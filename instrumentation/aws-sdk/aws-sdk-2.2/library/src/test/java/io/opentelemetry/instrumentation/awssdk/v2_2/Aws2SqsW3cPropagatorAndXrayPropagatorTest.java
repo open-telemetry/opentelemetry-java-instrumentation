@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
@@ -97,6 +98,73 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
               return value == null ? null : value.stringValue();
             })
         .contains(CUSTOM_TRACEPARENT);
+  }
+
+  @Test
+  void testDisabledCreateSpansPreserveCustomBatchCreationContexts() {
+    assumeTrue(emitStableMessagingSemconv());
+    AwsSdkTelemetry disabledTelemetry =
+        AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
+            .setCaptureExperimentalSpanAttributes(true)
+            .setUseConfiguredPropagatorForMessaging(true)
+            .setMessageCreateSpansEnabled(false)
+            .build();
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    builder.overrideConfiguration(
+        ClientOverrideConfiguration.builder()
+            .addExecutionInterceptor(disabledTelemetry.createExecutionInterceptor())
+            .build());
+    SendMessageBatchRequest batchRequest =
+        SendMessageBatchRequest.builder()
+            .queueUrl(queueUrl)
+            .entries(
+                SendMessageBatchRequestEntry.builder()
+                    .id("i1")
+                    .messageBody("e1")
+                    .messageAttributes(
+                        singletonMap(
+                            "traceparent",
+                            MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue(CUSTOM_TRACEPARENT)
+                                .build()))
+                    .build(),
+                SendMessageBatchRequestEntry.builder().id("i2").messageBody("e2").build())
+            .build();
+
+    try (SqsClient client = disabledTelemetry.wrap(builder.build())) {
+      client.createQueue(createQueueRequest);
+      client.sendMessageBatch(batchRequest);
+
+      getTesting()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("send testSdkSqs")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasLinksSatisfying(
+                                  links ->
+                                      assertThat(links)
+                                          .singleElement()
+                                          .satisfies(
+                                              link ->
+                                                  assertThat(link.getSpanContext().getSpanId())
+                                                      .isEqualTo("1111111111111111")))));
+
+      ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
+      assertThat(response.messages())
+          .filteredOn(message -> "e1".equals(message.body()))
+          .singleElement()
+          .satisfies(
+              message ->
+                  assertThat(message.messageAttributes().get("traceparent").stringValue())
+                      .isEqualTo(CUSTOM_TRACEPARENT));
+    }
   }
 
   @Test

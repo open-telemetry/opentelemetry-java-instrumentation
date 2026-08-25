@@ -190,7 +190,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       return request;
     }
 
-    if (emitStableMessagingSemconv() && messageCreateSpansEnabled) {
+    if (emitStableMessagingSemconv()) {
       SdkRequest preparedRequest =
           SqsAccess.prepareBatchRequest(
               request,
@@ -198,7 +198,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
               parentOtelContext,
               producerCreateInstrumenter,
               useXrayPropagator,
-              messagingPropagator);
+              messagingPropagator,
+              messageCreateSpansEnabled);
       if (preparedRequest != null) {
         request = preparedRequest;
       }
@@ -268,12 +269,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     SdkRequest modifiedRequest =
-        SqsAccess.modifyRequest(
-            request,
-            otelContext,
-            useXrayPropagator,
-            messagingPropagator,
-            messageCreateSpansEnabled);
+        SqsAccess.modifyRequest(request, otelContext, useXrayPropagator, messagingPropagator);
     if (modifiedRequest != null) {
       return modifiedRequest;
     }

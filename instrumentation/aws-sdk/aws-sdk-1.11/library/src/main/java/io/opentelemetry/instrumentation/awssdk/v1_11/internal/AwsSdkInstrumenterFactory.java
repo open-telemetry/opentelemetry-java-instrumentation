@@ -76,19 +76,16 @@ public final class AwsSdkInstrumenterFactory {
   private final IncludeExclude headers;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
-  private final boolean messageCreateSpansEnabled;
 
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
       IncludeExclude headers,
       boolean captureExperimentalSpanAttributes,
-      boolean messagingReceiveInstrumentationEnabled,
-      boolean messageCreateSpansEnabled) {
+      boolean messagingReceiveInstrumentationEnabled) {
     this.openTelemetry = openTelemetry;
     this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
-    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
   }
 
   private static List<AttributesExtractor<Request<?>, Response<?>>> createAttributesExtractors(
@@ -251,7 +248,6 @@ public final class AwsSdkInstrumenterFactory {
         MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME),
         request ->
             emitStableMessagingSemconv()
-                    && messageCreateSpansEnabled
                     && SqsAccess.isBatchRequest(request)
                     && !SqsAccess.getBatchMessageContexts(request).isEmpty()
                 ? SpanKind.CLIENT
@@ -261,7 +257,7 @@ public final class AwsSdkInstrumenterFactory {
         builder -> {
           builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
           setMessagingSendExceptionEventExtractor(builder);
-          if (emitStableMessagingSemconv() && messageCreateSpansEnabled) {
+          if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
                 (spanLinks, parentContext, request) -> {
                   for (Context creationContext : SqsAccess.getBatchMessageContexts(request)) {

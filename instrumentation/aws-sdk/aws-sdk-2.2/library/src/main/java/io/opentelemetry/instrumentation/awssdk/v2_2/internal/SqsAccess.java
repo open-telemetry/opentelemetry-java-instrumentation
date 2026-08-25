@@ -45,11 +45,9 @@ final class SqsAccess {
       SdkRequest request,
       io.opentelemetry.context.Context otelContext,
       boolean useXrayPropagator,
-      TextMapPropagator messagingPropagator,
-      boolean messageCreateSpansEnabled) {
+      TextMapPropagator messagingPropagator) {
     return enabled
-        ? SqsImpl.modifyRequest(
-            request, otelContext, useXrayPropagator, messagingPropagator, messageCreateSpansEnabled)
+        ? SqsImpl.modifyRequest(request, otelContext, useXrayPropagator, messagingPropagator)
         : null;
   }
 
@@ -61,7 +59,8 @@ final class SqsAccess {
       io.opentelemetry.context.Context parentContext,
       Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
       boolean useXrayPropagator,
-      TextMapPropagator messagingPropagator) {
+      TextMapPropagator messagingPropagator,
+      boolean messageCreateSpansEnabled) {
     return enabled
         ? SqsImpl.prepareBatchRequest(
             request,
@@ -69,7 +68,8 @@ final class SqsAccess {
             parentContext,
             producerCreateInstrumenter,
             useXrayPropagator,
-            messagingPropagator)
+            messagingPropagator,
+            messageCreateSpansEnabled)
         : null;
   }
 

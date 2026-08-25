@@ -98,8 +98,7 @@ public class AwsSdkTelemetry {
             headers,
             captureExperimentalSpanAttributes,
             messagingReceiveInstrumentationEnabled,
-            useXrayPropagator,
-            messageCreateSpansEnabled);
+            useXrayPropagator);
 
     this.requestInstrumenter = instrumenterFactory.requestInstrumenter();
     this.consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();

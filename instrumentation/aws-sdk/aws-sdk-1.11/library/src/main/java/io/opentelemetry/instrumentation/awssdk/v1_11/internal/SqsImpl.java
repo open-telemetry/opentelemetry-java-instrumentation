@@ -143,18 +143,19 @@ public final class SqsImpl {
       }
       return request;
     }
-    if (rawRequest instanceof SendMessageBatchRequest
-        && emitStableMessagingSemconv()
-        && messageCreateSpansEnabled) {
+    if (rawRequest instanceof SendMessageBatchRequest && emitStableMessagingSemconv()) {
       return injectBatchCreationContexts(
-          (SendMessageBatchRequest) rawRequest, producerCreateInstrumenter);
+          (SendMessageBatchRequest) rawRequest,
+          producerCreateInstrumenter,
+          messageCreateSpansEnabled);
     }
     return rawRequest;
   }
 
   private static SendMessageBatchRequest injectBatchCreationContexts(
       SendMessageBatchRequest request,
-      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter) {
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
+      boolean messageCreateSpansEnabled) {
     SendMessageBatchRequest preparedRequest = request.clone();
     List<SendMessageBatchRequestEntry> preparedEntries = new ArrayList<>();
     Context parentContext = Context.current().with(Span.getInvalid());
@@ -167,7 +168,9 @@ public final class SqsImpl {
         preparedEntries.add(preparedEntry);
         continue;
       }
-      if (!SqsMessageSystemAttributeAccess.isAvailable() || traceHeader != null) {
+      if (!messageCreateSpansEnabled
+          || !SqsMessageSystemAttributeAccess.isAvailable()
+          || traceHeader != null) {
         preparedEntries.add(preparedEntry);
         continue;
       }

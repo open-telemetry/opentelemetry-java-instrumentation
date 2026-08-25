@@ -61,8 +61,7 @@ public final class AwsSdkTelemetry {
             openTelemetry,
             headers,
             captureExperimentalSpanAttributes,
-            messagingReceiveInstrumentationEnabled,
-            messageCreateSpansEnabled);
+            messagingReceiveInstrumentationEnabled);
     requestInstrumenter = instrumenterFactory.requestInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
     consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();

@@ -20,11 +20,15 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SqsTracingTest extends AbstractSqsTracingTest {
+
+  private static final String CUSTOM_TRACE_HEADER =
+      "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1";
 
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -83,6 +87,65 @@ class SqsTracingTest extends AbstractSqsTracingTest {
                               .hasKind(SpanKind.PRODUCER)
                               .hasNoParent()
                               .hasTotalRecordedLinks(0)));
+    } finally {
+      client.shutdown();
+    }
+  }
+
+  @Test
+  void testDisableSqsMessageCreateSpansPreservesCustomContext()
+      throws ReflectiveOperationException {
+    assumeTrue(emitStableMessagingSemconv());
+    assumeTrue(supportsMessageSystemAttributes());
+    AmazonSQSAsync client =
+        newClientBuilder()
+            .withRequestHandlers(
+                AwsSdkTelemetry.builder(testing().getOpenTelemetry())
+                    .setCaptureExperimentalSpanAttributes(true)
+                    .setMessageCreateSpansEnabled(false)
+                    .build()
+                    .createRequestHandler())
+            .build();
+    try {
+      String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+      client.createQueue("testSdkSqs");
+      SendMessageBatchRequestEntry customContextEntry =
+          new SendMessageBatchRequestEntry("i1", "e1");
+      Class<?> accessClass =
+          Class.forName(
+              "io.opentelemetry.instrumentation.awssdk.v1_11.internal"
+                  + ".SqsMessageSystemAttributeAccess");
+      Method withTraceHeader =
+          accessClass.getDeclaredMethod(
+              "withTraceHeader", SendMessageBatchRequestEntry.class, String.class);
+      withTraceHeader.setAccessible(true);
+      customContextEntry =
+          (SendMessageBatchRequestEntry)
+              withTraceHeader.invoke(null, customContextEntry, CUSTOM_TRACE_HEADER);
+      client.sendMessageBatch(
+          new SendMessageBatchRequest()
+              .withQueueUrl(queueUrl)
+              .withEntries(customContextEntry, new SendMessageBatchRequestEntry("i2", "e2")));
+
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("send testSdkSqs")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasNoParent()
+                              .hasLinksSatisfying(
+                                  links ->
+                                      assertThat(links)
+                                          .singleElement()
+                                          .satisfies(
+                                              link ->
+                                                  assertThat(link.getSpanContext().getSpanId())
+                                                      .isEqualTo("53995c3f42cd8ad8")))));
     } finally {
       client.shutdown();
     }

@@ -164,8 +164,7 @@ public final class SqsImpl {
       SdkRequest request,
       io.opentelemetry.context.Context otelContext,
       boolean useXrayPropagator,
-      TextMapPropagator messagingPropagator,
-      boolean messageCreateSpansEnabled) {
+      TextMapPropagator messagingPropagator) {
     if (request instanceof ReceiveMessageRequest) {
       return modifyReceiveMessageRequest(
           (ReceiveMessageRequest) request, useXrayPropagator, messagingPropagator);
@@ -174,7 +173,7 @@ public final class SqsImpl {
         return injectIntoSendMessageRequest(
             (SendMessageRequest) request, otelContext, messagingPropagator);
       } else if (request instanceof SendMessageBatchRequest) {
-        if (emitStableMessagingSemconv() && messageCreateSpansEnabled) {
+        if (emitStableMessagingSemconv()) {
           return request;
         }
         return injectIntoSendMessageBatchRequest(
@@ -191,7 +190,8 @@ public final class SqsImpl {
       io.opentelemetry.context.Context parentContext,
       Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
       boolean useXrayPropagator,
-      TextMapPropagator messagingPropagator) {
+      TextMapPropagator messagingPropagator,
+      boolean messageCreateSpansEnabled) {
     if (!(request instanceof SendMessageBatchRequest)) {
       return null;
     }
@@ -213,6 +213,9 @@ public final class SqsImpl {
       }
       if (Span.fromContext(customCreationContext).getSpanContext().isValid()) {
         creationContexts.add(customCreationContext);
+        continue;
+      }
+      if (!messageCreateSpansEnabled) {
         continue;
       }
 

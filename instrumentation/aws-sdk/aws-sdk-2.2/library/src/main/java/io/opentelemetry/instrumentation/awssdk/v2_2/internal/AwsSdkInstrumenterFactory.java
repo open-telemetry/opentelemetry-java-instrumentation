@@ -133,7 +133,6 @@ public final class AwsSdkInstrumenterFactory {
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
   private final boolean useXrayPropagator;
-  private final boolean messageCreateSpansEnabled;
 
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
@@ -141,15 +140,13 @@ public final class AwsSdkInstrumenterFactory {
       IncludeExclude headers,
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled,
-      boolean useXrayPropagator,
-      boolean messageCreateSpansEnabled) {
+      boolean useXrayPropagator) {
     this.openTelemetry = openTelemetry;
     this.messagingPropagator = messagingPropagator;
     this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     this.useXrayPropagator = useXrayPropagator;
-    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
   }
 
   public Instrumenter<ExecutionAttributes, Response> requestInstrumenter() {
@@ -316,7 +313,6 @@ public final class AwsSdkInstrumenterFactory {
           SdkRequest sdkRequest =
               request.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
           return emitStableMessagingSemconv()
-                  && messageCreateSpansEnabled
                   && SqsAccess.isBatchRequest(sdkRequest)
                   && !TracingExecutionInterceptor.getBatchMessageContexts(request).isEmpty()
               ? SpanKind.CLIENT
@@ -327,7 +323,7 @@ public final class AwsSdkInstrumenterFactory {
         builder -> {
           builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
           setMessagingSendExceptionEventExtractor(builder);
-          if (emitStableMessagingSemconv() && messageCreateSpansEnabled) {
+          if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
                 (spanLinks, parentContext, request) -> {
                   for (Context creationContext :
