@@ -101,7 +101,10 @@ class ElasticsearchRest5Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -176,7 +179,10 @@ class ElasticsearchRest5Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -250,6 +256,12 @@ class ElasticsearchRest5Test {
     testing.waitAndAssertTraces(
         trace ->
             assertThat(trace.getSpan(0))
+                .hasName(
+                    emitStableDatabaseSemconv()
+                        ? (hostList != null
+                            ? hostList
+                            : httpHost.getHostName() + ":" + httpHost.getPort())
+                        : "GET")
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfying(
                     equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
