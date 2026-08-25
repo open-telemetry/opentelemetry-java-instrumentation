@@ -395,7 +395,7 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.")
+                        "Connector lifecycle state indicator.")
                     .hasUnit("1")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
@@ -456,7 +456,7 @@ class KafkaConnectTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values.")
+                        "The status of the connector task.")
                     .hasUnit("1")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
