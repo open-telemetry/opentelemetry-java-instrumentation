@@ -441,8 +441,8 @@ class InfluxDbClientTest {
   }
 
   @Test
-  void testConfiguredUrlIsSanitized() {
-    // the credentials and the path of the configured url must not reach server.address
+  void testServerAttributesFromConfiguredUrlWithUserInfo() {
+    // the credentials in the configured url must not reach server.address
     String serverUrl = "http://influxuser:influxsecret@" + host + ":" + port + "/";
     InfluxDB influxDbWithCredentialsInUrl = InfluxDBFactory.connect(serverUrl);
     cleanup.deferCleanup(influxDbWithCredentialsInUrl);
