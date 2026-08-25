@@ -11,7 +11,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
-final class TestEndPoints {
+class TestEndPoints {
 
   // SniEndPoint.resolve() looks the proxy host up with InetAddress.getAllByName, so a literal
   // address keeps every test offline and deterministic.

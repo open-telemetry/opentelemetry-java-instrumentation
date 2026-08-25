@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 // Host.getBroadcastRpcAddress(). This instrumentation also supports 3.0 to 3.7, where none of those
 // exist, so everything this class needs is reached by reflection. Host.getHostId() is reached the
 // same way because it was added in 3.6.0.
-final class CassandraEndPoints {
+class CassandraEndPoints {
 
   @Nullable
   private static final Class<?> SNI_END_POINT_CLASS =

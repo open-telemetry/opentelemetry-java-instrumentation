@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
  * a field of that builder, which a built session does not expose. A session that has none keeps
  * reporting the coordinator that answered.
  */
-final class CassandraServerTarget {
+class CassandraServerTarget {
 
   private final String address;
   @Nullable private final Integer port;

@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 
 // Driver 4.3 added SniEndPoint, but this instrumentation also supports 4.0 to 4.2, so the class and
 // its public getServerName() are reached by reflection.
-final class CassandraEndPoints {
+class CassandraEndPoints {
 
   @Nullable
   private static final Class<?> SNI_END_POINT_CLASS =
