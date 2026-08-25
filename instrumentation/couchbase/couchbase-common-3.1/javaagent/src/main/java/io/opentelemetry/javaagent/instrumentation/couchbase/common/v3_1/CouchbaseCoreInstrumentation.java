@@ -33,7 +33,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>A client built from seed nodes rather than a connection string carries none, and is left
  * without a target unless its seed nodes were resolved by an instrumented driver.
  */
-public final class CouchbaseCoreInstrumentation implements TypeInstrumentation {
+public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

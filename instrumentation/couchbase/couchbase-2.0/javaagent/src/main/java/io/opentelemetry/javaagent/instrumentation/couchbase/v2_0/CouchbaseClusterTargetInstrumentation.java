@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * {@link Object} because the 2.x line moved it between packages, so naming its type would keep the
  * advice off half of the drivers it supports.
  */
-final class CouchbaseClusterTargetInstrumentation implements TypeInstrumentation {
+class CouchbaseClusterTargetInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

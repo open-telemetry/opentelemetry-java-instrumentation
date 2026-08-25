@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
  * <p>Registration is skipped when a core is not built from a connection string. An operation that
  * finds no target then carries no server address.
  */
-public final class CouchbaseServerTargets {
+public class CouchbaseServerTargets {
 
   private static final Cache<Set<?>, CouchbaseServerTarget> seedNodeTargets = Cache.weak();
   private static final Cache<Core, CouchbaseServerTarget> coreTargets = Cache.weak();

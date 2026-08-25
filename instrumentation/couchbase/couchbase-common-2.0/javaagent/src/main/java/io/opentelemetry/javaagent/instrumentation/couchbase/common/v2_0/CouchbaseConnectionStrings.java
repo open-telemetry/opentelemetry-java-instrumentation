@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
  * <p>Driver 2.4 to 2.6 resolve the seeds while parsing and drop the ones that do not resolve, so
  * the unresolved list is read when the driver keeps one.
  */
-public final class CouchbaseConnectionStrings {
+public class CouchbaseConnectionStrings {
 
   /**
    * The target {@code connectionString} names, or {@code null} when it cannot be read.

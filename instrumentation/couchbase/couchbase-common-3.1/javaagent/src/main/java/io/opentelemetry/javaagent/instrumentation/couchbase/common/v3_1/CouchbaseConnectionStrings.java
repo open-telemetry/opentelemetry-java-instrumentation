@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
  * SRV is the lone seed of its connection string, so it is reported as itself rather than as the
  * seeds the driver looked up.
  */
-public final class CouchbaseConnectionStrings {
+public class CouchbaseConnectionStrings {
 
   /** The target {@code connectionString} names, or {@code null} when it cannot be read. */
   @Nullable

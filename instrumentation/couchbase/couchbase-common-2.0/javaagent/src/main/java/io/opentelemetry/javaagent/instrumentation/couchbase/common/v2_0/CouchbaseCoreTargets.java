@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
  * An operation that finds no target is then described by the node that answered it, on the drivers
  * that report one.
  */
-public final class CouchbaseCoreTargets {
+public class CouchbaseCoreTargets {
 
   private static final Cache<ClusterFacade, CouchbaseServerTarget> targets = Cache.weak();
 

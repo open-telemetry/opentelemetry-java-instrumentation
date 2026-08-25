@@ -163,7 +163,7 @@ public abstract class CouchbaseRequestInfo {
   }
 
   /** A node an operation reached, as both a socket and the address the driver opened it to. */
-  public static final class Node {
+  public static class Node {
 
     private final SocketAddress peerAddress;
     @Nullable private final String backendAddress;

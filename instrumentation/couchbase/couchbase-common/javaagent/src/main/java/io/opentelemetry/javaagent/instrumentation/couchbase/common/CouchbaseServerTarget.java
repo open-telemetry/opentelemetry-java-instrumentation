@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
  * <p>Only the seeds are rendered, so the address never contains credentials, a bucket, a path,
  * query parameters, options or a fragment.
  */
-public final class CouchbaseServerTarget {
+public class CouchbaseServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
@@ -52,7 +52,7 @@ public final class CouchbaseServerTarget {
   }
 
   /** Collects the seeds a client was configured with into a {@link CouchbaseServerTarget}. */
-  public static final class Builder {
+  public static class Builder {
 
     private final List<String> hosts = new ArrayList<>();
     private final List<Integer> ports = new ArrayList<>();

@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * The target is therefore read here, while the connection string is still around, and held against
  * the seed node set until the core built from it registers itself.
  */
-public final class CouchbaseSeedNodesInstrumentation implements TypeInstrumentation {
+public class CouchbaseSeedNodesInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
