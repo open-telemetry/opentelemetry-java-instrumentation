@@ -37,7 +37,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  * against it, which Geode completes without reaching a server, so the span describes the target the
  * pool was configured with rather than a failure to connect.
  */
-@SuppressWarnings("deprecation") // using deprecated semconv
 class DefaultPoolTargetTest {
 
   @RegisterExtension
@@ -56,6 +55,7 @@ class DefaultPoolTargetTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void theServerTheCacheConfiguredItsPoolWithIsReported() {
     Region<Object, Object> region =
         cache
