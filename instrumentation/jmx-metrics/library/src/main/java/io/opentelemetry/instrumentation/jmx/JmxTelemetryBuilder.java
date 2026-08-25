@@ -62,7 +62,7 @@ public final class JmxTelemetryBuilder {
 
   /**
    * Adds JMX rules from input stream, all metrics are included unless filtered out by the {@link
-   * #setMetrics(IncludeExclude)} method.
+   * #metrics(IncludeExclude)} method.
    *
    * @param input input to read rules from
    * @throws IllegalArgumentException when input is {@literal null} or can't be parsed
@@ -82,21 +82,9 @@ public final class JmxTelemetryBuilder {
     return this;
   }
 
-
-  /**
-   * Set metrics to include and exclude
-   *
-   * @param metrics metrics to include/exclude
-   * @return this
-   */
-  public JmxTelemetryBuilder setMetrics(IncludeExclude metrics) {
-    this.metrics = metrics;
-    return this;
-  }
-
   /**
    * Adds JMX rules from file system path, all metrics are included unless filtered out by the
-   * {@link #setMetrics(IncludeExclude)} method.
+   * {@link #metrics(IncludeExclude)} method.
    *
    * @param path path to yaml file
    * @return builder instance
@@ -113,6 +101,18 @@ public final class JmxTelemetryBuilder {
     } catch (IOException e) {
       throw new IllegalArgumentException("Unable to load JMX rules from: " + path, e);
     }
+  }
+
+  /**
+   * Set metrics to include and exclude
+   *
+   * @param metrics metrics to include/exclude
+   * @return this
+   */
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder metrics(IncludeExclude metrics) {
+    this.metrics = metrics;
+    return this;
   }
 
   /** Sets the {@link ClassLoader} to be used to load SPI implementations. */

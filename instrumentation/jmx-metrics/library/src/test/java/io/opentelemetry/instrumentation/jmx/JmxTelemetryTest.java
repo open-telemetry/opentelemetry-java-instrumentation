@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -46,7 +47,28 @@ class JmxTelemetryTest {
   void knownValidYaml() {
     JmxTelemetryBuilder jmxtelemetry = JmxTelemetry.builder(OpenTelemetry.noop());
     addClasspathRules(jmxtelemetry, "jmx/rules/jvm.yaml");
-    assertThat(jmxtelemetry.build()).isNotNull();
+    JmxTelemetry telemetry = jmxtelemetry.build();
+    assertThat(telemetry).isNotNull();
+
+    IncludeExclude includeExclude = telemetry.getMetrics();
+    assertThat(includeExclude.getIncluded()).isNotEmpty();
+    assertThat(includeExclude.getIncluded()
+        .stream().filter(m -> m.startsWith("jvm."))
+        .count()).isGreaterThan(0);
+    assertThat(includeExclude.getExcluded()).isEmpty();
+  }
+
+  @Test
+  void metricsExplicitInclude() {
+    JmxTelemetryBuilder jmxtelemetry = JmxTelemetry.builder(OpenTelemetry.noop());
+    addClasspathRules(jmxtelemetry, "jmx/rules/jvm.yaml");
+    jmxtelemetry.metrics(IncludeExclude.builder()
+        .setIncluded("jvm.memory.used")
+        .build());
+    JmxTelemetry telemetry = jmxtelemetry.build();
+    assertThat(telemetry).isNotNull();
+
+    assertThat(telemetry.getMetrics().getIncluded()).containsOnly("jvm.memory.used");
   }
 
   private static void addClasspathRules(JmxTelemetryBuilder builder, String path) {
