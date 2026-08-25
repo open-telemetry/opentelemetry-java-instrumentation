@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 @AutoValue
@@ -34,7 +35,7 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable private String localAddress;
   @Nullable private String operationId;
-  @Nullable private SocketAddress peerAddress;
+  @Nullable private volatile Endpoint endpoint;
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket, Class<?> declaringClass, String methodName) {
@@ -87,6 +88,20 @@ public abstract class CouchbaseRequestInfo {
 
   public abstract boolean isMethodCall();
 
+  public Supplier<CouchbaseRequestInfo> copySupplier() {
+    return new Supplier<CouchbaseRequestInfo>() {
+      @Override
+      public CouchbaseRequestInfo get() {
+        return copy();
+      }
+    };
+  }
+
+  private CouchbaseRequestInfo copy() {
+    return new AutoValue_CouchbaseRequestInfo(
+        getBucket(), getSqlQuery(), getSqlQueryWithSummary(), getOperation(), isMethodCall());
+  }
+
   @Nullable
   public String getLocalAddress() {
     return localAddress;
@@ -106,11 +121,45 @@ public abstract class CouchbaseRequestInfo {
   }
 
   @Nullable
-  public SocketAddress getPeerAddress() {
-    return peerAddress;
+  public Endpoint getEndpoint() {
+    return endpoint;
   }
 
-  public void setPeerAddress(@Nullable SocketAddress peerAddress) {
-    this.peerAddress = peerAddress;
+  public void setEndpoint(@Nullable SocketAddress peerAddress, String remoteAddress) {
+    if (peerAddress == null) {
+      return;
+    }
+
+    int portSeparator = remoteAddress.lastIndexOf(':');
+    String serverAddress = remoteAddress.substring(0, portSeparator);
+    if (serverAddress.startsWith("[") && serverAddress.endsWith("]")) {
+      serverAddress = serverAddress.substring(1, serverAddress.length() - 1);
+    }
+    int serverPort = Integer.parseInt(remoteAddress.substring(portSeparator + 1));
+    endpoint = new Endpoint(peerAddress, serverAddress, serverPort);
+  }
+
+  public static final class Endpoint {
+    private final SocketAddress peerAddress;
+    private final String serverAddress;
+    private final int serverPort;
+
+    private Endpoint(SocketAddress peerAddress, String serverAddress, int serverPort) {
+      this.peerAddress = peerAddress;
+      this.serverAddress = serverAddress;
+      this.serverPort = serverPort;
+    }
+
+    public SocketAddress getPeerAddress() {
+      return peerAddress;
+    }
+
+    public String getServerAddress() {
+      return serverAddress;
+    }
+
+    public int getServerPort() {
+      return serverPort;
+    }
   }
 }

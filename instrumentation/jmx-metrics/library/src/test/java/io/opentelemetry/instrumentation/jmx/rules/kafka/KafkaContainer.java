@@ -10,7 +10,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.Transferable;
 
-public class KafkaContainer extends GenericContainer<KafkaContainer> {
+class KafkaContainer extends GenericContainer<KafkaContainer> {
 
   private static final int KAFKA_CONTROLLER_PORT = 9093;
 
@@ -34,7 +34,7 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
     CONNECT
   }
 
-  public static KafkaContainer create(String image) {
+  static KafkaContainer create(String image) {
     return new KafkaContainer(image);
   }
 
@@ -45,13 +45,13 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
     this.basePath = bitnamiImage ? "/opt/bitnami/kafka" : "/opt/kafka";
   }
 
-  public KafkaContainer withZookeeper(String host, int port) {
+  KafkaContainer withZookeeper(String host, int port) {
     this.mode = Mode.ZOOKEEPER;
     this.zookeeperAddress = host + ":" + port;
     return this;
   }
 
-  public KafkaContainer withKafkaConnect() {
+  KafkaContainer withKafkaConnect() {
     this.mode = Mode.CONNECT;
     return this;
   }
@@ -153,7 +153,7 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
         .waitingFor(
             Wait.forHttp("/connectors")
                 .forPort(CONNECT_PORT)
-                .withStartupTimeout(Duration.ofMinutes(1)));
+                .withStartupTimeout(Duration.ofMinutes(5)));
   }
 
   private static String connectWorkerProperties() {

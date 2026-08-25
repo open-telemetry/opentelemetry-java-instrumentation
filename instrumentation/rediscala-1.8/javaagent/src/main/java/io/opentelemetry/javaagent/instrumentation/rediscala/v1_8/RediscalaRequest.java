@@ -35,40 +35,34 @@ class RediscalaRequest {
   private final String operationName;
   private final String stableOperationName;
   @Nullable private final Long batchSize;
-  @Nullable private final String host;
-  @Nullable private final Integer port;
+  @Nullable private final ServerEndpoint endpoint;
 
-  static RediscalaRequest create(
-      RedisCommand<?, ?> command, @Nullable String host, @Nullable Integer port) {
+  static RediscalaRequest create(RedisCommand<?, ?> command, @Nullable ServerEndpoint endpoint) {
     return new RediscalaRequest(
         operationName(command, /* stable= */ false),
         operationName(command, /* stable= */ true),
         null,
-        host,
-        port);
+        endpoint);
   }
 
   static RediscalaRequest createTransaction(
-      Queue<Operation<?, ?>> operations, @Nullable String host, @Nullable Integer port) {
+      Queue<Operation<?, ?>> operations, @Nullable ServerEndpoint endpoint) {
     return new RediscalaRequest(
         transactionOperationName(operations, /* stable= */ false),
         transactionOperationName(operations, /* stable= */ true),
         batchSize(operations),
-        host,
-        port);
+        endpoint);
   }
 
   private RediscalaRequest(
       String operationName,
       String stableOperationName,
       @Nullable Long batchSize,
-      @Nullable String host,
-      @Nullable Integer port) {
+      @Nullable ServerEndpoint endpoint) {
     this.operationName = operationName;
     this.stableOperationName = stableOperationName;
     this.batchSize = batchSize;
-    this.host = host;
-    this.port = port;
+    this.endpoint = endpoint;
   }
 
   String getOperationName() {
@@ -86,12 +80,17 @@ class RediscalaRequest {
 
   @Nullable
   String getHost() {
-    return host;
+    return endpoint != null ? endpoint.getHost() : null;
   }
 
   @Nullable
   Integer getPort() {
-    return port;
+    return endpoint != null ? endpoint.getPort() : null;
+  }
+
+  @Nullable
+  Integer getDatabaseIndex() {
+    return endpoint != null ? endpoint.getDatabaseIndex() : null;
   }
 
   private static String transactionOperationName(

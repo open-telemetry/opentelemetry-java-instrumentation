@@ -56,8 +56,7 @@ class KafkaBrokerTest extends TargetSystemTest {
           new GenericContainer<>(zookeeperImage)
               .withNetworkAliases("zookeeper")
               .withExposedPorts(2181)
-              .withStartupTimeout(Duration.ofMinutes(1))
-              .waitingFor(Wait.forListeningPort());
+              .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(1)));
 
       target.withZookeeper("zookeeper", 2181);
       dependencies = singletonList(zookeeper);

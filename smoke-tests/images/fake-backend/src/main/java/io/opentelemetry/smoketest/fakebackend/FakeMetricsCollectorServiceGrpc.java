@@ -5,33 +5,24 @@
 
 package io.opentelemetry.smoketest.fakebackend;
 
-import com.google.common.collect.ImmutableList;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse;
 import io.opentelemetry.proto.collector.metrics.v1.MetricsServiceGrpc;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 
-class FakeMetricsCollectorService extends MetricsServiceGrpc.MetricsServiceImplBase {
+class FakeMetricsCollectorServiceGrpc extends MetricsServiceGrpc.MetricsServiceImplBase {
 
-  private final BlockingQueue<ExportMetricsServiceRequest> exportRequests =
-      new LinkedBlockingDeque<>();
+  private final RequestsStorage storage;
 
-  List<ExportMetricsServiceRequest> getRequests() {
-    return ImmutableList.copyOf(exportRequests);
-  }
-
-  void clearRequests() {
-    exportRequests.clear();
+  FakeMetricsCollectorServiceGrpc(RequestsStorage storage) {
+    this.storage = storage;
   }
 
   @Override
   public void export(
       ExportMetricsServiceRequest request,
       StreamObserver<ExportMetricsServiceResponse> responseObserver) {
-    exportRequests.add(request);
+    storage.addMetricsRequest(request);
     responseObserver.onNext(ExportMetricsServiceResponse.getDefaultInstance());
     responseObserver.onCompleted();
   }
