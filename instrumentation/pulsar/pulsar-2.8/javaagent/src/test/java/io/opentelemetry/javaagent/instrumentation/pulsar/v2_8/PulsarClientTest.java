@@ -39,6 +39,7 @@ import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.TopicMetadata;
 import org.apache.pulsar.client.api.transaction.Transaction;
+import org.apache.pulsar.client.impl.conf.ConsumerConfigurationData;
 import org.junit.jupiter.api.Test;
 
 class PulsarClientTest extends AbstractPulsarClientTest {
@@ -1251,5 +1252,24 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             emitStableMessagingSemconv() ? "send " + topic : topic + " publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void testMessageListenerNotWrappedMultipleTimes() {
+    ConsumerConfigurationData<String> conf = new ConsumerConfigurationData<>();
+    MessageListener<String> originalListener = (consumer, msg) -> {};
+    conf.setMessageListener(originalListener);
+
+    MessageListener<String> wrapped1 = conf.getMessageListener();
+    conf.setMessageListener(wrapped1);
+    MessageListener<String> wrapped2 = conf.getMessageListener();
+
+    // MessageListenerInstrumentation.MessageListenerWrapper is a javaagent helper class isolated
+    // from this test's classloader, so it can't be referenced directly (.class would throw
+    // NoClassDefFoundError); compare by name instead.
+    assertThat(wrapped1.getClass().getName())
+        .isEqualTo(
+            "io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.MessageListenerInstrumentation$MessageListenerWrapper");
+    assertThat(wrapped2).isSameAs(wrapped1);
   }
 }
