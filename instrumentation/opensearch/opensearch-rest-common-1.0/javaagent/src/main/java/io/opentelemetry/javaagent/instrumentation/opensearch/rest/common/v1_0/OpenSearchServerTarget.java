@@ -83,7 +83,7 @@ public final class OpenSearchServerTarget {
     @Nullable private final String host;
     private final int port;
 
-    public Endpoint(@Nullable String scheme, @Nullable String host, int port) {
+    public Endpoint(@Nullable String host, int port) {
       this.host = sanitizeHost(host);
       this.port = port;
     }

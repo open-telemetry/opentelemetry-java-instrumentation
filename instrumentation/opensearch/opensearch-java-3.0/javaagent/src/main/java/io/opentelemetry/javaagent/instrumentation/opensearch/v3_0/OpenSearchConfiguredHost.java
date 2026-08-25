@@ -23,11 +23,9 @@ public final class OpenSearchConfiguredHost {
       return null;
     }
 
-    String scheme = null;
     String rest = host;
     int schemeEnd = rest.indexOf("://");
     if (schemeEnd >= 0) {
-      scheme = rest.substring(0, schemeEnd);
       rest = rest.substring(schemeEnd + 3);
     }
 
@@ -53,7 +51,7 @@ public final class OpenSearchConfiguredHost {
     }
 
     return OpenSearchServerTarget.of(
-        singletonList(new OpenSearchServerTarget.Endpoint(scheme, rest, port)));
+        singletonList(new OpenSearchServerTarget.Endpoint(rest, port)));
   }
 
   private OpenSearchConfiguredHost() {}

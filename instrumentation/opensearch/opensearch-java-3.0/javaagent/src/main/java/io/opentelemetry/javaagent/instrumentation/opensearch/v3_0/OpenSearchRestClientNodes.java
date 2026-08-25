@@ -33,7 +33,6 @@ public final class OpenSearchRestClientNodes {
         Object host = node.getClass().getMethod("getHost").invoke(node);
         endpoints.add(
             new OpenSearchServerTarget.Endpoint(
-                (String) host.getClass().getMethod("getSchemeName").invoke(host),
                 (String) host.getClass().getMethod("getHostName").invoke(host),
                 (Integer) host.getClass().getMethod("getPort").invoke(host)));
       }
