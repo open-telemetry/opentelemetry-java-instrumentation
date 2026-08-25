@@ -62,7 +62,7 @@ class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     public static Class<?> onEnter(
         @Advice.This java.lang.ClassLoader classLoader,
         @Advice.This
-            io.opentelemetry.javaagent.instrumentation.internal.classloader.stub.ClassLoader
+            io.opentelemetry.javaagent.bootstrap.internal.classloader.stub.ClassLoader
                 classLoaderStub,
         @Advice.Argument(0) String name) {
 
