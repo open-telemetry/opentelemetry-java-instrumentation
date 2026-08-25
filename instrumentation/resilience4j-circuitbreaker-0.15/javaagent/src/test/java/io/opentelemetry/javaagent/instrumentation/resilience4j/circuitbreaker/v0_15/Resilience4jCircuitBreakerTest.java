@@ -24,12 +24,15 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -133,6 +136,49 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(thrown).isInstanceOf(InvocationTargetException.class).hasCause(exception);
     assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void onResultOnlySuppressesOnSuccessForSameCircuitBreaker() throws Exception {
+    Method transitionOnResult = transitionOnResultMethod();
+    CircuitBreaker innerCircuitBreaker = CircuitBreaker.ofDefaults("inner-circuit-breaker");
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    transitionOnResult.invoke(
+        builder,
+        (Function<Object, Object>)
+            result -> {
+              innerCircuitBreaker.acquirePermission();
+              invokeOnSuccessUnchecked(innerCircuitBreaker);
+              return noTransitionResult();
+            });
+    CircuitBreaker outerCircuitBreaker =
+        CircuitBreaker.of("outer-circuit-breaker", builder.build());
+    Supplier<Integer> decorated = CircuitBreaker.decorateSupplier(outerCircuitBreaker, () -> 500);
+
+    Integer result = testing.runWithSpan("parent", decorated::get);
+
+    assertThat(result).isEqualTo(500);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfying(
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.outcome"),
+                                experimental("success"))),
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfying(
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.outcome"),
+                                experimental("success")))));
+    assertThat(testing.spans())
+        .extracting(span -> span.getName())
+        .contains("CircuitBreaker inner-circuit-breaker", "CircuitBreaker outer-circuit-breaker");
   }
 
   @Test
@@ -245,16 +291,43 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsCircuitBreakerSpanWhenDecoratedFutureGetThrowsRuntimeException() throws Exception {
-    Method decorateFuture = decorateFutureMethod();
-    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
-    IllegalStateException exception = new IllegalStateException("boom");
-    Supplier<Future<String>> supplier = () -> new RuntimeExceptionFuture<>(exception);
-    @SuppressWarnings("unchecked")
-    Supplier<Future<String>> decoratedSupplier =
-        (Supplier<Future<String>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+  void createsCancelledSpanWhenDecoratedFutureGetThrowsCancellationException() throws Exception {
+    CancellationException exception = new CancellationException("boom");
+    Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
 
-    Future<String> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
+    Throwable thrown = catchThrowable(decoratedFuture::get);
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "cancelled");
+  }
+
+  @Test
+  void createsCancelledSpanWhenDecoratedFutureGetThrowsInterruptedException() throws Exception {
+    InterruptedException exception = new InterruptedException("boom");
+    Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
+
+    Throwable thrown = catchThrowable(decoratedFuture::get);
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "cancelled");
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedFutureGetThrowsExecutionException() throws Exception {
+    IllegalStateException cause = new IllegalStateException("boom");
+    ExecutionException exception = new ExecutionException(cause);
+    Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
+
+    Throwable thrown = catchThrowable(decoratedFuture::get);
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", cause);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenDecoratedFutureGetThrowsRuntimeException() throws Exception {
+    IllegalStateException exception = new IllegalStateException("boom");
+    Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
 
     Throwable thrown = catchThrowable(decoratedFuture::get);
 
@@ -263,16 +336,20 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsFailureSpanWhenDecoratedFutureTimedGetThrowsRuntimeException() throws Exception {
-    Method decorateFuture = decorateFutureMethod();
-    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
-    IllegalStateException exception = new IllegalStateException("boom");
-    Supplier<Future<String>> supplier = () -> new RuntimeExceptionFuture<>(exception);
-    @SuppressWarnings("unchecked")
-    Supplier<Future<String>> decoratedSupplier =
-        (Supplier<Future<String>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+  void createsFailureSpanWhenDecoratedFutureTimedGetThrowsTimeoutException() throws Exception {
+    TimeoutException exception = new TimeoutException("boom");
+    Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
 
-    Future<String> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
+    Throwable thrown = catchThrowable(() -> decoratedFuture.get(1, MILLISECONDS));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedFutureTimedGetThrowsRuntimeException() throws Exception {
+    IllegalStateException exception = new IllegalStateException("boom");
+    Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
 
     Throwable thrown = catchThrowable(() -> decoratedFuture.get(1, MILLISECONDS));
 
@@ -580,6 +657,14 @@ class Resilience4jCircuitBreakerTest {
     assertThat(testing.spans()).isEmpty();
   }
 
+  private static void invokeOnSuccessUnchecked(CircuitBreaker circuitBreaker) {
+    try {
+      invokeOnSuccess(circuitBreaker);
+    } catch (Exception e) {
+      throw new AssertionError(e);
+    }
+  }
+
   private static void invokeOnSuccess(CircuitBreaker circuitBreaker) throws Exception {
     // Support the onSuccess signatures exposed by the supported Resilience4j versions.
     try {
@@ -677,6 +762,27 @@ class Resilience4jCircuitBreakerTest {
     }
   }
 
+  private static Object noTransitionResult() {
+    try {
+      Class<?> transitionCheckResult =
+          Class.forName(
+              "io.github.resilience4j.circuitbreaker.CircuitBreakerConfig$TransitionCheckResult");
+      return transitionCheckResult.getMethod("noTransition").invoke(null);
+    } catch (Exception e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  private static <T> Future<T> decoratedFuture(Future<T> future) throws Exception {
+    Method decorateFuture = decorateFutureMethod();
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Supplier<Future<T>> supplier = () -> future;
+    @SuppressWarnings("unchecked")
+    Supplier<Future<T>> decoratedSupplier =
+        (Supplier<Future<T>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+    return testing.runWithSpan("parent", decoratedSupplier::get);
+  }
+
   private static Object decorateVavrCheckedFunction(
       CircuitBreaker circuitBreaker, ThrowingFunction function) throws Exception {
     Class<?> checkedFunction1 = vavrCheckedFunction1Interface();
@@ -739,11 +845,11 @@ class Resilience4jCircuitBreakerTest {
     Object apply(Object value) throws Throwable;
   }
 
-  private static final class RuntimeExceptionFuture<T> implements Future<T> {
+  private static final class ThrowingFuture<T> implements Future<T> {
 
-    private final RuntimeException exception;
+    private final Throwable exception;
 
-    private RuntimeExceptionFuture(RuntimeException exception) {
+    private ThrowingFuture(Throwable exception) {
       this.exception = exception;
     }
 
@@ -763,13 +869,35 @@ class Resilience4jCircuitBreakerTest {
     }
 
     @Override
-    public T get() {
-      throw exception;
+    public T get() throws InterruptedException, ExecutionException {
+      throwException();
+      return null;
     }
 
     @Override
-    public T get(long timeout, TimeUnit unit) {
-      throw exception;
+    public T get(long timeout, TimeUnit unit)
+        throws InterruptedException, ExecutionException, TimeoutException {
+      if (exception instanceof TimeoutException) {
+        throw (TimeoutException) exception;
+      }
+      throwException();
+      return null;
+    }
+
+    private void throwException() throws InterruptedException, ExecutionException {
+      if (exception instanceof InterruptedException) {
+        throw (InterruptedException) exception;
+      }
+      if (exception instanceof ExecutionException) {
+        throw (ExecutionException) exception;
+      }
+      if (exception instanceof RuntimeException) {
+        throw (RuntimeException) exception;
+      }
+      if (exception instanceof Error) {
+        throw (Error) exception;
+      }
+      throw new AssertionError(exception);
     }
   }
 

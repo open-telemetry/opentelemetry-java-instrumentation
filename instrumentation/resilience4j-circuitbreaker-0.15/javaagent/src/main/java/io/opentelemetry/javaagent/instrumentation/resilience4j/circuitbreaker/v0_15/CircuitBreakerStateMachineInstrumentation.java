@@ -125,7 +125,7 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker, @Advice.Thrown @Nullable Throwable throwable) {
-      if (Resilience4jCircuitBreakerSpans.isOnResultActive()) {
+      if (Resilience4jCircuitBreakerSpans.isOnResultActive(circuitBreaker)) {
         return;
       }
       Resilience4jCircuitBreakerSpans.end(
@@ -186,8 +186,8 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   public static class OnResultAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      Resilience4jCircuitBreakerSpans.enterOnResult();
+    public static void onEnter(@Advice.This CircuitBreaker circuitBreaker) {
+      Resilience4jCircuitBreakerSpans.enterOnResult(circuitBreaker);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)

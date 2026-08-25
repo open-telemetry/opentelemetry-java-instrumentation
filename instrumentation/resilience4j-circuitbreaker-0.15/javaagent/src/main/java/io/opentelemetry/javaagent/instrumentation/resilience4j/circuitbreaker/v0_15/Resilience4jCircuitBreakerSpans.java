@@ -26,7 +26,7 @@ public class Resilience4jCircuitBreakerSpans {
   private static final ThreadLocal<Deque<Capture>> captures = new ThreadLocal<>();
   private static final ThreadLocal<Deque<CircuitBreaker>> circuitBreakerCallbacks =
       new ThreadLocal<>();
-  private static final ThreadLocal<Deque<Boolean>> onResultEnded = new ThreadLocal<>();
+  private static final ThreadLocal<Deque<OnResult>> onResults = new ThreadLocal<>();
 
   public static AttemptToken beginAcquisition(CircuitBreaker circuitBreaker) {
     AttemptToken token = new AttemptToken(circuitBreaker);
@@ -199,30 +199,30 @@ public class Resilience4jCircuitBreakerSpans {
     return callbacks != null && callbacks.peek() == circuitBreaker;
   }
 
-  public static void enterOnResult() {
-    Deque<Boolean> ended = onResultEnded.get();
-    if (ended == null) {
-      ended = new ArrayDeque<>();
-      onResultEnded.set(ended);
+  public static void enterOnResult(CircuitBreaker circuitBreaker) {
+    Deque<OnResult> results = onResults.get();
+    if (results == null) {
+      results = new ArrayDeque<>();
+      onResults.set(results);
     }
-    ended.push(Boolean.FALSE);
+    results.push(new OnResult(circuitBreaker));
   }
 
-  public static boolean isOnResultActive() {
-    Deque<Boolean> ended = onResultEnded.get();
-    return ended != null && !ended.isEmpty();
+  public static boolean isOnResultActive(CircuitBreaker circuitBreaker) {
+    Deque<OnResult> results = onResults.get();
+    return results != null && !results.isEmpty() && results.peek().circuitBreaker == circuitBreaker;
   }
 
   public static boolean exitOnResult() {
-    Deque<Boolean> ended = onResultEnded.get();
-    if (ended == null) {
+    Deque<OnResult> results = onResults.get();
+    if (results == null) {
       return false;
     }
-    Boolean result = ended.poll();
-    if (ended.isEmpty()) {
-      onResultEnded.remove();
+    OnResult result = results.poll();
+    if (results.isEmpty()) {
+      onResults.remove();
     }
-    return Boolean.TRUE.equals(result);
+    return result != null && result.ended;
   }
 
   public static void end(
@@ -262,9 +262,10 @@ public class Resilience4jCircuitBreakerSpans {
 
   public static void endIfResultRecordedAsFailure(
       CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
-    Deque<Boolean> ended = onResultEnded.get();
-    if (ended != null
-        && !ended.isEmpty()
+    Deque<OnResult> results = onResults.get();
+    if (results != null
+        && !results.isEmpty()
+        && results.peek().circuitBreaker == circuitBreaker
         && throwable != null
         // ResultRecordedAsFailureException was added in newer Resilience4j versions and is not
         // present across the full supported range, so avoid a hard reference that would break
@@ -272,8 +273,7 @@ public class Resilience4jCircuitBreakerSpans {
         && "io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException"
             .equals(throwable.getClass().getName())) {
       end(circuitBreaker, "failure", null);
-      ended.pop();
-      ended.push(Boolean.TRUE);
+      results.peek().ended = true;
     }
   }
 
@@ -339,6 +339,15 @@ public class Resilience4jCircuitBreakerSpans {
     @Nullable private AttemptToken token;
 
     private Capture(CircuitBreaker circuitBreaker) {
+      this.circuitBreaker = circuitBreaker;
+    }
+  }
+
+  private static class OnResult {
+    private final CircuitBreaker circuitBreaker;
+    private boolean ended;
+
+    private OnResult(CircuitBreaker circuitBreaker) {
       this.circuitBreaker = circuitBreaker;
     }
   }
