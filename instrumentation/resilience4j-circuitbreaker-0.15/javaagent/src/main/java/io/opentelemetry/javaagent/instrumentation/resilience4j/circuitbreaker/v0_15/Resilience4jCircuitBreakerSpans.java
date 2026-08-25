@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbre
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
@@ -18,9 +17,9 @@ import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerSpans {
 
-  // Raw acquirePermission()/onSuccess()/onError() does not expose an attempt token, so only
-  // same-thread callbacks are correlated here. Decorated async APIs propagate the exact PendingSpan
-  // explicitly instead of polling an arbitrary per-breaker queue.
+  // Raw acquirePermission()/onSuccess()/onError() does not expose an attempt token, so arbitrary
+  // out-of-order raw callbacks cannot be correlated safely. Decorated APIs capture the exact
+  // acquisition token; raw same-thread callbacks are only best-effort for simple usage.
   private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
   private static final ThreadLocal<Deque<AttemptToken>> currentAcquisitions = new ThreadLocal<>();
   private static final ThreadLocal<AttemptToken> recentAcquisition = new ThreadLocal<>();
@@ -141,7 +140,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
 
     PendingSpan pendingSpan =
-        new PendingSpan(circuitBreaker, request, instrumenter().start(parentContext, request));
+        new PendingSpan(request, instrumenter().start(parentContext, request));
     Deque<AttemptToken> tokens = currentAcquisitions.get();
     AttemptToken token = tokens == null ? null : tokens.peek();
     if (token != null && token.circuitBreaker == circuitBreaker) {
@@ -223,7 +222,10 @@ public class Resilience4jCircuitBreakerSpans {
 
   public static void end(
       CircuitBreaker circuitBreaker, String outcome, @Nullable Throwable throwable) {
-    PendingSpan pendingSpan = pollPendingSpan(circuitBreaker);
+    PendingSpan pendingSpan = claimActiveCapture(circuitBreaker);
+    if (pendingSpan == null) {
+      pendingSpan = claimRecentAcquisition(circuitBreaker);
+    }
     if (pendingSpan != null) {
       pendingSpan.end(outcome, throwable);
     }
@@ -284,44 +286,18 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   @Nullable
-  private static PendingSpan pollPendingSpan(CircuitBreaker circuitBreaker) {
-    Deque<PendingSpan> spans = pendingSpans.get();
-    if (spans == null) {
+  private static PendingSpan claimActiveCapture(CircuitBreaker circuitBreaker) {
+    Deque<Capture> captureStack = captures.get();
+    if (captureStack == null) {
       return null;
     }
-    removeEnded(spans);
-    return pollLocalPendingSpan(circuitBreaker, spans);
-  }
-
-  @Nullable
-  private static PendingSpan pollLocalPendingSpan(
-      CircuitBreaker circuitBreaker, Deque<PendingSpan> spans) {
-    Iterator<PendingSpan> iterator = spans.iterator();
-    while (iterator.hasNext()) {
-      PendingSpan span = iterator.next();
-      if (span.ended) {
-        iterator.remove();
-      } else if (span.isFor(circuitBreaker)) {
-        iterator.remove();
-        if (spans.isEmpty()) {
-          pendingSpans.remove();
-        }
-        return span;
+    for (Capture capture : captureStack) {
+      AttemptToken token = capture.token;
+      if (token != null && token.circuitBreaker == circuitBreaker) {
+        return claim(token);
       }
     }
-    if (spans.isEmpty()) {
-      pendingSpans.remove();
-    }
     return null;
-  }
-
-  private static void removeEnded(Deque<PendingSpan> spans) {
-    while (!spans.isEmpty() && spans.peek().ended) {
-      spans.poll();
-    }
-    if (spans.isEmpty()) {
-      pendingSpans.remove();
-    }
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
@@ -350,14 +326,11 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   public static class PendingSpan {
-    private final WeakReference<CircuitBreaker> circuitBreaker;
     private final Resilience4jCircuitBreakerRequest request;
     private final Context context;
     private volatile boolean ended;
 
-    private PendingSpan(
-        CircuitBreaker circuitBreaker, Resilience4jCircuitBreakerRequest request, Context context) {
-      this.circuitBreaker = new WeakReference<>(circuitBreaker);
+    private PendingSpan(Resilience4jCircuitBreakerRequest request, Context context) {
       this.request = request;
       this.context = context;
     }
@@ -369,10 +342,6 @@ public class Resilience4jCircuitBreakerSpans {
       ended = true;
       clearRecentAcquisition(this);
       instrumenter().end(context, request, outcome, throwable);
-    }
-
-    boolean isFor(CircuitBreaker circuitBreaker) {
-      return this.circuitBreaker.get() == circuitBreaker;
     }
   }
 

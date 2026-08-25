@@ -20,6 +20,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.vavr.CheckedFunction1;
+import io.vavr.Function1;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -228,15 +230,51 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void decoratedSupplierDoesNotEndNestedRawAttempt() throws Exception {
-    CircuitBreaker outer = CircuitBreaker.ofDefaults("test-circuit-breaker");
-    CircuitBreaker nested = CircuitBreaker.ofDefaults("nested-circuit-breaker");
+  void rawOutOfOrderCallbacksOnlyRecordMostRecentAttempt() throws Exception {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    IllegalStateException exception = new IllegalStateException("boom");
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          // Raw callbacks have no attempt identity. We keep only the most recent same-thread
+          // acquisition instead of pretending that arbitrary out-of-order callbacks are safely
+          // correlated.
+          circuitBreaker.acquirePermission();
+          circuitBreaker.acquirePermission();
+          invokeOnSuccess(circuitBreaker);
+          invokeOnError(circuitBreaker, exception);
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience.policy.name"),
+                                experimental("test-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.outcome"),
+                                experimental("success")))));
+  }
+
+  @Test
+  void decoratedSupplierDoesNotEndNestedRawAttemptForSameBreaker() throws Exception {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     IllegalStateException exception = new IllegalStateException("boom");
     Supplier<String> decorated =
         CircuitBreaker.decorateSupplier(
-            outer,
+            circuitBreaker,
             () -> {
-              nested.acquirePermission();
+              circuitBreaker.acquirePermission();
               return "ok";
             });
 
@@ -245,7 +283,7 @@ class Resilience4jCircuitBreakerTest {
             "parent",
             () -> {
               String value = decorated.get();
-              invokeOnError(nested, exception);
+              invokeOnError(circuitBreaker, exception);
               return value;
             });
 
@@ -269,7 +307,7 @@ class Resilience4jCircuitBreakerTest {
                                 stringKey("resilience.circuit_breaker.outcome"),
                                 experimental("success"))),
                 span ->
-                    span.hasName("CircuitBreaker nested-circuit-breaker")
+                    span.hasName("CircuitBreaker test-circuit-breaker")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
@@ -277,7 +315,7 @@ class Resilience4jCircuitBreakerTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("resilience.policy.name"),
-                                experimental("nested-circuit-breaker")),
+                                experimental("test-circuit-breaker")),
                             equalTo(
                                 stringKey("resilience.circuit_breaker.state"),
                                 experimental("closed")),
@@ -314,6 +352,47 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(thrown).isSameAs(error);
     assertCircuitBreakerSpan("closed", "failure", error);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenVavrCheckedFunctionAdapterSucceeds() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    CheckedFunction1<String, String> checkedFunction =
+        CircuitBreaker.decorateCheckedFunction(circuitBreaker, value -> value);
+
+    CheckedFunction1<String, String> memoized = checkedFunction.memoized();
+    String result =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              try {
+                return memoized.apply("ok");
+              } catch (Throwable t) {
+                throw new IllegalStateException(t);
+              }
+            });
+
+    assertThat(result).isEqualTo("ok");
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenVavrFunctionAdapterFails() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    IllegalStateException exception = new IllegalStateException("boom");
+    CheckedFunction1<String, String> checkedFunction =
+        CircuitBreaker.decorateCheckedFunction(
+            circuitBreaker,
+            value -> {
+              throw exception;
+            });
+
+    Function1<String, String> recovered =
+        checkedFunction.recover(throwable -> value -> "recovered");
+    String result = testing.runWithSpan("parent", () -> recovered.apply("ok"));
+
+    assertThat(result).isEqualTo("recovered");
+    assertCircuitBreakerSpan("closed", "failure", exception);
   }
 
   @Test

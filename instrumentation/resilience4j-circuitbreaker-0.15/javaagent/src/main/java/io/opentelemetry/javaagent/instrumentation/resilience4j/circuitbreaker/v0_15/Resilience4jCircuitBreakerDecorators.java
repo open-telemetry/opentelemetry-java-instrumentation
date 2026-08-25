@@ -440,14 +440,10 @@ public class Resilience4jCircuitBreakerDecorators {
     if (result == null) {
       return null;
     }
-    String methodName = method.getName();
-    if ("unchecked".equals(methodName)) {
-      return wrapFunctionalAdapter(circuitBreaker, result);
-    } else if (("andThen".equals(methodName) || "compose".equals(methodName))
-        && isCheckedFunctionType(method.getReturnType())) {
+    if (isCheckedFunctionType(method.getReturnType()) || isCheckedFunction(result)) {
       return wrapChecked(circuitBreaker, result);
-    } else if (("andThen".equals(methodName) || "compose".equals(methodName))
-        && isFunctionalInterface(result)) {
+    }
+    if (isFunctionalInterface(result)) {
       return wrapFunctionalAdapter(circuitBreaker, result);
     }
     return result;
@@ -458,7 +454,8 @@ public class Resilience4jCircuitBreakerDecorators {
         || value instanceof Callable
         || value instanceof Runnable
         || value instanceof Function
-        || value instanceof Consumer;
+        || value instanceof Consumer
+        || implementsInterfaceWithPrefix(value.getClass(), "io.vavr.Function");
   }
 
   private static Object wrapFunctionalAdapterResult(
@@ -466,9 +463,10 @@ public class Resilience4jCircuitBreakerDecorators {
     if (result == null) {
       return null;
     }
-    String methodName = method.getName();
-    if (("andThen".equals(methodName) || "compose".equals(methodName))
-        && isFunctionalInterface(result)) {
+    if (isCheckedFunctionType(method.getReturnType()) || isCheckedFunction(result)) {
+      return wrapChecked(circuitBreaker, result);
+    }
+    if (isFunctionalInterface(result)) {
       return wrapFunctionalAdapter(circuitBreaker, result);
     }
     return result;
@@ -485,9 +483,29 @@ public class Resilience4jCircuitBreakerDecorators {
         new FunctionalAdapterInvocationHandler(circuitBreaker, delegate));
   }
 
+  private static boolean isCheckedFunction(Object value) {
+    return implementsInterfaceWithPrefix(
+            value.getClass(), "io.github.resilience4j.core.functions.Checked")
+        || implementsInterfaceWithPrefix(value.getClass(), "io.vavr.CheckedFunction");
+  }
+
   private static boolean isCheckedFunctionType(Class<?> type) {
     return type.isInterface()
-        && type.getName().startsWith("io.github.resilience4j.core.functions.Checked");
+        && (type.getName().startsWith("io.github.resilience4j.core.functions.Checked")
+            || type.getName().startsWith("io.vavr.CheckedFunction"));
+  }
+
+  // Avoid direct references to optional Vavr types while still recognizing generated adapter
+  // classes/proxies that implement these interfaces indirectly across supported versions.
+  private static boolean implementsInterfaceWithPrefix(Class<?> type, String prefix) {
+    for (Class<?> interfaceType : type.getInterfaces()) {
+      if (interfaceType.getName().startsWith(prefix)
+          || implementsInterfaceWithPrefix(interfaceType, prefix)) {
+        return true;
+      }
+    }
+    Class<?> superclass = type.getSuperclass();
+    return superclass != null && implementsInterfaceWithPrefix(superclass, prefix);
   }
 
   private static final class FunctionalAdapterInvocationHandler implements InvocationHandler {
