@@ -262,6 +262,34 @@ class MessagingConsumerMetricsTest {
                                                 IllegalStateException.class.getName())))));
   }
 
+  @Test
+  void clientOperationDurationOnlyDoesNotCountConsumedMessages() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener listener =
+        MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("test"));
+
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "kafka")
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "poll" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
+            .build();
+    Context context = listener.onStart(Context.root(), attributes, nanos(100));
+    listener.onEnd(context, Attributes.empty(), nanos(300));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .satisfiesExactly(
+              metric -> assertThat(metric).hasName("messaging.client.operation.duration"));
+    } else {
+      assertThat(metrics).isEmpty();
+    }
+  }
+
   @ParameterizedTest
   @MethodSource("nonReceiveOperations")
   void selectsStableMetricsByOperationType(String operationType, boolean recordsClientDuration) {

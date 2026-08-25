@@ -6,7 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -114,6 +119,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                           .hasNoParent()
                           .hasLinks(receiveRecordLink(producerSpan.get()))
                           .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
+      assertMessagingMetrics();
       return;
     }
 
@@ -148,6 +154,19 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasAttributesSatisfyingExactly(
                             processAttributes("10", greeting, testHeaders, false)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))));
+    assertMessagingMetrics();
+  }
+
+  private static void assertMessagingMetrics() {
+    String instrumentationName = "io.opentelemetry.kafka-clients-0.11";
+    String group = testLatestDeps() ? "test" : null;
+    assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
+    // every test task that runs this class enables receive telemetry, so the receive operation
+    // always owns the consumed messages count here; KafkaClientSuppressReceiveSpansTest covers the
+    // case where it is disabled and the process operation owns the count instead
+    assertReceiveMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, 1, null);
+    assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, null);
+    assertTotalConsumedMessages(testing, instrumentationName, 1);
   }
 
   @Test

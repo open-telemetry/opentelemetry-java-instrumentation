@@ -10,6 +10,10 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoStableMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -23,8 +27,10 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -34,6 +40,7 @@ import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
@@ -44,6 +51,7 @@ import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,6 +67,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractJms3Test {
   private static final Logger logger = LoggerFactory.getLogger(AbstractJms3Test.class);
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-3.0";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -191,6 +201,141 @@ abstract class AbstractJms3Test {
     assertThat(message).isNull();
 
     testing.waitForTraces(0);
+  }
+
+  @Test
+  void shouldRecordSendAndProcessMetrics() throws Exception {
+
+    // given
+    Destination destination = session.createQueue("metricsListenerQueue");
+    TextMessage sentMessage = session.createTextMessage("a message");
+
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer);
+
+    CompletableFuture<TextMessage> receivedMessageFuture = new CompletableFuture<>();
+    consumer.setMessageListener(message -> receivedMessageFuture.complete((TextMessage) message));
+
+    // when
+    producer.send(sentMessage);
+
+    // then
+    assertThat(receivedMessageFuture.get(10, SECONDS).getText()).isEqualTo("a message");
+
+    if (!emitStableMessagingSemconv()) {
+      await().untilAsserted(() -> assertThat(testing.spans()).hasSize(2));
+      assertNoStableMetrics(testing, INSTRUMENTATION_NAME);
+      return;
+    }
+
+    Attributes sendAttributes = messagingMetricAttributes("send", "metricsListenerQueue");
+    Attributes processAttributes = messagingMetricAttributes("process", "metricsListenerQueue");
+    assertHistogram(
+        testing,
+        INSTRUMENTATION_NAME,
+        "messaging.client.operation.duration",
+        sendAttributes.toBuilder().put(MESSAGING_OPERATION_TYPE, "send").build());
+    assertCounter(
+        testing, INSTRUMENTATION_NAME, "messaging.client.sent.messages", 1, sendAttributes);
+    assertHistogram(testing, INSTRUMENTATION_NAME, "messaging.process.duration", processAttributes);
+    // A pushed message has no separate receive operation, so process owns the consumed count.
+    assertCounter(
+        testing, INSTRUMENTATION_NAME, "messaging.client.consumed.messages", 1, processAttributes);
+  }
+
+  @Test
+  void shouldRecordReceiveMetrics() throws Exception {
+
+    // given
+    Destination destination = session.createQueue("metricsReceiveQueue");
+    TextMessage sentMessage = session.createTextMessage("a message");
+
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer);
+
+    // when
+    producer.send(sentMessage);
+    TextMessage receivedMessage = (TextMessage) consumer.receive();
+
+    // then
+    assertThat(receivedMessage.getText()).isEqualTo("a message");
+
+    if (!emitStableMessagingSemconv()) {
+      await().untilAsserted(() -> assertThat(testing.spans()).hasSize(2));
+      assertNoStableMetrics(testing, INSTRUMENTATION_NAME);
+      return;
+    }
+
+    Attributes receiveAttributes = messagingMetricAttributes("receive", "metricsReceiveQueue");
+    assertHistogram(
+        testing,
+        INSTRUMENTATION_NAME,
+        "messaging.client.operation.duration",
+        messagingMetricAttributes("send", "metricsReceiveQueue").toBuilder()
+            .put(MESSAGING_OPERATION_TYPE, "send")
+            .build(),
+        receiveAttributes.toBuilder().put(MESSAGING_OPERATION_TYPE, "receive").build());
+    assertCounter(
+        testing, INSTRUMENTATION_NAME, "messaging.client.consumed.messages", 1, receiveAttributes);
+    assertNoMetric(testing, INSTRUMENTATION_NAME, "messaging.process.duration");
+  }
+
+  @Test
+  void shouldRecordConsumedMessagesOnceWhenReceivedMessageIsDispatchedToListener()
+      throws Exception {
+
+    // given
+    Destination destination = session.createQueue("metricsReceiveAndDispatchQueue");
+    TextMessage sentMessage = session.createTextMessage("a message");
+
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer);
+
+    // when
+    producer.send(sentMessage);
+    // frameworks that poll for messages themselves dispatch them to a message listener afterwards
+    Message receivedMessage = consumer.receive();
+    MessageListener listener = message -> {};
+    listener.onMessage(receivedMessage);
+
+    // then
+    assertThat(((TextMessage) receivedMessage).getText()).isEqualTo("a message");
+
+    if (!emitStableMessagingSemconv()) {
+      await().untilAsserted(() -> assertThat(testing.spans()).hasSize(3));
+      assertNoStableMetrics(testing, INSTRUMENTATION_NAME);
+      return;
+    }
+
+    assertHistogram(
+        testing,
+        INSTRUMENTATION_NAME,
+        "messaging.process.duration",
+        messagingMetricAttributes("process", "metricsReceiveAndDispatchQueue"));
+    // the receive operation already counted this delivery, so the process operation must not count
+    // it again
+    assertCounter(
+        testing,
+        INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        1,
+        messagingMetricAttributes("receive", "metricsReceiveAndDispatchQueue"));
+  }
+
+  private static Attributes messagingMetricAttributes(String operationName, String destination) {
+    return Attributes.of(
+        MESSAGING_OPERATION_NAME,
+        operationName,
+        MESSAGING_SYSTEM,
+        "jms",
+        MESSAGING_DESTINATION_NAME,
+        destination);
   }
 
   @ParameterizedTest
