@@ -58,28 +58,31 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
 
   @Test
   void configuredNodeListIsTheWholeTarget() throws Exception {
-    OpenSearchClient nodeListClient =
-        new OpenSearchClient(buildTransport(configuredHost(), hostThatIsDown()));
+    try (OpenSearchTransport transport = buildTransport(configuredHost(), hostThatIsDown())) {
+      OpenSearchClient nodeListClient = new OpenSearchClient(transport);
 
-    HealthResponse healthResponse = nodeListClient.cluster().health();
-    assertThat(healthResponse).isNotNull();
+      HealthResponse healthResponse = nodeListClient.cluster().health();
+      assertThat(healthResponse).isNotNull();
 
-    assertNodeListTarget();
+      assertNodeListTarget();
+    }
   }
 
   @Test
   void targetDoesNotFollowNodeChangesBeforeTransportConstruction() throws Exception {
     RestClient restClient = buildRestClient(configuredHost());
     restClient.setNodes(asList(new Node(configuredHost()), new Node(hostThatIsDown())));
-    OpenSearchClient client =
-        new OpenSearchClient(new RestClientTransport(restClient, new JacksonJsonpMapper()));
+    try (OpenSearchTransport transport =
+        new RestClientTransport(restClient, new JacksonJsonpMapper())) {
+      OpenSearchClient client = new OpenSearchClient(transport);
 
-    HealthResponse healthResponse = client.cluster().health();
-    assertThat(healthResponse).isNotNull();
+      HealthResponse healthResponse = client.cluster().health();
+      assertThat(healthResponse).isNotNull();
 
-    getTesting()
-        .waitAndAssertTraces(
-            trace -> assertThat(trace.getSpan(0)).hasAttributesSatisfying(withServer()));
+      getTesting()
+          .waitAndAssertTraces(
+              trace -> assertThat(trace.getSpan(0)).hasAttributesSatisfying(withServer()));
+    }
   }
 
   private HttpHost configuredHost() {

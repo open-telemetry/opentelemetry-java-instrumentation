@@ -66,13 +66,14 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
 
   @Test
   void configuredNodeListIsTheWholeTarget() throws Exception {
-    OpenSearchClient nodeListClient =
-        new OpenSearchClient(buildTransport(configuredHost(), hostThatIsDown()));
+    try (OpenSearchTransport transport = buildTransport(configuredHost(), hostThatIsDown())) {
+      OpenSearchClient nodeListClient = new OpenSearchClient(transport);
 
-    HealthResponse healthResponse = nodeListClient.cluster().health();
-    assertThat(healthResponse).isNotNull();
+      HealthResponse healthResponse = nodeListClient.cluster().health();
+      assertThat(healthResponse).isNotNull();
 
-    assertNodeListTarget();
+      assertNodeListTarget();
+    }
   }
 
   private HttpHost configuredHost() {
