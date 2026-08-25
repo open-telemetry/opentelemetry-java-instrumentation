@@ -38,11 +38,6 @@ public class GeodeServerTargets {
     builder(poolFactory).addLocator(host, port);
   }
 
-  /** Records the server group {@code poolFactory} is being configured with. */
-  public static void setServerGroup(PoolFactory poolFactory, @Nullable String serverGroup) {
-    builder(poolFactory).setServerGroup(serverGroup);
-  }
-
   /** Forgets the configuration {@code poolFactory} collected so far. */
   public static void reset(PoolFactory poolFactory) {
     builder(poolFactory).reset();
@@ -52,7 +47,6 @@ public class GeodeServerTargets {
   public static void copyConfiguration(PoolFactory poolFactory, Pool sourcePool) {
     GeodeServerTarget.Builder builder = builder(poolFactory);
     builder.reset();
-    builder.setServerGroup(sourcePool.getServerGroup());
     for (InetSocketAddress server : sourcePool.getServers()) {
       builder.addServer(server.getHostString(), server.getPort());
     }

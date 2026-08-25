@@ -151,19 +151,7 @@ class PutGetTest {
 
     testRegion.putAll(emptyMap());
 
-    String target;
-    if (serverCount == 0) {
-      target = geodeServer.getHost() + ":1";
-    } else {
-      target =
-          geodeServer.getHost()
-              + ":"
-              + geodeServer.getMappedPort(GEODE_PORT)
-              + ","
-              + geodeServer.getHost()
-              + ":"
-              + (geodeServer.getMappedPort(GEODE_PORT) + 1);
-    }
+    String target = serverCount == 0 ? geodeServer.getHost() : null;
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -182,13 +170,22 @@ class PutGetTest {
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? target : null),
                             equalTo(SERVER_PORT, null))));
 
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.geode-1.4",
-        DB_SYSTEM_NAME,
-        DB_COLLECTION_NAME,
-        DB_OPERATION_NAME,
-        SERVER_ADDRESS);
+    if (serverCount == 0) {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.geode-1.4",
+          DB_SYSTEM_NAME,
+          DB_COLLECTION_NAME,
+          DB_OPERATION_NAME,
+          SERVER_ADDRESS);
+    } else {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.geode-1.4",
+          DB_SYSTEM_NAME,
+          DB_COLLECTION_NAME,
+          DB_OPERATION_NAME);
+    }
   }
 
   @ParameterizedTest

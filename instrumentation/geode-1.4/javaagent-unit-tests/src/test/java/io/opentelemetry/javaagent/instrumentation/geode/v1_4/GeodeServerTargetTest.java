@@ -22,22 +22,19 @@ class GeodeServerTargetTest {
   }
 
   @Test
-  void severalServersAreSortedAndDeduplicated() {
+  void severalServersDoNotFormOneAddress() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addServer("two.example", 40405);
     builder.addServer("one.example", 40404);
-    builder.addServer("two.example", 40405);
 
-    GeodeServerTarget target = builder.build();
-    assertThat(target.getAddress()).isEqualTo("one.example:40404,two.example:40405");
-    assertThat(target.getPort()).isNull();
+    assertThat(builder.build()).isNull();
   }
 
   @Test
-  void explicitServerIsPreferredOverTheServerGroup() {
+  void theSameServerAddedTwiceIsStillOneServer() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addServer("cache.example", 40404);
-    builder.setServerGroup("orders");
+    builder.addServer("cache.example", 40404);
 
     GeodeServerTarget target = builder.build();
     assertThat(target.getAddress()).isEqualTo("cache.example");
@@ -45,60 +42,57 @@ class GeodeServerTargetTest {
   }
 
   @Test
-  void serverGroupIsTrimmed() {
-    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
-    builder.setServerGroup("  orders  ");
-
-    assertThat(builder.build().getAddress()).isEqualTo("orders");
-  }
-
-  @Test
-  void blankServerGroupNamesNothing() {
-    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
-    builder.setServerGroup("   ");
-    builder.addServer("cache.example", 40404);
-
-    assertThat(builder.build().getAddress()).isEqualTo("cache.example");
-  }
-
-  @Test
-  void poolWithoutServersOrAGroupHasNoTarget() {
+  void poolWithoutServersOrLocatorsHasNoTarget() {
     assertThat(GeodeServerTarget.builder().build()).isNull();
   }
 
   @Test
-  void locatorKeepsItsPortInTheAddress() {
+  void locatorIsNamedWithoutItsPort() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addLocator("locator.example", 10334);
 
     GeodeServerTarget target = builder.build();
-    assertThat(target.getAddress()).isEqualTo("locator.example:10334");
+    assertThat(target.getAddress()).isEqualTo("locator.example");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void locatorsAreSortedDeduplicatedAndIndependentlyScopedByTheirGroup() {
+  void severalLocatorsDoNotFormOneAddress() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addLocator("two.example", 10335);
     builder.addLocator("one.example", 10334);
-    builder.addLocator("two.example", 10335);
-    builder.setServerGroup("  orders  ");
 
-    GeodeServerTarget target = builder.build();
-    assertThat(target.getAddress()).isEqualTo("one.example:10334/orders,two.example:10335/orders");
-    assertThat(target.getPort()).isNull();
+    assertThat(builder.build()).isNull();
   }
 
   @Test
-  void explicitServersArePreferredOverLocatorDiscovery() {
+  void theSameLocatorAddedTwiceIsStillOneLocator() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addLocator("locator.example", 10334);
-    builder.setServerGroup("orders");
+    builder.addLocator("locator.example", 10334);
+
+    assertThat(builder.build().getAddress()).isEqualTo("locator.example");
+  }
+
+  @Test
+  void explicitServerIsPreferredOverLocatorDiscovery() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addLocator("locator.example", 10334);
     builder.addServer("cache.example", 40404);
 
     GeodeServerTarget target = builder.build();
     assertThat(target.getAddress()).isEqualTo("cache.example");
     assertThat(target.getPort()).isEqualTo(40404);
+  }
+
+  @Test
+  void severalServersHideTheLocatorsAsWell() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addLocator("locator.example", 10334);
+    builder.addServer("one.example", 40404);
+    builder.addServer("two.example", 40405);
+
+    assertThat(builder.build()).isNull();
   }
 
   @Test
@@ -120,25 +114,23 @@ class GeodeServerTargetTest {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addLocator("one.example", 10334);
     builder.addLocator("  ", 10335);
-    builder.setServerGroup("orders");
 
     assertThat(builder.build()).isNull();
   }
 
   @Test
   void ipv6ServersKeepTheirAddress() {
-    GeodeServerTarget.Builder single = GeodeServerTarget.builder();
-    single.addServer("2001:db8::1", 40404);
+    GeodeServerTarget.Builder bare = GeodeServerTarget.builder();
+    bare.addServer("2001:db8::1", 40404);
 
-    assertThat(single.build().getAddress()).isEqualTo("2001:db8::1");
-    assertThat(single.build().getPort()).isEqualTo(40404);
+    assertThat(bare.build().getAddress()).isEqualTo("2001:db8::1");
+    assertThat(bare.build().getPort()).isEqualTo(40404);
 
-    GeodeServerTarget.Builder several = GeodeServerTarget.builder();
-    several.addServer("[2001:db8::1]", 40404);
-    several.addServer("two.example", 40405);
+    GeodeServerTarget.Builder bracketed = GeodeServerTarget.builder();
+    bracketed.addServer("[2001:db8::1]", 40404);
 
-    assertThat(several.build().getAddress()).isEqualTo("[2001:db8::1]:40404,two.example:40405");
-    assertThat(several.build().getPort()).isNull();
+    assertThat(bracketed.build().getAddress()).isEqualTo("2001:db8::1");
+    assertThat(bracketed.build().getPort()).isEqualTo(40404);
   }
 
   @Test
@@ -154,7 +146,6 @@ class GeodeServerTargetTest {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addServer("one.example", 40404);
     builder.addLocator("locator.example", 10334);
-    builder.setServerGroup("orders");
     builder.reset();
 
     assertThat(builder.build()).isNull();
@@ -171,10 +162,9 @@ class GeodeServerTargetTest {
     GeodeServerTarget target = builder.build();
 
     builder.addServer("two.example", 40405);
-    builder.setServerGroup("orders");
 
     assertThat(target.getAddress()).isEqualTo("one.example");
     assertThat(target.getPort()).isEqualTo(40404);
-    assertThat(builder.build().getAddress()).isEqualTo("one.example:40404,two.example:40405");
+    assertThat(builder.build()).isNull();
   }
 }

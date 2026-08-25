@@ -11,18 +11,17 @@ import java.util.TreeMap;
 import javax.annotation.Nullable;
 
 /**
- * The target a Geode client pool was configured with, rendered once while the pool is being
- * created.
+ * The target a Geode client pool was configured with, read once while the pool is being created.
  *
- * <p>A pool configured with an explicit cache server keeps that server's host and its port. A pool
- * configured with several carries all of them in the address, as {@code host:port,host:port}, and
- * has no port of its own. Explicit servers take precedence over locator discovery and its server
- * group.
+ * <p>A pool configured with one explicit cache server keeps that server's host and its port. A pool
+ * configured with one locator is named by that locator's host, which carries no port of its own,
+ * because a locator says where to look for cache servers rather than which one answers. Explicit
+ * servers take precedence over locator discovery.
  *
- * <p>A locator-backed pool carries each configured locator in the address. When it selects a server
- * group, every comma-separated locator is independently scoped as {@code host:port/group}.
+ * <p>Several servers, or several locators, do not form one server address, so a pool configured
+ * that way has no target and the operations it carries name no server.
  *
- * <p>The address is rendered while the pool is being created, so a pool keeps reporting what it was
+ * <p>The target is read while the pool is being created, so a pool keeps reporting what it was
  * pointed at rather than the servers it later discovers.
  */
 public class GeodeServerTarget {
@@ -44,22 +43,21 @@ public class GeodeServerTarget {
   }
 
   /**
-   * The port of a single explicitly configured cache server, or {@code null} when the target names
-   * locator discovery, a server group, or several servers.
+   * The port of the single explicitly configured cache server, or {@code null} when the target
+   * names a locator.
    */
   @Nullable
   public Integer getPort() {
     return port;
   }
 
-  /** Collects the servers, locators, and server group a pool is being configured with. */
+  /** Collects the servers and locators a pool is being configured with. */
   public static class Builder {
 
     private static final int MAX_PORT = 65535;
 
     private final SortedMap<String, Endpoint> servers = new TreeMap<>();
     private final SortedMap<String, Endpoint> locators = new TreeMap<>();
-    @Nullable private String serverGroup;
     private boolean serverConfigured;
     private boolean locatorConfigured;
     private boolean serversComplete = true;
@@ -89,15 +87,10 @@ public class GeodeServerTarget {
       locatorsComplete &= add(locators, host, port);
     }
 
-    public synchronized void setServerGroup(@Nullable String serverGroup) {
-      this.serverGroup = serverGroup;
-    }
-
     /** Forgets everything configured so far, as {@code PoolFactory.reset()} does. */
     public synchronized void reset() {
       servers.clear();
       locators.clear();
-      serverGroup = null;
       serverConfigured = false;
       locatorConfigured = false;
       serversComplete = true;
@@ -105,49 +98,35 @@ public class GeodeServerTarget {
     }
 
     /**
-     * The target configured so far, or {@code null} when it names no explicit server, locator, or
-     * server group.
+     * The target configured so far, or {@code null} when it names neither one cache server nor one
+     * locator.
      */
     @Nullable
     public synchronized GeodeServerTarget build() {
       if (serverConfigured) {
-        return buildServers();
+        return buildServer();
       }
-      String group = serverGroup == null ? "" : serverGroup.trim();
       if (locatorConfigured) {
-        return buildLocators(group);
+        return buildLocator();
       }
-      return group.isEmpty() ? null : new GeodeServerTarget(group, null);
+      return null;
     }
 
     @Nullable
-    private GeodeServerTarget buildServers() {
-      if (!serversComplete || servers.isEmpty()) {
+    private GeodeServerTarget buildServer() {
+      if (!serversComplete || servers.size() != 1) {
         return null;
       }
-      if (servers.size() == 1) {
-        Endpoint only = servers.get(servers.firstKey());
-        return new GeodeServerTarget(only.host, only.port);
-      }
-      return new GeodeServerTarget(String.join(",", servers.keySet()), null);
+      Endpoint only = servers.get(servers.firstKey());
+      return new GeodeServerTarget(only.host, only.port);
     }
 
     @Nullable
-    private GeodeServerTarget buildLocators(String group) {
-      if (!locatorsComplete || locators.isEmpty()) {
+    private GeodeServerTarget buildLocator() {
+      if (!locatorsComplete || locators.size() != 1) {
         return null;
       }
-      StringBuilder address = new StringBuilder();
-      for (String locator : locators.keySet()) {
-        if (address.length() > 0) {
-          address.append(',');
-        }
-        address.append(locator);
-        if (!group.isEmpty()) {
-          address.append('/').append(group);
-        }
-      }
-      return new GeodeServerTarget(address.toString(), null);
+      return new GeodeServerTarget(locators.get(locators.firstKey()).host, null);
     }
 
     private static boolean add(Map<String, Endpoint> endpoints, @Nullable String host, int port) {
@@ -156,27 +135,30 @@ public class GeodeServerTarget {
         return false;
       }
       Endpoint endpoint = new Endpoint(cleaned, port);
-      endpoints.put(endpoint.render(), endpoint);
+      endpoints.put(endpoint.key(), endpoint);
       return true;
     }
 
-    private static String render(String host, int port) {
-      StringBuilder address = new StringBuilder();
+    /**
+     * The key that tells two configured endpoints apart, so the same one added twice counts once.
+     */
+    private static String key(String host, int port) {
+      StringBuilder key = new StringBuilder();
       // a literal ipv6 address is bracketed so that the port stays unambiguous
       if (host.indexOf(':') >= 0) {
-        address.append('[').append(host).append(']');
+        key.append('[').append(host).append(']');
       } else {
-        address.append(host);
+        key.append(host);
       }
-      address.append(':').append(port);
-      return address.toString();
+      key.append(':').append(port);
+      return key.toString();
     }
 
     /**
-     * The bare host of a configured server, or {@code null} when it names none.
+     * The bare host of a configured endpoint, or {@code null} when it names none.
      *
-     * <p>A lone host is reported unbracketed, where brackets would only get in the way of matching
-     * it against a configured peer.
+     * <p>A host is reported unbracketed, where brackets would only get in the way of matching it
+     * against a configured peer.
      */
     @Nullable
     private static String clean(@Nullable String host) {
@@ -201,8 +183,8 @@ public class GeodeServerTarget {
       this.port = port;
     }
 
-    private String render() {
-      return Builder.render(host, port);
+    private String key() {
+      return Builder.key(host, port);
     }
   }
 }

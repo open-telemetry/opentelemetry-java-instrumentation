@@ -98,7 +98,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
       return GeodeServerAddress.get(request.getRegion()).port();
     }
     GeodeServerTarget target = request.getServerTarget();
-    // a target naming a server group or several servers carries no port of its own
+    // a target naming a locator carries no port of its own
     return target == null ? null : target.getPort();
   }
 }
