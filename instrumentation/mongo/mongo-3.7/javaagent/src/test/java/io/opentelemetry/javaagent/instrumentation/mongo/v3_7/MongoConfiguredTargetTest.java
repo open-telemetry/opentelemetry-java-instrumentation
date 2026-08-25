@@ -77,7 +77,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   private static Method srvHostSetter() {
     try {
       return ClusterSettings.Builder.class.getMethod("srvHost", String.class);
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }

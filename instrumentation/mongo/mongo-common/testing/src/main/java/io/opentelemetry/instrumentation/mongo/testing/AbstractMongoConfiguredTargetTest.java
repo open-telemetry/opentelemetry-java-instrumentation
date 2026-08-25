@@ -285,7 +285,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
   private static Class<?> requestContextType() {
     try {
       return Class.forName("com.mongodb.RequestContext");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       // a driver without this class still has the constructors that do not take one
       return Void.class;
     }

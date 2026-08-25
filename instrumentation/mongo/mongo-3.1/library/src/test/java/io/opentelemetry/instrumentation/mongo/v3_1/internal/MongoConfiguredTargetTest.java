@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 
 class MongoConfiguredTargetTest {
 
-  private static final ServerAddress selectedServer = new ServerAddress("db2.example", 27018);
+  private static final ServerAddress SELECTED_SERVER = new ServerAddress("db2.example", 27018);
 
   private final MongoDbAttributesGetter getter =
       new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
@@ -32,7 +32,7 @@ class MongoConfiguredTargetTest {
     ClusterId clusterId = new ClusterId();
     MongoClusterTargets.register(
         clusterId,
-        MongoServerTarget.seeds(asList(new ServerAddress("db1.example", 27017), selectedServer)));
+        MongoServerTarget.seeds(asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
     assertThat(getter.getServerAddress(event)).isEqualTo("db2.example");
@@ -75,7 +75,7 @@ class MongoConfiguredTargetTest {
     ClusterId clusterId =
         configuredCluster(
             MongoServerTarget.seeds(
-                asList(new ServerAddress("db1.example", 27017), selectedServer)));
+                asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
     assertThat(getter.getConnectionString(event)).isEqualTo("mongodb://db2.example:27018");
@@ -86,7 +86,7 @@ class MongoConfiguredTargetTest {
     ClusterId clusterId = new ClusterId();
     MongoClusterTargets.register(
         clusterId,
-        MongoServerTarget.seeds(asList(new ServerAddress("db1.example", 27017), selectedServer)));
+        MongoServerTarget.seeds(asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
     CommandStartedEvent event = commandStartedEvent(clusterId, null, "listDatabases");
 
     String spanName = new MongoSpanNameExtractor(getter).extract(event);
@@ -105,7 +105,7 @@ class MongoConfiguredTargetTest {
   private static CommandStartedEvent commandStartedEvent(
       ClusterId clusterId, String databaseName, String commandName) {
     ConnectionDescription connectionDescription =
-        new ConnectionDescription(new ServerId(clusterId, selectedServer));
+        new ConnectionDescription(new ServerId(clusterId, SELECTED_SERVER));
     return new CommandStartedEvent(
         0,
         connectionDescription,
