@@ -12,6 +12,7 @@ import static java.util.logging.Level.WARNING;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongCounterBuilder;
@@ -20,6 +21,7 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
@@ -307,6 +309,15 @@ class MetricRegistrar implements AutoCloseable {
       @Override
       public DoubleGaugeBuilder gaugeBuilder(String s) {
         return getMeter(s).gaugeBuilder(s);
+      }
+
+      @Override
+      public BatchCallback batchCallback(
+          Runnable callback,
+          ObservableMeasurement observableMeasurement,
+          ObservableMeasurement... additionalMeasurements) {
+        // delegate to the underlying meter, filtered metrics should be no-op
+        return meter.batchCallback(callback, observableMeasurement, additionalMeasurements);
       }
     };
   }
