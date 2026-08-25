@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
@@ -87,8 +86,11 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This Object provider, @Advice.Argument(0) @Nullable String masterName) {
-      JedisSingletons.setProviderTarget(provider, RedisServerTarget.ofLogicalName(masterName));
+        @Advice.This Object provider,
+        @Advice.Argument(0) @Nullable String masterName,
+        @Advice.AllArguments Object[] arguments) {
+      JedisSingletons.setProviderTarget(
+          provider, JedisServerTargets.ofSentinelsFromArguments(masterName, arguments));
     }
   }
 

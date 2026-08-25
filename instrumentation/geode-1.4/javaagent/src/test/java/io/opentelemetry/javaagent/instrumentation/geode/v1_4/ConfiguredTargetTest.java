@@ -96,7 +96,7 @@ class ConfiguredTargetTest {
   }
 
   @Test
-  void configuredServerGroupIsPreferred() {
+  void explicitlyConfiguredServerIsPreferredOverItsGroup() {
     Region<Object, Object> region =
         createRegion(
             "server-group",
@@ -107,23 +107,41 @@ class ConfiguredTargetTest {
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, "orders", null));
+    testing.waitAndAssertTraces(operation(region, "localhost", 40404L));
   }
 
   @Test
-  void locatorsAreNotATarget() {
+  void configuredLocatorIsReportedAsADiscoveryTarget() {
     Region<Object, Object> region =
         createRegion("locators", poolFactory -> poolFactory.addLocator("localhost", 10334));
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, null, null));
+    testing.waitAndAssertTraces(operation(region, "localhost:10334", null));
     assertDurationMetric(
         testing,
         "io.opentelemetry.geode-1.4",
         DB_SYSTEM_NAME,
         DB_COLLECTION_NAME,
-        DB_OPERATION_NAME);
+        DB_OPERATION_NAME,
+        SERVER_ADDRESS);
+  }
+
+  @Test
+  void configuredLocatorsAreIndependentlyScopedByTheirGroup() {
+    Region<Object, Object> region =
+        createRegion(
+            "locator-group",
+            poolFactory -> {
+              poolFactory.addLocator("127.0.0.2", 10335);
+              poolFactory.addLocator("127.0.0.1", 10334);
+              poolFactory.setServerGroup("orders");
+            });
+
+    region.putAll(emptyMap());
+
+    testing.waitAndAssertTraces(
+        operation(region, "127.0.0.1:10334/orders,127.0.0.2:10335/orders", null));
   }
 
   @Test
@@ -143,7 +161,7 @@ class ConfiguredTargetTest {
 
     testing.waitAndAssertTraces(
         operation(single, "::1", 40404L),
-        operation(several, "[2001:db8::1]:40404,127.0.0.2:40405", null));
+        operation(several, "127.0.0.2:40405,[2001:db8::1]:40404", null));
   }
 
   @Test

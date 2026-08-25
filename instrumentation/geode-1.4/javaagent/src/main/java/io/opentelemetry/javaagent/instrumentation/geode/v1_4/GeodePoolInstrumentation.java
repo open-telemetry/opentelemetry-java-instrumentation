@@ -46,6 +46,9 @@ public final class GeodePoolInstrumentation implements TypeInstrumentation {
         named("addServer").and(takesArguments(2)).and(takesArgument(0, String.class)),
         getClass().getName() + "$AddServerAdvice");
     transformer.applyAdviceToMethod(
+        named("addLocator").and(takesArguments(2)).and(takesArgument(0, String.class)),
+        getClass().getName() + "$AddLocatorAdvice");
+    transformer.applyAdviceToMethod(
         named("setServerGroup").and(takesArguments(1)).and(takesArgument(0, String.class)),
         getClass().getName() + "$SetServerGroupAdvice");
     transformer.applyAdviceToMethod(
@@ -69,6 +72,18 @@ public final class GeodePoolInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) @Nullable String host,
         @Advice.Argument(1) int port) {
       GeodeServerTargets.addServer(poolFactory, host, port);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AddLocatorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void captureConfiguredLocator(
+        @Advice.This PoolFactory poolFactory,
+        @Advice.Argument(0) @Nullable String host,
+        @Advice.Argument(1) int port) {
+      GeodeServerTargets.addLocator(poolFactory, host, port);
     }
   }
 

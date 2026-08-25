@@ -86,7 +86,8 @@ class VertxRedisClient403Test {
               assertThat(spans).isNotEmpty();
               for (SpanData span : spans) {
                 assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                    .isEqualTo(emitStableDatabaseSemconv() ? "themaster" : host);
+                    .isEqualTo(
+                        emitStableDatabaseSemconv() ? host + ":" + port + "/themaster" : host);
                 assertThat(span.getAttributes().get(SERVER_PORT))
                     .isEqualTo(emitStableDatabaseSemconv() ? null : Long.valueOf(port));
                 assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);

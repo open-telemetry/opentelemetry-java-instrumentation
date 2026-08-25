@@ -30,5 +30,38 @@ public final class JedisServerTargets {
     return RedisServerTarget.ofEndpoints(endpoints);
   }
 
+  /** The target of a Sentinel backed client, scoped by its sentinels and master name. */
+  @Nullable
+  public static RedisServerTarget ofSentinels(
+      @Nullable String masterName, @Nullable Collection<?> sentinels) {
+    List<String> endpoints = null;
+    if (sentinels != null) {
+      endpoints = new ArrayList<>(sentinels.size());
+      for (Object sentinel : sentinels) {
+        if (sentinel != null) {
+          endpoints.add(sentinel.toString());
+        }
+      }
+    }
+    return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, masterName);
+  }
+
+  /**
+   * Finds the Sentinel collection in constructor arguments whose position varies between Jedis
+   * releases.
+   */
+  @Nullable
+  public static RedisServerTarget ofSentinelsFromArguments(
+      @Nullable String masterName, @Nullable Object[] arguments) {
+    if (arguments != null) {
+      for (Object argument : arguments) {
+        if (argument instanceof Collection) {
+          return ofSentinels(masterName, (Collection<?>) argument);
+        }
+      }
+    }
+    return RedisServerTarget.ofEndpointsAndLogicalName(null, masterName);
+  }
+
   private JedisServerTargets() {}
 }

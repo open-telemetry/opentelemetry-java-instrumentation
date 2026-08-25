@@ -59,6 +59,57 @@ class RedisServerTargetTest {
   }
 
   @Test
+  void discoveryEndpointsAreSortedDeduplicatedAndIndependentlyScoped() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpointsAndLogicalName(
+            asList("redis://sentinel2:26380", "redis://sentinel1:26379", "redis://sentinel2:26380"),
+            "  mymaster  ");
+
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster,sentinel2:26380/mymaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void singleDiscoveryEndpointKeepsItsPortInTheAddress() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpointsAndLogicalName(
+            singletonList("redis://sentinel1:26379"), "mymaster");
+
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void discoveryTargetSanitizesAndBracketsEndpoints() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpointsAndLogicalName(
+            asList("redis://user:password@[::2]:26380/2", "redis://[::1]:26379?timeout=5s"),
+            "mymaster");
+
+    assertThat(target.getAddress()).isEqualTo("[::1]:26379/mymaster,[::2]:26380/mymaster");
+  }
+
+  @Test
+  void discoveryTargetFallsBackToSortedEndpoints() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpointsAndLogicalName(
+            asList("sentinel2:26380", "sentinel1:26379"), " ");
+
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void discoveryTargetFallsBackToLogicalName() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpointsAndLogicalName(
+            asList("", "redis://", "://sentinel"), "mymaster");
+
+    assertThat(target.getAddress()).isEqualTo("mymaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void endpointListCarriesEveryEndpointAndNoPort() {
     RedisServerTarget target =
         RedisServerTarget.ofEndpoints(asList("node1:6379", "node2:6380", "node3:6381"));

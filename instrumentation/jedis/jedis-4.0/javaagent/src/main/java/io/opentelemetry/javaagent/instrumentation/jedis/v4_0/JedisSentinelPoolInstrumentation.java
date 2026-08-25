@@ -9,9 +9,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Set;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -19,8 +19,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.util.Pool;
 
 /**
- * Captures the master a Sentinel backed pool was configured with. The pool was reintroduced in
- * jedis 4.0.0, so on 4.0.0-beta1 this matches nothing.
+ * Captures the sentinels and master a Sentinel backed pool was configured with. The pool was
+ * reintroduced in jedis 4.0.0, so on 4.0.0-beta1 this matches nothing.
  */
 class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
 
@@ -43,8 +43,10 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This Pool<?> pool, @Advice.Argument(0) @Nullable String masterName) {
-      JedisSingletons.setPoolTarget(pool, RedisServerTarget.ofLogicalName(masterName));
+        @Advice.This Pool<?> pool,
+        @Advice.Argument(0) @Nullable String masterName,
+        @Advice.Argument(1) @Nullable Set<?> sentinels) {
+      JedisSingletons.setPoolTarget(pool, JedisServerTargets.ofSentinels(masterName, sentinels));
     }
   }
 }

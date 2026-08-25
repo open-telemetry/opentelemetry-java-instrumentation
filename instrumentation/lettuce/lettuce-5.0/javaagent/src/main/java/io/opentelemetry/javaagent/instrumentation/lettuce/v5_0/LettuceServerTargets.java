@@ -70,14 +70,9 @@ public final class LettuceServerTargets {
 
   @Nullable
   private static RedisServerTarget ofSentinel(RedisURI redisUri) {
-    RedisServerTarget masterTarget =
-        RedisServerTarget.ofLogicalName(redisUri.getSentinelMasterId());
-    if (masterTarget != null) {
-      return masterTarget;
-    }
     List<RedisURI> sentinels = redisUri.getSentinels();
     if (sentinels == null || sentinels.isEmpty()) {
-      return null;
+      return RedisServerTarget.ofEndpointsAndLogicalName(null, redisUri.getSentinelMasterId());
     }
     List<String> endpoints = new ArrayList<>(sentinels.size());
     for (RedisURI sentinel : sentinels) {
@@ -87,7 +82,7 @@ public final class LettuceServerTargets {
               ? socket
               : RedisServerTarget.endpoint(sentinel.getHost(), sentinel.getPort()));
     }
-    return RedisServerTarget.ofEndpoints(endpoints);
+    return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, redisUri.getSentinelMasterId());
   }
 
   private LettuceServerTargets() {}

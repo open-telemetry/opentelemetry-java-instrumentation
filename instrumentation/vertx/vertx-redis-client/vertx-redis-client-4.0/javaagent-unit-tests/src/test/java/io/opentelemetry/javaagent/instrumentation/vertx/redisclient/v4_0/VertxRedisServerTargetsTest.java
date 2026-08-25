@@ -95,7 +95,7 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void sentinelIsNamedByItsMaster() {
+  void sentinelsAreScopedByTheirMaster() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
             new RedisOptions()
@@ -104,7 +104,21 @@ class VertxRedisServerTargetsTest {
                 .addConnectionString("redis://sentinel1:26379")
                 .addConnectionString("redis://sentinel2:26380"));
 
-    assertThat(target.getAddress()).isEqualTo("themaster");
+    assertThat(target.getAddress())
+        .isEqualTo("sentinel1:26379/themaster,sentinel2:26380/themaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void sentinelUsesTheEffectiveDefaultPort() {
+    RedisServerTarget target =
+        VertxRedisServerTargets.of(
+            new RedisOptions()
+                .setType(RedisClientType.SENTINEL)
+                .setMasterName("themaster")
+                .addConnectionString("redis://sentinel"));
+
+    assertThat(target.getAddress()).isEqualTo("sentinel:6379/themaster");
     assertThat(target.getPort()).isNull();
   }
 

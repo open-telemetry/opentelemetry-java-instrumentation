@@ -18,8 +18,8 @@ import org.apache.geode.cache.client.PoolManager;
  *
  * <p>A pool factory collects what an operator configures, and the pool it creates is handed a
  * snapshot of that configuration. Rendering the target while the pool is being created keeps the
- * servers a pool discovers through its locators, and the connections it holds at any moment, out of
- * it, and leaves an operation with nothing to do beyond looking its pool up.
+ * servers a pool discovers and the connections it holds at any moment out of the target, and leaves
+ * an operation with nothing to do beyond looking its pool up.
  */
 public final class GeodeServerTargets {
 
@@ -33,6 +33,11 @@ public final class GeodeServerTargets {
     builder(poolFactory).addServer(host, port);
   }
 
+  /** Records a locator {@code poolFactory} is being configured with. */
+  public static void addLocator(PoolFactory poolFactory, @Nullable String host, int port) {
+    builder(poolFactory).addLocator(host, port);
+  }
+
   /** Records the server group {@code poolFactory} is being configured with. */
   public static void setServerGroup(PoolFactory poolFactory, @Nullable String serverGroup) {
     builder(poolFactory).setServerGroup(serverGroup);
@@ -43,18 +48,16 @@ public final class GeodeServerTargets {
     builder(poolFactory).reset();
   }
 
-  /**
-   * Copies the configured data-plane target from {@code sourcePool}.
-   *
-   * <p>Geode uses this path when materializing pools parsed from cache XML. Locators are
-   * intentionally ignored.
-   */
+  /** Copies the configured target from {@code sourcePool}. */
   public static void copyConfiguration(PoolFactory poolFactory, Pool sourcePool) {
     GeodeServerTarget.Builder builder = builder(poolFactory);
     builder.reset();
     builder.setServerGroup(sourcePool.getServerGroup());
     for (InetSocketAddress server : sourcePool.getServers()) {
       builder.addServer(server.getHostString(), server.getPort());
+    }
+    for (InetSocketAddress locator : sourcePool.getLocators()) {
+      builder.addLocator(locator.getHostString(), locator.getPort());
     }
   }
 

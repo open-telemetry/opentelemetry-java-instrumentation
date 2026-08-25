@@ -1,0 +1,206 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
+
+import java.util.Set;
+import java.util.TreeSet;
+import javax.annotation.Nullable;
+import org.apache.hadoop.conf.Configuration;
+
+/** Renders the immutable registry target configured for an HBase RPC client. */
+public class HbaseServerTarget {
+
+  private static final String REGISTRY_KEY = "hbase.client.registry.impl";
+  private static final String ZK_ASYNC_REGISTRY = "org.apache.hadoop.hbase.client.ZKAsyncRegistry";
+  private static final String ZK_REGISTRY = "org.apache.hadoop.hbase.client.ZKConnectionRegistry";
+  private static final String MASTER_REGISTRY = "org.apache.hadoop.hbase.client.MasterRegistry";
+
+  private static final String ZK_QUORUM_KEY = "hbase.zookeeper.quorum";
+  private static final String ZK_CLIENT_PORT_KEY = "hbase.zookeeper.property.clientPort";
+  private static final String ZK_ZNODE_PARENT_KEY = "zookeeper.znode.parent";
+  private static final String MASTER_ADDRESSES_KEY = "hbase.masters";
+  private static final String MASTER_PORT_KEY = "hbase.master.port";
+
+  private static final String DEFAULT_ZK_QUORUM = "localhost";
+  private static final int DEFAULT_ZK_CLIENT_PORT = 2181;
+  private static final String DEFAULT_ZK_ZNODE_PARENT = "/hbase";
+  private static final int DEFAULT_MASTER_PORT = 16000;
+
+  /**
+   * Returns the configured registry target, or {@code null} when it cannot be identified safely.
+   */
+  @Nullable
+  public static String from(Configuration configuration) {
+    String registry = configuration.get(REGISTRY_KEY);
+    if (registry == null) {
+      return zkTarget(configuration);
+    }
+
+    registry = registry.trim();
+    if (registry.equals(ZK_ASYNC_REGISTRY) || registry.equals(ZK_REGISTRY)) {
+      return zkTarget(configuration);
+    }
+    if (registry.equals(MASTER_REGISTRY)) {
+      return masterTarget(configuration);
+    }
+    return null;
+  }
+
+  @Nullable
+  private static String zkTarget(Configuration configuration) {
+    String quorum = configuration.get(ZK_QUORUM_KEY, DEFAULT_ZK_QUORUM);
+    Set<String> hosts = canonicalEndpoints(quorum, null);
+    if (hosts == null) {
+      return null;
+    }
+
+    Integer clientPort =
+        parsePort(configuration.get(ZK_CLIENT_PORT_KEY, Integer.toString(DEFAULT_ZK_CLIENT_PORT)));
+    if (clientPort == null) {
+      return null;
+    }
+
+    String znodeParent =
+        sanitizeZnodeParent(configuration.get(ZK_ZNODE_PARENT_KEY, DEFAULT_ZK_ZNODE_PARENT));
+    if (znodeParent == null) {
+      return null;
+    }
+    return String.join(",", hosts) + ":" + clientPort + ":" + znodeParent;
+  }
+
+  @Nullable
+  private static String masterTarget(Configuration configuration) {
+    Integer defaultPort = masterDefaultPort(configuration.get(MASTER_PORT_KEY));
+    if (defaultPort == null) {
+      return null;
+    }
+    Set<String> masters = canonicalEndpoints(configuration.get(MASTER_ADDRESSES_KEY), defaultPort);
+    return masters == null ? null : String.join(",", masters);
+  }
+
+  @Nullable
+  private static Integer masterDefaultPort(@Nullable String configuredPort) {
+    if (configuredPort == null || configuredPort.trim().equals("0")) {
+      return DEFAULT_MASTER_PORT;
+    }
+    return parsePort(configuredPort);
+  }
+
+  @Nullable
+  private static Set<String> canonicalEndpoints(
+      @Nullable String configuredEndpoints, @Nullable Integer defaultPort) {
+    if (configuredEndpoints == null) {
+      return null;
+    }
+
+    Set<String> endpoints = new TreeSet<>();
+    for (String configuredEndpoint : configuredEndpoints.split(",", -1)) {
+      String endpoint = canonicalEndpoint(configuredEndpoint, defaultPort);
+      if (endpoint == null) {
+        return null;
+      }
+      endpoints.add(endpoint);
+    }
+    return endpoints.isEmpty() ? null : endpoints;
+  }
+
+  @Nullable
+  private static String canonicalEndpoint(
+      String configuredEndpoint, @Nullable Integer defaultPort) {
+    String endpoint = sanitizeEndpoint(configuredEndpoint);
+    if (endpoint == null) {
+      return null;
+    }
+
+    String host;
+    Integer port = null;
+    if (endpoint.charAt(0) == '[') {
+      int bracket = endpoint.indexOf(']');
+      if (bracket <= 1) {
+        return null;
+      }
+      host = endpoint.substring(0, bracket + 1);
+      if (bracket + 1 < endpoint.length()) {
+        if (endpoint.charAt(bracket + 1) != ':') {
+          return null;
+        }
+        port = parsePort(endpoint.substring(bracket + 2));
+        if (port == null) {
+          return null;
+        }
+      }
+    } else {
+      int colon = endpoint.indexOf(':');
+      if (colon >= 0) {
+        if (colon == 0) {
+          return null;
+        }
+        if (colon != endpoint.lastIndexOf(':')) {
+          if (defaultPort == null) {
+            return null;
+          }
+          host = "[" + endpoint + "]";
+        } else {
+          host = endpoint.substring(0, colon);
+          port = parsePort(endpoint.substring(colon + 1));
+          if (port == null) {
+            return null;
+          }
+        }
+      } else {
+        host = endpoint;
+      }
+    }
+
+    if (host.isEmpty()) {
+      return null;
+    }
+    if (port == null) {
+      port = defaultPort;
+    }
+    return port == null ? host : host + ":" + port;
+  }
+
+  @Nullable
+  private static String sanitizeEndpoint(String configuredEndpoint) {
+    if (configuredEndpoint.contains("://")) {
+      return null;
+    }
+
+    String endpoint = configuredEndpoint.replaceAll("[\\t\\n\\x0B\\f\\r]", "").trim();
+    for (int i = 0; i < endpoint.length(); i++) {
+      char c = endpoint.charAt(i);
+      if (c == '@' || c == '/' || c == '?' || c == '#' || Character.isWhitespace(c)) {
+        return null;
+      }
+    }
+    return endpoint.isEmpty() ? null : endpoint;
+  }
+
+  @Nullable
+  private static String sanitizeZnodeParent(@Nullable String configuredParent) {
+    if (configuredParent == null) {
+      return null;
+    }
+    String parent = configuredParent.replaceAll("[\\t\\n\\x0B\\f\\r]", "").trim();
+    return parent.length() > 1 && parent.charAt(0) == '/' && !parent.endsWith("/") ? parent : null;
+  }
+
+  @Nullable
+  private static Integer parsePort(@Nullable String configuredPort) {
+    if (configuredPort == null) {
+      return null;
+    }
+    try {
+      int port = Integer.parseInt(configuredPort.trim());
+      return port > 0 && port <= 65535 ? port : null;
+    } catch (NumberFormatException ignored) {
+      return null;
+    }
+  }
+
+  private HbaseServerTarget() {}
+}

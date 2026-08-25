@@ -16,8 +16,8 @@ import javax.annotation.Nullable;
 public final class ConfigServerTargetsBefore317 {
 
   /**
-   * The target the configuration names, which is the Sentinel master when there is one, and the
-   * cluster nodes when the client was configured against a cluster.
+   * The target the configuration names, which is the Sentinel endpoints scoped by their master, or
+   * the cluster nodes when the client was configured against a cluster.
    *
    * <p>A client configured with a single address needs no target of its own: the address the
    * connection reports is already the address it was configured with.
@@ -29,12 +29,7 @@ public final class ConfigServerTargetsBefore317 {
     }
     SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
     if (sentinelConfig != null) {
-      RedisServerTarget masterTarget =
-          RedisServerTarget.ofLogicalName(sentinelConfig.getMasterName());
-      if (masterTarget != null) {
-        return masterTarget;
-      }
-      return ofAddresses(sentinelConfig.getSentinelAddresses());
+      return ofAddresses(sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
     }
     ClusterServersConfig clusterConfig = config.getClusterServersConfig();
     if (clusterConfig != null) {
@@ -59,6 +54,21 @@ public final class ConfigServerTargetsBefore317 {
       }
     }
     return RedisServerTarget.ofEndpoints(endpoints);
+  }
+
+  @Nullable
+  private static RedisServerTarget ofAddresses(
+      @Nullable Collection<?> addresses, @Nullable String logicalName) {
+    if (addresses == null || addresses.isEmpty()) {
+      return RedisServerTarget.ofEndpointsAndLogicalName(null, logicalName);
+    }
+    List<String> endpoints = new ArrayList<>(addresses.size());
+    for (Object address : addresses) {
+      if (address != null) {
+        endpoints.add(address.toString());
+      }
+    }
+    return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, logicalName);
   }
 
   private ConfigServerTargetsBefore317() {}

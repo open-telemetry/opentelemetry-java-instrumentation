@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.hadoop.hbase.TableName;
 
@@ -67,23 +68,25 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
-      HbaseRequest request, @Nullable Void unused) {
-    if (request.getHost() == null || request.getPort() == null) {
-      return null;
-    }
-    return InetSocketAddress.createUnresolved(request.getHost(), request.getPort());
+  public String getNetworkPeerAddress(HbaseRequest request, @Nullable Void unused) {
+    return request.getNetworkPeerAddress();
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(HbaseRequest request, @Nullable Void unused) {
+    return request.getNetworkPeerPort();
   }
 
   @Nullable
   @Override
   public String getServerAddress(HbaseRequest request) {
-    return request.getHost();
+    return emitStableDatabaseSemconv() ? request.getServerTarget() : request.getServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(HbaseRequest request) {
-    return request.getPort();
+    return emitStableDatabaseSemconv() ? null : request.getServerPort();
   }
 }

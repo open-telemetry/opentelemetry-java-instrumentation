@@ -7,10 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.redis.client.RedisConnectOptions;
 import io.vertx.redis.client.RedisSentinelConnectOptions;
 import io.vertx.redis.client.RedisStandaloneConnectOptions;
 import io.vertx.redis.client.impl.RedisURI;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -31,18 +34,28 @@ public final class VertxRedisServerTargets {
       return null;
     }
     if (options instanceof RedisSentinelConnectOptions) {
-      RedisServerTarget masterTarget =
-          RedisServerTarget.ofLogicalName(((RedisSentinelConnectOptions) options).getMasterName());
-      if (masterTarget != null) {
-        return masterTarget;
-      }
-      return RedisServerTarget.ofEndpoints(options.getEndpoints());
+      return RedisServerTarget.ofEndpointsAndLogicalName(
+          sentinelEndpoints(options.getEndpoints()),
+          ((RedisSentinelConnectOptions) options).getMasterName());
     }
     if (options instanceof RedisStandaloneConnectOptions) {
       // a standalone client only ever talks to the endpoint it picks, even when more are configured
       return RedisServerTarget.ofEndpoint(options.getEndpoint());
     }
     return RedisServerTarget.ofEndpoints(options.getEndpoints());
+  }
+
+  private static List<String> sentinelEndpoints(List<String> connectionStrings) {
+    List<String> endpoints = new ArrayList<>(connectionStrings.size());
+    for (String connectionString : connectionStrings) {
+      RedisURI redisUri = new RedisURI(connectionString);
+      SocketAddress address = redisUri.socketAddress();
+      endpoints.add(
+          address.isInetSocket()
+              ? RedisServerTarget.endpoint(address.host(), address.port())
+              : connectionString);
+    }
+    return endpoints;
   }
 
   public static void set(RedisURI redisUri, @Nullable RedisServerTarget target) {

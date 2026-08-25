@@ -29,18 +29,12 @@ public final class JedisServerTargets {
     return RedisServerTarget.ofEndpoints(endpoints);
   }
 
-  /**
-   * The target of a Sentinel backed client, which is the master it was asked for, or the sentinels
-   * themselves when it was not given a master name.
-   */
+  /** The target of a Sentinel backed client, scoped by its sentinels and master name. */
   @Nullable
   public static RedisServerTarget ofSentinels(
       @Nullable String masterName, @Nullable Collection<String> sentinels) {
-    RedisServerTarget masterTarget = RedisServerTarget.ofLogicalName(masterName);
-    if (masterTarget != null) {
-      return masterTarget;
-    }
-    return sentinels == null ? null : RedisServerTarget.ofEndpoints(new ArrayList<>(sentinels));
+    List<String> endpoints = sentinels == null ? null : new ArrayList<>(sentinels);
+    return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, masterName);
   }
 
   /** The target of a client configured with several nodes, built from every node it was given. */

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /**
@@ -17,8 +18,9 @@ import javax.annotation.Nullable;
  *
  * <p>A client configured with a single endpoint keeps that endpoint's host and its port. A client
  * configured with several endpoints carries all of them in the address, in the client's own {@code
- * host:port,host:port} syntax, and has no port of its own. A client configured against a logical
- * name, such as a Redis Sentinel master name, carries that name and has no port either.
+ * host:port,host:port} syntax, and has no port of its own. A discovery-backed client can scope each
+ * configured endpoint with the same logical name, as {@code host:port/name,host:port/name}, and has
+ * no port of its own.
  *
  * <p>Credentials, the selected database, query parameters and fragments are removed from every
  * endpoint.
@@ -100,6 +102,37 @@ public final class RedisServerTarget {
       return new RedisServerTarget(only.host, only.port);
     }
     return new RedisServerTarget(String.join(",", rendered), null);
+  }
+
+  /**
+   * The target of a discovery-backed client configured with {@code endpoints} and a logical {@code
+   * name}. Every endpoint is independently scoped as {@code endpoint/name}; endpoints are sorted
+   * and deduplicated because their configuration order is not part of the target identity.
+   */
+  @Nullable
+  public static RedisServerTarget ofEndpointsAndLogicalName(
+      @Nullable List<String> endpoints, @Nullable String name) {
+    String logicalName = name == null ? "" : name.trim();
+    Set<String> rendered = new TreeSet<>();
+    if (endpoints != null) {
+      for (String endpoint : endpoints) {
+        Endpoint parsed = Endpoint.parse(endpoint);
+        if (parsed != null) {
+          rendered.add(parsed.render());
+        }
+      }
+    }
+    if (rendered.isEmpty()) {
+      return ofLogicalName(logicalName);
+    }
+    if (logicalName.isEmpty()) {
+      return new RedisServerTarget(String.join(",", rendered), null);
+    }
+    List<String> scoped = new ArrayList<>(rendered.size());
+    for (String endpoint : rendered) {
+      scoped.add(endpoint + "/" + logicalName);
+    }
+    return new RedisServerTarget(String.join(",", scoped), null);
   }
 
   /** Renders {@code host} and {@code port} as a single endpoint in the usual Redis syntax. */

@@ -16,7 +16,7 @@ import org.redisson.connection.ServiceManager;
 class ConfigServerTargetsTest {
 
   @Test
-  void sentinelIsNamedByItsMaster() {
+  void sentinelsAreScopedByTheirMaster() {
     Config config = new Config();
     config
         .useSentinelServers()
@@ -25,7 +25,7 @@ class ConfigServerTargetsTest {
 
     RedisServerTarget target = ConfigServerTargetsSince317.of(config);
 
-    assertThat(target.getAddress()).isEqualTo("mymaster");
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
@@ -89,7 +89,7 @@ class ConfigServerTargetsTest {
     RedisServerTarget target =
         ConfigServerTargetsSince317.ofServiceManager(new ServiceManager(config));
 
-    assertThat(target.getAddress()).isEqualTo("mymaster");
+    assertThat(target.getAddress()).isEqualTo("s1:26379/mymaster");
     assertThat(target.getPort()).isNull();
   }
 

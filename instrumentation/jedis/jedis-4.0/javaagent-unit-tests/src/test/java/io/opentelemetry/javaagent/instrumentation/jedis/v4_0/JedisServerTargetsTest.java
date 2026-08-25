@@ -46,6 +46,33 @@ class JedisServerTargetsTest {
   }
 
   @Test
+  void sentinelsAreSortedAndScopedByTheirMaster() {
+    RedisServerTarget target =
+        JedisServerTargets.ofSentinels(
+            "mymaster",
+            asList(
+                new HostAndPort("sentinel2", 26380),
+                new HostAndPort("sentinel1", 26379),
+                new HostAndPort("sentinel2", 26380)));
+
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster,sentinel2:26380/mymaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void sentinelCollectionIsFoundInConstructorArguments() {
+    RedisServerTarget target =
+        JedisServerTargets.ofSentinelsFromArguments(
+            "mymaster",
+            new Object[] {
+              "mymaster",
+              asList(new HostAndPort("sentinel2", 26380), new HostAndPort("sentinel1", 26379))
+            });
+
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster,sentinel2:26380/mymaster");
+  }
+
+  @Test
   void noNodes() {
     assertThat(JedisServerTargets.ofNodes(null)).isNull();
     assertThat(JedisServerTargets.ofNodes(emptyList())).isNull();

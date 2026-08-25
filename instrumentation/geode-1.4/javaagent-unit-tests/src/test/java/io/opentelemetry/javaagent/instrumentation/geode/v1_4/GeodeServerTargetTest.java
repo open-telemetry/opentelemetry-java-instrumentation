@@ -22,8 +22,9 @@ class GeodeServerTargetTest {
   }
 
   @Test
-  void severalServersAreRenderedAsAList() {
+  void severalServersAreSortedAndDeduplicated() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addServer("two.example", 40405);
     builder.addServer("one.example", 40404);
     builder.addServer("two.example", 40405);
 
@@ -33,14 +34,14 @@ class GeodeServerTargetTest {
   }
 
   @Test
-  void serverGroupIsPreferredOverTheServersReachingIt() {
+  void explicitServerIsPreferredOverTheServerGroup() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addServer("cache.example", 40404);
     builder.setServerGroup("orders");
 
     GeodeServerTarget target = builder.build();
-    assertThat(target.getAddress()).isEqualTo("orders");
-    assertThat(target.getPort()).isNull();
+    assertThat(target.getAddress()).isEqualTo("cache.example");
+    assertThat(target.getPort()).isEqualTo(40404);
   }
 
   @Test
@@ -66,6 +67,41 @@ class GeodeServerTargetTest {
   }
 
   @Test
+  void locatorKeepsItsPortInTheAddress() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addLocator("locator.example", 10334);
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("locator.example:10334");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void locatorsAreSortedDeduplicatedAndIndependentlyScopedByTheirGroup() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addLocator("two.example", 10335);
+    builder.addLocator("one.example", 10334);
+    builder.addLocator("two.example", 10335);
+    builder.setServerGroup("  orders  ");
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("one.example:10334/orders,two.example:10335/orders");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void explicitServersArePreferredOverLocatorDiscovery() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addLocator("locator.example", 10334);
+    builder.setServerGroup("orders");
+    builder.addServer("cache.example", 40404);
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("cache.example");
+    assertThat(target.getPort()).isEqualTo(40404);
+  }
+
+  @Test
   void serverThatCannotBeNamedDropsTheServerList() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addServer("one.example", 40404);
@@ -77,6 +113,16 @@ class GeodeServerTargetTest {
     outOfRange.addServer("one.example", 0);
 
     assertThat(outOfRange.build()).isNull();
+  }
+
+  @Test
+  void locatorThatCannotBeNamedDropsTheLocatorList() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addLocator("one.example", 10334);
+    builder.addLocator("  ", 10335);
+    builder.setServerGroup("orders");
+
+    assertThat(builder.build()).isNull();
   }
 
   @Test
@@ -107,6 +153,7 @@ class GeodeServerTargetTest {
   void resetForgetsTheConfiguration() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addServer("one.example", 40404);
+    builder.addLocator("locator.example", 10334);
     builder.setServerGroup("orders");
     builder.reset();
 
@@ -128,6 +175,6 @@ class GeodeServerTargetTest {
 
     assertThat(target.getAddress()).isEqualTo("one.example");
     assertThat(target.getPort()).isEqualTo(40404);
-    assertThat(builder.build().getAddress()).isEqualTo("orders");
+    assertThat(builder.build().getAddress()).isEqualTo("one.example:40404,two.example:40405");
   }
 }

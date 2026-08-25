@@ -38,7 +38,7 @@ class CacheXmlTargetTest {
 
   @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
-  void configuredServersSurviveCacheXmlPoolCopy(@TempDir Path tempDir) throws Exception {
+  void configuredLocatorGroupSurvivesCacheXmlPoolCopy(@TempDir Path tempDir) throws Exception {
     Path cacheXml = tempDir.resolve("client-cache.xml");
     Files.write(
         cacheXml,
@@ -48,10 +48,10 @@ class CacheXmlTargetTest {
                 + "    xsi:schemaLocation=\"http://geode.apache.org/schema/cache "
                 + "http://geode.apache.org/schema/cache/cache-1.0.xsd\"\n"
                 + "    version=\"1.0\">\n"
-                + "  <pool name=\"xml-pool\" min-connections=\"0\" "
+                + "  <pool name=\"xml-pool\" server-group=\"orders\" min-connections=\"0\" "
                 + "subscription-enabled=\"false\">\n"
-                + "    <server host=\"127.0.0.1\" port=\"40404\"/>\n"
-                + "    <server host=\"127.0.0.2\" port=\"40405\"/>\n"
+                + "    <locator host=\"127.0.0.1\" port=\"10334\"/>\n"
+                + "    <locator host=\"127.0.0.2\" port=\"10335\"/>\n"
                 + "  </pool>\n"
                 + "</client-cache>\n")
             .getBytes(UTF_8));
@@ -82,7 +82,7 @@ class CacheXmlTargetTest {
                               equalTo(
                                   SERVER_ADDRESS,
                                   emitStableDatabaseSemconv()
-                                      ? "127.0.0.1:40404,127.0.0.2:40405"
+                                      ? "127.0.0.1:10334/orders,127.0.0.2:10335/orders"
                                       : null),
                               equalTo(SERVER_PORT, null))));
     }

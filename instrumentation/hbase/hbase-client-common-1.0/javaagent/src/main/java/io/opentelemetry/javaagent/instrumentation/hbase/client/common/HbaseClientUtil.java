@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.getTableName;
 
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.hadoop.hbase.protobuf.generated.ClientProtos;
@@ -43,7 +44,7 @@ public class HbaseClientUtil {
   }
 
   public static HbaseRequest createRequest(
-      Object md, Object param, User ticket, InetSocketAddress addr) {
+      Object md, Object param, User ticket, InetSocketAddress addr, @Nullable String serverTarget) {
     String operation = methodDescriptorName(md);
     Long batchSize = null;
     if (emitStableDatabaseSemconv() && param instanceof ClientProtos.MultiRequest) {
@@ -53,12 +54,17 @@ public class HbaseClientUtil {
       batchSize = batchMetadata.getOperationBatchSize();
     }
 
+    InetAddress peerAddress = addr.getAddress();
+    String networkPeerAddress = peerAddress == null ? null : peerAddress.getHostAddress();
     return HbaseRequest.create(
         operation,
         getTableName(),
         ticket.getName(),
         addr.getHostString(),
         addr.getPort(),
+        serverTarget,
+        networkPeerAddress,
+        networkPeerAddress == null ? null : addr.getPort(),
         batchSize);
   }
 

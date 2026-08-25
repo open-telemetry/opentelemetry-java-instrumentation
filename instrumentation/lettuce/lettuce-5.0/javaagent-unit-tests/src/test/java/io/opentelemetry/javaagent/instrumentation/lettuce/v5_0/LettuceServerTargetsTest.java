@@ -34,14 +34,14 @@ class LettuceServerTargetsTest {
   }
 
   @Test
-  void sentinelIsNamedByItsMaster() {
+  void sentinelsAreScopedByTheirMaster() {
     RedisServerTarget target =
         LettuceServerTargets.of(
             RedisURI.Builder.sentinel("sentinel1", 26379, "mymaster")
                 .withSentinel("sentinel2", 26380)
                 .build());
 
-    assertThat(target.getAddress()).isEqualTo("mymaster");
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 

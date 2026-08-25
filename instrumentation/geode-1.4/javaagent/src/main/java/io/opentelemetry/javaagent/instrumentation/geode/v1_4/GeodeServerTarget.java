@@ -5,22 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import javax.annotation.Nullable;
 
 /**
  * The target a Geode client pool was configured with, rendered once while the pool is being
  * created.
  *
- * <p>A pool configured with a server group is named by that group, a logical name that carries no
- * port. A pool configured with a single cache server keeps that server's host and its port. A pool
+ * <p>A pool configured with an explicit cache server keeps that server's host and its port. A pool
  * configured with several carries all of them in the address, as {@code host:port,host:port}, and
- * has no port of its own.
+ * has no port of its own. Explicit servers take precedence over locator discovery and its server
+ * group.
  *
- * <p>Locators are never part of the target. A locator hands a client the cache servers it may talk
- * to, so its address names a directory rather than a server an operation reaches. A pool given
- * locators and no server group therefore has no target at all.
+ * <p>A locator-backed pool carries each configured locator in the address. When it selects a server
+ * group, every comma-separated locator is independently scoped as {@code host:port/group}.
  *
  * <p>The address is rendered while the pool is being created, so a pool keeps reporting what it was
  * pointed at rather than the servers it later discovers.
@@ -44,23 +44,26 @@ public final class GeodeServerTarget {
   }
 
   /**
-   * The port of a single configured cache server, or {@code null} when the target names a server
-   * group or several servers.
+   * The port of a single explicitly configured cache server, or {@code null} when the target names
+   * locator discovery, a server group, or several servers.
    */
   @Nullable
   public Integer getPort() {
     return port;
   }
 
-  /** Collects the cache servers and the server group a pool is being configured with. */
+  /** Collects the servers, locators, and server group a pool is being configured with. */
   public static final class Builder {
 
     private static final int MAX_PORT = 65535;
 
-    private final List<String> hosts = new ArrayList<>();
-    private final List<Integer> ports = new ArrayList<>();
+    private final SortedMap<String, Endpoint> servers = new TreeMap<>();
+    private final SortedMap<String, Endpoint> locators = new TreeMap<>();
     @Nullable private String serverGroup;
-    private boolean complete = true;
+    private boolean serverConfigured;
+    private boolean locatorConfigured;
+    private boolean serversComplete = true;
+    private boolean locatorsComplete = true;
 
     private Builder() {}
 
@@ -71,13 +74,19 @@ public final class GeodeServerTarget {
      * describes a deployment the client was never pointed at.
      */
     public synchronized void addServer(@Nullable String host, int port) {
-      String cleaned = clean(host);
-      if (cleaned == null || port <= 0 || port > MAX_PORT) {
-        complete = false;
-        return;
-      }
-      hosts.add(cleaned);
-      ports.add(port);
+      serverConfigured = true;
+      serversComplete &= add(servers, host, port);
+    }
+
+    /**
+     * Adds a configured locator.
+     *
+     * <p>A locator that cannot be named drops the whole locator list, because a partial list
+     * describes a discovery target the client was never pointed at.
+     */
+    public synchronized void addLocator(@Nullable String host, int port) {
+      locatorConfigured = true;
+      locatorsComplete &= add(locators, host, port);
     }
 
     public synchronized void setServerGroup(@Nullable String serverGroup) {
@@ -86,43 +95,73 @@ public final class GeodeServerTarget {
 
     /** Forgets everything configured so far, as {@code PoolFactory.reset()} does. */
     public synchronized void reset() {
-      hosts.clear();
-      ports.clear();
+      servers.clear();
+      locators.clear();
       serverGroup = null;
-      complete = true;
+      serverConfigured = false;
+      locatorConfigured = false;
+      serversComplete = true;
+      locatorsComplete = true;
     }
 
     /**
-     * The target configured so far, or {@code null} when it names neither a server group nor a
-     * server.
-     *
-     * <p>A configured server group wins over the server list. It is the logical group of servers an
-     * operator pointed the client at, while the servers are only the way a client reaches that
-     * group.
+     * The target configured so far, or {@code null} when it names no explicit server, locator, or
+     * server group.
      */
     @Nullable
     public synchronized GeodeServerTarget build() {
-      String group = serverGroup == null ? "" : serverGroup.trim();
-      if (!group.isEmpty()) {
-        return new GeodeServerTarget(group, null);
+      if (serverConfigured) {
+        return buildServers();
       }
-      if (!complete || hosts.isEmpty()) {
+      String group = serverGroup == null ? "" : serverGroup.trim();
+      if (locatorConfigured) {
+        return buildLocators(group);
+      }
+      return group.isEmpty() ? null : new GeodeServerTarget(group, null);
+    }
+
+    @Nullable
+    private GeodeServerTarget buildServers() {
+      if (!serversComplete || servers.isEmpty()) {
         return null;
       }
-      if (hosts.size() == 1) {
-        return new GeodeServerTarget(hosts.get(0), ports.get(0));
+      if (servers.size() == 1) {
+        Endpoint only = servers.get(servers.firstKey());
+        return new GeodeServerTarget(only.host, only.port);
+      }
+      return new GeodeServerTarget(String.join(",", servers.keySet()), null);
+    }
+
+    @Nullable
+    private GeodeServerTarget buildLocators(String group) {
+      if (!locatorsComplete || locators.isEmpty()) {
+        return null;
       }
       StringBuilder address = new StringBuilder();
-      for (int i = 0; i < hosts.size(); i++) {
-        if (i > 0) {
+      for (String locator : locators.keySet()) {
+        if (address.length() > 0) {
           address.append(',');
         }
-        appendServer(address, hosts.get(i), ports.get(i));
+        address.append(locator);
+        if (!group.isEmpty()) {
+          address.append('/').append(group);
+        }
       }
       return new GeodeServerTarget(address.toString(), null);
     }
 
-    private static void appendServer(StringBuilder address, String host, int port) {
+    private static boolean add(Map<String, Endpoint> endpoints, @Nullable String host, int port) {
+      String cleaned = clean(host);
+      if (cleaned == null || port <= 0 || port > MAX_PORT) {
+        return false;
+      }
+      Endpoint endpoint = new Endpoint(cleaned, port);
+      endpoints.put(endpoint.render(), endpoint);
+      return true;
+    }
+
+    private static String render(String host, int port) {
+      StringBuilder address = new StringBuilder();
       // a literal ipv6 address is bracketed so that the port stays unambiguous
       if (host.indexOf(':') >= 0) {
         address.append('[').append(host).append(']');
@@ -130,6 +169,7 @@ public final class GeodeServerTarget {
         address.append(host);
       }
       address.append(':').append(port);
+      return address.toString();
     }
 
     /**
@@ -148,6 +188,21 @@ public final class GeodeServerTarget {
         cleaned = cleaned.substring(1, cleaned.length() - 1).trim();
       }
       return cleaned.isEmpty() ? null : cleaned;
+    }
+  }
+
+  private static final class Endpoint {
+
+    private final String host;
+    private final int port;
+
+    private Endpoint(String host, int port) {
+      this.host = host;
+      this.port = port;
+    }
+
+    private String render() {
+      return Builder.render(host, port);
     }
   }
 }

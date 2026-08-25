@@ -312,7 +312,7 @@ class VertxRedisClientTest {
   }
 
   @Test
-  void sentinelClientIsNamedByItsMaster() {
+  void sentinelClientIsScopedByItsEndpointsAndMaster() {
     Redis sentinelClient =
         Redis.createClient(
             vertx,
@@ -340,7 +340,8 @@ class VertxRedisClientTest {
               assertThat(spans).isNotEmpty();
               for (SpanData span : spans) {
                 assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                    .isEqualTo(emitStableDatabaseSemconv() ? "themaster" : host);
+                    .isEqualTo(
+                        emitStableDatabaseSemconv() ? host + ":" + port + "/themaster" : host);
                 assertThat(span.getAttributes().get(SERVER_PORT))
                     .isEqualTo(emitStableDatabaseSemconv() ? null : Long.valueOf(port));
                 // the socket the command went to is reported independently of the configured target
