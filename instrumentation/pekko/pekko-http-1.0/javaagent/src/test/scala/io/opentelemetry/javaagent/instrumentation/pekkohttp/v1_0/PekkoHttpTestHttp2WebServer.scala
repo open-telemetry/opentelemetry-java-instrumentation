@@ -5,15 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
+import com.typesafe.config.ConfigFactory
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
 
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
-object PekkoHttpTestAsyncWebServer {
-  implicit val system: ActorSystem = ActorSystem("my-system")
-  // needed for the future flatMap/onComplete in the end
+object PekkoHttpTestHttp2WebServer {
+  // `preview.enable-http2` is the setting used by pekko-http 1.0, it was replaced with
+  // `enable-http2` in 1.3
+  implicit val system: ActorSystem = ActorSystem(
+    "http2-system",
+    ConfigFactory
+      .parseString("""
+        |pekko.http.server.preview.enable-http2 = on
+        |pekko.http.server.enable-http2 = on
+        |""".stripMargin)
+      .withFallback(ConfigFactory.load())
+  )
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   private var binding: ServerBinding = _
@@ -22,11 +32,9 @@ object PekkoHttpTestAsyncWebServer {
     if (binding == null) {
       import scala.concurrent.duration._
       binding = Await.result(
-        Http().bindAndHandleAsync(
-          PekkoHttpTestAsyncHandler.asyncHandler,
-          "localhost",
-          port
-        ),
+        Http()
+          .newServerAt("localhost", port)
+          .bind(PekkoHttpTestAsyncHandler.asyncHandler),
         10.seconds
       )
     }
