@@ -74,8 +74,7 @@ class MongoConfiguredTargetTest {
   void theOldConnectionStringKeepsDescribingTheServerThatAnswered() {
     ClusterId clusterId =
         configuredCluster(
-            MongoServerTarget.seeds(
-                asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
+            MongoServerTarget.seeds(singletonList(new ServerAddress("db1.example", 27017))));
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
     assertThat(getter.getConnectionString(event)).isEqualTo("mongodb://db2.example:27018");
