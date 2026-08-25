@@ -91,15 +91,18 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
       return Resilience4jCircuitBreakerSpans.beginAcquisition(circuitBreaker);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker,
         @Advice.Enter Resilience4jCircuitBreakerSpans.AttemptToken token,
-        @Advice.Return boolean permitted) {
-      if (permitted) {
-        Resilience4jCircuitBreakerSpans.start(circuitBreaker);
-      } else {
-        Resilience4jCircuitBreakerSpans.reject(circuitBreaker, null);
+        @Advice.Return boolean permitted,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      if (throwable == null) {
+        if (permitted) {
+          Resilience4jCircuitBreakerSpans.start(circuitBreaker);
+        } else {
+          Resilience4jCircuitBreakerSpans.reject(circuitBreaker, null);
+        }
       }
       Resilience4jCircuitBreakerSpans.finishAcquisition(token);
     }
@@ -120,8 +123,10 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   public static class OnSuccessAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
-      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "success", null);
+    public static void onExit(
+        @Advice.This CircuitBreaker circuitBreaker, @Advice.Thrown @Nullable Throwable throwable) {
+      Resilience4jCircuitBreakerSpans.end(
+          circuitBreaker, throwable == null ? "success" : "failure", throwable);
     }
   }
 
