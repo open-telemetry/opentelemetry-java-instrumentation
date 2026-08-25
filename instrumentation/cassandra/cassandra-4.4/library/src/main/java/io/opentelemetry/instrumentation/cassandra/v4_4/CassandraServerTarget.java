@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.CONTACT_POINTS;
+import static java.util.Collections.emptyList;
 
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.context.DriverContext;
@@ -64,7 +65,9 @@ final class CassandraServerTarget {
         return null;
       }
       DriverExecutionProfile config = context.getConfig().getDefaultProfile();
-      List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS);
+      // basic.contact-points has no default, so the single argument lookup would throw when a
+      // session names its contact points on the builder alone
+      List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
       List<CassandraServerTarget> contactPoints = valid(configuredContactPoints);
       Set<String> configuredTargets = new HashSet<>();
       for (CassandraServerTarget contactPoint : contactPoints) {

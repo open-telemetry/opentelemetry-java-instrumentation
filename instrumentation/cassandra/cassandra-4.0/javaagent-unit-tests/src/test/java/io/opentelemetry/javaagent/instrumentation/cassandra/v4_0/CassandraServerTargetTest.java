@@ -17,6 +17,7 @@ import com.datastax.oss.driver.api.core.config.DriverConfig;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.session.Session;
+import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
 import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import java.net.InetSocketAddress;
@@ -173,10 +174,29 @@ class CassandraServerTargetTest {
     assertThat(target.getPort()).isEqualTo(9142);
   }
 
+  @Test
+  void sessionWithOnlyProgrammaticContactPointsReadsTheRealDriverConfiguration() {
+    // basic.contact-points has no default, so a lookup without one throws on a session that names
+    // its contact points on the builder alone
+    when(session.getContext()).thenReturn(context);
+    when(context.getConfig()).thenReturn(new DefaultDriverConfigLoader().getInitialConfig());
+    Set<EndPoint> programmaticContactPoints =
+        new LinkedHashSet<>(
+            singletonList(
+                new DefaultEndPoint(
+                    InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
+
+    CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("programmatic.example.com");
+    assertThat(target.getPort()).isEqualTo(9142);
+  }
+
   private void configureContactPoints(List<String> contactPoints) {
     when(context.getConfig()).thenReturn(config);
     when(config.getDefaultProfile()).thenReturn(defaultProfile);
-    when(defaultProfile.getStringList(DefaultDriverOption.CONTACT_POINTS))
+    when(defaultProfile.getStringList(DefaultDriverOption.CONTACT_POINTS, emptyList()))
         .thenReturn(contactPoints);
   }
 }

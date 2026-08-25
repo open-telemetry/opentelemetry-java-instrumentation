@@ -20,6 +20,7 @@ import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.session.Session;
 import com.datastax.oss.driver.internal.core.ContactPoints;
+import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
 import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
@@ -203,10 +204,30 @@ class CassandraServerTargetTest {
     assertThat(target.getPort()).isEqualTo(9042);
   }
 
+  @Test
+  void sessionWithOnlyProgrammaticContactPointsReadsTheRealDriverConfiguration() {
+    // basic.contact-points has no default, so a lookup without one throws on a session that names
+    // its contact points on the builder alone
+    when(session.getContext()).thenReturn(context);
+    when(context.getConfig()).thenReturn(new DefaultDriverConfigLoader().getInitialConfig());
+    when(context.getMetadataManager()).thenReturn(metadataManager);
+    when(metadataManager.getContactPoints()).thenReturn(singleton(programmaticNode));
+    when(programmaticNode.getEndPoint())
+        .thenReturn(
+            new DefaultEndPoint(
+                InetSocketAddress.createUnresolved("programmatic.example.com", 9142)));
+
+    CassandraServerTarget target = CassandraServerTarget.of(session);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("programmatic.example.com");
+    assertThat(target.getPort()).isEqualTo(9142);
+  }
+
   private void configureContactPoints(List<String> contactPoints) {
     when(context.getConfig()).thenReturn(config);
     when(config.getDefaultProfile()).thenReturn(defaultProfile);
-    when(defaultProfile.getStringList(DefaultDriverOption.CONTACT_POINTS))
+    when(defaultProfile.getStringList(DefaultDriverOption.CONTACT_POINTS, emptyList()))
         .thenReturn(contactPoints);
   }
 }
