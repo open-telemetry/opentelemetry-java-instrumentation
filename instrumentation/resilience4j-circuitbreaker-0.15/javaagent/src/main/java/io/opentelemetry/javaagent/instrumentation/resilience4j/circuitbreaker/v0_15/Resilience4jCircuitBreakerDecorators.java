@@ -147,9 +147,16 @@ public class Resilience4jCircuitBreakerDecorators {
           Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         CompletionStage<T> result = delegate.get();
-        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
-            Resilience4jCircuitBreakerSpans.pollPendingSpanAfter(baseline);
-        return pendingSpan == null ? result : wrapCompletionStage(result, pendingSpan);
+        if (baseline != null) {
+          Resilience4jCircuitBreakerSpans.detachPendingSpan(baseline);
+          try {
+            return wrapCompletionStage(result, baseline);
+          } catch (Throwable t) {
+            baseline.end("failure", t);
+            throw t;
+          }
+        }
+        return result;
       } catch (Throwable t) {
         Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
         throw t;
@@ -171,9 +178,16 @@ public class Resilience4jCircuitBreakerDecorators {
           Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         Future<T> result = delegate.get();
-        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
-            Resilience4jCircuitBreakerSpans.pollPendingSpanAfter(baseline);
-        return pendingSpan == null ? result : new FutureWrapper<>(result, pendingSpan);
+        if (baseline != null) {
+          Resilience4jCircuitBreakerSpans.detachPendingSpan(baseline);
+          try {
+            return new FutureWrapper<>(result, baseline);
+          } catch (Throwable t) {
+            baseline.end("failure", t);
+            throw t;
+          }
+        }
+        return result;
       } catch (Throwable t) {
         Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
         throw t;
@@ -389,6 +403,7 @@ public class Resilience4jCircuitBreakerDecorators {
         Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
         try {
           invokeWhenComplete(callback, result, throwable);
+          pendingSpan.end(throwable == null ? "success" : "failure", throwable);
         } catch (Throwable t) {
           pendingSpan.end("failure", t);
           throw t;

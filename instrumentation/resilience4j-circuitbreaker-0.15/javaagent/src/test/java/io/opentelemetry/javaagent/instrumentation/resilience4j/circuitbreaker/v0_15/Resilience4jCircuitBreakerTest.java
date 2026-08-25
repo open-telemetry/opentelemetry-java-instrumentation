@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
@@ -82,33 +83,6 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsCircuitBreakerSpanWhenOnSuccessCalledOnDifferentThread() throws Exception {
-    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    try {
-      testing.runWithSpan(
-          "parent",
-          () -> {
-            circuitBreaker.acquirePermission();
-            executor
-                .submit(
-                    () -> {
-                      try {
-                        invokeOnSuccess(circuitBreaker);
-                      } catch (Exception e) {
-                        throw new IllegalStateException(e);
-                      }
-                    })
-                .get();
-          });
-    } finally {
-      executor.shutdownNow();
-    }
-
-    assertCircuitBreakerSpan("closed", "success");
-  }
-
-  @Test
   void createsCircuitBreakerSpanWhenOnResultMatchesRecordResultPredicate() throws Exception {
     Method recordResultPredicate = recordResultPredicateMethod();
     Method onResult = onResultMethod();
@@ -127,6 +101,39 @@ class Resilience4jCircuitBreakerTest {
         });
 
     assertCircuitBreakerSpan("closed", "failure", null);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void createsCircuitBreakerSpanWhenDecoratedCompletionStageCompletesOnDifferentThread()
+      throws Exception {
+    Method decorateCompletionStage = decorateCompletionStageMethod();
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    CompletableFuture<String> future = new CompletableFuture<>();
+    Supplier<CompletionStage<String>> supplier = () -> future;
+    Supplier<CompletionStage<String>> decoratedSupplier =
+        (Supplier<CompletionStage<String>>)
+            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    AtomicReference<Thread> completionThread = new AtomicReference<>();
+    try {
+      Thread callingThread = Thread.currentThread();
+      CompletionStage<String> stage = testing.runWithSpan("parent", decoratedSupplier::get);
+      executor
+          .submit(
+              () -> {
+                completionThread.set(Thread.currentThread());
+                return future.complete("ok");
+              })
+          .get();
+
+      assertThat(completionThread.get()).isNotSameAs(callingThread);
+      assertThat(stage.toCompletableFuture().get()).isEqualTo("ok");
+    } finally {
+      executor.shutdownNow();
+    }
+
+    assertCircuitBreakerSpan("closed", "success");
   }
 
   @Test

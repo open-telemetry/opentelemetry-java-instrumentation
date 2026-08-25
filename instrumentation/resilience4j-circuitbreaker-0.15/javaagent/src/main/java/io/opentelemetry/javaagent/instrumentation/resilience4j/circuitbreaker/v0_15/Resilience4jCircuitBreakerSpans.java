@@ -12,21 +12,13 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.WeakHashMap;
 import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerSpans {
 
   private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
-  // Resilience4j's raw acquirePermission/onSuccess/onError API does not expose an attempt token.
-  // Keep a weak per-breaker fallback so callbacks on a different thread can still close the
-  // oldest pending attempt without retaining circuit breakers indefinitely.
-  private static final Map<CircuitBreaker, Deque<PendingSpan>> pendingSpansByCircuitBreaker =
-      Collections.synchronizedMap(new WeakHashMap<>());
   private static final ThreadLocal<Boolean> inCircuitBreakerCallback = new ThreadLocal<>();
   private static final ThreadLocal<Deque<Boolean>> onResultEnded = new ThreadLocal<>();
 
@@ -50,7 +42,6 @@ public class Resilience4jCircuitBreakerSpans {
       pendingSpans.set(spans);
     }
     spans.push(pendingSpan);
-    addGlobalPendingSpan(circuitBreaker, pendingSpan);
   }
 
   public static void reject(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
@@ -201,7 +192,6 @@ public class Resilience4jCircuitBreakerSpans {
     if (spans.isEmpty()) {
       pendingSpans.remove();
     }
-    removeGlobalPendingSpan(span);
     return span;
   }
 
@@ -209,15 +199,10 @@ public class Resilience4jCircuitBreakerSpans {
   private static PendingSpan pollPendingSpan(CircuitBreaker circuitBreaker) {
     Deque<PendingSpan> spans = pendingSpans.get();
     if (spans == null) {
-      return pollGlobalPendingSpan(circuitBreaker);
+      return null;
     }
     removeEnded(spans);
-    PendingSpan span = pollLocalPendingSpan(circuitBreaker, spans);
-    if (span != null) {
-      removeGlobalPendingSpan(span);
-      return span;
-    }
-    return pollGlobalPendingSpan(circuitBreaker);
+    return pollLocalPendingSpan(circuitBreaker, spans);
   }
 
   @Nullable
@@ -240,52 +225,6 @@ public class Resilience4jCircuitBreakerSpans {
       pendingSpans.remove();
     }
     return null;
-  }
-
-  private static void addGlobalPendingSpan(CircuitBreaker circuitBreaker, PendingSpan pendingSpan) {
-    synchronized (pendingSpansByCircuitBreaker) {
-      pendingSpansByCircuitBreaker
-          .computeIfAbsent(circuitBreaker, unused -> new ArrayDeque<>())
-          .push(pendingSpan);
-    }
-  }
-
-  @Nullable
-  private static PendingSpan pollGlobalPendingSpan(CircuitBreaker circuitBreaker) {
-    synchronized (pendingSpansByCircuitBreaker) {
-      Deque<PendingSpan> spans = pendingSpansByCircuitBreaker.get(circuitBreaker);
-      if (spans == null) {
-        return null;
-      }
-      while (!spans.isEmpty()) {
-        PendingSpan span = spans.pollLast();
-        if (!span.ended) {
-          if (spans.isEmpty()) {
-            pendingSpansByCircuitBreaker.remove(circuitBreaker);
-          }
-          return span;
-        }
-      }
-      pendingSpansByCircuitBreaker.remove(circuitBreaker);
-      return null;
-    }
-  }
-
-  private static void removeGlobalPendingSpan(PendingSpan pendingSpan) {
-    CircuitBreaker circuitBreaker = pendingSpan.circuitBreaker();
-    if (circuitBreaker == null) {
-      return;
-    }
-    synchronized (pendingSpansByCircuitBreaker) {
-      Deque<PendingSpan> spans = pendingSpansByCircuitBreaker.get(circuitBreaker);
-      if (spans == null) {
-        return;
-      }
-      spans.remove(pendingSpan);
-      if (spans.isEmpty()) {
-        pendingSpansByCircuitBreaker.remove(circuitBreaker);
-      }
-    }
   }
 
   private static void removeEnded(Deque<PendingSpan> spans) {
@@ -326,11 +265,6 @@ public class Resilience4jCircuitBreakerSpans {
 
     boolean isFor(CircuitBreaker circuitBreaker) {
       return this.circuitBreaker.get() == circuitBreaker;
-    }
-
-    @Nullable
-    CircuitBreaker circuitBreaker() {
-      return circuitBreaker.get();
     }
   }
 
