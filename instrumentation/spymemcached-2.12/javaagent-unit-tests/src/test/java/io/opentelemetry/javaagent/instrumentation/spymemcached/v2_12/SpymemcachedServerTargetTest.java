@@ -27,13 +27,11 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
-  void severalNodesAreRenderedAsAList() {
-    SpymemcachedServerTarget target =
-        SpymemcachedServerTarget.create(
-            asList(node("one.example", 11211), node("two.example", 11212)));
-
-    assertThat(target.getAddress()).isEqualTo("one.example:11211,two.example:11212");
-    assertThat(target.getPort()).isNull();
+  void severalNodesHaveNoSingleTarget() {
+    assertThat(
+            SpymemcachedServerTarget.create(
+                asList(node("one.example", 11211), node("two.example", 11212))))
+        .isNull();
   }
 
   @Test
@@ -57,13 +55,6 @@ class SpymemcachedServerTargetTest {
 
     assertThat(single.getAddress()).isEqualTo("2001:db8::1");
     assertThat(single.getPort()).isEqualTo(11211);
-
-    SpymemcachedServerTarget several =
-        SpymemcachedServerTarget.create(
-            asList(node("[2001:db8::1]", 11211), node("two.example", 11212)));
-
-    assertThat(several.getAddress()).isEqualTo("[2001:db8::1]:11211,two.example:11212");
-    assertThat(several.getPort()).isNull();
   }
 
   @Test

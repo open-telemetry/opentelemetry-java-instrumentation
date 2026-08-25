@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Runs in every semantic convention mode the module supports, so that each assertion below reads as
- * what that mode describes. Stable and dual both report the configured target; the old conventions
+ * what that mode describes. Stable and dual report a single configured target; the old conventions
  * describe the node that answered instead, which is only known once the request has ended.
  */
 class SpymemcachedAttributesGetterTest {
@@ -38,14 +38,12 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
-  void severalConfiguredNodesAreReportedWithoutAPort() {
+  void severalConfiguredNodesHaveNoSingleServerAddress() {
     SpymemcachedRequest request =
         request(asList(node("one.example", 11211), node("two.example", 11212)));
-    // the node the operation was actually dispatched to is only one of the configured two
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
-    assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "one.example:11211,two.example:11212" : null);
+    assertThat(getter.getServerAddress(request)).isNull();
     assertThat(getter.getServerPort(request)).isNull();
   }
 

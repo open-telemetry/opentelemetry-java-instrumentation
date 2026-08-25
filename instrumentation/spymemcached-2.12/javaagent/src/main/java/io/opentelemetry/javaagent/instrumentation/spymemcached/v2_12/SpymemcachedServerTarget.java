@@ -6,64 +6,42 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * The target a Spymemcached client was configured with, rendered once while its connection is being
- * created.
+ * The single server a Spymemcached client was configured with, captured while its connection is
+ * being created.
  *
- * <p>A client configured with a single node keeps that node's host and its port. A client
- * configured with several carries all of them in the address, as {@code host:port,host:port}, and
- * has no port of its own. That is the syntax {@code AddrUtil} reads a node list back out of, so the
- * address stays the one an operator wrote down.
- *
- * <p>The address is rendered while the connection is being created, so a client keeps reporting the
- * nodes it was pointed at rather than the one that happens to answer an operation.
+ * <p>Clients configured with several nodes have no single configured server. Their requests report
+ * the node that handles each operation instead.
  */
 public class SpymemcachedServerTarget {
 
   private final String address;
-  @Nullable private final Integer port;
+  private final int port;
 
   /**
-   * The target of a client configured with {@code nodes}, or {@code null} when they name no server.
+   * The target of a client configured with one node, or {@code null} when the client has no single
+   * configured server.
    *
-   * <p>The nodes are rendered here and then forgotten, so a caller is free to keep changing the
-   * list it handed over.
+   * <p>The node is copied here and then forgotten, so a caller is free to keep changing the list it
+   * handed over.
    */
   @Nullable
   public static SpymemcachedServerTarget create(@Nullable List<InetSocketAddress> nodes) {
-    if (nodes == null || nodes.isEmpty()) {
+    if (nodes == null || nodes.size() != 1) {
       return null;
     }
-    List<String> hosts = new ArrayList<>(nodes.size());
-    List<Integer> ports = new ArrayList<>(nodes.size());
-    for (InetSocketAddress node : nodes) {
-      String host = node == null ? null : clean(node.getHostString());
-      // a node that cannot be named drops the whole target, because a partial list describes a
-      // deployment the client was never pointed at
-      if (host == null || node.getPort() <= 0) {
-        return null;
-      }
-      hosts.add(host);
-      ports.add(node.getPort());
+    InetSocketAddress node = nodes.get(0);
+    String host = node == null ? null : clean(node.getHostString());
+    if (host == null || node.getPort() <= 0) {
+      return null;
     }
-    if (hosts.size() == 1) {
-      return new SpymemcachedServerTarget(hosts.get(0), ports.get(0));
-    }
-    StringBuilder address = new StringBuilder();
-    for (int i = 0; i < hosts.size(); i++) {
-      if (i > 0) {
-        address.append(',');
-      }
-      appendNode(address, hosts.get(i), ports.get(i));
-    }
-    return new SpymemcachedServerTarget(address.toString(), null);
+    return new SpymemcachedServerTarget(host, node.getPort());
   }
 
-  private SpymemcachedServerTarget(String address, @Nullable Integer port) {
+  private SpymemcachedServerTarget(String address, int port) {
     this.address = address;
     this.port = port;
   }
@@ -72,23 +50,8 @@ public class SpymemcachedServerTarget {
     return address;
   }
 
-  /**
-   * The port of a single configured node, or {@code null} when the target names several, which
-   * already carry a port each.
-   */
-  @Nullable
-  public Integer getPort() {
+  public int getPort() {
     return port;
-  }
-
-  private static void appendNode(StringBuilder address, String host, int port) {
-    // a literal ipv6 address is bracketed so that the port stays unambiguous
-    if (host.indexOf(':') >= 0) {
-      address.append('[').append(host).append(']');
-    } else {
-      address.append(host);
-    }
-    address.append(':').append(port);
   }
 
   /**

@@ -1059,18 +1059,17 @@ class SpymemcachedTest {
   }
 
   @Test
-  void severalConfiguredNodesAreReportedTogether() {
+  void severalConfiguredNodesUseTheHandlingNode() {
     MemcachedClient memcached = getMemcached(asList(memcachedAddress, memcachedLiteralAddress));
     testing.runWithSpan(
         "parent", () -> assertThat(memcached.get(key("test-several-nodes"))).isNull());
 
-    String target = configuredTarget(memcachedAddress, memcachedLiteralAddress);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
-                    span.hasName(spanName("get", target))
+                    span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -1078,21 +1077,11 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             satisfies(
                                 SERVER_ADDRESS,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isEqualTo(target);
-                                  } else {
-                                    // the node the key hashed to, which is only one of the two
+                                val ->
                                     val.isIn(
                                         memcachedAddress.getHostString(),
-                                        memcachedLiteralAddress.getHostString());
-                                  }
-                                }),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : (long) memcachedAddress.getPort()),
+                                        memcachedLiteralAddress.getHostString())),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
 
     assertDurationMetric(
@@ -1100,7 +1089,8 @@ class SpymemcachedTest {
         "io.opentelemetry.spymemcached-2.12",
         DB_SYSTEM_NAME,
         maybeStable(DB_OPERATION),
-        SERVER_ADDRESS);
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
@@ -1140,29 +1130,9 @@ class SpymemcachedTest {
    * client was configured with, which for a single node is its address and its port.
    */
   private static String spanName(String operation) {
-    return spanName(operation, memcachedAddress.getHostString() + ":" + memcachedAddress.getPort());
-  }
-
-  private static String spanName(String operation, String target) {
-    return emitStableDatabaseSemconv() ? operation + " " + target : operation;
-  }
-
-  /** The address a client configured with {@code nodes} reports, which carries a port per node. */
-  private static String configuredTarget(InetSocketAddress... nodes) {
-    StringBuilder target = new StringBuilder();
-    for (InetSocketAddress node : nodes) {
-      if (target.length() > 0) {
-        target.append(',');
-      }
-      String host = node.getHostString();
-      if (host.indexOf(':') >= 0) {
-        target.append('[').append(host).append(']');
-      } else {
-        target.append(host);
-      }
-      target.append(':').append(node.getPort());
-    }
-    return target.toString();
+    return emitStableDatabaseSemconv()
+        ? operation + " " + memcachedAddress.getHostString() + ":" + memcachedAddress.getPort()
+        : operation;
   }
 
   private static <T> T experimental(T value) {
