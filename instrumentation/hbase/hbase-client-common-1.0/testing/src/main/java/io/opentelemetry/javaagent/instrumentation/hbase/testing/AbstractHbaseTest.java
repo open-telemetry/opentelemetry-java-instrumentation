@@ -20,12 +20,15 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -40,11 +43,15 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.hadoop.conf.Configuration;
@@ -115,6 +122,8 @@ public abstract class AbstractHbaseTest {
   protected final GenericContainer<?> hbaseContainer = createHbaseContainer(hostname);
 
   protected Connection connection;
+  private String serverTarget;
+  private String networkPeerAddress;
 
   protected abstract InstrumentationExtension testing();
 
@@ -201,6 +210,9 @@ public abstract class AbstractHbaseTest {
     config.set("hbase.zookeeper.quorum", host);
     config.set("hbase.zookeeper.property.clientPort", "2181");
     connection = ConnectionFactory.createConnection(config);
+    serverTarget = host + ":2181:/hbase";
+    networkPeerAddress =
+        rpcCallUsesInetSocketAddress() ? InetAddress.getByName(hostname).getHostAddress() : null;
     cleanup.deferAfterAll(connection);
     testing()
         .runWithSpan(
@@ -288,6 +300,34 @@ public abstract class AbstractHbaseTest {
     testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
   }
 
+  @Test
+  void zookeeperQuorumIsReportedAsTheServerTarget() throws IOException {
+    String host = hbaseContainer.getHost();
+    String quorumHost = host.equals(hostname) ? host.toUpperCase(Locale.ROOT) : host;
+    String resolvedHost = InetAddress.getByName(host).getHostAddress();
+    Configuration config = HBaseConfiguration.create();
+    config.set("hbase.zookeeper.quorum", quorumHost + "," + resolvedHost);
+    config.set("hbase.zookeeper.property.clientPort", "2181");
+
+    try (Connection quorumConnection = ConnectionFactory.createConnection(config);
+        Table table = quorumConnection.getTable(TABLE_NAME)) {
+      table.get(new Get(Bytes.toBytes(ROW_1)));
+    }
+
+    String expectedServerTarget =
+        String.join(",", new TreeSet<>(asList(quorumHost, resolvedHost))) + ":2181:/hbase";
+    List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
+    traceAssertions.add(
+        traceAssertConsumer(META, SCAN, REGION_SERVER_PORT, true, expectedServerTarget));
+    if (!rpcCallUsesInetSocketAddress()) {
+      traceAssertions.add(
+          traceAssertConsumer(META, SCAN, REGION_SERVER_PORT, true, expectedServerTarget));
+    }
+    traceAssertions.add(
+        traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true, expectedServerTarget));
+    testing().waitAndAssertTraces(traceAssertions);
+  }
+
   private static String value(Result result, String column) {
     return Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes(column)));
   }
@@ -329,8 +369,20 @@ public abstract class AbstractHbaseTest {
                                   emitStableDatabaseSemconv()
                                       ? TABLE_NAME.getQualifierAsString()
                                       : null),
-                              equalTo(SERVER_ADDRESS, hostname),
-                              equalTo(SERVER_PORT, REGION_SERVER_PORT),
+                              equalTo(
+                                  SERVER_ADDRESS,
+                                  emitStableDatabaseSemconv() ? serverTarget : hostname),
+                              equalTo(
+                                  SERVER_PORT,
+                                  emitStableDatabaseSemconv()
+                                      ? null
+                                      : Long.valueOf(REGION_SERVER_PORT)),
+                              equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
+                              equalTo(
+                                  NETWORK_PEER_PORT,
+                                  networkPeerAddress == null
+                                      ? null
+                                      : Long.valueOf(REGION_SERVER_PORT)),
                               equalTo(
                                   ERROR_TYPE,
                                   emitStableDatabaseSemconv() ? timeoutSpanExceptionType : null),
@@ -609,24 +661,51 @@ public abstract class AbstractHbaseTest {
       table.get(new Get(Bytes.toBytes(ROW_1)));
     }
     testing().waitForTraces(1);
-    assertDurationMetric(
-        testing(),
-        instrumentationName(),
-        DB_SYSTEM_NAME,
-        maybeStable(DB_OPERATION),
-        maybeStable(DB_NAME),
-        DB_COLLECTION_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+    if (rpcCallUsesInetSocketAddress()) {
+      assertDurationMetric(
+          testing(),
+          instrumentationName(),
+          DB_SYSTEM_NAME,
+          maybeStable(DB_OPERATION),
+          maybeStable(DB_NAME),
+          DB_COLLECTION_NAME,
+          SERVER_ADDRESS,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT);
+    } else {
+      assertDurationMetric(
+          testing(),
+          instrumentationName(),
+          DB_SYSTEM_NAME,
+          maybeStable(DB_OPERATION),
+          maybeStable(DB_NAME),
+          DB_COLLECTION_NAME,
+          SERVER_ADDRESS);
+    }
   }
 
   protected Consumer<TraceAssert> traceAssertConsumer(
       TableName table, String operation, int port, boolean hasTable) {
-    return traceAssertConsumer(table, operation, port, hasTable, null);
+    return traceAssertConsumer(table, operation, port, hasTable, null, serverTarget);
+  }
+
+  private Consumer<TraceAssert> traceAssertConsumer(
+      TableName table, String operation, int port, boolean hasTable, String expectedServerTarget) {
+    return traceAssertConsumer(table, operation, port, hasTable, null, expectedServerTarget);
   }
 
   private Consumer<TraceAssert> traceAssertConsumer(
       TableName table, String operation, int port, boolean hasTable, Long batchSize) {
+    return traceAssertConsumer(table, operation, port, hasTable, batchSize, serverTarget);
+  }
+
+  private Consumer<TraceAssert> traceAssertConsumer(
+      TableName table,
+      String operation,
+      int port,
+      boolean hasTable,
+      Long batchSize,
+      String expectedServerTarget) {
     String spanName;
     if (hasTable) {
       spanName =
@@ -636,7 +715,7 @@ public abstract class AbstractHbaseTest {
                   ? table.getQualifierAsString()
                   : table.getNameAsString());
     } else if (emitStableDatabaseSemconv()) {
-      spanName = operation + " " + hostname + ":" + port;
+      spanName = operation + " " + expectedServerTarget;
     } else {
       spanName = operation;
     }
@@ -653,13 +732,37 @@ public abstract class AbstractHbaseTest {
                         equalTo(
                             DB_OPERATION_BATCH_SIZE,
                             emitStableDatabaseSemconv() ? batchSize : null),
-                        equalTo(SERVER_ADDRESS, hostname),
-                        equalTo(SERVER_PORT, port),
+                        equalTo(
+                            SERVER_ADDRESS,
+                            emitStableDatabaseSemconv() ? expectedServerTarget : hostname),
+                        equalTo(
+                            SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                        equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
+                        equalTo(
+                            NETWORK_PEER_PORT,
+                            networkPeerAddress == null ? null : Long.valueOf(port)),
                         satisfies(
                             DB_USER,
                             emitStableDatabaseSemconv()
                                 ? AbstractAssert::isNull
                                 : AbstractAssert::isNotNull)));
+  }
+
+  private static boolean rpcCallUsesInetSocketAddress() {
+    try {
+      Class<?> rpcClient = Class.forName("org.apache.hadoop.hbase.ipc.AbstractRpcClient");
+      for (Method method : rpcClient.getDeclaredMethods()) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        if ((method.getName().equals("callMethod") || method.getName().equals("callBlockingMethod"))
+            && parameterTypes.length > 5
+            && parameterTypes[5] == InetSocketAddress.class) {
+          return true;
+        }
+      }
+    } catch (ClassNotFoundException ignored) {
+      // The test cannot produce HBase spans without this class.
+    }
+    return false;
   }
 
   private static String dbNamespace(TableName table, boolean hasTable) {

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientUtil.createRequest;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_0.HbaseSingletons.instrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -14,14 +15,18 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerTarget;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.ipc.AbstractRpcClient;
 import org.apache.hadoop.hbase.security.User;
 
 class AbstractRpcClientInstrumentation implements TypeInstrumentation {
@@ -33,6 +38,10 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(0, named("org.apache.hadoop.conf.Configuration"))),
+        getClass().getName() + "$ConstructorAdvice");
+
     // 1.0.0-1.3.x: callBlockingMethod(md, pcrc, param, returnType, ticket, addr)
     transformer.applyAdviceToMethod(
         named("callBlockingMethod")
@@ -48,6 +57,18 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$CallBlockingMethodAdvice");
   }
 
+  @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This AbstractRpcClient client, @Advice.Argument(0) Configuration configuration) {
+      String serverTarget = HbaseServerTarget.from(configuration);
+      if (serverTarget != null) {
+        VirtualField.find(AbstractRpcClient.class, String.class).set(client, serverTarget);
+      }
+    }
+  }
+
   public static class AdviceScope {
     private final HbaseRequest request;
     private final Context context;
@@ -60,8 +81,13 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    public static AdviceScope start(Object md, Object param, User ticket, InetSocketAddress addr) {
-      HbaseRequest request = createRequest(md, param, ticket, addr);
+    public static AdviceScope start(
+        Object md,
+        Object param,
+        User ticket,
+        InetSocketAddress addr,
+        @Nullable String serverTarget) {
+      HbaseRequest request = createRequest(md, param, ticket, addr, serverTarget);
       Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
@@ -97,11 +123,13 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(
+        @Advice.This AbstractRpcClient client,
         @Advice.Argument(0) Object md,
         @Advice.Argument(2) Object param,
         @Advice.Argument(4) User ticket,
         @Advice.Argument(5) InetSocketAddress addr) {
-      return AdviceScope.start(md, param, ticket, addr);
+      String serverTarget = VirtualField.find(AbstractRpcClient.class, String.class).get(client);
+      return AdviceScope.start(md, param, ticket, addr, serverTarget);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
