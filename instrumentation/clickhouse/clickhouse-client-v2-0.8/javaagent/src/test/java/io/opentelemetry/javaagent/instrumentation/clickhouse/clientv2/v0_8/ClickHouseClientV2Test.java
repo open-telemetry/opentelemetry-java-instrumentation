@@ -33,6 +33,7 @@ import com.clickhouse.client.api.query.QueryResponse;
 import com.clickhouse.client.api.query.QuerySettings;
 import com.clickhouse.client.api.query.Records;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -41,7 +42,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
@@ -482,7 +482,7 @@ class ClickHouseClientV2Test {
   @Test
   void testMultipleEndpointsReportTheWholeConfiguredTarget() throws Exception {
     // the second endpoint is given as a url string, the other form the client accepts
-    String secondEndpoint = "http://" + host + ":" + (port + 1);
+    String secondEndpoint = "http://127.0.0.1:" + port;
     Client client =
         new Client.Builder()
             .addEndpoint(Protocol.HTTP, host, port, false)
@@ -495,17 +495,15 @@ class ClickHouseClientV2Test {
     cleanup.deferCleanup(client);
 
     // the endpoints are reported in a fixed order, whatever order the client keeps them in
-    List<String> endpoints = new ArrayList<>(asList(host + ":" + port, host + ":" + (port + 1)));
+    List<String> endpoints = new ArrayList<>(asList(host + ":" + port, "127.0.0.1:" + port));
     Collections.sort(endpoints);
     String addressGroup = String.join(",", endpoints);
+    String firstEndpoint = client.getEndpoints().iterator().next();
+    String legacyAddress = UrlParser.getHost(firstEndpoint);
+    Integer legacyPort = UrlParser.getPort(firstEndpoint);
 
-    try {
-      QueryResponse response = client.query("select * from " + TABLE_NAME).join();
-      response.close();
-    } catch (RuntimeException ignored) {
-      // only one of the two endpoints accepts connections; the span carries the configured target
-      // whether or not the query reaches the server
-    }
+    QueryResponse response = client.query("select * from " + TABLE_NAME).join();
+    response.close();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -516,10 +514,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
-                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? addressGroup : legacyAddress),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(legacyPort)),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -531,15 +530,54 @@ class ClickHouseClientV2Test {
 
   @Test
   void testMultipleEndpointsExcludeCredentialsAndUrlComponents() {
-    ClickHouseClientV2Singletons.ServerInfo serverInfo =
-        ClickHouseClientV2Singletons.ServerInfo.of(
-            new HashSet<>(
-                asList(
-                    "https://user:secret@[2001:db8::1]:8443/database?option=value#fragment",
-                    "http://host.example:8123")));
+    List<String> endpoints =
+        new ArrayList<>(
+            asList(
+                "https://user:secret@[2001:db8::1]:8443/database?option=value#fragment",
+                "http://host.example:8123"));
 
-    assertThat(serverInfo.getAddressGroup()).isEqualTo("[2001:db8::1]:8443,host.example:8123");
-    assertThat(serverInfo.getAddress()).isEqualTo("2001:db8::1");
-    assertThat(serverInfo.getPort()).isEqualTo(8443);
+    Client.Builder builder =
+        new Client.Builder()
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setConnectTimeout(100)
+            .setMaxRetries(0);
+    for (String endpoint : endpoints) {
+      builder.addEndpoint(endpoint);
+    }
+    Client testClient = builder.build();
+    cleanup.deferCleanup(testClient);
+    boolean ipv6First = testClient.getEndpoints().iterator().next().contains("[2001:db8::1]");
+    String legacyAddress = ipv6First ? "2001:db8::1" : "host.example";
+    long legacyPort = ipv6First ? 8443 : 8123;
+
+    Throwable thrown = catchThrowable(() -> testClient.query("select 1").join());
+    assertThat(thrown).isNotNull();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? "[2001:db8::1]:8443,host.example:8123"
+                                    : legacyAddress),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : legacyPort),
+                            equalTo(maybeStable(DB_STATEMENT), "select ?"),
+                            equalTo(
+                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? "com.clickhouse.client.api.ClientException"
+                                    : null))));
   }
 }

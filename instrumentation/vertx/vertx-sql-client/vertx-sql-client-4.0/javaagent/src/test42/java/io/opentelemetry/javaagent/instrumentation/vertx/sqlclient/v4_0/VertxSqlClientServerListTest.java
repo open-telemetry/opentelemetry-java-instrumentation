@@ -152,7 +152,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void aSinglePoolBuiltBeforeAListPoolKeepsItsOwnTarget()
+  void singlePoolBuiltBeforeListPoolKeepsItsOwnTarget()
       throws InterruptedException, ExecutionException, TimeoutException {
     PgConnectOptions primary = connectOptions().setPort(port);
     Pool singlePool = PgPool.pool(vertx, primary, poolOptions());
@@ -163,7 +163,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void aSinglePoolBuiltAfterAListPoolKeepsItsOwnTarget()
+  void singlePoolBuiltAfterListPoolKeepsItsOwnTarget()
       throws InterruptedException, ExecutionException, TimeoutException {
     PgConnectOptions primary = connectOptions().setPort(port);
     Pool listPool =

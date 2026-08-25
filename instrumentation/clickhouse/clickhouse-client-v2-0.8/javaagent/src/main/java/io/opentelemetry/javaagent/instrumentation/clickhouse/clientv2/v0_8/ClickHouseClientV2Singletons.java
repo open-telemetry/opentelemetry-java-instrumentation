@@ -81,6 +81,8 @@ public class ClickHouseClientV2Singletons {
         return new ServerInfo(UrlParser.getHost(endpoint), UrlParser.getPort(endpoint), null);
       }
 
+      String first = sanitizeEndpoint(endpoints.iterator().next());
+
       // the endpoints of a client are an unordered set, so they are sorted to give one client
       // configuration one target, whatever order the set iterates in
       List<String> sanitized = new ArrayList<>(endpoints.size());
@@ -96,7 +98,6 @@ public class ClickHouseClientV2Singletons {
         }
         addressGroup.append(endpoint);
       }
-      String first = sanitized.get(0);
       return new ServerInfo(endpointAddress(first), endpointPort(first), addressGroup.toString());
     }
 
