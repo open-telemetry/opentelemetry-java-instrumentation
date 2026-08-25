@@ -122,7 +122,7 @@ public abstract class AbstractElasticsearchTransportClientTest
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
     if (emitStableDatabaseSemconv()) {
       result.add(equalTo(SERVER_ADDRESS, getAddress()));
-      result.add(equalTo(SERVER_PORT, (long) getPort()));
+      result.add(equalTo(SERVER_PORT, getPort()));
     }
     return result;
   }

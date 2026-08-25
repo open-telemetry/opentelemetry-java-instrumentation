@@ -201,7 +201,7 @@ abstract class AbstractOpenSearchTest {
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
     if (emitStableDatabaseSemconv()) {
       result.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
-      result.add(equalTo(SERVER_PORT, (long) httpHost.getPort()));
+      result.add(equalTo(SERVER_PORT, httpHost.getPort()));
     }
     return result;
   }

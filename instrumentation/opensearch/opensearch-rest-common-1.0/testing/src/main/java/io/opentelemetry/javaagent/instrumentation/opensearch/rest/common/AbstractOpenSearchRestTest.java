@@ -258,7 +258,7 @@ public abstract class AbstractOpenSearchRestTest {
                 equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
-      assertions.add(equalTo(SERVER_PORT, (long) httpHost.getPort()));
+      assertions.add(equalTo(SERVER_PORT, httpHost.getPort()));
     }
     return assertions;
   }
