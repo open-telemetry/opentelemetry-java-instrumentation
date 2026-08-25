@@ -292,6 +292,9 @@ public class Resilience4jCircuitBreakerDecorators {
       } catch (ExecutionException e) {
         pendingSpan.end("failure", e.getCause() == null ? e : e.getCause());
         throw e;
+      } catch (RuntimeException | Error e) {
+        pendingSpan.end("failure", e);
+        throw e;
       } finally {
         Resilience4jCircuitBreakerSpans.detachPendingSpan(pendingSpan);
       }
@@ -312,6 +315,9 @@ public class Resilience4jCircuitBreakerDecorators {
         pendingSpan.end("failure", e.getCause() == null ? e : e.getCause());
         throw e;
       } catch (TimeoutException e) {
+        pendingSpan.end("failure", e);
+        throw e;
+      } catch (RuntimeException | Error e) {
         pendingSpan.end("failure", e);
         throw e;
       } finally {

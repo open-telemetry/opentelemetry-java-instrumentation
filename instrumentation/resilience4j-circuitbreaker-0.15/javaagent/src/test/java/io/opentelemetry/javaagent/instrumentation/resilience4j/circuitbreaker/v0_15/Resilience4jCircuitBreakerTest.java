@@ -245,6 +245,42 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void createsCircuitBreakerSpanWhenDecoratedFutureGetThrowsRuntimeException() throws Exception {
+    Method decorateFuture = decorateFutureMethod();
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    IllegalStateException exception = new IllegalStateException("boom");
+    Supplier<Future<String>> supplier = () -> new RuntimeExceptionFuture<>(exception);
+    @SuppressWarnings("unchecked")
+    Supplier<Future<String>> decoratedSupplier =
+        (Supplier<Future<String>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+
+    Future<String> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
+
+    Throwable thrown = catchThrowable(decoratedFuture::get);
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedFutureTimedGetThrowsRuntimeException() throws Exception {
+    Method decorateFuture = decorateFutureMethod();
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    IllegalStateException exception = new IllegalStateException("boom");
+    Supplier<Future<String>> supplier = () -> new RuntimeExceptionFuture<>(exception);
+    @SuppressWarnings("unchecked")
+    Supplier<Future<String>> decoratedSupplier =
+        (Supplier<Future<String>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+
+    Future<String> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
+
+    Throwable thrown = catchThrowable(() -> decoratedFuture.get(1, MILLISECONDS));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
   void createsCircuitBreakerSpanWhenOnErrorCalledDirectly() throws Exception {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     IllegalStateException exception = new IllegalStateException("boom");
@@ -257,6 +293,34 @@ class Resilience4jCircuitBreakerTest {
         });
 
     assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsFailureSpanWhenOnErrorCallbackThrows() throws Exception {
+    Method recordException = recordExceptionMethod();
+    IllegalArgumentException originalException = new IllegalArgumentException("original");
+    IllegalStateException callbackException = new IllegalStateException("boom");
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    recordException.invoke(
+        builder,
+        (Predicate<Throwable>)
+            throwable -> {
+              throw callbackException;
+            });
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () -> {
+                      circuitBreaker.acquirePermission();
+                      invokeOnError(circuitBreaker, originalException);
+                    }));
+
+    assertThat(thrown).isInstanceOf(InvocationTargetException.class).hasCause(callbackException);
+    assertCircuitBreakerSpan("closed", "failure", callbackException);
   }
 
   @Test
@@ -558,6 +622,15 @@ class Resilience4jCircuitBreakerTest {
     }
   }
 
+  private static Method recordExceptionMethod() throws NoSuchMethodException {
+    try {
+      return CircuitBreakerConfig.Builder.class.getMethod("recordException", Predicate.class);
+    } catch (NoSuchMethodException e) {
+      assumeTrue(false, "recordException is not available in this Resilience4j version");
+      throw e;
+    }
+  }
+
   private static Method transitionOnResultMethod() throws NoSuchMethodException {
     try {
       return CircuitBreakerConfig.Builder.class.getMethod("transitionOnResult", Function.class);
@@ -664,6 +737,40 @@ class Resilience4jCircuitBreakerTest {
 
   private interface ThrowingFunction {
     Object apply(Object value) throws Throwable;
+  }
+
+  private static final class RuntimeExceptionFuture<T> implements Future<T> {
+
+    private final RuntimeException exception;
+
+    private RuntimeExceptionFuture(RuntimeException exception) {
+      this.exception = exception;
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+      return false;
+    }
+
+    @Override
+    public boolean isCancelled() {
+      return false;
+    }
+
+    @Override
+    public boolean isDone() {
+      return true;
+    }
+
+    @Override
+    public T get() {
+      throw exception;
+    }
+
+    @Override
+    public T get(long timeout, TimeUnit unit) {
+      throw exception;
+    }
   }
 
   private static void assertCircuitBreakerSpan(String state, String outcome) {

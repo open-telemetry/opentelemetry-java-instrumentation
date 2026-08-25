@@ -143,9 +143,12 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
-        @Advice.This CircuitBreaker circuitBreaker, @Advice.Argument(1) Throwable throwable) {
+        @Advice.This CircuitBreaker circuitBreaker,
+        @Advice.Argument(1) Throwable throwable,
+        @Advice.Thrown @Nullable Throwable callbackThrowable) {
       Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback(circuitBreaker);
-      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "failure", throwable);
+      Resilience4jCircuitBreakerSpans.end(
+          circuitBreaker, "failure", callbackThrowable == null ? throwable : callbackThrowable);
     }
   }
 
@@ -159,9 +162,12 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
-        @Advice.This CircuitBreaker circuitBreaker, @Advice.Argument(2) Throwable throwable) {
+        @Advice.This CircuitBreaker circuitBreaker,
+        @Advice.Argument(2) Throwable throwable,
+        @Advice.Thrown @Nullable Throwable callbackThrowable) {
       Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback(circuitBreaker);
-      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "failure", throwable);
+      Resilience4jCircuitBreakerSpans.end(
+          circuitBreaker, "failure", callbackThrowable == null ? throwable : callbackThrowable);
     }
   }
 
