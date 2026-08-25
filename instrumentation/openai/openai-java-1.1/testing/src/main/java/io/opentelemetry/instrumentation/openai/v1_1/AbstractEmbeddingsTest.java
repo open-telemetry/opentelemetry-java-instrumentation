@@ -275,8 +275,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                ERROR_TYPE, OpenAIIoException.class.getName()),
+                                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
                                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
