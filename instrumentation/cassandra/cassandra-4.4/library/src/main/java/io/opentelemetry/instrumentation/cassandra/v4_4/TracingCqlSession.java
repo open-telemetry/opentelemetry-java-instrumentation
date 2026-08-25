@@ -37,12 +37,16 @@ final class TracingCqlSession {
   }
 
   CqlSession wrapSession(CqlSession session) {
+    // the driver configuration can be reloaded, so read the configured target once, here, and keep
+    // that snapshot for the life of the session
     CassandraServerTarget serverTarget =
         emitStableDatabaseSemconv() ? CassandraServerTarget.of(session) : null;
     return wrapSession(session, serverTarget);
   }
 
   CqlSession wrapSession(CqlSession session, Set<EndPoint> programmaticContactPoints) {
+    // the driver configuration can be reloaded, so read the configured target once, here, and keep
+    // that snapshot for the life of the session
     CassandraServerTarget serverTarget =
         emitStableDatabaseSemconv()
             ? CassandraServerTarget.of(session, programmaticContactPoints)
@@ -51,8 +55,6 @@ final class TracingCqlSession {
   }
 
   private CqlSession wrapSession(CqlSession session, @Nullable CassandraServerTarget serverTarget) {
-    // the driver configuration can be reloaded, so read the configured target once, here, and keep
-    // that snapshot for the life of the session
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();
     while (clazz != Object.class) {
