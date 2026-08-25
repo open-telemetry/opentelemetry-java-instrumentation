@@ -73,7 +73,12 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
         }
       }
       return wrapContext(
-          attachPreparedStatementData(future, new VertxSqlClientData(connectOptions, dbSystem)));
+          attachPreparedStatementData(
+              future,
+              new VertxSqlClientData(
+                  connectOptions,
+                  dbSystem,
+                  VertxSqlClientSingletons.getAddressGroup(sqlClientBase))));
     }
   }
 }

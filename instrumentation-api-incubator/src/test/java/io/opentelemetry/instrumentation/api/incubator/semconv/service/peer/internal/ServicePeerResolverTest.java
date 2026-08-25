@@ -94,6 +94,47 @@ class ServicePeerResolverTest {
   }
 
   @Test
+  void configuredTargetDoesNotAlsoMatchItsFirstHost() {
+    String target = "node1:6379,node2:6380";
+    ServicePeerResolver r = createResolver(mapping(target, "cluster", null));
+    assertThat(r.isEmpty()).isFalse();
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve(target, null, () -> null, attrs::put);
+    assertName("cluster", attrs.build());
+
+    attrs = Attributes.builder();
+    r.resolve("node1", 6379, () -> null, attrs::put);
+    assertThat(attrs.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void opaqueConfiguredTargetDoesNotAlsoMatchItsDriverName() {
+    String target =
+        "oracle:thin:@(description=(address=(protocol=tcp)(host=h1)(port=1521))"
+            + "(address=(protocol=tcp)(host=h2)(port=1521)))";
+    ServicePeerResolver r = createResolver(mapping(target, "cluster", null));
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve(target, null, () -> null, attrs::put);
+    assertName("cluster", attrs.build());
+
+    attrs = Attributes.builder();
+    r.resolve("oracle", null, () -> null, attrs::put);
+    assertThat(attrs.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void commaInPathStillUsesHostAndPathMatching() {
+    ServicePeerResolver r = createResolver(mapping("example.com/api,v2", "versionedApi", null));
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve("example.com", null, () -> "/api,v2", attrs::put);
+
+    assertName("versionedApi", attrs.build());
+  }
+
+  @Test
   void shouldSkipEntryWithNullPeer() {
     ServicePeerResolver r =
         createResolver(mapping(null, "svc", null), mapping("valid.com", "validSvc", null));

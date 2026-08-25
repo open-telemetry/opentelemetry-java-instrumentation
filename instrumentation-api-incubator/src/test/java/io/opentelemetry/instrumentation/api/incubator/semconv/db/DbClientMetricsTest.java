@@ -17,7 +17,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -54,8 +53,7 @@ class DbClientMetricsTest {
             .put(DB_NAMESPACE, "potatoes")
             .put(DB_OPERATION_NAME, "SELECT")
             .put(DB_QUERY_SUMMARY, "SELECT table")
-            .put(SERVER_ADDRESS, "localhost")
-            .put(SERVER_PORT, 1234)
+            .put(SERVER_ADDRESS, "db1.example:5432,db2.example:5432")
             .build();
 
     Attributes responseAttributes =
@@ -100,8 +98,9 @@ class DbClientMetricsTest {
                                             equalTo(DB_OPERATION_NAME, "SELECT"),
                                             equalTo(DB_COLLECTION_NAME, "table"),
                                             equalTo(DB_QUERY_SUMMARY, "SELECT table"),
-                                            equalTo(SERVER_ADDRESS, "localhost"),
-                                            equalTo(SERVER_PORT, 1234),
+                                            equalTo(
+                                                SERVER_ADDRESS,
+                                                "db1.example:5432,db2.example:5432"),
                                             equalTo(ERROR_TYPE, "400"),
                                             equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
                                             equalTo(NETWORK_PEER_PORT, 8080))

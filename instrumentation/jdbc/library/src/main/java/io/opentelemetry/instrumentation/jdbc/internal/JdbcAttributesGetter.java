@@ -6,9 +6,11 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
@@ -106,12 +108,22 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Nullable
   @Override
   public String getServerAddress(DbRequest request) {
-    return request.getDbInfo().getServerAddress();
+    DbInfo dbInfo = request.getDbInfo();
+    String addressGroup = dbInfo.getServerAddressGroup();
+    if (emitStableDatabaseSemconv() && addressGroup != null) {
+      return addressGroup;
+    }
+    return dbInfo.getServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(DbRequest request) {
-    return request.getDbInfo().getServerPort();
+    DbInfo dbInfo = request.getDbInfo();
+    if (emitStableDatabaseSemconv() && dbInfo.getServerAddressGroup() != null) {
+      // the group target already carries the port of every host it names
+      return null;
+    }
+    return dbInfo.getServerPort();
   }
 }

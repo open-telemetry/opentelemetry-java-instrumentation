@@ -56,6 +56,15 @@ public abstract class DbInfo {
   @Nullable
   public abstract Integer getServerPort();
 
+  /**
+   * The complete configured target of a connection that routes to more than one host, e.g. {@code
+   * h1:3306,h2:3306}. Opaque routing targets retain their driver syntax. Credentials, the database
+   * path, options and the fragment are removed. {@code null} when the connection targets a single
+   * host.
+   */
+  @Nullable
+  public abstract String getServerAddressGroup();
+
   @Nullable
   public final String getSystem() {
     return getDbSystem() != null ? getDbSystem() : getDbSystemName();
@@ -96,7 +105,8 @@ public abstract class DbInfo {
         .dbName(getDbName())
         .dbNamespace(getDbNamespace())
         .serverAddress(getServerAddress())
-        .serverPort(getServerPort());
+        .serverPort(getServerPort())
+        .serverAddressGroup(getServerAddressGroup());
   }
 
   /**
@@ -128,6 +138,8 @@ public abstract class DbInfo {
     public abstract Builder serverAddress(String serverAddress);
 
     public abstract Builder serverPort(Integer serverPort);
+
+    public abstract Builder serverAddressGroup(String serverAddressGroup);
 
     public final Builder system(String system) {
       return dbSystemName(system).dbSystem(system);

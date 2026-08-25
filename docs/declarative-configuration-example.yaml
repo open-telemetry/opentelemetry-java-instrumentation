@@ -177,9 +177,9 @@ instrumentation/development:
           # with only a span link connecting it to the producer trace.
           enabled: false
 
-      # Used to specify a mapping from host names or IP addresses to peer services.
+      # Used to specify a mapping from server addresses or configured targets to peer services.
       # Each list entry is an object with the following properties:
-      #   peer (string, required): Host name or IP address to match against.
+      #   peer (string, required): Server address or configured target to match against.
       #   service_name (string, required): Peer service name to record for matching peers.
       # Example:
       #   service_peer_mapping:

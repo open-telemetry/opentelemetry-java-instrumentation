@@ -70,6 +70,7 @@ public final class DbExecution {
   @Nullable private final String namespace;
   @Nullable private final String serverAddress;
   @Nullable private final Integer serverPort;
+  @Nullable private final String serverAddressGroup;
   private final String connectionString;
   private final List<String> rawQueryTexts;
   @Nullable private final Long batchSize;
@@ -99,6 +100,7 @@ public final class DbExecution {
         factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
     this.serverPort =
         factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
+    this.serverAddressGroup = serverAddressGroup(serverAddress, serverPort);
     this.connectionString =
         String.format(
             "%s%s:%s%s",
@@ -132,6 +134,46 @@ public final class DbExecution {
   @Nullable
   public Integer getServerPort() {
     return serverPort;
+  }
+
+  /**
+   * The complete configured target of a connection whose {@code HOST} lists more than one host,
+   * e.g. {@code host1:3306,host2:3306}. Every host carries a port, so that the target names the
+   * whole configuration on its own and {@code server.port} can be left out.
+   *
+   * <p>Null when {@code HOST} names a single host, however it is spelled. A unix domain socket path
+   * is a single host even when it holds a comma.
+   */
+  @Nullable
+  public String getServerAddressGroup() {
+    return serverAddressGroup;
+  }
+
+  @Nullable
+  private static String serverAddressGroup(
+      @Nullable String serverAddress, @Nullable Integer serverPort) {
+    if (serverAddress == null || serverAddress.indexOf(',') < 0 || serverAddress.startsWith("/")) {
+      return null;
+    }
+    if (serverPort == null) {
+      return serverAddress;
+    }
+    StringBuilder group = new StringBuilder();
+    for (String host : serverAddress.split(",")) {
+      if (group.length() > 0) {
+        group.append(',');
+      }
+      String trimmed = host.trim();
+      group.append(trimmed);
+      if (!hasPort(trimmed)) {
+        group.append(':').append(serverPort);
+      }
+    }
+    return group.toString();
+  }
+
+  private static boolean hasPort(String host) {
+    return host.startsWith("[") ? host.indexOf("]:") > 0 : host.indexOf(':') >= 0;
   }
 
   public String getSystemName() {
