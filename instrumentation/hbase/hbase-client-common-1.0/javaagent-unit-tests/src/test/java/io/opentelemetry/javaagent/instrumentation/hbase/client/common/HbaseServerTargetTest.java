@@ -23,6 +23,15 @@ class HbaseServerTargetTest {
   }
 
   @Test
+  void rejectsZooKeeperTargetWhenZooCfgMayOverrideIt() {
+    Configuration configuration = new Configuration(false);
+    configuration.setBoolean("hbase.config.read.zookeeper.config", true);
+    configuration.set("hbase.zookeeper.quorum", "ignored-zk");
+
+    assertThat(HbaseServerTarget.from(configuration)).isNull();
+  }
+
+  @Test
   void rendersCanonicalZooKeeperClusterKey() {
     Configuration configuration = new Configuration(false);
     configuration.set(REGISTRY_KEY, ZK_REGISTRY);

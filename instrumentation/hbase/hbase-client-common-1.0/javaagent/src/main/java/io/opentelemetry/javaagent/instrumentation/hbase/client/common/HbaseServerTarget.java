@@ -24,6 +24,7 @@ public class HbaseServerTarget {
   private static final String CLIENT_ZK_QUORUM_KEY = "hbase.client.zookeeper.quorum";
   private static final String CLIENT_ZK_CLIENT_PORT_KEY =
       "hbase.client.zookeeper.property.clientPort";
+  private static final String READ_ZK_CONFIG_KEY = "hbase.config.read.zookeeper.config";
   private static final String ZK_ZNODE_PARENT_KEY = "zookeeper.znode.parent";
   private static final String MASTER_ADDRESSES_KEY = "hbase.masters";
   private static final String MASTER_PORT_KEY = "hbase.master.port";
@@ -74,6 +75,10 @@ public class HbaseServerTarget {
 
   @Nullable
   private static String zkTarget(Configuration configuration, boolean supportsClientZkConfig) {
+    if (configuration.getBoolean(READ_ZK_CONFIG_KEY, false)) {
+      return null;
+    }
+
     String quorum = supportsClientZkConfig ? configuration.get(CLIENT_ZK_QUORUM_KEY) : null;
     String clientPort = null;
     if (quorum == null) {
