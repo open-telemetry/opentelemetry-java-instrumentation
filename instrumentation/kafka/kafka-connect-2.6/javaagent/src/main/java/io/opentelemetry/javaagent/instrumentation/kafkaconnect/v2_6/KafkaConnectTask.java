@@ -20,9 +20,8 @@ import org.apache.kafka.connect.sink.SinkRecord;
 
 public class KafkaConnectTask {
 
-  // Sink tasks run in a Kafka Connect plugin classloader, which has its own copy of the
-  // instrumentation helper classes. A JDK type is used as the field type so that this
-  // classloader and the worker classloader generate the same VirtualField accessor.
+  // Worker and sink task instrumentation may load helpers through different classloaders.
+  // Use a bootstrap-loaded field type so both sides resolve the same VirtualField accessor.
   private static final VirtualField<SinkRecord, Boolean> RECEIVE_OWNED_FIELD =
       VirtualField.find(SinkRecord.class, Boolean.class);
 
