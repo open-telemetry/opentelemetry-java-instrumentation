@@ -5,11 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0;
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -30,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
@@ -84,6 +89,61 @@ class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
       HttpClientResult httpClientResult) {
     sendRequest(request)
         .whenComplete((status, throwable) -> httpClientResult.complete(() -> status, throwable));
+  }
+
+  @Test
+  void endHandlerDoesNotCountAsWriteAttempt() throws Exception {
+    URI uri = resolveAddress("/success");
+    HttpClientRequest request = httpClient.requestAbs(HttpMethod.GET, uri.toString());
+    CompletableFuture<Integer> result = new CompletableFuture<>();
+    request
+        .handler(response -> result.complete(response.statusCode()))
+        .exceptionHandler(result::completeExceptionally);
+
+    testing.runWithHttpClientSpan(
+        "parent-client-span",
+        () -> {
+          request.endHandler(ignored -> {});
+        });
+    request.end();
+
+    assertThat(result.get(30, SECONDS)).isEqualTo(200);
+
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent-client-span", "GET"),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent-client-span").hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasKind(CLIENT).hasNoParent(),
+                span -> span.hasKind(SERVER).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void doesNotInjectAfterSuppressedSendHead() throws Exception {
+    URI uri = resolveAddress("/success");
+    HttpClientRequest request = httpClient.requestAbs(HttpMethod.GET, uri.toString());
+    CompletableFuture<Integer> result = new CompletableFuture<>();
+    request
+        .handler(response -> result.complete(response.statusCode()))
+        .exceptionHandler(result::completeExceptionally);
+
+    testing.runWithHttpClientSpan(
+        "parent-client-span",
+        () -> {
+          request.sendHead();
+        });
+    request.end();
+
+    assertThat(result.get(30, SECONDS)).isEqualTo(200);
+
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent-client-span", "test-http-server"),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent-client-span").hasKind(CLIENT).hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span)));
   }
 
   @Override

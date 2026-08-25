@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.VertxClientSingletons.CONTEXTS;
+import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.VertxClientSingletons.INSTRUMENTATION_STATE;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.VertxClientSingletons.REQUEST_INFO;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.VertxClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
@@ -21,6 +22,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.Contexts;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.ExceptionHandlerWrapper;
+import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.RequestInstrumentationState;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
@@ -60,7 +62,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        nameStartsWith("end").or(named("sendHead")), getClass().getName() + "$EndRequestAdvice");
+        named("end").or(named("sendHead")), getClass().getName() + "$EndRequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("handleException"), getClass().getName() + "$HandleExceptionAdvice");
@@ -103,10 +105,10 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
         // Vert.x may be serializing those same headers on the event loop. That data race can
         // surface as a NullPointerException in HeadersMultiMap.names(). Injecting once keeps the
         // instrumentation from adding a second, unsynchronized writer of the header map.
-        Contexts contexts = CONTEXTS.get(request);
-        if (contexts != null) {
+        if (INSTRUMENTATION_STATE.get(request) != null) {
           return null;
         }
+        INSTRUMENTATION_STATE.set(request, RequestInstrumentationState.ATTEMPTED);
 
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
