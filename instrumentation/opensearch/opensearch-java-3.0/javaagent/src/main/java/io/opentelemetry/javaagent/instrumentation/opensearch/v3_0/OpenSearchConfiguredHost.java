@@ -45,7 +45,7 @@ public class OpenSearchConfiguredHost {
       try {
         port = Integer.parseInt(rest.substring(portStart + 1));
         rest = rest.substring(0, portStart);
-      } catch (NumberFormatException e) {
+      } catch (NumberFormatException ignored) {
         // not a port, keep the authority as it is
       }
     }

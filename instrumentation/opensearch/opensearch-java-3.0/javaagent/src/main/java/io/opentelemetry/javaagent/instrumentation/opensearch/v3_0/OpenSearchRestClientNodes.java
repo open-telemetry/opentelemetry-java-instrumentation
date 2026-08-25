@@ -37,7 +37,7 @@ public class OpenSearchRestClientNodes {
                 (Integer) host.getClass().getMethod("getPort").invoke(host)));
       }
       return OpenSearchServerTarget.of(endpoints);
-    } catch (ReflectiveOperationException | RuntimeException e) {
+    } catch (ReflectiveOperationException | RuntimeException ignored) {
       return null;
     }
   }
