@@ -122,7 +122,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName("$JS.ACK settle")
+                        span.hasName(emitStableMessagingSemconv() ? "settle $JS.ACK" : "$JS.ACK settle")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -133,7 +133,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
                                     equalTo(
                                         stringKey("messaging.destination.template"), "$JS.ACK"))),
                     span ->
-                        span.hasName("$JS.ACK settle")
+                        span.hasName(emitStableMessagingSemconv() ? "settle $JS.ACK" : "$JS.ACK settle")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
