@@ -140,7 +140,6 @@ class SpymemcachedRequestTest {
     request.setHandlingNode(memcachedNode("one.example", 11211));
     request.setHandlingNode(memcachedNode("two.example", 11212));
     assertThat(request.getHandlingNodeAddress()).isNull();
-    assertThat(request.getHandlingNodeAddress()).isNull();
     assertThat(request.getServerTarget().getAddress()).isEqualTo("one.example");
   }
 
