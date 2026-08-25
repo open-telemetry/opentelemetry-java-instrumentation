@@ -90,21 +90,12 @@ tasks {
   }
 
   val testBothSemconvNoReceiveTelemetry = register<Test>("testBothSemconvNoReceiveTelemetry") {
-    val sourceTask = named<Test>("testNoReceiveTelemetry").get()
-    setJvmArgs(sourceTask.jvmArgs)
-    setSystemProperties(sourceTask.systemProperties)
-
     testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
     classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
-
-    val semconvConfig = "otel.semconv-stability.preview=messaging/dup"
+    isEnabled = project.tasks.named("testNoReceiveTelemetry").get().enabled
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-D$semconvConfig")
-    systemProperty(
-      "metadataConfig",
-      listOfNotNull(sourceTask.systemProperties["metadataConfig"], semconvConfig).joinToString(","),
-    )
-    isEnabled = sourceTask.enabled
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
 
   check {
