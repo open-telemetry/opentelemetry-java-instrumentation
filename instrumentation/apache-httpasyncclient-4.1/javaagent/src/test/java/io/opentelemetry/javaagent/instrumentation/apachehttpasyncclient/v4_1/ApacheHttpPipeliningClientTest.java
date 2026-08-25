@@ -178,9 +178,11 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
                         .hasStatus(StatusData.error()),
                 span ->
                     assertServerSpan(span)
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 1)),
                 span ->
                     assertServerSpan(span)
+                        .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 2)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -273,9 +275,11 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
                         .hasStatus(StatusData.error()),
                 span ->
                     assertServerSpan(span)
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 3)),
                 span ->
                     assertServerSpan(span)
+                        .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 4)),
                 span ->
                     span.hasName("failure-callback")
