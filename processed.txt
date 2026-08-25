@@ -593,3 +593,4 @@ apache-commons-pool-2.0:javaagent
 apache-commons-pool-2.0:library
 apache-commons-pool-2.0:testing
 elasticsearch-transport-common-5.0:javaagent-unit-tests
+redisson-metrics-3.18:javaagent
