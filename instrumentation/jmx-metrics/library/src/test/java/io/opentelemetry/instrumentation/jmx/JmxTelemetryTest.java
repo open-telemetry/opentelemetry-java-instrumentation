@@ -47,7 +47,7 @@ class JmxTelemetryTest {
   void knownValidYaml() {
     JmxTelemetryBuilder jmxtelemetry = JmxTelemetry.builder(OpenTelemetry.noop());
     addClasspathRules(jmxtelemetry, "jmx/rules/jvm.yaml");
-    jmxtelemetry.metrics(IncludeExclude.builder().setExcluded("excluded.metric").build());
+    jmxtelemetry.setMetrics(IncludeExclude.builder().setExcluded("excluded.metric").build());
     JmxTelemetry telemetry = jmxtelemetry.build();
     assertThat(telemetry).isNotNull();
 
@@ -63,7 +63,7 @@ class JmxTelemetryTest {
   void metricsExplicitInclude() {
     JmxTelemetryBuilder jmxtelemetry = JmxTelemetry.builder(OpenTelemetry.noop());
     addClasspathRules(jmxtelemetry, "jmx/rules/jvm.yaml");
-    jmxtelemetry.metrics(
+    jmxtelemetry.setMetrics(
         IncludeExclude.builder()
             .setIncluded("jvm.memory.used")
             .setExcluded("missing.metric")

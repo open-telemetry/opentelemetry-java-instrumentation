@@ -64,7 +64,7 @@ public final class JmxTelemetryBuilder {
 
   /**
    * Adds JMX rules from input stream, all metrics are included unless filtered out by the {@link
-   * #metrics(IncludeExclude)} method.
+   * #setMetrics(IncludeExclude)} method.
    *
    * @param input input to read rules from
    * @throws IllegalArgumentException when input is {@literal null} or can't be parsed
@@ -87,7 +87,7 @@ public final class JmxTelemetryBuilder {
 
   /**
    * Adds JMX rules from file system path, all metrics are included unless filtered out by the
-   * {@link #metrics(IncludeExclude)} method.
+   * {@link #setMetrics(IncludeExclude)} method.
    *
    * @param path path to yaml file
    * @return builder instance
@@ -113,7 +113,7 @@ public final class JmxTelemetryBuilder {
    * @return this
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder metrics(IncludeExclude metrics) {
+  public JmxTelemetryBuilder setMetrics(IncludeExclude metrics) {
     this.metrics = metrics;
     return this;
   }
