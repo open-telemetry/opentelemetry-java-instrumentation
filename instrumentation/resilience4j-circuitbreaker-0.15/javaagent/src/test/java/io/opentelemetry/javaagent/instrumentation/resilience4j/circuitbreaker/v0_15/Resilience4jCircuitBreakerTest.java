@@ -20,9 +20,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.vavr.CheckedFunction1;
-import io.vavr.Function1;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
@@ -30,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
@@ -355,41 +357,36 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsCircuitBreakerSpanWhenVavrCheckedFunctionAdapterSucceeds() {
+  void createsCircuitBreakerSpanWhenVavrCheckedFunctionAdapterSucceeds() throws Exception {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
-    CheckedFunction1<String, String> checkedFunction =
-        CircuitBreaker.decorateCheckedFunction(circuitBreaker, value -> value);
+    Object checkedFunction = decorateVavrCheckedFunction(circuitBreaker, value -> value);
 
-    CheckedFunction1<String, String> memoized = checkedFunction.memoized();
-    String result =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              try {
-                return memoized.apply("ok");
-              } catch (Throwable t) {
-                throw new IllegalStateException(t);
-              }
-            });
+    Object memoized = checkedFunction.getClass().getMethod("memoized").invoke(checkedFunction);
+    String result = testing.runWithSpan("parent", () -> invokeFunction1(memoized, "ok"));
 
     assertThat(result).isEqualTo("ok");
     assertCircuitBreakerSpan("closed", "success");
   }
 
   @Test
-  void createsCircuitBreakerSpanWhenVavrFunctionAdapterFails() {
+  void createsCircuitBreakerSpanWhenVavrFunctionAdapterFails() throws Exception {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     IllegalStateException exception = new IllegalStateException("boom");
-    CheckedFunction1<String, String> checkedFunction =
-        CircuitBreaker.decorateCheckedFunction(
+    Object checkedFunction =
+        decorateVavrCheckedFunction(
             circuitBreaker,
             value -> {
               throw exception;
             });
 
-    Function1<String, String> recovered =
-        checkedFunction.recover(throwable -> value -> "recovered");
-    String result = testing.runWithSpan("parent", () -> recovered.apply("ok"));
+    Object recovered =
+        checkedFunction
+            .getClass()
+            .getMethod("recover", Function.class)
+            .invoke(
+                checkedFunction,
+                (Function<Throwable, Function<String, String>>) throwable -> value -> "recovered");
+    String result = testing.runWithSpan("parent", () -> invokeFunction1(recovered, "ok"));
 
     assertThat(result).isEqualTo("recovered");
     assertCircuitBreakerSpan("closed", "failure", exception);
@@ -552,6 +549,68 @@ class Resilience4jCircuitBreakerTest {
       assumeTrue(false, "onResult is not available in this Resilience4j version");
       throw e;
     }
+  }
+
+  private static Object decorateVavrCheckedFunction(
+      CircuitBreaker circuitBreaker, ThrowingFunction function) throws Exception {
+    Class<?> checkedFunction1 = vavrCheckedFunction1Interface();
+    InvocationHandler invocationHandler =
+        (proxy, method, args) -> {
+          if (method.getDeclaringClass() == Object.class) {
+            if ("equals".equals(method.getName())) {
+              return proxy == args[0];
+            } else if ("hashCode".equals(method.getName())) {
+              return System.identityHashCode(proxy);
+            }
+            return method.invoke(function, args);
+          }
+          return function.apply(args[0]);
+        };
+    Object delegate =
+        Proxy.newProxyInstance(
+            checkedFunction1.getClassLoader(),
+            new Class<?>[] {checkedFunction1},
+            invocationHandler);
+    try {
+      return CircuitBreaker.class
+          .getMethod("decorateCheckedFunction", CircuitBreaker.class, checkedFunction1)
+          .invoke(null, circuitBreaker, delegate);
+    } catch (NoSuchMethodException e) {
+      assumeTrue(false, "decorateCheckedFunction is not available in this Resilience4j version");
+      throw e;
+    }
+  }
+
+  private static Class<?> vavrCheckedFunction1Interface() throws ClassNotFoundException {
+    try {
+      return Class.forName("io.vavr.CheckedFunction1");
+    } catch (ClassNotFoundException e) {
+      assumeTrue(false, "Vavr CheckedFunction1 is not available in this Resilience4j version");
+      throw e;
+    }
+  }
+
+  private static String invokeFunction1(Object function, Object argument) {
+    try {
+      Method apply = function.getClass().getMethod("apply", Object.class);
+      apply.setAccessible(true);
+      return (String) apply.invoke(function, argument);
+    } catch (InvocationTargetException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof RuntimeException) {
+        throw (RuntimeException) cause;
+      }
+      if (cause instanceof Error) {
+        throw (Error) cause;
+      }
+      throw new IllegalStateException(cause);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private interface ThrowingFunction {
+    Object apply(Object value) throws Throwable;
   }
 
   private static void assertCircuitBreakerSpan(String state, String outcome) {
