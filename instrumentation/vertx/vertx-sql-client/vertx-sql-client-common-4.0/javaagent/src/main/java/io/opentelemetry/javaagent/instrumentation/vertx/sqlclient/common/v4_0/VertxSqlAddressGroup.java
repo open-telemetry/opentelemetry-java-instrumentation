@@ -24,7 +24,8 @@ public final class VertxSqlAddressGroup {
   }
 
   /**
-   * The target of {@code databases}, or null when they name a single server and there is no group.
+   * The target of {@code databases}, or null when they name a single server, when there is no
+   * group, or when a host is missing so that no complete target can be rendered.
    */
   @Nullable
   public static VertxSqlAddressGroup of(@Nullable List<? extends SqlConnectOptions> databases) {
@@ -33,24 +34,27 @@ public final class VertxSqlAddressGroup {
     }
     StringBuilder address = new StringBuilder();
     for (SqlConnectOptions database : databases) {
+      String host = database.getHost();
+      if (host == null) {
+        return null;
+      }
       if (address.length() > 0) {
         address.append(',');
       }
-      appendHostPort(address, database);
+      appendHostPort(address, host, database.getPort());
     }
     return new VertxSqlAddressGroup(address.toString());
   }
 
-  private static void appendHostPort(StringBuilder address, SqlConnectOptions database) {
-    String host = database.getHost();
+  private static void appendHostPort(StringBuilder address, String host, int port) {
     // a literal IPv6 address is bracketed so that the port stays unambiguous; a Unix domain socket
     // path is kept as configured
-    if (host != null && host.indexOf(':') >= 0 && !host.startsWith("[")) {
+    if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
       address.append('[').append(host).append(']');
     } else {
       address.append(host);
     }
-    address.append(':').append(database.getPort());
+    address.append(':').append(port);
   }
 
   public String getAddress() {

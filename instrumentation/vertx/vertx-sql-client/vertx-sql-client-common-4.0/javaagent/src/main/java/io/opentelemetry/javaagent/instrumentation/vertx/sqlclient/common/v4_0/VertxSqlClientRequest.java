@@ -58,7 +58,8 @@ public class VertxSqlClientRequest {
 
   /**
    * The complete configured target when the client was given more than one server, e.g. {@code
-   * h1:5432,h2:5432}. Null when the client targets a single server.
+   * h1:5432,h2:5432}. Null when the client targets a single server, or when no complete target can
+   * be rendered.
    */
   @Nullable
   public String getServerAddressGroup() {
