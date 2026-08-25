@@ -5,51 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15.Resilience4jCircuitBreakerSingletons.instrumenter;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerSpans {
-
-  private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.resilience4j-circuitbreaker-0.15";
-
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      DeclarativeConfigUtil.getInstrumentationConfig(
-              GlobalOpenTelemetry.get(), "resilience4j_circuitbreaker")
-          .getBoolean("experimental_span_attributes/development", false);
-
-  private static final Tracer tracer;
-
-  static {
-    String instrumentationVersion =
-        EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
-    TracerBuilder tracerBuilder =
-        GlobalOpenTelemetry.get().getTracerProvider().tracerBuilder(INSTRUMENTATION_NAME);
-    if (instrumentationVersion != null) {
-      tracerBuilder.setInstrumentationVersion(instrumentationVersion);
-    }
-    tracer = tracerBuilder.build();
-  }
 
   private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
   // Resilience4j's raw acquirePermission/onSuccess/onError API does not expose an attempt token.
@@ -60,49 +30,43 @@ public class Resilience4jCircuitBreakerSpans {
   private static final ThreadLocal<Boolean> inCircuitBreakerCallback = new ThreadLocal<>();
   private static final ThreadLocal<Deque<Boolean>> onResultEnded = new ThreadLocal<>();
 
-  private static final AttributeKey<String> CIRCUIT_BREAKER_NAME =
-      stringKey("resilience.policy.name");
-
-  private static final AttributeKey<String> CIRCUIT_BREAKER_STATE =
-      stringKey("resilience.circuit_breaker.state");
-
-  private static final AttributeKey<String> CIRCUIT_BREAKER_OUTCOME =
-      stringKey("resilience.circuit_breaker.outcome");
-
   public static void start(CircuitBreaker circuitBreaker) {
     Context parentContext = Context.current();
-    SpanContext parentSpanContext = Span.fromContext(parentContext).getSpanContext();
-    if (!parentSpanContext.isValid()) {
+    Resilience4jCircuitBreakerRequest request =
+        Resilience4jCircuitBreakerRequest.create(circuitBreaker);
+    if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
+      // Circuit breaker spans are internal and noisy without an existing trace.
+      return;
+    }
+    if (!instrumenter().shouldStart(parentContext, request)) {
       return;
     }
 
     PendingSpan pendingSpan =
-        new PendingSpan(circuitBreaker, startSpan(circuitBreaker, parentContext));
+        new PendingSpan(circuitBreaker, request, instrumenter().start(parentContext, request));
     Deque<PendingSpan> spans = pendingSpans.get();
     if (spans == null) {
       spans = new ArrayDeque<>();
       pendingSpans.set(spans);
     }
     spans.push(pendingSpan);
-    addGlobalPendingSpan(pendingSpan);
+    addGlobalPendingSpan(circuitBreaker, pendingSpan);
   }
 
   public static void reject(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
     Context parentContext = Context.current();
-    SpanContext parentSpanContext = Span.fromContext(parentContext).getSpanContext();
-    if (!parentSpanContext.isValid()) {
+    Resilience4jCircuitBreakerRequest request =
+        Resilience4jCircuitBreakerRequest.create(circuitBreaker);
+    if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
+      // Circuit breaker spans are internal and noisy without an existing trace.
+      return;
+    }
+    if (!instrumenter().shouldStart(parentContext, request)) {
       return;
     }
 
-    Span span = startSpan(circuitBreaker, parentContext);
-    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      span.setAttribute(CIRCUIT_BREAKER_OUTCOME, "rejected");
-    }
-    if (throwable != null) {
-      span.recordException(throwable);
-    }
-    span.setStatus(StatusCode.ERROR);
-    span.end();
+    Context context = instrumenter().start(parentContext, request);
+    instrumenter().end(context, request, "rejected", throwable);
   }
 
   public static void enterCircuitBreakerCallback() {
@@ -193,21 +157,6 @@ public class Resilience4jCircuitBreakerSpans {
     return spans.peek();
   }
 
-  @Nullable
-  private static PendingSpan pollPendingSpan(CircuitBreaker circuitBreaker) {
-    Deque<PendingSpan> spans = pendingSpans.get();
-    if (spans == null) {
-      return pollGlobalPendingSpan(circuitBreaker);
-    }
-    removeEnded(spans);
-    PendingSpan span = pollLocalPendingSpan(circuitBreaker, spans);
-    if (span != null) {
-      removeGlobalPendingSpan(span);
-      return span;
-    }
-    return pollGlobalPendingSpan(circuitBreaker);
-  }
-
   public static void attachPendingSpan(PendingSpan pendingSpan) {
     Deque<PendingSpan> spans = pendingSpans.get();
     if (spans == null) {
@@ -257,6 +206,21 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   @Nullable
+  private static PendingSpan pollPendingSpan(CircuitBreaker circuitBreaker) {
+    Deque<PendingSpan> spans = pendingSpans.get();
+    if (spans == null) {
+      return pollGlobalPendingSpan(circuitBreaker);
+    }
+    removeEnded(spans);
+    PendingSpan span = pollLocalPendingSpan(circuitBreaker, spans);
+    if (span != null) {
+      removeGlobalPendingSpan(span);
+      return span;
+    }
+    return pollGlobalPendingSpan(circuitBreaker);
+  }
+
+  @Nullable
   private static PendingSpan pollLocalPendingSpan(
       CircuitBreaker circuitBreaker, Deque<PendingSpan> spans) {
     Iterator<PendingSpan> iterator = spans.iterator();
@@ -264,7 +228,7 @@ public class Resilience4jCircuitBreakerSpans {
       PendingSpan span = iterator.next();
       if (span.ended) {
         iterator.remove();
-      } else if (span.circuitBreaker == circuitBreaker) {
+      } else if (span.isFor(circuitBreaker)) {
         iterator.remove();
         if (spans.isEmpty()) {
           pendingSpans.remove();
@@ -278,10 +242,10 @@ public class Resilience4jCircuitBreakerSpans {
     return null;
   }
 
-  private static void addGlobalPendingSpan(PendingSpan pendingSpan) {
+  private static void addGlobalPendingSpan(CircuitBreaker circuitBreaker, PendingSpan pendingSpan) {
     synchronized (pendingSpansByCircuitBreaker) {
       pendingSpansByCircuitBreaker
-          .computeIfAbsent(pendingSpan.circuitBreaker, unused -> new ArrayDeque<>())
+          .computeIfAbsent(circuitBreaker, unused -> new ArrayDeque<>())
           .push(pendingSpan);
     }
   }
@@ -308,14 +272,18 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   private static void removeGlobalPendingSpan(PendingSpan pendingSpan) {
+    CircuitBreaker circuitBreaker = pendingSpan.circuitBreaker();
+    if (circuitBreaker == null) {
+      return;
+    }
     synchronized (pendingSpansByCircuitBreaker) {
-      Deque<PendingSpan> spans = pendingSpansByCircuitBreaker.get(pendingSpan.circuitBreaker);
+      Deque<PendingSpan> spans = pendingSpansByCircuitBreaker.get(circuitBreaker);
       if (spans == null) {
         return;
       }
       spans.remove(pendingSpan);
       if (spans.isEmpty()) {
-        pendingSpansByCircuitBreaker.remove(pendingSpan.circuitBreaker);
+        pendingSpansByCircuitBreaker.remove(circuitBreaker);
       }
     }
   }
@@ -329,40 +297,23 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  private static Span startSpan(CircuitBreaker circuitBreaker, Context parentContext) {
-    Span span =
-        tracer
-            .spanBuilder("CircuitBreaker " + circuitBreaker.getName())
-            .setParent(parentContext)
-            .setSpanKind(SpanKind.INTERNAL)
-            .startSpan();
-    setStartAttributes(span, circuitBreaker);
-    return span;
-  }
-
-  private static void setStartAttributes(Span span, CircuitBreaker circuitBreaker) {
-    if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES || !span.isRecording()) {
-      return;
-    }
-    span.setAttribute(CIRCUIT_BREAKER_NAME, circuitBreaker.getName());
-    span.setAttribute(
-        CIRCUIT_BREAKER_STATE, circuitBreaker.getState().name().toLowerCase(Locale.ROOT));
-  }
-
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
   private static void limitSupportedVersions(CircuitBreaker circuitBreaker) {
     // Keep a reference to enforce 0.15.0 as the minimum version.
     circuitBreaker.tryAcquirePermission();
   }
 
-  public static final class PendingSpan {
-    private final CircuitBreaker circuitBreaker;
-    private final Span span;
+  public static class PendingSpan {
+    private final WeakReference<CircuitBreaker> circuitBreaker;
+    private final Resilience4jCircuitBreakerRequest request;
+    private final Context context;
     private volatile boolean ended;
 
-    private PendingSpan(CircuitBreaker circuitBreaker, Span span) {
-      this.circuitBreaker = circuitBreaker;
-      this.span = span;
+    private PendingSpan(
+        CircuitBreaker circuitBreaker, Resilience4jCircuitBreakerRequest request, Context context) {
+      this.circuitBreaker = new WeakReference<>(circuitBreaker);
+      this.request = request;
+      this.context = context;
     }
 
     public synchronized void end(String outcome, @Nullable Throwable throwable) {
@@ -370,16 +321,16 @@ public class Resilience4jCircuitBreakerSpans {
         return;
       }
       ended = true;
-      if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-        span.setAttribute(CIRCUIT_BREAKER_OUTCOME, outcome);
-      }
-      if (throwable != null) {
-        span.recordException(throwable);
-      }
-      if (throwable != null || "failure".equals(outcome)) {
-        span.setStatus(StatusCode.ERROR);
-      }
-      span.end();
+      instrumenter().end(context, request, outcome, throwable);
+    }
+
+    boolean isFor(CircuitBreaker circuitBreaker) {
+      return this.circuitBreaker.get() == circuitBreaker;
+    }
+
+    @Nullable
+    CircuitBreaker circuitBreaker() {
+      return circuitBreaker.get();
     }
   }
 
