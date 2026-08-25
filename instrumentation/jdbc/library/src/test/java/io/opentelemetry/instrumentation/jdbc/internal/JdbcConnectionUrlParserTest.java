@@ -2073,6 +2073,17 @@ class JdbcConnectionUrlParserTest {
     assertThat(extractAuthority(url)).isNull();
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "postgresql://h1,h2/db/admin@corp.com",
+        "postgresql://h1,h2/db?user=admin@corp.com",
+        "postgresql://h1,h2/db#admin@corp.com"
+      })
+  void testAtInUrlComponentDoesNotHideAuthority(String url) {
+    assertThat(extractAuthority(url)).isEqualTo("h1,h2");
+  }
+
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {
     DbInfo info = parse(argument.url, argument.properties);
     DbInfo expected = argument.dbInfo;

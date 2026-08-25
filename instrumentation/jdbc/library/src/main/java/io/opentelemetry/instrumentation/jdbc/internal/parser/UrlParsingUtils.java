@@ -269,9 +269,14 @@ public final class UrlParsingUtils {
     int end = indexOfAny(url, start, '/', '?', '#');
     int lastAt = url.lastIndexOf('@');
     if (lastAt >= start && end >= 0 && lastAt > end) {
-      // A delimiter before the user-info terminator is ambiguous: it may be part of a malformed
-      // password. Dropping the group is safer than reporting credential text as a host.
-      return null;
+      int possibleAuthorityEnd = indexOfAny(url, lastAt + 1, '/', '?', '#');
+      possibleAuthorityEnd = possibleAuthorityEnd < 0 ? url.length() : possibleAuthorityEnd;
+      int comma = url.indexOf(',', lastAt + 1);
+      if (comma >= 0 && comma < possibleAuthorityEnd) {
+        // A delimiter before a user-info terminator followed by a host list may be part of a
+        // malformed password. Dropping the group is safer than reporting credential text as a host.
+        return null;
+      }
     }
     return end < 0 ? url.substring(start) : url.substring(start, end);
   }
