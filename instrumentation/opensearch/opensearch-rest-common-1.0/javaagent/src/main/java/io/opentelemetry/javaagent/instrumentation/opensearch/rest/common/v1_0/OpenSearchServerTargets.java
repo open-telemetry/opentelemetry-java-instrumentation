@@ -32,5 +32,10 @@ public final class OpenSearchServerTargets {
     return serverTarget.get(restClient);
   }
 
+  @Nullable
+  public static OpenSearchServerTarget getForObject(Object restClient) {
+    return restClient instanceof RestClient ? get((RestClient) restClient) : null;
+  }
+
   private OpenSearchServerTargets() {}
 }

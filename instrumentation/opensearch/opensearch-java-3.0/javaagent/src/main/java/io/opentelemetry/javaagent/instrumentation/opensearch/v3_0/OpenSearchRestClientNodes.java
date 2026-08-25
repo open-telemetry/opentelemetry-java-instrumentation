@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchServerTarget;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchServerTargets;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -21,6 +22,10 @@ public final class OpenSearchRestClientNodes {
 
   @Nullable
   public static OpenSearchServerTarget target(Object restClient) {
+    OpenSearchServerTarget capturedTarget = OpenSearchServerTargets.getForObject(restClient);
+    if (capturedTarget != null) {
+      return capturedTarget;
+    }
     try {
       List<?> nodes = (List<?>) restClient.getClass().getMethod("getNodes").invoke(restClient);
       List<OpenSearchServerTarget.Endpoint> endpoints = new ArrayList<>(nodes.size());

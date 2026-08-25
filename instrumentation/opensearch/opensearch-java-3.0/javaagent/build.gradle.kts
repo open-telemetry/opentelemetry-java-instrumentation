@@ -25,6 +25,7 @@ dependencies {
 
   testImplementation("org.opensearch.client:opensearch-rest-client:3.0.0")
   testImplementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:testing"))
+  testInstrumentation(project(":instrumentation:opensearch:opensearch-rest-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
 
   // AwsSdk2Transport supports awssdk version 2.26.0

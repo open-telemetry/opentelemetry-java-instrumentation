@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -23,6 +25,7 @@ import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.ssl.TrustStrategy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.client.Node;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
@@ -64,6 +67,21 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
     assertNodeListTarget();
   }
 
+  @Test
+  void targetDoesNotFollowNodeChangesBeforeTransportConstruction() throws Exception {
+    RestClient restClient = buildRestClient(configuredHost());
+    restClient.setNodes(asList(new Node(configuredHost()), new Node(hostThatIsDown())));
+    OpenSearchClient client =
+        new OpenSearchClient(new RestClientTransport(restClient, new JacksonJsonpMapper()));
+
+    HealthResponse healthResponse = client.cluster().health();
+    assertThat(healthResponse).isNotNull();
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace -> assertThat(trace.getSpan(0)).hasAttributesSatisfying(withServer()));
+  }
+
   private HttpHost configuredHost() {
     return new HttpHost("https", httpHost.getHost(), httpHost.getPort());
   }
@@ -74,6 +92,10 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
   }
 
   private OpenSearchTransport buildTransport(HttpHost... hosts) throws Exception {
+    return new RestClientTransport(buildRestClient(hosts), new JacksonJsonpMapper());
+  }
+
+  private RestClient buildRestClient(HttpHost... hosts) throws Exception {
     TrustStrategy acceptingTrustStrategy = (certificate, authType) -> true;
     SSLContext sslContext =
         SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
@@ -91,14 +113,12 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
         new UsernamePasswordCredentials(
             opensearch.getUsername(), opensearch.getPassword().toCharArray()));
 
-    RestClient restClient =
-        RestClient.builder(hosts)
-            .setHttpClientConfigCallback(
-                httpClientBuilder ->
-                    httpClientBuilder
-                        .setConnectionManager(connectionManager)
-                        .setDefaultCredentialsProvider(credentialsProvider))
-            .build();
-    return new RestClientTransport(restClient, new JacksonJsonpMapper());
+    return RestClient.builder(hosts)
+        .setHttpClientConfigCallback(
+            httpClientBuilder ->
+                httpClientBuilder
+                    .setConnectionManager(connectionManager)
+                    .setDefaultCredentialsProvider(credentialsProvider))
+        .build();
   }
 }
