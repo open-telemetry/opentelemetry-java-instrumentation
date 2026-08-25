@@ -22,24 +22,117 @@ public class Resilience4jCircuitBreakerSpans {
   // same-thread callbacks are correlated here. Decorated async APIs propagate the exact PendingSpan
   // explicitly instead of polling an arbitrary per-breaker queue.
   private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
+  private static final ThreadLocal<Deque<AttemptToken>> currentAcquisitions = new ThreadLocal<>();
+  private static final ThreadLocal<AttemptToken> recentAcquisition = new ThreadLocal<>();
+  private static final ThreadLocal<Deque<Capture>> captures = new ThreadLocal<>();
   private static final ThreadLocal<Deque<CircuitBreaker>> circuitBreakerCallbacks =
       new ThreadLocal<>();
   private static final ThreadLocal<Deque<Boolean>> onResultEnded = new ThreadLocal<>();
 
+  public static AttemptToken beginAcquisition(CircuitBreaker circuitBreaker) {
+    AttemptToken token = new AttemptToken(circuitBreaker);
+    Deque<AttemptToken> tokens = currentAcquisitions.get();
+    if (tokens == null) {
+      tokens = new ArrayDeque<>();
+      currentAcquisitions.set(tokens);
+    }
+    tokens.push(token);
+    recentAcquisition.remove();
+    return token;
+  }
+
+  public static void finishAcquisition(@Nullable AttemptToken token) {
+    Deque<AttemptToken> tokens = currentAcquisitions.get();
+    if (token == null) {
+      currentAcquisitions.remove();
+      return;
+    }
+    if (tokens != null) {
+      if (tokens.peek() == token) {
+        tokens.poll();
+      } else {
+        tokens.remove(token);
+      }
+      if (tokens.isEmpty()) {
+        currentAcquisitions.remove();
+      }
+    }
+    recentAcquisition.set(token);
+    Deque<Capture> captureStack = captures.get();
+    if (captureStack != null && !captureStack.isEmpty()) {
+      Capture capture = captureStack.peek();
+      if (capture.circuitBreaker == token.circuitBreaker && capture.token == null) {
+        capture.token = token;
+      }
+    }
+  }
+
+  public static Capture beginCapture(CircuitBreaker circuitBreaker) {
+    Capture capture = new Capture(circuitBreaker);
+    Deque<Capture> captureStack = captures.get();
+    if (captureStack == null) {
+      captureStack = new ArrayDeque<>();
+      captures.set(captureStack);
+    }
+    captureStack.push(capture);
+    return capture;
+  }
+
+  @Nullable
+  public static PendingSpan endCapture(Capture capture) {
+    Deque<Capture> captureStack = captures.get();
+    if (captureStack != null) {
+      if (captureStack.peek() == capture) {
+        captureStack.poll();
+      } else {
+        captureStack.remove(capture);
+      }
+      if (captureStack.isEmpty()) {
+        captures.remove();
+      }
+    }
+    return claim(capture.token);
+  }
+
+  @Nullable
+  public static PendingSpan claimRecentAcquisition(CircuitBreaker circuitBreaker) {
+    AttemptToken token = recentAcquisition.get();
+    if (token == null || token.circuitBreaker != circuitBreaker) {
+      return null;
+    }
+    recentAcquisition.remove();
+    return claim(token);
+  }
+
+  @Nullable
+  private static PendingSpan claim(@Nullable AttemptToken token) {
+    if (token == null || token.claimed || token.pendingSpan == null) {
+      return null;
+    }
+    token.claimed = true;
+    detachPendingSpan(token.pendingSpan);
+    return token.pendingSpan;
+  }
+
   public static void start(CircuitBreaker circuitBreaker) {
     Context parentContext = Context.current();
-    Resilience4jCircuitBreakerRequest request =
-        Resilience4jCircuitBreakerRequest.create(circuitBreaker);
     if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
       // Circuit breaker spans are internal and noisy without an existing trace.
       return;
     }
+    Resilience4jCircuitBreakerRequest request =
+        Resilience4jCircuitBreakerRequest.create(circuitBreaker);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return;
     }
 
     PendingSpan pendingSpan =
         new PendingSpan(circuitBreaker, request, instrumenter().start(parentContext, request));
+    Deque<AttemptToken> tokens = currentAcquisitions.get();
+    AttemptToken token = tokens == null ? null : tokens.peek();
+    if (token != null && token.circuitBreaker == circuitBreaker) {
+      token.pendingSpan = pendingSpan;
+    }
     Deque<PendingSpan> spans = pendingSpans.get();
     if (spans == null) {
       spans = new ArrayDeque<>();
@@ -50,12 +143,12 @@ public class Resilience4jCircuitBreakerSpans {
 
   public static void reject(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
     Context parentContext = Context.current();
-    Resilience4jCircuitBreakerRequest request =
-        Resilience4jCircuitBreakerRequest.create(circuitBreaker);
     if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
       // Circuit breaker spans are internal and noisy without an existing trace.
       return;
     }
+    Resilience4jCircuitBreakerRequest request =
+        Resilience4jCircuitBreakerRequest.create(circuitBreaker);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return;
     }
@@ -261,6 +354,25 @@ public class Resilience4jCircuitBreakerSpans {
   private static void limitSupportedVersions(CircuitBreaker circuitBreaker) {
     // Keep a reference to enforce 0.15.0 as the minimum version.
     circuitBreaker.tryAcquirePermission();
+  }
+
+  public static class AttemptToken {
+    private final CircuitBreaker circuitBreaker;
+    @Nullable private PendingSpan pendingSpan;
+    private boolean claimed;
+
+    private AttemptToken(CircuitBreaker circuitBreaker) {
+      this.circuitBreaker = circuitBreaker;
+    }
+  }
+
+  public static class Capture {
+    private final CircuitBreaker circuitBreaker;
+    @Nullable private AttemptToken token;
+
+    private Capture(CircuitBreaker circuitBreaker) {
+      this.circuitBreaker = circuitBreaker;
+    }
   }
 
   public static class PendingSpan {

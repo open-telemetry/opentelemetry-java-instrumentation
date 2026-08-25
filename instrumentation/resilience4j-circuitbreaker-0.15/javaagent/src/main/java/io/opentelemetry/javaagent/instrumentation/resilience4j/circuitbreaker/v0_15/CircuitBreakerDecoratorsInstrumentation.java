@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Callable;
@@ -104,8 +105,11 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static <T> void onEnter(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker,
         @Advice.Argument(value = 1, readOnly = false) Supplier<CompletionStage<T>> supplier) {
-      supplier = Resilience4jCircuitBreakerDecorators.wrapCompletionStageSupplier(supplier);
+      supplier =
+          Resilience4jCircuitBreakerDecorators.wrapCompletionStageSupplier(
+              circuitBreaker, supplier);
     }
   }
 
@@ -114,8 +118,10 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <T> Supplier<Future<T>> onExit(@Advice.Return Supplier<Future<T>> result) {
-      return Resilience4jCircuitBreakerDecorators.wrapFutureSupplier(result);
+    public static <T> Supplier<Future<T>> onExit(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker,
+        @Advice.Return Supplier<Future<T>> result) {
+      return Resilience4jCircuitBreakerDecorators.wrapFutureSupplier(circuitBreaker, result);
     }
   }
 

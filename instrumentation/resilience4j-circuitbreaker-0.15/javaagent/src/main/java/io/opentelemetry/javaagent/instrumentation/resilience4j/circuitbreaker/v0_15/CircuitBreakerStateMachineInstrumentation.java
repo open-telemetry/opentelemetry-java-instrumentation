@@ -62,28 +62,46 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AcquirePermissionAdvice {
 
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static Resilience4jCircuitBreakerSpans.AttemptToken onEnter(
+        @Advice.This CircuitBreaker circuitBreaker) {
+      return Resilience4jCircuitBreakerSpans.beginAcquisition(circuitBreaker);
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
-        @Advice.This CircuitBreaker circuitBreaker, @Advice.Thrown @Nullable Throwable throwable) {
+        @Advice.This CircuitBreaker circuitBreaker,
+        @Advice.Enter Resilience4jCircuitBreakerSpans.AttemptToken token,
+        @Advice.Thrown @Nullable Throwable throwable) {
       if (throwable == null) {
         Resilience4jCircuitBreakerSpans.start(circuitBreaker);
       } else {
         Resilience4jCircuitBreakerSpans.reject(circuitBreaker, throwable);
       }
+      Resilience4jCircuitBreakerSpans.finishAcquisition(token);
     }
   }
 
   @SuppressWarnings("unused")
   public static class TryAcquirePermissionAdvice {
 
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static Resilience4jCircuitBreakerSpans.AttemptToken onEnter(
+        @Advice.This CircuitBreaker circuitBreaker) {
+      return Resilience4jCircuitBreakerSpans.beginAcquisition(circuitBreaker);
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
-        @Advice.This CircuitBreaker circuitBreaker, @Advice.Return boolean permitted) {
+        @Advice.This CircuitBreaker circuitBreaker,
+        @Advice.Enter Resilience4jCircuitBreakerSpans.AttemptToken token,
+        @Advice.Return boolean permitted) {
       if (permitted) {
         Resilience4jCircuitBreakerSpans.start(circuitBreaker);
       } else {
         Resilience4jCircuitBreakerSpans.reject(circuitBreaker, null);
       }
+      Resilience4jCircuitBreakerSpans.finishAcquisition(token);
     }
   }
 

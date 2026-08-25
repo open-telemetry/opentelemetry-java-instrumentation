@@ -239,6 +239,25 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void createsCircuitBreakerSpanWhenUncheckedCheckedSupplierThrowsError() throws Exception {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    AssertionError error = new AssertionError("boom");
+    Object checkedSupplier =
+        CircuitBreaker.decorateCheckedSupplier(
+            circuitBreaker,
+            () -> {
+              throw error;
+            });
+    Method unchecked = uncheckedMethod(checkedSupplier);
+    Supplier<?> supplier = (Supplier<?>) unchecked.invoke(checkedSupplier);
+
+    Throwable thrown = catchThrowable(() -> testing.runWithSpan("parent", supplier::get));
+
+    assertThat(thrown).isSameAs(error);
+    assertCircuitBreakerSpan("closed", "failure", error);
+  }
+
+  @Test
   void checkedProxyObjectMethodsDoNotCreateCircuitBreakerSpans() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     Object checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> "ok");
@@ -356,6 +375,15 @@ class Resilience4jCircuitBreakerTest {
       return CircuitBreakerConfig.Builder.class.getMethod("recordResultPredicate", Predicate.class);
     } catch (NoSuchMethodException e) {
       assumeTrue(false, "recordResultPredicate is not available in this Resilience4j version");
+      throw e;
+    }
+  }
+
+  private static Method uncheckedMethod(Object checkedSupplier) throws NoSuchMethodException {
+    try {
+      return checkedSupplier.getClass().getMethod("unchecked");
+    } catch (NoSuchMethodException e) {
+      assumeTrue(false, "unchecked is not available in this Resilience4j version");
       throw e;
     }
   }

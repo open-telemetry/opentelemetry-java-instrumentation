@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -37,12 +38,13 @@ public class Resilience4jCircuitBreakerDecorators {
   }
 
   public static <T> Supplier<CompletionStage<T>> wrapCompletionStageSupplier(
-      Supplier<CompletionStage<T>> delegate) {
-    return new CompletionStageSupplierWrapper<>(delegate);
+      CircuitBreaker circuitBreaker, Supplier<CompletionStage<T>> delegate) {
+    return new CompletionStageSupplierWrapper<>(circuitBreaker, delegate);
   }
 
-  public static <T> Supplier<Future<T>> wrapFutureSupplier(Supplier<Future<T>> delegate) {
-    return new FutureSupplierWrapper<>(delegate);
+  public static <T> Supplier<Future<T>> wrapFutureSupplier(
+      CircuitBreaker circuitBreaker, Supplier<Future<T>> delegate) {
+    return new FutureSupplierWrapper<>(circuitBreaker, delegate);
   }
 
   public static <T, R> Function<T, R> wrapFunction(Function<T, R> delegate) {
@@ -135,9 +137,12 @@ public class Resilience4jCircuitBreakerDecorators {
   private static final class CompletionStageSupplierWrapper<T>
       implements Supplier<CompletionStage<T>> {
 
+    private final CircuitBreaker circuitBreaker;
     private final Supplier<CompletionStage<T>> delegate;
 
-    private CompletionStageSupplierWrapper(Supplier<CompletionStage<T>> delegate) {
+    private CompletionStageSupplierWrapper(
+        CircuitBreaker circuitBreaker, Supplier<CompletionStage<T>> delegate) {
+      this.circuitBreaker = circuitBreaker;
       this.delegate = delegate;
     }
 
@@ -145,27 +150,26 @@ public class Resilience4jCircuitBreakerDecorators {
     public CompletionStage<T> get() {
       Resilience4jCircuitBreakerSpans.PendingSpan baseline =
           Resilience4jCircuitBreakerSpans.currentPendingSpan();
+      // decorateCompletionStage's user supplier is wrapped before Resilience4j builds its
+      // decorated supplier, so this wrapper runs immediately after permission acquisition. Claim
+      // that acquisition before invoking user code, which may perform nested acquisitions.
+      Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+          Resilience4jCircuitBreakerSpans.claimRecentAcquisition(circuitBreaker);
       try {
         CompletionStage<T> result = delegate.get();
-        // decorateCompletionStage's user supplier is wrapped before Resilience4j builds its
-        // decorated supplier, so this wrapper runs after permission acquisition. The baseline is
-        // therefore the exact span for this attempt and must be propagated to Resilience4j's
-        // completion callback.
-        if (baseline != null) {
-          Resilience4jCircuitBreakerSpans.detachPendingSpan(baseline);
-          try {
-            return wrapCompletionStage(result, baseline);
-          } catch (Throwable t) {
-            baseline.end("failure", t);
-            throw t;
-          }
+        if (pendingSpan == null) {
+          return result;
         }
-        return result;
+        try {
+          return wrapCompletionStage(result, pendingSpan);
+        } catch (Throwable t) {
+          pendingSpan.end("failure", t);
+          throw t;
+        }
       } catch (Throwable t) {
         Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
-        if (baseline != null) {
-          Resilience4jCircuitBreakerSpans.detachPendingSpan(baseline);
-          baseline.end("failure", t);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", t);
         }
         throw t;
       }
@@ -174,9 +178,11 @@ public class Resilience4jCircuitBreakerDecorators {
 
   private static final class FutureSupplierWrapper<T> implements Supplier<Future<T>> {
 
+    private final CircuitBreaker circuitBreaker;
     private final Supplier<Future<T>> delegate;
 
-    private FutureSupplierWrapper(Supplier<Future<T>> delegate) {
+    private FutureSupplierWrapper(CircuitBreaker circuitBreaker, Supplier<Future<T>> delegate) {
+      this.circuitBreaker = circuitBreaker;
       this.delegate = delegate;
     }
 
@@ -184,13 +190,15 @@ public class Resilience4jCircuitBreakerDecorators {
     public Future<T> get() {
       Resilience4jCircuitBreakerSpans.PendingSpan baseline =
           Resilience4jCircuitBreakerSpans.currentPendingSpan();
+      Resilience4jCircuitBreakerSpans.Capture capture =
+          Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         Future<T> result = delegate.get();
         // decorateFuture's returned supplier is wrapped after Resilience4j builds it, so
-        // permission is acquired inside delegate.get(). Poll the span created during that call and
-        // make the returned Future wrapper own it.
+        // permission is acquired inside delegate.get(). Claim only the span created by that
+        // specific acquisition and make the returned Future wrapper own it.
         Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
-            Resilience4jCircuitBreakerSpans.pollPendingSpanAfter(baseline);
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
         if (pendingSpan != null) {
           try {
             return new FutureWrapper<>(result, pendingSpan);
@@ -201,6 +209,11 @@ public class Resilience4jCircuitBreakerDecorators {
         }
         return result;
       } catch (Throwable t) {
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", t);
+        }
         Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
         throw t;
       }
@@ -328,6 +341,71 @@ public class Resilience4jCircuitBreakerDecorators {
     private final Object delegate;
 
     private CheckedInvocationHandler(Object delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      if (method.getDeclaringClass() == Object.class) {
+        String methodName = method.getName();
+        if ("equals".equals(methodName)) {
+          return proxy == args[0];
+        } else if ("hashCode".equals(methodName)) {
+          return System.identityHashCode(proxy);
+        }
+        return method.invoke(delegate, args);
+      }
+      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
+          Resilience4jCircuitBreakerSpans.currentPendingSpan();
+      try {
+        Object result = method.invoke(delegate, args);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
+        return wrapCheckedAdapterResult(method, result);
+      } catch (InvocationTargetException e) {
+        Throwable cause = e.getCause();
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", cause);
+        throw cause;
+      } catch (Throwable t) {
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
+        throw t;
+      }
+    }
+  }
+
+  private static Object wrapCheckedAdapterResult(Method method, @Nullable Object result) {
+    if (result == null) {
+      return null;
+    }
+    String methodName = method.getName();
+    if ("unchecked".equals(methodName)) {
+      return wrapFunctionalAdapter(result);
+    } else if ("andThen".equals(methodName) && isCheckedFunctionType(method.getReturnType())) {
+      return wrapChecked(result);
+    }
+    return result;
+  }
+
+  private static Object wrapFunctionalAdapter(Object delegate) {
+    Class<?>[] interfaces = delegate.getClass().getInterfaces();
+    if (interfaces.length == 0) {
+      return delegate;
+    }
+    return Proxy.newProxyInstance(
+        delegate.getClass().getClassLoader(),
+        interfaces,
+        new FunctionalAdapterInvocationHandler(delegate));
+  }
+
+  private static boolean isCheckedFunctionType(Class<?> type) {
+    return type.isInterface()
+        && type.getName().startsWith("io.github.resilience4j.core.functions.Checked");
+  }
+
+  private static final class FunctionalAdapterInvocationHandler implements InvocationHandler {
+
+    private final Object delegate;
+
+    private FunctionalAdapterInvocationHandler(Object delegate) {
       this.delegate = delegate;
     }
 
