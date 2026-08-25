@@ -45,6 +45,15 @@ class SqsMessageSystemAttributeAccess {
     return accessors != null;
   }
 
+  static boolean canSetTraceHeader(SendMessageBatchRequestEntry entry) {
+    Accessors accessors = SqsMessageSystemAttributeAccess.accessors;
+    if (accessors == null) {
+      return false;
+    }
+    Map<?, ?> attributes = invoke(accessors.getMessageSystemAttributes, entry, Map.class);
+    return !attributes.containsKey(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
+  }
+
   @Nullable
   static String getTraceHeader(SendMessageBatchRequestEntry entry) {
     Accessors accessors = SqsMessageSystemAttributeAccess.accessors;

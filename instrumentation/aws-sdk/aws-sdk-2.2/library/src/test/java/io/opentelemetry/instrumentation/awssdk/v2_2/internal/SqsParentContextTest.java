@@ -124,9 +124,11 @@ class SqsParentContextTest {
 
     SendMessageBatchRequestEntry entry =
         SendMessageBatchRequestEntry.builder().id("id").messageBody("body").build();
+    assertThat(SqsMessageSystemAttributeAccess.canSetTraceHeader(entry)).isTrue();
     SendMessageBatchRequestEntry updatedEntry =
         SqsMessageSystemAttributeAccess.withTraceHeader(entry, TRACE_HEADER);
     assertThat(updatedEntry).isNotNull();
+    assertThat(SqsMessageSystemAttributeAccess.canSetTraceHeader(updatedEntry)).isFalse();
     assertThat(SqsMessageSystemAttributeAccess.getTraceHeader(updatedEntry))
         .isEqualTo(TRACE_HEADER);
     assertThat(SqsMessageSystemAttributeAccess.withTraceHeader(updatedEntry, "replacement"))

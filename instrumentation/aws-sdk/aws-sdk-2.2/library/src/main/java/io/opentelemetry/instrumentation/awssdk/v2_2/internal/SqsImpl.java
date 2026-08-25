@@ -228,9 +228,8 @@ public final class SqsImpl {
 
       io.opentelemetry.context.Context propagationCapacityContext =
           creationParentContext.with(PROPAGATION_CAPACITY_SPAN);
-      if (injectCreationContext(
-              entry, propagationCapacityContext, useXrayPropagator, messagingPropagator)
-          == null) {
+      if (!canInjectCreationContext(
+          entry, propagationCapacityContext, useXrayPropagator, messagingPropagator)) {
         continue;
       }
 
@@ -266,6 +265,22 @@ public final class SqsImpl {
       return SqsParentContext.ofTraceHeader(SqsMessageSystemAttributeAccess.getTraceHeader(entry));
     }
     return context;
+  }
+
+  private static boolean canInjectCreationContext(
+      SendMessageBatchRequestEntry entry,
+      io.opentelemetry.context.Context propagationCapacityContext,
+      boolean useXrayPropagator,
+      @Nullable TextMapPropagator messagingPropagator) {
+    if (useXrayPropagator && SqsMessageSystemAttributeAccess.canSetTraceHeader(entry)) {
+      return true;
+    }
+    if (messagingPropagator == null) {
+      return false;
+    }
+    Map<String, MessageAttributeValue> messageAttributes = new HashMap<>(entry.messageAttributes());
+    return injectIntoMessageAttributesIfCapacity(
+        messageAttributes, propagationCapacityContext, messagingPropagator);
   }
 
   @Nullable
