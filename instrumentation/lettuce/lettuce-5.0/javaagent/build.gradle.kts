@@ -28,6 +28,78 @@ dependencies {
   latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see lettuce-5.1 module
 }
 
+testing {
+  suites {
+    // These suite names intentionally do not start with "test". Otherwise the main suite's
+    // latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") override would apply to them.
+    register<JvmTestSuite>("v3PreviewLettuce51Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        implementation("com.google.guava:guava")
+        implementation("io.lettuce:lettuce-core:5.1.0.RELEASE")
+        implementation("org.testcontainers:testcontainers")
+      }
+
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+        }
+      }
+    }
+
+    register<JvmTestSuite>("v3PreviewLettuce60Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        implementation("com.google.guava:guava")
+        implementation("io.lettuce:lettuce-core:6.0.0.RELEASE")
+        implementation("org.testcontainers:testcontainers")
+      }
+
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+          systemProperty("testLettuce6OrLater", true)
+        }
+      }
+    }
+
+    register<JvmTestSuite>("v3PreviewLettuce65Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        val lettuceVersion = baseVersion("6.5.0.RELEASE").orLatest()
+        implementation("com.google.guava:guava")
+        implementation("io.lettuce:lettuce-core:$lettuceVersion")
+        implementation("org.testcontainers:testcontainers")
+      }
+
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+          systemProperty("testLettuce6OrLater", true)
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -83,6 +155,7 @@ tasks {
 
   check {
     dependsOn(
+      testing.suites,
       testConnectionTelemetryEnabled,
       testConnectionTelemetryEnabledStableSemconv,
       testStableSemconv,

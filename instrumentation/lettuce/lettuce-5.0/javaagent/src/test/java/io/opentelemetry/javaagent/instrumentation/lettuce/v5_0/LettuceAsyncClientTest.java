@@ -66,6 +66,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -116,9 +117,18 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     syncCommands.set("TESTKEY", "TESTVAL");
 
-    // 1 set + 1 SELECT issued while connecting to the non-default database
-    // (+ 1 connect trace per client when connection telemetry is enabled)
-    testing.waitForTraces(connectionTelemetryEnabled() ? 4 : 2);
+    // Lettuce 5 emits SET plus SELECT while opening the non-default database.
+    // Lettuce 6+ performs the selection as an activation command without a command span.
+    boolean lettuce6OrLater = Boolean.getBoolean("testLettuce6OrLater");
+    int expectedTraceCount = lettuce6OrLater ? 1 : 2;
+    if (connectionTelemetryEnabled()) {
+      expectedTraceCount += 2;
+      if (!lettuce6OrLater && emitStableDatabaseSemconv()) {
+        // SELECT is a child of the second CONNECT span instead of starting another trace.
+        expectedTraceCount--;
+      }
+    }
+    testing.waitForTraces(expectedTraceCount);
   }
 
   @AfterAll
@@ -700,6 +710,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
+  @DisabledIfSystemProperty(named = "testLettuce6OrLater", matches = "true")
   void testNonDefaultDatabaseIndexOnConnect() {
     RedisClient client =
         RedisClient.create("redis://" + host + ":" + port + "/" + NON_DEFAULT_DB_INDEX);
