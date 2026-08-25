@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -118,6 +119,36 @@ class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasKind(CLIENT).hasNoParent(),
                 span -> span.hasKind(SERVER).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void injectsContextOnceWhenSendHeadPrecedesEnd() throws Exception {
+    URI uri = resolveAddress("/success");
+
+    int responseCode =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              HttpClientRequest request = httpClient.requestAbs(HttpMethod.GET, uri.toString());
+              CompletableFuture<Integer> result = new CompletableFuture<>();
+              request
+                  .handler(response -> result.complete(response.statusCode()))
+                  .exceptionHandler(result::completeExceptionally);
+
+              request.sendHead();
+              request.end();
+
+              return result.get(30, SECONDS);
+            });
+
+    assertThat(responseCode).isEqualTo(200);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasKind(SERVER).hasParent(trace.getSpan(1))));
   }
 
   @Test
