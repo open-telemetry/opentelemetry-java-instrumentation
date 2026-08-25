@@ -18,19 +18,19 @@ import org.elasticsearch.client.RestClient;
  */
 public final class ElasticsearchServerTargets {
 
-  private static final VirtualField<RestClient, ElasticsearchServerTarget> serverTarget =
+  private static final VirtualField<RestClient, ElasticsearchServerTarget> SERVER_TARGET =
       VirtualField.find(RestClient.class, ElasticsearchServerTarget.class);
 
   public static void capture(RestClient restClient, @Nullable List<HttpHost> configuredHosts) {
     ElasticsearchServerTarget target = ElasticsearchServerTarget.of(configuredHosts);
     if (target != null) {
-      serverTarget.set(restClient, target);
+      SERVER_TARGET.set(restClient, target);
     }
   }
 
   @Nullable
   public static ElasticsearchServerTarget get(RestClient restClient) {
-    return serverTarget.get(restClient);
+    return SERVER_TARGET.get(restClient);
   }
 
   private ElasticsearchServerTargets() {}

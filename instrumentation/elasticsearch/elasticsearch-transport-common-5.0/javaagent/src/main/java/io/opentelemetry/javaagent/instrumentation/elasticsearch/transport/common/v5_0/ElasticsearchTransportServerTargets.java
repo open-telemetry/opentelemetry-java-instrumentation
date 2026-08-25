@@ -25,13 +25,13 @@ public final class ElasticsearchTransportServerTargets {
   // marks a client whose target has been read and that has none, e.g. an in-process node client
   private static final String NO_TARGET = "";
 
-  private static final VirtualField<AbstractClient, String> serverAddress =
+  private static final VirtualField<AbstractClient, String> SERVER_ADDRESS =
       VirtualField.find(AbstractClient.class, String.class);
-  private static final VirtualField<AbstractClient, Integer> serverPort =
+  private static final VirtualField<AbstractClient, Integer> SERVER_PORT =
       VirtualField.find(AbstractClient.class, Integer.class);
 
   public static boolean isCaptured(AbstractClient client) {
-    return serverAddress.get(client) != null;
+    return SERVER_ADDRESS.get(client) != null;
   }
 
   public static void capture(
@@ -39,22 +39,22 @@ public final class ElasticsearchTransportServerTargets {
       @Nullable List<ElasticsearchTransportServerTarget.Endpoint> endpoints) {
     ElasticsearchTransportServerTarget target = ElasticsearchTransportServerTarget.of(endpoints);
     if (target == null) {
-      serverAddress.set(client, NO_TARGET);
+      SERVER_ADDRESS.set(client, NO_TARGET);
       return;
     }
-    serverPort.set(client, target.getPort());
-    serverAddress.set(client, target.getAddress());
+    SERVER_PORT.set(client, target.getPort());
+    SERVER_ADDRESS.set(client, target.getAddress());
   }
 
   @Nullable
   public static String address(AbstractClient client) {
-    String address = serverAddress.get(client);
+    String address = SERVER_ADDRESS.get(client);
     return NO_TARGET.equals(address) ? null : address;
   }
 
   @Nullable
   public static Integer port(AbstractClient client) {
-    return address(client) == null ? null : serverPort.get(client);
+    return address(client) == null ? null : SERVER_PORT.get(client);
   }
 
   private ElasticsearchTransportServerTargets() {}

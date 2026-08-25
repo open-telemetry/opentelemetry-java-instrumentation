@@ -20,9 +20,9 @@ import org.opensearch.client.transport.OpenSearchTransport;
  */
 public final class OpenSearchServerTargets {
 
-  private static final VirtualField<OpenSearchTransport, String> serverAddress =
+  private static final VirtualField<OpenSearchTransport, String> SERVER_ADDRESS =
       VirtualField.find(OpenSearchTransport.class, String.class);
-  private static final VirtualField<OpenSearchTransport, Integer> serverPort =
+  private static final VirtualField<OpenSearchTransport, Integer> SERVER_PORT =
       VirtualField.find(OpenSearchTransport.class, Integer.class);
 
   public static void capture(
@@ -35,18 +35,18 @@ public final class OpenSearchServerTargets {
     if (target == null) {
       return;
     }
-    serverAddress.set(transport, target.getAddress());
-    serverPort.set(transport, target.getPort());
+    SERVER_ADDRESS.set(transport, target.getAddress());
+    SERVER_PORT.set(transport, target.getPort());
   }
 
   @Nullable
   public static String address(OpenSearchTransport transport) {
-    return serverAddress.get(transport);
+    return SERVER_ADDRESS.get(transport);
   }
 
   @Nullable
   public static Integer port(OpenSearchTransport transport) {
-    return serverPort.get(transport);
+    return SERVER_PORT.get(transport);
   }
 
   private OpenSearchServerTargets() {}

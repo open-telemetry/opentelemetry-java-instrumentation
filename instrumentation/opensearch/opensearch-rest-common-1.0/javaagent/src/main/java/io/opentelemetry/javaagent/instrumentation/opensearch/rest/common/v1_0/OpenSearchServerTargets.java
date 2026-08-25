@@ -16,20 +16,20 @@ import org.opensearch.client.RestClient;
  */
 public final class OpenSearchServerTargets {
 
-  private static final VirtualField<RestClient, OpenSearchServerTarget> serverTarget =
+  private static final VirtualField<RestClient, OpenSearchServerTarget> SERVER_TARGET =
       VirtualField.find(RestClient.class, OpenSearchServerTarget.class);
 
   public static void capture(
       RestClient restClient, @Nullable List<OpenSearchServerTarget.Endpoint> configuredEndpoints) {
     OpenSearchServerTarget target = OpenSearchServerTarget.of(configuredEndpoints);
     if (target != null) {
-      serverTarget.set(restClient, target);
+      SERVER_TARGET.set(restClient, target);
     }
   }
 
   @Nullable
   public static OpenSearchServerTarget get(RestClient restClient) {
-    return serverTarget.get(restClient);
+    return SERVER_TARGET.get(restClient);
   }
 
   @Nullable
