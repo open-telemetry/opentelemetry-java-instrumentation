@@ -483,10 +483,13 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10ms")
-            // the fake backend accumulates metric payloads instead of replacing them, so a longer
-            // interval keeps each test run's assertions looking at a small, predictable number of
-            // exports
-            .withEnv("OTEL_METRIC_EXPORT_INTERVAL", "10000")
+            // The fake backend can clear retained OTLP payloads between tests, but it cannot reset
+            // metric state in the separately running Java agent. Unlike the regular in-process
+            // Java agent test harness, which can and frequently does reset captured telemetry and
+            // metric state, cumulative exports can re-emit measurements from earlier tests. Delta
+            // temporality makes clearing the backend meaningful.
+            .withEnv("OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE", "delta")
+            .withEnv("OTEL_METRIC_EXPORT_INTERVAL", "1000")
             .withEnv(
                 "OTEL_SEMCONV_STABILITY_OPT_IN",
                 emitStableMessagingSemconv()
