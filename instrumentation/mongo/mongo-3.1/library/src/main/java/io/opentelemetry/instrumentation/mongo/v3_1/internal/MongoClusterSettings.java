@@ -14,8 +14,9 @@ import javax.annotation.Nullable;
  * Reads the SRV host out of cluster settings, which only a driver from 3.10 on keeps.
  *
  * <p>Muzzle holds the instrumentation for the older drivers to the API they shipped, so the
- * accessor is looked up once rather than called directly. That lookup happens while a cluster is
- * being constructed, once per client, and never while a command runs.
+ * accessor is looked up reflectively rather than called directly. That lookup runs once, when this
+ * class is initialized. The accessor is then invoked while a cluster is being constructed, once per
+ * client, and never while a command runs.
  *
  * <p>A driver before 3.10 resolves an SRV host into seeds as it parses the connection string, so
  * there is nothing left for this to read and the client is described by the hosts it resolved to.
