@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.HostAndPort;
@@ -27,6 +28,7 @@ public final class JedisServerTargets {
         endpoints.add(RedisServerTarget.endpoint(node.getHost(), node.getPort()));
       }
     }
+    Collections.sort(endpoints);
     return RedisServerTarget.ofEndpoints(endpoints);
   }
 

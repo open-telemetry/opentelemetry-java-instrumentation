@@ -69,10 +69,11 @@ class JedisServerTargetsTest {
   }
 
   @Test
-  void clusterNodesKeepEveryConfiguredEndpoint() {
+  void clusterNodesAreSorted() {
     RedisServerTarget target =
         JedisServerTargets.ofNodes(
-            asList(new HostAndPort("node1", 7000), new HostAndPort("node2", 7001)));
+            new LinkedHashSet<>(
+                asList(new HostAndPort("node2", 7001), new HostAndPort("node1", 7000))));
 
     assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
     assertThat(target.getPort()).isNull();

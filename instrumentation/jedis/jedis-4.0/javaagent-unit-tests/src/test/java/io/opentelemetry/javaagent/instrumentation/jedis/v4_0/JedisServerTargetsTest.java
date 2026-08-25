@@ -11,16 +11,18 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import java.util.LinkedHashSet;
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.HostAndPort;
 
 class JedisServerTargetsTest {
 
   @Test
-  void nodesKeepEveryConfiguredEndpoint() {
+  void nodesAreSorted() {
     RedisServerTarget target =
         JedisServerTargets.ofNodes(
-            asList(new HostAndPort("node1", 7000), new HostAndPort("node2", 7001)));
+            new LinkedHashSet<>(
+                asList(new HostAndPort("node2", 7001), new HostAndPort("node1", 7000))));
 
     assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
     assertThat(target.getPort()).isNull();
