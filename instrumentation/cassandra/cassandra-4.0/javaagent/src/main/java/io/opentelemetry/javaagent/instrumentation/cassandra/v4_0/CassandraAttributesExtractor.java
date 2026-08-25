@@ -157,6 +157,8 @@ final class CassandraAttributesExtractor
 
   private static void updateStableSniServerAddressAndPort(
       AttributesBuilder attributes, Node coordinator, EndPoint endPoint) {
+    attributes.remove(SERVER_ADDRESS);
+    attributes.remove(SERVER_PORT);
     // Under SNI (proxied deployments such as DataStax Astra), resolve() would return the proxy
     // rather than the server behind it. It also performs a dns lookup on every call and rotates a
     // shared static counter the driver uses to pick a connection. Use the coordinator's own

@@ -186,6 +186,8 @@ final class CassandraAttributesExtractor
 
   private static void updateStableSniServerAddressAndPort(
       AttributesBuilder attributes, Node coordinator, SniEndPoint sniEndPoint) {
+    attributes.remove(SERVER_ADDRESS);
+    attributes.remove(SERVER_PORT);
     // Under SNI (proxied deployments such as DataStax Astra) the client reaches the server through
     // a proxy, and SniEndPoint.resolve() would return the proxy. server.address should be the
     // server behind the proxy, so use the coordinator's own broadcast RPC address, which carries

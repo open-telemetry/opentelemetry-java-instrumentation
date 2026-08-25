@@ -140,7 +140,7 @@ class CassandraEndpointAttributesTest {
       when(coordinator.getHostId()).thenReturn(hostId);
     }
 
-    Attributes attributes = serverAttributes(null);
+    Attributes attributes = serverAttributes(target(singletonList("proxy.example.com:29042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isNull();
@@ -159,7 +159,7 @@ class CassandraEndpointAttributesTest {
           .thenReturn(UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31"));
     }
 
-    Attributes attributes = serverAttributes(null);
+    Attributes attributes = serverAttributes(target(singletonList("proxy.example.com:29042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com");
