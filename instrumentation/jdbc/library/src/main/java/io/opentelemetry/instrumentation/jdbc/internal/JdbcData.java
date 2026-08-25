@@ -33,12 +33,12 @@ public final class JdbcData {
       VirtualField.find(Connection.class, DbInfo.class);
   public static final VirtualField<PreparedStatement, String> PREPARED_STATEMENT =
       VirtualField.find(PreparedStatement.class, String.class);
-  private static final VirtualField<Statement, StatementBatchInfo> statementBatch =
+  private static final VirtualField<Statement, StatementBatchInfo> STATEMENT_BATCH =
       VirtualField.find(Statement.class, StatementBatchInfo.class);
   private static final VirtualField<PreparedStatement, PreparedStatementBatchInfo>
-      preparedStatementBatch =
+      PREPARED_STATEMENT_BATCH =
           VirtualField.find(PreparedStatement.class, PreparedStatementBatchInfo.class);
-  private static final VirtualField<PreparedStatement, Map<String, String>> parameters =
+  private static final VirtualField<PreparedStatement, Map<String, String>> STATEMENT_PARAMETERS =
       VirtualField.find(PreparedStatement.class, Map.class);
 
   private JdbcData() {}
@@ -66,54 +66,54 @@ public final class JdbcData {
   }
 
   public static void addStatementBatch(Statement statement, String sql) {
-    StatementBatchInfo batchInfo = statementBatch.get(statement);
+    StatementBatchInfo batchInfo = STATEMENT_BATCH.get(statement);
     if (batchInfo == null) {
       batchInfo = new StatementBatchInfo();
-      statementBatch.set(statement, batchInfo);
+      STATEMENT_BATCH.set(statement, batchInfo);
     }
     batchInfo.add(sql);
   }
 
   public static void addPreparedStatementBatch(PreparedStatement statement) {
-    PreparedStatementBatchInfo batchInfo = preparedStatementBatch.get(statement);
+    PreparedStatementBatchInfo batchInfo = PREPARED_STATEMENT_BATCH.get(statement);
     if (batchInfo == null) {
       batchInfo = new PreparedStatementBatchInfo();
-      preparedStatementBatch.set(statement, batchInfo);
+      PREPARED_STATEMENT_BATCH.set(statement, batchInfo);
     }
     batchInfo.add();
   }
 
   public static void clearBatch(Statement statement) {
     if (statement instanceof PreparedStatement) {
-      preparedStatementBatch.set((PreparedStatement) statement, null);
+      PREPARED_STATEMENT_BATCH.set((PreparedStatement) statement, null);
     } else {
-      statementBatch.set(statement, null);
+      STATEMENT_BATCH.set(statement, null);
     }
   }
 
   public static StatementBatchInfo getStatementBatchInfo(Statement statement) {
-    return statementBatch.get(statement);
+    return STATEMENT_BATCH.get(statement);
   }
 
   public static Long getPreparedStatementBatchSize(PreparedStatement statement) {
-    PreparedStatementBatchInfo batchInfo = preparedStatementBatch.get(statement);
+    PreparedStatementBatchInfo batchInfo = PREPARED_STATEMENT_BATCH.get(statement);
     return batchInfo != null ? batchInfo.getBatchSize() : null;
   }
 
   public static void close(Statement statement) {
     // when statement is closed remove all of our virtual fields in case the JDBC driver reuses the
     // same statement instance for a subsequent query
-    statementBatch.set(statement, null);
+    STATEMENT_BATCH.set(statement, null);
     if (statement instanceof PreparedStatement) {
       PreparedStatement prepared = (PreparedStatement) statement;
       PREPARED_STATEMENT.set(prepared, null);
-      preparedStatementBatch.set(prepared, null);
-      parameters.set(prepared, null);
+      PREPARED_STATEMENT_BATCH.set(prepared, null);
+      STATEMENT_PARAMETERS.set(prepared, null);
     }
   }
 
   public static Map<String, String> getParameters(PreparedStatement statement) {
-    Map<String, String> parametersMap = parameters.get(statement);
+    Map<String, String> parametersMap = STATEMENT_PARAMETERS.get(statement);
     return parametersMap != null ? parametersMap : emptyMap();
   }
 
@@ -122,16 +122,16 @@ public final class JdbcData {
       return;
     }
 
-    Map<String, String> parametersMap = parameters.get(statement);
+    Map<String, String> parametersMap = STATEMENT_PARAMETERS.get(statement);
     if (parametersMap == null) {
       parametersMap = new HashMap<>();
-      parameters.set(statement, parametersMap);
+      STATEMENT_PARAMETERS.set(statement, parametersMap);
     }
     parametersMap.put(key, value);
   }
 
   public static void clearParameters(PreparedStatement statement) {
-    parameters.set(statement, null);
+    STATEMENT_PARAMETERS.set(statement, null);
   }
 
   /**
