@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * with several carries all of them in the address, in the client's own {@code host:port,host:port}
  * syntax, and has no port of its own.
  */
-public final class ElasticsearchTransportServerTarget {
+public class ElasticsearchTransportServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
@@ -75,7 +75,7 @@ public final class ElasticsearchTransportServerTarget {
   }
 
   /** A single configured address. */
-  public static final class Endpoint {
+  public static class Endpoint {
 
     @Nullable private final String host;
     private final int port;

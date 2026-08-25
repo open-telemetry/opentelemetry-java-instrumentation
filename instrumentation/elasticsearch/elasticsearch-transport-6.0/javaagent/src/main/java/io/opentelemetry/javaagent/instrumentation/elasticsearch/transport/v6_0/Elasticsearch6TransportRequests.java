@@ -16,7 +16,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.TransportAddress;
 
 /** Builds the request of a client, together with the target that client is configured with. */
-final class Elasticsearch6TransportRequests {
+class Elasticsearch6TransportRequests {
 
   static ElasticTransportRequest request(
       AbstractClient client, Object action, Object actionRequest) {

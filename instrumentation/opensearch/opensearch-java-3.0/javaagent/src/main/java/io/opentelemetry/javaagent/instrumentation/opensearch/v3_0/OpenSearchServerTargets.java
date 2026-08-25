@@ -18,7 +18,7 @@ import org.opensearch.client.transport.OpenSearchTransport;
  * <p>The target is held in fields of types the JDK already provides, because the transport that
  * records it and the request that reads it are covered by separate instrumentation modules.
  */
-public final class OpenSearchServerTargets {
+public class OpenSearchServerTargets {
 
   private static final VirtualField<OpenSearchTransport, String> SERVER_ADDRESS =
       VirtualField.find(OpenSearchTransport.class, String.class);

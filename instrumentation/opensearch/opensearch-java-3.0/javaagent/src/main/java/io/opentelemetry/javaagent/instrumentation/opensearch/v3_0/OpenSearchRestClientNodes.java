@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
  * does not depend on, so it is read reflectively and the instrumentation of the other transports
  * stays available when that artifact is missing.
  */
-public final class OpenSearchRestClientNodes {
+public class OpenSearchRestClientNodes {
 
   @Nullable
   public static OpenSearchServerTarget target(Object restClient) {

@@ -20,7 +20,7 @@ import org.elasticsearch.client.support.AbstractClient;
  *
  * <p>A client that talks to a node in the same process has no address and stays without a target.
  */
-public final class ElasticsearchTransportServerTargets {
+public class ElasticsearchTransportServerTargets {
 
   // marks a client whose target has been read and that has none, e.g. an in-process node client
   private static final String NO_TARGET = "";

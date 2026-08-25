@@ -14,7 +14,7 @@ import org.opensearch.client.RestClient;
  * Keeps the target a rest client was built with. The nodes a rest client reports later are the ones
  * it currently routes to, which sniffing and {@code setNodes} can replace at any time.
  */
-public final class OpenSearchServerTargets {
+public class OpenSearchServerTargets {
 
   private static final VirtualField<RestClient, OpenSearchServerTarget> SERVER_TARGET =
       VirtualField.find(RestClient.class, OpenSearchServerTarget.class);

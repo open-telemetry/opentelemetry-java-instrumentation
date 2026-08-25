@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
  * several nodes carries all of them in the address as {@code host:port,host:port}, and has no port
  * of its own.
  */
-public final class OpenSearchServerTarget {
+public class OpenSearchServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
@@ -78,7 +78,7 @@ public final class OpenSearchServerTarget {
   }
 
   /** A single configured endpoint, with credentials, path, query and fragment already removed. */
-  public static final class Endpoint {
+  public static class Endpoint {
 
     @Nullable private final String host;
     private final int port;

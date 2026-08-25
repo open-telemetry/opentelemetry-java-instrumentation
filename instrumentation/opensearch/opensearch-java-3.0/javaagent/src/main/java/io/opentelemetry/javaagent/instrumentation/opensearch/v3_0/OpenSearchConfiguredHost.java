@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
  * Reads the target out of the endpoint string an AWS SDK 2 transport is configured with, for
  * example {@code https://search-domain.us-east-1.es.amazonaws.com}.
  */
-public final class OpenSearchConfiguredHost {
+public class OpenSearchConfiguredHost {
 
   /** The target {@code host} names, or {@code null} when nothing usable is left of it. */
   @Nullable

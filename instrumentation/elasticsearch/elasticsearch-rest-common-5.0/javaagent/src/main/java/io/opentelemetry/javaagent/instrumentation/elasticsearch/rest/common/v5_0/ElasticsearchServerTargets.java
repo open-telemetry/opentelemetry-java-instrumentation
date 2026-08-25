@@ -16,7 +16,7 @@ import org.elasticsearch.client.RestClient;
  * Keeps the target a rest client was built with. The hosts a rest client reports later are the ones
  * it currently routes to, which sniffing and {@code setNodes} can replace at any time.
  */
-public final class ElasticsearchServerTargets {
+public class ElasticsearchServerTargets {
 
   private static final VirtualField<RestClient, ElasticsearchServerTarget> SERVER_TARGET =
       VirtualField.find(RestClient.class, ElasticsearchServerTarget.class);
