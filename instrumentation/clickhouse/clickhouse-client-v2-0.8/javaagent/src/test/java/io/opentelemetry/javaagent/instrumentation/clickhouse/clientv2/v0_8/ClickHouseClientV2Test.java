@@ -512,12 +512,21 @@ class ClickHouseClientV2Test {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
   }
 
   @Test

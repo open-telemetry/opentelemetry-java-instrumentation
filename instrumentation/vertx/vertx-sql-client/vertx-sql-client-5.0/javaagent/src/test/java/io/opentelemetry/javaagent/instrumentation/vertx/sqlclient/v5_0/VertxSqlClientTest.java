@@ -189,7 +189,23 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "test"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, Long.valueOf(port)))));
   }
@@ -198,7 +214,19 @@ class VertxSqlClientTest {
     trace.hasSpansSatisfyingExactly(
         span ->
             span.hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                    equalTo(maybeStable(DB_NAME), DB),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                    equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                    equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
+                    equalTo(
+                        maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                    equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
+                    equalTo(
+                        maybeStablePeerService(),
+                        emitStableDatabaseSemconv() ? null : "test-peer-service"),
                     equalTo(
                         SERVER_ADDRESS,
                         emitStableDatabaseSemconv()

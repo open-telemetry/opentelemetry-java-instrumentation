@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -94,7 +95,15 @@ class JdbcTelemetryTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasAttributesSatisfying(
+                    span.hasAttributesSatisfyingExactly(
+                        equalTo(maybeStable(DB_SYSTEM), POSTGRESQL),
+                        equalTo(maybeStable(DB_NAME), "dbname"),
+                        equalTo(
+                            DB_CONNECTION_STRING,
+                            emitStableDatabaseSemconv() ? null : "postgresql://localhost:5432"),
+                        equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"),
+                        equalTo(DB_OPERATION, emitStableDatabaseSemconv() ? null : "SELECT"),
+                        equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
                         // the old semconv value is the one the parser has always reported for a
                         // multi host url: the driver default, because such a url names no single
                         // server
