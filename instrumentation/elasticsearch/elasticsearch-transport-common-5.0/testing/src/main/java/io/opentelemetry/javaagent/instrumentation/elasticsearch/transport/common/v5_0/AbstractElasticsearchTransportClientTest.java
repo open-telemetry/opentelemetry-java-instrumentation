@@ -132,9 +132,7 @@ public abstract class AbstractElasticsearchTransportClientTest
    * collection to name.
    */
   private String spanName(String action, String wireAction) {
-    return emitStableDatabaseSemconv()
-        ? wireAction + " " + getAddress() + ":" + getPort()
-        : action;
+    return emitStableDatabaseSemconv() ? wireAction + " " + getAddress() + ":" + getPort() : action;
   }
 
   private Stream<Arguments> errorArguments() {
