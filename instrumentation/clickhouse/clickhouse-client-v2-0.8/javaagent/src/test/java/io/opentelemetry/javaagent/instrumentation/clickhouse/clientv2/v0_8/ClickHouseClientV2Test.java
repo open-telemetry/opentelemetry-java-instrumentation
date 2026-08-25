@@ -577,7 +577,7 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 ERROR_TYPE,
                                 emitStableDatabaseSemconv()
-                                    ? "com.clickhouse.client.api.ClientException"
+                                    ? thrown.getClass().getName()
                                     : null))));
   }
 }
