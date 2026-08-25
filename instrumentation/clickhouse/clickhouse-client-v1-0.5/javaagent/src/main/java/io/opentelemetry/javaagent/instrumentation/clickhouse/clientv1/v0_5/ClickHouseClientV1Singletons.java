@@ -25,7 +25,7 @@ public class ClickHouseClientV1Singletons {
   // "" marks a configuration that names a single node, which has no group target
   private static final String NO_GROUP = "";
 
-  private static final VirtualField<ClickHouseNodes, String> nodesAddressGroup =
+  private static final VirtualField<ClickHouseNodes, String> NODES_ADDRESS_GROUP =
       VirtualField.find(ClickHouseNodes.class, String.class);
 
   static {
@@ -59,14 +59,14 @@ public class ClickHouseClientV1Singletons {
     if (nodes == null) {
       return null;
     }
-    String addressGroup = nodesAddressGroup.get(nodes);
+    String addressGroup = NODES_ADDRESS_GROUP.get(nodes);
     return addressGroup == null || NO_GROUP.equals(addressGroup) ? null : addressGroup;
   }
 
   /** Render and keep the target of a node list, from the nodes it was configured with. */
   public static void captureConfiguredNodes(
       ClickHouseNodes nodes, Collection<ClickHouseNode> configuredNodes) {
-    nodesAddressGroup.set(nodes, renderAddressGroup(configuredNodes));
+    NODES_ADDRESS_GROUP.set(nodes, renderAddressGroup(configuredNodes));
   }
 
   private static String renderAddressGroup(Collection<ClickHouseNode> nodes) {

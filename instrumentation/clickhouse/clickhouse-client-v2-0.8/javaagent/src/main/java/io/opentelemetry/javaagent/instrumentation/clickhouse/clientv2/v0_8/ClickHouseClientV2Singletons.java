@@ -22,7 +22,7 @@ public class ClickHouseClientV2Singletons {
 
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v2-0.8";
   private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
-  private static final VirtualField<Client, ServerInfo> serverInfoField =
+  private static final VirtualField<Client, ServerInfo> SERVER_INFO_FIELD =
       VirtualField.find(Client.class, ServerInfo.class);
 
   static {
@@ -47,10 +47,10 @@ public class ClickHouseClientV2Singletons {
    * is computed once and kept on the client rather than on every query.
    */
   public static ServerInfo serverInfo(Client client) {
-    ServerInfo serverInfo = serverInfoField.get(client);
+    ServerInfo serverInfo = SERVER_INFO_FIELD.get(client);
     if (serverInfo == null) {
       serverInfo = ServerInfo.of(client.getEndpoints());
-      serverInfoField.set(client, serverInfo);
+      SERVER_INFO_FIELD.set(client, serverInfo);
     }
     return serverInfo;
   }
