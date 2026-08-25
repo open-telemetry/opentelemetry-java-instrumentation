@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
  * <p>The address is rendered while the connection is being created, so a client keeps reporting the
  * nodes it was pointed at rather than the one that happens to answer an operation.
  */
-public final class SpymemcachedServerTarget {
+public class SpymemcachedServerTarget {
 
   private final String address;
   @Nullable private final Integer port;

@@ -19,7 +19,7 @@ import net.spy.memcached.MemcachedConnection;
  * nodes a connection later drops, reconnects to or picks for a single operation out of it, and
  * leaves an operation with nothing to do beyond looking its connection up.
  */
-public final class SpymemcachedServerTargets {
+public class SpymemcachedServerTargets {
 
   private static final VirtualField<MemcachedConnection, SpymemcachedServerTarget>
       CONFIGURED_TARGETS =

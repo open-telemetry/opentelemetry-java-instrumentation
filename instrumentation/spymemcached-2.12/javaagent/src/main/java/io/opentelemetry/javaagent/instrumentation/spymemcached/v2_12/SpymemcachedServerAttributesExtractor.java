@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import javax.annotation.Nullable;
 
-final class SpymemcachedServerAttributesExtractor
+class SpymemcachedServerAttributesExtractor
     implements AttributesExtractor<SpymemcachedRequest, Object> {
 
   private final ServerAttributesExtractor<SpymemcachedRequest, Void> delegate =
