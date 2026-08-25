@@ -178,6 +178,8 @@ instrumentation/development:
           enabled: false
 
       # Used to specify a mapping from server addresses or configured targets to peer services.
+      # Configured targets containing commas or equals signs can only be mapped with declarative
+      # `service_peer_mapping`.
       # Each list entry is an object with the following properties:
       #   peer (string, required): Server address or configured target to match against.
       #   service_name (string, required): Peer service name to record for matching peers.

@@ -23,7 +23,7 @@ configurations:
   common.peer-service-mapping:
     name: otel.instrumentation.common.peer-service-mapping
     declarative_name: java.common.service_peer_mapping
-    description: "Used to specify a mapping from server addresses or configured targets to peer services."
+    description: "Used to specify a mapping from server addresses or configured targets to peer services. Configured targets containing commas or equals signs can only be mapped with declarative `service_peer_mapping`."
     type: map
     default: ""
     declarative_type: structured_list
