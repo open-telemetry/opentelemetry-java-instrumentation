@@ -249,23 +249,20 @@ class ElasticsearchRest5Test {
 
   /**
    * Asserts the server of the elasticsearch span, where {@code hostList} is the whole configured
-   * list, or null when a single host was configured.
+   * list.
    */
   private static void assertConfiguredTarget(String hostList) {
-    boolean stableHostList = emitStableDatabaseSemconv() && hostList != null;
     testing.waitAndAssertTraces(
         trace ->
             assertThat(trace.getSpan(0))
-                .hasName(
-                    emitStableDatabaseSemconv()
-                        ? (hostList != null
-                            ? hostList
-                            : httpHost.getHostName() + ":" + httpHost.getPort())
-                        : "GET")
+                .hasName(emitStableDatabaseSemconv() ? hostList : "GET")
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfying(
-                    equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
                     equalTo(
-                        SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort()))));
+                        SERVER_ADDRESS,
+                        emitStableDatabaseSemconv() ? hostList : httpHost.getHostName()),
+                    equalTo(
+                        SERVER_PORT,
+                        emitStableDatabaseSemconv() ? null : Long.valueOf(httpHost.getPort()))));
   }
 }

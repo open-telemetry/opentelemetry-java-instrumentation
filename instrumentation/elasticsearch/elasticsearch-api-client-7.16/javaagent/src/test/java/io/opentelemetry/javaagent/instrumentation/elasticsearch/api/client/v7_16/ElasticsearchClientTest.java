@@ -308,26 +308,21 @@ class ElasticsearchClientTest {
 
   /**
    * Asserts the server of the elasticsearch span, where {@code hostList} is the whole configured
-   * list, or null when a single host was configured. Only the elasticsearch span is asserted,
-   * because a request that first reaches the host that is down is retried and reports a second http
-   * span.
+   * list. Only the elasticsearch span is asserted, because a request that first reaches the host
+   * that is down is retried and reports a second http span.
    */
   private static void assertConfiguredTarget(String hostList) {
-    boolean stableHostList = emitStableDatabaseSemconv() && hostList != null;
     testing.waitAndAssertTraces(
         trace ->
             assertThat(trace.getSpan(0))
-                .hasName(
-                    emitStableDatabaseSemconv()
-                        ? "info "
-                            + (hostList != null
-                                ? hostList
-                                : httpHost.getHostName() + ":" + httpHost.getPort())
-                        : "info")
+                .hasName(emitStableDatabaseSemconv() ? "info " + hostList : "info")
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfying(
-                    equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
                     equalTo(
-                        SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort()))));
+                        SERVER_ADDRESS,
+                        emitStableDatabaseSemconv() ? hostList : httpHost.getHostName()),
+                    equalTo(
+                        SERVER_PORT,
+                        emitStableDatabaseSemconv() ? null : Long.valueOf(httpHost.getPort()))));
   }
 }
