@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.redissonmetrics.v3_26;
+package io.opentelemetry.javaagent.instrumentation.redissonmetrics.v3_18;
 
-import static io.opentelemetry.javaagent.instrumentation.redissonmetrics.v3_26.RedissonSingletons.INSTRUMENTATION_NAME;
+import static io.opentelemetry.javaagent.instrumentation.redissonmetrics.v3_18.RedissonSingletons.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.javaagent.instrumentation.redissonmetrics.AbstractRedissonConnectionPoolMetricsTest;
+import java.lang.reflect.Field;
 import java.util.concurrent.CompletableFuture;
 import org.redisson.Redisson;
 import org.redisson.client.RedisConnection;
 import org.redisson.client.protocol.RedisCommands;
 import org.redisson.connection.ClientConnectionsEntry;
-import org.redisson.connection.ConnectionsHolder;
 import org.redisson.connection.MasterSlaveEntry;
 import org.redisson.misc.AsyncSemaphore;
 
@@ -29,14 +29,13 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
       Redisson redisson, String regularPool, String subscriptionPool)
       throws ReflectiveOperationException {
     MasterSlaveEntry entry = getMasterSlaveEntry(redisson);
-    ClientConnectionsEntry masterEntry = (ClientConnectionsEntry) getMasterConnectionsEntry(entry);
-    ConnectionsHolder<RedisConnection> holder = masterEntry.getConnectionsHolder();
-    AsyncSemaphore semaphore = holder.getFreeConnectionsCounter();
+    ClientConnectionsEntry connectionsEntry =
+        (ClientConnectionsEntry) getMasterConnectionsEntry(entry);
+    AsyncSemaphore semaphore = getFreeConnectionsCounter(connectionsEntry);
 
     clearMetrics();
     RedisConnection connection = entry.connectionWriteOp(RedisCommands.PING).join();
     try {
-      // Delta temporality reports one fewer idle connection and one used connection.
       assertUsageMetric(regularPool, -1, 1, subscriptionPool, 0, 0);
     } finally {
       entry.releaseWrite(connection);
@@ -55,5 +54,12 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
       }
     }
     queued.join();
+  }
+
+  private static AsyncSemaphore getFreeConnectionsCounter(ClientConnectionsEntry entry)
+      throws ReflectiveOperationException {
+    Field field = ClientConnectionsEntry.class.getDeclaredField("freeConnectionsCounter");
+    field.setAccessible(true);
+    return (AsyncSemaphore) field.get(entry);
   }
 }

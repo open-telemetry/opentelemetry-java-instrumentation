@@ -461,6 +461,7 @@
     "org.quartz-scheduler:quartz#+": "2.5.2",
     "org.redisson:redisson#+": "4.7.0",
     "org.redisson:redisson#3.16.+": "3.16.8",
+    "org.redisson:redisson#3.25.+": "3.25.2",
     "org.restlet.jse:org.restlet#+": "2.5-M1",
     "org.restlet.jse:org.restlet.ext.jetty#+": "2.5-M1",
     "org.restlet:org.restlet#+": "2.6.0",

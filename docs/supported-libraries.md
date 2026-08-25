@@ -192,7 +192,7 @@ These are the supported libraries and frameworks:
 
 **[7]** When `otel.instrumentation.common.v3-preview` is enabled, Jedis instrumentation supports 2.0+.
 
-**[8]** Redisson database client telemetry is supported from 3.0+, and database pool metrics are supported from 3.26+.
+**[8]** Redisson database client telemetry is supported from 3.0+, and database pool metrics are supported from 3.18+.
 
 [Elasticsearch Client Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/elasticsearch.md
 [HTTP Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server

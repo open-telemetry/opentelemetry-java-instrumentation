@@ -930,7 +930,13 @@ targets:
       target: ':instrumentation:redisson:redisson-common-3.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:redisson:redisson-metrics-3.18:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:redisson:redisson-metrics-3.26:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:redisson:redisson-metrics-common-3.18:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:restlet:restlet-1.1:javaagent'
