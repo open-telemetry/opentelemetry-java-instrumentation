@@ -60,7 +60,6 @@ class SpymemcachedAttributesGetter
       return null;
     }
     SpymemcachedServerTarget target = spymemcachedRequest.getServerTarget();
-    // a target naming several nodes already carries the port of each of them
     return target == null ? null : target.getPort();
   }
 }
