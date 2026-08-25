@@ -57,6 +57,9 @@ public final class UrlParsingUtils {
               + "|(?:[A-F0-9]{1,4}:){7}:|:(:[A-F0-9]{1,4}){7})(?![:.\\w])",
           Pattern.CASE_INSENSITIVE);
 
+  private static final Pattern ADDRESS_CREDENTIAL_PATTERN =
+      Pattern.compile("\\(\\s*(?:user|password)\\s*=[^)]*\\)");
+
   private UrlParsingUtils() {}
 
   /**
@@ -335,9 +338,6 @@ public final class UrlParsingUtils {
     entries.add(hostList.substring(start));
     return entries;
   }
-
-  private static final Pattern ADDRESS_CREDENTIAL_PATTERN =
-      Pattern.compile("\\(\\s*(?:user|password)\\s*=[^)]*\\)");
 
   /**
    * Remove the credential attributes of the MySQL and MariaDB {@code address=(...)} syntax, e.g.
