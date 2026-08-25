@@ -29,7 +29,7 @@ class GeodeServerTarget {
   private final String address;
   @Nullable private final Integer port;
 
-  public static Builder builder() {
+  static Builder builder() {
     return new Builder();
   }
 
@@ -38,7 +38,7 @@ class GeodeServerTarget {
     this.port = port;
   }
 
-  public String getAddress() {
+  String getAddress() {
     return address;
   }
 
@@ -47,12 +47,12 @@ class GeodeServerTarget {
    * names a locator.
    */
   @Nullable
-  public Integer getPort() {
+  Integer getPort() {
     return port;
   }
 
   /** Collects the servers and locators a pool is being configured with. */
-  public static class Builder {
+  static class Builder {
 
     private static final int MAX_PORT = 65535;
 
@@ -71,7 +71,7 @@ class GeodeServerTarget {
      * <p>A server that cannot be named drops the whole server list, because a partial list
      * describes a deployment the client was never pointed at.
      */
-    public synchronized void addServer(@Nullable String host, int port) {
+    synchronized void addServer(@Nullable String host, int port) {
       serverConfigured = true;
       serversComplete &= add(servers, host, port);
     }
@@ -82,13 +82,13 @@ class GeodeServerTarget {
      * <p>A locator that cannot be named drops the whole locator list, because a partial list
      * describes a discovery target the client was never pointed at.
      */
-    public synchronized void addLocator(@Nullable String host, int port) {
+    synchronized void addLocator(@Nullable String host, int port) {
       locatorConfigured = true;
       locatorsComplete &= add(locators, host, port);
     }
 
     /** Forgets everything configured so far, as {@code PoolFactory.reset()} does. */
-    public synchronized void reset() {
+    synchronized void reset() {
       servers.clear();
       locators.clear();
       serverConfigured = false;
@@ -102,7 +102,7 @@ class GeodeServerTarget {
      * locator.
      */
     @Nullable
-    public synchronized GeodeServerTarget build() {
+    synchronized GeodeServerTarget build() {
       if (serverConfigured) {
         return buildServer();
       }
