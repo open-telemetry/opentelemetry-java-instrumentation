@@ -136,6 +136,21 @@ public abstract class AbstractCouchbaseTest {
     return emitStableDatabaseSemconv() ? "127.0.0.1" : null;
   }
 
+  /** The configured target in stable mode, or the contacted node in legacy mode. */
+  protected StringAssertConsumer operationServerAddress() {
+    if (emitStableDatabaseSemconv()) {
+      return val -> val.isEqualTo(serverAddress());
+    }
+    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+  }
+
+  /** The contacted node port in legacy mode; the configured target names no port. */
+  protected LongAssertConsumer operationServerPort() {
+    return !emitStableDatabaseSemconv() && includesNetworkAttributes()
+        ? val -> val.isNotNull()
+        : val -> val.isNull();
+  }
+
   /**
    * The name of a span whose operation names no bucket, which the stable conventions round out with
    * the server the client was configured with because there is nothing else to name.
