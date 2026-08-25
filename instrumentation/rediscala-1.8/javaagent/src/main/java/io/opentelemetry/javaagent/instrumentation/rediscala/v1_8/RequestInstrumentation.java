@@ -78,14 +78,11 @@ class RequestInstrumentation implements TypeInstrumentation {
           return null;
         }
 
-        String host = null;
-        Integer port = null;
+        ServerEndpoint endpoint = null;
         if (action instanceof RedisClientActorLike) {
-          RedisClientActorLike client = (RedisClientActorLike) action;
-          host = client.host();
-          port = client.port();
+          endpoint = ServerEndpoint.create((RedisClientActorLike) action);
         }
-        RediscalaRequest request = RediscalaRequest.create(cmd, host, port);
+        RediscalaRequest request = RediscalaRequest.create(cmd, endpoint);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

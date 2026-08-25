@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.9"
+    id("org.graalvm.buildtools.native") version "1.1.10"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -294,6 +294,7 @@ include(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing")
 include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent")
+include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent-unit-tests")
 include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing")
 include(":instrumentation:executors:bootstrap")
 include(":instrumentation:executors:javaagent")
