@@ -113,7 +113,7 @@ public class MetricDef {
   }
 
   /**
-   * Get list of metric names captured by this MetricDef.
+   * Get metric names included in this MetricDef, does not include metrics from handlers.
    *
    * @return metric names.
    */
