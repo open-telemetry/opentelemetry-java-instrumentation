@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-final class SqsMessageSystemAttributeAccess {
+class SqsMessageSystemAttributeAccess {
   @Nullable private static final Accessors accessors;
 
   static {

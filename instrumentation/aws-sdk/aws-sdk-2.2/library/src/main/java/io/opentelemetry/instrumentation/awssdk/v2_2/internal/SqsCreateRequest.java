@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class SqsCreateRequest {
+public class SqsCreateRequest {
 
   @Nullable private final String queueUrl;
   private final Map<String, String> messageAttributes;

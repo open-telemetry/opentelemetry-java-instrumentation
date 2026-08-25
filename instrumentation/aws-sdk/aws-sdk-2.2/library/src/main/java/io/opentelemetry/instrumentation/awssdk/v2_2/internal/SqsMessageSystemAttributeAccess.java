@@ -12,7 +12,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 
-final class SqsMessageSystemAttributeAccess {
+class SqsMessageSystemAttributeAccess {
   @Nullable private static final Accessors accessors;
 
   static {

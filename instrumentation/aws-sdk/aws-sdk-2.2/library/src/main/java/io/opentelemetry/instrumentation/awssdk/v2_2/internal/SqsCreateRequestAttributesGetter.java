@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
-final class SqsCreateRequestAttributesGetter
+class SqsCreateRequestAttributesGetter
     implements MessagingAttributesGetter<SqsCreateRequest, Void> {
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
