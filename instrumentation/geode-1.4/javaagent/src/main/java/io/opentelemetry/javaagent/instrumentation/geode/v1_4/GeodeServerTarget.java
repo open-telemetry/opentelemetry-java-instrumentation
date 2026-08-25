@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
  * <p>The target is read while the pool is being created, so a pool keeps reporting what it was
  * pointed at rather than the servers it later discovers.
  */
-public class GeodeServerTarget {
+class GeodeServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
