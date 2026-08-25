@@ -24,9 +24,8 @@ import org.apache.geode.cache.client.PoolFactory;
  * Reads the target a client pool is being configured with, and hands it to the pool the factory
  * creates.
  *
- * <p>The factory is the only place where the configuration is complete and still untouched by what
- * the pool later learns from its locators, and a factory keeps its configuration between pools, so
- * every pool it creates is given a snapshot of its own.
+ * <p>The factory sees the complete target configuration before the pool exists. A factory keeps
+ * that configuration between pools, so every pool it creates is given a snapshot of its own.
  */
 class GeodePoolInstrumentation implements TypeInstrumentation {
 
