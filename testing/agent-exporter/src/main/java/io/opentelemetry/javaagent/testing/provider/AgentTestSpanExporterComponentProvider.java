@@ -11,11 +11,12 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import javax.annotation.Nullable;
 
 @AutoService(ComponentProvider.class)
 public class AgentTestSpanExporterComponentProvider implements ComponentProvider {
 
-  private static SpanExporter spanExporter;
+  @Nullable private static SpanExporter spanExporter;
 
   @Override
   public Class<SpanExporter> getType() {
