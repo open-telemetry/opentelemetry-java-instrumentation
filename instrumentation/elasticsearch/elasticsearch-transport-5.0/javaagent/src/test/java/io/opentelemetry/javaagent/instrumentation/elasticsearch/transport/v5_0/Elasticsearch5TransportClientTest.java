@@ -113,11 +113,16 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   @Test
   void configuredAddressListIsTheWholeTarget() {
     TransportClient addressListClient = newClient();
-    addressListClient.addTransportAddress(tcpPublishAddress);
-    // nothing listens on this address; the configured target names it all the same
-    addressListClient.addTransportAddress(addressThatIsDown());
-    // adding an address makes the client reach out to it, which reports telemetry of its own
-    clusterHealth(addressListClient);
+    testing.runWithSpan(
+        "setup",
+        () -> {
+          addressListClient.addTransportAddress(tcpPublishAddress);
+          // nothing listens on this address; the configured target names it all the same
+          addressListClient.addTransportAddress(addressThatIsDown());
+          // adding an address makes the client reach out to it, which reports telemetry of its own
+          clusterHealth(addressListClient);
+        });
+    testing.waitForTraces(1);
     testing.clearData();
 
     clusterHealth(addressListClient);
@@ -135,13 +140,18 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   @Test
   void theTargetDoesNotFollowLaterAddressChanges() {
     TransportClient singleAddressClient = newClient();
-    singleAddressClient.addTransportAddress(tcpPublishAddress);
-    // the target is read here, while the client names a single address
-    clusterHealth(singleAddressClient);
-    // a client can be given more addresses at any time; the target it already reported must not
-    // change underneath the telemetry that was emitted with it
-    singleAddressClient.addTransportAddress(addressThatIsDown());
-    clusterHealth(singleAddressClient);
+    testing.runWithSpan(
+        "setup",
+        () -> {
+          singleAddressClient.addTransportAddress(tcpPublishAddress);
+          // the target is read here, while the client names a single address
+          clusterHealth(singleAddressClient);
+          // a client can be given more addresses at any time; the target it already reported must
+          // not change underneath the telemetry that was emitted with it
+          singleAddressClient.addTransportAddress(addressThatIsDown());
+          clusterHealth(singleAddressClient);
+        });
+    testing.waitForTraces(1);
     testing.clearData();
 
     clusterHealth(singleAddressClient);
