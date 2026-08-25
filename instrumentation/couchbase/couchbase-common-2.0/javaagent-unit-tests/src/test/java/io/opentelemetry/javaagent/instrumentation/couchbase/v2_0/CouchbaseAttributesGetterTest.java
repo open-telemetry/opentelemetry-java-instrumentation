@@ -6,8 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import java.net.InetSocketAddress;
@@ -37,14 +42,42 @@ class CouchbaseAttributesGetterTest {
   }
 
   @Test
-  void fallsBackToTheNodeThatAnsweredWhenTheClientWasNotSeenBeingBuilt() {
+  void doesNotReportTheNodeThatAnsweredAtStart() {
     CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", null, getClass(), "get");
     request.setNode(new InetSocketAddress("192.0.2.1", 32768), "node.example:11210");
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
-    assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "node.example" : null);
-    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? 11210 : null);
+    assertThat(getter.getServerAddress(request)).isNull();
+    assertThat(getter.getServerPort(request)).isNull();
+  }
+
+  @Test
+  void reportsTheNodeThatAnsweredAtEndWhenTheConfiguredTargetIsUnavailable() {
+    CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", null, getClass(), "get");
+    request.setNode(new InetSocketAddress("192.0.2.1", 32768), "node.example:11210");
+
+    AttributesBuilder attributes = Attributes.builder();
+    new CouchbaseAttributesGetter().onEnd(attributes, Context.root(), request, null, null);
+
+    assertThat(attributes.build().get(SERVER_ADDRESS)).isEqualTo("node.example");
+    assertThat(attributes.build().get(SERVER_PORT)).isEqualTo(11210L);
+  }
+
+  @Test
+  void preservesTheConfiguredTargetInStableMode() {
+    CouchbaseRequestInfo request =
+        CouchbaseRequestInfo.create("bucket", target("cluster.example", 0), getClass(), "get");
+    request.setNode(new InetSocketAddress("192.0.2.1", 32768), "node.example:11210");
+
+    AttributesBuilder attributes = Attributes.builder();
+    new CouchbaseAttributesGetter().onEnd(attributes, Context.root(), request, null, null);
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.build()).isEqualTo(Attributes.empty());
+    } else {
+      assertThat(attributes.build().get(SERVER_ADDRESS)).isEqualTo("node.example");
+      assertThat(attributes.build().get(SERVER_PORT)).isEqualTo(11210L);
+    }
   }
 
   @Test
