@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraSingletons.instrumenter;
 import static java.util.Arrays.asList;
 
@@ -30,7 +31,8 @@ final class TracingCqlSession {
   static CqlSession wrapSession(CqlSession session) {
     // the driver configuration can be reloaded, so read the configured target once, here, and keep
     // that snapshot for the life of the session
-    CassandraServerTarget serverTarget = CassandraServerTarget.of(session);
+    CassandraServerTarget serverTarget =
+        emitStableDatabaseSemconv() ? CassandraServerTarget.of(session) : null;
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();
     while (clazz != Object.class) {
