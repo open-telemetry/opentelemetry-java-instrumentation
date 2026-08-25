@@ -92,7 +92,7 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
-      if (!Resilience4jCircuitBreakerSpans.isInCircuitBreakerCallback()) {
+      if (!Resilience4jCircuitBreakerSpans.isInCircuitBreakerCallback(circuitBreaker)) {
         Resilience4jCircuitBreakerSpans.end(circuitBreaker, "cancelled", null);
       }
     }
@@ -111,14 +111,14 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   public static class OnErrorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      Resilience4jCircuitBreakerSpans.enterCircuitBreakerCallback();
+    public static void onEnter(@Advice.This CircuitBreaker circuitBreaker) {
+      Resilience4jCircuitBreakerSpans.enterCircuitBreakerCallback(circuitBreaker);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker, @Advice.Argument(1) Throwable throwable) {
-      Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback();
+      Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback(circuitBreaker);
       Resilience4jCircuitBreakerSpans.end(circuitBreaker, "failure", throwable);
     }
   }
@@ -127,14 +127,14 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   public static class NewOnErrorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      Resilience4jCircuitBreakerSpans.enterCircuitBreakerCallback();
+    public static void onEnter(@Advice.This CircuitBreaker circuitBreaker) {
+      Resilience4jCircuitBreakerSpans.enterCircuitBreakerCallback(circuitBreaker);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker, @Advice.Argument(2) Throwable throwable) {
-      Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback();
+      Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback(circuitBreaker);
       Resilience4jCircuitBreakerSpans.end(circuitBreaker, "failure", throwable);
     }
   }

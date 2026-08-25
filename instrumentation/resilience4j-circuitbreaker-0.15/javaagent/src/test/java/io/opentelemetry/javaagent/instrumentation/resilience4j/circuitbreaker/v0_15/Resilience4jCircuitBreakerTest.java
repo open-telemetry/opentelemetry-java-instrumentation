@@ -161,6 +161,38 @@ class Resilience4jCircuitBreakerTest {
 
   @Test
   @SuppressWarnings("unchecked")
+  void createsCircuitBreakerSpanWhenDecoratedFutureConsumedOnDifferentThread() throws Exception {
+    Method decorateFuture = decorateFutureMethod();
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    CompletableFuture<String> future = CompletableFuture.completedFuture("ok");
+    Supplier<Future<String>> supplier = () -> future;
+    Supplier<Future<String>> decoratedSupplier =
+        (Supplier<Future<String>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    AtomicReference<Thread> getThread = new AtomicReference<>();
+    try {
+      Thread callingThread = Thread.currentThread();
+      Future<String> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
+      String result =
+          executor
+              .submit(
+                  () -> {
+                    getThread.set(Thread.currentThread());
+                    return decoratedFuture.get();
+                  })
+              .get();
+
+      assertThat(getThread.get()).isNotSameAs(callingThread);
+      assertThat(result).isEqualTo("ok");
+    } finally {
+      executor.shutdownNow();
+    }
+
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
   void createsCircuitBreakerSpanWhenDecoratedFutureResultMatchesRecordResultPredicate()
       throws Exception {
     Method recordResultPredicate = recordResultPredicateMethod();

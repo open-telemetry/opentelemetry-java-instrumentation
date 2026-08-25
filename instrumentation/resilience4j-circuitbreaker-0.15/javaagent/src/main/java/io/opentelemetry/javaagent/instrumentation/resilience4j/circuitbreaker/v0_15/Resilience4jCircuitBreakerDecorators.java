@@ -147,6 +147,10 @@ public class Resilience4jCircuitBreakerDecorators {
           Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         CompletionStage<T> result = delegate.get();
+        // decorateCompletionStage's user supplier is wrapped before Resilience4j builds its
+        // decorated supplier, so this wrapper runs after permission acquisition. The baseline is
+        // therefore the exact span for this attempt and must be propagated to Resilience4j's
+        // completion callback.
         if (baseline != null) {
           Resilience4jCircuitBreakerSpans.detachPendingSpan(baseline);
           try {
@@ -178,12 +182,16 @@ public class Resilience4jCircuitBreakerDecorators {
           Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         Future<T> result = delegate.get();
-        if (baseline != null) {
-          Resilience4jCircuitBreakerSpans.detachPendingSpan(baseline);
+        // decorateFuture's returned supplier is wrapped after Resilience4j builds it, so
+        // permission is acquired inside delegate.get(). Poll the span created during that call and
+        // make the returned Future wrapper own it.
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.pollPendingSpanAfter(baseline);
+        if (pendingSpan != null) {
           try {
-            return new FutureWrapper<>(result, baseline);
+            return new FutureWrapper<>(result, pendingSpan);
           } catch (Throwable t) {
-            baseline.end("failure", t);
+            pendingSpan.end("failure", t);
             throw t;
           }
         }

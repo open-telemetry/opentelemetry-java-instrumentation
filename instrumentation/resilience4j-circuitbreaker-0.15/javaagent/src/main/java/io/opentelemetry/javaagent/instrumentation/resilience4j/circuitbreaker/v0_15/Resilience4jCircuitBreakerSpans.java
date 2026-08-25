@@ -19,7 +19,8 @@ import javax.annotation.Nullable;
 public class Resilience4jCircuitBreakerSpans {
 
   private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
-  private static final ThreadLocal<Boolean> inCircuitBreakerCallback = new ThreadLocal<>();
+  private static final ThreadLocal<Deque<CircuitBreaker>> circuitBreakerCallbacks =
+      new ThreadLocal<>();
   private static final ThreadLocal<Deque<Boolean>> onResultEnded = new ThreadLocal<>();
 
   public static void start(CircuitBreaker circuitBreaker) {
@@ -60,16 +61,33 @@ public class Resilience4jCircuitBreakerSpans {
     instrumenter().end(context, request, "rejected", throwable);
   }
 
-  public static void enterCircuitBreakerCallback() {
-    inCircuitBreakerCallback.set(Boolean.TRUE);
+  public static void enterCircuitBreakerCallback(CircuitBreaker circuitBreaker) {
+    Deque<CircuitBreaker> callbacks = circuitBreakerCallbacks.get();
+    if (callbacks == null) {
+      callbacks = new ArrayDeque<>();
+      circuitBreakerCallbacks.set(callbacks);
+    }
+    callbacks.push(circuitBreaker);
   }
 
-  public static void exitCircuitBreakerCallback() {
-    inCircuitBreakerCallback.remove();
+  public static void exitCircuitBreakerCallback(CircuitBreaker circuitBreaker) {
+    Deque<CircuitBreaker> callbacks = circuitBreakerCallbacks.get();
+    if (callbacks == null) {
+      return;
+    }
+    if (callbacks.peek() == circuitBreaker) {
+      callbacks.poll();
+    } else {
+      callbacks.remove(circuitBreaker);
+    }
+    if (callbacks.isEmpty()) {
+      circuitBreakerCallbacks.remove();
+    }
   }
 
-  public static boolean isInCircuitBreakerCallback() {
-    return Boolean.TRUE.equals(inCircuitBreakerCallback.get());
+  public static boolean isInCircuitBreakerCallback(CircuitBreaker circuitBreaker) {
+    Deque<CircuitBreaker> callbacks = circuitBreakerCallbacks.get();
+    return callbacks != null && callbacks.peek() == circuitBreaker;
   }
 
   public static void enterOnResult() {
