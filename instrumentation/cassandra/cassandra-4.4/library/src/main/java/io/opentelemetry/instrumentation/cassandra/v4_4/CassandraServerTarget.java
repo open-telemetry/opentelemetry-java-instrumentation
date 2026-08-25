@@ -6,14 +6,11 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.CONTACT_POINTS;
-import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.RESOLVE_CONTACT_POINTS;
-import static java.util.Collections.emptySet;
 
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.context.DriverContext;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.session.Session;
-import com.datastax.oss.driver.internal.core.ContactPoints;
 import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
 import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
@@ -21,6 +18,7 @@ import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,8 +36,9 @@ import javax.annotation.Nullable;
  *
  * <p>The driver merges {@code basic.contact-points} with contact points added on the session
  * builder. Configuration entries are read before DNS resolution to preserve their original host
- * names. The merged session metadata supplies the programmatic entries. A session that has no
- * explicit contact point keeps reporting the coordinator that answered.
+ * names. The merged session metadata supplies programmatic entries when their source is
+ * unambiguous. A session whose complete target cannot be recovered without another DNS lookup keeps
+ * reporting the coordinator that answered.
  */
 final class CassandraServerTarget {
 
@@ -66,15 +65,13 @@ final class CassandraServerTarget {
       }
       DriverExecutionProfile config = context.getConfig().getDefaultProfile();
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS);
-      Set<EndPoint> resolvedConfiguredContactPoints =
-          ContactPoints.merge(
-              emptySet(), configuredContactPoints, config.getBoolean(RESOLVE_CONTACT_POINTS));
       List<CassandraServerTarget> contactPoints = valid(configuredContactPoints);
+      Set<String> configuredTargets = new HashSet<>();
+      for (CassandraServerTarget contactPoint : contactPoints) {
+        configuredTargets.add(contactPoint.asContactPoint());
+      }
       for (DefaultNode node : metadataManager.getContactPoints()) {
         EndPoint endPoint = node.getEndPoint();
-        if (resolvedConfiguredContactPoints.contains(endPoint)) {
-          continue;
-        }
         if (endPoint instanceof SniEndPoint) {
           return null;
         }
@@ -83,8 +80,15 @@ final class CassandraServerTarget {
           return null;
         }
         InetSocketAddress inetAddress = (InetSocketAddress) address;
-        contactPoints.add(
-            new CassandraServerTarget(inetAddress.getHostString(), inetAddress.getPort()));
+        CassandraServerTarget target =
+            new CassandraServerTarget(inetAddress.getHostString(), inetAddress.getPort());
+        if (configuredTargets.contains(target.asContactPoint())) {
+          continue;
+        }
+        if (!configuredTargets.isEmpty()) {
+          return null;
+        }
+        contactPoints.add(target);
       }
       return combine(contactPoints);
     } catch (RuntimeException ignored) {

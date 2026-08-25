@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.cassandra.v4_4;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -127,9 +128,9 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void sessionUsesMergedProgrammaticAndConfiguredContactPoints() {
+  void sessionWithMixedContactPointSourcesHasNoTarget() {
     Set<DefaultNode> contactPoints = new LinkedHashSet<>(asList(configuredNode, programmaticNode));
-    configureContactPoints(singletonList("configured.example.com:9042"), false);
+    configureContactPoints(singletonList("configured.example.com:9042"));
     when(session.getContext()).thenReturn(context);
     when(context.getMetadataManager()).thenReturn(metadataManager);
     when(metadataManager.getContactPoints()).thenReturn(contactPoints);
@@ -144,14 +145,24 @@ class CassandraServerTargetTest {
 
     CassandraServerTarget target = CassandraServerTarget.of(session);
 
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress())
-        .isEqualTo("configured.example.com:9042,programmatic.example.com:9142");
-    assertThat(target.getPort()).isNull();
+    assertThat(target).isNull();
   }
 
   @Test
-  void sessionPreservesAConfiguredHostnameAfterResolutionAndAddsProgrammaticPoints() {
+  void sessionFallsBackWhenResolvedConfiguredPointCannotBeMatched() {
+    configureContactPoints(singletonList("configured.invalid:9042"));
+    when(session.getContext()).thenReturn(context);
+    when(context.getMetadataManager()).thenReturn(metadataManager);
+    when(metadataManager.getContactPoints()).thenReturn(singleton(configuredNode));
+    when(configuredNode.getEndPoint())
+        .thenReturn(
+            new DefaultEndPoint(InetSocketAddress.createUnresolved("old-address.invalid", 9042)));
+
+    assertThat(CassandraServerTarget.of(session)).isNull();
+  }
+
+  @Test
+  void sessionPreservesAConfiguredHostnameWithoutResolvingItAgain() {
     List<String> configuredContactPoints = singletonList("localhost.:9042");
     Set<DefaultNode> contactPoints = new LinkedHashSet<>();
     for (EndPoint endPoint : ContactPoints.merge(emptySet(), configuredContactPoints, true)) {
@@ -159,12 +170,7 @@ class CassandraServerTargetTest {
       when(node.getEndPoint()).thenReturn(endPoint);
       contactPoints.add(node);
     }
-    when(programmaticNode.getEndPoint())
-        .thenReturn(
-            new DefaultEndPoint(
-                InetSocketAddress.createUnresolved("programmatic.example.com", 9142)));
-    contactPoints.add(programmaticNode);
-    configureContactPoints(configuredContactPoints, true);
+    configureContactPoints(configuredContactPoints);
     when(session.getContext()).thenReturn(context);
     when(context.getMetadataManager()).thenReturn(metadataManager);
     when(metadataManager.getContactPoints()).thenReturn(contactPoints);
@@ -172,14 +178,14 @@ class CassandraServerTargetTest {
     CassandraServerTarget target = CassandraServerTarget.of(session);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("localhost.:9042,programmatic.example.com:9142");
-    assertThat(target.getPort()).isNull();
+    assertThat(target.getAddress()).isEqualTo("localhost.");
+    assertThat(target.getPort()).isEqualTo(9042);
   }
 
   @Test
   void theTargetDoesNotFollowLaterChangesToTheMergedContactPoints() {
     Set<DefaultNode> contactPoints = new LinkedHashSet<>(singletonList(configuredNode));
-    configureContactPoints(singletonList("configured.example.com:9042"), false);
+    configureContactPoints(singletonList("configured.example.com:9042"));
     when(session.getContext()).thenReturn(context);
     when(context.getMetadataManager()).thenReturn(metadataManager);
     when(metadataManager.getContactPoints()).thenReturn(contactPoints);
@@ -197,11 +203,10 @@ class CassandraServerTargetTest {
     assertThat(target.getPort()).isEqualTo(9042);
   }
 
-  private void configureContactPoints(List<String> contactPoints, boolean resolve) {
+  private void configureContactPoints(List<String> contactPoints) {
     when(context.getConfig()).thenReturn(config);
     when(config.getDefaultProfile()).thenReturn(defaultProfile);
     when(defaultProfile.getStringList(DefaultDriverOption.CONTACT_POINTS))
         .thenReturn(contactPoints);
-    when(defaultProfile.getBoolean(DefaultDriverOption.RESOLVE_CONTACT_POINTS)).thenReturn(resolve);
   }
 }

@@ -6,17 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.CONTACT_POINTS;
-import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.RESOLVE_CONTACT_POINTS;
-import static java.util.Collections.emptySet;
 
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.context.DriverContext;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.session.Session;
-import com.datastax.oss.driver.internal.core.ContactPoints;
-import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
-import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
-import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
@@ -37,8 +31,8 @@ import javax.annotation.Nullable;
  *
  * <p>The driver merges {@code basic.contact-points} with contact points added on the session
  * builder. Configuration entries are read before DNS resolution to preserve their original host
- * names. The merged session metadata supplies the programmatic entries. A session that has no
- * explicit contact point keeps reporting the coordinator that answered.
+ * names. Programmatic entries are captured from the builder before session creation. A session that
+ * has no explicit contact point keeps reporting the coordinator that answered.
  */
 class CassandraServerTarget {
 
@@ -53,27 +47,13 @@ class CassandraServerTarget {
    * session could report two identities over its life.
    */
   @Nullable
-  static CassandraServerTarget of(Session session) {
+  static CassandraServerTarget of(Session session, Set<EndPoint> programmaticContactPoints) {
     try {
       DriverContext context = session.getContext();
-      if (!(context instanceof InternalDriverContext)) {
-        return null;
-      }
-      MetadataManager metadataManager = ((InternalDriverContext) context).getMetadataManager();
-      if (metadataManager.wasImplicitContactPoint()) {
-        return null;
-      }
       DriverExecutionProfile config = context.getConfig().getDefaultProfile();
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS);
-      Set<EndPoint> resolvedConfiguredContactPoints =
-          ContactPoints.merge(
-              emptySet(), configuredContactPoints, config.getBoolean(RESOLVE_CONTACT_POINTS));
       List<CassandraServerTarget> contactPoints = valid(configuredContactPoints);
-      for (DefaultNode node : metadataManager.getContactPoints()) {
-        EndPoint endPoint = node.getEndPoint();
-        if (resolvedConfiguredContactPoints.contains(endPoint)) {
-          continue;
-        }
+      for (EndPoint endPoint : programmaticContactPoints) {
         if (CassandraEndPoints.isSniEndPoint(endPoint)) {
           return null;
         }

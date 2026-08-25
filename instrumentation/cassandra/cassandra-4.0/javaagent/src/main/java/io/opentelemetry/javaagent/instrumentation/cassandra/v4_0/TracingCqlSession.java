@@ -15,11 +15,13 @@ import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
@@ -28,11 +30,13 @@ import javax.annotation.Nullable;
 final class TracingCqlSession {
   private TracingCqlSession() {}
 
-  static CqlSession wrapSession(CqlSession session) {
+  static CqlSession wrapSession(CqlSession session, Set<EndPoint> programmaticContactPoints) {
     // the driver configuration can be reloaded, so read the configured target once, here, and keep
     // that snapshot for the life of the session
     CassandraServerTarget serverTarget =
-        emitStableDatabaseSemconv() ? CassandraServerTarget.of(session) : null;
+        emitStableDatabaseSemconv()
+            ? CassandraServerTarget.of(session, programmaticContactPoints)
+            : null;
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();
     while (clazz != Object.class) {

@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
@@ -18,11 +17,8 @@ import com.datastax.oss.driver.api.core.config.DriverConfig;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.session.Session;
-import com.datastax.oss.driver.internal.core.ContactPoints;
 import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
-import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
-import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
 import java.net.InetSocketAddress;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,9 +35,6 @@ class CassandraServerTargetTest {
   @Mock private InternalDriverContext context;
   @Mock private DriverConfig config;
   @Mock private DriverExecutionProfile defaultProfile;
-  @Mock private MetadataManager metadataManager;
-  @Mock private DefaultNode configuredNode;
-  @Mock private DefaultNode programmaticNode;
 
   @Test
   void singleContactPointKeepsItsHostAndPort() {
@@ -119,30 +112,23 @@ class CassandraServerTargetTest {
 
   @Test
   void sessionThatNamesNoContactPointHasNoTarget() {
+    configureContactPoints(emptyList());
     when(session.getContext()).thenReturn(context);
-    when(context.getMetadataManager()).thenReturn(metadataManager);
-    when(metadataManager.wasImplicitContactPoint()).thenReturn(true);
 
-    assertThat(CassandraServerTarget.of(session)).isNull();
+    assertThat(CassandraServerTarget.of(session, emptySet())).isNull();
   }
 
   @Test
   void sessionUsesMergedProgrammaticAndConfiguredContactPoints() {
-    Set<DefaultNode> contactPoints = new LinkedHashSet<>(asList(configuredNode, programmaticNode));
-    configureContactPoints(singletonList("configured.example.com:9042"), false);
+    configureContactPoints(singletonList("configured.example.com:9042"));
     when(session.getContext()).thenReturn(context);
-    when(context.getMetadataManager()).thenReturn(metadataManager);
-    when(metadataManager.getContactPoints()).thenReturn(contactPoints);
-    when(configuredNode.getEndPoint())
-        .thenReturn(
-            new DefaultEndPoint(
-                InetSocketAddress.createUnresolved("configured.example.com", 9042)));
-    when(programmaticNode.getEndPoint())
-        .thenReturn(
-            new DefaultEndPoint(
-                InetSocketAddress.createUnresolved("programmatic.example.com", 9142)));
+    Set<EndPoint> programmaticContactPoints =
+        new LinkedHashSet<>(
+            singletonList(
+                new DefaultEndPoint(
+                    InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
 
-    CassandraServerTarget target = CassandraServerTarget.of(session);
+    CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
@@ -151,57 +137,46 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void sessionPreservesAConfiguredHostnameAfterResolutionAndAddsProgrammaticPoints() {
-    List<String> configuredContactPoints = singletonList("localhost.:9042");
-    Set<DefaultNode> contactPoints = new LinkedHashSet<>();
-    for (EndPoint endPoint : ContactPoints.merge(emptySet(), configuredContactPoints, true)) {
-      DefaultNode node = mock(DefaultNode.class);
-      when(node.getEndPoint()).thenReturn(endPoint);
-      contactPoints.add(node);
-    }
-    when(programmaticNode.getEndPoint())
-        .thenReturn(
-            new DefaultEndPoint(
-                InetSocketAddress.createUnresolved("programmatic.example.com", 9142)));
-    contactPoints.add(programmaticNode);
-    configureContactPoints(configuredContactPoints, true);
+  void sessionDoesNotResolveConfiguredContactPointsAgain() {
+    configureContactPoints(singletonList("configured.invalid:9042"));
     when(session.getContext()).thenReturn(context);
-    when(context.getMetadataManager()).thenReturn(metadataManager);
-    when(metadataManager.getContactPoints()).thenReturn(contactPoints);
+    Set<EndPoint> programmaticContactPoints =
+        new LinkedHashSet<>(
+            singletonList(
+                new DefaultEndPoint(
+                    InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
 
-    CassandraServerTarget target = CassandraServerTarget.of(session);
+    CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("localhost.:9042,programmatic.example.com:9142");
+    assertThat(target.getAddress())
+        .isEqualTo("configured.invalid:9042,programmatic.example.com:9142");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
   void theTargetDoesNotFollowLaterChangesToTheMergedContactPoints() {
-    Set<DefaultNode> contactPoints = new LinkedHashSet<>(singletonList(configuredNode));
-    configureContactPoints(singletonList("configured.example.com:9042"), false);
+    Set<EndPoint> programmaticContactPoints =
+        new LinkedHashSet<>(
+            singletonList(
+                new DefaultEndPoint(
+                    InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
+    configureContactPoints(emptyList());
     when(session.getContext()).thenReturn(context);
-    when(context.getMetadataManager()).thenReturn(metadataManager);
-    when(metadataManager.getContactPoints()).thenReturn(contactPoints);
-    when(configuredNode.getEndPoint())
-        .thenReturn(
-            new DefaultEndPoint(
-                InetSocketAddress.createUnresolved("configured.example.com", 9042)));
 
-    CassandraServerTarget target = CassandraServerTarget.of(session);
+    CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
 
-    contactPoints.clear();
+    programmaticContactPoints.clear();
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("configured.example.com");
-    assertThat(target.getPort()).isEqualTo(9042);
+    assertThat(target.getAddress()).isEqualTo("programmatic.example.com");
+    assertThat(target.getPort()).isEqualTo(9142);
   }
 
-  private void configureContactPoints(List<String> contactPoints, boolean resolve) {
+  private void configureContactPoints(List<String> contactPoints) {
     when(context.getConfig()).thenReturn(config);
     when(config.getDefaultProfile()).thenReturn(defaultProfile);
     when(defaultProfile.getStringList(DefaultDriverOption.CONTACT_POINTS))
         .thenReturn(contactPoints);
-    when(defaultProfile.getBoolean(DefaultDriverOption.RESOLVE_CONTACT_POINTS)).thenReturn(resolve);
   }
 }
