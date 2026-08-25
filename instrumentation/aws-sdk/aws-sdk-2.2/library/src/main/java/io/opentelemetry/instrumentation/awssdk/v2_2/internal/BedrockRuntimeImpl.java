@@ -1199,9 +1199,20 @@ public final class BedrockRuntimeImpl {
       delegate.onEventStream(
           sdkPublisher.map(
               event -> {
-                handleEvent(event);
+                handleEventSafely(event);
                 return event;
               }));
+    }
+
+    // Telemetry parsing must never change the behavior of the application's stream. A provider,
+    // proxy, or future SDK version can deliver an incomplete or out-of-order event, and the
+    // instrumentation should simply omit telemetry for that event instead of failing the stream.
+    final void handleEventSafely(S event) {
+      try {
+        handleEvent(event);
+      } catch (RuntimeException ignored) {
+        // Keep the original event flowing to the delegate subscriber.
+      }
     }
 
     @Override
