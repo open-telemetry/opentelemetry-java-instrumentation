@@ -49,7 +49,13 @@ final class ElasticsearchClientAttributeExtractor
     this.sensitiveQueryParameters = new HashSet<>(sensitiveQueryParameters);
   }
 
-  private static void setServerAttributes(AttributesBuilder attributes, Response response) {
+  private static void setServerAttributes(
+      AttributesBuilder attributes, ElasticsearchRestRequest request, Response response) {
+    if (emitStableDatabaseSemconv() && request.getServerTarget() != null) {
+      // the configured target was recorded when the span started and must not be replaced by the
+      // host that happened to answer
+      return;
+    }
     HttpHost host = response.getHost();
     if (host != null) {
       attributes.put(SERVER_ADDRESS, host.getHostName());
@@ -113,7 +119,7 @@ final class ElasticsearchClientAttributeExtractor
 
     if (response != null) {
       setUrlAttribute(attributes, response);
-      setServerAttributes(attributes, response);
+      setServerAttributes(attributes, request, response);
     }
   }
 }

@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -21,16 +23,21 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -54,7 +61,11 @@ public abstract class AbstractOpenSearchRestTest {
 
   protected abstract InstrumentationExtension getTesting();
 
-  protected abstract RestClient buildRestClient() throws Exception;
+  /** A rest client configured with every one of {@code hostAddresses}. */
+  protected abstract RestClient buildRestClient(String... hostAddresses) throws Exception;
+
+  /** Replaces the nodes {@code client} routes to, the way sniffing does. */
+  protected abstract void resetNodes(RestClient client, String... hostAddresses) throws Exception;
 
   protected abstract int getResponseStatus(Response response);
 
@@ -73,7 +84,7 @@ public abstract class AbstractOpenSearchRestTest {
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
 
-    client = buildRestClient();
+    client = buildRestClient(opensearch.getHttpHostAddress());
     cleanup.deferAfterAll(client);
   }
 
@@ -87,12 +98,9 @@ public abstract class AbstractOpenSearchRestTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName(openSearchSpanName())
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
+                            .hasAttributesSatisfyingExactly(openSearchAttributes()),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -157,13 +165,10 @@ public abstract class AbstractOpenSearchRestTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(openSearchSpanName())
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
+                            .hasAttributesSatisfyingExactly(openSearchAttributes()),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -189,6 +194,94 @@ public abstract class AbstractOpenSearchRestTest {
 
     getTesting().waitForTraces(1);
 
-    assertDurationMetric(getTesting(), getInstrumentationName(), DB_OPERATION_NAME, DB_SYSTEM_NAME);
+    assertDurationMetric(
+        getTesting(),
+        getInstrumentationName(),
+        DB_OPERATION_NAME,
+        DB_SYSTEM_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+  }
+
+  @Test
+  void configuredNodeListIsTheWholeTarget() throws Exception {
+    RestClient nodeListClient =
+        buildRestClient(opensearch.getHttpHostAddress(), addressOfHostThatIsDown());
+    cleanup.deferCleanup(nodeListClient);
+
+    nodeListClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget(nodeList());
+  }
+
+  @Test
+  void theTargetDoesNotFollowLaterNodeChanges() throws Exception {
+    RestClient singleNodeClient = buildRestClient(opensearch.getHttpHostAddress());
+    cleanup.deferCleanup(singleNodeClient);
+    // a client is given new nodes when it is sniffed; the configured target must not follow them
+    resetNodes(singleNodeClient, opensearch.getHttpHostAddress(), addressOfHostThatIsDown());
+
+    singleNodeClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget(null);
+  }
+
+  private String addressOfHostThatIsDown() {
+    // nothing listens on this port, so a request is served by the running server after a retry
+    return httpHost.getScheme() + "://" + httpHost.getHost() + ":" + (httpHost.getPort() + 1);
+  }
+
+  private String nodeList() {
+    return httpHost.getHost()
+        + ":"
+        + httpHost.getPort()
+        + ","
+        + httpHost.getHost()
+        + ":"
+        + (httpHost.getPort() + 1);
+  }
+
+  private String openSearchSpanName() {
+    // the stable span name falls back to the target, because opensearch has no namespace or
+    // collection to name
+    return emitStableDatabaseSemconv()
+        ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+        : "GET";
+  }
+
+  private List<AttributeAssertion> openSearchAttributes() {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "GET"),
+                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")));
+    if (emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
+      assertions.add(equalTo(SERVER_PORT, (long) httpHost.getPort()));
+    }
+    return assertions;
+  }
+
+  /**
+   * Asserts the server of the opensearch span, where {@code nodeList} is the whole configured list,
+   * or null when a single node was configured. Only the opensearch span is asserted, because a
+   * request that first reaches the host that is down is retried and reports a second http span.
+   */
+  private void assertConfiguredTarget(@Nullable String nodeList) {
+    // old semantic conventions record no server at all
+    String expectedAddress =
+        !emitStableDatabaseSemconv() ? null : (nodeList != null ? nodeList : httpHost.getHost());
+    Long expectedPort =
+        !emitStableDatabaseSemconv() || nodeList != null ? null : Long.valueOf(httpHost.getPort());
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                assertThat(trace.getSpan(0))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(SERVER_ADDRESS, expectedAddress),
+                        equalTo(SERVER_PORT, expectedPort)));
   }
 }

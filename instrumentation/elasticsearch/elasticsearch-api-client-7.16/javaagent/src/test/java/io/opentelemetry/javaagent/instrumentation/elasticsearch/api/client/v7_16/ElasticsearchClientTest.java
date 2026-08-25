@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSp
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -39,6 +40,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.BeforeAll;
@@ -265,5 +267,52 @@ class ElasticsearchClientTest {
     public String getName() {
       return name;
     }
+  }
+
+  @Test
+  void configuredNodeListIsTheWholeTarget() throws IOException {
+    HttpHost deadHost = deadHost();
+    RestClient nodeListRestClient = RestClient.builder(httpHost, deadHost).build();
+    cleanup.deferCleanup(nodeListRestClient);
+    ElasticsearchClient nodeListClient =
+        new ElasticsearchClient(
+            new RestClientTransport(nodeListRestClient, new JacksonJsonpMapper()));
+
+    nodeListClient.info();
+
+    assertConfiguredTarget(hostList(deadHost));
+  }
+
+  private static HttpHost deadHost() {
+    // nothing listens on this port, so a request is served by the running server after a retry
+    return new HttpHost(httpHost.getHostName(), httpHost.getPort() + 1, httpHost.getSchemeName());
+  }
+
+  private static String hostList(HttpHost deadHost) {
+    return httpHost.getHostName()
+        + ":"
+        + httpHost.getPort()
+        + ","
+        + deadHost.getHostName()
+        + ":"
+        + deadHost.getPort();
+  }
+
+  /**
+   * Asserts the server of the elasticsearch span, where {@code hostList} is the whole configured
+   * list, or null when a single host was configured. Only the elasticsearch span is asserted,
+   * because a request that first reaches the host that is down is retried and reports a second http
+   * span.
+   */
+  private static void assertConfiguredTarget(@Nullable String hostList) {
+    boolean stableHostList = emitStableDatabaseSemconv() && hostList != null;
+    testing.waitAndAssertTraces(
+        trace ->
+            assertThat(trace.getSpan(0))
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfying(
+                    equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
+                    equalTo(
+                        SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort()))));
   }
 }
