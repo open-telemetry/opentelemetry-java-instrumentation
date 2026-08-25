@@ -439,4 +439,22 @@ class InfluxDbClientTest {
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? "write" : "WRITE"))));
   }
+
+  @Test
+  void testConfiguredUrlIsSanitized() {
+    // the credentials and the path of the configured url must not reach server.address
+    String serverUrl = "http://influxuser:influxsecret@" + host + ":" + port + "/";
+    InfluxDB influxDbWithCredentialsInUrl = InfluxDBFactory.connect(serverUrl);
+    cleanup.deferCleanup(influxDbWithCredentialsInUrl);
+
+    influxDbWithCredentialsInUrl.query(new Query("SELECT * FROM cpu", DATABASE_NAME));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfying(
+                            equalTo(SERVER_ADDRESS, host), equalTo(SERVER_PORT, port))));
+  }
 }
