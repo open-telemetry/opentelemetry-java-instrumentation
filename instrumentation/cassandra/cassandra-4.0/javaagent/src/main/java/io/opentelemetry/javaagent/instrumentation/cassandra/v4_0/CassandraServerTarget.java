@@ -15,9 +15,9 @@ import javax.annotation.Nullable;
  * The target a session was configured with, rendered once from its contact points.
  *
  * <p>A session configured with a single contact point keeps that host and its port. A session
- * configured with several carries all of them in the address, in the driver's own {@code
- * host:port,host:port} syntax, and has no port of its own. Contact points carry no credentials,
- * path or options, so the configured text is already the target.
+ * configured with several carries all valid entries in the address, in the driver's own {@code
+ * host:port,host:port} syntax, and has no port of its own. Entries that do not use the driver's
+ * required {@code host:port} syntax are omitted.
  *
  * <p>Only the contact points in {@code basic.contact-points} are read. They are the sole place the
  * driver keeps what an operator configured; contact points added on the session builder are held in
@@ -59,66 +59,56 @@ final class CassandraServerTarget {
     if (contactPoints == null || contactPoints.isEmpty()) {
       return null;
     }
-    if (contactPoints.size() == 1) {
-      return single(contactPoints.get(0).trim());
-    }
+    CassandraServerTarget first = null;
+    int validCount = 0;
     StringBuilder group = new StringBuilder();
     for (String contactPoint : contactPoints) {
-      String trimmed = contactPoint.trim();
-      if (trimmed.isEmpty()) {
-        return null;
+      CassandraServerTarget target = single(contactPoint);
+      if (target == null) {
+        continue;
       }
+      if (first == null) {
+        first = target;
+      }
+      validCount++;
       if (group.length() > 0) {
         group.append(',');
       }
-      group.append(bracketIpv6(trimmed));
+      group.append(target.asContactPoint());
     }
-    return new CassandraServerTarget(group.toString(), null);
+    if (first == null) {
+      return null;
+    }
+    return validCount == 1 ? first : new CassandraServerTarget(group.toString(), null);
   }
 
   @Nullable
   private static CassandraServerTarget single(String contactPoint) {
-    if (contactPoint.isEmpty()) {
+    int separator = contactPoint.lastIndexOf(':');
+    if (separator < 0) {
       return null;
     }
-    if (contactPoint.startsWith("[")) {
-      int end = contactPoint.indexOf(']');
-      if (end < 0) {
-        return null;
-      }
-      String host = contactPoint.substring(1, end);
-      String rest = contactPoint.substring(end + 1);
-      return host.isEmpty()
-          ? null
-          : new CassandraServerTarget(host, rest.startsWith(":") ? port(rest.substring(1)) : null);
-    }
-    int separator = contactPoint.indexOf(':');
-    if (separator < 0 || contactPoint.lastIndexOf(':') != separator) {
-      // no port at all, or a bare ipv6 address, which carries no port either
-      return new CassandraServerTarget(contactPoint, null);
-    }
     String host = contactPoint.substring(0, separator);
-    return host.isEmpty()
-        ? null
-        : new CassandraServerTarget(host, port(contactPoint.substring(separator + 1)));
+    if (host.startsWith("[") && host.endsWith("]")) {
+      host = host.substring(1, host.length() - 1);
+    }
+    Integer port = port(contactPoint.substring(separator + 1));
+    return host.isEmpty() || port == null ? null : new CassandraServerTarget(host, port);
   }
 
   @Nullable
   private static Integer port(String port) {
     try {
-      return Integer.valueOf(port);
+      int value = Integer.parseInt(port);
+      return value >= 0 && value <= 65535 ? value : null;
     } catch (NumberFormatException ignored) {
       return null;
     }
   }
 
-  // a literal ipv6 address is bracketed so that the port stays unambiguous
-  private static String bracketIpv6(String contactPoint) {
-    if (contactPoint.startsWith("[")
-        || contactPoint.indexOf(':') == contactPoint.lastIndexOf(':')) {
-      return contactPoint;
-    }
-    return '[' + contactPoint + ']';
+  private String asContactPoint() {
+    String host = address.indexOf(':') < 0 ? address : '[' + address + ']';
+    return host + ':' + port;
   }
 
   String getAddress() {

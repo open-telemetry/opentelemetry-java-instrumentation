@@ -52,12 +52,10 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void singleContactPointWithoutAPortHasNoPort() {
+  void contactPointWithoutAPortIsIgnored() {
     CassandraServerTarget target = CassandraServerTarget.of(singletonList("cassandra.example.com"));
 
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
-    assertThat(target.getPort()).isNull();
+    assertThat(target).isNull();
   }
 
   @Test
@@ -73,18 +71,27 @@ class CassandraServerTargetTest {
   @Test
   void ipv6ContactPointsStayBracketedInAGroup() {
     CassandraServerTarget target =
-        CassandraServerTarget.of(asList("[::1]:9042", "2001:db8::1", "10.0.0.5:9042"));
+        CassandraServerTarget.of(asList("[::1]:9042", "2001:db8::1:9042", "10.0.0.5:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]:9042,[2001:db8::1],10.0.0.5:9042");
+    assertThat(target.getAddress()).isEqualTo("[::1]:9042,[2001:db8::1]:9042,10.0.0.5:9042");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void noContactPointsMeansNoTarget() {
+  void invalidContactPointsAreIgnored() {
     assertThat(CassandraServerTarget.of(emptyList())).isNull();
     assertThat(CassandraServerTarget.of((List<String>) null)).isNull();
     assertThat(CassandraServerTarget.of(singletonList("  "))).isNull();
+    assertThat(CassandraServerTarget.of(singletonList("node.example.com:not-a-port"))).isNull();
+
+    CassandraServerTarget target =
+        CassandraServerTarget.of(
+            asList("missing-port", "node.example.com:9042", "invalid:not-a-port", "[::1]:9042"));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("node.example.com:9042,[::1]:9042");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
