@@ -80,7 +80,7 @@ class SpymemcachedRequestTest {
         .onEnd(attributes, Context.root(), request, null, null);
 
     if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.build().isEmpty()).isTrue();
+      assertThat(attributes.build().asMap()).isEmpty();
     } else {
       Attributes result = attributes.build();
       assertThat(result.get(SERVER_ADDRESS)).isEqualTo("selected.example");
