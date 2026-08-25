@@ -40,7 +40,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
-import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.BeforeAll;
@@ -304,7 +303,7 @@ class ElasticsearchClientTest {
    * because a request that first reaches the host that is down is retried and reports a second http
    * span.
    */
-  private static void assertConfiguredTarget(@Nullable String hostList) {
+  private static void assertConfiguredTarget(String hostList) {
     boolean stableHostList = emitStableDatabaseSemconv() && hostList != null;
     testing.waitAndAssertTraces(
         trace ->

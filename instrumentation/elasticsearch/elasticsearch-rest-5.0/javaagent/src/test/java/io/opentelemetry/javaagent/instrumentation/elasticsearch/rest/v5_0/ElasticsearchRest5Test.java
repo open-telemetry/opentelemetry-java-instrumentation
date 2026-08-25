@@ -32,7 +32,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
@@ -246,7 +245,7 @@ class ElasticsearchRest5Test {
    * Asserts the server of the elasticsearch span, where {@code hostList} is the whole configured
    * list, or null when a single host was configured.
    */
-  private static void assertConfiguredTarget(@Nullable String hostList) {
+  private static void assertConfiguredTarget(String hostList) {
     boolean stableHostList = emitStableDatabaseSemconv() && hostList != null;
     testing.waitAndAssertTraces(
         trace ->

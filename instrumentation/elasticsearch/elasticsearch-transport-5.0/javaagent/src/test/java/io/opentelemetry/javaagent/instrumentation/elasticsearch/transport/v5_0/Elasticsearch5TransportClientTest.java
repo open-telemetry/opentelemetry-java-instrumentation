@@ -17,7 +17,6 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common
 import java.io.File;
 import java.net.InetAddress;
 import java.util.UUID;
-import javax.annotation.Nullable;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -164,7 +163,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   }
 
   /** Asserts the server of the elasticsearch span of a single request. */
-  private void assertConfiguredTarget(@Nullable String addressList) {
+  private void assertConfiguredTarget(String addressList) {
     boolean stableAddressList = emitStableDatabaseSemconv() && addressList != null;
     testing.waitAndAssertTraces(
         trace ->

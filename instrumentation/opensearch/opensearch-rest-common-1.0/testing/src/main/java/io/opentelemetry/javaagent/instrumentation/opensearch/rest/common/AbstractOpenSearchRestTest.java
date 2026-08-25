@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -268,7 +267,7 @@ public abstract class AbstractOpenSearchRestTest {
    * or null when a single node was configured. Only the opensearch span is asserted, because a
    * request that first reaches the host that is down is retried and reports a second http span.
    */
-  private void assertConfiguredTarget(@Nullable String nodeList) {
+  private void assertConfiguredTarget(String nodeList) {
     // old semantic conventions record no server at all
     String expectedAddress =
         !emitStableDatabaseSemconv() ? null : (nodeList != null ? nodeList : httpHost.getHost());
