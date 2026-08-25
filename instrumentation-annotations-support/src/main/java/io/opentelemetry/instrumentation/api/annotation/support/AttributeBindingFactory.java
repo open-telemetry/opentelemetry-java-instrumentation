@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.api.annotation.support;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.common.AttributeKey;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.AbstractList;
 import java.util.List;
@@ -60,6 +62,9 @@ class AttributeBindingFactory {
   }
 
   private static boolean isArrayType(Type type) {
+    if (type instanceof GenericArrayType) {
+      return true;
+    }
     if (type instanceof Class) {
       return ((Class<?>) type).isArray();
     }
@@ -67,6 +72,9 @@ class AttributeBindingFactory {
   }
 
   private static Optional<Type> resolveListComponentType(Type type) {
+    if (!(type instanceof Class) && !(type instanceof ParameterizedType)) {
+      return Optional.empty();
+    }
     return ParameterizedClass.of(type)
         .findParameterizedSuperclass(List.class)
         .map(pc -> pc.getActualTypeArguments()[0]);

@@ -24,7 +24,7 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
 public class SpringAwsUtil {
   private static final ThreadLocal<TracingList> context = new ThreadLocal<>();
-  private static final VirtualField<Message<?>, TracingContext> tracingContextField =
+  private static final VirtualField<Message<?>, TracingContext> TRACING_CONTEXT =
       VirtualField.find(Message.class, TracingContext.class);
 
   // put the TracingList into thread local, so we can use it in attachTracingState method
@@ -52,7 +52,7 @@ public class SpringAwsUtil {
       return;
     }
 
-    tracingContextField.set(convertedMessage, new TracingContext(tracingList, message));
+    TRACING_CONTEXT.set(convertedMessage, new TracingContext(tracingList, message));
   }
 
   public static void copyTracingState(Message<?> original, Message<?> transformed) {
@@ -60,12 +60,12 @@ public class SpringAwsUtil {
       return;
     }
 
-    tracingContextField.set(transformed, tracingContextField.get(original));
+    TRACING_CONTEXT.set(transformed, TRACING_CONTEXT.get(original));
   }
 
   @Nullable
   public static MessageScope handleMessage(Message<?> message) {
-    TracingContext tracingContext = tracingContextField.get(message);
+    TracingContext tracingContext = TRACING_CONTEXT.get(message);
     if (tracingContext == null) {
       return null;
     }
@@ -80,7 +80,7 @@ public class SpringAwsUtil {
       return null;
     }
     Message<?> message = messages.iterator().next();
-    TracingContext tracingContext = tracingContextField.get(message);
+    TracingContext tracingContext = TRACING_CONTEXT.get(message);
     if (tracingContext == null) {
       return null;
     }
