@@ -27,7 +27,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
@@ -86,11 +85,6 @@ class ShardedJedisClientTest {
     Jedis shard = sharded.getShard("foo");
     shardHost = shard.getClient().getHost();
     shardPort = shard.getClient().getPort();
-  }
-
-  @BeforeEach
-  void reset() {
-    testing.clearData();
   }
 
   @Test
