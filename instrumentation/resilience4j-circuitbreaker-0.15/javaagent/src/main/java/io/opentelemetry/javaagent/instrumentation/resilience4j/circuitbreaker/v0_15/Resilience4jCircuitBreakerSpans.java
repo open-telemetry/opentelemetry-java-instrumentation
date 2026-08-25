@@ -18,6 +18,9 @@ import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerSpans {
 
+  // Raw acquirePermission()/onSuccess()/onError() does not expose an attempt token, so only
+  // same-thread callbacks are correlated here. Decorated async APIs propagate the exact PendingSpan
+  // explicitly instead of polling an arbitrary per-breaker queue.
   private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
   private static final ThreadLocal<Deque<CircuitBreaker>> circuitBreakerCallbacks =
       new ThreadLocal<>();

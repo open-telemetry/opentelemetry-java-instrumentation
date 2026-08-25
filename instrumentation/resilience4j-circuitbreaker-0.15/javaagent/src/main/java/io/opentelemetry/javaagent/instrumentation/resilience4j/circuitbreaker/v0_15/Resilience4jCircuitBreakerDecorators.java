@@ -163,6 +163,10 @@ public class Resilience4jCircuitBreakerDecorators {
         return result;
       } catch (Throwable t) {
         Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
+        if (baseline != null) {
+          Resilience4jCircuitBreakerSpans.detachPendingSpan(baseline);
+          baseline.end("failure", t);
+        }
         throw t;
       }
     }
