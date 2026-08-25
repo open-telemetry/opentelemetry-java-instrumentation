@@ -134,7 +134,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "listDatabases selected.example"
+                                    ? "listDatabases selected.example:27099"
                                     : "listDatabases")
                             .hasKind(CLIENT)));
   }

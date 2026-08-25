@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 
 import com.mongodb.MongoClientSettings;
@@ -90,6 +91,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
         DB_NAMESPACE,
         DB_OPERATION_NAME,
         DB_COLLECTION_NAME,
-        SERVER_ADDRESS);
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 }

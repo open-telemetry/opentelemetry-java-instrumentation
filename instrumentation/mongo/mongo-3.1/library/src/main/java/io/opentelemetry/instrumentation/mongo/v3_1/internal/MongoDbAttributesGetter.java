@@ -155,7 +155,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     if (emitStableDatabaseSemconv()) {
       MongoServerTarget target = MongoClusterTargets.get(event);
       if (target != null) {
-        // a target that names several seeds already carries the port of each of them
         return target.getPort();
       }
     }

@@ -92,7 +92,8 @@ class MongoConfiguredTargetTest {
     String spanName = new MongoSpanNameExtractor(getter).extract(event);
 
     assertThat(spanName)
-        .isEqualTo(emitStableDatabaseSemconv() ? "listDatabases db2.example" : "listDatabases");
+        .isEqualTo(
+            emitStableDatabaseSemconv() ? "listDatabases db2.example:27018" : "listDatabases");
   }
 
   private static ClusterId configuredCluster(MongoServerTarget target) {

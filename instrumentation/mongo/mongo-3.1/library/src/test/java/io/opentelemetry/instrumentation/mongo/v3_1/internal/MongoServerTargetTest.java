@@ -79,7 +79,7 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void aMultiSeedConnectionStringIsNotOneServerTarget() {
+  void multiSeedConnectionStringIsNotOneServerTarget() {
     ClusterSettings settings =
         ClusterSettings.builder()
             .applyConnectionString(
