@@ -12,6 +12,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
@@ -37,6 +38,7 @@ public final class JmxTelemetryBuilder {
   private ComponentLoader componentLoader =
       ComponentLoader.forClassLoader(JmxTelemetryBuilder.class.getClassLoader());
   private final Set<String> registeredMetrics = new HashSet<>();
+  private final Set<String> registeredHandlers = new HashSet<>();
   private IncludeExclude metrics = IncludeExclude.builder().build();
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -78,6 +80,7 @@ public final class JmxTelemetryBuilder {
     for (MetricDef metricDef : metricDefs) {
       metricConfiguration.addMetricDef(metricDef);
       registeredMetrics.addAll(metricDef.getMetricNames());
+      registeredHandlers.addAll(metricDef.getHandlerNames());
     }
     return this;
   }
@@ -124,8 +127,19 @@ public final class JmxTelemetryBuilder {
   }
 
   public JmxTelemetry build() {
+
     HandlerRegistry handlerRegistry = new HandlerRegistry();
-    registeredMetrics.addAll(handlerRegistry.load(componentLoader));
+    handlerRegistry.load(componentLoader);
+
+    // metric names from handlers are only available after handlers have been resolved
+    // also, we should only include handlers that have been explicitly registered in the rules.
+    registeredHandlers.forEach(
+        h -> {
+          ExperimentalJmxMetricHandler handler = handlerRegistry.getHandler(h);
+          if (handler != null) {
+            registeredMetrics.addAll(handler.getMetricNames());
+          }
+        });
 
     IncludeExclude effectiveMetrics = metrics;
     if (metrics.getIncluded().isEmpty()) {

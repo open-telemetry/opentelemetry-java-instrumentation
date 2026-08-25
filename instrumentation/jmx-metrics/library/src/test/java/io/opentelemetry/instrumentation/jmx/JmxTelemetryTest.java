@@ -10,12 +10,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -47,28 +47,32 @@ class JmxTelemetryTest {
   void knownValidYaml() {
     JmxTelemetryBuilder jmxtelemetry = JmxTelemetry.builder(OpenTelemetry.noop());
     addClasspathRules(jmxtelemetry, "jmx/rules/jvm.yaml");
+    jmxtelemetry.metrics(IncludeExclude.builder().setExcluded("excluded.metric").build());
     JmxTelemetry telemetry = jmxtelemetry.build();
     assertThat(telemetry).isNotNull();
 
+    // by default include should contain all registered metrics, and the provided excluded should
+    // be preserved as-is
     IncludeExclude includeExclude = telemetry.getMetrics();
     assertThat(includeExclude.getIncluded()).isNotEmpty();
-    assertThat(includeExclude.getIncluded()
-        .stream().filter(m -> m.startsWith("jvm."))
-        .count()).isGreaterThan(0);
-    assertThat(includeExclude.getExcluded()).isEmpty();
+    assertThat(includeExclude.getIncluded()).allMatch(m -> m.startsWith("jvm."));
+    assertThat(includeExclude.getExcluded()).contains("excluded.metric");
   }
 
   @Test
   void metricsExplicitInclude() {
     JmxTelemetryBuilder jmxtelemetry = JmxTelemetry.builder(OpenTelemetry.noop());
     addClasspathRules(jmxtelemetry, "jmx/rules/jvm.yaml");
-    jmxtelemetry.metrics(IncludeExclude.builder()
-        .setIncluded("jvm.memory.used")
-        .build());
+    jmxtelemetry.metrics(
+        IncludeExclude.builder()
+            .setIncluded("jvm.memory.used")
+            .setExcluded("missing.metric")
+            .build());
     JmxTelemetry telemetry = jmxtelemetry.build();
     assertThat(telemetry).isNotNull();
 
     assertThat(telemetry.getMetrics().getIncluded()).containsOnly("jvm.memory.used");
+    assertThat(telemetry.getMetrics().getExcluded()).containsOnly("missing.metric");
   }
 
   private static void addClasspathRules(JmxTelemetryBuilder builder, String path) {
