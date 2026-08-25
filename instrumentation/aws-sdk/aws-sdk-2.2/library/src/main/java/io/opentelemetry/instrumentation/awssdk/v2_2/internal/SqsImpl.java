@@ -235,7 +235,7 @@ public final class SqsImpl {
       }
 
       SqsCreateRequest createRequest =
-          new SqsCreateRequest(batchRequest.queueUrl(), toStringMap(messageAttributes));
+          new SqsCreateRequest(batchRequest.queueUrl(), messageAttributes);
       if (!producerCreateInstrumenter.shouldStart(creationParentContext, createRequest)) {
         continue;
       }
@@ -430,13 +430,6 @@ public final class SqsImpl {
 
   static boolean isSqsDeleteRequest(SdkRequest request) {
     return request instanceof DeleteMessageRequest || request instanceof DeleteMessageBatchRequest;
-  }
-
-  private static Map<String, String> toStringMap(
-      Map<String, MessageAttributeValue> messageAttributes) {
-    Map<String, String> result = new HashMap<>();
-    messageAttributes.forEach((key, value) -> result.put(key, value.stringValue()));
-    return result;
   }
 
   static String getQueueUrl(SdkRequest request) {

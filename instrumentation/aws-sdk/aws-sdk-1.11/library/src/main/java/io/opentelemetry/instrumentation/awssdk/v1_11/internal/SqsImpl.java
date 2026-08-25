@@ -28,7 +28,6 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -171,7 +170,7 @@ public final class SqsImpl {
       }
 
       SqsCreateRequest createRequest =
-          new SqsCreateRequest(request.getQueueUrl(), toStringMap(entry.getMessageAttributes()));
+          new SqsCreateRequest(request.getQueueUrl(), entry.getMessageAttributes());
       if (!producerCreateInstrumenter.shouldStart(parentContext, createRequest)) {
         preparedEntries.add(entry.clone());
         continue;
@@ -209,13 +208,6 @@ public final class SqsImpl {
       }
     }
     return contexts;
-  }
-
-  private static Map<String, String> toStringMap(
-      Map<String, MessageAttributeValue> messageAttributes) {
-    Map<String, String> result = new HashMap<>();
-    messageAttributes.forEach((key, value) -> result.put(key, value.getStringValue()));
-    return result;
   }
 
   @Nullable

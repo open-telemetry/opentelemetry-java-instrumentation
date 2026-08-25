@@ -9,6 +9,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import org.junit.jupiter.api.Test;
 
 class SqsCreateRequestTest {
@@ -21,9 +22,14 @@ class SqsCreateRequestTest {
   @Test
   void exposesMessageAttributeNames() {
     SqsCreateRequest request =
-        new SqsCreateRequest("https://example.com/queue", singletonMap("header", "value"));
+        new SqsCreateRequest(
+            "https://example.com/queue",
+            singletonMap(
+                "header",
+                new MessageAttributeValue().withDataType("String").withStringValue("value")));
 
-    assertThat(new SqsCreateRequestAttributesGetter().getMessageHeaderNames(request))
-        .containsExactly("header");
+    SqsCreateRequestAttributesGetter getter = new SqsCreateRequestAttributesGetter();
+    assertThat(getter.getMessageHeaderNames(request)).containsExactly("header");
+    assertThat(getter.getMessageHeader(request, "header")).containsExactly("value");
   }
 }
