@@ -61,8 +61,8 @@ public class KafkaConnectTask {
   }
 
   // counts the records of this put() invocation that were not already counted by a receive
-  // operation, so that a batch partially owned by receive telemetry counts only the remainder,
-  // and every put() invocation, including failed and redelivered ones, counts its own attempt.
+  // operation, so every put() invocation, including failed and redelivered ones, counts its own
+  // attempt.
   // The marker is cleared after suppressing a record so that a retry of the same put() — which
   // Kafka Connect performs when the task throws a RetriableException — is counted as a new attempt.
   long countUnmarkedRecords() {

@@ -57,7 +57,6 @@ tasks {
       filter {
         includeTestsMatching("io.opentelemetry.instrumentation.kafkaconnect.v2_6.MongoKafkaConnectSinkTaskTest.testSingleMessage")
       }
-      include("**/MongoKafkaConnectSinkTaskTest.*")
       jvmArgs("-Dotel.semconv-stability.preview=messaging")
       jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
       systemProperty(

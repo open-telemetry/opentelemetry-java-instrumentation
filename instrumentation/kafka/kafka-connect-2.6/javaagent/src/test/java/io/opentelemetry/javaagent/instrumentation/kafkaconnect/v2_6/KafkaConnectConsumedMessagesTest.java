@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMess
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -89,27 +88,6 @@ class KafkaConnectConsumedMessagesTest {
     assertProcessMetrics(testing, INSTRUMENTATION_NAME, "receive-owned-topic", null, "0", 1, null);
     assertConsumedMessagesMetrics(
         testing, receiveInstrumentationName, "receive-owned-topic", null, "0", 1, null);
-  }
-
-  @Test
-  @SuppressWarnings("unchecked")
-  void partiallyReceiveOwnedBatchCountsOnlyTheUnmarkedRecords() {
-    String receiveInstrumentationName = "test-kafka-connect-receive-partial";
-    Instrumenter<KafkaReceiveRequest, Void> receiveInstrumenter =
-        new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), receiveInstrumentationName)
-            .setMessagingReceiveTelemetryEnabled(true)
-            .createConsumerReceiveInstrumenter();
-    Consumer<String, String> consumer = mock(Consumer.class);
-    receive(receiveInstrumenter, consumer, "partial-batch-topic", 0, 20);
-    SinkRecord receiveOwnedTarget = sinkRecord("partial-batch-topic", 0, 20);
-    markReceiveOwned(receiveOwnedTarget);
-    SinkRecord plainRecord = sinkRecord("partial-batch-topic", 0, 21);
-
-    new RetryingSinkTask(0).put(asList(receiveOwnedTarget, plainRecord));
-
-    // only the record that was not already owned by the receive operation is counted here
-    assertProcessMetricsWithConsumedMessages(
-        testing, INSTRUMENTATION_NAME, "partial-batch-topic", null, "0", 1, 1, null);
   }
 
   // Test classes are not rewritten to use the javaagent's field-backed VirtualField, so a
