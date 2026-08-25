@@ -171,19 +171,10 @@ final class CassandraAttributesExtractor
       }
       return;
     }
-    // A session that names its contact points is reported by the target it was configured with,
-    // which stays the same whichever node answers. This runs only under the stable conventions;
-    // the old ones are frozen and keep reporting the coordinator below. It also runs only for
-    // direct connections, because a proxied session reaches its nodes through an intermediary and
-    // is handled above.
-    CassandraServerTarget serverTarget = request.getServerTarget();
-    if (emitStableDatabaseSemconv() && serverTarget != null) {
-      attributes.put(SERVER_ADDRESS, serverTarget.getAddress());
-      // a target that names several contact points already carries the port of each of them
-      Integer port = serverTarget.getPort();
-      if (port != null) {
-        attributes.put(SERVER_PORT, port);
-      }
+    // The SQL attributes extractor records a direct session's configured target on start. Do not
+    // replace it with the coordinator that answered. Proxied sessions have no configured target and
+    // are handled above.
+    if (emitStableDatabaseSemconv() && request.getServerTarget() != null) {
       return;
     }
     if (endPoint instanceof DefaultEndPoint) {

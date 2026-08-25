@@ -53,6 +53,20 @@ final class CassandraSqlAttributesGetter
     return request.getBatchSize();
   }
 
+  @Override
+  @Nullable
+  public String getServerAddress(CassandraRequest request) {
+    CassandraServerTarget serverTarget = request.getServerTarget();
+    return emitStableDatabaseSemconv() && serverTarget != null ? serverTarget.getAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(CassandraRequest request) {
+    CassandraServerTarget serverTarget = request.getServerTarget();
+    return emitStableDatabaseSemconv() && serverTarget != null ? serverTarget.getPort() : null;
+  }
+
   @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(

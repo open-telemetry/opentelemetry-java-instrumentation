@@ -21,6 +21,8 @@ import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -88,6 +90,22 @@ class CassandraEndpointAttributesTest {
     } else {
       assertCoordinatorIsServer(attributes);
     }
+  }
+
+  @Test
+  void configuredTargetIsAvailableWithoutExecutionInfo() {
+    CassandraRequest request =
+        CassandraRequest.create(
+            session, target(singletonList("cassandra.example.com:9042")), "SELECT 1");
+    AttributesBuilder builder = Attributes.builder();
+
+    ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
+        .onStart(builder, Context.root(), request);
+
+    Attributes attributes = builder.build();
+    assertThat(attributes.get(SERVER_ADDRESS))
+        .isEqualTo(emitStableDatabaseSemconv() ? "cassandra.example.com" : null);
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? 9042L : null);
   }
 
   @Test
@@ -211,8 +229,10 @@ class CassandraEndpointAttributesTest {
 
   private Attributes serverAttributes(CassandraServerTarget serverTarget) {
     AttributesBuilder builder = Attributes.builder();
-    CassandraAttributesExtractor.updateServerAddressAndPort(
-        builder, CassandraRequest.create(session, serverTarget, "SELECT 1"), coordinator);
+    CassandraRequest request = CassandraRequest.create(session, serverTarget, "SELECT 1");
+    ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
+        .onStart(builder, Context.root(), request);
+    CassandraAttributesExtractor.updateServerAddressAndPort(builder, request, coordinator);
     return builder.build();
   }
 

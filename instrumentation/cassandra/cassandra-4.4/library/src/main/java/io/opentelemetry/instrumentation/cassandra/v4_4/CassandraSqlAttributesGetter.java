@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -50,6 +51,20 @@ final class CassandraSqlAttributesGetter
   @Nullable
   public Long getDbOperationBatchSize(CassandraRequest request) {
     return request.getBatchSize();
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(CassandraRequest request) {
+    CassandraServerTarget serverTarget = request.getServerTarget();
+    return emitStableDatabaseSemconv() && serverTarget != null ? serverTarget.getAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(CassandraRequest request) {
+    CassandraServerTarget serverTarget = request.getServerTarget();
+    return emitStableDatabaseSemconv() && serverTarget != null ? serverTarget.getPort() : null;
   }
 
   @Nullable
