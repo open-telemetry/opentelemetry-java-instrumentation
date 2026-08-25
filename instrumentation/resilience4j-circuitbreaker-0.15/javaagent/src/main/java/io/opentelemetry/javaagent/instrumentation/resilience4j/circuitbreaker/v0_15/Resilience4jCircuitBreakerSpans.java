@@ -229,8 +229,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  public static void endResult(
-      CircuitBreaker circuitBreaker, @Nullable Object result, @Nullable Throwable throwable) {
+  public static void endResult(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
     if (throwable != null) {
       end(circuitBreaker, "failure", throwable);
       return;

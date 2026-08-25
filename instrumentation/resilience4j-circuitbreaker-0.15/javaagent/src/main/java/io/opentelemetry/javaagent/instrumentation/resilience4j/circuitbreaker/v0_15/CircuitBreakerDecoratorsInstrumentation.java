@@ -21,6 +21,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -107,12 +108,12 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   public static class CompletionStageSupplierAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static <T> void onEnter(
+    @AssignReturned.ToArguments(@ToArgument(1))
+    public static <T> Supplier<CompletionStage<T>> onEnter(
         @Advice.Argument(0) CircuitBreaker circuitBreaker,
-        @Advice.Argument(value = 1, readOnly = false) Supplier<CompletionStage<T>> supplier) {
-      supplier =
-          Resilience4jCircuitBreakerDecorators.wrapCompletionStageSupplier(
-              circuitBreaker, supplier);
+        @Advice.Argument(1) Supplier<CompletionStage<T>> supplier) {
+      return Resilience4jCircuitBreakerDecorators.wrapCompletionStageSupplier(
+          circuitBreaker, supplier);
     }
   }
 
