@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
@@ -97,11 +96,6 @@ class ShardedJedis30ClientTest {
     shardHost = shard.getClient().getHost();
     shardPort = shard.getClient().getPort();
     shardIp = InetAddress.getByName(shardHost).getHostAddress();
-  }
-
-  @BeforeEach
-  void reset() {
-    testing.clearData();
   }
 
   @Test
