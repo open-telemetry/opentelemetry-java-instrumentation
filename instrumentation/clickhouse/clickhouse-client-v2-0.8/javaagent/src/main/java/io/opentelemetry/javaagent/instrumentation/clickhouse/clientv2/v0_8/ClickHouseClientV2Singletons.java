@@ -43,16 +43,16 @@ public class ClickHouseClientV2Singletons {
   }
 
   /**
-   * The endpoints the client was configured with. A client cannot be reconfigured, so the rendering
-   * is computed once and kept on the client rather than on every query.
+   * Capture the endpoints that belong to a newly constructed client before its builder can be
+   * changed or reused.
    */
+  public static void captureServerInfo(Client client) {
+    SERVER_INFO_FIELD.set(client, ServerInfo.of(client.getEndpoints()));
+  }
+
+  @Nullable
   public static ServerInfo serverInfo(Client client) {
-    ServerInfo serverInfo = SERVER_INFO_FIELD.get(client);
-    if (serverInfo == null) {
-      serverInfo = ServerInfo.of(client.getEndpoints());
-      SERVER_INFO_FIELD.set(client, serverInfo);
-    }
-    return serverInfo;
+    return SERVER_INFO_FIELD.get(client);
   }
 
   /**

@@ -529,6 +529,47 @@ class ClickHouseClientV2Test {
   }
 
   @Test
+  void testBuilderReuseDoesNotChangeAnExistingClientTarget() throws Exception {
+    Client.Builder builder =
+        new Client.Builder()
+            .addEndpoint(Protocol.HTTP, host, port, false)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false");
+    Client firstClient = builder.build();
+    cleanup.deferCleanup(firstClient);
+    Client secondClient = builder.addEndpoint("http://unused.invalid:8123").build();
+    cleanup.deferCleanup(secondClient);
+
+    QueryResponse response = firstClient.query("select * from " + TABLE_NAME).join();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "select test_table"
+                                : "SELECT " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
   void testMultipleEndpointsExcludeCredentialsAndUrlComponents() {
     List<String> endpoints =
         new ArrayList<>(
