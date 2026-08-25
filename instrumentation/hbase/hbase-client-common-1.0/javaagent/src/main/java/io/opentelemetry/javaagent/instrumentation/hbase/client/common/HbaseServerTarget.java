@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.TreeSet;
 import javax.annotation.Nullable;
@@ -262,7 +264,8 @@ public class HbaseServerTarget {
 
   private static boolean hasHbaseConstant(String fieldName) {
     try {
-      return HConstants.class.getField(fieldName) != null;
+      Field unused = HConstants.class.getField(fieldName);
+      return true;
     } catch (NoSuchFieldException | SecurityException | LinkageError ignored) {
       return false;
     }
@@ -270,9 +273,10 @@ public class HbaseServerTarget {
 
   private static boolean usesConfiguredMasterPort() {
     try {
-      return Class.forName(MASTER_REGISTRY, false, HbaseServerTarget.class.getClassLoader())
-              .getDeclaredMethod("getDefaultMasterPort", Configuration.class)
-          != null;
+      Method unused =
+          Class.forName(MASTER_REGISTRY, false, HbaseServerTarget.class.getClassLoader())
+              .getDeclaredMethod("getDefaultMasterPort", Configuration.class);
+      return true;
     } catch (ReflectiveOperationException | SecurityException | LinkageError ignored) {
       return false;
     }
