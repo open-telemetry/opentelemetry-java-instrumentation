@@ -9,6 +9,8 @@ permissions:
 
 jobs:
   crawl:
+    outputs:
+      success: ${{ steps.doc-site-audit.outputs.success }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -27,7 +29,35 @@ jobs:
         run: ./gradlew :instrumentation-docs:runAnalysis
 
       - name: Run doc site audit
-        run: ./gradlew :instrumentation-docs:docSiteAudit
+        id: doc-site-audit
+        run: |
+          set -euo pipefail
+          ./gradlew :instrumentation-docs:docSiteAudit
+          audit_result=$(cat instrumentation-docs/build/audit-result)
+          case "$audit_result" in
+            clean)
+              echo "success=true" >> "$GITHUB_OUTPUT"
+              ;;
+            drift)
+              echo "success=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unexpected documentation audit result: $audit_result" >&2
+              exit 1
+              ;;
+          esac
+
+  documentation-drift-notification:
+    permissions:
+      contents: read
+      issues: write
+    needs:
+      - crawl
+    if: ${{ needs.crawl.result == 'success' }}
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.crawl.outputs.success == 'true' }}
+      title: "Documentation sync needed: opentelemetry.io site out of sync"
 
   workflow-notification:
     permissions:
@@ -39,4 +69,3 @@ jobs:
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.crawl.result == 'success' }}
-      title: "Documentation sync needed: opentelemetry.io site out of sync"
