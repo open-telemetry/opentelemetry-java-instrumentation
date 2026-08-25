@@ -28,7 +28,7 @@ import org.apache.geode.cache.client.PoolFactory;
  * the pool later learns from its locators, and a factory keeps its configuration between pools, so
  * every pool it creates is given a snapshot of its own.
  */
-public final class GeodePoolInstrumentation implements TypeInstrumentation {
+public class GeodePoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {

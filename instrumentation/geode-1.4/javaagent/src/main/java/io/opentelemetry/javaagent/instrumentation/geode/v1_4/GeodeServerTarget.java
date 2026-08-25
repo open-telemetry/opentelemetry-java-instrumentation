@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
  * <p>The address is rendered while the pool is being created, so a pool keeps reporting what it was
  * pointed at rather than the servers it later discovers.
  */
-public final class GeodeServerTarget {
+public class GeodeServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
@@ -53,7 +53,7 @@ public final class GeodeServerTarget {
   }
 
   /** Collects the servers, locators, and server group a pool is being configured with. */
-  public static final class Builder {
+  public static class Builder {
 
     private static final int MAX_PORT = 65535;
 
@@ -191,7 +191,7 @@ public final class GeodeServerTarget {
     }
   }
 
-  private static final class Endpoint {
+  private static class Endpoint {
 
     private final String host;
     private final int port;

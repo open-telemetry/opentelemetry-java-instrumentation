@@ -21,7 +21,7 @@ import org.apache.geode.cache.client.PoolManager;
  * servers a pool discovers and the connections it holds at any moment out of the target, and leaves
  * an operation with nothing to do beyond looking its pool up.
  */
-public final class GeodeServerTargets {
+public class GeodeServerTargets {
 
   private static final VirtualField<PoolFactory, GeodeServerTarget.Builder> CONFIGURED_TARGETS =
       VirtualField.find(PoolFactory.class, GeodeServerTarget.Builder.class);
