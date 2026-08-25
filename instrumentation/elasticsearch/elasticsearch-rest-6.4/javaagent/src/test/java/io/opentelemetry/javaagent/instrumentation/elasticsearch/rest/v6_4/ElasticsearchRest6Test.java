@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -18,6 +20,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,7 +33,10 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
+import org.elasticsearch.client.Node;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
@@ -193,5 +199,61 @@ class ElasticsearchRest6Test {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void configuredNodeListIsTheWholeTarget() throws IOException {
+    HttpHost deadHost = deadHost();
+    RestClient nodeListClient = RestClient.builder(httpHost, deadHost).build();
+    cleanup.deferCleanup(nodeListClient);
+
+    nodeListClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget(hostList(deadHost));
+  }
+
+  @Test
+  void theTargetDoesNotFollowLaterNodeChanges() throws IOException {
+    RestClient singleNodeClient = RestClient.builder(httpHost).build();
+    cleanup.deferCleanup(singleNodeClient);
+    // a client is given new nodes when it is sniffed; the configured target must not follow them
+    singleNodeClient.setNodes(asList(new Node(httpHost), new Node(deadHost())));
+
+    singleNodeClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget(null);
+  }
+
+  private static HttpHost deadHost() {
+    // nothing listens on this port, so a request is served by the running server after a retry
+    return new HttpHost(httpHost.getHostName(), httpHost.getPort() + 1, httpHost.getSchemeName());
+  }
+
+  private static String hostList(HttpHost deadHost) {
+    return httpHost.getHostName()
+        + ":"
+        + httpHost.getPort()
+        + ","
+        + deadHost.getHostName()
+        + ":"
+        + deadHost.getPort();
+  }
+
+  /**
+   * Asserts the server of the elasticsearch span, where {@code hostList} is the whole configured
+   * list, or null when a single host was configured. Only the elasticsearch span is asserted,
+   * because a request that first reaches the host that is down is retried and reports a second http
+   * span.
+   */
+  private static void assertConfiguredTarget(@Nullable String hostList) {
+    boolean stableHostList = emitStableDatabaseSemconv() && hostList != null;
+    testing.waitAndAssertTraces(
+        trace ->
+            assertThat(trace.getSpan(0))
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfying(
+                    equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
+                    equalTo(
+                        SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort()))));
   }
 }

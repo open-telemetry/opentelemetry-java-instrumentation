@@ -94,6 +94,31 @@ class ServicePeerResolverTest {
   }
 
   @Test
+  void configuredTargetDoesNotAlsoMatchItsFirstHost() {
+    String target = "node1:6379,node2:6380";
+    ServicePeerResolver r = createResolver(mapping(target, "cluster", null));
+    assertThat(r.isEmpty()).isFalse();
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve(target, null, () -> null, attrs::put);
+    assertName("cluster", attrs.build());
+
+    attrs = Attributes.builder();
+    r.resolve("node1", 6379, () -> null, attrs::put);
+    assertThat(attrs.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void commaInPathStillUsesHostAndPathMatching() {
+    ServicePeerResolver r = createResolver(mapping("example.com/api,v2", "versionedApi", null));
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve("example.com", null, () -> "/api,v2", attrs::put);
+
+    assertName("versionedApi", attrs.build());
+  }
+
+  @Test
   void shouldSkipEntryWithNullPeer() {
     ServicePeerResolver r =
         createResolver(mapping(null, "svc", null), mapping("valid.com", "validSvc", null));

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.joining;
@@ -88,5 +89,27 @@ final class ElasticsearchDbAttributesGetter
       }
     }
     return null;
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(ElasticsearchRestRequest request) {
+    // old semantic conventions record the host that answered instead, on span end
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    ElasticsearchServerTarget target = request.getServerTarget();
+    return target != null ? target.getAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(ElasticsearchRestRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    ElasticsearchServerTarget target = request.getServerTarget();
+    // a target that names several hosts already carries the port of each of them
+    return target != null ? target.getPort() : null;
   }
 }

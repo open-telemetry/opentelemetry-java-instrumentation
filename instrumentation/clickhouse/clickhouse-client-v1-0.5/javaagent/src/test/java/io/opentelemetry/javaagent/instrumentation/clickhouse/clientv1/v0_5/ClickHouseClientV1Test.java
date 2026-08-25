@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import com.clickhouse.client.ClickHouseClient;
 import com.clickhouse.client.ClickHouseException;
 import com.clickhouse.client.ClickHouseNode;
+import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.ClickHouseParameterizedQuery;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseResponse;
@@ -562,5 +563,70 @@ class ClickHouseClientV1Test {
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testNodeListReportsTheWholeConfiguredTarget() throws ClickHouseException {
+    // the first node is the running server, the second one is only there to make the target a group
+    String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
+    String addressGroup = host + ":" + port + "," + host + ":" + (port + 1);
+    ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
+
+    ClickHouseResponse response =
+        client
+            .read(nodes)
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + TABLE_NAME)
+            .executeAndWait();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfying(
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
+  }
+
+  @Test
+  void testFaultyNodeStaysInTheConfiguredTarget() throws ClickHouseException {
+    // a second node list, so that the health state of this one does not reach the test above
+    String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 2);
+    String addressGroup = host + ":" + port + "," + host + ":" + (port + 2);
+    ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
+
+    for (ClickHouseNode node : nodes.getNodes()) {
+      if (node.getPort() == port + 2) {
+        nodes.update(node, ClickHouseNode.Status.FAULTY);
+      }
+    }
+    // the nodes a list hands out are only the healthy ones, and the target must not shrink with
+    // them
+    assertThat(nodes.getNodes()).hasSize(1);
+
+    ClickHouseResponse response =
+        client
+            .read(nodes)
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + TABLE_NAME)
+            .executeAndWait();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfying(
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
   }
 }

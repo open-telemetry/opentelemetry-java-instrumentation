@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.getSniServerName;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isSniEndPoint;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL;
@@ -26,6 +28,7 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -56,11 +59,7 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      SocketAddress address = coordinator.getEndPoint().resolve();
-      if (address instanceof InetSocketAddress) {
-        attributes.put(SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
-        attributes.put(SERVER_PORT, ((InetSocketAddress) address).getPort());
-      }
+      updateServerAddressAndPort(attributes, request, coordinator);
       String coordinatorDc = coordinator.getDatacenter();
       if (emitStableDatabaseSemconv()) {
         attributes.put(CASSANDRA_COORDINATOR_DC, coordinatorDc);
@@ -130,6 +129,63 @@ final class CassandraAttributesExtractor
     }
     if (emitOldDatabaseSemconv()) {
       attributes.put(DB_CASSANDRA_IDEMPOTENCE, idempotent);
+    }
+  }
+
+  static void updateServerAddressAndPort(
+      AttributesBuilder attributes, CassandraRequest request, Node coordinator) {
+    EndPoint endPoint = coordinator.getEndPoint();
+    if (emitStableDatabaseSemconv() && isSniEndPoint(endPoint)) {
+      updateStableSniServerAddressAndPort(attributes, coordinator, endPoint);
+      return;
+    }
+    // A session that names its contact points is reported by the target it was configured with,
+    // which stays the same whichever node answers. This runs only under the stable conventions;
+    // the old ones are frozen and keep reporting the coordinator below. It also runs only for
+    // direct connections, because a proxied session reaches its nodes through an intermediary and
+    // is handled above.
+    CassandraServerTarget serverTarget = request.getServerTarget();
+    if (emitStableDatabaseSemconv() && serverTarget != null) {
+      attributes.put(SERVER_ADDRESS, serverTarget.getAddress());
+      // a target that names several contact points already carries the port of each of them
+      Integer port = serverTarget.getPort();
+      if (port != null) {
+        attributes.put(SERVER_PORT, port);
+      }
+      return;
+    }
+    // The old database semantic conventions are frozen, so keep the pre-existing behavior, which
+    // records the proxy under SNI. Custom endpoints may represent direct connections, so preserve
+    // their resolved addresses under both old and stable conventions.
+    SocketAddress address = endPoint.resolve();
+    if (address instanceof InetSocketAddress) {
+      attributes.put(SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
+      attributes.put(SERVER_PORT, ((InetSocketAddress) address).getPort());
+    }
+  }
+
+  private static void updateStableSniServerAddressAndPort(
+      AttributesBuilder attributes, Node coordinator, EndPoint endPoint) {
+    // Under SNI (proxied deployments such as DataStax Astra), resolve() would return the proxy
+    // rather than the server behind it. It also performs a dns lookup on every call and rotates a
+    // shared static counter the driver uses to pick a connection. Use the coordinator's own
+    // broadcast rpc address instead, which carries both the address and the port with no side
+    // effects.
+    InetSocketAddress rpcAddress = coordinator.getBroadcastRpcAddress().orElse(null);
+    if (rpcAddress != null) {
+      attributes.put(SERVER_ADDRESS, rpcAddress.getHostString());
+      attributes.put(SERVER_PORT, rpcAddress.getPort());
+      return;
+    }
+    // When the node has not published its rpc address, fall back to the SNI server name, which
+    // carries no port. In cloud deployments the driver sets that name to the node's host id, which
+    // is an opaque identifier rather than an address, and which is already recorded as
+    // cassandra.coordinator.id. Record the server name only when it is something else, such as a
+    // host name supplied for a custom SNI proxy.
+    String serverName = getSniServerName(endPoint);
+    UUID hostId = coordinator.getHostId();
+    if (hostId == null || !hostId.toString().equals(serverName)) {
+      attributes.put(SERVER_ADDRESS, serverName);
     }
   }
 }

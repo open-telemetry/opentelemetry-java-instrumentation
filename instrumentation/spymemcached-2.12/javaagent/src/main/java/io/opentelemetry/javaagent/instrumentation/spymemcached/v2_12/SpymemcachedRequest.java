@@ -16,12 +16,17 @@ import net.spy.memcached.MemcachedNode;
 public abstract class SpymemcachedRequest {
 
   public static SpymemcachedRequest create(MemcachedConnection connection, String queryText) {
-    return new AutoValue_SpymemcachedRequest(connection, queryText);
+    return new AutoValue_SpymemcachedRequest(
+        connection, queryText, SpymemcachedServerTargets.get(connection));
   }
 
   public abstract MemcachedConnection getConnection();
 
   public abstract String getQueryText();
+
+  /** The target the client behind this request was configured with. */
+  @Nullable
+  public abstract SpymemcachedServerTarget getServerTarget();
 
   @Nullable private MemcachedNode handlingNode;
   @Nullable private InetSocketAddress handlingNodeAddress;

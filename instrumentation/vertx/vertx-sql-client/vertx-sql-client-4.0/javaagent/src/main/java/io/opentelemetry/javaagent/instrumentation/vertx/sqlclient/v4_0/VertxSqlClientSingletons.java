@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.vertx.core.Future;
@@ -22,6 +23,9 @@ public class VertxSqlClientSingletons {
 
   private static final VirtualField<SqlClientBase<?>, SqlConnectOptions> connectOptionsField =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
+
+  private static final VirtualField<SqlClientBase<?>, VertxSqlAddressGroup> addressGroupField =
+      VirtualField.find(SqlClientBase.class, VertxSqlAddressGroup.class);
 
   private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
       VirtualField.find(SqlConnectOptions.class, String.class);
@@ -47,17 +51,27 @@ public class VertxSqlClientSingletons {
     return connectOptionsField.get(sqlClientBase);
   }
 
-  public static void attachConnectOptions(
-      SqlClientBase<?> sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
-    connectOptionsField.set(sqlClientBase, connectOptions);
+  @Nullable
+  public static VertxSqlAddressGroup getAddressGroup(SqlClientBase<?> sqlClientBase) {
+    return addressGroupField.get(sqlClientBase);
   }
 
-  public static Future<SqlConnection> attachConnectOptions(
-      Future<SqlConnection> future, @Nullable SqlConnectOptions connectOptions) {
+  public static void attachClientState(
+      SqlClientBase<?> sqlClientBase,
+      @Nullable SqlConnectOptions connectOptions,
+      @Nullable VertxSqlAddressGroup addressGroup) {
+    connectOptionsField.set(sqlClientBase, connectOptions);
+    addressGroupField.set(sqlClientBase, addressGroup);
+  }
+
+  public static Future<SqlConnection> attachClientState(
+      Future<SqlConnection> future,
+      @Nullable SqlConnectOptions connectOptions,
+      @Nullable VertxSqlAddressGroup addressGroup) {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {
-            connectOptionsField.set((SqlClientBase<?>) sqlConnection, connectOptions);
+            attachClientState((SqlClientBase<?>) sqlConnection, connectOptions, addressGroup);
           }
           return sqlConnection;
         });

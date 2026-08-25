@@ -6,6 +6,65 @@
 
 - Remove the deprecated `HostIdResource.REGISTRY_QUERY` in favor of the absolute-path `reg.exe` lookup used by
   `HostIdResource`. ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
+- Prefer the original configured logical or server-group target for `server.address` when stable
+  database semantic conventions are enabled. Multi-server targets include their endpoints in
+  `server.address` and omit `server.port`; default legacy telemetry is unchanged.
+- Elasticsearch and OpenSearch spans record the target their client was built with instead of the
+  node that answered, again only when stable database semantic conventions are enabled. OpenSearch
+  spans and Elasticsearch transport client spans now carry `server.address`, which their stable span
+  names include because there is no namespace or collection to name.
+- Redis spans record the target their client was configured with instead of the node a command was
+  routed to, again only when stable database semantic conventions are enabled. A Sentinel backed
+  client is named by its master, a clustered, sharded or pooled client carries every configured
+  endpoint in `server.address` and omits `server.port`, and credentials, the selected database, query
+  parameters and fragments are removed from every endpoint.
+- Cassandra spans record the contact points their session was configured with instead of the
+  coordinator that answered, again only when stable database semantic conventions are enabled. A
+  session that names several contact points carries all of them in `server.address` and omits
+  `server.port`. Under SNI (proxied deployments such as DataStax Astra) `server.address` and
+  `server.port` describe the node behind the proxy rather than the proxy itself, and
+  `network.peer.*` is left unset because reading the proxy socket would resolve it on every span.
+  Sessions using driver 3.x keep reporting the coordinator, because that driver never exposes the
+  contact points it was configured with.
+- MongoDB spans record the target their client was configured with instead of the server that
+  answered a command, again only when stable database semantic conventions are enabled. A client
+  configured with several seeds carries all of them in `server.address` as
+  `host:port,host:port` and omits `server.port`; a client configured with an SRV host is named by
+  that host. Credentials, the selected database and connection string options are never part of the
+  target, and the required replica set name is left out because it names a set of servers rather
+  than an address. Clients using a driver before 3.10 resolve an SRV host into seeds while parsing
+  their connection string, so they report the hosts it resolved to.
+- Couchbase spans record the target their client was configured with instead of the node an
+  operation was dispatched to, again only when stable database semantic conventions are enabled. A
+  client configured with several seeds carries all of them in `server.address` as
+  `host,host:port` and omits `server.port`; a client configured with a host that resolves through DNS
+  SRV is named by that host. Credentials, the selected bucket and connection string parameters are
+  never part of the target, and a seed the connection string left without a port carries none,
+  because Couchbase reaches every service on a node through a different default port. Operations
+  that name no bucket, such as `Cluster.openBucket`, now carry `server.address` in their stable span
+  name, because there is no namespace or collection to name. A client using driver 2.6 or later that
+  the agent did not see being built falls back to the node that answered. Clients using driver 3.1
+  to 3.5 that connect from seed nodes rather than a connection string report no target, because
+  those drivers never see one.
+- Geode spans record the target their client pool was configured with, again only when stable
+  database semantic conventions are enabled; they carried no server attributes before. A pool
+  configured with a single cache server keeps that server's host and port, a pool configured with
+  several carries all of them in `server.address` as `host:port,host:port` and omits `server.port`,
+  and a pool configured with a server group is named by that group and omits `server.port` as well.
+  Locators are never part of the target, because a locator hands a client the cache servers it may
+  talk to rather than serving operations itself, so a pool given locators and no server group
+  reports no target. The target is read while the pool is being created, so a pool keeps reporting
+  what it was pointed at rather than the servers it later discovers.
+- Spymemcached spans record the target their client was configured with instead of the node that
+  answered an operation, again only when stable database semantic conventions are enabled. A client
+  configured with a single node keeps that node's host and port, and a client configured with
+  several carries all of them in `server.address` as `host:port,host:port` and omits `server.port`.
+  A memcached span has no namespace or collection to name, so its stable span name now ends with
+  that target, and operations that fail before reaching a node at all, such as one given a key that
+  is too long, carry the target where they previously carried no server. The target is read while
+  the client's connection is being created, so a client keeps reporting what it was pointed at
+  rather than the node a key happened to hash to; a client whose connection the agent did not see
+  being created falls back to the node that answered.
 
 ## Version 2.31.1 (2026-08-23)
 

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.Inet4Address;
@@ -50,6 +52,28 @@ final class OpenSearchRestAttributesGetter
       }
     }
     return null;
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(OpenSearchRestRequest request) {
+    // old semantic conventions do not record the server at all
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    OpenSearchServerTarget target = request.getServerTarget();
+    return target != null ? target.getAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(OpenSearchRestRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    OpenSearchServerTarget target = request.getServerTarget();
+    // a target that names several nodes already carries the port of each of them
+    return target != null ? target.getPort() : null;
   }
 
   @Nullable

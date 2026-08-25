@@ -14,12 +14,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.clickhouse.client.api.Client;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseScope;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.ServerInfo;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -55,19 +55,19 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
       }
 
       // https://clickhouse.com/docs/integrations/language-clients/java/client#client-configuration
-      // Currently, clientv2 supports only one endpoint. Since the endpoint is not going to change
-      // we'll cache it in a virtual field.
-      AddressAndPort addressAndPort = ClickHouseClientV2Singletons.getAddressAndPort(client);
-      if (addressAndPort == null) {
-        String endpoint = client.getEndpoints().stream().findFirst().orElse(null);
-        addressAndPort = ClickHouseClientV2Singletons.setAddressAndPort(client, endpoint);
-      }
+      // The endpoints of a client never change, so they are resolved once and cached in a virtual
+      // field.
+      ServerInfo serverInfo = ClickHouseClientV2Singletons.serverInfo(client);
 
       String database = client.getConfiguration().get("database");
       Context parentContext = currentContext();
       ClickHouseDbRequest request =
           ClickHouseDbRequest.create(
-              addressAndPort.getAddress(), addressAndPort.getPort(), database, sqlQuery);
+              serverInfo.getAddress(),
+              serverInfo.getPort(),
+              serverInfo.getAddressGroup(),
+              database,
+              sqlQuery);
 
       return ClickHouseScope.start(instrumenter(), parentContext, request);
     }

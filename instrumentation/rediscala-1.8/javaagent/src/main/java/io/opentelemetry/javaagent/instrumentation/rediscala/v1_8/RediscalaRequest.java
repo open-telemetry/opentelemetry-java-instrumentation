@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import static java.util.Arrays.asList;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -36,13 +37,18 @@ class RediscalaRequest {
   private final String stableOperationName;
   @Nullable private final Long batchSize;
   @Nullable private final ServerEndpoint endpoint;
+  @Nullable private final RedisServerTarget serverTarget;
 
-  static RediscalaRequest create(RedisCommand<?, ?> command, @Nullable ServerEndpoint endpoint) {
+  static RediscalaRequest create(
+      RedisCommand<?, ?> command,
+      @Nullable ServerEndpoint endpoint,
+      @Nullable RedisServerTarget serverTarget) {
     return new RediscalaRequest(
         operationName(command, /* stable= */ false),
         operationName(command, /* stable= */ true),
         null,
-        endpoint);
+        endpoint,
+        serverTarget);
   }
 
   static RediscalaRequest createTransaction(
@@ -51,18 +57,23 @@ class RediscalaRequest {
         transactionOperationName(operations, /* stable= */ false),
         transactionOperationName(operations, /* stable= */ true),
         batchSize(operations),
-        endpoint);
+        endpoint,
+        endpoint == null
+            ? null
+            : RedisServerTarget.ofHostAndPort(endpoint.getHost(), endpoint.getPort()));
   }
 
   private RediscalaRequest(
       String operationName,
       String stableOperationName,
       @Nullable Long batchSize,
-      @Nullable ServerEndpoint endpoint) {
+      @Nullable ServerEndpoint endpoint,
+      @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
     this.stableOperationName = stableOperationName;
     this.batchSize = batchSize;
     this.endpoint = endpoint;
+    this.serverTarget = serverTarget;
   }
 
   String getOperationName() {
@@ -91,6 +102,11 @@ class RediscalaRequest {
   @Nullable
   Integer getDatabaseIndex() {
     return endpoint != null ? endpoint.getDatabaseIndex() : null;
+  }
+
+  @Nullable
+  RedisServerTarget getServerTarget() {
+    return serverTarget;
   }
 
   private static String transactionOperationName(

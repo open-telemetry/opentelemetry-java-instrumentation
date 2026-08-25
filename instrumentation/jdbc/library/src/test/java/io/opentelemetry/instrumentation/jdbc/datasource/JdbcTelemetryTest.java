@@ -80,6 +80,52 @@ class JdbcTelemetryTest {
         SERVER_PORT);
   }
 
+  @Test
+  void groupTargetSuppressesPortInStableSemconv() throws SQLException {
+    JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
+    DataSource dataSource =
+        telemetry.wrap(new TestDataSource("jdbc:postgresql://pg.host1:5432,pg.host2:5433/dbname"));
+
+    testing.runWithSpan(
+        "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasAttributesSatisfying(
+                        // the old semconv value is the one the parser has always reported for a
+                        // multi host url: the driver default, because such a url names no single
+                        // server
+                        equalTo(
+                            SERVER_ADDRESS,
+                            emitStableDatabaseSemconv()
+                                ? "pg.host1:5432,pg.host2:5433"
+                                : "localhost"),
+                        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : 5432L))));
+  }
+
+  @Test
+  void spanNameFallsBackToGroupTarget() throws SQLException {
+    JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
+    DataSource dataSource =
+        telemetry.wrap(new TestDataSource("jdbc:postgresql://pg.host1:5432,pg.host2:5433"));
+
+    testing.runWithSpan(
+        "parent", () -> dataSource.getConnection().createStatement().execute("invalid"));
+
+    // span naming is unchanged: a query that has no summary and no namespace falls back to
+    // server.address, which now holds the whole configured target
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasName(
+                        emitStableDatabaseSemconv() ? "pg.host1:5432,pg.host2:5433" : "DB Query")));
+  }
+
   @ParameterizedTest
   @MethodSource("errorCodes")
   void error(int errorCode, String sqlState, String expectedErrorType) throws SQLException {

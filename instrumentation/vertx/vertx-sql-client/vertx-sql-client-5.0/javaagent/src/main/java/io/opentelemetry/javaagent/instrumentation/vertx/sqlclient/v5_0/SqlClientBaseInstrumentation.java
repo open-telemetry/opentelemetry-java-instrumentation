@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -38,8 +40,9 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase sqlClientBase) {
-      // copy connection options from ThreadLocal to VirtualField
-      VertxSqlClientSingletons.attachConnectOptions(sqlClientBase, getSqlConnectOptions());
+      // copy the client state from ThreadLocal to VirtualField
+      VertxSqlClientSingletons.attachClientState(
+          sqlClientBase, getSqlConnectOptions(), getAddressGroup());
     }
   }
 
@@ -52,10 +55,11 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
 
-      // set connection options to ThreadLocal, they will be read in QueryExecutor constructor
+      // set the client state to ThreadLocal, it will be read in QueryExecutor constructor
       SqlConnectOptions sqlConnectOptions =
           VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
       setSqlConnectOptions(sqlConnectOptions);
+      setAddressGroup(VertxSqlClientSingletons.getAddressGroup(sqlClientBase));
       return callDepth;
     }
 
@@ -66,6 +70,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
       }
 
       setSqlConnectOptions(null);
+      setAddressGroup(null);
     }
   }
 }

@@ -59,16 +59,17 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(openSearchSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                satisfies(
-                                    maybeStable(DB_STATEMENT),
-                                    val ->
-                                        val.asString()
-                                            .startsWith("POST /" + INDEX_NAME + "/_search"))),
+                                withServer(
+                                    equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                    equalTo(maybeStable(DB_OPERATION), "POST"),
+                                    satisfies(
+                                        maybeStable(DB_STATEMENT),
+                                        val ->
+                                            val.asString()
+                                                .startsWith("POST /" + INDEX_NAME + "/_search")))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)

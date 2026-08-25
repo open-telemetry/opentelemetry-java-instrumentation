@@ -34,6 +34,9 @@ final class TracingCqlSession {
   }
 
   CqlSession wrapSession(CqlSession session) {
+    // the driver configuration can be reloaded, so read the configured target once, here, and keep
+    // that snapshot for the life of the session
+    CassandraServerTarget serverTarget = CassandraServerTarget.of(session);
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();
     while (clazz != Object.class) {
@@ -48,31 +51,31 @@ final class TracingCqlSession {
               if ("execute".equals(method.getName()) && method.getParameterCount() == 1) {
                 if (method.getParameterTypes()[0] == String.class) {
                   String query = (String) args[0];
-                  return execute(session, query);
+                  return execute(session, serverTarget, query);
                 }
                 if (method.getParameterTypes()[0] == Statement.class) {
                   Statement<?> statement = (Statement<?>) args[0];
-                  return execute(session, statement);
+                  return execute(session, serverTarget, statement);
                 }
               } else if ("executeAsync".equals(method.getName())
                   && method.getParameterCount() == 1) {
                 if (method.getParameterTypes()[0] == String.class) {
                   String query = (String) args[0];
-                  return executeAsync(session, query);
+                  return executeAsync(session, serverTarget, query);
                 }
                 if (method.getParameterTypes()[0] == Statement.class) {
                   Statement<?> statement = (Statement<?>) args[0];
-                  return executeAsync(session, statement);
+                  return executeAsync(session, serverTarget, statement);
                 }
               } else if ("executeReactive".equals(method.getName())
                   && method.getParameterCount() == 1) {
                 if (method.getParameterTypes()[0] == String.class) {
                   String query = (String) args[0];
-                  return executeReactive(session, query);
+                  return executeReactive(session, serverTarget, query);
                 }
                 if (method.getParameterTypes()[0] == Statement.class) {
                   Statement<?> statement = (Statement<?>) args[0];
-                  return executeReactive(session, statement);
+                  return executeReactive(session, serverTarget, statement);
                 }
               }
 
@@ -80,8 +83,9 @@ final class TracingCqlSession {
             });
   }
 
-  private ResultSet execute(CqlSession session, String query) {
-    CassandraRequest request = CassandraRequest.create(session, query);
+  private ResultSet execute(
+      CqlSession session, @Nullable CassandraServerTarget serverTarget, String query) {
+    CassandraRequest request = CassandraRequest.create(session, serverTarget, query);
     Context context = instrumenter.start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -94,8 +98,9 @@ final class TracingCqlSession {
     return resultSet;
   }
 
-  private ResultSet execute(CqlSession session, Statement<?> statement) {
-    CassandraRequest request = CassandraRequest.create(session, statement);
+  private ResultSet execute(
+      CqlSession session, @Nullable CassandraServerTarget serverTarget, Statement<?> statement) {
+    CassandraRequest request = CassandraRequest.create(session, serverTarget, statement);
     Context context = instrumenter.start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -108,13 +113,15 @@ final class TracingCqlSession {
     return resultSet;
   }
 
-  private CompletionStage<AsyncResultSet> executeAsync(CqlSession session, Statement<?> statement) {
-    CassandraRequest request = CassandraRequest.create(session, statement);
+  private CompletionStage<AsyncResultSet> executeAsync(
+      CqlSession session, @Nullable CassandraServerTarget serverTarget, Statement<?> statement) {
+    CassandraRequest request = CassandraRequest.create(session, serverTarget, statement);
     return executeAsync(request, () -> session.executeAsync(statement));
   }
 
-  private CompletionStage<AsyncResultSet> executeAsync(CqlSession session, String query) {
-    CassandraRequest request = CassandraRequest.create(session, query);
+  private CompletionStage<AsyncResultSet> executeAsync(
+      CqlSession session, @Nullable CassandraServerTarget serverTarget, String query) {
+    CassandraRequest request = CassandraRequest.create(session, serverTarget, query);
     return executeAsync(request, () -> session.executeAsync(query));
   }
 
@@ -133,12 +140,14 @@ final class TracingCqlSession {
     }
   }
 
-  private ReactiveResultSet executeReactive(CqlSession session, String query) {
-    return new DefaultReactiveResultSet(() -> executeAsync(session, query));
+  private ReactiveResultSet executeReactive(
+      CqlSession session, @Nullable CassandraServerTarget serverTarget, String query) {
+    return new DefaultReactiveResultSet(() -> executeAsync(session, serverTarget, query));
   }
 
-  private ReactiveResultSet executeReactive(CqlSession session, Statement<?> statement) {
-    return new DefaultReactiveResultSet(() -> executeAsync(session, statement));
+  private ReactiveResultSet executeReactive(
+      CqlSession session, @Nullable CassandraServerTarget serverTarget, Statement<?> statement) {
+    return new DefaultReactiveResultSet(() -> executeAsync(session, serverTarget, statement));
   }
 
   private static <T> CompletableFuture<T> wrap(CompletionStage<T> future, Context context) {

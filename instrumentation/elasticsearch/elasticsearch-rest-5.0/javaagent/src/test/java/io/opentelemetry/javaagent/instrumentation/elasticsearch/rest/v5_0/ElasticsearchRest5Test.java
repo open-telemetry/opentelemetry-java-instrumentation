@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -30,6 +32,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
@@ -199,5 +202,59 @@ class ElasticsearchRest5Test {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void configuredHostListIsTheWholeTarget() throws IOException {
+    RestClient hostListClient = hostListClient();
+    cleanup.deferCleanup(hostListClient);
+
+    hostListClient.performRequest("GET", "_cluster/health");
+
+    assertConfiguredTarget(hostList());
+  }
+
+  @Test
+  void theTargetDoesNotFollowLaterHostChanges() throws IOException {
+    RestClient hostListClient = hostListClient();
+    cleanup.deferCleanup(hostListClient);
+    // a client is given new hosts when it is sniffed; the configured target must not shrink to the
+    // single host this one is left with
+    hostListClient.setHosts(httpHost);
+
+    hostListClient.performRequest("GET", "_cluster/health");
+
+    assertConfiguredTarget(hostList());
+  }
+
+  /**
+   * A client whose configured target is a list. The running server is named twice, so that every
+   * attempt reaches it and the request never depends on a host that is down.
+   */
+  private static RestClient hostListClient() {
+    return RestClient.builder(httpHost, httpHost)
+        .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
+        .build();
+  }
+
+  private static String hostList() {
+    String endpoint = httpHost.getHostName() + ":" + httpHost.getPort();
+    return endpoint + "," + endpoint;
+  }
+
+  /**
+   * Asserts the server of the elasticsearch span, where {@code hostList} is the whole configured
+   * list, or null when a single host was configured.
+   */
+  private static void assertConfiguredTarget(@Nullable String hostList) {
+    boolean stableHostList = emitStableDatabaseSemconv() && hostList != null;
+    testing.waitAndAssertTraces(
+        trace ->
+            assertThat(trace.getSpan(0))
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfying(
+                    equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
+                    equalTo(
+                        SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort()))));
   }
 }

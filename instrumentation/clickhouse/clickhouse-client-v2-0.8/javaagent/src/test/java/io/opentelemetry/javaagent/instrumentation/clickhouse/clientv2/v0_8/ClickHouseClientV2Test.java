@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -37,7 +38,10 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
@@ -473,5 +477,60 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testMultipleEndpointsReportTheWholeConfiguredTarget() throws Exception {
+    // the second endpoint is given as a url string, the other form the client accepts
+    String secondEndpoint = "http://" + host + ":" + (port + 1);
+    Client client =
+        new Client.Builder()
+            .addEndpoint(Protocol.HTTP, host, port, false)
+            .addEndpoint(secondEndpoint)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false")
+            .build();
+    cleanup.deferCleanup(client);
+
+    // the endpoints are reported in a fixed order, whatever order the client keeps them in
+    List<String> endpoints = new ArrayList<>(asList(host + ":" + port, host + ":" + (port + 1)));
+    Collections.sort(endpoints);
+    String addressGroup = String.join(",", endpoints);
+
+    try {
+      QueryResponse response = client.query("select * from " + TABLE_NAME).join();
+      response.close();
+    } catch (RuntimeException ignored) {
+      // only one of the two endpoints accepts connections; the span carries the configured target
+      // whether or not the query reaches the server
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfying(
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
+  }
+
+  @Test
+  void testMultipleEndpointsExcludeCredentialsAndUrlComponents() {
+    ClickHouseClientV2Singletons.ServerInfo serverInfo =
+        ClickHouseClientV2Singletons.ServerInfo.of(
+            new HashSet<>(
+                asList(
+                    "https://user:secret@[2001:db8::1]:8443/database?option=value#fragment",
+                    "http://host.example:8123")));
+
+    assertThat(serverInfo.getAddressGroup()).isEqualTo("[2001:db8::1]:8443,host.example:8123");
+    assertThat(serverInfo.getAddress()).isEqualTo("2001:db8::1");
+    assertThat(serverInfo.getPort()).isEqualTo(8443);
   }
 }

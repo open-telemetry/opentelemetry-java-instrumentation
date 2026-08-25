@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.RestResponseListener;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0.ElasticsearchServerTargets;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -24,6 +25,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.client.ResponseListener;
+import org.elasticsearch.client.RestClient;
 
 class RestClientInstrumentation implements TypeInstrumentation {
   @Override
@@ -85,12 +87,15 @@ class RestClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(value = 5, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
+        @Advice.This RestClient restClient,
         @Advice.Argument(0) String method,
         @Advice.Argument(1) String endpoint,
         @Advice.Argument(5) ResponseListener originalResponseListener) {
       ResponseListener responseListener = originalResponseListener;
 
-      ElasticsearchRestRequest request = ElasticsearchRestRequest.create(method, endpoint);
+      ElasticsearchRestRequest request =
+          ElasticsearchRestRequest.create(
+              method, endpoint, null, null, ElasticsearchServerTargets.get(restClient));
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, responseListener};

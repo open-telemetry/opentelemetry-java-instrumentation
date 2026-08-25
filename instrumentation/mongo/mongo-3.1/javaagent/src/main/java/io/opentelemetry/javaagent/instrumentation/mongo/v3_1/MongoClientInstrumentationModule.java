@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo.v3_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.mongo.v3_1.MongoInstrumentationSingletons.tracingListener;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -32,8 +33,14 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // the legacy client, which is the only client this module instruments
+    return hasClassesNamed("com.mongodb.MongoClientOptions");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new MongoClientOptionsBuilderInstrumentation());
+    return asList(new MongoClientOptionsBuilderInstrumentation(), new ClusterInstrumentation());
   }
 
   public static final class MongoClientOptionsBuilderInstrumentation

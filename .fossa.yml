@@ -465,7 +465,13 @@ targets:
       target: ':instrumentation:couchbase:couchbase-3.4:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:couchbase:couchbase-common:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:couchbase:couchbase-common-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:couchbase:couchbase-common-3.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent'
@@ -1083,9 +1089,6 @@ targets:
       target: ':instrumentation:vertx:vertx-kafka-client-3.6:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:vertx:vertx-redis-client-4.0:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:vertx:vertx-rx-java-3.5:javaagent'
     - type: gradle
       path: ./
@@ -1243,6 +1246,12 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-common-3.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.4.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent'

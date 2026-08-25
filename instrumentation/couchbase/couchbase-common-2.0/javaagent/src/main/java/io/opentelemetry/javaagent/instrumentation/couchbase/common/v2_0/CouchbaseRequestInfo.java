@@ -13,6 +13,7 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,19 +36,23 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable private String localAddress;
   @Nullable private String operationId;
-  @Nullable private volatile Endpoint endpoint;
+  @Nullable private volatile Node node;
 
   public static CouchbaseRequestInfo create(
-      @Nullable String bucket, Class<?> declaringClass, String methodName) {
+      @Nullable String bucket,
+      @Nullable CouchbaseServerTarget serverTarget,
+      Class<?> declaringClass,
+      String methodName) {
     String operation =
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true, serverTarget);
   }
 
   @SuppressWarnings("deprecation") // using deprecated old semconv operation
-  public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
+  public static CouchbaseRequestInfo create(
+      @Nullable String bucket, @Nullable CouchbaseServerTarget serverTarget, Object query) {
     SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
     SqlQuery sqlQueryWithSummary =
         emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
@@ -56,7 +61,7 @@ public abstract class CouchbaseRequestInfo {
       operation = sqlQueryWithSummary.getOperationName();
     }
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, sqlQuery, sqlQueryWithSummary, operation, false);
+        bucket, sqlQuery, sqlQueryWithSummary, operation, false, serverTarget);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -88,6 +93,14 @@ public abstract class CouchbaseRequestInfo {
 
   public abstract boolean isMethodCall();
 
+  /** The target the client issuing this operation was configured with. */
+  @Nullable
+  public abstract CouchbaseServerTarget getServerTarget();
+
+  /**
+   * A supplier handing out one operation of this shape per call, so that every subscription to the
+   * same observable records the node it reached on its own.
+   */
   public Supplier<CouchbaseRequestInfo> copySupplier() {
     return new Supplier<CouchbaseRequestInfo>() {
       @Override
@@ -99,7 +112,12 @@ public abstract class CouchbaseRequestInfo {
 
   private CouchbaseRequestInfo copy() {
     return new AutoValue_CouchbaseRequestInfo(
-        getBucket(), getSqlQuery(), getSqlQueryWithSummary(), getOperation(), isMethodCall());
+        getBucket(),
+        getSqlQuery(),
+        getSqlQueryWithSummary(),
+        getOperation(),
+        isMethodCall(),
+        getServerTarget());
   }
 
   @Nullable
@@ -120,46 +138,81 @@ public abstract class CouchbaseRequestInfo {
     this.operationId = operationId;
   }
 
+  /** The node this operation reached last, or {@code null} when it has reached none. */
   @Nullable
-  public Endpoint getEndpoint() {
-    return endpoint;
+  public Node getNode() {
+    return node;
   }
 
-  public void setEndpoint(@Nullable SocketAddress peerAddress, String remoteAddress) {
+  /**
+   * Records the node this operation has just been written to.
+   *
+   * <p>The socket it was written over and the address the driver opened that endpoint to are
+   * replaced together, so an operation that walks several nodes never pairs the socket of one node
+   * with the address of another.
+   *
+   * @param peerAddress the socket the operation was written over
+   * @param backendAddress the {@code host:port} the driver opened the endpoint to, which the
+   *     drivers before 2.6 do not expose
+   */
+  public void setNode(@Nullable SocketAddress peerAddress, @Nullable String backendAddress) {
     if (peerAddress == null) {
       return;
     }
-
-    int portSeparator = remoteAddress.lastIndexOf(':');
-    String serverAddress = remoteAddress.substring(0, portSeparator);
-    if (serverAddress.startsWith("[") && serverAddress.endsWith("]")) {
-      serverAddress = serverAddress.substring(1, serverAddress.length() - 1);
-    }
-    int serverPort = Integer.parseInt(remoteAddress.substring(portSeparator + 1));
-    endpoint = new Endpoint(peerAddress, serverAddress, serverPort);
+    node = new Node(peerAddress, backendAddress);
   }
 
-  public static final class Endpoint {
-    private final SocketAddress peerAddress;
-    private final String serverAddress;
-    private final int serverPort;
+  /** A node an operation reached, as both a socket and the address the driver opened it to. */
+  public static final class Node {
 
-    private Endpoint(SocketAddress peerAddress, String serverAddress, int serverPort) {
+    private final SocketAddress peerAddress;
+    @Nullable private final String backendAddress;
+    private final int backendPort;
+
+    private Node(SocketAddress peerAddress, @Nullable String backendAddress) {
       this.peerAddress = peerAddress;
-      this.serverAddress = serverAddress;
-      this.serverPort = serverPort;
+      int portSeparator = backendAddress == null ? -1 : backendAddress.lastIndexOf(':');
+      if (portSeparator < 0) {
+        this.backendAddress = stripBrackets(backendAddress);
+        this.backendPort = 0;
+      } else {
+        this.backendAddress = stripBrackets(backendAddress.substring(0, portSeparator));
+        this.backendPort = parsePort(backendAddress.substring(portSeparator + 1));
+      }
     }
 
+    /** The socket the operation was written over. */
     public SocketAddress getPeerAddress() {
       return peerAddress;
     }
 
-    public String getServerAddress() {
-      return serverAddress;
+    /** The host the driver opened the endpoint to, which can be a name rather than an address. */
+    @Nullable
+    public String getBackendAddress() {
+      return backendAddress;
     }
 
-    public int getServerPort() {
-      return serverPort;
+    /** The port the driver opened the endpoint to, or zero when it named none. */
+    public int getBackendPort() {
+      return backendPort;
+    }
+
+    @Nullable
+    private static String stripBrackets(@Nullable String host) {
+      if (host == null) {
+        return null;
+      }
+      String stripped =
+          host.startsWith("[") && host.endsWith("]") ? host.substring(1, host.length() - 1) : host;
+      return stripped.isEmpty() ? null : stripped;
+    }
+
+    private static int parsePort(String port) {
+      try {
+        return Integer.parseInt(port);
+      } catch (NumberFormatException ignored) {
+        return 0;
+      }
     }
   }
 }

@@ -82,7 +82,8 @@ class RequestInstrumentation implements TypeInstrumentation {
         if (action instanceof RedisClientActorLike) {
           endpoint = ServerEndpoint.create((RedisClientActorLike) action);
         }
-        RediscalaRequest request = RediscalaRequest.create(cmd, endpoint);
+        RediscalaRequest request =
+            RediscalaRequest.create(cmd, endpoint, RediscalaServerTargets.of(action));
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
