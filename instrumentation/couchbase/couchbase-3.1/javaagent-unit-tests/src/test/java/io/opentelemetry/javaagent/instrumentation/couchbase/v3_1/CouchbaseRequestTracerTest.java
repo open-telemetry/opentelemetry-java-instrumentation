@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 class CouchbaseRequestTracerTest {
 
   @Test
-  void setsConfiguredPortWithTheOldRequestSpanInterface() throws Exception {
+  void settingConfiguredPortDoesNotThrowWithoutRequestSpanLongOverload() throws Exception {
     RequestTracer tracer =
         CouchbaseRequestTracer.create(OpenTelemetry.noop().getTracer("test-couchbase"));
     RequestSpan span = tracer.requestSpan("test", null);
