@@ -208,6 +208,11 @@ public class Resilience4jCircuitBreakerSpans {
     ended.push(Boolean.FALSE);
   }
 
+  public static boolean isOnResultActive() {
+    Deque<Boolean> ended = onResultEnded.get();
+    return ended != null && !ended.isEmpty();
+  }
+
   public static boolean exitOnResult() {
     Deque<Boolean> ended = onResultEnded.get();
     if (ended == null) {

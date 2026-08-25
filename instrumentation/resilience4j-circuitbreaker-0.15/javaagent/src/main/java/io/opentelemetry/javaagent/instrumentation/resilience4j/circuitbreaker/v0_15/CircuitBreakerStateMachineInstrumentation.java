@@ -125,6 +125,9 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker, @Advice.Thrown @Nullable Throwable throwable) {
+      if (Resilience4jCircuitBreakerSpans.isOnResultActive()) {
+        return;
+      }
       Resilience4jCircuitBreakerSpans.end(
           circuitBreaker, throwable == null ? "success" : "failure", throwable);
     }

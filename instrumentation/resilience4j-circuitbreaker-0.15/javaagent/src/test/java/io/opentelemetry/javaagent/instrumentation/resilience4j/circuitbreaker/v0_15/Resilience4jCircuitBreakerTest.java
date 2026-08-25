@@ -108,6 +108,34 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void createsFailureSpanWhenOnResultTransitionThrows() throws Exception {
+    Method transitionOnResult = transitionOnResultMethod();
+    Method onResult = onResultMethod();
+    IllegalStateException exception = new IllegalStateException("boom");
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    transitionOnResult.invoke(
+        builder,
+        (Function<Object, Object>)
+            result -> {
+              throw exception;
+            });
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () -> {
+                      circuitBreaker.acquirePermission();
+                      onResult.invoke(circuitBreaker, 1L, MILLISECONDS, 500);
+                    }));
+
+    assertThat(thrown).isInstanceOf(InvocationTargetException.class).hasCause(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
   @SuppressWarnings("unchecked")
   void createsCircuitBreakerSpanWhenDecoratedCompletionStageCompletesOnDifferentThread()
       throws Exception {
@@ -526,6 +554,15 @@ class Resilience4jCircuitBreakerTest {
       return CircuitBreakerConfig.Builder.class.getMethod("recordResultPredicate", Predicate.class);
     } catch (NoSuchMethodException e) {
       assumeTrue(false, "recordResultPredicate is not available in this Resilience4j version");
+      throw e;
+    }
+  }
+
+  private static Method transitionOnResultMethod() throws NoSuchMethodException {
+    try {
+      return CircuitBreakerConfig.Builder.class.getMethod("transitionOnResult", Function.class);
+    } catch (NoSuchMethodException e) {
+      assumeTrue(false, "transitionOnResult is not available in this Resilience4j version");
       throw e;
     }
   }
