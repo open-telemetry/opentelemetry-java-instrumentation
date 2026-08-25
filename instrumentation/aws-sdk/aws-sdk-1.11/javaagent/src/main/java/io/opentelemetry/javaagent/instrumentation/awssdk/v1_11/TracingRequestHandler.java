@@ -15,6 +15,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
+import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetryBuilder;
+import io.opentelemetry.instrumentation.awssdk.v1_11.internal.Experimental;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import javax.annotation.Nullable;
 
@@ -34,23 +36,27 @@ public class TracingRequestHandler extends RequestHandler2 {
   public static final HandlerContextKey<Scope> SCOPE =
       new HandlerContextKey<>(Scope.class.getName());
 
-  private static final RequestHandler2 tracingHandler =
-      AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
-          .setCaptureExperimentalSpanAttributes(
-              DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
-                  .getBoolean("experimental_span_attributes/development", false))
-          .setMessagingReceiveTelemetryEnabled(
-              ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-          .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
-          .setMessageCreateSpansEnabled(
-              DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
-                  .get("message_create_spans/development")
-                  .getBoolean("enabled", true))
-          .build()
-          .createRequestHandler();
+  private static final RequestHandler2 tracingHandler = createTracingHandler();
 
   public static RequestHandler2 tracingHandler() {
     return tracingHandler;
+  }
+
+  private static RequestHandler2 createTracingHandler() {
+    AwsSdkTelemetryBuilder builder =
+        AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
+            .setCaptureExperimentalSpanAttributes(
+                DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
+                    .getBoolean("experimental_span_attributes/development", false))
+            .setMessagingReceiveTelemetryEnabled(
+                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+            .setHeaders(ExperimentalConfig.get().getMessagingHeaders());
+    Experimental.setMessageCreateSpansEnabled(
+        builder,
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
+            .get("message_create_spans/development")
+            .getBoolean("enabled", true));
+    return builder.build().createRequestHandler();
   }
 
   @Override

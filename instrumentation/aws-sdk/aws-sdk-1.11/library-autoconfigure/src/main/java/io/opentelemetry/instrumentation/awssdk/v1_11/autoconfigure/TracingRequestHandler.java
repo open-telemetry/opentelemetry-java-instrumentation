@@ -16,6 +16,8 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
+import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetryBuilder;
+import io.opentelemetry.instrumentation.awssdk.v1_11.internal.Experimental;
 
 /**
  * A {@link RequestHandler2} for use as an SPI by the AWS SDK to automatically trace all requests.
@@ -29,23 +31,26 @@ public final class TracingRequestHandler extends RequestHandler2 {
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
     DeclarativeConfigProperties awsSdk =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk");
-    return AwsSdkTelemetry.builder(openTelemetry)
-        .setCaptureExperimentalSpanAttributes(
-            awsSdk.getBoolean(
-                "experimental_span_attributes/development",
-                // The library-autoconfigure module has no programmatic configuration API,
-                // and declarative instrumentation configuration is not stable, so it is
-                // necessary to support configuration via system properties.
-                SystemProperty.getBoolean(
-                    "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
-        .setMessageCreateSpansEnabled(
-            awsSdk
-                .get("message_create_spans/development")
-                .getBoolean(
-                    "enabled",
+    AwsSdkTelemetryBuilder builder =
+        AwsSdkTelemetry.builder(openTelemetry)
+            .setCaptureExperimentalSpanAttributes(
+                awsSdk.getBoolean(
+                    "experimental_span_attributes/development",
+                    // The library-autoconfigure module has no programmatic configuration API,
+                    // and declarative instrumentation configuration is not stable, so it is
+                    // necessary to support configuration via system properties.
                     SystemProperty.getBoolean(
-                        "otel.instrumentation.aws-sdk.experimental.message-create-spans.enabled",
-                        true)))
+                        "otel.instrumentation.aws-sdk.experimental-span-attributes", false)));
+    Experimental.setMessageCreateSpansEnabled(
+        builder,
+        awsSdk
+            .get("message_create_spans/development")
+            .getBoolean(
+                "enabled",
+                SystemProperty.getBoolean(
+                    "otel.instrumentation.aws-sdk.experimental.message-create-spans.enabled",
+                    true)));
+    return builder
         .setMessagingReceiveTelemetryEnabled(
             messaging
                 .get("receive_telemetry/development")

@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.awssdk.v2_2.internal.Experimental;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.List;
@@ -103,13 +104,13 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
   @Test
   void testDisabledCreateSpansPreserveCustomBatchCreationContexts() {
     assumeTrue(emitStableMessagingSemconv());
-    AwsSdkTelemetry disabledTelemetry =
+    AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
             .setUseConfiguredPropagatorForMessaging(true)
-            .setUseXrayPropagator(false)
-            .setMessageCreateSpansEnabled(false)
-            .build();
+            .setUseXrayPropagator(false);
+    Experimental.setMessageCreateSpansEnabled(telemetryBuilder, false);
+    AwsSdkTelemetry disabledTelemetry = telemetryBuilder.build();
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     builder.overrideConfiguration(
