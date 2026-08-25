@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import oracle.ucp.UniversalConnectionPool;
 import oracle.ucp.jdbc.PoolDataSource;
 
-final class PoolDataSourceInstrumentation implements TypeInstrumentation {
+class PoolDataSourceInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

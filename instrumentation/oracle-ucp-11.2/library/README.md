@@ -55,9 +55,10 @@ The single-argument `registerMetrics` method uses `UniversalConnectionPool.getNa
 OpenTelemetry metric pool name. The overload that accepts a pool name changes only the pool name
 metric attribute and does not change the Oracle UCP pool name.
 
-Javaagent instrumentation derives the metric pool name from the JDBC URL or, when the URL is not
-set, from the standard `serverName`, `portNumber`, and `databaseName` properties exposed by the
-`PoolDataSource` and its connection properties. This applies only when the `PoolDataSource` does
+Javaagent instrumentation derives the metric pool name from the `PoolDataSource` connection
+properties and the JDBC URL, when present. Without a JDBC URL, it also uses the standard
+`serverName`, `portNumber`, and `databaseName` values exposed directly by the `PoolDataSource`.
+This applies only when the `PoolDataSource` does
 not have an explicitly configured connection pool name. The derived format is
 `host[:port][/database-or-service]`; when the connection information is unavailable, the fallback
 name is `oracle-ucp`. Pools connected to the same database intentionally share the derived name, so
