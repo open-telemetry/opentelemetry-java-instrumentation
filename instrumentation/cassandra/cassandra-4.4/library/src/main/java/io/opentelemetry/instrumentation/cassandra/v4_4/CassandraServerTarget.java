@@ -31,8 +31,9 @@ import javax.annotation.Nullable;
  *
  * <p>A session configured with a single contact point keeps that host and its port. A session
  * configured with several carries all valid entries in the address, in the driver's own {@code
- * host:port,host:port} syntax, and has no port of its own. Entries that do not use the driver's
- * required {@code host:port} syntax are omitted.
+ * host:port,host:port} syntax, and has no port of its own. Those entries are ordered by their
+ * {@code host:port} rendering, so the same set of contact points always produces the same address.
+ * Entries that do not use the driver's required {@code host:port} syntax are omitted.
  *
  * <p>The driver merges {@code basic.contact-points} with contact points added on the session
  * builder. Configuration entries are read before DNS resolution to preserve their original host
@@ -89,7 +90,6 @@ final class CassandraServerTarget {
         contactPoints.add(
             new CassandraServerTarget(inetAddress.getHostString(), inetAddress.getPort()));
       }
-      contactPoints.sort(Comparator.comparing(CassandraServerTarget::asContactPoint));
       return combine(contactPoints);
     } catch (RuntimeException ignored) {
       // a session that cannot describe its own configuration keeps reporting its coordinator
@@ -124,6 +124,7 @@ final class CassandraServerTarget {
     if (contactPoints.size() == 1) {
       return contactPoints.get(0);
     }
+    contactPoints.sort(Comparator.comparing(CassandraServerTarget::asContactPoint));
     StringBuilder group = new StringBuilder();
     for (CassandraServerTarget contactPoint : contactPoints) {
       if (group.length() > 0) {

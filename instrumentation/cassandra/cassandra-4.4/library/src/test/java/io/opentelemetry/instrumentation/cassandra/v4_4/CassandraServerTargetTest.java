@@ -76,7 +76,7 @@ class CassandraServerTargetTest {
         CassandraServerTarget.of(asList("node1.example.com:9042", "10.0.0.5:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("node1.example.com:9042,10.0.0.5:9042");
+    assertThat(target.getAddress()).isEqualTo("10.0.0.5:9042,node1.example.com:9042");
     assertThat(target.getPort()).isNull();
   }
 
@@ -86,7 +86,7 @@ class CassandraServerTargetTest {
         CassandraServerTarget.of(asList("[::1]:9042", "2001:db8::1:9042", "10.0.0.5:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]:9042,[2001:db8::1]:9042,10.0.0.5:9042");
+    assertThat(target.getAddress()).isEqualTo("10.0.0.5:9042,[2001:db8::1]:9042,[::1]:9042");
     assertThat(target.getPort()).isNull();
   }
 
@@ -102,7 +102,7 @@ class CassandraServerTargetTest {
             asList("missing-port", "node.example.com:9042", "invalid:not-a-port", "[::1]:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("node.example.com:9042,[::1]:9042");
+    assertThat(target.getAddress()).isEqualTo("[::1]:9042,node.example.com:9042");
     assertThat(target.getPort()).isNull();
   }
 
