@@ -19,11 +19,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Jakarta namespace counterpart of {@link IbmMqJmsListenerInstrumentation}. See that class for the
- * full rationale, including the message-keyed fallback wired through {@link
- * IbmMqJakartaJmsListenerQmid#stamp(MessageListener, Message)}.
- */
 public class IbmMqJakartaJmsListenerInstrumentation implements TypeInstrumentation {
 
   @Override

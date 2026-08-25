@@ -1,4 +1,6 @@
-description: This instrumentation enables messaging spans for IBM MQ message producers.
+description: >
+  This instrumentation adds the queue manager identifier to IBM MQ JMS producer and consumer
+  messaging spans.
 display_name: IBM MQ
 library_link: https://www.ibm.com/products/mq
 semantic_conventions:

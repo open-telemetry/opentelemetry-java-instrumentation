@@ -19,11 +19,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Captures the queue manager identifier when an application registers an asynchronous {@link
- * MessageListener} on an IBM MQ consumer. This is the only point at which both the consumer (which
- * knows the QMID) and the listener (which is in scope during delivery) are available together.
- */
 public class IbmMqJmsSetListenerInstrumentation implements TypeInstrumentation {
 
   @Override

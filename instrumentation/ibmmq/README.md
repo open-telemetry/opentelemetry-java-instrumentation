@@ -8,7 +8,7 @@ manager, generated at creation time.
 
 ## Supported libraries
 
-- IBM MQ classic base API and javax JMS provider: `com.ibm.mq:com.ibm.mq.allclient` 9.0.4.0+
+- IBM MQ javax JMS provider: `com.ibm.mq:com.ibm.mq.allclient` 9.0.4.0+
 - IBM MQ jakarta JMS provider: `com.ibm.mq:com.ibm.mq.jakarta.client` 9.3.0.0+
 
 The javax and jakarta providers are handled by two independent `InstrumentationModule`s
@@ -26,10 +26,6 @@ The QMID attribute is disabled by default. Enable it with:
 ```
 
 ## How it works
-
-There are two independent enrichment paths, depending on how the application talks to MQ.
-
-### JMS provider (the common case)
 
 Applications using `javax.jms`/`jakarta.jms` already get a messaging span from the generic JMS
 instrumentation (`messaging.system=jms`). This module additively enriches that span -- it never
@@ -50,15 +46,6 @@ creates, ends, or otherwise alters it:
   synchronous `receive()` call's own span, which remains unreachable by design -- the generic JMS
   instrumentation creates and ends that span in one call, never making it current, so no advice can
   write to it.
-
-### Classic base API (`com.ibm.mq.MQQueueManager`/`MQQueue`)
-
-Applications calling the base API directly (not through a JMS provider) get their own producer span
-from this module, with `messaging.system=ibmmq`. The QMID here genuinely requires an `MQINQ` network
-round trip (selector `2032`, `MQCA_Q_MGR_IDENTIFIER`), so it is read once per connection and cached on
-a `VirtualField` keyed on the `MQQueueManager` instance, rather than re-read per message. In practice,
-JMS applications never exercise this path at all -- IBM's JMS provider does not call these classes
-internally.
 
 ## Captured attributes
 

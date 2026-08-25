@@ -34,7 +34,7 @@ class IbmMqTest {
   void attributeIsOptInAndOffUnlessEnabled() {
     // Runs under both the default test task (flag absent -> false) and testExperimental (flag set
     // -> true), so the opt_in default is asserted rather than assumed.
-    assertThat(IbmMqJmsQmid.enabled())
+    assertThat(IbmMqQmidSupport.enabled())
         .isEqualTo(Boolean.getBoolean("otel.instrumentation.ibmmq.experimental-span-attributes"));
   }
 

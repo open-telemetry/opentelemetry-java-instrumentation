@@ -19,23 +19,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Adds the queue manager identifier to the process span that the generic JMS instrumentation opens
- * around {@code MessageListener.onMessage}. That span is created in entry advice and made current,
- * so it is writable for the whole callback -- unlike the synchronous {@code receive()} span itself,
- * which this module still never touches (see {@link IbmMqInstrumentationModule}).
- *
- * <p>Resolves the QMID from whichever of two sources applies: the consumer this listener was
- * registered on via {@code setMessageListener} ({@link IbmMqJmsListenerQmid#associate}), or, when
- * that never happened, the QMID captured when this exact message was returned from {@code
- * receive()} ({@link IbmMqJmsListenerQmid#captureFromReceive}). The latter covers containers --
- * such as Spring's default {@code JmsListenerContainerFactory} -- that drive {@code onMessage} by
- * calling {@code receive()} and invoking the listener directly, without ever calling {@code
- * setMessageListener}.
- *
- * <p>Listeners and messages this module never saw carry no remembered QMID, so this is a no-op for
- * non-IBM JMS providers.
- */
 public class IbmMqJmsListenerInstrumentation implements TypeInstrumentation {
 
   @Override

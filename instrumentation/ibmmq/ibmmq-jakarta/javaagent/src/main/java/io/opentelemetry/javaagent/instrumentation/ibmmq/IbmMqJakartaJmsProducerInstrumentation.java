@@ -16,11 +16,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Jakarta namespace counterpart of {@link IbmMqJmsProducerInstrumentation}. Matches IBM's own
- * {@code com.ibm.msg.client.jakarta.jms.JmsMessageProducer}, the package-renamed but otherwise
- * identical mirror of the {@code javax.jms} interface of the same simple name.
- */
 public class IbmMqJakartaJmsProducerInstrumentation implements TypeInstrumentation {
 
   @Override
@@ -42,13 +37,10 @@ public class IbmMqJakartaJmsProducerInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class SendAdvice {
 
+    // This module's order() installs it after the generic JMS instrumentation, whose entry advice
+    // has therefore already opened the producer span and made it current by the time this runs.
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This Object producer) {
-      IbmMqJakartaJmsQmid.stampMessagingSpan(producer);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.This Object producer) {
       IbmMqJakartaJmsQmid.stampMessagingSpan(producer);
     }
   }

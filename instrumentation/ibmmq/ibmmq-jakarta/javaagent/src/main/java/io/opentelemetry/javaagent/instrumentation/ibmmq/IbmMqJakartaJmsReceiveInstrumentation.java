@@ -19,10 +19,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Jakarta namespace counterpart of {@link IbmMqJmsReceiveInstrumentation}. See that class and
- * {@link IbmMqInstrumentationModule} for why this never touches the receive span itself.
- */
 public class IbmMqJakartaJmsReceiveInstrumentation implements TypeInstrumentation {
 
   @Override
