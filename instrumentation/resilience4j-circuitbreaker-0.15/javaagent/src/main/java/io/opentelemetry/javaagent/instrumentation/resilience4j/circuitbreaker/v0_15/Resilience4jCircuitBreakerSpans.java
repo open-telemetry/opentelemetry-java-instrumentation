@@ -57,7 +57,11 @@ public class Resilience4jCircuitBreakerSpans {
         currentAcquisitions.remove();
       }
     }
-    recentAcquisition.set(token);
+    if (token.pendingSpan != null && !token.claimed) {
+      recentAcquisition.set(token);
+    } else if (recentAcquisition.get() == token) {
+      recentAcquisition.remove();
+    }
     Deque<Capture> captureStack = captures.get();
     if (captureStack != null && !captureStack.isEmpty()) {
       Capture capture = captureStack.peek();
@@ -110,8 +114,18 @@ public class Resilience4jCircuitBreakerSpans {
       return null;
     }
     token.claimed = true;
+    if (recentAcquisition.get() == token) {
+      recentAcquisition.remove();
+    }
     detachPendingSpan(token.pendingSpan);
     return token.pendingSpan;
+  }
+
+  private static void clearRecentAcquisition(PendingSpan pendingSpan) {
+    AttemptToken token = recentAcquisition.get();
+    if (token != null && token.pendingSpan == pendingSpan) {
+      recentAcquisition.remove();
+    }
   }
 
   public static void start(CircuitBreaker circuitBreaker) {
@@ -393,6 +407,7 @@ public class Resilience4jCircuitBreakerSpans {
         return;
       }
       ended = true;
+      clearRecentAcquisition(this);
       instrumenter().end(context, request, outcome, throwable);
     }
 

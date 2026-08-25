@@ -148,13 +148,15 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public CompletionStage<T> get() {
-      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
-          Resilience4jCircuitBreakerSpans.currentPendingSpan();
       // decorateCompletionStage's user supplier is wrapped before Resilience4j builds its
       // decorated supplier, so this wrapper runs immediately after permission acquisition. Claim
       // that acquisition before invoking user code, which may perform nested acquisitions.
       Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
           Resilience4jCircuitBreakerSpans.claimRecentAcquisition(circuitBreaker);
+      // Use the ambient baseline after claiming the completion-stage attempt so error handling does
+      // not accidentally end the detached, owned span through thread-local stack lookup.
+      Resilience4jCircuitBreakerSpans.PendingSpan postClaimBaseline =
+          Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         CompletionStage<T> result = delegate.get();
         if (pendingSpan == null) {
@@ -167,7 +169,7 @@ public class Resilience4jCircuitBreakerDecorators {
           throw t;
         }
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
+        Resilience4jCircuitBreakerSpans.endAfter(postClaimBaseline, "failure", t);
         if (pendingSpan != null) {
           pendingSpan.end("failure", t);
         }
@@ -379,8 +381,32 @@ public class Resilience4jCircuitBreakerDecorators {
     String methodName = method.getName();
     if ("unchecked".equals(methodName)) {
       return wrapFunctionalAdapter(result);
-    } else if ("andThen".equals(methodName) && isCheckedFunctionType(method.getReturnType())) {
+    } else if (("andThen".equals(methodName) || "compose".equals(methodName))
+        && isCheckedFunctionType(method.getReturnType())) {
       return wrapChecked(result);
+    } else if (("andThen".equals(methodName) || "compose".equals(methodName))
+        && isFunctionalInterface(result)) {
+      return wrapFunctionalAdapter(result);
+    }
+    return result;
+  }
+
+  private static boolean isFunctionalInterface(Object value) {
+    return value instanceof Supplier
+        || value instanceof Callable
+        || value instanceof Runnable
+        || value instanceof Function
+        || value instanceof Consumer;
+  }
+
+  private static Object wrapFunctionalAdapterResult(Method method, @Nullable Object result) {
+    if (result == null) {
+      return null;
+    }
+    String methodName = method.getName();
+    if (("andThen".equals(methodName) || "compose".equals(methodName))
+        && isFunctionalInterface(result)) {
+      return wrapFunctionalAdapter(result);
     }
     return result;
   }
@@ -425,7 +451,7 @@ public class Resilience4jCircuitBreakerDecorators {
       try {
         Object result = method.invoke(delegate, args);
         Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
-        return result;
+        return wrapFunctionalAdapterResult(method, result);
       } catch (InvocationTargetException e) {
         Throwable cause = e.getCause();
         Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", cause);
