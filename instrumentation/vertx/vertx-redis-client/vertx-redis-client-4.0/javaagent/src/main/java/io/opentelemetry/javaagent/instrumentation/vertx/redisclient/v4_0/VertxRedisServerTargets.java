@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
  */
 public final class VertxRedisServerTargets {
 
-  private static final VirtualField<RedisURI, RedisServerTarget> targetField =
+  private static final VirtualField<RedisURI, RedisServerTarget> TARGET_FIELD =
       VirtualField.find(RedisURI.class, RedisServerTarget.class);
 
   @Nullable
@@ -60,13 +60,13 @@ public final class VertxRedisServerTargets {
 
   public static void set(RedisURI redisUri, @Nullable RedisServerTarget target) {
     if (target != null) {
-      targetField.set(redisUri, target);
+      TARGET_FIELD.set(redisUri, target);
     }
   }
 
   @Nullable
   public static RedisServerTarget get(@Nullable RedisURI redisUri) {
-    return redisUri == null ? null : targetField.get(redisUri);
+    return redisUri == null ? null : TARGET_FIELD.get(redisUri);
   }
 
   private VertxRedisServerTargets() {}

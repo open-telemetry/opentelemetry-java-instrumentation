@@ -17,16 +17,16 @@ import javax.annotation.Nullable;
  */
 public class RedisConnectionManagerUtil {
 
-  private static final VirtualField<RedisConnectionManager, RedisServerTarget> targetField =
+  private static final VirtualField<RedisConnectionManager, RedisServerTarget> TARGET_FIELD =
       VirtualField.find(RedisConnectionManager.class, RedisServerTarget.class);
 
   public static void setServerTarget(Object manager, @Nullable RedisServerTarget target) {
-    targetField.set((RedisConnectionManager) manager, target);
+    TARGET_FIELD.set((RedisConnectionManager) manager, target);
   }
 
   @Nullable
   public static RedisServerTarget getServerTarget(Object manager) {
-    return targetField.get((RedisConnectionManager) manager);
+    return TARGET_FIELD.get((RedisConnectionManager) manager);
   }
 
   private RedisConnectionManagerUtil() {}
