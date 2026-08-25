@@ -147,6 +147,12 @@ public abstract class AbstractHbaseTest {
     return 1;
   }
 
+  // The HBase 2.4+ client overrides this to 2 because opening a connection scans the meta region
+  // twice; the other tested clients scan it once.
+  protected int getMetaScanTraceCount() {
+    return 1;
+  }
+
   protected String putOperation() {
     return MUTATE;
   }
@@ -317,9 +323,7 @@ public abstract class AbstractHbaseTest {
     String expectedServerTarget =
         String.join(",", new TreeSet<>(asList(quorumHost, resolvedHost))) + ":2181:/hbase";
     List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
-    traceAssertions.add(
-        traceAssertConsumer(META, SCAN, REGION_SERVER_PORT, true, expectedServerTarget));
-    if (!rpcCallUsesInetSocketAddress()) {
+    for (int i = 0; i < getMetaScanTraceCount(); i++) {
       traceAssertions.add(
           traceAssertConsumer(META, SCAN, REGION_SERVER_PORT, true, expectedServerTarget));
     }
