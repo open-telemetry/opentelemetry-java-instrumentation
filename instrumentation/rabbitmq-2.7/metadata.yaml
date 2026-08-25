@@ -22,3 +22,19 @@ configurations:
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
+  - name: otel.instrumentation.rabbitmq.experimental.capture-vhost-name
+    declarative_name: java.rabbitmq.capture_vhost_name/development
+    description: >
+      Enables the `messaging.rabbitmq.vhost.name` span attribute, set to the virtual host of the
+      connection. Not part of the messaging semantic conventions yet, see
+      open-telemetry/semantic-conventions#3997.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.rabbitmq.experimental.capture-cluster-name
+    declarative_name: java.rabbitmq.capture_cluster_name/development
+    description: >
+      Enables the `messaging.rabbitmq.cluster.name` span attribute, set to the broker's
+      `cluster_name` server property. Not part of the messaging semantic conventions yet, see
+      open-telemetry/semantic-conventions#3997.
+    type: boolean
+    default: false
