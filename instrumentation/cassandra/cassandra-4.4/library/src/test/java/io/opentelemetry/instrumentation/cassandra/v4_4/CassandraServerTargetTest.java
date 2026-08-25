@@ -7,11 +7,18 @@ package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
+import com.datastax.oss.driver.api.core.config.DriverConfig;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.session.Session;
+import com.datastax.oss.driver.internal.core.ContactPoints;
 import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
@@ -30,6 +37,8 @@ class CassandraServerTargetTest {
 
   @Mock private Session session;
   @Mock private InternalDriverContext context;
+  @Mock private DriverConfig config;
+  @Mock private DriverExecutionProfile defaultProfile;
   @Mock private MetadataManager metadataManager;
   @Mock private DefaultNode configuredNode;
   @Mock private DefaultNode programmaticNode;
@@ -109,6 +118,7 @@ class CassandraServerTargetTest {
   @Test
   void sessionUsesMergedProgrammaticAndConfiguredContactPoints() {
     Set<DefaultNode> contactPoints = new LinkedHashSet<>(asList(configuredNode, programmaticNode));
+    configureContactPoints(singletonList("configured.example.com:9042"), false);
     when(session.getContext()).thenReturn(context);
     when(context.getMetadataManager()).thenReturn(metadataManager);
     when(metadataManager.getContactPoints()).thenReturn(contactPoints);
@@ -130,8 +140,35 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void sessionPreservesAConfiguredHostnameAfterResolutionAndAddsProgrammaticPoints() {
+    List<String> configuredContactPoints = singletonList("localhost.:9042");
+    Set<DefaultNode> contactPoints = new LinkedHashSet<>();
+    for (EndPoint endPoint : ContactPoints.merge(emptySet(), configuredContactPoints, true)) {
+      DefaultNode node = mock(DefaultNode.class);
+      when(node.getEndPoint()).thenReturn(endPoint);
+      contactPoints.add(node);
+    }
+    when(programmaticNode.getEndPoint())
+        .thenReturn(
+            new DefaultEndPoint(
+                InetSocketAddress.createUnresolved("programmatic.example.com", 9142)));
+    contactPoints.add(programmaticNode);
+    configureContactPoints(configuredContactPoints, true);
+    when(session.getContext()).thenReturn(context);
+    when(context.getMetadataManager()).thenReturn(metadataManager);
+    when(metadataManager.getContactPoints()).thenReturn(contactPoints);
+
+    CassandraServerTarget target = CassandraServerTarget.of(session);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("localhost.:9042,programmatic.example.com:9142");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void theTargetDoesNotFollowLaterChangesToTheMergedContactPoints() {
     Set<DefaultNode> contactPoints = new LinkedHashSet<>(singletonList(configuredNode));
+    configureContactPoints(singletonList("configured.example.com:9042"), false);
     when(session.getContext()).thenReturn(context);
     when(context.getMetadataManager()).thenReturn(metadataManager);
     when(metadataManager.getContactPoints()).thenReturn(contactPoints);
@@ -147,5 +184,13 @@ class CassandraServerTargetTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("configured.example.com");
     assertThat(target.getPort()).isEqualTo(9042);
+  }
+
+  private void configureContactPoints(List<String> contactPoints, boolean resolve) {
+    when(context.getConfig()).thenReturn(config);
+    when(config.getDefaultProfile()).thenReturn(defaultProfile);
+    when(defaultProfile.getStringList(DefaultDriverOption.CONTACT_POINTS))
+        .thenReturn(contactPoints);
+    when(defaultProfile.getBoolean(DefaultDriverOption.RESOLVE_CONTACT_POINTS)).thenReturn(resolve);
   }
 }
