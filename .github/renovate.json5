@@ -240,7 +240,7 @@
       groupName: 'graalvm buildtools packages',
       matchPackageNames: [
         'org.graalvm.buildtools:**',
-        'org.graalvm.buildtools.native',
+        'org.graalvm.buildtools.native:**',
       ],
     },
 
