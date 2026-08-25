@@ -27,23 +27,23 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final VirtualField<Pool, String> poolDbSystem =
+  private static final VirtualField<Pool, String> POOL_DB_SYSTEM =
       VirtualField.find(Pool.class, String.class);
 
-  private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
+  private static final VirtualField<SqlConnectOptions, String> CONNECT_OPTIONS_DB_SYSTEM =
       VirtualField.find(SqlConnectOptions.class, String.class);
 
-  private static final VirtualField<SqlClientBase, SqlConnectOptions> connectOptionsField =
+  private static final VirtualField<SqlClientBase, SqlConnectOptions> CONNECT_OPTIONS =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
 
-  private static final VirtualField<SqlClientBase, VertxSqlAddressGroup> addressGroupField =
+  private static final VirtualField<SqlClientBase, VertxSqlAddressGroup> ADDRESS_GROUP =
       VirtualField.find(SqlClientBase.class, VertxSqlAddressGroup.class);
 
   private static final VirtualField<ClientBuilderBase<?>, List<SqlConnectOptions>>
-      builderDatabases = VirtualField.find(ClientBuilderBase.class, List.class);
+      BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
 
   @Nullable
-  private static final VirtualField<Object, Context> commandContextField =
+  private static final VirtualField<Object, Context> COMMAND_CONTEXT =
       getCommandContextVirtualField();
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
@@ -76,47 +76,47 @@ public class VertxSqlClientSingletons {
 
   @Nullable
   public static Context getCommandContext(Object command) {
-    return commandContextField != null ? commandContextField.get(command) : null;
+    return COMMAND_CONTEXT != null ? COMMAND_CONTEXT.get(command) : null;
   }
 
   public static void setCommandContext(Object command, Context context) {
-    if (commandContextField != null) {
-      commandContextField.set(command, context);
+    if (COMMAND_CONTEXT != null) {
+      COMMAND_CONTEXT.set(command, context);
     }
   }
 
   public static void storePoolDbSystem(Pool pool, String dbSystem) {
-    poolDbSystem.set(pool, dbSystem);
+    POOL_DB_SYSTEM.set(pool, dbSystem);
   }
 
   @Nullable
   public static String getConnectOptionsDbSystem(SqlConnectOptions sqlConnectOptions) {
-    return connectOptionsDbSystem.get(sqlConnectOptions);
+    return CONNECT_OPTIONS_DB_SYSTEM.get(sqlConnectOptions);
   }
 
   public static void resolveAndStoreDbSystem(Pool pool, SqlConnectOptions sqlConnectOptions) {
-    String dbSystem = poolDbSystem.get(pool);
+    String dbSystem = POOL_DB_SYSTEM.get(pool);
     if (sqlConnectOptions != null && dbSystem != null) {
-      connectOptionsDbSystem.set(sqlConnectOptions, dbSystem);
+      CONNECT_OPTIONS_DB_SYSTEM.set(sqlConnectOptions, dbSystem);
     }
   }
 
   @Nullable
   public static SqlConnectOptions getSqlConnectOptions(SqlClientBase sqlClientBase) {
-    return connectOptionsField.get(sqlClientBase);
+    return CONNECT_OPTIONS.get(sqlClientBase);
   }
 
   @Nullable
   public static VertxSqlAddressGroup getAddressGroup(SqlClientBase sqlClientBase) {
-    return addressGroupField.get(sqlClientBase);
+    return ADDRESS_GROUP.get(sqlClientBase);
   }
 
   public static void attachClientState(
       SqlClientBase sqlClientBase,
       @Nullable SqlConnectOptions connectOptions,
       @Nullable VertxSqlAddressGroup addressGroup) {
-    connectOptionsField.set(sqlClientBase, connectOptions);
-    addressGroupField.set(sqlClientBase, addressGroup);
+    CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
+    ADDRESS_GROUP.set(sqlClientBase, addressGroup);
   }
 
   public static Future<SqlConnection> attachClientState(
@@ -136,7 +136,7 @@ public class VertxSqlClientSingletons {
   public static void storeBuilderDatabases(
       Object clientBuilder, @Nullable List<SqlConnectOptions> databases) {
     if (clientBuilder instanceof ClientBuilderBase) {
-      builderDatabases.set(
+      BUILDER_DATABASES.set(
           (ClientBuilderBase<?>) clientBuilder,
           databases == null ? null : new ArrayList<>(databases));
     }
@@ -145,7 +145,7 @@ public class VertxSqlClientSingletons {
   @Nullable
   public static List<SqlConnectOptions> getBuilderDatabases(Object clientBuilder) {
     return clientBuilder instanceof ClientBuilderBase
-        ? builderDatabases.get((ClientBuilderBase<?>) clientBuilder)
+        ? BUILDER_DATABASES.get((ClientBuilderBase<?>) clientBuilder)
         : null;
   }
 

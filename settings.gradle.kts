@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.9"
+    id("org.graalvm.buildtools.native") version "1.1.10"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -613,7 +613,10 @@ include(":instrumentation:redisson:redisson-3.0:javaagent")
 include(":instrumentation:redisson:redisson-3.17:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:testing")
+include(":instrumentation:redisson:redisson-metrics-3.18:javaagent")
 include(":instrumentation:redisson:redisson-metrics-3.26:javaagent")
+include(":instrumentation:redisson:redisson-metrics-common-3.18:javaagent")
+include(":instrumentation:redisson:redisson-metrics-common-3.18:testing")
 include(":instrumentation:resources:library")
 include(":instrumentation:restlet:restlet-1.1:javaagent")
 include(":instrumentation:restlet:restlet-1.1:library")
