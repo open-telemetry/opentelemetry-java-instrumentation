@@ -43,8 +43,9 @@ public class HandlerRegistry {
             "Multiple JmxMetricHandlers with the same name found: "
                 + name
                 + ". Only one will be used.");
+      } else {
+        metricNames.addAll(handler.getMetricNames());
       }
-      metricNames.addAll(handler.getMetricNames());
     }
     return metricNames;
   }

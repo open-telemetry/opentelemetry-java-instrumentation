@@ -175,11 +175,10 @@ public class RuleParser {
   }
 
   /**
-   * Parse the YAML rules from the specified input stream and add them, after converting to the
-   * internal representation, to the provided metric configuration.
+   * Parse the YAML rules from the specified input stream
    *
    * @param is the InputStream with the YAML rules
-   * @return metric names that were added to the configuration
+   * @return parsed collection of MetricDef
    * @throws IllegalArgumentException when unable to parse YAML
    */
   public List<MetricDef> parseMetricDefs(InputStream is) {
