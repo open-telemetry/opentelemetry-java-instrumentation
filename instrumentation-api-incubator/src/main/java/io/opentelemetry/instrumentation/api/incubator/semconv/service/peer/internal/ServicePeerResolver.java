@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -108,8 +109,9 @@ public class ServicePeerResolver {
         return true;
       }
     }
-    int firstAddress = peer.indexOf("(address=");
-    return firstAddress >= 0 && peer.indexOf("(address=", firstAddress + 1) >= 0;
+    String lowercasePeer = peer.toLowerCase(Locale.ROOT);
+    int firstAddress = lowercasePeer.indexOf("(address=");
+    return firstAddress >= 0 && lowercasePeer.indexOf("(address=", firstAddress + 1) >= 0;
   }
 
   public boolean isEmpty() {
