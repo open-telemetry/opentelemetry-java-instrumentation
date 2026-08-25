@@ -164,7 +164,8 @@ public final class SqsImpl {
       SdkRequest request,
       io.opentelemetry.context.Context otelContext,
       boolean useXrayPropagator,
-      TextMapPropagator messagingPropagator) {
+      TextMapPropagator messagingPropagator,
+      boolean messageCreateSpansEnabled) {
     if (request instanceof ReceiveMessageRequest) {
       return modifyReceiveMessageRequest(
           (ReceiveMessageRequest) request, useXrayPropagator, messagingPropagator);
@@ -174,10 +175,21 @@ public final class SqsImpl {
             (SendMessageRequest) request, otelContext, messagingPropagator);
       } else if (request instanceof SendMessageBatchRequest) {
         if (emitStableMessagingSemconv()) {
-          return request;
+          return messageCreateSpansEnabled
+              ? request
+              : injectIntoSendMessageBatchRequest(
+                  (SendMessageBatchRequest) request,
+                  otelContext,
+                  messagingPropagator,
+                  true,
+                  useXrayPropagator);
         }
         return injectIntoSendMessageBatchRequest(
-            (SendMessageBatchRequest) request, otelContext, messagingPropagator);
+            (SendMessageBatchRequest) request,
+            otelContext,
+            messagingPropagator,
+            false,
+            useXrayPropagator);
       }
     }
     return null;
@@ -205,12 +217,7 @@ public final class SqsImpl {
       SendMessageBatchRequestEntry entry = entries.get(i);
       Map<String, MessageAttributeValue> messageAttributes = entry.messageAttributes();
       io.opentelemetry.context.Context customCreationContext =
-          creationContext(entry, messagingPropagator);
-      if (useXrayPropagator
-          && !Span.fromContext(customCreationContext).getSpanContext().isValid()) {
-        customCreationContext =
-            SqsParentContext.ofTraceHeader(SqsMessageSystemAttributeAccess.getTraceHeader(entry));
-      }
+          creationContext(entry, messagingPropagator, useXrayPropagator);
       if (Span.fromContext(customCreationContext).getSpanContext().isValid()) {
         creationContexts.add(customCreationContext);
         continue;
@@ -248,10 +255,17 @@ public final class SqsImpl {
   }
 
   private static io.opentelemetry.context.Context creationContext(
-      SendMessageBatchRequestEntry entry, @Nullable TextMapPropagator messagingPropagator) {
-    return messagingPropagator == null
-        ? io.opentelemetry.context.Context.root()
-        : SqsParentContext.ofMessageAttributes(entry.messageAttributes(), messagingPropagator);
+      SendMessageBatchRequestEntry entry,
+      @Nullable TextMapPropagator messagingPropagator,
+      boolean useXrayPropagator) {
+    io.opentelemetry.context.Context context =
+        messagingPropagator == null
+            ? io.opentelemetry.context.Context.root()
+            : SqsParentContext.ofMessageAttributes(entry.messageAttributes(), messagingPropagator);
+    if (useXrayPropagator && !Span.fromContext(context).getSpanContext().isValid()) {
+      return SqsParentContext.ofTraceHeader(SqsMessageSystemAttributeAccess.getTraceHeader(entry));
+    }
+    return context;
   }
 
   @Nullable
@@ -313,10 +327,18 @@ public final class SqsImpl {
   private static SdkRequest injectIntoSendMessageBatchRequest(
       SendMessageBatchRequest request,
       io.opentelemetry.context.Context otelContext,
-      TextMapPropagator messagingPropagator) {
+      TextMapPropagator messagingPropagator,
+      boolean preserveExistingCreationContexts,
+      boolean useXrayPropagator) {
     ArrayList<SendMessageBatchRequestEntry> entries = new ArrayList<>(request.entries());
     for (int i = 0; i < entries.size(); ++i) {
       SendMessageBatchRequestEntry entry = entries.get(i);
+      if (preserveExistingCreationContexts
+          && Span.fromContext(creationContext(entry, messagingPropagator, useXrayPropagator))
+              .getSpanContext()
+              .isValid()) {
+        continue;
+      }
       Map<String, MessageAttributeValue> messageAttributes =
           new HashMap<>(entry.messageAttributes());
 

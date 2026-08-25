@@ -107,6 +107,7 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
             .setUseConfiguredPropagatorForMessaging(true)
+            .setUseXrayPropagator(false)
             .setMessageCreateSpansEnabled(false)
             .build();
     SqsClientBuilder builder = SqsClient.builder();
@@ -137,24 +138,27 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
       client.createQueue(createQueueRequest);
       client.sendMessageBatch(batchRequest);
 
+      AtomicReference<SpanData> sendSpan = new AtomicReference<>();
       getTesting()
           .waitAndAssertTraces(
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName("send testSdkSqs")
-                              .hasKind(SpanKind.CLIENT)
-                              .hasLinksSatisfying(
-                                  links ->
-                                      assertThat(links)
-                                          .singleElement()
-                                          .satisfies(
-                                              link ->
-                                                  assertThat(link.getSpanContext().getSpanId())
-                                                      .isEqualTo("1111111111111111")))));
+              trace -> {
+                sendSpan.set(trace.getSpan(0));
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("send testSdkSqs")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link ->
+                                                assertThat(link.getSpanContext().getSpanId())
+                                                    .isEqualTo("1111111111111111"))));
+              });
 
       ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
       assertThat(response.messages())
@@ -164,6 +168,19 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
               message ->
                   assertThat(message.messageAttributes().get("traceparent").stringValue())
                       .isEqualTo(CUSTOM_TRACEPARENT));
+      assertThat(response.messages())
+          .filteredOn(message -> "e2".equals(message.body()))
+          .singleElement()
+          .satisfies(
+              message ->
+                  assertThat(message.messageAttributes().get("traceparent").stringValue())
+                      .isEqualTo(
+                          "00-"
+                              + sendSpan.get().getTraceId()
+                              + "-"
+                              + sendSpan.get().getSpanId()
+                              + "-"
+                              + sendSpan.get().getSpanContext().getTraceFlags().asHex()));
     }
   }
 
