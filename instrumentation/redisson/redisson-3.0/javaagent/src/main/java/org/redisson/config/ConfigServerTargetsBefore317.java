@@ -41,14 +41,26 @@ public final class ConfigServerTargetsBefore317 {
     MasterSlaveServersConfig masterSlaveConfig = config.getMasterSlaveServersConfig();
     if (masterSlaveConfig != null) {
       return ofAddresses(
-          masterSlaveConfig.getMasterAddress(), masterSlaveConfig.getSlaveAddresses());
+          getMasterAddress(masterSlaveConfig), masterSlaveConfig.getSlaveAddresses());
     }
     return null;
   }
 
   /**
-   * Renders addresses that redisson holds as {@code java.net.URI} before 3.16 and as {@code String}
-   * from 3.16 on, which is why they are read as plain objects.
+   * Reads the master address reflectively because Redisson returns it as {@code URI}, {@code URL},
+   * or {@code String} across the supported versions.
+   */
+  private static Object getMasterAddress(MasterSlaveServersConfig config) {
+    try {
+      return config.getClass().getMethod("getMasterAddress").invoke(config);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Could not read Redisson master address", e);
+    }
+  }
+
+  /**
+   * Renders addresses that Redisson holds using different types across the supported versions,
+   * which is why they are read as plain objects.
    */
   @Nullable
   private static RedisServerTarget ofAddresses(@Nullable Collection<?> addresses) {
