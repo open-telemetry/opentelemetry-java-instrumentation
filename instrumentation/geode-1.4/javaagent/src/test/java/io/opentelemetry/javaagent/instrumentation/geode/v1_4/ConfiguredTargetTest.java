@@ -19,11 +19,14 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.GEODE;
 import static java.util.Collections.emptyMap;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.function.Consumer;
 import org.apache.geode.cache.Region;
 import org.apache.geode.cache.client.ClientCache;
@@ -95,18 +98,16 @@ class ConfiguredTargetTest {
   }
 
   @Test
-  void explicitlyConfiguredServerIsPreferredOverLocatorDiscovery() {
-    Region<Object, Object> region =
-        createRegion(
-            "server-and-locator",
-            poolFactory -> {
-              poolFactory.addLocator("127.0.0.2", 10334);
-              poolFactory.addServer("localhost", 40404);
-            });
+  void rejectedServerDoesNotReplaceConfiguredLocator() {
+    PoolFactory poolFactory = poolFactory();
+    poolFactory.addLocator("127.0.0.2", 10334);
+    assertThatThrownBy(() -> poolFactory.addServer("localhost", 40404))
+        .isInstanceOf(IllegalStateException.class);
+    Region<Object, Object> region = createRegion("server-and-locator", poolFactory);
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, "localhost", 40404L));
+    testing.waitAndAssertTraces(operation(region, "127.0.0.2", null));
   }
 
   @Test
@@ -212,6 +213,11 @@ class ConfiguredTargetTest {
   private static Consumer<TraceAssert> operation(
       Region<Object, Object> region, String serverAddress, Long serverPort) {
     String regionName = region.getName();
+    List<InetSocketAddress> legacyServers = PoolManager.find(region).getServers();
+    String legacyServerAddress =
+        legacyServers.size() == 1 ? legacyServers.get(0).getHostString() : null;
+    Long legacyServerPort =
+        legacyServers.size() == 1 ? (long) legacyServers.get(0).getPort() : null;
     return trace ->
         trace.hasSpansSatisfyingExactly(
             span ->
@@ -223,7 +229,11 @@ class ConfiguredTargetTest {
                             DB_COLLECTION_NAME, emitStableDatabaseSemconv() ? regionName : null),
                         equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : regionName),
                         equalTo(maybeStable(DB_OPERATION), "putAll"),
-                        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? serverAddress : null),
-                        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? serverPort : null)));
+                        equalTo(
+                            SERVER_ADDRESS,
+                            emitStableDatabaseSemconv() ? serverAddress : legacyServerAddress),
+                        equalTo(
+                            SERVER_PORT,
+                            emitStableDatabaseSemconv() ? serverPort : legacyServerPort)));
   }
 }
