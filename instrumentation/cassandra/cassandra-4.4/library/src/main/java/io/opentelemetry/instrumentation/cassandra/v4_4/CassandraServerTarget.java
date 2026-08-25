@@ -45,11 +45,6 @@ final class CassandraServerTarget {
   private final String address;
   @Nullable private final Integer port;
 
-  private CassandraServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
-
   /**
    * The target {@code session} was configured with, or {@code null} when it names no explicit
    * contact point or the complete target cannot be recovered.
@@ -103,6 +98,11 @@ final class CassandraServerTarget {
       return null;
     }
     return combine(valid(contactPoints));
+  }
+
+  private CassandraServerTarget(String address, @Nullable Integer port) {
+    this.address = address;
+    this.port = port;
   }
 
   private static List<CassandraServerTarget> valid(List<String> contactPoints) {
