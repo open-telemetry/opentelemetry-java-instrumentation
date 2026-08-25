@@ -48,20 +48,20 @@ tasks {
   val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
       register<Test>("${suite.name}Experimental") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
+
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        val receiveTelemetryEnabled = suite.name != "testNoReceiveTelemetry"
-        jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=$receiveTelemetryEnabled")
-        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-        val metadataConfig =
-          if (receiveTelemetryEnabled) {
-            "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true"
-          } else {
-            "otel.instrumentation.kafka.experimental-span-attributes=true"
-          }
-        systemProperty("metadataConfig", metadataConfig)
-        isEnabled = project.tasks.named(suite.name).get().enabled
+        val experimentalConfig = "otel.instrumentation.kafka.experimental-span-attributes=true"
+        jvmArgs("-D$experimentalConfig")
+        systemProperty(
+          "metadataConfig",
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig).joinToString(","),
+        )
+        isEnabled = sourceTask.enabled
       }
     }
 

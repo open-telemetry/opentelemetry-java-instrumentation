@@ -54,12 +54,20 @@ tasks {
   val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
       register<Test>("${suite.name}Experimental") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
+
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
-        systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
-        isEnabled = project.tasks.named(suite.name).get().enabled
+        val experimentalConfig = "otel.instrumentation.xxl-job.experimental-span-attributes=true"
+        jvmArgs("-D$experimentalConfig")
+        systemProperty(
+          "metadataConfig",
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig).joinToString(","),
+        )
+        isEnabled = sourceTask.enabled
       }
     }
 
