@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_ENCODING_FORMATS;
@@ -249,6 +250,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                 .hasKind(SpanKind.CLIENT)
                                 .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                                 .hasAttributesSatisfyingExactly(
+                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                     equalTo(GEN_AI_REQUEST_MODEL, MODEL),
@@ -273,6 +275,8 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                ERROR_TYPE, OpenAIIoException.class.getName()),
                                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
