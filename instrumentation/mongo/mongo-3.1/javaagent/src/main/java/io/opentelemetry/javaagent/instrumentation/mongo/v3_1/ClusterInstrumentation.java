@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ClusterSettings;
-import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoClusterSettings;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoClusterTargets;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -27,6 +26,10 @@ import net.bytebuddy.matcher.ElementMatcher;
  *
  * <p>Only the driver 3.1 to 3.7 location of {@code BaseCluster} is matched here. From 3.8 the class
  * moved into an internal package that the newer instrumentation modules cover.
+ *
+ * <p>A driver at that location resolves an SRV host into seeds as it parses the connection string,
+ * and it keeps no SRV host in its cluster settings, so a cluster here is always described by its
+ * seeds.
  */
 final class ClusterInstrumentation implements TypeInstrumentation {
 
@@ -50,13 +53,7 @@ final class ClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void captureConfiguredTarget(
         @Advice.Argument(0) ClusterId clusterId, @Advice.Argument(1) ClusterSettings settings) {
-      // a client that resolves an SRV host is given a placeholder seed list naming a host it
-      // never talks to, so the srv host is read first
-      MongoServerTarget target = MongoServerTarget.srvHost(MongoClusterSettings.srvHost(settings));
-      if (target == null) {
-        target = MongoServerTarget.seeds(settings.getHosts());
-      }
-      MongoClusterTargets.register(clusterId, target);
+      MongoClusterTargets.register(clusterId, MongoServerTarget.seeds(settings.getHosts()));
     }
   }
 }
