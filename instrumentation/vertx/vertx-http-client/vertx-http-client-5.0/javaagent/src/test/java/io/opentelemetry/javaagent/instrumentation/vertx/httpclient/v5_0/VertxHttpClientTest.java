@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
-import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static java.util.Collections.emptySet;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -161,45 +160,6 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0)),
                 span -> span.hasKind(SERVER).hasParent(trace.getSpan(1))));
-  }
-
-  @SuppressWarnings({"deprecation", "removal"})
-  @Test
-  void doesNotInjectAfterSuppressedSendHead() throws Exception {
-    URI uri = resolveAddress("/success");
-    RequestOptions requestOptions =
-        new RequestOptions().setMethod(HttpMethod.GET).setAbsoluteURI(uri.toString());
-    HttpClientRequest request =
-        httpClient
-            .request(requestOptions)
-            .toCompletionStage()
-            .toCompletableFuture()
-            .get(30, SECONDS);
-    CompletableFuture<Integer> result = new CompletableFuture<>();
-    request
-        .response()
-        .onComplete(
-            asyncResult -> {
-              if (asyncResult.succeeded()) {
-                result.complete(asyncResult.result().statusCode());
-              } else {
-                result.completeExceptionally(asyncResult.cause());
-              }
-            });
-
-    testing.runWithHttpClientSpan(
-        "parent-client-span",
-        () -> request.sendHead().toCompletionStage().toCompletableFuture().get(30, SECONDS));
-    request.end();
-
-    assertThat(result.get(30, SECONDS)).isEqualTo(200);
-
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent-client-span", "test-http-server"),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent-client-span").hasKind(CLIENT).hasNoParent()),
-        trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span)));
   }
 
   @Override

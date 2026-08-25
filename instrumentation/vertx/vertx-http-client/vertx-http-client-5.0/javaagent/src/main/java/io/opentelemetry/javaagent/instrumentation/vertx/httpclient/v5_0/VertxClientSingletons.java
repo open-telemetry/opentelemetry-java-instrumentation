@@ -10,7 +10,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.Contexts;
-import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.RequestInstrumentationState;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.VertxClientInstrumenterFactory;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpClientRequest;
@@ -31,10 +30,6 @@ public class VertxClientSingletons {
 
   public static final VirtualField<HttpClientRequest, Contexts> CONTEXTS =
       VirtualField.find(HttpClientRequest.class, Contexts.class);
-
-  public static final VirtualField<HttpClientRequest, RequestInstrumentationState>
-      INSTRUMENTATION_STATE =
-          VirtualField.find(HttpClientRequest.class, RequestInstrumentationState.class);
 
   private static final VirtualField<HttpClientResponse, HttpConnection> CONNECTION_FIELD =
       VirtualField.find(HttpClientResponse.class, HttpConnection.class);
