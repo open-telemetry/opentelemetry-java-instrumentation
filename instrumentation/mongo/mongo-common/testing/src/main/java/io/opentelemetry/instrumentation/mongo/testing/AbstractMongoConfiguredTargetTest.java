@@ -117,7 +117,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void commandWithNoDatabaseIsNamedByTheConfiguredTarget() {
+  void commandWithNoDatabaseIsNamedByTheSelectedServerForASeedGroup() {
     try (ConfiguredClient client =
         createClient(
             asList(
