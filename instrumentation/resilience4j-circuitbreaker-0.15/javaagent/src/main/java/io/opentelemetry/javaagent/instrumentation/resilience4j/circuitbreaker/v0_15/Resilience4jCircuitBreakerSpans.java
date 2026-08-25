@@ -222,7 +222,20 @@ public class Resilience4jCircuitBreakerSpans {
 
   public static void end(
       CircuitBreaker circuitBreaker, String outcome, @Nullable Throwable throwable) {
-    PendingSpan pendingSpan = claimActiveCapture(circuitBreaker);
+    AttemptToken captureToken = activeCaptureToken(circuitBreaker);
+    AttemptToken recentToken = recentAcquisition.get();
+    PendingSpan pendingSpan = null;
+    // If user code performs a nested raw acquisition inside a decorated call and records that
+    // result before the decorated call completes, prefer the newer raw acquisition. Otherwise, use
+    // the active capture token owned by the decorator.
+    if (recentToken != null
+        && recentToken.circuitBreaker == circuitBreaker
+        && recentToken != captureToken) {
+      pendingSpan = claim(recentToken);
+    }
+    if (pendingSpan == null) {
+      pendingSpan = claim(captureToken);
+    }
     if (pendingSpan == null) {
       pendingSpan = claimRecentAcquisition(circuitBreaker);
     }
@@ -286,7 +299,7 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   @Nullable
-  private static PendingSpan claimActiveCapture(CircuitBreaker circuitBreaker) {
+  private static AttemptToken activeCaptureToken(CircuitBreaker circuitBreaker) {
     Deque<Capture> captureStack = captures.get();
     if (captureStack == null) {
       return null;
@@ -294,7 +307,7 @@ public class Resilience4jCircuitBreakerSpans {
     for (Capture capture : captureStack) {
       AttemptToken token = capture.token;
       if (token != null && token.circuitBreaker == circuitBreaker) {
-        return claim(token);
+        return token;
       }
     }
     return null;

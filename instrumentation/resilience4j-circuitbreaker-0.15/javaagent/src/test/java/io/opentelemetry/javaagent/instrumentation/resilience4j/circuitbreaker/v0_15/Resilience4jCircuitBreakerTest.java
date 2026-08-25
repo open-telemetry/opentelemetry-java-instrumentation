@@ -277,17 +277,11 @@ class Resilience4jCircuitBreakerTest {
             circuitBreaker,
             () -> {
               circuitBreaker.acquirePermission();
+              invokeOnErrorUnchecked(circuitBreaker, exception);
               return "ok";
             });
 
-    String result =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              String value = decorated.get();
-              invokeOnError(circuitBreaker, exception);
-              return value;
-            });
+    String result = testing.runWithSpan("parent", decorated::get);
 
     assertThat(result).isEqualTo("ok");
     testing.waitAndAssertTraces(
@@ -297,33 +291,47 @@ class Resilience4jCircuitBreakerTest {
                 span ->
                     span.hasName("CircuitBreaker test-circuit-breaker")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("resilience.policy.name"),
-                                experimental("test-circuit-breaker")),
-                            equalTo(
-                                stringKey("resilience.circuit_breaker.state"),
-                                experimental("closed")),
-                            equalTo(
-                                stringKey("resilience.circuit_breaker.outcome"),
-                                experimental("success"))),
+                        .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("CircuitBreaker test-circuit-breaker")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(exception)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("resilience.policy.name"),
-                                experimental("test-circuit-breaker")),
-                            equalTo(
-                                stringKey("resilience.circuit_breaker.state"),
-                                experimental("closed")),
-                            equalTo(
-                                stringKey("resilience.circuit_breaker.outcome"),
-                                experimental("failure")))));
+                        .hasParent(trace.getSpan(0))));
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
+        .filteredOn(span -> span.getStatus().equals(StatusData.unset()))
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getEvents()).isEmpty();
+              assertThat(span.getAttributes().get(stringKey("resilience.policy.name")))
+                  .isEqualTo(experimental("test-circuit-breaker"));
+              assertThat(span.getAttributes().get(stringKey("resilience.circuit_breaker.state")))
+                  .isEqualTo(experimental("closed"));
+              assertThat(span.getAttributes().get(stringKey("resilience.circuit_breaker.outcome")))
+                  .isEqualTo(experimental("success"));
+            });
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
+        .filteredOn(span -> span.getStatus().equals(StatusData.error()))
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(stringKey("resilience.policy.name")))
+                  .isEqualTo(experimental("test-circuit-breaker"));
+              assertThat(span.getAttributes().get(stringKey("resilience.circuit_breaker.state")))
+                  .isEqualTo(experimental("closed"));
+              assertThat(span.getAttributes().get(stringKey("resilience.circuit_breaker.outcome")))
+                  .isEqualTo(experimental("failure"));
+              assertThat(span.getEvents())
+                  .singleElement()
+                  .satisfies(
+                      event -> {
+                        assertThat(event.getAttributes().get(stringKey("exception.type")))
+                            .isEqualTo(IllegalStateException.class.getName());
+                        assertThat(event.getAttributes().get(stringKey("exception.message")))
+                            .isEqualTo("boom");
+                      });
+            });
   }
 
   @Test
@@ -488,6 +496,14 @@ class Resilience4jCircuitBreakerTest {
           .invoke(circuitBreaker, 1L, MILLISECONDS);
     } catch (NoSuchMethodException e) {
       CircuitBreaker.class.getMethod("onSuccess", long.class).invoke(circuitBreaker, 1L);
+    }
+  }
+
+  private static void invokeOnErrorUnchecked(CircuitBreaker circuitBreaker, Throwable throwable) {
+    try {
+      invokeOnError(circuitBreaker, throwable);
+    } catch (Exception e) {
+      throw new AssertionError(e);
     }
   }
 
