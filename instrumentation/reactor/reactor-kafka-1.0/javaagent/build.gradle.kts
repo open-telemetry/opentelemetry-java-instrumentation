@@ -110,94 +110,66 @@ tasks {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
   }
 
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
+  val messagingPreviewSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}MessagingPreview") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testV1_3_3MessagingPreview = register<Test>("testV1_3_3MessagingPreview") {
-    testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
-    classpath = sourceSets["testV1_3_3"].runtimeClasspath
-    isEnabled = project.tasks.named("testV1_3_3").get().enabled
-    systemProperty("hasConsumerGroup", true)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testV1_3_3BothSemconv = register<Test>("testV1_3_3BothSemconv") {
-    testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
-    classpath = sourceSets["testV1_3_3"].runtimeClasspath
-    isEnabled = project.tasks.named("testV1_3_3").get().enabled
-    systemProperty("hasConsumerGroup", true)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testV1_3_3MessagingPreviewReceiveSpansDisabled =
-    register<Test>("testV1_3_3MessagingPreviewReceiveSpansDisabled") {
-      testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
-      classpath = sourceSets["testV1_3_3"].runtimeClasspath
-      isEnabled = project.tasks.named("testV1_3_3").get().enabled
-      systemProperty("hasConsumerGroup", true)
-      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-      jvmArgs("-Dotel.semconv-stability.preview=messaging")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+        val semconvConfig = "otel.semconv-stability.preview=messaging"
+        jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+        jvmArgs("-D$semconvConfig")
+        systemProperty(
+          "metadataConfig",
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], semconvConfig).joinToString(","),
+        )
+        isEnabled = sourceTask.enabled
+      }
     }
 
-  val testV1_3_21MessagingPreview = register<Test>("testV1_3_21MessagingPreview") {
-    testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
-    classpath = sourceSets["testV1_3_21"].runtimeClasspath
-    isEnabled = project.tasks.named("testV1_3_21").get().enabled
-    systemProperty("hasConsumerGroup", true)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
+  val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}BothSemconv") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
 
-  val testV1_3_21BothSemconv = register<Test>("testV1_3_21BothSemconv") {
-    testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
-    classpath = sourceSets["testV1_3_21"].runtimeClasspath
-    isEnabled = project.tasks.named("testV1_3_21").get().enabled
-    systemProperty("hasConsumerGroup", true)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-  val testV1_3_21MessagingPreviewReceiveSpansDisabled =
-    register<Test>("testV1_3_21MessagingPreviewReceiveSpansDisabled") {
-      testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
-      classpath = sourceSets["testV1_3_21"].runtimeClasspath
-      isEnabled = project.tasks.named("testV1_3_21").get().enabled
-      systemProperty("hasConsumerGroup", true)
-      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-      jvmArgs("-Dotel.semconv-stability.preview=messaging")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+        val semconvConfig = "otel.semconv-stability.preview=messaging/dup"
+        jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+        jvmArgs("-D$semconvConfig")
+        systemProperty(
+          "metadataConfig",
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], semconvConfig).joinToString(","),
+        )
+        isEnabled = sourceTask.enabled
+      }
     }
+
+  val messagingPreviewReceiveSpansDisabledSuites =
+    testing.suites.withType(JvmTestSuite::class)
+      .map { suite ->
+        register<Test>("${suite.name}MessagingPreviewReceiveSpansDisabled") {
+          val sourceTask = named<Test>(suite.name).get()
+          setJvmArgs(sourceTask.jvmArgs)
+          setSystemProperties(sourceTask.systemProperties)
+
+          testClassesDirs = suite.sources.output.classesDirs
+          classpath = suite.sources.runtimeClasspath
+
+          val semconvConfig = "otel.semconv-stability.preview=messaging"
+          jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+          jvmArgs("-D$semconvConfig")
+          systemProperty("metadataConfig", semconvConfig)
+          isEnabled = sourceTask.enabled
+        }
+      }
 
   test {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
@@ -213,15 +185,9 @@ tasks {
       testing.suites,
       experimentalSuites,
       testReceiveSpansDisabled,
-      testMessagingPreview,
-      testBothSemconv,
-      testMessagingPreviewReceiveSpansDisabled,
-      testV1_3_3MessagingPreview,
-      testV1_3_3BothSemconv,
-      testV1_3_3MessagingPreviewReceiveSpansDisabled,
-      testV1_3_21MessagingPreview,
-      testV1_3_21BothSemconv,
-      testV1_3_21MessagingPreviewReceiveSpansDisabled,
+      messagingPreviewSuites,
+      bothSemconvSuites,
+      messagingPreviewReceiveSpansDisabledSuites,
     )
   }
 }

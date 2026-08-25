@@ -105,12 +105,20 @@ tasks {
   }
 
   val testJms2BothSemconv = register<Test>("testJms2BothSemconv") {
+    val sourceTask = named<Test>("jms2Test").get()
+    setJvmArgs(sourceTask.jvmArgs)
+    setSystemProperties(sourceTask.systemProperties)
+
     testClassesDirs = sourceSets["jms2Test"].output.classesDirs
     classpath = sourceSets["jms2Test"].runtimeClasspath
-    isEnabled = project.tasks.named("jms2Test").get().enabled
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+
+    val semconvConfig = "otel.semconv-stability.preview=messaging/dup"
+    jvmArgs("-D$semconvConfig")
+    systemProperty(
+      "metadataConfig",
+      listOfNotNull(sourceTask.systemProperties["metadataConfig"], semconvConfig).joinToString(","),
+    )
+    isEnabled = sourceTask.enabled
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {

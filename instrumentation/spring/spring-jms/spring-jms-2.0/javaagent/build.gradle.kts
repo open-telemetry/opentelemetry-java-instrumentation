@@ -75,11 +75,20 @@ tasks {
 
   val testBothSemconvReceiveSpansDisabled =
     register<Test>("testBothSemconvReceiveSpansDisabled") {
+      val sourceTask = named<Test>("testReceiveSpansDisabled").get()
+      setJvmArgs(sourceTask.jvmArgs)
+      setSystemProperties(sourceTask.systemProperties)
+
       testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
       classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
-      isEnabled = project.tasks.named("testReceiveSpansDisabled").get().enabled
-      jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+
+      val semconvConfig = "otel.semconv-stability.preview=messaging/dup"
+      jvmArgs("-D$semconvConfig")
+      systemProperty(
+        "metadataConfig",
+        listOfNotNull(sourceTask.systemProperties["metadataConfig"], semconvConfig).joinToString(","),
+      )
+      isEnabled = sourceTask.enabled
     }
 
   // this does not apply to testReceiveSpansDisabled
