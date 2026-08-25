@@ -65,7 +65,7 @@ import org.springframework.ai.content.Media;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
-@SuppressWarnings("OtelDeprecatedApiUsage")
+@SuppressWarnings("deprecation") // using deprecated semconv
 class ChatModelTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-ai-1.0";
@@ -143,6 +143,41 @@ class ChatModelTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("stream parent").hasKind(INTERNAL).hasNoParent(),
                 span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void optionalResponseProcessingFailureStillEndsSpan() {
+    ChatResponse response =
+        response(
+            singletonList(generation(RESPONSE, "stop")),
+            ChatResponseMetadata.builder()
+                .id("response-id")
+                .model(MODEL)
+                .usage(new DefaultUsage(3, 2))
+                .build());
+    chatModel.setCallResponse(
+        new ChatResponse(response.getResults(), response.getMetadata()) {
+          private boolean firstGetResults = true;
+
+          @Override
+          public List<Generation> getResults() {
+            if (firstGetResults) {
+              firstGetResults = false;
+              throw new IllegalStateException("response processing failed");
+            }
+            return super.getResults();
+          }
+        });
+
+    testing.runWithSpan("parent", () -> chatModel.call(prompt()));
+
+    assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isEqualTo(1);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    assertMetrics();
   }
 
   @SuppressWarnings("PublicApiNamedStreamShouldReturnStream")

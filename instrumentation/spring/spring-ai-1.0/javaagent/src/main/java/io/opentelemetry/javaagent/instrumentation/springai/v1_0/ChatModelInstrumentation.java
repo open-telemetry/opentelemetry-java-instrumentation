@@ -136,9 +136,12 @@ class ChatModelInstrumentation implements TypeInstrumentation {
         try {
           scope.close();
         } finally {
-          SpringAiMessageAttributes.setOutputMessages(context, response, null);
-          SpringAiMessageEvents.emitResponseEvents(context, request, response, null);
-          instrumenter().end(context, request, response, throwable);
+          try {
+            SpringAiMessageAttributes.setOutputMessages(context, response, null);
+            SpringAiMessageEvents.emitResponseEvents(context, request, response, null);
+          } finally {
+            instrumenter().end(context, request, response, throwable);
+          }
         }
       }
     }

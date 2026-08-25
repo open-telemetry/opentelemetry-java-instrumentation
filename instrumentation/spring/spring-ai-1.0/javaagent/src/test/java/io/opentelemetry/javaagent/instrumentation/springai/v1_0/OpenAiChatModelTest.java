@@ -49,7 +49,7 @@ import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
-@SuppressWarnings("OtelDeprecatedApiUsage")
+@SuppressWarnings("deprecation") // using deprecated semconv
 class OpenAiChatModelTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-ai-1.0";
