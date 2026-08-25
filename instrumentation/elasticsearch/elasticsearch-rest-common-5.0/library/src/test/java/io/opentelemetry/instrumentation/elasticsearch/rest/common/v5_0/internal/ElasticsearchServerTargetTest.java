@@ -43,6 +43,16 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
+  void singleIpv6HostDropsItsBrackets() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(singletonList(new HttpHost("[::1]", 9200, "https")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("::1");
+    assertThat(target.getPort()).isEqualTo(9200);
+  }
+
+  @Test
   void severalHostsOmitTheirSharedScheme() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(

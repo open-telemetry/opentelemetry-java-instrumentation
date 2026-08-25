@@ -57,11 +57,11 @@ class OpenSearchConfiguredHostTest {
   }
 
   @Test
-  void literalIpv6AddressKeepsItsBrackets() {
+  void literalIpv6AddressDropsItsBrackets() {
     OpenSearchServerTarget target = OpenSearchConfiguredHost.parse("https://[::1]:9200");
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]");
+    assertThat(target.getAddress()).isEqualTo("::1");
     assertThat(target.getPort()).isEqualTo(9200);
   }
 
@@ -70,7 +70,7 @@ class OpenSearchConfiguredHostTest {
     OpenSearchServerTarget target = OpenSearchConfiguredHost.parse("https://[::1]");
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]");
+    assertThat(target.getAddress()).isEqualTo("::1");
     assertThat(target.getPort()).isNull();
   }
 
