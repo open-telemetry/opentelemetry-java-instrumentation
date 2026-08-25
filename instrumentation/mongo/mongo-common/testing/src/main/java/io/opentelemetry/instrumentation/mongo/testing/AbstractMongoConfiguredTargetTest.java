@@ -43,17 +43,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 /**
- * Verifies that a client reports the target it was configured with rather than the server that
- * answered a command.
+ * Verifies that a client configured with one address reports it instead of the server that answered
+ * a command, while a client configured with several seeds keeps reporting the selected server.
  *
- * <p>The two can only differ once a client reaches more than one server, which no single server
- * deployment can be made to do. The client is therefore built against seeds it never connects to,
- * which is enough for the driver to construct its cluster, and the command events a connected
- * client would deliver are handed to the same listener the instrumentation installed, describing a
- * server the client was never configured with. What is exercised is the whole path a real command
- * takes: the driver builds the client, the instrumentation reads the configuration out of the
- * cluster the driver creates for it, and every command event finds it again through the server that
- * answered.
+ * <p>The client is built against seeds it never connects to, which is enough for the driver to
+ * construct its cluster. The command events a connected client would deliver are handed to the same
+ * listener the instrumentation installed, describing a different selected server. What is exercised
+ * is the whole path a real command takes: the driver builds the client, the instrumentation reads
+ * the cluster configuration, and every command event finds it again through the selected server.
  */
 @TestInstance(PER_CLASS)
 public abstract class AbstractMongoConfiguredTargetTest {
@@ -84,7 +81,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void severalSeedsAreReportedAsOneTarget() {
+  void severalSeedsKeepReportingTheSelectedServer() {
     try (ConfiguredClient client =
         createClient(
             asList(
@@ -93,7 +90,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("db1.example:27017,db2.example:27018", null);
+    assertFindSpan("selected.example", 27099L);
   }
 
   @Test
@@ -107,7 +104,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void ipv6SeedsAreBracketed() {
+  void severalIpv6SeedsKeepReportingTheSelectedServer() {
     assumeTrue(supportsIpv6Seeds());
 
     try (ConfiguredClient client =
@@ -116,7 +113,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("[::1]:27017,[fe80::1]:27018", null);
+    assertFindSpan("selected.example", 27099L);
   }
 
   @Test
@@ -137,7 +134,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "listDatabases db1.example:27017,db2.example:27018"
+                                    ? "listDatabases selected.example"
                                     : "listDatabases")
                             .hasKind(CLIENT)));
   }

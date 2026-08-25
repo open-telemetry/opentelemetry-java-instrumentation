@@ -73,7 +73,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void theConfiguredTargetDimensionsTheOperationDurationMetric() {
+  void theSelectedServerDimensionsTheOperationDurationMetricForSeveralSeeds() {
     try (ConfiguredClient client =
         createClient(
             asList(
@@ -82,7 +82,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("db1.example:27017,db2.example:27018", null);
+    assertFindSpan("selected.example", 27099L);
     assertDurationMetric(
         testing,
         "io.opentelemetry.mongo-4.0",

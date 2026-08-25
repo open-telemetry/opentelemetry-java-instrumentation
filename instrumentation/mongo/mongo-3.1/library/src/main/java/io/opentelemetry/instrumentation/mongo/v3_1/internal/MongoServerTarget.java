@@ -13,10 +13,9 @@ import javax.annotation.Nullable;
  * The target a MongoDB client was configured with, rendered once from the cluster settings it was
  * built from.
  *
- * <p>A client configured with a single seed keeps that host and its port. A client configured with
- * several seeds carries all of them in the address as {@code host:port,host:port}, and has no port
- * of its own. A client configured with an SRV host is named by that host, a single name that
- * carries no port.
+ * <p>A client configured with a single seed keeps that host and its port. Several seeds do not form
+ * one server address, so commands from such a client are described by the server that answered. A
+ * client configured with an SRV host is named by that host, a single name that carries no port.
  *
  * <p>Cluster settings hold the hosts the driver has already parsed out of a connection string, so
  * the rendered text never contains credentials, a database, a path, query parameters, options or a
@@ -52,31 +51,14 @@ public final class MongoServerTarget {
   }
 
   /**
-   * The target of a client configured with the given seeds, or {@code null} when it names none.
-   *
-   * <p>The seeds are rendered eagerly, so that a client keeps reporting the target it was built
-   * with even after the driver discovers the deployment behind it and stops talking to some of
-   * them.
+   * The target of a client configured with one seed, or {@code null} when it names zero or several.
    */
   @Nullable
   public static MongoServerTarget seeds(@Nullable List<ServerAddress> seeds) {
-    if (seeds == null || seeds.isEmpty()) {
+    if (seeds == null || seeds.size() != 1) {
       return null;
     }
-    if (seeds.size() == 1) {
-      return single(seeds.get(0));
-    }
-    StringBuilder group = new StringBuilder();
-    for (ServerAddress seed : seeds) {
-      if (seed == null || seed.getHost() == null || seed.getHost().isEmpty()) {
-        return null;
-      }
-      if (group.length() > 0) {
-        group.append(',');
-      }
-      appendHostAndPort(group, seed);
-    }
-    return new MongoServerTarget(group.toString(), null);
+    return single(seeds.get(0));
   }
 
   private MongoServerTarget(String address, @Nullable Integer port) {
@@ -96,22 +78,6 @@ public final class MongoServerTarget {
     return new MongoServerTarget(host, isUnixSocket(host) ? null : seed.getPort());
   }
 
-  private static void appendHostAndPort(StringBuilder group, ServerAddress seed) {
-    String host = seed.getHost();
-    if (isUnixSocket(host)) {
-      group.append(host);
-      return;
-    }
-    // a literal ipv6 address is bracketed so that the port stays unambiguous; driver 3.3 to 3.7
-    // hands one over bracketed already
-    if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
-      group.append('[').append(host).append(']');
-    } else {
-      group.append(host);
-    }
-    group.append(':').append(seed.getPort());
-  }
-
   // a single host is reported on its own, where brackets would only get in the way of matching it
   // against a configured peer
   private static String stripBrackets(String host) {
@@ -129,7 +95,7 @@ public final class MongoServerTarget {
     return address;
   }
 
-  /** The port of a single configured seed, or {@code null} when the target names several. */
+  /** The port of a configured seed, or {@code null} when the target has no port. */
   @Nullable
   public Integer getPort() {
     return port;
