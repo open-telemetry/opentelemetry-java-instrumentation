@@ -81,6 +81,17 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void duplicateContactPointsAreOneTarget() {
+    CassandraServerTarget target =
+        CassandraServerTarget.of(
+            asList("cassandra.example.com:9042", "cassandra.example.com:9042"));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
+    assertThat(target.getPort()).isEqualTo(9042);
+  }
+
+  @Test
   void ipv6ContactPointsStayBracketedInAGroup() {
     CassandraServerTarget target =
         CassandraServerTarget.of(asList("[::1]:9042", "2001:db8::1:9042", "10.0.0.5:9042"));

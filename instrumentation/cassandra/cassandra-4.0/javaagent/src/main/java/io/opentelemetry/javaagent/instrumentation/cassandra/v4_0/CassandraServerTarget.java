@@ -20,9 +20,10 @@ import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import javax.annotation.Nullable;
 
 /**
@@ -120,16 +121,19 @@ class CassandraServerTarget {
     if (contactPoints.isEmpty()) {
       return null;
     }
-    if (contactPoints.size() == 1) {
-      return contactPoints.get(0);
-    }
-    contactPoints.sort(Comparator.comparing(CassandraServerTarget::asContactPoint));
-    StringBuilder group = new StringBuilder();
+    Map<String, CassandraServerTarget> uniqueContactPoints = new TreeMap<>();
     for (CassandraServerTarget contactPoint : contactPoints) {
+      uniqueContactPoints.put(contactPoint.asContactPoint(), contactPoint);
+    }
+    if (uniqueContactPoints.size() == 1) {
+      return uniqueContactPoints.values().iterator().next();
+    }
+    StringBuilder group = new StringBuilder();
+    for (String contactPoint : uniqueContactPoints.keySet()) {
       if (group.length() > 0) {
         group.append(',');
       }
-      group.append(contactPoint.asContactPoint());
+      group.append(contactPoint);
     }
     return new CassandraServerTarget(group.toString(), null);
   }
