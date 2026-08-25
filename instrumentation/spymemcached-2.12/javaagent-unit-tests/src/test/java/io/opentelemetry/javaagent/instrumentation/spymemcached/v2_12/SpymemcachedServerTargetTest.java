@@ -56,6 +56,15 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
+  void bracketedIpv6NodesLoseTheirBrackets() {
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(singletonList(node("[2001:db8::1]", 11211)));
+
+    assertThat(target.getAddress()).isEqualTo("2001:db8::1");
+    assertThat(target.getPort()).isEqualTo(11211);
+  }
+
+  @Test
   void hostsAreCleaned() {
     SpymemcachedServerTarget target =
         SpymemcachedServerTarget.create(singletonList(node("  cache.example  ", 11211)));
