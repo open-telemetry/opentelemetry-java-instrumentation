@@ -114,15 +114,6 @@ public final class ParseContext {
     this.port = port;
   }
 
-  /**
-   * The configured target of a connection that routes to more than one host, e.g. {@code
-   * h1:3306,h2:3306}.
-   */
-  @Nullable
-  public String serverAddressGroup() {
-    return serverAddressGroup;
-  }
-
   /** Set the configured target of a connection that routes to more than one parsed host. */
   public void serverAddressGroup(@Nullable String serverAddressGroup) {
     this.serverAddressGroup = serverAddressGroup;
