@@ -24,8 +24,6 @@ import javax.annotation.Nullable;
  */
 public final class SpymemcachedServerTarget {
 
-  private static final int MAX_PORT = 65535;
-
   private final String address;
   @Nullable private final Integer port;
 
@@ -46,7 +44,7 @@ public final class SpymemcachedServerTarget {
       String host = node == null ? null : clean(node.getHostString());
       // a node that cannot be named drops the whole target, because a partial list describes a
       // deployment the client was never pointed at
-      if (host == null || node.getPort() <= 0 || node.getPort() > MAX_PORT) {
+      if (host == null || node.getPort() <= 0) {
         return null;
       }
       hosts.add(host);
