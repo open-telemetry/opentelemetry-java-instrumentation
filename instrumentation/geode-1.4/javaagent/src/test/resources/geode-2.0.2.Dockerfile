@@ -17,7 +17,7 @@
 # Release: https://github.com/apache/geode/releases/tag/rel/v2.0.2
 # Dockerfile source: https://github.com/apache/geode/blob/1685bb49297e2c8f1c0d436f11f93bfb6209686b/docker/Dockerfile
 
-FROM bellsoft/liberica-openjdk-alpine:17
+FROM bellsoft/liberica-openjdk-alpine:25@sha256:b728c08690506dac4ed7150ab40f406236d43f487c51a72f375e817f02d7cbde
 
 RUN apk add --no-cache \
 		bash \
