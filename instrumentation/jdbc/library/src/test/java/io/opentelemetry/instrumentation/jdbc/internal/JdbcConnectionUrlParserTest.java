@@ -2080,6 +2080,8 @@ class JdbcConnectionUrlParserTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
+        "postgresql://user:p,a/ss@pg.host:5432/db",
+        "postgresql://user:p,a/ss@pg.host:5432",
         "postgresql://user:pa,ss/word@pg.host1:5432,pg.host2:5433/pgdb",
         "postgresql://user:p@ss,w/ord@pg.host1:5432,pg.host2:5433/pgdb"
       })
