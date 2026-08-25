@@ -34,8 +34,8 @@ class ConfigServerTargetsTest {
     Config config = new Config();
     config
         .useClusterServers()
-        .addNodeAddress("redis://node1:7000")
-        .addNodeAddress("redis://node2:7001");
+        .addNodeAddress("redis://node2:7001")
+        .addNodeAddress("redis://node1:7000");
 
     RedisServerTarget target = ConfigServerTargetsSince317.of(config);
 
@@ -59,8 +59,8 @@ class ConfigServerTargetsTest {
     Config config = new Config();
     config
         .useReplicatedServers()
-        .addNodeAddress("redis://node1:6379")
-        .addNodeAddress("redis://node2:6380");
+        .addNodeAddress("redis://node2:6380")
+        .addNodeAddress("redis://node1:6379");
 
     RedisServerTarget target = ConfigServerTargetsSince317.of(config);
 

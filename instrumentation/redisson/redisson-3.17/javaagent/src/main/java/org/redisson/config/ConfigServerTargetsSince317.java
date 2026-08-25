@@ -13,6 +13,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -98,7 +99,9 @@ public final class ConfigServerTargetsSince317 {
     if (addresses == null || addresses.isEmpty()) {
       return null;
     }
-    return RedisServerTarget.ofEndpoints(new ArrayList<>(addresses));
+    List<String> endpoints = new ArrayList<>(addresses);
+    Collections.sort(endpoints);
+    return RedisServerTarget.ofEndpoints(endpoints);
   }
 
   @Nullable

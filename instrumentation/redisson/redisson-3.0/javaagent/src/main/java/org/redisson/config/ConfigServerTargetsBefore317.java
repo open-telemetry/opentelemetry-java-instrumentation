@@ -8,6 +8,7 @@ package org.redisson.config;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -60,6 +61,7 @@ public final class ConfigServerTargetsBefore317 {
         endpoints.add(address.toString());
       }
     }
+    Collections.sort(endpoints);
     return RedisServerTarget.ofEndpoints(endpoints);
   }
 
