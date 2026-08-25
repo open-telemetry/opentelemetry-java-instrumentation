@@ -5,9 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
-import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
-import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.context.DriverContext;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.session.Session;
+import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
+import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
+import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -19,10 +26,9 @@ import javax.annotation.Nullable;
  * host:port,host:port} syntax, and has no port of its own. Entries that do not use the driver's
  * required {@code host:port} syntax are omitted.
  *
- * <p>Only the contact points in {@code basic.contact-points} are read. They are the sole place the
- * driver keeps what an operator configured; contact points added on the session builder are held in
- * a field of that builder, which a built session does not expose. A session that has none keeps
- * reporting the coordinator that answered.
+ * <p>The driver merges {@code basic.contact-points} with contact points added on the session
+ * builder. The merged set is read from the session metadata so the target includes both sources. A
+ * session that has no explicit contact point keeps reporting the coordinator that answered.
  */
 class CassandraServerTarget {
 
@@ -35,7 +41,8 @@ class CassandraServerTarget {
   }
 
   /**
-   * The target {@code session} was configured with, or {@code null} when it names no contact point.
+   * The target {@code session} was configured with, or {@code null} when it names no explicit
+   * contact point or the complete target cannot be recovered.
    *
    * <p>The driver configuration can be reloaded, so read it once and keep the result, otherwise a
    * session could report two identities over its life.
@@ -43,11 +50,30 @@ class CassandraServerTarget {
   @Nullable
   static CassandraServerTarget of(Session session) {
     try {
-      DriverExecutionProfile profile = session.getContext().getConfig().getDefaultProfile();
-      if (!profile.isDefined(DefaultDriverOption.CONTACT_POINTS)) {
+      DriverContext context = session.getContext();
+      if (!(context instanceof InternalDriverContext)) {
         return null;
       }
-      return of(profile.getStringList(DefaultDriverOption.CONTACT_POINTS));
+      MetadataManager metadataManager = ((InternalDriverContext) context).getMetadataManager();
+      if (metadataManager.wasImplicitContactPoint()) {
+        return null;
+      }
+      List<CassandraServerTarget> contactPoints = new ArrayList<>();
+      for (DefaultNode node : metadataManager.getContactPoints()) {
+        EndPoint endPoint = node.getEndPoint();
+        if (CassandraEndPoints.isSniEndPoint(endPoint)) {
+          return null;
+        }
+        SocketAddress address = endPoint.resolve();
+        if (!(address instanceof InetSocketAddress)) {
+          return null;
+        }
+        InetSocketAddress inetAddress = (InetSocketAddress) address;
+        contactPoints.add(
+            new CassandraServerTarget(inetAddress.getHostString(), inetAddress.getPort()));
+      }
+      contactPoints.sort(Comparator.comparing(CassandraServerTarget::asContactPoint));
+      return combine(contactPoints);
     } catch (RuntimeException ignored) {
       // a session that cannot describe its own configuration keeps reporting its coordinator
       return null;
@@ -59,27 +85,32 @@ class CassandraServerTarget {
     if (contactPoints == null || contactPoints.isEmpty()) {
       return null;
     }
-    CassandraServerTarget first = null;
-    int validCount = 0;
-    StringBuilder group = new StringBuilder();
+    List<CassandraServerTarget> validContactPoints = new ArrayList<>();
     for (String contactPoint : contactPoints) {
       CassandraServerTarget target = single(contactPoint);
-      if (target == null) {
-        continue;
+      if (target != null) {
+        validContactPoints.add(target);
       }
-      if (first == null) {
-        first = target;
-      }
-      validCount++;
+    }
+    return combine(validContactPoints);
+  }
+
+  @Nullable
+  private static CassandraServerTarget combine(List<CassandraServerTarget> contactPoints) {
+    if (contactPoints.isEmpty()) {
+      return null;
+    }
+    if (contactPoints.size() == 1) {
+      return contactPoints.get(0);
+    }
+    StringBuilder group = new StringBuilder();
+    for (CassandraServerTarget contactPoint : contactPoints) {
       if (group.length() > 0) {
         group.append(',');
       }
-      group.append(target.asContactPoint());
+      group.append(contactPoint.asContactPoint());
     }
-    if (first == null) {
-      return null;
-    }
-    return validCount == 1 ? first : new CassandraServerTarget(group.toString(), null);
+    return new CassandraServerTarget(group.toString(), null);
   }
 
   @Nullable
