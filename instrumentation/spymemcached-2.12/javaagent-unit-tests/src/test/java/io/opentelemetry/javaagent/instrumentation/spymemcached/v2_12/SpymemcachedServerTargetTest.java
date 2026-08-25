@@ -73,7 +73,7 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
-  void renderedTargetIsNotChangedByLaterEditsToTheNodeList() {
+  void targetIsNotChangedByLaterEditsToTheNodeList() {
     List<InetSocketAddress> nodes = new ArrayList<>();
     nodes.add(node("one.example", 11211));
 
