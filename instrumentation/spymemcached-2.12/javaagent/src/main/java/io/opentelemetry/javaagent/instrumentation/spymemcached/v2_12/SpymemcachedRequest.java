@@ -52,6 +52,20 @@ public abstract class SpymemcachedRequest {
     return handlingNodeAddress;
   }
 
+  /** Returns the memcached command that corresponds to the client method. */
+  String getStableOperationName() {
+    String operationName = getOperationName();
+    switch (operationName) {
+      case "getBulk":
+        // getBulk is get with multiple keys.
+        return "get";
+      case "getAndTouch":
+        return "gat";
+      default:
+        return operationName;
+    }
+  }
+
   public String getOperationName() {
     String queryText = getQueryText();
     if (queryText.startsWith("async")) {

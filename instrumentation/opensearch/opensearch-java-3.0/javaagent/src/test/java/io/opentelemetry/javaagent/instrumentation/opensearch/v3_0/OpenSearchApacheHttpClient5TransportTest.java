@@ -5,8 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletionException;
 import javax.net.ssl.SSLContext;
 import org.apache.hc.client5.http.auth.AuthScope;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
@@ -19,9 +35,11 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.nio.ssl.TlsStrategy;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.ssl.TrustStrategy;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.transport.OpenSearchTransport;
 import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
 
@@ -97,5 +115,53 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
                         .setDefaultCredentialsProvider(credentialsProvider))
             .build();
     return new OpenSearchAsyncClient(apacheHttpClient5Transport);
+  }
+
+  @Test
+  void shouldRecordErrorType() {
+    assertThatThrownBy(
+            () ->
+                openSearchClient.get(
+                    request -> request.index("invalid-index").id("1"), Object.class))
+        .isInstanceOf(OpenSearchException.class);
+
+    assertErrorTypeSpan();
+  }
+
+  @Test
+  void shouldRecordAsyncErrorType() {
+    assertThatThrownBy(
+            () ->
+                openSearchAsyncClient
+                    .get(request -> request.index("invalid-index").id("1"), Object.class)
+                    .join())
+        .isInstanceOf(CompletionException.class)
+        .hasCauseInstanceOf(OpenSearchException.class);
+
+    assertErrorTypeSpan();
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private void assertErrorTypeSpan() {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "GET"),
+                equalTo(maybeStable(DB_STATEMENT), "GET /invalid-index/_doc/1")));
+    if (emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(ERROR_TYPE, "404"));
+    }
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(assertions),
+                    span ->
+                        span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 }

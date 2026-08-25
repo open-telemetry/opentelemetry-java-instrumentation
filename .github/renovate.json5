@@ -45,6 +45,15 @@
       groupName: 'weekly update',
     },
     {
+      // keep the Gradle semconv dep and manifest.yaml updates in the same group,
+      // without the weekly schedule inherited from the custom.regex rule above
+      matchPackageNames: [
+        'io.opentelemetry.semconv:opentelemetry-semconv',
+      ],
+      groupName: 'opentelemetry semconv',
+      schedule: [],
+    },
+    {
       // gh-aw updates need a dedicated branch so CI can regenerate their workflow lockfiles
       matchPackageNames: [
         'github/gh-aw',
@@ -482,6 +491,18 @@
       ],
       matchStrings: [
         '"(?<depName>otel/weaver):(?<currentValue>[^"]+)"',
+      ],
+    },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'maven',
+      depNameTemplate: 'io.opentelemetry.semconv:opentelemetry-semconv',
+      managerFilePatterns: [
+        'instrumentation/jmx-metrics/model/manifest.yaml',
+      ],
+      matchStrings: [
+        'registry_path: https://github\\.com/open-telemetry/semantic-conventions@v(?<currentValue>[^\\[]+)\\[model\\]',
+        'schema_url: https://opentelemetry\\.io/schemas/(?<currentValue>[^\\s]+)',
       ],
     },
   ],

@@ -56,16 +56,19 @@ tasks {
     }
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .associate { suite ->
+      suite.name to register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    filter {
-      excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+        filter {
+          excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+        }
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      }
     }
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
 
   val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -103,6 +106,11 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testQuerySanitizationDisabled, testQuerySanitizationDisabledStableSemconv, testQuerySanitizationEnabledOverride)
+    dependsOn(
+      if (otelProps.testLatestDeps) listOf(stableSemconvSuites.getValue("test")) else stableSemconvSuites.values,
+      testQuerySanitizationDisabled,
+      testQuerySanitizationDisabledStableSemconv,
+      testQuerySanitizationEnabledOverride
+    )
   }
 }

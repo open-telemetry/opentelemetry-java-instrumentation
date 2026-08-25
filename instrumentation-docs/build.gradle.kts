@@ -47,5 +47,6 @@ tasks {
     systemProperty("basePath", project.rootDir)
     mainClass.set("io.opentelemetry.instrumentation.docs.DocSynchronization")
     classpath(sourceSets["main"].runtimeClasspath)
+    args(layout.buildDirectory.file("audit-result").get().asFile.absolutePath)
   }
 }
