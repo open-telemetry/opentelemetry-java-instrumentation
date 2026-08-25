@@ -152,6 +152,21 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .setName("mdbdb")
             .build(),
+        arg("jdbc:mysql:failover://localhost:1234?autoReconnect=true")
+            .setShortUrl("mysql:failover://localhost:1234")
+            .setSystem(MYSQL)
+            .setSubtype("failover")
+            .setHost("localhost")
+            .setPort(1234)
+            .build(),
+        arg("jdbc:mysql:failover://my.host?user=domain:user")
+            .setShortUrl("mysql:failover://my.host:3306")
+            .setSystem(MYSQL)
+            .setSubtype("failover")
+            .setUser("domain:user")
+            .setHost("my.host")
+            .setPort(3306)
+            .build(),
         arg("jdbc:mysql:loadbalance://127.0.0.1,127.0.0.1:3306/mdbdb?user=mdbuser&password=PW")
             .setShortUrl("mysql:loadbalance://127.0.0.1:3306")
             .setSystem(MYSQL)
@@ -178,6 +193,14 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host")
             .setPort(3306)
             .setName("mdbdb")
+            .build(),
+        arg("jdbc:mysql:replication://address=(host=::1)(port=33)/mydb")
+            .setShortUrl("mysql:replication://[::1]:33")
+            .setSystem(MYSQL)
+            .setSubtype("replication")
+            .setHost("::1")
+            .setPort(33)
+            .setName("mydb")
             .build(),
         arg("jdbc:mysql:loadbalance://localhost")
             .setShortUrl("mysql:loadbalance://localhost:3306")
@@ -207,6 +230,38 @@ class JdbcConnectionUrlParserTest {
             .setHost("::1")
             .setPort(3306)
             .setName("mydb")
+            .build(),
+        arg("jdbc:mysql:host:3306")
+            .setShortUrl("mysql://host:3306")
+            .setSystem(MYSQL)
+            .setHost("host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:host")
+            .setShortUrl("mysql://host:3306")
+            .setSystem(MYSQL)
+            .setHost("host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:my.host:1234?user=myuser&password=PW")
+            .setShortUrl("mysql://my.host:1234")
+            .setSystem(MYSQL)
+            .setUser("myuser")
+            .setHost("my.host")
+            .setPort(1234)
+            .build(),
+        arg("jdbc:mysql:my.host?user=myuser&password=PW")
+            .setShortUrl("mysql://my.host:3306")
+            .setSystem(MYSQL)
+            .setUser("myuser")
+            .setHost("my.host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:my.host?socket=/tmp/mysql.sock")
+            .setShortUrl("mysql://my.host:3306")
+            .setSystem(MYSQL)
+            .setHost("my.host")
+            .setPort(3306)
             .build());
   }
 

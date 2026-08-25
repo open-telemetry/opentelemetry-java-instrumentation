@@ -5,40 +5,67 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static java.util.Collections.emptyList;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /** A builder of {@link NatsTelemetry}. */
 public final class NatsTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
-  private List<String> capturedHeaders = emptyList();
+  private IncludeExclude headers = IncludeExclude.builder().build();
 
   NatsTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
 
   /**
-   * Configures the messaging headers that will be captured as span attributes.
+   * Configures which message headers are captured as span attributes.
    *
-   * @param capturedHeaders A list of messaging header names.
+   * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
+   * {@code <name>} part in the attribute key is the header name with dashes replaced by underscores
+   * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
+   * preserved.
+   *
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
    */
   @CanIgnoreReturnValue
-  public NatsTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    this.capturedHeaders = new ArrayList<>(capturedHeaders);
+  public NatsTelemetryBuilder setHeaders(IncludeExclude headers) {
+    this.headers = headers;
     return this;
+  }
+
+  /**
+   * Configures the messaging headers that will be captured as span attributes.
+   *
+   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
+   *
+   * @param capturedHeaders A list of messaging header names.
+   * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
+   *     release.
+   */
+  @Deprecated // may be removed in the next minor release
+  @CanIgnoreReturnValue
+  public NatsTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+    return setHeaders(
+        DeprecatedCaptureNames.toSelectorOrEmpty(
+            capturedHeaders,
+            "NatsTelemetryBuilder.setCapturedHeaders()",
+            "setHeaders(IncludeExclude)"));
   }
 
   /** Returns a new {@link NatsTelemetry} with the settings of this {@link NatsTelemetryBuilder}. */
   public NatsTelemetry build() {
     return new NatsTelemetry(
-        NatsInstrumenterFactory.createProducerInstrumenter(openTelemetry, capturedHeaders),
-        NatsInstrumenterFactory.createConsumerProcessInstrumenter(openTelemetry, capturedHeaders));
+        NatsInstrumenterFactory.createPublishInstrumenter(openTelemetry, headers),
+        NatsInstrumenterFactory.createRequestInstrumenter(openTelemetry, headers),
+        NatsInstrumenterFactory.createConsumerProcessInstrumenter(openTelemetry, headers));
   }
 }

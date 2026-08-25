@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,9 +38,9 @@ public class EmittedSpanParser {
    * @return contents of aggregated files
    */
   public static Map<String, EmittedSpans> getSpansByScopeFromFiles(
-      String rootDir, String instrumentationDirectory) throws JsonProcessingException {
+      Path rootDir, String instrumentationDirectory) throws JsonProcessingException {
     Map<String, StringBuilder> spansByScope = new HashMap<>();
-    Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
+    Path telemetryDir = rootDir.resolve(instrumentationDirectory).resolve(".telemetry");
 
     if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
       try (Stream<Path> files = Files.list(telemetryDir)) {
@@ -49,7 +48,7 @@ public class EmittedSpanParser {
             .filter(path -> path.getFileName().toString().startsWith("spans-"))
             .forEach(
                 path -> {
-                  String content = FileManager.readFileToString(path.toString());
+                  String content = FileManager.readFileToString(path);
                   if (content != null) {
                     String whenKey = normalizeWhenCondition(content);
 

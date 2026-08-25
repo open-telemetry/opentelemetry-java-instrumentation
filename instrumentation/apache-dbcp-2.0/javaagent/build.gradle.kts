@@ -15,24 +15,16 @@ dependencies {
   library("org.apache.commons:commons-dbcp2:2.0")
 
   implementation(project(":instrumentation:apache-dbcp-2.0:library"))
+  implementation(project(":instrumentation:jdbc:javaagent-common"))
 
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
-  compileOnly(
-    project(
-      path = ":instrumentation:jdbc:library",
-      configuration = "shadow",
-    ),
-  )
 
   testImplementation(project(":instrumentation:apache-dbcp-2.0:testing"))
-  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
 tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
-    // The JDBC javaagent supplies the URL parser; its connection advice is not under test here.
-    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {

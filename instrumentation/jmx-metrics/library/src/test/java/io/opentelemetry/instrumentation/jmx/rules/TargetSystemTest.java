@@ -59,17 +59,19 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.MountableFile;
 
 /** Base class for testing YAML metric definitions with a real target system */
-class TargetSystemTest {
+public class TargetSystemTest {
 
   private static final Logger logger = LoggerFactory.getLogger(TargetSystemTest.class);
   private static final Logger targetSystemLogger = LoggerFactory.getLogger("targetSystem");
 
   private static final String AGENT_PATH = "/opentelemetry-instrumentation-javaagent.jar";
+  private static final String JMX_INSTRUMENTATION_PATH = "/opentelemetry-jmx-instrumentation.jar";
 
   private static final Network network = Network.newNetwork();
 
   private static OtlpGrpcServer otlpServer;
   private static Path agentPath;
+  private static Path jmxInstrumentationPath;
   private static Path testWebAppPath;
 
   private static String otlpEndpoint;
@@ -88,6 +90,8 @@ class TargetSystemTest {
     otlpEndpoint = "http://host.testcontainers.internal:" + otlpServer.httpPort();
 
     TargetSystemTest.agentPath = getArtifactPath("io.opentelemetry.javaagent.path");
+    TargetSystemTest.jmxInstrumentationPath =
+        getArtifactPath("io.opentelemetry.javaagent.jmx.path");
     TargetSystemTest.testWebAppPath = getArtifactPath("io.opentelemetry.testapp.path");
   }
 
@@ -191,8 +195,8 @@ class TargetSystemTest {
     config.put("otel.exporter.otlp.protocol", "grpc");
     // short export interval for testing
     config.put("otel.metric.export.interval", "5s");
-    // disable runtime telemetry metrics
-    config.put("otel.instrumentation.runtime-telemetry.enabled", "false");
+    // the agent only provides the machinery, the JMX instrumentation is added on top of it
+    config.put("otel.javaagent.experimental.initializer.jar", JMX_INSTRUMENTATION_PATH);
     // set yaml config files to test
     config.put(
         "otel.jmx.config",
@@ -234,6 +238,12 @@ class TargetSystemTest {
   protected static void copyAgentToTarget(GenericContainer<?> target) {
     logger.info("copying java agent {} to container {}", agentPath, AGENT_PATH);
     target.withCopyFileToContainer(MountableFile.forHostPath(agentPath), AGENT_PATH);
+    logger.info(
+        "copying jmx instrumentation {} to container {}",
+        jmxInstrumentationPath,
+        JMX_INSTRUMENTATION_PATH);
+    target.withCopyFileToContainer(
+        MountableFile.forHostPath(jmxInstrumentationPath), JMX_INSTRUMENTATION_PATH);
   }
 
   protected static void copyYamlFilesToTarget(GenericContainer<?> target, List<String> yamlFiles) {

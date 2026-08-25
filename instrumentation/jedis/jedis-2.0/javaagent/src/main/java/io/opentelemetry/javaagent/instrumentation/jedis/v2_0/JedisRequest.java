@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import java.util.List;
 import javax.annotation.Nullable;
+import redis.clients.jedis.BinaryClient;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
 
@@ -53,6 +54,16 @@ public abstract class JedisRequest {
   }
 
   public abstract Connection getConnection();
+
+  /**
+   * Returns the index of the Redis database the connection is currently on, or {@code null} when
+   * the connection does not track it.
+   */
+  @Nullable
+  public Long getDatabaseIndex() {
+    Connection connection = getConnection();
+    return connection instanceof BinaryClient ? ((BinaryClient) connection).getDB() : null;
+  }
 
   public abstract String getOperationName();
 

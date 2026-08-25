@@ -126,6 +126,14 @@ public abstract class AbstractCouchbaseTest {
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
+  protected StringAssertConsumer serverAddress() {
+    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+  }
+
+  protected LongAssertConsumer serverPort() {
+    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+  }
+
   protected StringAssertConsumer experimentalAttribute() {
     return includesExperimentalAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }

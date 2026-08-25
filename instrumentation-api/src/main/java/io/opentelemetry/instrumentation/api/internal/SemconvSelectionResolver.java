@@ -89,12 +89,17 @@ class SemconvSelectionResolver {
   }
 
   SemconvMode messaging() {
-    return resolveSemconvSelection(
-        SemconvDomain.builder("messaging")
-            .defaultMode(SemconvMode.V0_STABLE)
-            .otherSupportedModes(
-                SemconvMode.V1_EXPERIMENTAL, SemconvMode.V1_EXPERIMENTAL.withDualEmit())
-            .build());
+    SemconvDomain.Builder domain = SemconvDomain.builder("messaging");
+    if (v3Preview) {
+      // will be changed in 3.0 to V0_STABLE, which becomes the one and only messaging semconv
+      domain.defaultMode(SemconvMode.V1_EXPERIMENTAL);
+    } else {
+      domain
+          .defaultMode(SemconvMode.V0_STABLE)
+          .otherSupportedModes(
+              SemconvMode.V1_EXPERIMENTAL, SemconvMode.V1_EXPERIMENTAL.withDualEmit());
+    }
+    return resolveSemconvSelection(domain.build());
   }
 
   SemconvMode servicePeer() {

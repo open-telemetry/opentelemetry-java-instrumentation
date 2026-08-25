@@ -5,6 +5,12 @@
 - Use when: reviewing or creating `metadata.yaml` files, converting config names
 - Review focus: declarative_name format, examples guidelines, special mappings, config validation
 
+## General
+
+- General enabled/disabled configs for an instrumentation module (example: `otel.instrumentation.apache-commons-pool.enabled`)
+  should not be defined within the configuration block. It will be assumed that modules are enabled
+  unless they contain `disabled_by_default: true`
+
 ## Entry Structure
 
 Each configuration entry includes:
@@ -18,7 +24,8 @@ Each configuration entry includes:
 - `default`: Default value
 - `examples` (optional): Only for module-specific configs with non-obvious format
 - `declarative_type` (optional): Overrides the declarative-form shape when it differs from the flat
-  `type`. Currently only `structured_list` (see Structured Lists).
+  `type`. Either `structured_list` (see Structured Lists) or a scalar type — `string`, `boolean`,
+  `int` (see Scalar Overrides).
 - `declarative_schema` (optional): Per-item object schema, required when
   `declarative_type: structured_list` (see Structured Lists).
 
@@ -28,8 +35,13 @@ Some declarative configs are **lists of objects** even though their flat form is
 flat `type` describes the flat system property; `declarative_type: structured_list` plus a
 `declarative_schema` describe the per-item object shape for the declarative builder. The schema
 mirrors the JSON-schema style used by opentelemetry-configuration: `type: object`, a `required`
-list, and named `properties` (each with `type`, optional `description`, optional `default`). The
-`required` keys must be a subset of `properties`.
+list, and named `properties` (each with `type`, optional `description`, optional `default`, and
+optional `example`). The `required` keys must be a subset of `properties`.
+
+`example` is the sample value used for that property in the generated
+`docs/declarative-configuration-example.yaml` entry; without it the generator falls back to the
+property's `default`, then to a `<property-name>` placeholder. Set it on every property whose
+placeholder would not be self-explanatory.
 
 `service_peer_mapping` — flat form is a `host=service` map, declarative form is a list of
 `{peer, service_name}`:
@@ -43,10 +55,16 @@ list, and named `properties` (each with `type`, optional `description`, optional
   declarative_type: structured_list
   declarative_schema:
     type: object
-    required: [peer, service_name]
+    required: [ peer, service_name ]
     properties:
-      peer: { type: string, description: Host name or IP address to match against. }
-      service_name: { type: string, description: Peer service name to record for matching peers. }
+      peer:
+        type: string
+        description: Host name or IP address to match against.
+        example: host
+      service_name:
+        type: string
+        description: Peer service name to record for matching peers.
+        example: serviceName
 ```
 
 `url_template_rules` is **declarative-only** (no flat property) — it omits `name`:
@@ -59,12 +77,50 @@ list, and named `properties` (each with `type`, optional `description`, optional
   declarative_type: structured_list
   declarative_schema:
     type: object
-    required: [pattern, template]
+    required: [ pattern, template ]
     properties:
-      pattern: { type: string }
-      template: { type: string }
-      override: { type: boolean, default: false }
+      pattern:
+        type: string
+        description: Regular expression matched against the request URL.
+        example: '/users/\d+'
+      template:
+        type: string
+        description: Template used to derive the low-cardinality route.
+        example: '/users/{id}'
+      override:
+        type: boolean
+        default: false
+        description: Whether this rule overrides an already-applied template.
 ```
+
+## Scalar Overrides
+
+A flat property that parses as a `list` or `map` is sometimes a plain scalar in the declarative
+configuration schema. Set `declarative_type` to the scalar type so the declarative form is described
+correctly; `type` keeps describing the flat system property. No `declarative_schema` is involved.
+
+`otel.semconv-stability.opt-in` is the current case: the flat property is a comma-separated list,
+but `general.stability_opt_in_list` is a single string that the agent splits itself (see
+`SemconvSelectionResolver`), so it is `type: list` + `declarative_type: string`:
+
+```yaml
+- name: otel.semconv-stability.opt-in
+  declarative_name: general.stability_opt_in_list
+  description: Opt-in to emit stable semantic conventions instead of the old experimental ones.
+  type: list
+  declarative_type: string
+  default: ""
+```
+
+## Deprecated Declarative Names
+
+Some declarative names were published under an earlier spelling. The bridge keeps the old spelling
+in `SPECIAL_MAPPINGS` so existing configuration files keep working, but `metadata.yaml` MUST use the
+current name — `DeclarativeConfigValidationTest` fails on the deprecated one.
+
+| Deprecated                         | Use instead                     |
+| ---------------------------------- | ------------------------------- |
+| `general.semconv_stability.opt_in` | `general.stability_opt_in_list` |
 
 ## Special Mappings
 
@@ -76,12 +132,14 @@ Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.ja
 | `otel.instrumentation.http.client.capture-response-headers`                     | `general.http.client.response_captured_headers`                   |
 | `otel.instrumentation.http.server.capture-request-headers`                      | `general.http.server.request_captured_headers`                    |
 | `otel.instrumentation.http.server.capture-response-headers`                     | `general.http.server.response_captured_headers`                   |
-| `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` | `general.sanitization.url.sensitive_query_parameters/development` |
-| `otel.semconv-stability.opt-in`                                                 | `general.semconv_stability.opt_in`                                |
+| `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` | `general.sanitization.url.sensitive_query_parameters`             |
+| `otel.semconv-stability.opt-in`                                                 | `general.stability_opt_in_list`                                   |
 | `otel.instrumentation.http.known-methods`                                       | `java.common.http.known_methods`                                  |
 | `otel.instrumentation.http.client.emit-experimental-telemetry`                  | `java.common.http.client.emit_experimental_telemetry/development` |
 | `otel.instrumentation.http.server.emit-experimental-telemetry`                  | `java.common.http.server.emit_experimental_telemetry/development` |
 | `otel.instrumentation.messaging.experimental.receive-telemetry.enabled`         | `java.common.messaging.receive_telemetry/development.enabled`     |
+| `otel.instrumentation.messaging.experimental.headers.included`                  | `java.common.messaging.headers/development.included`              |
+| `otel.instrumentation.messaging.experimental.headers.excluded`                  | `java.common.messaging.headers/development.excluded`              |
 | `otel.instrumentation.messaging.experimental.capture-headers`                   | `java.common.messaging.capture_headers/development`               |
 | `otel.instrumentation.genai.capture-message-content`                            | `java.common.gen_ai.capture_message_content`                      |
 | `otel.instrumentation.experimental.span-suppression-strategy`                   | `java.common.span_suppression_strategy/development`               |
@@ -172,7 +230,7 @@ This validates round-trip conversion (flat property → bridge → declarative p
 
 Example failure when flat name is wrong:
 
-```
+```text
 FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
   flat property: otel.instrumentation.servlet.capture-request-parameters
   expected: [item1, item2, item3]

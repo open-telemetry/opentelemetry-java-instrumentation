@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -28,7 +29,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class DbClientSpanNameExtractorTest {
   @Mock DbClientAttributesGetter<DbRequest, Void> dbAttributesGetter;
 
-  @Mock SqlClientAttributesGetter<DbRequest, Void> sqlAttributesGetter;
+  @Mock(answer = Answers.CALLS_REAL_METHODS)
+  SqlClientAttributesGetter<DbRequest, Void> sqlAttributesGetter;
 
   @BeforeEach
   void setUp() {

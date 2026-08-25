@@ -9,6 +9,7 @@ import com.alibaba.druid.pool.DruidAbstractDataSource;
 import com.alibaba.druid.pool.DruidDataSourceMBean;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.alibabadruid.v1_0.DruidTelemetry;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.util.Properties;
@@ -24,29 +25,7 @@ public class DruidSingletons {
     }
 
     DbInfo dbInfo = JdbcConnectionUrlParser.parse(dataSource.getUrl(), connectProperties);
-    String serverAddress = dbInfo.getServerAddress();
-    Integer serverPort = dbInfo.getServerPort();
-    String dbNamespace = dbInfo.getDbNamespace();
-
-    StringBuilder poolName = new StringBuilder();
-    if (serverAddress != null) {
-      if (serverAddress.indexOf(':') >= 0) {
-        poolName.append('[').append(serverAddress).append(']');
-      } else {
-        poolName.append(serverAddress);
-      }
-      if (serverPort != null) {
-        poolName.append(':').append(serverPort);
-      }
-    }
-    if (dbNamespace != null) {
-      if (poolName.length() > 0) {
-        poolName.append('/');
-      }
-      poolName.append(dbNamespace);
-    }
-
-    return poolName.length() > 0 ? poolName.toString() : "alibaba-druid";
+    return JdbcConnectionPoolNameUtil.poolName(dbInfo, "alibaba-druid");
   }
 
   public static DruidTelemetry telemetry() {

@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
@@ -79,9 +80,7 @@ class MessagingAttributesExtractorTest {
     request.put("batchMessageCount", "2");
 
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.builder(TestGetter.INSTANCE, operationType)
-            .setOperationName(operationName)
-            .build();
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, operationType, operationName);
 
     Context context = Context.root();
 
@@ -115,10 +114,10 @@ class MessagingAttributesExtractorTest {
       expectedEntries.add(entry(MESSAGING_MESSAGE_BODY_SIZE, 100L));
       expectedEntries.add(entry(MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
       expectedEntries.add(entry(stringKey("messaging.client_id"), "43"));
-      expectedEntries.add(entry(MESSAGING_OPERATION, operationType.defaultOperationName()));
+      expectedEntries.add(entry(MESSAGING_OPERATION, operationType.legacyOperationName()));
     }
     if (emitStableMessagingSemconv()) {
-      expectedEntries.add(entry(stringKey("messaging.client.id"), "43"));
+      expectedEntries.add(entry(MESSAGING_CLIENT_ID, "43"));
       expectedEntries.add(entry(MESSAGING_OPERATION_NAME, operationName));
       expectedEntries.add(entry(MESSAGING_OPERATION_TYPE, operationType.value()));
     }
@@ -178,11 +177,7 @@ class MessagingAttributesExtractorTest {
   void shouldReturnSpanKey(MessagingOperationType operationType, SpanKey spanKey) {
     MessagingAttributesExtractor<Map<String, String>, String> underTest =
         new MessagingAttributesExtractor<>(
-            TestGetter.INSTANCE,
-            operationType,
-            operationType.defaultOperationName(),
-            true,
-            new ArrayList<>());
+            TestGetter.INSTANCE, operationType, operationType.legacyOperationName(), true, null);
 
     assertThat(underTest.internalGetSpanKey()).isSameAs(spanKey);
   }
@@ -210,23 +205,11 @@ class MessagingAttributesExtractorTest {
             entry(MESSAGING_DESTINATION_ANONYMOUS, true), entry(MESSAGING_OPERATION, "publish"));
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void shouldRejectOperationNameForDeprecatedMessageOperation() {
-    assertThatThrownBy(
-            () ->
-                MessagingAttributesExtractor.builder(TestGetter.INSTANCE, MessageOperation.PUBLISH)
-                    .setOperationName("send"))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Operation name is not configurable for legacy builders");
-  }
-
   @Test
   void shouldExtractOperationNameWithoutOperationType() {
     AttributesExtractor<Map<String, String>, String> underTest =
         new MessagingAttributesExtractorBuilder<Map<String, String>, String>(
-                TestGetter.INSTANCE, null, true)
-            .setOperationName("ack")
+                TestGetter.INSTANCE, null, "ack", true)
             .build();
 
     AttributesBuilder attributes = Attributes.builder();
@@ -243,9 +226,8 @@ class MessagingAttributesExtractorTest {
   void shouldRequireOperationNameForStableSemconv() {
     assertThatThrownBy(
             () ->
-                new MessagingAttributesExtractorBuilder<Map<String, String>, String>(
-                        TestGetter.INSTANCE, null, true)
-                    .build())
+                MessagingAttributesExtractor.builder(
+                    TestGetter.INSTANCE, MessagingOperationType.SEND, null))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("operationName");
   }
@@ -253,7 +235,8 @@ class MessagingAttributesExtractorTest {
   @Test
   void shouldExtractErrorTypeFromResponse() {
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessagingOperationType.RECEIVE);
+        MessagingAttributesExtractor.create(
+            TestGetter.INSTANCE, MessagingOperationType.RECEIVE, "receive");
 
     AttributesBuilder attributes = Attributes.builder();
     underTest.onEnd(attributes, Context.root(), emptyMap(), "failure", null);
@@ -263,6 +246,7 @@ class MessagingAttributesExtractorTest {
     assertThat(attributes.build()).isEqualTo(expected);
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given

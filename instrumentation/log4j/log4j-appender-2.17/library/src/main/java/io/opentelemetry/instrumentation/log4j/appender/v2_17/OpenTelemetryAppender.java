@@ -20,7 +20,9 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
@@ -36,6 +38,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.ThreadContext;
@@ -115,10 +118,16 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureExperimentalAttributes;
     @PluginBuilderAttribute private boolean captureCodeAttributes;
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
+    @Nullable @PluginBuilderAttribute private String mapMessageAttributesIncluded;
+    @Nullable @PluginBuilderAttribute private String mapMessageAttributesExcluded;
+    @Nullable private IncludeExclude mapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private boolean captureTemplate;
     @PluginBuilderAttribute private boolean captureArguments;
     @Nullable @PluginBuilderAttribute private String captureContextDataAttributes;
+    @Nullable @PluginBuilderAttribute private String contextDataAttributesIncluded;
+    @Nullable @PluginBuilderAttribute private String contextDataAttributesExcluded;
+    @Nullable private IncludeExclude contextDataAttributes;
     @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
     @Nullable private OpenTelemetry openTelemetry;
@@ -148,11 +157,84 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return asBuilder();
     }
 
-    /** Sets whether log4j {@link MapMessage} attributes should be copied to logs. */
+    /**
+     * Configures the log4j {@link MapMessage} attributes that will be copied to logs.
+     *
+     * <p>{@code MapMessage} keys and selector patterns are matched case-sensitively. {@code ?}
+     * matches any single character and {@code *} matches any number of characters, including none,
+     * so {@code included("*")} captures every {@code MapMessage} attribute. Excluded patterns take
+     * precedence over included patterns. A selector with only excluded patterns captures every
+     * {@code MapMessage} attribute that it does not exclude.
+     *
+     * <p>Only a non-empty selector set here takes precedence over the {@code
+     * mapMessageAttributesIncluded} and {@code mapMessageAttributesExcluded} settings, which in
+     * turn take precedence over the deprecated {@code captureMapMessageAttributes} setting. A
+     * {@code null} or empty selector carries no configuration, so it does not disable capture and
+     * the next configured source is used instead. No {@code MapMessage} attributes are captured
+     * when the selector and the pattern settings are absent or empty and {@code
+     * captureMapMessageAttributes} is {@code false}, which is also its default.
+     *
+     * <p>Captured {@code MapMessage} attributes may contain sensitive information. Configure
+     * included and excluded patterns to limit the data exported as log attributes.
+     */
+    @CanIgnoreReturnValue
+    public B setMapMessageAttributes(@Nullable IncludeExclude mapMessageAttributes) {
+      this.mapMessageAttributes =
+          mapMessageAttributes == null || mapMessageAttributes.isEmpty()
+              ? null
+              : mapMessageAttributes;
+      return asBuilder();
+    }
+
+    /**
+     * Configures the comma-separated log4j {@link MapMessage} attribute key patterns that will be
+     * copied to logs.
+     *
+     * <p>This is the configuration-file form of {@link #setMapMessageAttributes(IncludeExclude)}
+     * and is ignored when a non-empty selector is set with that method. Patterns use the same
+     * case-sensitive glob syntax, where {@code ?} matches any single character and {@code *}
+     * matches any number of characters, including none.
+     */
+    @CanIgnoreReturnValue
+    public B setMapMessageAttributesIncluded(String mapMessageAttributesIncluded) {
+      this.mapMessageAttributesIncluded = mapMessageAttributesIncluded;
+      return asBuilder();
+    }
+
+    /**
+     * Configures the comma-separated log4j {@link MapMessage} attribute key patterns that will not
+     * be copied to logs.
+     *
+     * <p>This is the configuration-file form of {@link #setMapMessageAttributes(IncludeExclude)}
+     * and is ignored when a non-empty selector is set with that method. Patterns use the same
+     * case-sensitive glob syntax, where {@code ?} matches any single character and {@code *}
+     * matches any number of characters, including none. Excluded patterns take precedence over
+     * included patterns.
+     */
+    @CanIgnoreReturnValue
+    public B setMapMessageAttributesExcluded(String mapMessageAttributesExcluded) {
+      this.mapMessageAttributesExcluded = mapMessageAttributesExcluded;
+      return asBuilder();
+    }
+
+    /**
+     * Sets whether log4j {@link MapMessage} attributes should be copied to logs.
+     *
+     * <p>{@code true} is equivalent to setting a selector that includes {@code "*"} with {@link
+     * #setMapMessageAttributes(IncludeExclude)}, and {@code false} is equivalent to clearing that
+     * selector, so the last of these two methods to be called wins. The {@code
+     * captureMapMessageAttributes} configuration-file attribute is only used when no selector and
+     * no {@code mapMessageAttributesIncluded} or {@code mapMessageAttributesExcluded} pattern is
+     * configured.
+     *
+     * @deprecated Use {@link #setMapMessageAttributes(IncludeExclude)} instead. May be removed in
+     *     the next minor release.
+     */
+    @Deprecated // may be removed in the next minor release
     @CanIgnoreReturnValue
     public B setCaptureMapMessageAttributes(boolean captureMapMessageAttributes) {
-      this.captureMapMessageAttributes = captureMapMessageAttributes;
-      return asBuilder();
+      return setMapMessageAttributes(
+          captureMapMessageAttributes ? IncludeExclude.builder().setIncluded("*").build() : null);
     }
 
     /**
@@ -189,7 +271,80 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return asBuilder();
     }
 
-    /** Configures the {@link ThreadContext} attributes that will be copied to logs. */
+    /**
+     * Configures the {@link ThreadContext} attributes that will be copied to logs.
+     *
+     * <p>Context data keys and selector patterns are matched case-sensitively. {@code ?} matches
+     * any single character and {@code *} matches any number of characters, including none, so
+     * {@code included("*")} captures every context data attribute. Excluded patterns take
+     * precedence over included patterns. A selector with only excluded patterns captures every
+     * context data attribute that it does not exclude.
+     *
+     * <p>Only a non-empty selector set here takes precedence over the {@code
+     * contextDataAttributesIncluded} and {@code contextDataAttributesExcluded} settings, which in
+     * turn take precedence over the deprecated {@link #setCaptureContextDataAttributes(String)}
+     * setting. A {@code null} or empty selector carries no configuration, so it does not disable
+     * capture and the next configured source is used instead. No context data attributes are
+     * captured only when every one of these sources is absent or empty.
+     *
+     * <p>Captured context data attributes may contain sensitive information. Configure included and
+     * excluded patterns to limit the data exported as log attributes.
+     */
+    @CanIgnoreReturnValue
+    public B setContextDataAttributes(@Nullable IncludeExclude contextDataAttributes) {
+      this.contextDataAttributes =
+          contextDataAttributes == null || contextDataAttributes.isEmpty()
+              ? null
+              : contextDataAttributes;
+      return asBuilder();
+    }
+
+    /**
+     * Configures the comma-separated {@link ThreadContext} attribute key patterns that will be
+     * copied to logs.
+     *
+     * <p>This is the configuration-file form of {@link #setContextDataAttributes(IncludeExclude)}
+     * and is ignored when a non-empty selector is set with that method. Patterns use the same
+     * case-sensitive glob syntax, where {@code ?} matches any single character and {@code *}
+     * matches any number of characters, including none.
+     */
+    @CanIgnoreReturnValue
+    public B setContextDataAttributesIncluded(String contextDataAttributesIncluded) {
+      this.contextDataAttributesIncluded = contextDataAttributesIncluded;
+      return asBuilder();
+    }
+
+    /**
+     * Configures the comma-separated {@link ThreadContext} attribute key patterns that will not be
+     * copied to logs.
+     *
+     * <p>This is the configuration-file form of {@link #setContextDataAttributes(IncludeExclude)}
+     * and is ignored when a non-empty selector is set with that method. Patterns use the same
+     * case-sensitive glob syntax, where {@code ?} matches any single character and {@code *}
+     * matches any number of characters, including none. Excluded patterns take precedence over
+     * included patterns.
+     */
+    @CanIgnoreReturnValue
+    public B setContextDataAttributesExcluded(String contextDataAttributesExcluded) {
+      this.contextDataAttributesExcluded = contextDataAttributesExcluded;
+      return asBuilder();
+    }
+
+    /**
+     * Configures the {@link ThreadContext} attributes that will be copied to logs.
+     *
+     * <p>This setting does not support glob patterns. A comma-separated list containing only {@code
+     * *} captures every context data attribute; otherwise every entry, including one that contains
+     * {@code *} or {@code ?}, is matched as a literal context data key.
+     *
+     * <p>It is ignored when a non-empty selector is set with {@link
+     * #setContextDataAttributes(IncludeExclude)} or when {@code contextDataAttributesIncluded} or
+     * {@code contextDataAttributesExcluded} is configured.
+     *
+     * @deprecated Use {@link #setContextDataAttributes(IncludeExclude)} instead. May be removed in
+     *     the next minor release.
+     */
+    @Deprecated // may be removed in the next minor release
     @CanIgnoreReturnValue
     public B setCaptureContextDataAttributes(String captureContextDataAttributes) {
       this.captureContextDataAttributes = captureContextDataAttributes;
@@ -226,13 +381,46 @@ public class OpenTelemetryAppender extends AbstractAppender {
           getPropertyArray(),
           captureExperimentalAttributes,
           captureCodeAttributes,
-          captureMapMessageAttributes,
+          getEffectiveMapMessageAttributes(),
           captureMarkerAttribute,
           captureTemplate,
           captureArguments,
-          captureContextDataAttributes,
+          getEffectiveContextDataAttributes(),
           numLogsCapturedBeforeOtelInstall,
           openTelemetry);
+    }
+
+    @Nullable
+    private Predicate<String> getEffectiveMapMessageAttributes() {
+      if (mapMessageAttributes != null) {
+        return mapMessageAttributes::matches;
+      }
+      IncludeExclude selector =
+          IncludeExclude.builder()
+              .setIncluded(splitAndFilterBlanksAndNulls(mapMessageAttributesIncluded))
+              .setExcluded(splitAndFilterBlanksAndNulls(mapMessageAttributesExcluded))
+              .build();
+      if (!selector.isEmpty()) {
+        return selector::matches;
+      }
+      return captureMapMessageAttributes ? value -> true : null;
+    }
+
+    @Nullable
+    private Predicate<String> getEffectiveContextDataAttributes() {
+      if (contextDataAttributes != null) {
+        return contextDataAttributes::matches;
+      }
+      IncludeExclude selector =
+          IncludeExclude.builder()
+              .setIncluded(splitAndFilterBlanksAndNulls(contextDataAttributesIncluded))
+              .setExcluded(splitAndFilterBlanksAndNulls(contextDataAttributesExcluded))
+              .build();
+      if (!selector.isEmpty()) {
+        return selector::matches;
+      }
+      return SelectorConfig.resolveLegacyLiteral(
+          splitAndFilterBlanksAndNulls(captureContextDataAttributes));
     }
   }
 
@@ -244,11 +432,11 @@ public class OpenTelemetryAppender extends AbstractAppender {
       Property[] properties,
       boolean captureExperimentalAttributes,
       boolean captureCodeAttributes,
-      boolean captureMapMessageAttributes,
+      @Nullable Predicate<String> mapMessageAttributes,
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
-      @Nullable String captureContextDataAttributes,
+      @Nullable Predicate<String> contextDataAttributes,
       int numLogsCapturedBeforeOtelInstall,
       @Nullable OpenTelemetry openTelemetry) {
     super(name, filter, layout, ignoreExceptions, properties);
@@ -261,11 +449,11 @@ public class OpenTelemetryAppender extends AbstractAppender {
         createMapper(
             captureExperimentalAttributes,
             captureCodeAttributes,
-            captureMapMessageAttributes,
+            mapMessageAttributes,
             captureMarkerAttribute,
             captureTemplate,
             captureArguments,
-            captureContextDataAttributes,
+            contextDataAttributes,
             v3Preview);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
@@ -290,21 +478,21 @@ public class OpenTelemetryAppender extends AbstractAppender {
   private static LogEventMapper<ReadOnlyStringMap> createMapper(
       boolean captureExperimentalAttributes,
       boolean captureCodeAttributes,
-      boolean captureMapMessageAttributes,
+      @Nullable Predicate<String> mapMessageAttributes,
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
-      @Nullable String captureContextDataAttributes,
+      @Nullable Predicate<String> contextDataAttributes,
       boolean v3Preview) {
     return new LogEventMapper<>(
         ContextDataAccessorImpl.INSTANCE,
         captureExperimentalAttributes,
         captureCodeAttributes,
-        captureMapMessageAttributes,
+        mapMessageAttributes,
         captureMarkerAttribute,
         captureTemplate,
         captureArguments,
-        splitAndFilterBlanksAndNulls(captureContextDataAttributes),
+        contextDataAttributes,
         v3Preview);
   }
 

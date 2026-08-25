@@ -8,13 +8,13 @@ package io.opentelemetry.instrumentation.servlet.common.internal;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -26,21 +26,26 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
 
-  private static final ConcurrentMap<String, AttributeKey<List<String>>> parameterKeysCache =
-      new ConcurrentHashMap<>();
-
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
-  private final Collection<String> captureRequestParameters;
+  private final IncludeExclude requestParameters;
+  private final Map<String, AttributeKey<List<String>>> literalParameterKeys;
 
   public ServletRequestParametersExtractor(
-      ServletAccessor<REQUEST, RESPONSE> accessor, Collection<String> captureRequestParameters) {
+      ServletAccessor<REQUEST, RESPONSE> accessor, IncludeExclude requestParameters) {
     this.accessor = accessor;
-    this.captureRequestParameters = captureRequestParameters;
+    this.requestParameters = requestParameters;
+    this.literalParameterKeys = createLiteralParameterKeys(requestParameters);
   }
 
   public void setAttributes(
       REQUEST request, BiConsumer<AttributeKey<List<String>>, List<String>> consumer) {
-    for (String name : captureRequestParameters) {
+    if (requestParameters.isEmpty()) {
+      return;
+    }
+    for (String name : accessor.getRequestParameterNames(request)) {
+      if (!requestParameters.matches(name)) {
+        continue;
+      }
       List<String> values = accessor.getRequestParameterValues(request, name);
       if (!values.isEmpty()) {
         consumer.accept(parameterAttributeKey(name), values);
@@ -67,9 +72,20 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     setAttributes(request, attributes::put);
   }
 
-  private static AttributeKey<List<String>> parameterAttributeKey(String parameterName) {
-    return parameterKeysCache.computeIfAbsent(
-        parameterName, ServletRequestParametersExtractor::createKey);
+  private AttributeKey<List<String>> parameterAttributeKey(String parameterName) {
+    AttributeKey<List<String>> key = literalParameterKeys.get(parameterName);
+    return key != null ? key : createKey(parameterName);
+  }
+
+  private static Map<String, AttributeKey<List<String>>> createLiteralParameterKeys(
+      IncludeExclude selector) {
+    Map<String, AttributeKey<List<String>>> result = new HashMap<>();
+    for (String pattern : selector.getIncluded()) {
+      if (pattern.indexOf('*') == -1 && pattern.indexOf('?') == -1) {
+        result.put(pattern, createKey(pattern));
+      }
+    }
+    return result;
   }
 
   private static AttributeKey<List<String>> createKey(String parameterName) {

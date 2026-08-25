@@ -18,18 +18,24 @@ public enum MessagingOperationType {
   SETTLE("settle", "settle");
 
   private final String value;
-  private final String defaultOperationName;
+  private final String legacyOperationName;
 
-  MessagingOperationType(String value, String defaultOperationName) {
+  MessagingOperationType(String value, String legacyOperationName) {
     this.value = value;
-    this.defaultOperationName = defaultOperationName;
+    this.legacyOperationName = legacyOperationName;
   }
 
   String value() {
     return value;
   }
 
-  String defaultOperationName() {
-    return defaultOperationName;
+  /**
+   * Returns the operation name used by the old messaging semantic conventions, i.e. the value of
+   * the {@code messaging.operation} attribute and the operation part of the old span name. The
+   * v1.43 conventions require a system-specific operation name, which callers have to provide
+   * explicitly.
+   */
+  String legacyOperationName() {
+    return legacyOperationName;
   }
 }

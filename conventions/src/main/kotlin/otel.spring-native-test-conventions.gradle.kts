@@ -10,7 +10,7 @@
 import org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension
 
 // Keep this in sync with the org.graalvm.buildtools.native plugin version in settings.gradle.kts.
-val graalvmReachabilityMetadataVersion = "1.1.7"
+val graalvmReachabilityMetadataVersion = "1.1.10"
 
 if (gradle.startParameter.taskNames.any { it.contains("nativeTest") }) {
   apply(plugin = "org.graalvm.buildtools.native")

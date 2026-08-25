@@ -82,6 +82,24 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*Sqs*")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*Sqs*")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+  }
+
   val testCoreOnlyStableSemconv = register<Test>("testCoreOnlyStableSemconv") {
     val testCoreOnlySourceSet = sourceSets["testCoreOnly"]
     testClassesDirs = testCoreOnlySourceSet.output.classesDirs
@@ -98,6 +116,13 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, testCoreOnlyStableSemconv, testExceptionSignalLogs)
+    dependsOn(
+      testing.suites,
+      testStableSemconv,
+      testMessagingPreview,
+      testBothSemconv,
+      testCoreOnlyStableSemconv,
+      testExceptionSignalLogs,
+    )
   }
 }
