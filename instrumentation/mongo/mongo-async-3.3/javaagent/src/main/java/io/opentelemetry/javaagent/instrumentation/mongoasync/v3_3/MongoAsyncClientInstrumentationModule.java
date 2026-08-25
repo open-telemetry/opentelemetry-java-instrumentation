@@ -32,6 +32,7 @@ public class MongoAsyncClientInstrumentationModule extends InstrumentationModule
     return asList(
         new MongoClientSettingsBuildersInstrumentation(),
         new InternalStreamConnectionInstrumentation(),
-        new BaseClusterInstrumentation());
+        new BaseClusterInstrumentation(),
+        new ClusterInstrumentation());
   }
 }
