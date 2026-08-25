@@ -102,11 +102,11 @@ class PutGetTest {
   }
 
   private static String serverAddress() {
-    return emitStableDatabaseSemconv() ? geodeServer.getHost() : null;
+    return geodeServer.getHost();
   }
 
   private static Long serverPort() {
-    return emitStableDatabaseSemconv() ? (long) geodeServer.getMappedPort(GEODE_PORT) : null;
+    return (long) geodeServer.getMappedPort(GEODE_PORT);
   }
 
   private static Stream<Arguments> provideParameters() {

@@ -84,9 +84,8 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   @Nullable
   public String getServerAddress(GeodeRequest request) {
-    // the old conventions never described a server for Geode, and they are frozen
     if (!emitStableDatabaseSemconv()) {
-      return null;
+      return GeodeServerAddress.get(request.getRegion()).address();
     }
     GeodeServerTarget target = request.getServerTarget();
     return target == null ? null : target.getAddress();
@@ -96,7 +95,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Nullable
   public Integer getServerPort(GeodeRequest request) {
     if (!emitStableDatabaseSemconv()) {
-      return null;
+      return GeodeServerAddress.get(request.getRegion()).port();
     }
     GeodeServerTarget target = request.getServerTarget();
     // a target naming a server group or several servers carries no port of its own
