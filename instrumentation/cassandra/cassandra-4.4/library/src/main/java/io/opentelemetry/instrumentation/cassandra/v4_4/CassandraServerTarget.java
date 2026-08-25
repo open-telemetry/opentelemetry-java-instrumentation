@@ -101,6 +101,34 @@ final class CassandraServerTarget {
   }
 
   @Nullable
+  static CassandraServerTarget of(Session session, Set<EndPoint> programmaticContactPoints) {
+    try {
+      DriverContext context = session.getContext();
+      DriverExecutionProfile config = context.getConfig().getDefaultProfile();
+      // basic.contact-points has no default, so the single argument lookup would throw when a
+      // session names its contact points on the builder alone
+      List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
+      List<CassandraServerTarget> contactPoints = valid(configuredContactPoints);
+      for (EndPoint endPoint : programmaticContactPoints) {
+        if (endPoint instanceof SniEndPoint) {
+          return null;
+        }
+        SocketAddress address = endPoint.resolve();
+        if (!(address instanceof InetSocketAddress)) {
+          return null;
+        }
+        InetSocketAddress inetAddress = (InetSocketAddress) address;
+        contactPoints.add(
+            new CassandraServerTarget(inetAddress.getHostString(), inetAddress.getPort()));
+      }
+      return combine(contactPoints);
+    } catch (RuntimeException ignored) {
+      // a session that cannot describe its own configuration keeps reporting its coordinator
+      return null;
+    }
+  }
+
+  @Nullable
   static CassandraServerTarget of(@Nullable List<String> contactPoints) {
     if (contactPoints == null || contactPoints.isEmpty()) {
       return null;

@@ -9,8 +9,10 @@ import static java.util.Objects.requireNonNull;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.Set;
 
 /** Entrypoint for instrumenting cassandra sessions. */
 public final class CassandraTelemetry {
@@ -41,5 +43,10 @@ public final class CassandraTelemetry {
    */
   public CqlSession wrap(CqlSession session) {
     return tracingCqlSession.wrapSession(requireNonNull(session, "session"));
+  }
+
+  CqlSession wrap(CqlSession session, Set<EndPoint> programmaticContactPoints) {
+    return tracingCqlSession.wrapSession(
+        requireNonNull(session, "session"), programmaticContactPoints);
   }
 }
