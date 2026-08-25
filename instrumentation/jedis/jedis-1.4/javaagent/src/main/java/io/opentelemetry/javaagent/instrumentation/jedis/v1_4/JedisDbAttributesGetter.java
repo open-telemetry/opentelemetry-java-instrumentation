@@ -5,10 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
@@ -41,11 +44,20 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getServerAddress(JedisRequest request) {
+    RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
+    if (emitStableDatabaseSemconv() && target != null) {
+      return target.getAddress();
+    }
     return request.getConnection().getHost();
   }
 
   @Override
   public Integer getServerPort(JedisRequest request) {
+    RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
+    if (emitStableDatabaseSemconv() && target != null) {
+      // a target that names several shards already carries the port of each of them
+      return target.getPort();
+    }
     return request.getConnection().getPort();
   }
 }
