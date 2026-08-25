@@ -103,10 +103,7 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty(
       "metadataConfig",
-      listOf(
-        "otel.instrumentation.pulsar.experimental-span-attributes=true",
-        "otel.semconv-stability.preview=messaging",
-      ).joinToString(","),
+      "otel.instrumentation.pulsar.experimental-span-attributes=true,otel.semconv-stability.preview=messaging",
     )
   }
 
@@ -119,10 +116,7 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty(
       "metadataConfig",
-      listOf(
-        "otel.instrumentation.pulsar.experimental-span-attributes=true",
-        "otel.semconv-stability.preview=messaging/dup",
-      ).joinToString(","),
+      "otel.instrumentation.pulsar.experimental-span-attributes=true,otel.semconv-stability.preview=messaging/dup",
     )
   }
 
