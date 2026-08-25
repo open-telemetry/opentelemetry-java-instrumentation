@@ -18,7 +18,7 @@ import java.util.concurrent.CountDownLatch;
  * Captures the identity the driver gives the cluster it builds for a client, which is how a command
  * event finds the target that client was configured with.
  *
- * <p>Usable from driver 3.3 on, which is where the driver started letting a client settle a cluster
+ * <p>Usable from driver 3.3 on, which is where the driver started letting a client set a cluster
  * listener. From 4.6 on the driver hands cluster events to a listener of its own that republishes
  * them on a thread of its own, so the identity is waited for rather than read straight after the
  * client is built.
