@@ -156,39 +156,33 @@ public final class SqsImpl {
       SendMessageBatchRequest request,
       Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
       boolean messageCreateSpansEnabled) {
+    if (!messageCreateSpansEnabled || !SqsMessageSystemAttributeAccess.isAvailable()) {
+      return request;
+    }
+
     SendMessageBatchRequest preparedRequest = request.clone();
     List<SendMessageBatchRequestEntry> preparedEntries = new ArrayList<>();
     Context parentContext = Context.current().with(Span.getInvalid());
     for (SendMessageBatchRequestEntry entry : request.getEntries()) {
-      SendMessageBatchRequestEntry preparedEntry = entry.clone();
-      Map<String, MessageAttributeValue> attributes = entry.getMessageAttributes();
       String traceHeader = SqsMessageSystemAttributeAccess.getTraceHeader(entry);
-      Context customCreationContext = SqsParentContext.ofTraceHeader(traceHeader);
-      if (Span.fromContext(customCreationContext).getSpanContext().isValid()) {
-        preparedEntries.add(preparedEntry);
-        continue;
-      }
-      if (!messageCreateSpansEnabled
-          || !SqsMessageSystemAttributeAccess.isAvailable()
-          || traceHeader != null) {
-        preparedEntries.add(preparedEntry);
+      if (traceHeader != null) {
+        preparedEntries.add(entry.clone());
         continue;
       }
 
       SqsCreateRequest createRequest =
-          new SqsCreateRequest(request.getQueueUrl(), toStringMap(attributes));
+          new SqsCreateRequest(request.getQueueUrl(), toStringMap(entry.getMessageAttributes()));
       if (!producerCreateInstrumenter.shouldStart(parentContext, createRequest)) {
-        preparedEntries.add(preparedEntry);
+        preparedEntries.add(entry.clone());
         continue;
       }
       Context creationContext = producerCreateInstrumenter.start(parentContext, createRequest);
-      SendMessageBatchRequestEntry updatedEntry =
+      SendMessageBatchRequestEntry preparedEntry =
           SqsMessageSystemAttributeAccess.withTraceHeader(
-              preparedEntry, SqsParentContext.toTraceHeader(creationContext));
-      if (updatedEntry == null) {
+              entry, SqsParentContext.toTraceHeader(creationContext));
+      if (preparedEntry == null) {
         throw new IllegalStateException("Could not inject the SQS message creation context");
       }
-      preparedEntry = updatedEntry;
       producerCreateInstrumenter.end(creationContext, createRequest, null, null);
       preparedEntries.add(preparedEntry);
     }
@@ -201,11 +195,12 @@ public final class SqsImpl {
   }
 
   static List<Context> getBatchMessageContexts(Request<?> request) {
-    if (!(request.getOriginalRequest() instanceof SendMessageBatchRequest)) {
-      return new ArrayList<>();
+    AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
+    if (!(originalRequest instanceof SendMessageBatchRequest)) {
+      return emptyList();
     }
     List<Context> contexts = new ArrayList<>();
-    SendMessageBatchRequest batchRequest = (SendMessageBatchRequest) request.getOriginalRequest();
+    SendMessageBatchRequest batchRequest = (SendMessageBatchRequest) originalRequest;
     for (SendMessageBatchRequestEntry entry : batchRequest.getEntries()) {
       Context context =
           SqsParentContext.ofTraceHeader(SqsMessageSystemAttributeAccess.getTraceHeader(entry));
