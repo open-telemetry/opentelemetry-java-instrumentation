@@ -91,8 +91,8 @@ public final class AwsSdkTelemetryBuilder {
 
   /**
    * Sets whether a producer "Create" span is emitted for each eligible entry in an SQS batch send.
-   * An entry is eligible when it does not already contain a creation context and has enough
-   * message-attribute capacity to inject one.
+   * An entry is eligible when it does not already contain a creation context and the AWS SDK
+   * version supports the per-entry {@code AWSTraceHeader} system attribute.
    *
    * <p>This option only applies when the stable messaging semantic conventions are enabled. It is
    * enabled by default.
