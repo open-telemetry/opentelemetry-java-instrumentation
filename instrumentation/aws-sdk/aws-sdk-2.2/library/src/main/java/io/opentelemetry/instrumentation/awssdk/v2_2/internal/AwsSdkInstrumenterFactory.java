@@ -266,7 +266,6 @@ public final class AwsSdkInstrumenterFactory {
                       parentContext,
                       request.getMessage(),
                       messagingPropagator,
-                      useXrayPropagator,
                       useXrayPropagator)));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
@@ -319,6 +318,7 @@ public final class AwsSdkInstrumenterFactory {
           return emitStableMessagingSemconv()
                   && messageCreateSpansEnabled
                   && SqsAccess.isBatchRequest(sdkRequest)
+                  && !TracingExecutionInterceptor.getBatchMessageContexts(request).isEmpty()
               ? SpanKind.CLIENT
               : SpanKind.PRODUCER;
         },

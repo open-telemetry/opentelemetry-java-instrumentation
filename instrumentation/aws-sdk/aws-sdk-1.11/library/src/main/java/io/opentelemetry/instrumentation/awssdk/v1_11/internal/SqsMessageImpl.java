@@ -5,15 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -40,21 +36,7 @@ final class SqsMessageImpl implements SqsMessage {
 
   @Override
   public Context getCreationContext() {
-    if (emitStableMessagingSemconv()) {
-      Context messageAttributeContext =
-          SqsParentContext.ofMessageAttributes(toStringMap(message.getMessageAttributes()));
-      if (Span.fromContext(messageAttributeContext).getSpanContext().isValid()) {
-        return messageAttributeContext;
-      }
-    }
     return SqsParentContext.ofSystemAttributes(message.getAttributes());
-  }
-
-  private static Map<String, String> toStringMap(
-      Map<String, MessageAttributeValue> messageAttributes) {
-    Map<String, String> result = new HashMap<>();
-    messageAttributes.forEach((key, value) -> result.put(key, value.getStringValue()));
-    return result;
   }
 
   @Override

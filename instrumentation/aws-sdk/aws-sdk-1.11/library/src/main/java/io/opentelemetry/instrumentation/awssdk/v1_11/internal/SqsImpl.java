@@ -22,8 +22,6 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -143,12 +141,6 @@ public final class SqsImpl {
       if (!request.getAttributeNames().contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE)) {
         request.withAttributeNames(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
       }
-      if (emitStableMessagingSemconv()
-          && !request
-              .getMessageAttributeNames()
-              .contains(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE)) {
-        request.withMessageAttributeNames(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE);
-      }
       return request;
     }
     if (rawRequest instanceof SendMessageBatchRequest
@@ -166,17 +158,16 @@ public final class SqsImpl {
     SendMessageBatchRequest preparedRequest = request.clone();
     List<SendMessageBatchRequestEntry> preparedEntries = new ArrayList<>();
     Context parentContext = Context.current().with(Span.getInvalid());
-    TextMapPropagator xrayPropagator = AwsXrayPropagator.getInstance();
     for (SendMessageBatchRequestEntry entry : request.getEntries()) {
       SendMessageBatchRequestEntry preparedEntry = entry.clone();
       Map<String, MessageAttributeValue> attributes = entry.getMessageAttributes();
-      Context customCreationContext = SqsParentContext.ofMessageAttributes(toStringMap(attributes));
+      String traceHeader = SqsMessageSystemAttributeAccess.getTraceHeader(entry);
+      Context customCreationContext = SqsParentContext.ofTraceHeader(traceHeader);
       if (Span.fromContext(customCreationContext).getSpanContext().isValid()) {
         preparedEntries.add(preparedEntry);
         continue;
       }
-      if (attributes.containsKey(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE)
-          || attributes.size() >= 10) {
+      if (!SqsMessageSystemAttributeAccess.isAvailable() || traceHeader != null) {
         preparedEntries.add(preparedEntry);
         continue;
       }
@@ -188,14 +179,13 @@ public final class SqsImpl {
         continue;
       }
       Context creationContext = producerCreateInstrumenter.start(parentContext, createRequest);
-      Map<String, MessageAttributeValue> updatedAttributes = new HashMap<>(attributes);
-      xrayPropagator.inject(
-          creationContext,
-          updatedAttributes,
-          (carrier, key, value) ->
-              carrier.put(
-                  key, new MessageAttributeValue().withDataType("String").withStringValue(value)));
-      preparedEntry.setMessageAttributes(updatedAttributes);
+      SendMessageBatchRequestEntry updatedEntry =
+          SqsMessageSystemAttributeAccess.withTraceHeader(
+              preparedEntry, SqsParentContext.toTraceHeader(creationContext));
+      if (updatedEntry == null) {
+        throw new IllegalStateException("Could not inject the SQS message creation context");
+      }
+      preparedEntry = updatedEntry;
       producerCreateInstrumenter.end(creationContext, createRequest, null, null);
       preparedEntries.add(preparedEntry);
     }
@@ -215,7 +205,7 @@ public final class SqsImpl {
     SendMessageBatchRequest batchRequest = (SendMessageBatchRequest) request.getOriginalRequest();
     for (SendMessageBatchRequestEntry entry : batchRequest.getEntries()) {
       Context context =
-          SqsParentContext.ofMessageAttributes(toStringMap(entry.getMessageAttributes()));
+          SqsParentContext.ofTraceHeader(SqsMessageSystemAttributeAccess.getTraceHeader(entry));
       if (Span.fromContext(context).getSpanContext().isValid()) {
         contexts.add(context);
       }

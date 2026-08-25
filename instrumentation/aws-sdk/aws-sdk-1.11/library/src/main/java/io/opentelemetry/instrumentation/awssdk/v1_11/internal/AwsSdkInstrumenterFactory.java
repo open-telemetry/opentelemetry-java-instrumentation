@@ -253,6 +253,7 @@ public final class AwsSdkInstrumenterFactory {
             emitStableMessagingSemconv()
                     && messageCreateSpansEnabled
                     && SqsAccess.isBatchRequest(request)
+                    && !SqsAccess.getBatchMessageContexts(request).isEmpty()
                 ? SpanKind.CLIENT
                 : SpanKind.PRODUCER,
         attributesExtractors(),

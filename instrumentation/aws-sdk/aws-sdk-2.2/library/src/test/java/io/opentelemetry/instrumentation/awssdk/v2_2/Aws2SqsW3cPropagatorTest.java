@@ -84,7 +84,7 @@ class Aws2SqsW3cPropagatorTest extends Aws2SqsTracingTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
+                            .hasKind(SpanKind.PRODUCER)
                             .hasTotalRecordedLinks(0)));
   }
 

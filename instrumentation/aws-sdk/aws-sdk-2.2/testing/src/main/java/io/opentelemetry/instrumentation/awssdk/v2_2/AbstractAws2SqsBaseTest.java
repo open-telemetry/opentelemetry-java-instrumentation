@@ -60,6 +60,7 @@ import software.amazon.awssdk.services.sqs.model.QueueDoesNotExistException;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -124,6 +125,20 @@ public abstract class AbstractAws2SqsBaseTest {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory
     return Boolean.getBoolean(
         "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging");
+  }
+
+  protected boolean canInjectBatchCreationContext() {
+    return isSqsAttributeInjectionEnabled()
+        || (isXrayInjectionEnabled() && supportsMessageSystemAttributes());
+  }
+
+  protected static boolean supportsMessageSystemAttributes() {
+    try {
+      SendMessageBatchRequestEntry.class.getMethod("messageSystemAttributesAsStrings");
+      return true;
+    } catch (NoSuchMethodException ignored) {
+      return false;
+    }
   }
 
   @BeforeAll
@@ -306,7 +321,9 @@ public abstract class AbstractAws2SqsBaseTest {
       SpanDataAssert span, String queueUrl, String rpcMethod, Long batchMessageCount) {
     return span.hasName(emitStableMessagingSemconv() ? "send testSdkSqs" : "testSdkSqs publish")
         .hasKind(
-            emitStableMessagingSemconv() && batchMessageCount != null
+            emitStableMessagingSemconv()
+                    && batchMessageCount != null
+                    && canInjectBatchCreationContext()
                 ? SpanKind.CLIENT
                 : SpanKind.PRODUCER)
         .hasNoParent()

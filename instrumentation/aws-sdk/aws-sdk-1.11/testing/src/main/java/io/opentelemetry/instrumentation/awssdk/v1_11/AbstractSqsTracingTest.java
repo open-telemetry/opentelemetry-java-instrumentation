@@ -426,6 +426,7 @@ public abstract class AbstractSqsTracingTest {
   @Test
   void testBatchReceiveLinkAttributes() {
     assumeTrue(emitStableMessagingSemconv());
+    assumeTrue(supportsMessageSystemAttributes());
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
     sqsClient.sendMessageBatch(
@@ -522,9 +523,23 @@ public abstract class AbstractSqsTracingTest {
                 new SendMessageBatchRequestEntry("i3", "e3"));
     sqsClient.sendMessageBatch(batchRequest);
 
-    assertThat(batchRequest.getEntries().get(0).getMessageAttributes())
-        .hasSize(10)
-        .doesNotContainKey("X-Amzn-Trace-Id");
+    assertThat(batchRequest.getEntries().get(0).getMessageAttributes()).hasSize(10);
+
+    if (!supportsMessageSystemAttributes()) {
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("send testSdkSqs")
+                              .hasKind(SpanKind.PRODUCER)
+                              .hasNoParent()
+                              .hasTotalRecordedLinks(0)));
+      return;
+    }
 
     List<SpanData> createSpans = new ArrayList<>();
     testing()
@@ -532,6 +547,21 @@ public abstract class AbstractSqsTracingTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+            trace -> {
+              createSpans.add(trace.getSpan(0));
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("create testSdkSqs")
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                              equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                              equalTo(MESSAGING_OPERATION_NAME, "create"),
+                              equalTo(
+                                  MESSAGING_OPERATION, emitOldMessagingSemconv() ? "create" : null),
+                              equalTo(MESSAGING_OPERATION_TYPE, "create")));
+            },
             trace -> {
               createSpans.add(trace.getSpan(0));
               trace.hasSpansSatisfyingExactly(
@@ -596,7 +626,17 @@ public abstract class AbstractSqsTracingTest {
                                         .extracting(link -> link.getSpanContext().getSpanId())
                                         .containsExactlyInAnyOrder(
                                             createSpans.get(0).getSpanId(),
-                                            createSpans.get(1).getSpanId()))));
+                                            createSpans.get(1).getSpanId(),
+                                            createSpans.get(2).getSpanId()))));
+  }
+
+  protected static boolean supportsMessageSystemAttributes() {
+    try {
+      SendMessageBatchRequestEntry.class.getMethod("getMessageSystemAttributes");
+      return true;
+    } catch (NoSuchMethodException ignored) {
+      return false;
+    }
   }
 
   @Test

@@ -190,13 +190,9 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
 
     assertThat(response.messages()).hasSize(3);
 
-    assertThat(totalAttrs)
-        .isEqualTo(
-            10
-                + (emitStableMessagingSemconv() && isXrayInjectionEnabled() ? 3 : 0)
-                + (isSqsAttributeInjectionEnabled() ? 3 : 0));
+    assertThat(totalAttrs).isEqualTo(10 + (isSqsAttributeInjectionEnabled() ? 3 : 0));
 
-    if (emitStableMessagingSemconv()) {
+    if (emitStableMessagingSemconv() && canInjectBatchCreationContext()) {
       List<SpanData> createSpans = new ArrayList<>();
       List<Consumer<TraceAssert>> stableTraceAsserts = new ArrayList<>();
       stableTraceAsserts.add(
