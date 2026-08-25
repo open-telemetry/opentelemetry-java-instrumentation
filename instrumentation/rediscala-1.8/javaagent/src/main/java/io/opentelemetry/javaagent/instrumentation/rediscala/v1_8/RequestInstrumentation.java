@@ -87,7 +87,7 @@ class RequestInstrumentation implements TypeInstrumentation {
             RediscalaRequest.create(
                 cmd,
                 endpoint,
-                emitStableDatabaseSemconv() ? RediscalaServerTargets.of(action) : null);
+                emitStableDatabaseSemconv() ? RediscalaServerTargets.get(action) : null);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

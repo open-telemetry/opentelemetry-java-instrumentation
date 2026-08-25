@@ -8,14 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
+import redis.ActorRequest;
 import redis.RedisClientActorLike;
 import redis.RedisClientPool;
 import redis.RedisServer;
+import redis.RoundRobinPoolRequest;
 import redis.SentinelMonitoredRedisBlockingClient;
 import redis.SentinelMonitoredRedisClient;
 import scala.collection.Iterable;
@@ -37,6 +40,12 @@ final class RediscalaServerTargets {
   // scala 2.13 builds, so the method is resolved reflectively rather than called directly
   @Nullable private static final Method REDIS_SERVERS = findRedisServers();
 
+  private static final VirtualField<ActorRequest, RedisServerTarget> ACTOR_REQUEST_TARGET =
+      VirtualField.find(ActorRequest.class, RedisServerTarget.class);
+
+  private static final VirtualField<RoundRobinPoolRequest, RedisServerTarget> POOL_REQUEST_TARGET =
+      VirtualField.find(RoundRobinPoolRequest.class, RedisServerTarget.class);
+
   @Nullable
   private static Method findRedisServers() {
     try {
@@ -47,7 +56,31 @@ final class RediscalaServerTargets {
   }
 
   @Nullable
-  static RedisServerTarget of(Object client) {
+  static RedisServerTarget get(Object client) {
+    if (client instanceof ActorRequest) {
+      return get(ACTOR_REQUEST_TARGET, (ActorRequest) client);
+    }
+    if (client instanceof RoundRobinPoolRequest) {
+      return get(POOL_REQUEST_TARGET, (RoundRobinPoolRequest) client);
+    }
+    return of(client);
+  }
+
+  @Nullable
+  private static <T> RedisServerTarget get(
+      VirtualField<T, RedisServerTarget> targetField, T client) {
+    RedisServerTarget target = targetField.get(client);
+    if (target == null) {
+      target = of(client);
+      if (target != null) {
+        targetField.set(client, target);
+      }
+    }
+    return target;
+  }
+
+  @Nullable
+  private static RedisServerTarget of(Object client) {
     if (client instanceof SentinelMonitoredRedisClient) {
       return RedisServerTarget.ofLogicalName(((SentinelMonitoredRedisClient) client).master());
     }
