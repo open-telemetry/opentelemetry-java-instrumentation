@@ -11,6 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.OtelCommandArgsUtil;
+import io.lettuce.core.protocol.ProtocolKeyword;
 import io.lettuce.core.protocol.RedisCommand;
 import io.lettuce.core.tracing.TraceContext;
 import io.lettuce.core.tracing.TraceContextProvider;
@@ -199,6 +200,15 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
+      // In Lettuce 6.0.0-6.0.2 the command name is missing when start() runs,
+      // so take name from the command. Later versions already set the name correctly,
+      // so only fill it in when it is still null.
+      // Use toString(): name() was removed from ProtocolKeyword in 6.5.0+.
+      ProtocolKeyword type = command.getType();
+      if (request.getCommand() == null && type != null) {
+        request.setCommand(type.toString());
+      }
+
       // Extract args BEFORE calling start() so db.query.text can include them
       if (command.getArgs() != null) {
         request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));
