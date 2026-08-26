@@ -124,7 +124,6 @@ abstract class CassandraRequest {
 
   abstract Session getSession();
 
-  /** The target the session was configured with, or {@code null} when it named no contact point. */
   @Nullable
   abstract CassandraServerTarget getServerTarget();
 

@@ -25,8 +25,6 @@ class CassandraEndPoints {
     return SNI_END_POINT_CLASS != null && SNI_END_POINT_CLASS.isInstance(endPoint);
   }
 
-  // Returns the SNI server name, the name the client sends in the TLS handshake to tell the proxy
-  // which node to forward the connection to.
   @Nullable
   static String getSniServerName(EndPoint endPoint) {
     if (SNI_GET_SERVER_NAME == null) {

@@ -21,32 +21,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import javax.annotation.Nullable;
 
-/**
- * The target a session was configured with, rendered once from its contact points.
- *
- * <p>A session configured with a single contact point keeps that host and its port. A session
- * configured with several carries all valid entries in the address, in the driver's own {@code
- * host:port,host:port} syntax, and has no port of its own. Those entries are ordered by their
- * {@code host:port} rendering, so the same set of contact points always produces the same address.
- * Entries that do not use the driver's required {@code host:port} syntax are omitted.
- *
- * <p>The driver merges {@code basic.contact-points} with contact points added on the session
- * builder. Configuration entries are read before DNS resolution to preserve their original host
- * names. Programmatic entries are captured from the builder before session creation. A session that
- * has no explicit contact point keeps reporting the coordinator that answered.
- */
 class CassandraServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
 
-  /**
-   * The target {@code session} was configured with, or {@code null} when it names no explicit
-   * contact point or the complete target cannot be recovered.
-   *
-   * <p>The driver configuration can be reloaded, so read it once and keep the result, otherwise a
-   * session could report two identities over its life.
-   */
   @Nullable
   static CassandraServerTarget of(Session session, Set<EndPoint> programmaticContactPoints) {
     try {
@@ -154,9 +133,6 @@ class CassandraServerTarget {
     return address;
   }
 
-  /**
-   * The port of a single configured contact point, or {@code null} when the target names several.
-   */
   @Nullable
   Integer getPort() {
     return port;

@@ -25,7 +25,9 @@ import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
 import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,7 +59,6 @@ class CassandraServerTargetTest {
 
   @Test
   void singleIpv6ContactPointLosesItsBrackets() {
-    // server.address holds a bare address, unlike a group where brackets keep the port unambiguous
     CassandraServerTarget target = CassandraServerTarget.of(singletonList("[::1]:9042"));
 
     assertThat(target).isNotNull();
@@ -150,6 +151,30 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void sessionUsesSeveralProgrammaticContactPoints() {
+    Set<DefaultNode> contactPoints = new LinkedHashSet<>(asList(configuredNode, programmaticNode));
+    configureContactPoints(emptyList());
+    when(session.getContext()).thenReturn(context);
+    when(context.getMetadataManager()).thenReturn(metadataManager);
+    when(metadataManager.getContactPoints()).thenReturn(contactPoints);
+    when(configuredNode.getEndPoint())
+        .thenReturn(
+            new DefaultEndPoint(
+                InetSocketAddress.createUnresolved("programmatic1.example.com", 9042)));
+    when(programmaticNode.getEndPoint())
+        .thenReturn(
+            new DefaultEndPoint(
+                InetSocketAddress.createUnresolved("programmatic2.example.com", 9142)));
+
+    CassandraServerTarget target = CassandraServerTarget.of(session);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress())
+        .isEqualTo("programmatic1.example.com:9042,programmatic2.example.com:9142");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void sessionUsesCapturedProgrammaticAndConfiguredContactPoints() {
     configureContactPoints(singletonList("configured.example.com:9042"));
     when(session.getContext()).thenReturn(context);
@@ -198,6 +223,27 @@ class CassandraServerTargetTest {
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("localhost.");
+    assertThat(target.getPort()).isEqualTo(9042);
+  }
+
+  @Test
+  void sessionPreservesAConfiguredIpv6LiteralAfterResolution() throws UnknownHostException {
+    configureContactPoints(singletonList("[::1]:9042"));
+    when(session.getContext()).thenReturn(context);
+    when(context.getMetadataManager()).thenReturn(metadataManager);
+    when(metadataManager.getContactPoints()).thenReturn(singleton(configuredNode));
+    when(configuredNode.getEndPoint())
+        .thenReturn(
+            new DefaultEndPoint(
+                new InetSocketAddress(
+                    InetAddress.getByAddress(
+                        new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}),
+                    9042)));
+
+    CassandraServerTarget target = CassandraServerTarget.of(session);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("::1");
     assertThat(target.getPort()).isEqualTo(9042);
   }
 

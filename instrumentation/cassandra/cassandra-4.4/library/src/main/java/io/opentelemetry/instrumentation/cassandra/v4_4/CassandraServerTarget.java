@@ -16,43 +16,22 @@ import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
 import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
 import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import javax.annotation.Nullable;
 
-/**
- * The target a session was configured with, rendered once from its contact points.
- *
- * <p>A session configured with a single contact point keeps that host and its port. A session
- * configured with several carries all valid entries in the address, in the driver's own {@code
- * host:port,host:port} syntax, and has no port of its own. Those entries are ordered by their
- * {@code host:port} rendering, so the same set of contact points always produces the same address.
- * Entries that do not use the driver's required {@code host:port} syntax are omitted.
- *
- * <p>The driver merges {@code basic.contact-points} with contact points added on the session
- * builder. Configuration entries are read before DNS resolution to preserve their original host
- * names. The merged session metadata supplies programmatic entries when their source is
- * unambiguous. A session whose complete target cannot be recovered without another DNS lookup keeps
- * reporting the coordinator that answered.
- */
 final class CassandraServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
 
-  /**
-   * The target {@code session} was configured with, or {@code null} when it names no explicit
-   * contact point or the complete target cannot be recovered.
-   *
-   * <p>The driver configuration can be reloaded, so read it once and keep the result, otherwise a
-   * session could report two identities over its life.
-   */
   @Nullable
   static CassandraServerTarget of(Session session) {
     try {
@@ -69,10 +48,7 @@ final class CassandraServerTarget {
       // session names its contact points on the builder alone
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
       List<CassandraServerTarget> contactPoints = valid(configuredContactPoints);
-      Set<String> configuredTargets = new HashSet<>();
-      for (CassandraServerTarget contactPoint : contactPoints) {
-        configuredTargets.add(contactPoint.asContactPoint());
-      }
+      boolean hasConfiguredTargets = !contactPoints.isEmpty();
       for (DefaultNode node : metadataManager.getContactPoints()) {
         EndPoint endPoint = node.getEndPoint();
         if (endPoint instanceof SniEndPoint) {
@@ -85,10 +61,10 @@ final class CassandraServerTarget {
         InetSocketAddress inetAddress = (InetSocketAddress) address;
         CassandraServerTarget target =
             new CassandraServerTarget(inetAddress.getHostString(), inetAddress.getPort());
-        if (configuredTargets.contains(target.asContactPoint())) {
+        if (matches(contactPoints, target)) {
           continue;
         }
-        if (!configuredTargets.isEmpty()) {
+        if (hasConfiguredTargets) {
           return null;
         }
         contactPoints.add(target);
@@ -174,6 +150,32 @@ final class CassandraServerTarget {
     return new CassandraServerTarget(group.toString(), null);
   }
 
+  private static boolean matches(
+      List<CassandraServerTarget> configuredTargets, CassandraServerTarget target) {
+    for (CassandraServerTarget configuredTarget : configuredTargets) {
+      if (!configuredTarget.port.equals(target.port)) {
+        continue;
+      }
+      if (configuredTarget.address.equals(target.address)) {
+        return true;
+      }
+      if (configuredTarget.address.indexOf(':') < 0 || target.address.indexOf(':') < 0) {
+        continue;
+      }
+      try {
+        // The driver may expand a configured IPv6 literal when it builds the metadata endpoint.
+        InetAddress configuredAddress = InetAddress.getByName(configuredTarget.address);
+        InetAddress targetAddress = InetAddress.getByName(target.address);
+        if (configuredAddress.equals(targetAddress)) {
+          return true;
+        }
+      } catch (UnknownHostException ignored) {
+        // Invalid configured contact points do not match retained metadata endpoints.
+      }
+    }
+    return false;
+  }
+
   @Nullable
   private static CassandraServerTarget single(String contactPoint) {
     int separator = contactPoint.lastIndexOf(':');
@@ -207,9 +209,6 @@ final class CassandraServerTarget {
     return address;
   }
 
-  /**
-   * The port of a single configured contact point, or {@code null} when the target names several.
-   */
   @Nullable
   Integer getPort() {
     return port;

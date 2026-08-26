@@ -25,15 +25,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-// The SNI (proxied) path cannot be exercised against the Cassandra test container, because no test
-// container image runs a proxied deployment, so this unit test covers the endpoint-to-address
-// mapping directly. CassandraResponse holds what the instrumentation records: the server address
-// becomes server.address and server.port, the SNI server name becomes server.address on its own,
-// and the peer address becomes network.peer.*. Under the frozen old database semantic conventions
-// the proxy is still recorded, so every test that reaches the SNI branch pins both modes.
-//
+// The Cassandra test container cannot exercise SNI, so these tests cover endpoint mapping directly.
 // Host.getSocketAddress() is deprecated in driver 3.11.5, but the instrumentation supports drivers
-// back to 3.0 where it is not, and the frozen old conventions still record it.
+// back to 3.0, where it is not deprecated.
 @SuppressWarnings("deprecation")
 @ExtendWith(MockitoExtension.class)
 class CassandraResponseTest {
@@ -71,7 +65,6 @@ class CassandraResponseTest {
 
     CassandraResponse response = CassandraResponse.create(executionInfo);
 
-    // an address stays a bare address, without the brackets a host:port pair would need
     assertThat(response.getServerAddress()).isNotNull();
     assertThat(response.getServerAddress().getHostString()).isEqualTo("0:0:0:0:0:0:0:1");
     assertThat(peerAddress(response)).isEqualTo(socketAddress);
@@ -79,9 +72,6 @@ class CassandraResponseTest {
 
   @Test
   void sniEndPointRecordsBroadcastRpcAddressAsServerAndNoPeer() throws UnknownHostException {
-    // Under the stable conventions the coordinator's own broadcast rpc address is recorded and the
-    // peer is left unset, because the proxy socket is only reachable through a resolving call. The
-    // old conventions never look at the endpoint and keep recording the proxy socket address.
     InetSocketAddress broadcastRpcAddress = address(NODE_IP, 9042);
     when(executionInfo.getQueriedHost()).thenReturn(coordinator);
     if (emitStableDatabaseSemconv()) {
@@ -103,8 +93,6 @@ class CassandraResponseTest {
 
   @Test
   void sniEndPointOmitsServerAddressWhenServerNameIsHostId() {
-    // Cloud deployments name each node by its host id, which is already recorded as
-    // cassandra.coordinator.id, so there is nothing address-like left to record.
     UUID hostId = UUID.randomUUID();
     when(executionInfo.getQueriedHost()).thenReturn(coordinator);
     if (emitStableDatabaseSemconv()) {
@@ -128,8 +116,6 @@ class CassandraResponseTest {
 
   @Test
   void sniEndPointFallsBackToServerNameWhenItIsNotHostId() {
-    // A custom SNI proxy may name nodes by host name, which is a usable server address, though it
-    // carries no port.
     when(executionInfo.getQueriedHost()).thenReturn(coordinator);
     if (emitStableDatabaseSemconv()) {
       when(coordinator.getEndPoint()).thenReturn(sniEndPoint("node1.example.com"));
@@ -165,8 +151,6 @@ class CassandraResponseTest {
 
   @Test
   void sniEndPointExceptionRecordsNothing() {
-    // The exception knows only the proxy endpoint, and reading its address resolves that endpoint,
-    // so the stable conventions record neither address. The old conventions still record the proxy.
     UnavailableException exception =
         new UnavailableException(sniEndPoint(), ConsistencyLevel.ONE, 1, 0);
 
@@ -203,8 +187,6 @@ class CassandraResponseTest {
     assertThat(peer.getPort()).isEqualTo(PROXY_ADDRESS.getPort());
   }
 
-  // network.peer.* is read through the attributes getter, so assert through it rather than reading
-  // the response directly.
   private static InetSocketAddress peerAddress(CassandraResponse response) {
     return new CassandraSqlAttributesGetter().getNetworkPeerInetSocketAddress(null, response);
   }

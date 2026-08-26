@@ -25,7 +25,6 @@ public class CompletionStageFunction implements Function<Object, Object> {
     if (session == null) {
       return null;
     }
-    // This should cover ours and OT's TracingCqlSession
     if (session.getClass().getName().endsWith("cassandra4.TracingCqlSession")) {
       return session;
     }

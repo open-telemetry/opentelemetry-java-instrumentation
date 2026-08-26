@@ -52,8 +52,6 @@ class CassandraEndPoints {
     return (InetSocketAddress) invoke(HOST_GET_BROADCAST_RPC_ADDRESS, coordinator);
   }
 
-  // The name the client sends in the TLS server name indication field, which the proxy uses to pick
-  // the node to route to.
   @Nullable
   static String getSniServerName(Host coordinator) {
     Object endPoint = invoke(HOST_GET_END_POINT, coordinator);

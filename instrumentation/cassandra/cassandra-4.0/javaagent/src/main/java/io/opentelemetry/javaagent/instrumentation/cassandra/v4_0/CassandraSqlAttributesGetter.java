@@ -80,16 +80,13 @@ final class CassandraSqlAttributesGetter
     }
     EndPoint endPoint = coordinator.getEndPoint();
     if (!emitStableDatabaseSemconv() || !isSniEndPoint(endPoint)) {
-      // The old database semantic conventions are frozen, so keep the pre-existing behavior, which
-      // records the proxy as the peer under SNI. Custom endpoints may represent direct connections,
-      // so preserve their resolved addresses under both old and stable conventions.
+      // Legacy semconv still records the proxy under SNI. Custom endpoints may be direct
+      // connections.
       SocketAddress address = endPoint.resolve();
       return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
     }
-    // Under SNI, resolve() performs a dns lookup on every call and round-robins across the resolved
-    // addresses using a shared static counter that the driver also uses to pick a connection.
-    // Calling it here would add a per-span dns lookup, record a rotating address that may not match
-    // the connection, and perturb the driver's own rotation, so network.peer.* is left unset.
+    // SniEndPoint.resolve() performs DNS and advances the driver's shared round-robin counter, so
+    // stable semconv leaves network.peer.* unset.
     return null;
   }
 

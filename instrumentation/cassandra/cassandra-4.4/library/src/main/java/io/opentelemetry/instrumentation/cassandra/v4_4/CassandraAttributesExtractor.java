@@ -164,16 +164,12 @@ final class CassandraAttributesExtractor
       if (emitStableDatabaseSemconv()) {
         updateStableSniServerAddressAndPort(attributes, coordinator, sniEndPoint);
       } else {
-        // The old database semantic conventions are frozen, so keep the pre-existing behavior even
-        // though it records the proxy rather than the server behind it. The fix that reports the
-        // server behind the proxy is applied only under the stable conventions above.
+        // Legacy semconv keeps recording the proxy as the server.
         updateLegacySniServerAddressAndPort(attributes, sniEndPoint);
       }
       return;
     }
-    // The SQL attributes extractor records a direct session's configured target on start. Do not
-    // replace it with the coordinator that answered. Proxied sessions have no configured target and
-    // are handled above.
+    // Preserve the configured target that stable semconv records on span start.
     if (emitStableDatabaseSemconv() && request.getServerTarget() != null) {
       return;
     }
@@ -188,23 +184,15 @@ final class CassandraAttributesExtractor
       AttributesBuilder attributes, Node coordinator, SniEndPoint sniEndPoint) {
     attributes.remove(SERVER_ADDRESS);
     attributes.remove(SERVER_PORT);
-    // Under SNI (proxied deployments such as DataStax Astra) the client reaches the server through
-    // a proxy, and SniEndPoint.resolve() would return the proxy. server.address should be the
-    // server behind the proxy, so use the coordinator's own broadcast RPC address, which carries
-    // both the address and port with no side effects. resolve() is avoided deliberately: it
-    // performs a dns lookup on every call and rotates a shared static counter the driver uses to
-    // pick a connection.
+    // SniEndPoint.resolve() returns the proxy, performs DNS, and advances the driver's shared
+    // round-robin counter. The broadcast RPC address identifies the server without those effects.
     InetSocketAddress rpcAddress = coordinator.getBroadcastRpcAddress().orElse(null);
     if (rpcAddress != null) {
       attributes.put(SERVER_ADDRESS, rpcAddress.getHostString());
       attributes.put(SERVER_PORT, rpcAddress.getPort());
       return;
     }
-    // When the node has not published its RPC address, fall back to the SNI server name, which
-    // carries no port. In cloud deployments the driver sets that name to the node's host id, which
-    // is an opaque identifier rather than an address, and which is already recorded as
-    // cassandra.coordinator.id. Record the server name only when it is something else, such as a
-    // host name supplied for a custom SNI proxy.
+    // Cloud deployments use the host id as the SNI name, not an address.
     String serverName = sniEndPoint.getServerName();
     UUID hostId = coordinator.getHostId();
     if (hostId == null || !hostId.toString().equals(serverName)) {

@@ -34,10 +34,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-// Neither a proxied (SNI) deployment nor a multi node cluster can be exercised against the
-// Cassandra test container, so this unit test covers the endpoint-to-attribute mapping directly.
-// This module uses driver 4.3.1; the javaagent module compiles against 4.0.0, where the SNI api
-// that CassandraEndPoints reaches by reflection does not exist yet.
+// The Cassandra test container cannot exercise SNI. These tests use driver 4.3.1 to cover the SNI
+// APIs that the 4.0 javaagent accesses by reflection.
 @ExtendWith(MockitoExtension.class)
 class CassandraEndpointAttributesTest {
 
@@ -110,9 +108,6 @@ class CassandraEndpointAttributesTest {
 
   @Test
   void sniEndPointIgnoresTheConfiguredTargetAndUsesBroadcastRpcAddress() {
-    // A proxied session reaches its nodes through an intermediary, so the node behind the proxy
-    // wins over whatever the session names as its contact points. Under the frozen old conventions
-    // the proxy returned by resolve() is recorded, so each mode pins a different value.
     when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "host-id"));
     if (emitStableDatabaseSemconv()) {
       when(coordinator.getBroadcastRpcAddress())
@@ -131,8 +126,6 @@ class CassandraEndpointAttributesTest {
 
   @Test
   void sniEndPointOmitsServerAddressWhenServerNameIsHostId() {
-    // In cloud deployments the driver builds the SNI server name from the node's host id, which is
-    // not an address, so nothing is recorded rather than the host id.
     UUID hostId = UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31");
     when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, hostId.toString()));
     if (emitStableDatabaseSemconv()) {
@@ -190,8 +183,6 @@ class CassandraEndpointAttributesTest {
     if (emitStableDatabaseSemconv()) {
       assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isNull();
     } else {
-      // The old conventions are frozen and still record the proxy returned by resolve() as the
-      // peer.
       InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
       assertThat(peer).isNotNull();
       assertThat(peer.getAddress().isLoopbackAddress()).isTrue();
@@ -245,7 +236,6 @@ class CassandraEndpointAttributesTest {
     assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
   }
 
-  // PROXY_ADDRESS is unresolved, so resolve() turns it into the loopback address it names.
   private static void assertProxyIsServer(Attributes attributes) {
     assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("127.0.0.1");
     assertThat(attributes.get(SERVER_PORT)).isEqualTo(29042L);

@@ -49,7 +49,6 @@ class CassandraServerTargetTest {
 
   @Test
   void singleIpv6ContactPointLosesItsBrackets() {
-    // server.address holds a bare address, unlike a group where brackets keep the port unambiguous
     CassandraServerTarget target = CassandraServerTarget.of(singletonList("[::1]:9042"));
 
     assertThat(target).isNotNull();

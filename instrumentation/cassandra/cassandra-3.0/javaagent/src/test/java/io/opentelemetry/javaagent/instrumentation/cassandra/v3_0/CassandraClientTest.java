@@ -218,10 +218,6 @@ class CassandraClientTest {
 
   @Test
   void severalConfiguredContactPointsStillReportTheCoordinator() {
-    // Sibling instrumentations report the target a client was configured with once the stable
-    // conventions are enabled. Driver 3.x never hands its contact points back, so the coordinator
-    // stays the target here, in every mode. CassandraConfiguredContactPointsTest in the
-    // javaagent-unit-tests module holds the reasons.
     Cluster multiContactPointCluster =
         Cluster.builder()
             .addContactPointsWithPorts(

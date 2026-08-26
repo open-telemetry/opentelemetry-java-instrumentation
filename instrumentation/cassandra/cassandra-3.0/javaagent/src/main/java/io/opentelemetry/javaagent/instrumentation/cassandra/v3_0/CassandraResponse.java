@@ -36,23 +36,13 @@ class CassandraResponse {
       return new CassandraResponse(executionInfo, null, null, null);
     }
     if (emitStableDatabaseSemconv() && CassandraEndPoints.isSniEndPoint(coordinator)) {
-      // Under SNI (proxied deployments such as DataStax Astra) the client connects to a proxy, so
-      // the coordinator's socket address is the proxy rather than the server behind it. Reading it
-      // also calls SniEndPoint.resolve(), which rotates a shared static counter the driver uses to
-      // pick a connection, and performs a dns lookup whenever the proxy address is unresolved,
-      // which it is for cloud deployments. Record the coordinator's own broadcast rpc address as
-      // the server, and leave the peer unset because the proxy socket is only reachable through
-      // resolve(). This applies only under the stable database semantic conventions; the old
-      // conventions are frozen and keep recording the proxy below.
+      // SniEndPoint.resolve() returns the proxy, performs DNS, and advances the driver's shared
+      // round-robin counter. Stable semconv uses the coordinator's broadcast address instead.
       InetSocketAddress rpcAddress = CassandraEndPoints.getBroadcastRpcAddress(coordinator);
       if (rpcAddress != null) {
         return new CassandraResponse(executionInfo, null, rpcAddress, null);
       }
-      // When the node has not published its rpc address, fall back to the SNI server name, which
-      // carries no port. In cloud deployments the driver sets that name to the node's host id,
-      // which is an opaque identifier rather than an address, and which is already recorded as
-      // cassandra.coordinator.id. Keep the server name only when it is something else, such as a
-      // host name supplied for a custom SNI proxy.
+      // Cloud deployments use the host id as the SNI name, not an address.
       String serverName = CassandraEndPoints.getSniServerName(coordinator);
       String hostId = CassandraEndPoints.getHostId(coordinator);
       if (hostId != null && hostId.equals(serverName)) {
@@ -71,11 +61,8 @@ class CassandraResponse {
     }
     CoordinatorException exception = (CoordinatorException) throwable;
     if (emitStableDatabaseSemconv() && CassandraEndPoints.isSniEndPoint(exception)) {
-      // The exception knows only the proxy endpoint, and getAddress() would resolve it, so neither
-      // address is recorded. The endpoint carries an SNI server name, but the exception carries no
-      // host id to tell an opaque cloud server name from a real host name, so that is not recorded
-      // either. This applies only under the stable database semantic conventions; the old
-      // conventions are frozen and keep recording the proxy below.
+      // The exception exposes only the proxy endpoint and cannot distinguish a host id from an SNI
+      // host name. Stable semconv therefore leaves the server and peer unset.
       return new CassandraResponse(null, null, null, null);
     }
     InetSocketAddress address = exception.getAddress();
@@ -87,19 +74,16 @@ class CassandraResponse {
     return executionInfo;
   }
 
-  /** The socket the request was actually written to, left unset under SNI. */
   @Nullable
   InetSocketAddress getPeerAddress() {
     return peerAddress;
   }
 
-  /** The address of the server the request reached, together with the port it listens on. */
   @Nullable
   InetSocketAddress getServerAddress() {
     return serverAddress;
   }
 
-  /** The name of the server the request reached, when no address with a port is known for it. */
   @Nullable
   String getServerName() {
     return serverName;

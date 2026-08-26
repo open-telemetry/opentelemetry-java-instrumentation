@@ -33,10 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-// Neither a proxied (SNI) deployment nor a multi node cluster can be exercised against the
-// Cassandra test container, so this unit test covers the endpoint-to-attribute mapping directly.
-// Under the frozen old database semantic conventions the coordinator is still recorded, so every
-// test that changes under the stable conventions pins both modes.
+// The Cassandra test container cannot exercise SNI, so these tests cover endpoint mapping directly.
 @ExtendWith(MockitoExtension.class)
 class CassandraEndpointAttributesTest {
 
@@ -105,8 +102,6 @@ class CassandraEndpointAttributesTest {
 
   @Test
   void sniEndPointIgnoresTheConfiguredTargetAndUsesBroadcastRpcAddress() {
-    // A proxied session reaches its nodes through an intermediary, so the node behind the proxy
-    // wins over whatever the session names as its contact points.
     when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "host-id"));
     if (emitStableDatabaseSemconv()) {
       when(coordinator.getBroadcastRpcAddress())
@@ -125,8 +120,6 @@ class CassandraEndpointAttributesTest {
 
   @Test
   void sniEndPointOmitsServerAddressWhenServerNameIsHostId() {
-    // In cloud deployments the driver builds the SNI server name from the node's host id, which is
-    // not an address, so nothing is recorded rather than the host id.
     UUID hostId = UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31");
     when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, hostId.toString()));
     if (emitStableDatabaseSemconv()) {
@@ -176,8 +169,6 @@ class CassandraEndpointAttributesTest {
   @Test
   void networkPeerIsTheCoordinatorSocketEvenWhenTheSessionNamesSeveralContactPoints()
       throws UnknownHostException {
-    // network.peer.* describes the connection the request actually used, so the configured target
-    // never reaches it.
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
     when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
 

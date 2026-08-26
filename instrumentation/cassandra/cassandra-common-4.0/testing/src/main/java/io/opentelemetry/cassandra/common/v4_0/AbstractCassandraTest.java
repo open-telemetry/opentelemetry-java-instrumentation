@@ -196,10 +196,7 @@ public abstract class AbstractCassandraTest {
 
   @Test
   void configuredContactPointsAreTheServerTarget() {
-    // The stable conventions report the target a session was configured with rather than the node
-    // that answered, so a session that names several contact points reports all of them and no
-    // port of its own. The old conventions are frozen and keep reporting the coordinator. The
-    // second contact point is unreachable on purpose: only the configuration is being reported.
+    // The second contact point is unreachable on purpose; only its configured value is reported.
     String unreachableContactPoint = "127.0.0.2:9042";
     CqlSession session =
         getSessionWithConfiguredContactPoints(
@@ -664,10 +661,6 @@ public abstract class AbstractCassandraTest {
     return sessionBuilder;
   }
 
-  /**
-   * A session whose contact points come from {@code basic.contact-points} alone, which is where the
-   * driver keeps what an operator configured.
-   */
   protected CqlSession getSessionWithConfiguredContactPoints(List<String> contactPoints) {
     DriverConfigLoader configLoader =
         DefaultDriverConfigLoader.builder()
