@@ -1,0 +1,7 @@
+display_name: Pekko Remote
+description: >
+  This instrumentation propagates context between the nodes of a Pekko cluster, it does not emit any
+  telemetry on its own.
+library_link: https://pekko.apache.org/docs/pekko/current/remoting-artery.html
+features:
+  - CONTEXT_PROPAGATION
