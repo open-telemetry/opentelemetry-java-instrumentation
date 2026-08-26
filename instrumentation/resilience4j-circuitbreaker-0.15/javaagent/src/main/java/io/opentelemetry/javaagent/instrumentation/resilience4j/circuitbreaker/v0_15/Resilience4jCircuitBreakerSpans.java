@@ -23,7 +23,6 @@ public class Resilience4jCircuitBreakerSpans {
   // Raw acquirePermission()/onSuccess()/onError() does not expose an attempt token, so arbitrary
   // out-of-order raw callbacks cannot be correlated safely. Decorated APIs capture the exact
   // acquisition token; raw same-thread callbacks are only best-effort for simple usage.
-  private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
   private static final ThreadLocal<Deque<AttachedPendingSpan>> attachedPendingSpans =
       new ThreadLocal<>();
   private static final ThreadLocal<Deque<AttemptToken>> currentAcquisitions = new ThreadLocal<>();
@@ -153,12 +152,6 @@ public class Resilience4jCircuitBreakerSpans {
     if (token != null && token.circuitBreaker == circuitBreaker) {
       token.pendingSpan = pendingSpan;
     }
-    Deque<PendingSpan> spans = pendingSpans.get();
-    if (spans == null) {
-      spans = new ArrayDeque<>();
-      pendingSpans.set(spans);
-    }
-    spans.push(pendingSpan);
   }
 
   public static void reject(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
@@ -303,25 +296,7 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   public static void detachPendingSpan(PendingSpan pendingSpan) {
-    removePendingSpan(pendingSpan);
     removeAttachedPendingSpan(pendingSpan);
-  }
-
-  private static void removePendingSpan(PendingSpan pendingSpan) {
-    Deque<PendingSpan> spans = pendingSpans.get();
-    if (spans == null) {
-      return;
-    }
-    Iterator<PendingSpan> iterator = spans.iterator();
-    while (iterator.hasNext()) {
-      if (iterator.next() == pendingSpan) {
-        iterator.remove();
-        break;
-      }
-    }
-    if (spans.isEmpty()) {
-      pendingSpans.remove();
-    }
   }
 
   private static void removeAttachedPendingSpan(PendingSpan pendingSpan) {
