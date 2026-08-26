@@ -20,13 +20,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.geode.cache.client.Pool;
 import org.apache.geode.cache.client.PoolFactory;
 
-/**
- * Reads the target a client pool is being configured with, and hands it to the pool the factory
- * creates.
- *
- * <p>The factory sees the complete target configuration before the pool exists. A factory keeps
- * that configuration between pools, so every pool it creates is given a snapshot of its own.
- */
 class GeodePoolInstrumentation implements TypeInstrumentation {
 
   @Override
@@ -47,6 +40,9 @@ class GeodePoolInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("addLocator").and(takesArguments(2)).and(takesArgument(0, String.class)),
         getClass().getName() + "$AddLocatorAdvice");
+    transformer.applyAdviceToMethod(
+        named("setServerGroup").and(takesArguments(1)).and(takesArgument(0, String.class)),
+        getClass().getName() + "$SetServerGroupAdvice");
     transformer.applyAdviceToMethod(
         named("reset").and(takesArguments(0)), getClass().getName() + "$ResetAdvice");
     transformer.applyAdviceToMethod(
@@ -80,6 +76,16 @@ class GeodePoolInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) @Nullable String host,
         @Advice.Argument(1) int port) {
       GeodeServerTargets.addLocator(poolFactory, host, port);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetServerGroupAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void captureConfiguredServerGroup(
+        @Advice.This PoolFactory poolFactory, @Advice.Argument(0) @Nullable String serverGroup) {
+      GeodeServerTargets.setServerGroup(poolFactory, serverGroup);
     }
   }
 

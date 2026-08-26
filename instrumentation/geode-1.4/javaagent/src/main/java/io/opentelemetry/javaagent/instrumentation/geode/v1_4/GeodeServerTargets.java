@@ -13,14 +13,7 @@ import org.apache.geode.cache.client.Pool;
 import org.apache.geode.cache.client.PoolFactory;
 import org.apache.geode.cache.client.PoolManager;
 
-/**
- * The configured target of every client pool the instrumentation has seen being created.
- *
- * <p>A pool factory collects what an operator configures, and the pool it creates is handed a
- * snapshot of that configuration. Rendering the target while the pool is being created keeps the
- * servers a pool discovers and the connections it holds at any moment out of the target, and leaves
- * an operation with nothing to do beyond looking its pool up.
- */
+// Public because advice may be inlined into Geode classes in a different package.
 public class GeodeServerTargets {
 
   private static final VirtualField<PoolFactory, GeodeServerTarget.Builder> CONFIGURED_TARGETS =
@@ -28,25 +21,26 @@ public class GeodeServerTargets {
   private static final VirtualField<Pool, GeodeServerTarget> POOL_TARGETS =
       VirtualField.find(Pool.class, GeodeServerTarget.class);
 
-  /** Records a cache server {@code poolFactory} is being configured with. */
   public static void addServer(PoolFactory poolFactory, @Nullable String host, int port) {
     builder(poolFactory).addServer(host, port);
   }
 
-  /** Records a locator {@code poolFactory} is being configured with. */
   public static void addLocator(PoolFactory poolFactory, @Nullable String host, int port) {
     builder(poolFactory).addLocator(host, port);
   }
 
-  /** Forgets the configuration {@code poolFactory} collected so far. */
+  public static void setServerGroup(PoolFactory poolFactory, @Nullable String serverGroup) {
+    builder(poolFactory).setServerGroup(serverGroup);
+  }
+
   public static void reset(PoolFactory poolFactory) {
     builder(poolFactory).reset();
   }
 
-  /** Copies the configured target from {@code sourcePool}. */
   public static void copyConfiguration(PoolFactory poolFactory, Pool sourcePool) {
     GeodeServerTarget.Builder builder = builder(poolFactory);
     builder.reset();
+    builder.setServerGroup(sourcePool.getServerGroup());
     for (InetSocketAddress server : sourcePool.getServers()) {
       builder.addServer(server.getHostString(), server.getPort());
     }
@@ -55,17 +49,13 @@ public class GeodeServerTargets {
     }
   }
 
-  /** Records the target {@code pool} was created with. */
   public static void capture(PoolFactory poolFactory, @Nullable Pool pool) {
     if (pool != null) {
+      // Each pool keeps the configuration snapshot from the moment it was created.
       POOL_TARGETS.set(pool, builder(poolFactory).build());
     }
   }
 
-  /**
-   * The target the pool behind {@code region} was configured with, or {@code null} when the region
-   * reaches no pool or its pool names no target.
-   */
   @Nullable
   public static GeodeServerTarget get(Region<?, ?> region) {
     Pool pool = PoolManager.find(region);

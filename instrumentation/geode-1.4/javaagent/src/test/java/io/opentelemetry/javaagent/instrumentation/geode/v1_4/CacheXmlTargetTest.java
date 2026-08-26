@@ -38,7 +38,7 @@ class CacheXmlTargetTest {
 
   @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
-  void configuredLocatorSurvivesCacheXmlPoolCopy(@TempDir Path tempDir) throws Exception {
+  void configuredLocatorGroupSurvivesCacheXmlPoolCopy(@TempDir Path tempDir) throws Exception {
     Path cacheXml = tempDir.resolve("client-cache.xml");
     Files.write(
         cacheXml,
@@ -51,6 +51,7 @@ class CacheXmlTargetTest {
                 + "  <pool name=\"xml-pool\" server-group=\"orders\" min-connections=\"0\" "
                 + "subscription-enabled=\"false\">\n"
                 + "    <locator host=\"192.0.2.1\" port=\"10334\"/>\n"
+                + "    <locator host=\"192.0.2.2\" port=\"10335\"/>\n"
                 + "  </pool>\n"
                 + "</client-cache>\n")
             .getBytes(UTF_8));
@@ -79,7 +80,10 @@ class CacheXmlTargetTest {
                               equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "xml-region"),
                               equalTo(maybeStable(DB_OPERATION), "putAll"),
                               equalTo(
-                                  SERVER_ADDRESS, emitStableDatabaseSemconv() ? "192.0.2.1" : null),
+                                  SERVER_ADDRESS,
+                                  emitStableDatabaseSemconv()
+                                      ? "192.0.2.1:10334/orders,192.0.2.2:10335/orders"
+                                      : null),
                               equalTo(SERVER_PORT, null))));
     }
   }

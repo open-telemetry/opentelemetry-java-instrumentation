@@ -77,7 +77,7 @@ class ConfiguredTargetTest {
   }
 
   @Test
-  void severalConfiguredServersAreNotReported() {
+  void severalConfiguredServersAreReportedTogether() {
     Region<Object, Object> region =
         createRegion(
             "several-servers",
@@ -88,13 +88,14 @@ class ConfiguredTargetTest {
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, null, null));
+    testing.waitAndAssertTraces(operation(region, "127.0.0.1:40404,127.0.0.2:40405", null));
     assertDurationMetric(
         testing,
         "io.opentelemetry.geode-1.4",
         DB_SYSTEM_NAME,
         DB_COLLECTION_NAME,
-        DB_OPERATION_NAME);
+        DB_OPERATION_NAME,
+        SERVER_ADDRESS);
   }
 
   @Test
@@ -107,17 +108,32 @@ class ConfiguredTargetTest {
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, "127.0.0.2", null));
+    testing.waitAndAssertTraces(operation(region, "127.0.0.2:10334", null));
   }
 
   @Test
-  void configuredLocatorIsReportedWithoutItsPort() {
+  void explicitlyConfiguredServerIsPreferredOverItsGroup() {
+    Region<Object, Object> region =
+        createRegion(
+            "server-group",
+            poolFactory -> {
+              poolFactory.addServer("localhost", 40404);
+              poolFactory.setServerGroup("orders");
+            });
+
+    region.putAll(emptyMap());
+
+    testing.waitAndAssertTraces(operation(region, "localhost", 40404L));
+  }
+
+  @Test
+  void configuredLocatorIsReportedAsADiscoveryTarget() {
     Region<Object, Object> region =
         createRegion("locators", poolFactory -> poolFactory.addLocator("localhost", 10334));
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, "localhost", null));
+    testing.waitAndAssertTraces(operation(region, "localhost:10334", null));
     assertDurationMetric(
         testing,
         "io.opentelemetry.geode-1.4",
@@ -128,33 +144,40 @@ class ConfiguredTargetTest {
   }
 
   @Test
-  void severalConfiguredLocatorsAreNotReported() {
+  void configuredLocatorsAreIndependentlyScopedByTheirGroup() {
     Region<Object, Object> region =
         createRegion(
-            "several-locators",
+            "locator-group",
             poolFactory -> {
               poolFactory.addLocator("127.0.0.2", 10335);
               poolFactory.addLocator("127.0.0.1", 10334);
+              poolFactory.setServerGroup("orders");
             });
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, null, null));
+    testing.waitAndAssertTraces(
+        operation(region, "127.0.0.1:10334/orders,127.0.0.2:10335/orders", null));
   }
 
   @Test
   void ipv6ServersKeepTheirAddress() {
-    Region<Object, Object> bare =
-        createRegion("ipv6-bare", poolFactory -> poolFactory.addServer("::1", 40404));
-    Region<Object, Object> bracketed =
+    Region<Object, Object> single =
+        createRegion("ipv6-single", poolFactory -> poolFactory.addServer("::1", 40404));
+    Region<Object, Object> several =
         createRegion(
-            "ipv6-bracketed", poolFactory -> poolFactory.addServer("[2001:db8::1]", 40404));
+            "ipv6-several",
+            poolFactory -> {
+              poolFactory.addServer("[2001:db8::1]", 40404);
+              poolFactory.addServer("127.0.0.2", 40405);
+            });
 
-    bare.putAll(emptyMap());
-    bracketed.putAll(emptyMap());
+    single.putAll(emptyMap());
+    several.putAll(emptyMap());
 
     testing.waitAndAssertTraces(
-        operation(bare, "::1", 40404L), operation(bracketed, "2001:db8::1", 40404L));
+        operation(single, "::1", 40404L),
+        operation(several, "127.0.0.2:40405,[2001:db8::1]:40404", null));
   }
 
   @Test
@@ -170,7 +193,8 @@ class ConfiguredTargetTest {
     second.putAll(emptyMap());
 
     testing.waitAndAssertTraces(
-        operation(first, "127.0.0.1", 40404L), operation(second, null, null));
+        operation(first, "127.0.0.1", 40404L),
+        operation(second, "127.0.0.1:40404,127.0.0.2:40405", null));
   }
 
   @Test
@@ -180,6 +204,7 @@ class ConfiguredTargetTest {
             "after-reset",
             poolFactory -> {
               poolFactory.addServer("127.0.0.1", 40404);
+              poolFactory.setServerGroup("orders");
               poolFactory.reset();
               poolFactory
                   .setMinConnections(0)
