@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Arrays.asList;
 
 import io.lettuce.core.RedisClient;
@@ -108,6 +110,27 @@ public abstract class AbstractLettuceClientTest {
     } else {
       assertCommandEncodeEvents(span);
     }
+  }
+
+  protected void assertCommandErrorMetric(String errorType) {
+    if (!emitStableDatabaseSemconv()) {
+      return;
+    }
+
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.lettuce-5.1",
+            "db.client.operation.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(ERROR_TYPE, errorType))))));
   }
 
   protected String spanName(String operation) {

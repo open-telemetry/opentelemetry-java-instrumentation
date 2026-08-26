@@ -320,10 +320,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(maybeStable(DB_OPERATION), "LPUSH"),
                                     equalTo(
                                         ERROR_TYPE,
-                                        emitStableDatabaseSemconv() && testLatestDeps()
-                                            ? "io.lettuce.core.RedisCommandExecutionException"
-                                            : null)))
+                                        emitStableDatabaseSemconv() ? "WRONGTYPE" : null)))
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
+
+    assertCommandErrorMetric("WRONGTYPE");
   }
 
   @Test
@@ -478,9 +478,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          emitStableDatabaseSemconv()
-                                              ? "io.lettuce.core.RedisCommandExecutionException"
-                                              : null)))),
+                                          emitStableDatabaseSemconv() ? "ERR" : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -500,9 +498,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          emitStableDatabaseSemconv()
-                                              ? "io.lettuce.core.RedisCommandExecutionException"
-                                              : null)))),
+                                          emitStableDatabaseSemconv() ? "ERR" : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -522,9 +518,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          emitStableDatabaseSemconv()
-                                              ? "io.lettuce.core.RedisCommandExecutionException"
-                                              : null)))),
+                                          emitStableDatabaseSemconv() ? "ERR" : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->

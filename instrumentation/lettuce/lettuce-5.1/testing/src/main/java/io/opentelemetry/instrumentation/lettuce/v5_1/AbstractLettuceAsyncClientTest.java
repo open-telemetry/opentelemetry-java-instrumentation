@@ -220,10 +220,10 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(maybeStable(DB_OPERATION), "LPUSH"),
                                     equalTo(
                                         ERROR_TYPE,
-                                        emitStableDatabaseSemconv() && testLatestDeps()
-                                            ? "io.lettuce.core.RedisCommandExecutionException"
-                                            : null)))
+                                        emitStableDatabaseSemconv() ? "WRONGTYPE" : null)))
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
+
+    assertCommandErrorMetric("WRONGTYPE");
   }
 
   @Test
