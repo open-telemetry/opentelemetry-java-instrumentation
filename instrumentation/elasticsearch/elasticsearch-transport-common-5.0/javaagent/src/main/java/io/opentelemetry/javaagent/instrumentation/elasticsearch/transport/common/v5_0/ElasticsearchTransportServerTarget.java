@@ -20,11 +20,6 @@ public class ElasticsearchTransportServerTarget {
   private final String address;
   @Nullable private final Integer port;
 
-  private ElasticsearchTransportServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
-
   /** The target of {@code endpoints}, or {@code null} when there is no usable endpoint. */
   @Nullable
   public static ElasticsearchTransportServerTarget of(@Nullable List<Endpoint> endpoints) {
@@ -60,6 +55,11 @@ public class ElasticsearchTransportServerTarget {
       }
     }
     return new ElasticsearchTransportServerTarget(group.toString(), null);
+  }
+
+  private ElasticsearchTransportServerTarget(String address, @Nullable Integer port) {
+    this.address = address;
+    this.port = port;
   }
 
   public String getAddress() {

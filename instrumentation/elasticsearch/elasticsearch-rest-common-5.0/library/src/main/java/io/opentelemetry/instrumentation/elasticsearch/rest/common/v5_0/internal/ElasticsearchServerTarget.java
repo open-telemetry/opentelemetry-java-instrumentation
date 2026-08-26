@@ -25,11 +25,6 @@ public class ElasticsearchServerTarget {
   private final String address;
   @Nullable private final Integer port;
 
-  private ElasticsearchServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
-
   /** The target of {@code hosts}, or {@code null} when there is no usable host. */
   @Nullable
   public static ElasticsearchServerTarget of(@Nullable List<HttpHost> hosts) {
@@ -46,6 +41,11 @@ public class ElasticsearchServerTarget {
     }
     String group = renderGroup(hosts);
     return group == null ? null : new ElasticsearchServerTarget(group, null);
+  }
+
+  private ElasticsearchServerTarget(String address, @Nullable Integer port) {
+    this.address = address;
+    this.port = port;
   }
 
   @Nullable

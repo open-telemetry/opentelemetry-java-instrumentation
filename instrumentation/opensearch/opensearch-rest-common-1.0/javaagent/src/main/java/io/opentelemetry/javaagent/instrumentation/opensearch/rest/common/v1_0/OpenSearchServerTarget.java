@@ -21,11 +21,6 @@ public class OpenSearchServerTarget {
   private final String address;
   @Nullable private final Integer port;
 
-  private OpenSearchServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
-
   /** The target of {@code endpoints}, or {@code null} when there is no usable endpoint. */
   @Nullable
   public static OpenSearchServerTarget of(@Nullable List<Endpoint> endpoints) {
@@ -41,6 +36,11 @@ public class OpenSearchServerTarget {
     }
     String group = renderGroup(endpoints);
     return group == null ? null : new OpenSearchServerTarget(group, null);
+  }
+
+  private OpenSearchServerTarget(String address, @Nullable Integer port) {
+    this.address = address;
+    this.port = port;
   }
 
   @Nullable
