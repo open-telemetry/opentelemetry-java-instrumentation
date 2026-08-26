@@ -102,6 +102,14 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getName()).isNull();
   }
 
+  @Test
+  void atInPostgresQueryDoesNotDisableConfiguredTargetParsing() {
+    DbInfo dbInfo =
+        parse("jdbc:postgresql://pg.host1:5432,pg.host2:5433/pgdb?user=admin@corp.com", null);
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("pg.host1:5432,pg.host2:5433");
+    assertThat(dbInfo.getName()).isEqualTo("pgdb");
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {
@@ -2057,7 +2065,6 @@ class JdbcConnectionUrlParserTest {
             .setPort(1521)
             .setName("orclsn")
             .build(),
-        // a single host is not a group, whatever the routing syntax
         arg("jdbc:mariadb:failover://mdb.host:3306/mdbdb")
             .setShortUrl("mariadb:failover://mdb.host:3306")
             .setSystem(MARIADB)
@@ -2100,13 +2107,14 @@ class JdbcConnectionUrlParserTest {
 
   @ParameterizedTest
   @ValueSource(
-      strings = {
-        "postgresql://h1,h2/db/admin@corp.com",
-        "postgresql://h1,h2/db?user=admin@corp.com",
-        "postgresql://h1,h2/db#admin@corp.com"
-      })
+      strings = {"postgresql://h1,h2/db/admin@corp.com", "postgresql://h1,h2/db#admin@corp.com"})
   void testAtAfterCommaSeparatedAuthorityIsAmbiguous(String url) {
     assertThat(extractAuthority(url)).isNull();
+  }
+
+  @Test
+  void testAtInQueryParameterDoesNotHideAuthority() {
+    assertThat(extractAuthority("postgresql://h1,h2/db?user=admin@corp.com")).isEqualTo("h1,h2");
   }
 
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {

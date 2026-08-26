@@ -26,12 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Captures the servers a client is built with when {@link
- * io.vertx.sqlclient.ClientBuilder#connectingTo(List)} is used. The other {@code connectingTo}
- * overloads name a single server, and they all funnel into {@code connectingTo(Supplier)}, which is
- * where the servers of an earlier call are dropped.
- */
+// All connectingTo overloads delegate to the Supplier overload, which clears the previous target.
 class ClientBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
@@ -63,7 +58,6 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConnectingToOptionsAdvice {
-    // runs after the delegation to connectingTo(Supplier) cleared the previous servers
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Object clientBuilder,
@@ -77,15 +71,12 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
   public static class ConnectingToSupplierAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Object clientBuilder) {
-      // every connectingTo overload ends up here, so this is where the previously configured
-      // servers stop being what the builder connects to
       VertxSqlClientSingletons.storeBuilderDatabases(clientBuilder, null);
     }
   }
 
   @SuppressWarnings("unused")
   public static class ConnectingToListAdvice {
-    // runs after the delegation to connectingTo(Supplier) cleared the previous servers
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Object clientBuilder, @Advice.Argument(0) List<SqlConnectOptions> databases) {
@@ -104,7 +95,6 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      // set the client state to ThreadLocal, it will be read in SqlClientBase constructor
       setSqlConnectOptions(databases.get(0));
       setAddressGroup(VertxSqlAddressGroup.of(databases));
       return databases;

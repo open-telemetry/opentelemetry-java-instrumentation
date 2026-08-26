@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-/** Pools over a list of servers were added in vert.x 4.2, the version this suite runs against. */
 @SuppressWarnings("deprecation") // using deprecated semconv
 class VertxSqlClientServerListTest {
 
@@ -83,7 +82,6 @@ class VertxSqlClientServerListTest {
   @Test
   void serverListIsReportedAsOneTarget()
       throws InterruptedException, ExecutionException, TimeoutException {
-    // the first server is the running database, the second one only makes the target a group
     PgConnectOptions first = connectOptions().setPort(port);
     PgConnectOptions second = connectOptions().setPort(port + 1);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
@@ -173,10 +171,6 @@ class VertxSqlClientServerListTest {
     assertEachPoolReportsItsOwnTarget(singlePool, listPool);
   }
 
-  /**
-   * Both pools are built from the same {@link PgConnectOptions} instance, which the caller owns and
-   * may hand to any number of clients.
-   */
   private static void assertEachPoolReportsItsOwnTarget(Pool singlePool, Pool listPool)
       throws InterruptedException, ExecutionException, TimeoutException {
     cleanup.deferCleanup(singlePool::close);

@@ -567,7 +567,6 @@ class ClickHouseClientV1Test {
 
   @Test
   void testNodeListReportsTheWholeConfiguredTarget() throws ClickHouseException {
-    // the first node is the running server, the second one is only there to make the target a group
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
     String addressGroup = host + ":" + port + "," + host + ":" + (port + 1);
     ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
@@ -604,7 +603,6 @@ class ClickHouseClientV1Test {
 
   @Test
   void testFaultyNodeStaysInTheConfiguredTarget() throws ClickHouseException {
-    // a second node list, so that the health state of this one does not reach the test above
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 2);
     String addressGroup = host + ":" + port + "," + host + ":" + (port + 2);
     ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
@@ -614,8 +612,6 @@ class ClickHouseClientV1Test {
         nodes.update(node, ClickHouseNode.Status.FAULTY);
       }
     }
-    // the nodes a list hands out are only the healthy ones, and the target must not shrink with
-    // them
     assertThat(nodes.getNodes()).hasSize(1);
 
     ClickHouseResponse response =

@@ -68,7 +68,6 @@ class VertxSqlClientAttributesGetter
   @Override
   public Integer getServerPort(VertxSqlClientRequest request) {
     if (emitStableDatabaseSemconv() && request.getServerAddressGroup() != null) {
-      // the group target already carries the port of every server it names
       return null;
     }
     return request.getPort();

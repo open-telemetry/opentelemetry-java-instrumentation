@@ -56,12 +56,6 @@ public abstract class DbInfo {
   @Nullable
   public abstract Integer getServerPort();
 
-  /**
-   * The complete configured target of a connection that routes to more than one host, e.g. {@code
-   * h1:3306,h2:3306}. Opaque routing targets retain their driver syntax. Credentials, the database
-   * path, options and the fragment are removed. {@code null} when the connection targets a single
-   * host.
-   */
   @Nullable
   public abstract String getServerAddressGroup();
 

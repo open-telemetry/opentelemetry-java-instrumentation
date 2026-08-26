@@ -132,10 +132,10 @@ public class VertxSqlClientSingletons {
         });
   }
 
-  /** Keeps a snapshot, so that a later change to the caller's list does not change the client. */
   public static void storeBuilderDatabases(
       Object clientBuilder, @Nullable List<SqlConnectOptions> databases) {
     if (clientBuilder instanceof ClientBuilderBase) {
+      // The list belongs to the caller and may be mutated or reused.
       BUILDER_DATABASES.set(
           (ClientBuilderBase<?>) clientBuilder,
           databases == null ? null : new ArrayList<>(databases));

@@ -101,7 +101,6 @@ class PoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<SqlConnection> onExit(
         @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
-      // copy the state stored on the pool to the new connection
       return wrapContext(
           VertxSqlClientSingletons.attachClientState(
               future, getPoolSqlConnectOptions(pool), getPoolAddressGroup(pool)));

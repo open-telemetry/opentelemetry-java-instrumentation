@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Verifies service peer mappings against the value emitted as {@code server.address}. */
 class JdbcServicePeerTest {
 
   private static final String GROUP_TARGET = "pg.host1:5432,pg.host2:5433";

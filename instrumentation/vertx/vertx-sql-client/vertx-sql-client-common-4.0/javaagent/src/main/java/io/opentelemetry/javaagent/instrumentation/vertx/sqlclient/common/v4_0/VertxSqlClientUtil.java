@@ -43,7 +43,6 @@ public class VertxSqlClientUtil {
   private static final VirtualField<PreparedStatement, VertxSqlClientData> PREPARED_STATEMENT_DATA =
       VirtualField.find(PreparedStatement.class, VertxSqlClientData.class);
 
-  /** The server that stands for a client configured with a list of them. */
   @Nullable
   public static SqlConnectOptions firstDatabase(
       @Nullable List<? extends SqlConnectOptions> databases) {

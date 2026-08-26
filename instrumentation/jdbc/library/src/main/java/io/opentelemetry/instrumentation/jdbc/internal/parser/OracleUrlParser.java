@@ -144,14 +144,8 @@ public final class OracleUrlParser implements JdbcUrlParser {
     applyAddressListGroup(atSplit[1], ctx);
   }
 
-  /**
-   * Keep the whole address list of a DESCRIPTION that names more than one ADDRESS, dropping the
-   * CONNECT_DATA and every address attribute other than PROTOCOL, HOST and PORT.
-   *
-   * <p>A DESCRIPTION_LIST is left alone, because its addresses belong to separate descriptions and
-   * flattening them into one list would misstate the configuration.
-   */
   private static void applyAddressListGroup(String description, ParseContext ctx) {
+    // A DESCRIPTION_LIST contains independent targets, not one failover/load-balancing group.
     if (DESCRIPTION_LIST_PATTERN.matcher(description).find()) {
       return;
     }

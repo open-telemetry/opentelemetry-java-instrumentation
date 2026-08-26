@@ -9,12 +9,6 @@ import io.vertx.sqlclient.SqlConnectOptions;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * The complete configured target of a client that was given more than one server, rendered as a
- * comma separated {@code host:port} list, e.g. {@code h1:5432,h2:5432}.
- *
- * <p>The rendering is done once, when the client is configured, and the result is immutable.
- */
 public class VertxSqlAddressGroup {
 
   private final String address;
@@ -23,10 +17,6 @@ public class VertxSqlAddressGroup {
     this.address = address;
   }
 
-  /**
-   * The target of {@code databases}, or null when they name a single server, when there is no
-   * group, or when a host is missing so that no complete target can be rendered.
-   */
   @Nullable
   public static VertxSqlAddressGroup of(@Nullable List<? extends SqlConnectOptions> databases) {
     if (databases == null || databases.size() < 2) {
@@ -47,8 +37,7 @@ public class VertxSqlAddressGroup {
   }
 
   private static void appendHostPort(StringBuilder address, String host, int port) {
-    // a literal IPv6 address is bracketed so that the port stays unambiguous; a Unix domain socket
-    // path is kept as configured
+    // Bracket IPv6 literals; leave Unix socket paths unchanged.
     if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
       address.append('[').append(host).append(']');
     } else {

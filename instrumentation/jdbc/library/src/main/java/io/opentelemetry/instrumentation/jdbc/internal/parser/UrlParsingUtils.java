@@ -133,10 +133,6 @@ public final class UrlParsingUtils {
     return url.toString();
   }
 
-  /**
-   * Append the {@code type:[subtype:]} prefix that starts a JDBC connection string, without the
-   * {@code jdbc:} scheme.
-   */
   public static void appendTypePrefix(
       StringBuilder builder, String type, @Nullable String subtype) {
     builder.append(type);
@@ -147,11 +143,8 @@ public final class UrlParsingUtils {
     }
   }
 
-  /**
-   * Append {@code host[:port]}, enclosing a literal IPv6 address in brackets so that the port stays
-   * unambiguous.
-   */
   public static void appendHostPort(StringBuilder builder, String host, @Nullable Integer port) {
+    // Brackets keep an IPv6 literal unambiguous when a port follows.
     if (host.contains(":") && !host.startsWith("[")) {
       builder.append('[');
       builder.append(host);
@@ -233,15 +226,6 @@ public final class UrlParsingUtils {
     return indexOfAny(str, 0, chars);
   }
 
-  /**
-   * Find the index of the first occurrence of any of the specified characters at or after {@code
-   * fromIndex}.
-   *
-   * @param str the string to search
-   * @param fromIndex the index to start searching from
-   * @param chars the characters to search for
-   * @return the index of the first occurrence, or -1 if none found
-   */
   public static int indexOfAny(String str, int fromIndex, char... chars) {
     for (int i = Math.max(fromIndex, 0); i < str.length(); i++) {
       char c = str.charAt(i);
@@ -254,14 +238,6 @@ public final class UrlParsingUtils {
     return -1;
   }
 
-  /**
-   * Extract the authority of a URL-shaped connection string, i.e. everything between {@code ://}
-   * and the database path, the query string or the fragment.
-   *
-   * @param url the connection string, with the {@code jdbc:} scheme already removed
-   * @return the authority, or null when the connection string has no {@code ://} separator or
-   *     contains ambiguous user info that cannot be sanitized safely
-   */
   @Nullable
   public static String extractAuthority(String url) {
     int protoLoc = url.indexOf("://");
@@ -277,7 +253,9 @@ public final class UrlParsingUtils {
       int commaAfterAt = url.indexOf(',', lastAt + 1);
       int commaBeforeEnd = url.indexOf(',', start);
       if ((commaAfterAt >= 0 && commaAfterAt < possibleAuthorityEnd)
-          || (commaBeforeEnd >= 0 && commaBeforeEnd < end)) {
+          || (commaBeforeEnd >= 0
+              && commaBeforeEnd < end
+              && !isAtInQueryParameter(url, end, lastAt))) {
         // Comma-separated text around an early delimiter may be part of a malformed password.
         // Dropping the group is safer than reporting credential text as a host.
         return null;
@@ -286,19 +264,28 @@ public final class UrlParsingUtils {
     return end < 0 ? url.substring(start) : url.substring(start, end);
   }
 
-  /**
-   * Remove the {@code user[:password]@} prefix of an authority.
-   *
-   * <p>Only an authority that has the URL shape carries user info that way. A driver specific
-   * {@code key=value} block, such as the MySQL and MariaDB {@code address=(...)} syntax, spells its
-   * credentials out as attributes, and an {@code @} inside one of them belongs to the value rather
-   * than to a user info separator. Such an authority is returned unchanged, so that cutting at the
-   * last {@code @} cannot leave the tail of a password behind.
-   *
-   * @param authority the authority to strip
-   * @return the authority without user info
-   */
+  private static boolean isAtInQueryParameter(String url, int authorityEnd, int at) {
+    int queryStart = url.indexOf('?', authorityEnd);
+    if (queryStart < 0 || queryStart > at) {
+      return false;
+    }
+    int fragmentStart = url.indexOf('#', queryStart);
+    if (fragmentStart >= 0 && fragmentStart < at) {
+      return false;
+    }
+    int parameterStart = Math.max(queryStart, url.lastIndexOf('&', at)) + 1;
+    int equals = url.indexOf('=', parameterStart);
+    if (equals < parameterStart || equals > at) {
+      return false;
+    }
+    int parameterEnd = indexOfAny(url, at + 1, '&', '#');
+    parameterEnd = parameterEnd < 0 ? url.length() : parameterEnd;
+    String suffix = url.substring(at + 1, parameterEnd);
+    return suffix.indexOf('/') < 0 && suffix.indexOf(',') < 0;
+  }
+
   private static String stripUserInfo(String authority) {
+    // address=(...) credentials use key/value syntax, where '@' belongs to the value.
     if (!isUrlShapedAuthority(authority)) {
       return authority;
     }
@@ -306,22 +293,11 @@ public final class UrlParsingUtils {
     return at < 0 ? authority : authority.substring(at + 1);
   }
 
-  /**
-   * Whether an authority is written as {@code [user[:password]@]host[:port]}, as opposed to a
-   * driver specific block of {@code key=value} attributes.
-   */
   private static boolean isUrlShapedAuthority(String authority) {
     return authority.indexOf('(') < 0;
   }
 
-  /**
-   * Split a comma-separated host list into its entries. Commas inside square brackets (literal IPv6
-   * addresses) and inside parentheses (MySQL and MariaDB {@code address=(...)} blocks) are part of
-   * an entry rather than separators.
-   *
-   * @param hostList the host list, without user info
-   * @return the individual entries, in the order they appear
-   */
+  // IPv6 brackets and address=(...) blocks may contain commas.
   private static List<String> splitHostList(String hostList) {
     List<String> entries = new ArrayList<>();
     int depth = 0;
@@ -341,33 +317,14 @@ public final class UrlParsingUtils {
     return entries;
   }
 
-  /**
-   * Remove the credential attributes of the MySQL and MariaDB {@code address=(...)} syntax, e.g.
-   * {@code (user=root)} and {@code (password=secret)}.
-   *
-   * @param authority the authority to sanitize
-   * @return the authority without credential attributes
-   */
+  // MySQL and MariaDB address=(...) blocks store credentials as separate attributes.
   private static String stripAddressCredentials(String authority) {
     return ADDRESS_CREDENTIAL_PATTERN.matcher(authority).replaceAll("");
   }
 
-  /**
-   * Render the sanitized host list of an authority that routes to more than one host.
-   *
-   * <p>User info and the credentials of MySQL and MariaDB {@code address=(...)} blocks are removed;
-   * everything else is kept as configured so that the routing identity survives.
-   *
-   * <p>Whole credential attributes are removed before any user info is looked for, because a
-   * password may hold an {@code @} of its own and cutting the authority at the last {@code @} would
-   * otherwise carry the rest of that password into the result.
-   *
-   * @param authority the authority to sanitize
-   * @return the sanitized host list, or null when the authority routes to a single host or still
-   *     holds credential material that cannot be told apart from a host
-   */
   @Nullable
   public static String sanitizeHostList(String authority) {
+    // Remove key/value credentials before URL user info because a password may contain '@'.
     String hostList = stripUserInfo(stripAddressCredentials(authority));
     List<String> entries = splitHostList(hostList);
     if (entries.size() < 2) {
@@ -377,8 +334,7 @@ public final class UrlParsingUtils {
     for (String entry : entries) {
       String host = entry.trim();
       if (host.indexOf('@') >= 0) {
-        // a host never holds an '@', so an entry that still carries one holds part of a credential
-        // that neither of the two steps above recognized, and the whole target is dropped
+        // Do not risk reporting unrecognized credential text as a host.
         return null;
       }
       if (group.length() > 0) {

@@ -114,12 +114,10 @@ public final class ParseContext {
     this.port = port;
   }
 
-  /** Set the configured target of a connection that routes to more than one parsed host. */
   public void serverAddressGroup(@Nullable String serverAddressGroup) {
     this.serverAddressGroup = serverAddressGroup;
   }
 
-  /** Set an opaque configured target, preserving the driver's type and subtype prefix. */
   public void opaqueServerAddressGroup(String target) {
     StringBuilder groupAddress = new StringBuilder();
     appendTypePrefix(groupAddress, type, subtype);

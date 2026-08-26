@@ -14,11 +14,6 @@ public class ClickHouseRequestAccess {
     return clickHouseRequest.getQuery();
   }
 
-  /**
-   * The nodes the request was configured with, as opposed to the single node {@link
-   * ClickHouseRequest#getServer()} currently routes to. Returns null when the request was not
-   * configured from a node list.
-   */
   @Nullable
   public static ClickHouseNodes getNodes(ClickHouseRequest<?> clickHouseRequest) {
     return clickHouseRequest.server instanceof ClickHouseNodes

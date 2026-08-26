@@ -481,7 +481,6 @@ class ClickHouseClientV2Test {
 
   @Test
   void testMultipleEndpointsReportTheWholeConfiguredTarget() throws Exception {
-    // the second endpoint is given as a url string, the other form the client accepts
     String secondEndpoint = "http://127.0.0.1:" + port;
     Client client =
         new Client.Builder()
@@ -494,7 +493,6 @@ class ClickHouseClientV2Test {
             .build();
     cleanup.deferCleanup(client);
 
-    // the endpoints are reported in a fixed order, whatever order the client keeps them in
     List<String> endpoints = new ArrayList<>(asList(host + ":" + port, "127.0.0.1:" + port));
     Collections.sort(endpoints);
     String addressGroup = String.join(",", endpoints);

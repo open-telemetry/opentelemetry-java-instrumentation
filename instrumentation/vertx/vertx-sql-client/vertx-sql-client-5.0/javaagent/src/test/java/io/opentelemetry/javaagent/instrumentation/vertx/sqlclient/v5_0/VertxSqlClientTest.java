@@ -134,7 +134,6 @@ class VertxSqlClientTest {
 
   @Test
   void testConnectingToServerListReportsTheWholeConfiguredTarget() throws Exception {
-    // the first server is the running database, the second one only makes the target a group
     PgConnectOptions first = connectOptions();
     PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
     Pool listPool =
@@ -152,8 +151,6 @@ class VertxSqlClientTest {
 
   @Test
   void testOneBuilderGivesEachClientItsOwnTarget() throws Exception {
-    // the same options instance goes into both clients, so nothing about the target can be kept on
-    // it
     PgConnectOptions first = connectOptions();
     ClientBuilder<Pool> builder =
         PgBuilder.pool().using(vertx).with(new PoolOptions().setMaxSize(1));

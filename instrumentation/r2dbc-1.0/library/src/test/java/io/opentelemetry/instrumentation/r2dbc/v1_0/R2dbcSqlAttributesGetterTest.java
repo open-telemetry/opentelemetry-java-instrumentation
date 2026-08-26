@@ -120,7 +120,6 @@ class R2dbcSqlAttributesGetterTest {
                 .build());
 
     if (emitStableDatabaseSemconv()) {
-      // server.port is left out, so the target has to name the port of every host itself
       assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1:3306,host2:3306");
       assertThat(getter.getServerPort(dbExecution)).isNull();
     } else {

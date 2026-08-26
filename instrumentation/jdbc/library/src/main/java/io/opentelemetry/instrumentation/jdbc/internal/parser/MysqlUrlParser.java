@@ -102,12 +102,6 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     return -1;
   }
 
-  /**
-   * Keep the whole host list of a sub-protocol URL, e.g. {@code failover://h1:3306,h2:3306/db},
-   * when it routes to more than one host.
-   *
-   * @param jdbcUrl the part of the URL that follows {@code ://}
-   */
   private static boolean applyHostGroup(String jdbcUrl, ParseContext ctx) {
     String authority = extractAuthority("mariadb://" + jdbcUrl);
     if (authority == null) {

@@ -45,14 +45,6 @@ public class ClickHouseClientV1Singletons {
     return instrumenter;
   }
 
-  /**
-   * The complete configured target of a request that was given more than one node, e.g. {@code
-   * h1:8123,h2:8123}.
-   *
-   * <p>The target is rendered once, from the nodes the list was built with, and kept on that list.
-   * The nodes a list hands out at query time are only those that are currently healthy and that its
-   * load balancing tags select, which is a moving subset of the configuration.
-   */
   @Nullable
   public static String serverAddressGroup(ClickHouseRequest<?> request) {
     ClickHouseNodes nodes = ClickHouseRequestAccess.getNodes(request);
@@ -63,7 +55,6 @@ public class ClickHouseClientV1Singletons {
     return addressGroup == null || NO_GROUP.equals(addressGroup) ? null : addressGroup;
   }
 
-  /** Render and keep the target of a node list, from the nodes it was configured with. */
   public static void captureConfiguredNodes(
       ClickHouseNodes nodes, Collection<ClickHouseNode> configuredNodes) {
     NODES_ADDRESS_GROUP.set(nodes, renderAddressGroup(configuredNodes));

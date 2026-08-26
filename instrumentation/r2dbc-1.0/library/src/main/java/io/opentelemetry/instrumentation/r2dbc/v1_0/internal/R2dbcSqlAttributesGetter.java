@@ -110,7 +110,6 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public Integer getServerPort(DbExecution request) {
     if (emitStableDatabaseSemconv() && request.getServerAddressGroup() != null) {
-      // the group target already carries the port of every host it names
       return null;
     }
     return request.getServerPort();

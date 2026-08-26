@@ -42,10 +42,6 @@ public class ClickHouseClientV2Singletons {
     return instrumenter;
   }
 
-  /**
-   * Capture the endpoints that belong to a newly constructed client before its builder can be
-   * changed or reused.
-   */
   public static void captureServerInfo(Client client) {
     SERVER_INFO_FIELD.set(client, ServerInfo.of(client.getEndpoints()));
   }
@@ -55,10 +51,6 @@ public class ClickHouseClientV2Singletons {
     return SERVER_INFO_FIELD.get(client);
   }
 
-  /**
-   * The address a client resolves to: the single configured endpoint, or the whole endpoint list
-   * when the client was given more than one.
-   */
   public static class ServerInfo {
 
     @Nullable private final String address;
@@ -83,8 +75,7 @@ public class ClickHouseClientV2Singletons {
 
       String first = sanitizeEndpoint(endpoints.iterator().next());
 
-      // the endpoints of a client are an unordered set, so they are sorted to give one client
-      // configuration one target, whatever order the set iterates in
+      // Endpoint iteration order is unspecified, so canonicalize the configured target.
       List<String> sanitized = new ArrayList<>(endpoints.size());
       for (String endpoint : endpoints) {
         sanitized.add(sanitizeEndpoint(endpoint));
@@ -137,7 +128,6 @@ public class ClickHouseClientV2Singletons {
       }
     }
 
-    /** An endpoint reduced to {@code host[:port]}. */
     private static String sanitizeEndpoint(String endpoint) {
       int authorityStart = endpoint.indexOf("://");
       authorityStart = authorityStart < 0 ? 0 : authorityStart + 3;

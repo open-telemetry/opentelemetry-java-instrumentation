@@ -92,10 +92,6 @@ public final class GenericUrlParser implements JdbcUrlParser {
     ctx.applyCommonParams(jdbcUrl, "?", "&");
   }
 
-  /**
-   * Keep the whole host list of an authority that routes to more than one host, e.g. {@code
-   * postgresql://h1:5432,h2:5432/db}, as the configured group target.
-   */
   private static boolean applyHostGroup(String jdbcUrl, ParseContext ctx) {
     String authority = extractAuthority(jdbcUrl);
     if (authority == null) {

@@ -40,7 +40,6 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase sqlClientBase) {
-      // copy the client state from ThreadLocal to VirtualField
       VertxSqlClientSingletons.attachClientState(
           sqlClientBase, getSqlConnectOptions(), getAddressGroup());
     }
@@ -55,7 +54,6 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
 
-      // set the client state to ThreadLocal, it will be read in QueryExecutor constructor
       SqlConnectOptions sqlConnectOptions =
           VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
       setSqlConnectOptions(sqlConnectOptions);

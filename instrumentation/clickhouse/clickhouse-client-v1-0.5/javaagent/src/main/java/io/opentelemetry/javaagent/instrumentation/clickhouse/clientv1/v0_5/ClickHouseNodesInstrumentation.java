@@ -18,10 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Records the target of a node list while it still holds every configured node. Afterwards a node
- * list only reports the nodes that are healthy and that its load balancing tags select.
- */
+// Capture the target before health checks and load-balancing tags reduce the visible node set.
 class ClickHouseNodesInstrumentation implements TypeInstrumentation {
 
   @Override

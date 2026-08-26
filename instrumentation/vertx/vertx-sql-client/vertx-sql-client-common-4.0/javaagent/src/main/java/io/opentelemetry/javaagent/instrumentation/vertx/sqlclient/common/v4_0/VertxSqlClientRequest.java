@@ -56,11 +56,6 @@ public class VertxSqlClientRequest {
     return sqlConnectOptions != null ? sqlConnectOptions.getPort() : null;
   }
 
-  /**
-   * The complete configured target when the client was given more than one server, e.g. {@code
-   * h1:5432,h2:5432}. Null when the client targets a single server, or when no complete target can
-   * be rendered.
-   */
   @Nullable
   public String getServerAddressGroup() {
     return addressGroup != null ? addressGroup.getAddress() : null;

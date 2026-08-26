@@ -136,14 +136,6 @@ public final class DbExecution {
     return serverPort;
   }
 
-  /**
-   * The complete configured target of a connection whose {@code HOST} lists more than one host,
-   * e.g. {@code host1:3306,host2:3306}. Every host carries a port, so that the target names the
-   * whole configuration on its own and {@code server.port} can be left out.
-   *
-   * <p>Null when {@code HOST} names a single host, however it is spelled. A unix domain socket path
-   * is a single host even when it holds a comma.
-   */
   @Nullable
   public String getServerAddressGroup() {
     return serverAddressGroup;
@@ -152,6 +144,7 @@ public final class DbExecution {
   @Nullable
   private static String serverAddressGroup(
       @Nullable String serverAddress, @Nullable Integer serverPort) {
+    // Unix socket paths may contain commas but still identify one endpoint.
     if (serverAddress == null || serverAddress.indexOf(',') < 0 || serverAddress.startsWith("/")) {
       return null;
     }
