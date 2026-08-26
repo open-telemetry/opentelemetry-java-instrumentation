@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.common.collect.ImmutableMap;
@@ -66,7 +67,6 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -119,11 +119,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     // Lettuce 5 emits SET plus SELECT while opening the non-default database.
     // Lettuce 6+ performs the selection as an activation command without a command span.
-    boolean lettuce6OrLater = Boolean.getBoolean("testLettuce6OrLater");
-    int expectedTraceCount = lettuce6OrLater ? 1 : 2;
+    boolean lettuce5 = isLettuce5();
+    int expectedTraceCount = lettuce5 ? 2 : 1;
     if (connectionTelemetryEnabled()) {
       expectedTraceCount += 2;
-      if (!lettuce6OrLater && emitStableDatabaseSemconv()) {
+      if (lettuce5 && emitStableDatabaseSemconv()) {
         // SELECT is a child of the second CONNECT span instead of starting another trace.
         expectedTraceCount--;
       }
@@ -710,8 +710,9 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  @DisabledIfSystemProperty(named = "testLettuce6OrLater", matches = "true")
   void testNonDefaultDatabaseIndexOnConnect() {
+    assumeTrue(isLettuce5());
+
     RedisClient client =
         RedisClient.create("redis://" + host + ":" + port + "/" + NON_DEFAULT_DB_INDEX);
     client.setOptions(CLIENT_OPTIONS);
@@ -742,6 +743,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                       equalTo(maybeStable(DB_STATEMENT), "SELECT " + NON_DEFAULT_DB_INDEX),
                       equalTo(maybeStable(DB_OPERATION), "SELECT"));
             });
+  }
+
+  private static boolean isLettuce5() {
+    String version = RedisClient.class.getPackage().getImplementationVersion();
+    // Implementation-Version is absent from the Lettuce 5.0 and 5.1 artifacts.
+    return version == null || version.startsWith("5.");
   }
 
   private static String expectedNonDefaultNamespace() {

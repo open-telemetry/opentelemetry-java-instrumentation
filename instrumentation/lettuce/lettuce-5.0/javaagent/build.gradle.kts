@@ -30,8 +30,10 @@ dependencies {
 
 testing {
   suites {
-    // These suite names intentionally do not start with "test". Otherwise the main suite's Lettuce
-    // 5.0 latest-dependency override would apply to them.
+    // Do not prefix these suite names with "test". When -PtestLatestDeps=true, the base plugin
+    // applies this module's lettuce-core:5.0.+ latestDepTestLibrary override to every resolvable
+    // configuration whose name starts with "test". That would replace the explicit Lettuce versions
+    // below with 5.0.x.
     register<JvmTestSuite>("v3PreviewLettuce51Test") {
       sources {
         java {
@@ -70,7 +72,6 @@ testing {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
           systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-          systemProperty("testLettuce6OrLater", true)
         }
       }
     }
@@ -93,7 +94,6 @@ testing {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
           systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-          systemProperty("testLettuce6OrLater", true)
         }
       }
     }
