@@ -18,8 +18,7 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 
-final class SpringAiAttributesGetter
-    implements GenAiAttributesGetter<SpringAiRequest, ChatResponse> {
+class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest, ChatResponse> {
   @Override
   public String getOperationName(SpringAiRequest request) {
     return "chat";

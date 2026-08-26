@@ -100,8 +100,10 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
     attributes.put(GEN_AI_USAGE_INPUT_TOKENS, getter.getUsageInputTokens(request, response));
     attributes.put(GEN_AI_USAGE_OUTPUT_TOKENS, getter.getUsageOutputTokens(request, response));
-    if (error != null) {
-      attributes.put(ERROR_TYPE, error.getClass().getName());
+    String errorType = getter.getErrorType(request, response, error);
+    if (errorType == null && error != null) {
+      errorType = error.getClass().getName();
     }
+    attributes.put(ERROR_TYPE, errorType);
   }
 }

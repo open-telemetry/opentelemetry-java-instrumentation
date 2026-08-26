@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
 
 import javax.annotation.Nullable;
 
-final class SpringAiStringUtil {
+class SpringAiStringUtil {
 
   static int safeEndIndex(String value, int maxLength) {
     int end = Math.min(value.length(), Math.max(0, maxLength));

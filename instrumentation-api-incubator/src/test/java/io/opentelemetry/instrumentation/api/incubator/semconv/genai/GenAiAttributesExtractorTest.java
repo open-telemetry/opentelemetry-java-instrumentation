@@ -30,7 +30,25 @@ class GenAiAttributesExtractorTest {
     assertThat(attributes.build()).containsEntry(ERROR_TYPE, IllegalStateException.class.getName());
   }
 
-  private static final class TestGetter implements GenAiAttributesGetter<String, String> {
+  @Test
+  void usesGetterErrorTypeBeforeExceptionClass() {
+    AttributesExtractor<String, String> extractor =
+        GenAiAttributesExtractor.create(
+            new TestGetter() {
+              @Override
+              public String getErrorType(String request, String response, Throwable error) {
+                return "provider_error";
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(
+        attributes, Context.root(), "request", "response", new IllegalStateException("failure"));
+
+    assertThat(attributes.build()).containsEntry(ERROR_TYPE, "provider_error");
+  }
+
+  private static class TestGetter implements GenAiAttributesGetter<String, String> {
     @Override
     public String getOperationName(String request) {
       return "chat";
