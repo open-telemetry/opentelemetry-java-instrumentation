@@ -167,7 +167,7 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void networkPeerIsOmittedUnderSni() {
+  void networkPeerIsOmittedUnderSniWithoutAgentData() {
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
     when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "host-id"));
 
@@ -202,12 +202,11 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void responsePeerPrecedesEndpointDerivedData() throws UnknownHostException {
-    InetSocketAddress responsePeer = resolved(19042);
+  void responsePeerIsTheSniProxySocket() throws UnknownHostException {
+    InetSocketAddress responsePeer = resolved(29042);
     set(executionInfo, responsePeer);
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-
     assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
     verifyNoInteractions(coordinator);
   }

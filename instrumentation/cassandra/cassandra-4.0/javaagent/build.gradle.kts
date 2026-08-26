@@ -44,11 +44,11 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
-  check {
-    dependsOn(testStableSemconv)
-  }
-
-  fun registerShadedTest(name: String, version: String, stableSemconv: Boolean = false) {
+  fun registerShadedTest(
+    name: String,
+    version: String,
+    stableSemconv: Boolean = false,
+  ): org.gradle.api.tasks.TaskProvider<Test> {
     val shadedClasspath =
       configurations.create("${name}RuntimeClasspath") {
         isCanBeConsumed = false
@@ -59,7 +59,7 @@ tasks {
             .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
         }
       }
-    register<Test>(name) {
+    return register<Test>(name) {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = files(sourceSets.test.get().output, shadedClasspath)
       if (stableSemconv) {
@@ -69,7 +69,12 @@ tasks {
     }
   }
 
-  registerShadedTest("testShaded", "4.0.0")
-  registerShadedTest("testShadedStableSemconv", "4.0.0", stableSemconv = true)
-  registerShadedTest("testShadedLatest", "4.3.1")
+  val testShaded = registerShadedTest("testShaded", "4.0.0")
+  val testShadedStableSemconv =
+    registerShadedTest("testShadedStableSemconv", "4.0.0", stableSemconv = true)
+  val testShadedLatest = registerShadedTest("testShadedLatest", "4.3.1")
+
+  check {
+    dependsOn(testStableSemconv, testShaded, testShadedStableSemconv, testShadedLatest)
+  }
 }

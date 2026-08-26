@@ -86,16 +86,12 @@ final class CassandraSqlAttributesGetter
     if (coordinator == null) {
       return null;
     }
-    EndPoint endPoint = coordinator.getEndPoint();
-    if (!emitStableDatabaseSemconv() || !isSniEndPoint(endPoint)) {
-      // Legacy semconv still records the proxy under SNI. Custom endpoints may be direct
-      // connections.
-      SocketAddress address = endPoint.resolve();
-      return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+    if (emitStableDatabaseSemconv()) {
+      return null;
     }
-    // SniEndPoint.resolve() performs DNS and advances the driver's shared round-robin counter, so
-    // stable semconv leaves network.peer.* unset.
-    return null;
+    EndPoint endPoint = coordinator.getEndPoint();
+    SocketAddress address = endPoint.resolve();
+    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
   }
 
   @Override

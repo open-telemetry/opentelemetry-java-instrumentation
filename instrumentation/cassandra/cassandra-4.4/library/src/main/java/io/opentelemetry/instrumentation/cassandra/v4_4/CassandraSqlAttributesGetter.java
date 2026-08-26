@@ -89,10 +89,6 @@ final class CassandraSqlAttributesGetter
       // resolve() returns the already-resolved InetSocketAddress, it does not do a dns lookup
       return (InetSocketAddress) endPoint.resolve();
     }
-    // SniEndPoint.resolve() performs DNS and advances the driver's shared round-robin counter.
-    // Other
-    // endpoint types may not represent an IP address, so stable semconv leaves network.peer.*
-    // unset.
     return null;
   }
 
