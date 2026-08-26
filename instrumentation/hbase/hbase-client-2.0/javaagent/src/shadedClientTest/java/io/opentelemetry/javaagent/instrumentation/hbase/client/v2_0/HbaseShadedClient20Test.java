@@ -56,6 +56,11 @@ class HbaseShadedClient20Test extends AbstractHbaseTest {
   }
 
   @Override
+  protected boolean reportsNetworkPeerAddress() {
+    return true;
+  }
+
+  @Override
   protected byte[] checkAndMutateCheckedRowKey() {
     return Bytes.toBytes(ROW_1);
   }

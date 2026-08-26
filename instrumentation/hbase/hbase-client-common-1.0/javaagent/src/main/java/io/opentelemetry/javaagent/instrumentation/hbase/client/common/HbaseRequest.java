@@ -35,6 +35,19 @@ public abstract class HbaseRequest {
         operationBatchSize);
   }
 
+  public HbaseRequest withNetworkPeer(String networkPeerAddress, int networkPeerPort) {
+    return new AutoValue_HbaseRequest(
+        getOperation(),
+        getTableName(),
+        getUser(),
+        getServerAddress(),
+        getServerPort(),
+        getServerTarget(),
+        networkPeerAddress,
+        networkPeerPort,
+        getOperationBatchSize());
+  }
+
   @Nullable
   public abstract String getOperation();
 

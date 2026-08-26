@@ -16,6 +16,13 @@ public abstract class RequestAndContext {
     return new AutoValue_RequestAndContext(request, scope, context);
   }
 
+  public RequestAndContext withNetworkPeer(String networkPeerAddress, int networkPeerPort) {
+    return create(
+        getRequest().withNetworkPeer(networkPeerAddress, networkPeerPort),
+        getScope(),
+        getContext());
+  }
+
   public abstract HbaseRequest getRequest();
 
   public abstract Scope getScope();

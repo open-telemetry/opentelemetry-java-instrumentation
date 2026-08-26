@@ -218,7 +218,7 @@ public abstract class AbstractHbaseTest {
     connection = ConnectionFactory.createConnection(config);
     serverTarget = host + ":2181:/hbase";
     networkPeerAddress =
-        rpcCallUsesInetSocketAddress() ? InetAddress.getByName(hostname).getHostAddress() : null;
+        reportsNetworkPeerAddress() ? InetAddress.getByName(hostname).getHostAddress() : null;
     cleanup.deferAfterAll(connection);
     testing()
         .runWithSpan(
@@ -665,7 +665,7 @@ public abstract class AbstractHbaseTest {
       table.get(new Get(Bytes.toBytes(ROW_1)));
     }
     testing().waitForTraces(1);
-    if (rpcCallUsesInetSocketAddress()) {
+    if (reportsNetworkPeerAddress()) {
       assertDurationMetric(
           testing(),
           instrumentationName(),
@@ -767,6 +767,10 @@ public abstract class AbstractHbaseTest {
     } catch (ClassNotFoundException ignored) {
     }
     return false;
+  }
+
+  protected boolean reportsNetworkPeerAddress() {
+    return rpcCallUsesInetSocketAddress();
   }
 
   private static String dbNamespace(TableName table, boolean hasTable) {

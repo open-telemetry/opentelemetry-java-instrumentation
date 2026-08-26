@@ -7,6 +7,9 @@ package org.apache.hadoop.hbase.ipc;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 // Helper for accessing the virtual field on package-private Call.
@@ -16,14 +19,45 @@ public final class OpenTelemetryCallUtil {
 
   public static void setRequestAndContext(
       Object call, @Nullable RequestAndContext requestAndContext) {
-    requestAndContextField.set((Call) call, requestAndContext);
+    synchronized (call) {
+      requestAndContextField.set((Call) call, requestAndContext);
+    }
+  }
+
+  public static boolean isCall(Object message) {
+    return message instanceof Call;
+  }
+
+  public static void setNetworkPeer(Object message, @Nullable SocketAddress remoteAddress) {
+    if (!(message instanceof Call) || !(remoteAddress instanceof InetSocketAddress)) {
+      return;
+    }
+
+    InetSocketAddress inetSocketAddress = (InetSocketAddress) remoteAddress;
+    InetAddress inetAddress = inetSocketAddress.getAddress();
+    if (inetAddress == null) {
+      return;
+    }
+
+    Call call = (Call) message;
+    synchronized (call) {
+      RequestAndContext requestAndContext = requestAndContextField.get(call);
+      if (requestAndContext != null) {
+        requestAndContextField.set(
+            call,
+            requestAndContext.withNetworkPeer(
+                inetAddress.getHostAddress(), inetSocketAddress.getPort()));
+      }
+    }
   }
 
   @Nullable
   public static RequestAndContext getAndClearRequestAndContext(Object call) {
-    RequestAndContext requestAndContext = requestAndContextField.get((Call) call);
-    requestAndContextField.set((Call) call, null);
-    return requestAndContext;
+    synchronized (call) {
+      RequestAndContext requestAndContext = requestAndContextField.get((Call) call);
+      requestAndContextField.set((Call) call, null);
+      return requestAndContext;
+    }
   }
 
   private OpenTelemetryCallUtil() {}
