@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.awssdk.v2_2.internal.Experimental;
 import java.net.URISyntaxException;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -56,7 +55,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true);
-    Experimental.setMessageCreateSpansEnabled(telemetryBuilder, false);
+    telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
     AwsSdkTelemetry disabledTelemetry = telemetryBuilder.build();
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);

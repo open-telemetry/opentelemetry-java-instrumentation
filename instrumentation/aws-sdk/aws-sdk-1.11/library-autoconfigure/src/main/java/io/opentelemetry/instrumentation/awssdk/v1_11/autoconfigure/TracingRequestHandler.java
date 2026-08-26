@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetryBuilder;
-import io.opentelemetry.instrumentation.awssdk.v1_11.internal.Experimental;
 
 /**
  * A {@link RequestHandler2} for use as an SPI by the AWS SDK to automatically trace all requests.
@@ -41,17 +40,23 @@ public final class TracingRequestHandler extends RequestHandler2 {
                     // necessary to support configuration via system properties.
                     SystemProperty.getBoolean(
                         "otel.instrumentation.aws-sdk.experimental-span-attributes", false)));
-    Experimental.setMessageCreateSpansEnabled(
-        builder,
-        messaging
-            .get("batch_send")
-            .get("message_creation_spans")
-            .getBoolean(
-                "enabled",
-                SystemProperty.getBoolean(
-                    "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled",
-                    true)));
     return builder
+        .setBatchSendMessageCreationSpansEnabled(
+            awsSdk
+                .get("batch_send")
+                .get("message_creation_spans")
+                .getBoolean(
+                    "enabled",
+                    SystemProperty.getBoolean(
+                        "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled",
+                        messaging
+                            .get("batch_send")
+                            .get("message_creation_spans")
+                            .getBoolean(
+                                "enabled",
+                                SystemProperty.getBoolean(
+                                    "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled",
+                                    true)))))
         .setMessagingReceiveTelemetryEnabled(
             messaging
                 .get("receive_telemetry/development")

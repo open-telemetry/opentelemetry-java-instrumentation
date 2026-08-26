@@ -16,7 +16,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetryBuilder;
-import io.opentelemetry.instrumentation.awssdk.v1_11.internal.Experimental;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import javax.annotation.Nullable;
 
@@ -51,14 +50,20 @@ public class TracingRequestHandler extends RequestHandler2 {
             .setMessagingReceiveTelemetryEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
             .setHeaders(ExperimentalConfig.get().getMessagingHeaders());
-    Experimental.setMessageCreateSpansEnabled(
-        builder,
+    boolean commonBatchSendMessageCreationSpansEnabled =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
             .get("messaging")
             .get("batch_send")
             .get("message_creation_spans")
-            .getBoolean("enabled", true));
-    return builder.build().createRequestHandler();
+            .getBoolean("enabled", true);
+    return builder
+        .setBatchSendMessageCreationSpansEnabled(
+            DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
+                .get("batch_send")
+                .get("message_creation_spans")
+                .getBoolean("enabled", commonBatchSendMessageCreationSpansEnabled))
+        .build()
+        .createRequestHandler();
   }
 
   @Override

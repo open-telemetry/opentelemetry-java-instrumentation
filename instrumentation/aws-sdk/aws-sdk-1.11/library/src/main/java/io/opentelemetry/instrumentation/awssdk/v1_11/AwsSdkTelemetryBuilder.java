@@ -9,23 +9,17 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
-import io.opentelemetry.instrumentation.awssdk.v1_11.internal.Experimental;
 import java.util.Collection;
 
 /** A builder of {@link AwsSdkTelemetry}. */
 public final class AwsSdkTelemetryBuilder {
-
-  static {
-    Experimental.internalSetMessageCreateSpansEnabled(
-        (builder, enabled) -> builder.messageCreateSpansEnabled = enabled);
-  }
 
   private final OpenTelemetry openTelemetry;
 
   private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean captureExperimentalSpanAttributes;
   private boolean messagingReceiveTelemetryEnabled;
-  private boolean messageCreateSpansEnabled = true;
+  private boolean batchSendMessageCreationSpansEnabled = true;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -96,6 +90,21 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Sets whether a producer "Create" span is emitted for each eligible entry in an SQS batch send.
+   * An entry is eligible when it does not already contain a creation context and the AWS SDK
+   * version supports the per-entry {@code AWSTraceHeader} system attribute.
+   *
+   * <p>This option only applies when the stable messaging semantic conventions are enabled. It is
+   * enabled by default.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setBatchSendMessageCreationSpansEnabled(
+      boolean batchSendMessageCreationSpansEnabled) {
+    this.batchSendMessageCreationSpansEnabled = batchSendMessageCreationSpansEnabled;
+    return this;
+  }
+
+  /**
    * Returns a new {@link AwsSdkTelemetry} with the settings of this {@link AwsSdkTelemetryBuilder}.
    */
   public AwsSdkTelemetry build() {
@@ -104,6 +113,6 @@ public final class AwsSdkTelemetryBuilder {
         headers,
         captureExperimentalSpanAttributes,
         messagingReceiveTelemetryEnabled,
-        messageCreateSpansEnabled);
+        batchSendMessageCreationSpansEnabled);
   }
 }

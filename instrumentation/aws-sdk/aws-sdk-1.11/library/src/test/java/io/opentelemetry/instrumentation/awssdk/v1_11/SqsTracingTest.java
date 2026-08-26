@@ -17,7 +17,6 @@ import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.awssdk.v1_11.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -60,7 +59,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true);
-    Experimental.setMessageCreateSpansEnabled(telemetryBuilder, false);
+    telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
     AmazonSQSAsync client =
         newClientBuilder()
             .withRequestHandlers(telemetryBuilder.build().createRequestHandler())
@@ -100,7 +99,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true);
-    Experimental.setMessageCreateSpansEnabled(telemetryBuilder, false);
+    telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
     AmazonSQSAsync client =
         newClientBuilder()
             .withRequestHandlers(telemetryBuilder.build().createRequestHandler())

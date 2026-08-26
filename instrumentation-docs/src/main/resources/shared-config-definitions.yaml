@@ -129,6 +129,6 @@ configurations:
   messaging.batch-send.message-creation-spans.enabled:
     name: otel.instrumentation.messaging.batch-send.message-creation-spans.enabled
     declarative_name: java.common.messaging.batch_send.message_creation_spans.enabled
-    description: "Determines whether to create a producer span for each eligible message in a batch send when stable messaging semantic conventions are enabled."
+    description: "Provides the default for whether to create a producer span for each eligible message in a batch send when stable messaging semantic conventions are enabled. An instrumentation-specific setting takes precedence."
     type: boolean
     default: true
