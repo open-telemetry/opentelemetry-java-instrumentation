@@ -52,7 +52,6 @@ class HbaseClient20Test extends AbstractHbaseTest {
 
   @Override
   protected int getMetaScanTraceCount() {
-    // HBase 2.4 scans the meta region twice when opening a connection.
     return testLatestDeps() ? 2 : 1;
   }
 

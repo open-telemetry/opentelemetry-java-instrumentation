@@ -752,6 +752,7 @@ public abstract class AbstractHbaseTest {
                                 : AbstractAssert::isNotNull)));
   }
 
+  @SuppressWarnings("EmptyCatch")
   private static boolean rpcCallUsesInetSocketAddress() {
     try {
       Class<?> rpcClient = Class.forName("org.apache.hadoop.hbase.ipc.AbstractRpcClient");
@@ -764,7 +765,6 @@ public abstract class AbstractHbaseTest {
         }
       }
     } catch (ClassNotFoundException ignored) {
-      // The test cannot produce HBase spans without this class.
     }
     return false;
   }

@@ -13,7 +13,6 @@ import javax.annotation.Nullable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
 
-/** Renders the immutable registry target configured for an HBase RPC client. */
 public class HbaseServerTarget {
 
   private static final String REGISTRY_KEY = "hbase.client.registry.impl";
@@ -44,9 +43,6 @@ public class HbaseServerTarget {
       hasHbaseConstant("HBASE_CONFIG_READ_ZOOKEEPER_CONFIG");
   private static final boolean USES_CONFIGURED_MASTER_PORT = usesConfiguredMasterPort();
 
-  /**
-   * Returns the configured registry target, or {@code null} when it cannot be identified safely.
-   */
   @Nullable
   public static String from(Configuration configuration) {
     return from(
@@ -96,6 +92,7 @@ public class HbaseServerTarget {
   @Nullable
   private static String zkTarget(
       Configuration configuration, boolean supportsClientZkConfig, boolean supportsZkConfigFile) {
+    // When supported and enabled, zoo.cfg overrides the HBase ZooKeeper properties.
     if (supportsZkConfigFile && configuration.getBoolean(READ_ZK_CONFIG_KEY, false)) {
       return null;
     }
