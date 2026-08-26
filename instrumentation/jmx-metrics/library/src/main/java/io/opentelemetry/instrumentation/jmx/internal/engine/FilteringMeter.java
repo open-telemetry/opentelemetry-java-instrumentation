@@ -75,7 +75,7 @@ class FilteringMeter implements Meter {
       };
     }
 
-    if (measurements.size() > 1) {
+    if (measurements.size() == 1) {
       return delegate.batchCallback(callback, measurements.get(0));
     }
 
