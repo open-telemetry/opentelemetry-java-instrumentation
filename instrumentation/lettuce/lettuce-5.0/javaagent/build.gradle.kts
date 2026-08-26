@@ -30,8 +30,8 @@ dependencies {
 
 testing {
   suites {
-    // These suite names intentionally do not start with "test". Otherwise the main suite's
-    // latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") override would apply to them.
+    // These suite names intentionally do not start with "test". Otherwise the main suite's Lettuce
+    // 5.0 latest-dependency override would apply to them.
     register<JvmTestSuite>("v3PreviewLettuce51Test") {
       sources {
         java {
@@ -105,6 +105,13 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  if (otelProps.denyUnsafe) {
+    // Lettuce 5.1.0 pulls in Reactor 3.2.0, whose RingBuffer accesses sun.misc.Unsafe directly.
+    named("v3PreviewLettuce51Test", Test::class) {
+      enabled = false
+    }
   }
 
   val testExperimental = register<Test>("testExperimental") {
