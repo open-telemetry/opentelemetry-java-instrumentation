@@ -29,17 +29,24 @@ import scala.collection.Iterator;
  * Renders the target a rediscala client was configured with.
  *
  * <p>A sentinel monitored client is named by the master it was configured to follow, a {@link
- * RedisClientPool} by the servers it was configured with, and a plain client by its own host and
- * port. None of these carry an actor system type, so this works the same for the Akka and the Pekko
- * builds of rediscala.
+ * RedisClientPool} or mutable pool by the servers it is configured with, and a plain client by its
+ * own host and port. None of these carry an actor system type, so this works the same for the Akka
+ * and the Pekko builds of rediscala.
  */
 public final class RediscalaServerTargets {
 
   private static final Logger logger = Logger.getLogger(RediscalaServerTargets.class.getName());
 
+  private static final String MUTABLE_POOL_CLASS_NAME = "redis.RedisClientMutablePool";
+
   // Scala collection return types differ between the Scala 2.12 and 2.13 builds, so
   // collection-returning methods are resolved reflectively rather than called directly.
-  @Nullable private static final Method REDIS_SERVERS = findRedisServers();
+  @Nullable
+  private static final Method POOL_REDIS_SERVERS = findRedisServers(RedisClientPool.class);
+
+  @Nullable
+  private static final Method MUTABLE_POOL_REDIS_SERVERS =
+      findRedisServers(MUTABLE_POOL_CLASS_NAME);
 
   @Nullable
   private static final Method SENTINELS = findSentinels(SentinelMonitoredRedisClient.class);
@@ -55,10 +62,20 @@ public final class RediscalaServerTargets {
       VirtualField.find(RoundRobinPoolRequest.class, RedisServerTarget.class);
 
   @Nullable
-  private static Method findRedisServers() {
+  private static Method findRedisServers(Class<?> poolClass) {
     try {
-      return RedisClientPool.class.getMethod("redisServers");
+      return poolClass.getMethod("redisServers");
     } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Method findRedisServers(String poolClassName) {
+    try {
+      return findRedisServers(
+          Class.forName(poolClassName, false, RediscalaServerTargets.class.getClassLoader()));
+    } catch (ClassNotFoundException e) {
       return null;
     }
   }
@@ -74,6 +91,10 @@ public final class RediscalaServerTargets {
 
   @Nullable
   public static RedisServerTarget get(Object client) {
+    if (MUTABLE_POOL_REDIS_SERVERS != null
+        && MUTABLE_POOL_REDIS_SERVERS.getDeclaringClass().isInstance(client)) {
+      return ofPool(client, MUTABLE_POOL_REDIS_SERVERS);
+    }
     if (client instanceof ActorRequest) {
       return get(ACTOR_REQUEST_TARGET, (ActorRequest) client);
     }
@@ -106,7 +127,7 @@ public final class RediscalaServerTargets {
           client, BLOCKING_SENTINELS, ((SentinelMonitoredRedisBlockingClient) client).master());
     }
     if (client instanceof RedisClientPool) {
-      return ofPool((RedisClientPool) client);
+      return ofPool(client, POOL_REDIS_SERVERS);
     }
     if (client instanceof RedisClientActorLike) {
       RedisClientActorLike actorClient = (RedisClientActorLike) client;
@@ -153,13 +174,13 @@ public final class RediscalaServerTargets {
   }
 
   @Nullable
-  private static RedisServerTarget ofPool(RedisClientPool pool) {
-    if (REDIS_SERVERS == null) {
+  private static RedisServerTarget ofPool(Object pool, @Nullable Method redisServersMethod) {
+    if (redisServersMethod == null) {
       return null;
     }
     Object servers;
     try {
-      servers = REDIS_SERVERS.invoke(pool);
+      servers = redisServersMethod.invoke(pool);
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured rediscala pool servers", e);
       return null;
