@@ -16,15 +16,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Reads the target a client is being configured with where the driver turns its connection string
- * into seed nodes.
- *
- * <p>The drivers up to 3.2 hand the core only the seed nodes, which no longer name the host a DNS
- * SRV record was looked up from and no longer keep the order the connection string listed them in.
- * The target is therefore read here, while the connection string is still around, and held against
- * the seed node set until the core built from it registers itself.
- */
+// Through 3.2 the core receives only resolved seed nodes, which lose the DNS SRV hostname and seed
+// order. Associate the original target with the seed set until the core is constructed.
 public class CouchbaseSeedNodesInstrumentation implements TypeInstrumentation {
 
   @Override

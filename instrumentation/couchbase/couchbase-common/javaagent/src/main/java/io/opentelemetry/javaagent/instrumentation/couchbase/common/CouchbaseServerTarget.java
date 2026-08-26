@@ -9,29 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * The target a Couchbase client was configured with, rendered once from the connection string it
- * was built from.
- *
- * <p>A client configured with a single seed keeps that seed as its address, together with the port
- * the seed named. A client configured with several seeds carries all of them in the address as
- * {@code host,host:port}, and has no port of its own. A client configured with a host that resolves
- * through DNS SRV names that host, which is a single seed without a port, so it is rendered the
- * same way as any other lone seed.
- *
- * <p>A port is reported only when the connection string named one. Couchbase reaches a single node
- * through a different default port for every service, so there is no one port that describes a seed
- * the user left unqualified.
- *
- * <p>Only the seeds are rendered, so the address never contains credentials, a bucket, a path,
- * query parameters, options or a fragment.
- */
+// Multi-seed targets keep each seed's port in the address and therefore have no separate port.
+// Unqualified seeds also have no port because each Couchbase service uses a different default.
 public class CouchbaseServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
 
-  /** A builder rendering the seeds from a connection string without its transport scheme. */
   public static Builder builder() {
     return new Builder();
   }
@@ -45,13 +29,11 @@ public class CouchbaseServerTarget {
     return address;
   }
 
-  /** The port of a single configured seed, or {@code null} when the target names several. */
   @Nullable
   public Integer getPort() {
     return port;
   }
 
-  /** Collects the seeds a client was configured with into a {@link CouchbaseServerTarget}. */
   public static class Builder {
 
     private final List<String> hosts = new ArrayList<>();
@@ -60,16 +42,10 @@ public class CouchbaseServerTarget {
 
     private Builder() {}
 
-    /**
-     * Adds a configured seed, where a {@code port} of zero means the connection string left the
-     * seed unqualified.
-     *
-     * <p>A seed the driver cannot name drops the whole target, because a partial list of seeds
-     * describes a deployment the client was never pointed at.
-     */
     public void addSeed(@Nullable String host, int port) {
       String cleaned = clean(host);
       if (cleaned == null) {
+        // A partial seed list describes a target the client was never configured with.
         complete = false;
         return;
       }
@@ -77,7 +53,6 @@ public class CouchbaseServerTarget {
       ports.add(port > 0 ? port : 0);
     }
 
-    /** The collected target, or {@code null} when no seed could be rendered. */
     @Nullable
     public CouchbaseServerTarget build() {
       if (!complete || hosts.isEmpty()) {
@@ -109,18 +84,12 @@ public class CouchbaseServerTarget {
       }
     }
 
-    /**
-     * The bare host of a seed, or {@code null} when it names none.
-     *
-     * <p>The drivers hand over seeds they have already parsed, but the older parsers keep whatever
-     * followed the host in the connection string, so anything that describes the client rather than
-     * the server it talks to is cut away here.
-     */
     @Nullable
     private static String clean(@Nullable String host) {
       if (host == null) {
         return null;
       }
+      // Older parsers retain credentials and connection-string suffixes in the seed host.
       String cleaned = truncateAt(truncateAt(truncateAt(host.trim(), '/'), '?'), '#');
       int credentialsEnd = cleaned.lastIndexOf('@');
       if (credentialsEnd >= 0) {

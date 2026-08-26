@@ -9,18 +9,11 @@ import com.couchbase.client.core.util.ConnectionString;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import javax.annotation.Nullable;
 
-/**
- * Reads the target a Couchbase 3.x client was configured with out of the connection string its core
- * was built from.
- *
- * <p>The driver hands over the seeds it parsed, so the rendered target never contains credentials,
- * a bucket, a path, connection string parameters or a fragment. A host that resolves through DNS
- * SRV is the lone seed of its connection string, so it is reported as itself rather than as the
- * seeds the driver looked up.
- */
+// Parsing the connection string rather than resolved nodes preserves a DNS SRV hostname and
+// excludes
+// credentials, bucket paths, parameters, and fragments from the target.
 public class CouchbaseConnectionStrings {
 
-  /** The target {@code connectionString} names, or {@code null} when it cannot be read. */
   @Nullable
   public static CouchbaseServerTarget target(@Nullable String connectionString) {
     if (connectionString == null || connectionString.isEmpty()) {
@@ -29,12 +22,11 @@ public class CouchbaseConnectionStrings {
     try {
       return target(ConnectionString.create(connectionString));
     } catch (RuntimeException ignored) {
-      // a connection string the driver itself rejects leaves the client without a target
+      // Leave the target unavailable when the driver rejects the connection string.
       return null;
     }
   }
 
-  /** The target {@code connectionString} names, or {@code null} when it names none. */
   @Nullable
   public static CouchbaseServerTarget target(@Nullable ConnectionString connectionString) {
     if (connectionString == null) {

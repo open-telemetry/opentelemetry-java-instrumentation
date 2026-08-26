@@ -19,20 +19,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Records the target a core was configured with while the core is being constructed, which is the
- * earliest point at which the client is complete and the last point at which its configuration is
- * still the one it was built with.
- *
- * <p>All three shapes the constructor has taken are matched, because a driver version range rarely
- * lines up with one of them: the drivers up to 3.2 are handed only the seed nodes their connection
- * string was resolved into, 3.3 to 3.5 are handed the connection string as the text the user wrote,
- * and from 3.6 they are handed it already parsed. The three shapes differ in arity or argument
- * type, so a constructor only ever matches one of them.
- *
- * <p>A client built from seed nodes rather than a connection string carries none, and is left
- * without a target unless its seed nodes were resolved by an instrumented driver.
- */
+// Core constructors receive seed nodes through 3.2, connection string text in 3.3-3.5, and a parsed
+// connection string from 3.6. Capturing each shape here keeps the target tied to the client core.
 public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
   @Override

@@ -19,15 +19,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Records the target a cluster was configured with while the cluster is being constructed, which is
- * the last point at which the connection string is still the one the client was built with.
- *
- * <p>Every way of creating a cluster funnels through this constructor, including the synchronous
- * {@code CouchbaseCluster}, which wraps a cluster built here. The connection string is taken as an
- * {@link Object} because the 2.x line moved it between packages, so naming its type would keep the
- * advice off half of the drivers it supports.
- */
+// The synchronous CouchbaseCluster also funnels through this constructor. Object is used because
+// the 2.x line moved the connection string type between packages.
 class CouchbaseClusterTargetInstrumentation implements TypeInstrumentation {
 
   @Override

@@ -110,7 +110,7 @@ class CouchbaseConnectionStringsTest {
         .isNull();
   }
 
-  /** A connection string of the shape driver 2.0 to 2.3 and driver 2.7 expose. */
+  // Shape exposed by drivers 2.0-2.3 and 2.7.
   public static class SeedListConnectionString {
 
     private final String scheme;
@@ -130,7 +130,7 @@ class CouchbaseConnectionStringsTest {
     }
   }
 
-  /** A connection string of the shape driver 2.4 to 2.6 expose, which drops unresolved seeds. */
+  // Shape exposed by drivers 2.4-2.6, which drops unresolved seeds from hosts.
   public static class ResolvedSeedListConnectionString extends SeedListConnectionString {
 
     private final List<?> allHosts;
@@ -145,7 +145,7 @@ class CouchbaseConnectionStringsTest {
     }
   }
 
-  /** A seed of the shape driver 2.7 exposes. */
+  // Seed shape exposed by driver 2.7.
   public static class Seed {
 
     private final String hostname;

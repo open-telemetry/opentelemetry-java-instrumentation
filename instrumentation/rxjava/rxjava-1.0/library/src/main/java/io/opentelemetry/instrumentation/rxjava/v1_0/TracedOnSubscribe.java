@@ -20,13 +20,7 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
   private final Supplier<REQUEST> requestFactory;
   private final Context parentContext;
 
-  /**
-   * Traces every subscription with an operation of its own, taken from {@code requestFactory}.
-   *
-   * <p>An observable can be subscribed to more than once, and each subscription runs the operation
-   * again. Handing every subscription its own operation keeps whatever one of them records, such as
-   * the node it reached, out of the spans of the others.
-   */
+  /** Creates a wrapper that obtains independent request state for each subscription. */
   public static <T, REQUEST> TracedOnSubscribe<T, REQUEST> perSubscription(
       Observable<T> originalObservable,
       Instrumenter<REQUEST, ?> instrumenter,

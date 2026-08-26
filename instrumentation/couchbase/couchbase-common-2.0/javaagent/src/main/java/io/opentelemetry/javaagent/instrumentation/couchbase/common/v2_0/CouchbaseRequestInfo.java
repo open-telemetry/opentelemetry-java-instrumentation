@@ -93,14 +93,10 @@ public abstract class CouchbaseRequestInfo {
 
   public abstract boolean isMethodCall();
 
-  /** The target the client issuing this operation was configured with. */
   @Nullable
   public abstract CouchbaseServerTarget getServerTarget();
 
-  /**
-   * A supplier handing out one operation of this shape per call, so that every subscription to the
-   * same observable records the node it reached on its own.
-   */
+  // Each subscription needs independent mutable node state.
   public Supplier<CouchbaseRequestInfo> copySupplier() {
     return new Supplier<CouchbaseRequestInfo>() {
       @Override
@@ -138,31 +134,19 @@ public abstract class CouchbaseRequestInfo {
     this.operationId = operationId;
   }
 
-  /** The node this operation reached last, or {@code null} when it has reached none. */
   @Nullable
   public Node getNode() {
     return node;
   }
 
-  /**
-   * Records the node this operation has just been written to.
-   *
-   * <p>The socket it was written over and the address the driver opened that endpoint to are
-   * replaced together, so an operation that walks several nodes never pairs the socket of one node
-   * with the address of another.
-   *
-   * @param peerAddress the socket the operation was written over
-   * @param backendAddress the {@code host:port} the driver opened the endpoint to, which the
-   *     drivers before 2.6 do not expose
-   */
   public void setNode(@Nullable SocketAddress peerAddress, @Nullable String backendAddress) {
     if (peerAddress == null) {
       return;
     }
+    // Replace both values atomically so retries cannot pair data from different nodes.
     node = new Node(peerAddress, backendAddress);
   }
 
-  /** A node an operation reached, as both a socket and the address the driver opened it to. */
   public static class Node {
 
     private final SocketAddress peerAddress;
@@ -181,18 +165,15 @@ public abstract class CouchbaseRequestInfo {
       }
     }
 
-    /** The socket the operation was written over. */
     public SocketAddress getPeerAddress() {
       return peerAddress;
     }
 
-    /** The host the driver opened the endpoint to, which can be a name rather than an address. */
     @Nullable
     public String getBackendAddress() {
       return backendAddress;
     }
 
-    /** The port the driver opened the endpoint to, or zero when it named none. */
     public int getBackendPort() {
       return backendPort;
     }
