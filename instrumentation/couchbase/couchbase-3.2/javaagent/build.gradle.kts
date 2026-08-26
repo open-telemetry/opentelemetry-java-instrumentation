@@ -22,6 +22,9 @@ sourceSets {
 }
 
 dependencies {
+  implementation(project(":instrumentation:couchbase:couchbase-common:javaagent"))
+  implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
+
   compileOnly(
     project(
       path = ":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded",

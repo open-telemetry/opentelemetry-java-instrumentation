@@ -14,6 +14,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
@@ -25,10 +27,14 @@ import com.couchbase.client.core.msg.RequestContext;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
+import io.opentelemetry.javaagent.instrumentation.couchbase.v3_1.shaded.com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v3_1.shaded.com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.time.Duration;
 import java.time.Instant;
+import javax.annotation.Nullable;
 import reactor.core.publisher.Mono;
 
 public final class CouchbaseRequestTracer implements RequestTracer {
@@ -144,6 +150,24 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     @Override
     public void requestContext(RequestContext requestContext) {
       delegate.requestContext(requestContext);
+      // the old conventions never described a server for Couchbase, and they are frozen
+      if (emitStableDatabaseSemconv()) {
+        setConfiguredTarget(delegate, CouchbaseServerTargets.get(requestContext.core()));
+      }
+    }
+
+    private static void setConfiguredTarget(
+        RequestSpan span, @Nullable CouchbaseServerTarget target) {
+      if (target == null) {
+        return;
+      }
+      span.setAttribute(SERVER_ADDRESS.getKey(), target.getAddress());
+      Integer port = target.getPort();
+      if (port != null) {
+        // RequestSpan does not expose long attributes throughout the supported range, while the
+        // shaded implementation does.
+        ((OpenTelemetryRequestSpan) span).setAttribute(SERVER_PORT.getKey(), port.longValue());
+      }
     }
 
     @SuppressWarnings("deprecation") // using deprecated semconv
