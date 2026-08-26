@@ -14,6 +14,7 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
+import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.net.InetSocketAddress;
@@ -57,15 +58,15 @@ final class CassandraSqlAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CassandraRequest request) {
-    CassandraServerTarget serverTarget = request.getServerTarget();
-    return emitStableDatabaseSemconv() && serverTarget != null ? serverTarget.getAddress() : null;
+    CassandraServerTarget serverTarget = getServerTarget(request);
+    return serverTarget == null ? null : serverTarget.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(CassandraRequest request) {
-    CassandraServerTarget serverTarget = request.getServerTarget();
-    return emitStableDatabaseSemconv() && serverTarget != null ? serverTarget.getPort() : null;
+    CassandraServerTarget serverTarget = getServerTarget(request);
+    return serverTarget == null ? null : serverTarget.getPort();
   }
 
   @Nullable
@@ -98,5 +99,18 @@ final class CassandraSqlAttributesGetter
   @Override
   public boolean isParameterizedQuery(CassandraRequest request, int queryIndex) {
     return request.isParameterizedQuery(queryIndex);
+  }
+
+  @Nullable
+  private static CassandraServerTarget getServerTarget(CassandraRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    for (Node node : request.getSession().getMetadata().getNodes().values()) {
+      if (node.getEndPoint() instanceof SniEndPoint) {
+        return null;
+      }
+    }
+    return request.getServerTarget();
   }
 }

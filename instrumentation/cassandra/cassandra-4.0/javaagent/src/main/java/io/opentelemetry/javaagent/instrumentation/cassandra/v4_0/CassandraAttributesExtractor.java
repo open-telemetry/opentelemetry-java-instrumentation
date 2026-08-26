@@ -153,8 +153,6 @@ final class CassandraAttributesExtractor
 
   private static void updateStableSniServerAddressAndPort(
       AttributesBuilder attributes, Node coordinator, EndPoint endPoint) {
-    attributes.remove(SERVER_ADDRESS);
-    attributes.remove(SERVER_PORT);
     // SniEndPoint.resolve() returns the proxy, performs DNS, and advances the driver's shared
     // round-robin counter. The broadcast RPC address identifies the server without those effects.
     InetSocketAddress rpcAddress = coordinator.getBroadcastRpcAddress().orElse(null);

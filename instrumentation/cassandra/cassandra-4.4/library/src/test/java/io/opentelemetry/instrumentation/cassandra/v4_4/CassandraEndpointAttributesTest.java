@@ -11,12 +11,14 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
+import com.datastax.oss.driver.api.core.metadata.Metadata;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.api.core.session.Session;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
@@ -44,6 +46,7 @@ class CassandraEndpointAttributesTest {
       InetSocketAddress.createUnresolved("proxy.example.com", 29042);
 
   @Mock private ExecutionInfo executionInfo;
+  @Mock private Metadata metadata;
   @Mock private Node coordinator;
   @Mock private EndPoint customEndPoint;
   @Mock private Session session;
@@ -90,6 +93,9 @@ class CassandraEndpointAttributesTest {
 
   @Test
   void configuredTargetIsAvailableWithoutExecutionInfo() {
+    if (emitStableDatabaseSemconv()) {
+      stubSessionNode();
+    }
     CassandraRequest request =
         CassandraRequest.create(
             session, target(singletonList("cassandra.example.com:9042")), "SELECT 1");
@@ -207,12 +213,24 @@ class CassandraEndpointAttributesTest {
   }
 
   private Attributes serverAttributes(CassandraServerTarget serverTarget) {
-    AttributesBuilder builder = Attributes.builder();
+    if (emitStableDatabaseSemconv()) {
+      stubSessionNode();
+    }
     CassandraRequest request = CassandraRequest.create(session, serverTarget, "SELECT 1");
+    AttributesBuilder startAttributes = Attributes.builder();
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
-        .onStart(builder, Context.root(), request);
-    CassandraAttributesExtractor.updateServerAddressAndPort(builder, request, coordinator);
-    return builder.build();
+        .onStart(startAttributes, Context.root(), request);
+    AttributesBuilder endAttributes = Attributes.builder();
+    CassandraAttributesExtractor.updateServerAddressAndPort(endAttributes, request, coordinator);
+    return Attributes.builder()
+        .putAll(startAttributes.build())
+        .putAll(endAttributes.build())
+        .build();
+  }
+
+  private void stubSessionNode() {
+    when(session.getMetadata()).thenReturn(metadata);
+    when(metadata.getNodes()).thenReturn(singletonMap(UUID.randomUUID(), coordinator));
   }
 
   private static CassandraServerTarget target(List<String> contactPoints) {

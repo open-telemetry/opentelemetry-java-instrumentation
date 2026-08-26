@@ -60,15 +60,15 @@ final class CassandraSqlAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CassandraRequest request) {
-    CassandraServerTarget serverTarget = request.getServerTarget();
-    return emitStableDatabaseSemconv() && serverTarget != null ? serverTarget.getAddress() : null;
+    CassandraServerTarget serverTarget = getServerTarget(request);
+    return serverTarget == null ? null : serverTarget.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(CassandraRequest request) {
-    CassandraServerTarget serverTarget = request.getServerTarget();
-    return emitStableDatabaseSemconv() && serverTarget != null ? serverTarget.getPort() : null;
+    CassandraServerTarget serverTarget = getServerTarget(request);
+    return serverTarget == null ? null : serverTarget.getPort();
   }
 
   @Nullable
@@ -101,5 +101,18 @@ final class CassandraSqlAttributesGetter
   @Override
   public boolean isParameterizedQuery(CassandraRequest request, int queryIndex) {
     return request.isParameterizedQuery(queryIndex);
+  }
+
+  @Nullable
+  private static CassandraServerTarget getServerTarget(CassandraRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    for (Node node : request.getSession().getMetadata().getNodes().values()) {
+      if (isSniEndPoint(node.getEndPoint())) {
+        return null;
+      }
+    }
+    return request.getServerTarget();
   }
 }
