@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0;
+package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery;
 
-import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.VirtualFields.OUTBOUND_ENVELOPE_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery.VirtualFields.OUTBOUND_ENVELOPE_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 

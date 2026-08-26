@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0;
+package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery;
 
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;

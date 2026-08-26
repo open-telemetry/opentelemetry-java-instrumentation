@@ -21,9 +21,11 @@ import org.apache.pekko.actor.Props;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class PekkoRemoteTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+abstract class AbstractPekkoRemoteTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -32,8 +34,11 @@ class PekkoRemoteTest {
   private static ActorSystem receiverSystem;
   private static String receiverPath;
 
+  /** Configuration that sets up the transport under test. */
+  protected abstract Config remoteConfig();
+
   @BeforeAll
-  static void setUp() {
+  void setUp() {
     senderSystem = ActorSystem.create("sender", remoteConfig());
     receiverSystem = ActorSystem.create("receiver", remoteConfig());
     receiverSystem.actorOf(Props.create(EchoActor.class), "echo");
@@ -42,7 +47,7 @@ class PekkoRemoteTest {
   }
 
   @AfterAll
-  static void tearDown() {
+  void tearDown() {
     if (senderSystem != null) {
       senderSystem.terminate();
     }
@@ -51,13 +56,9 @@ class PekkoRemoteTest {
     }
   }
 
-  private static Config remoteConfig() {
+  protected static Config parseConfig(String transportConfig) {
     return ConfigFactory.parseString(
-            "pekko.actor.provider = remote\n"
-                + "pekko.remote.artery.transport = tcp\n"
-                + "pekko.remote.artery.canonical.hostname = 127.0.0.1\n"
-                + "pekko.remote.artery.canonical.port = 0\n"
-                + "pekko.loglevel = WARNING\n")
+            "pekko.actor.provider = remote\n" + "pekko.loglevel = WARNING\n" + transportConfig)
         .withFallback(ConfigFactory.load());
   }
 

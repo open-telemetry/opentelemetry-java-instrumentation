@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0;
+package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic;
 
-import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.VirtualFields.INBOUND_ENVELOPE_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic.VirtualFields.SEND_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -17,35 +17,34 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.pekko.remote.artery.InboundEnvelope;
+import org.apache.pekko.remote.EndpointManager;
 
 /**
- * Makes the context that was received with a remote message current while the message is handed to
- * the actor it is addressed to. The pekko-actor instrumentation takes it from there, it attaches
- * the current context to the envelope that the message is delivered with.
+ * Makes the context of the sender current while the message is serialized, the codec writes the
+ * context that is current when it builds the message.
  */
-class MessageDispatcherInstrumentation implements TypeInstrumentation {
+class EndpointWriterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.pekko.remote.artery.MessageDispatcher");
+    return named("org.apache.pekko.remote.EndpointWriter");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch")
-            .and(takesArgument(0, named("org.apache.pekko.remote.artery.InboundEnvelope"))),
-        getClass().getName() + "$DispatchAdvice");
+        named("writeSend")
+            .and(takesArgument(0, named("org.apache.pekko.remote.EndpointManager$Send"))),
+        getClass().getName() + "$WriteSendAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class DispatchAdvice {
+  public static class WriteSendAdvice {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.Argument(0) InboundEnvelope envelope) {
-      Context context = INBOUND_ENVELOPE_CONTEXT.get(envelope);
+    public static Scope onEnter(@Advice.Argument(0) EndpointManager.Send send) {
+      Context context = SEND_CONTEXT.get(send);
       return context == null ? null : context.makeCurrent();
     }
 

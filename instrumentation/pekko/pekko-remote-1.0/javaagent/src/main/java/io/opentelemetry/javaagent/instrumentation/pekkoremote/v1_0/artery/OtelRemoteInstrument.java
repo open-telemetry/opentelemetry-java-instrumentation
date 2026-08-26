@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0;
+package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery;
 
-import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.VirtualFields.INBOUND_ENVELOPE_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery.VirtualFields.INBOUND_ENVELOPE_CONTEXT;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.ContextMetadata;
 import java.nio.ByteBuffer;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.remote.artery.InboundEnvelope;

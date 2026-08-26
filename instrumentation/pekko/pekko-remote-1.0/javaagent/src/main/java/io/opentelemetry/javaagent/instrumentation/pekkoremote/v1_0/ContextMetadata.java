@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
  * <p>A reader that does not know the version skips the metadata, pekko repositions the buffer to
  * the end of the section after the instrument has run.
  */
-final class ContextMetadata {
+public final class ContextMetadata {
 
   private static final byte VERSION = 1;
   // messages share the artery frame with the metadata, don't let a large context eat into the
@@ -57,7 +57,7 @@ final class ContextMetadata {
         }
       };
 
-  static void write(Context context, ByteBuffer buffer) {
+  public static void write(Context context, ByteBuffer buffer) {
     Map<String, String> fields = new LinkedHashMap<>();
     GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, fields, SETTER);
     if (fields.isEmpty()) {
@@ -82,7 +82,7 @@ final class ContextMetadata {
   }
 
   @Nullable
-  static Context read(ByteBuffer buffer) {
+  public static Context read(ByteBuffer buffer) {
     if (buffer.get() != VERSION) {
       return null;
     }

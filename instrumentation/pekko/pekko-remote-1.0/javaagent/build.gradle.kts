@@ -26,6 +26,15 @@ muzzle {
 dependencies {
   library("org.apache.pekko:pekko-remote_2.12:1.0.1")
 
+  // classic remoting needs netty, which is an optional dependency of pekko-remote, pekko moved
+  // the classic transport from netty 3 to netty 4 during the 1.x line
+  if (otelProps.testLatestDeps) {
+    testImplementation("io.netty:netty-transport:4.2.17.Final")
+    testImplementation("io.netty:netty-handler:4.2.17.Final")
+  } else {
+    testImplementation("io.netty:netty:3.10.6.Final")
+  }
+
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 

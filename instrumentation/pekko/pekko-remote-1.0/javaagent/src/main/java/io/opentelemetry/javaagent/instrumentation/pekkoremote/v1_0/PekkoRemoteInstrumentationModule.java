@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0;
 
-import static java.util.Arrays.asList;
-
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery.ArteryInstrumentations;
+import io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic.ClassicInstrumentations;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,11 +28,8 @@ public class PekkoRemoteInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new RemoteInstrumentsInstrumentation(),
-        new RemoteInstrumentsSerializationInstrumentation(),
-        new OutboundEnvelopeInstrumentation(),
-        new InboundEnvelopeInstrumentation(),
-        new MessageDispatcherInstrumentation());
+    List<TypeInstrumentation> instrumentations = new ArrayList<>(ArteryInstrumentations.get());
+    instrumentations.addAll(ClassicInstrumentations.get());
+    return instrumentations;
   }
 }
