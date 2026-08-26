@@ -9,9 +9,9 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `otel.instrumentation.opensearch.capture-search-query` and
-  `otel.instrumentation.graphql.capture-query` for removal in 3.0. OpenSearch search query bodies
-  and GraphQL queries will always be captured in 3.0; there are no replacement properties.
+- Deprecate `otel.instrumentation.opensearch.capture-search-query`,
+  `otel.instrumentation.graphql.capture-query`, and the GraphQL library
+  `setCaptureQuery(boolean)` APIs. There are no replacements.
 
 ## Version 2.31.1 (2026-08-23)
 

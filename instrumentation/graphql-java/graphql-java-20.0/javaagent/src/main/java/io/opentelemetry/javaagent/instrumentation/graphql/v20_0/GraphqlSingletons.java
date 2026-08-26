@@ -26,19 +26,24 @@ public class GraphqlSingletons {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     Configuration config = new Configuration(openTelemetry);
 
-    telemetry =
-        GraphQLTelemetry.builder(openTelemetry)
-            .setCaptureQuery(config.captureQuery)
-            .setQuerySanitizationEnabled(config.querySanitizationEnabled)
-            .setDataFetcherInstrumentationEnabled(config.dataFetcherEnabled)
-            .setTrivialDataFetcherInstrumentationEnabled(config.trivialDataFetcherEnabled)
-            .setOperationNameInSpanNameEnabled(config.operationNameInSpanNameEnabled)
-            .build();
+    telemetry = createTelemetry(openTelemetry, config);
   }
 
   public static Instrumentation addInstrumentation(Instrumentation instrumentation) {
     Instrumentation ourInstrumentation = telemetry.createInstrumentation();
     return InstrumentationUtil.addInstrumentation(instrumentation, ourInstrumentation);
+  }
+
+  @SuppressWarnings("deprecation") // setCaptureQuery remains supported until 3.0
+  private static GraphQLTelemetry createTelemetry(
+      OpenTelemetry openTelemetry, Configuration config) {
+    return GraphQLTelemetry.builder(openTelemetry)
+        .setCaptureQuery(config.captureQuery)
+        .setQuerySanitizationEnabled(config.querySanitizationEnabled)
+        .setDataFetcherInstrumentationEnabled(config.dataFetcherEnabled)
+        .setTrivialDataFetcherInstrumentationEnabled(config.trivialDataFetcherEnabled)
+        .setOperationNameInSpanNameEnabled(config.operationNameInSpanNameEnabled)
+        .build();
   }
 
   // instrumentation/development:

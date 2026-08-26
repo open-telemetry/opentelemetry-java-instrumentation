@@ -90,7 +90,7 @@ class GraphqlTest extends AbstractGraphqlTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                             equalTo(GRAPHQL_OPERATION_TYPE, "query"),
-                            normalizedQueryEqualsTo(
+                            queryEqualsTo(
                                 GRAPHQL_DOCUMENT,
                                 "query findBookById { bookById(id: ?) { name author { name } } }")),
                 span ->
@@ -155,7 +155,7 @@ class GraphqlTest extends AbstractGraphqlTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                             equalTo(GRAPHQL_OPERATION_TYPE, "query"),
-                            normalizedQueryEqualsTo(
+                            queryEqualsTo(
                                 GRAPHQL_DOCUMENT,
                                 "query findBookById { bookById(id: ?) { name author { name } } }")),
                 span ->
@@ -234,7 +234,7 @@ class GraphqlTest extends AbstractGraphqlTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                             equalTo(GRAPHQL_OPERATION_TYPE, "query"),
-                            normalizedQueryEqualsTo(
+                            queryEqualsTo(
                                 GRAPHQL_DOCUMENT,
                                 "query findBookById { bookById(id: ?) { name author { name } } }")),
                 span ->
@@ -286,7 +286,7 @@ class GraphqlTest extends AbstractGraphqlTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                             equalTo(GRAPHQL_OPERATION_TYPE, "query"),
-                            normalizedQueryEqualsTo(
+                            queryEqualsTo(
                                 GRAPHQL_DOCUMENT,
                                 "query findBookById { bookById(id: ?) { name author { name } } }"))
                         .hasStatus(StatusData.error())
@@ -359,7 +359,7 @@ class GraphqlTest extends AbstractGraphqlTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                             equalTo(GRAPHQL_OPERATION_TYPE, "query"),
-                            normalizedQueryEqualsTo(
+                            queryEqualsTo(
                                 GRAPHQL_DOCUMENT,
                                 "query findBookById { bookById(id: ?) { name author { name } } }"))
                         .hasStatus(StatusData.error())

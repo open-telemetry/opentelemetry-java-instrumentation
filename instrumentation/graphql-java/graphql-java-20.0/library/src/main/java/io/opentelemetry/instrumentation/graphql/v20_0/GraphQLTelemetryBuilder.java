@@ -27,7 +27,10 @@ public final class GraphQLTelemetryBuilder {
   /**
    * Sets whether query should be captured in {@code graphql.document} span attribute. Default is
    * {@code true}.
+   *
+   * @deprecated GraphQL queries will always be captured in 3.0. There is no replacement.
    */
+  @Deprecated // to be removed in 3.0
   @CanIgnoreReturnValue
   public GraphQLTelemetryBuilder setCaptureQuery(boolean captureQuery) {
     this.captureQuery = captureQuery;
