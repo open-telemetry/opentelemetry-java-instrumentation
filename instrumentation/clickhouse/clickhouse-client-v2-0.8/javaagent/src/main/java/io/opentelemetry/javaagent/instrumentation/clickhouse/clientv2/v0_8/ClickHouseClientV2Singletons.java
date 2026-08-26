@@ -59,7 +59,7 @@ public class ClickHouseClientV2Singletons {
    * The address a client resolves to: the single configured endpoint, or the whole endpoint list
    * when the client was given more than one.
    */
-  public static final class ServerInfo {
+  public static class ServerInfo {
 
     @Nullable private final String address;
     @Nullable private final Integer port;

@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  *
  * <p>The rendering is done once, when the client is configured, and the result is immutable.
  */
-public final class VertxSqlAddressGroup {
+public class VertxSqlAddressGroup {
 
   private final String address;
 
