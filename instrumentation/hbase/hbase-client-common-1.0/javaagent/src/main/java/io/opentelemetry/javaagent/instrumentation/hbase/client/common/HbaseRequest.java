@@ -12,16 +12,40 @@ import org.apache.hadoop.hbase.TableName;
 @AutoValue
 public abstract class HbaseRequest {
 
+  @SuppressWarnings("TooManyParameters")
   public static HbaseRequest create(
       @Nullable String operation,
       @Nullable TableName tableName,
       @Nullable String user,
-      @Nullable String host,
-      @Nullable Integer port,
+      @Nullable String serverAddress,
+      @Nullable Integer serverPort,
       @Nullable String serverTarget,
+      @Nullable String networkPeerAddress,
+      @Nullable Integer networkPeerPort,
       @Nullable Long operationBatchSize) {
     return new AutoValue_HbaseRequest(
-        operation, tableName, user, host, port, serverTarget, operationBatchSize);
+        operation,
+        tableName,
+        user,
+        serverAddress,
+        serverPort,
+        serverTarget,
+        networkPeerAddress,
+        networkPeerPort,
+        operationBatchSize);
+  }
+
+  public HbaseRequest withNetworkPeer(String networkPeerAddress, int networkPeerPort) {
+    return new AutoValue_HbaseRequest(
+        getOperation(),
+        getTableName(),
+        getUser(),
+        getServerAddress(),
+        getServerPort(),
+        getServerTarget(),
+        networkPeerAddress,
+        networkPeerPort,
+        getOperationBatchSize());
   }
 
   @Nullable
@@ -34,13 +58,19 @@ public abstract class HbaseRequest {
   public abstract String getUser();
 
   @Nullable
-  public abstract String getHost();
+  public abstract String getServerAddress();
 
   @Nullable
-  public abstract Integer getPort();
+  public abstract Integer getServerPort();
 
   @Nullable
   public abstract String getServerTarget();
+
+  @Nullable
+  public abstract String getNetworkPeerAddress();
+
+  @Nullable
+  public abstract Integer getNetworkPeerPort();
 
   @Nullable
   public abstract Long getOperationBatchSize();

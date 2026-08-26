@@ -60,6 +60,8 @@ public class HbaseClientUtil {
         addr.getHostString(),
         addr.getPort(),
         serverTarget,
+        null,
+        null,
         batchSize);
   }
 
