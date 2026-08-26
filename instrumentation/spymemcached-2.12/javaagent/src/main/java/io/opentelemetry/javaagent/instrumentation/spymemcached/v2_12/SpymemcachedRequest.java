@@ -24,7 +24,6 @@ public abstract class SpymemcachedRequest {
 
   public abstract String getQueryText();
 
-  /** The target the client behind this request was configured with. */
   @Nullable
   public abstract SpymemcachedServerTarget getServerTarget();
 

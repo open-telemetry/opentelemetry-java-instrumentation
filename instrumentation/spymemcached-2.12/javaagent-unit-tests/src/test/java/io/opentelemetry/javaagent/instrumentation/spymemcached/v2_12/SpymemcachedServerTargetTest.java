@@ -27,11 +27,13 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
-  void severalNodesHaveNoSingleTarget() {
-    assertThat(
-            SpymemcachedServerTarget.create(
-                asList(node("one.example", 11211), node("two.example", 11212))))
-        .isNull();
+  void severalNodesAreRenderedInOrder() {
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(
+            asList(node("one.example", 11211), node("two.example", 11212)));
+
+    assertThat(target.getAddress()).isEqualTo("one.example:11211,two.example:11212");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -42,8 +44,11 @@ class SpymemcachedServerTargetTest {
 
   @Test
   void nodeThatCannotBeNamedDropsTheNodeList() {
-    assertThat(SpymemcachedServerTarget.create(singletonList(node("  ", 11212)))).isNull();
+    assertThat(
+            SpymemcachedServerTarget.create(asList(node("one.example", 11211), node("  ", 11212))))
+        .isNull();
     assertThat(SpymemcachedServerTarget.create(singletonList(node("one.example", 0)))).isNull();
+    assertThat(SpymemcachedServerTarget.create(asList(node("one.example", 11211), null))).isNull();
   }
 
   @Test
@@ -65,6 +70,16 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
+  void ipv6NodesAreBracketedInMultiNodeTargets() {
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(
+            asList(node("[2001:db8::1]", 11211), node("two.example", 11212)));
+
+    assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:11211,two.example:11212");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void hostsAreCleaned() {
     SpymemcachedServerTarget target =
         SpymemcachedServerTarget.create(singletonList(node("  cache.example  ", 11211)));
@@ -73,17 +88,17 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
-  void targetIsNotChangedByLaterEditsToTheNodeList() {
+  void renderedTargetIsNotChangedByLaterEditsToTheNodeList() {
     List<InetSocketAddress> nodes = new ArrayList<>();
     nodes.add(node("one.example", 11211));
+    nodes.add(node("two.example", 11212));
 
     SpymemcachedServerTarget target = SpymemcachedServerTarget.create(nodes);
 
-    nodes.add(node("two.example", 11212));
     nodes.clear();
 
-    assertThat(target.getAddress()).isEqualTo("one.example");
-    assertThat(target.getPort()).isEqualTo(11211);
+    assertThat(target.getAddress()).isEqualTo("one.example:11211,two.example:11212");
+    assertThat(target.getPort()).isNull();
   }
 
   private static InetSocketAddress node(String host, int port) {

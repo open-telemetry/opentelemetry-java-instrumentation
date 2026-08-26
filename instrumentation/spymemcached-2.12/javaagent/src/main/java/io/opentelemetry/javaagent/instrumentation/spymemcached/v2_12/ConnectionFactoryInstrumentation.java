@@ -22,14 +22,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.spy.memcached.MemcachedConnection;
 
-/**
- * Reads the nodes a client is being configured with, and hands them to the connection every one of
- * its operations then runs through.
- *
- * <p>The connection factory is the earliest place that sees the node list a client was built with,
- * whichever constructor it was built through and whichever protocol it speaks, and it sees that
- * list before the connection has resolved, dropped or reconnected to anything.
- */
 class ConnectionFactoryInstrumentation implements TypeInstrumentation {
 
   @Override

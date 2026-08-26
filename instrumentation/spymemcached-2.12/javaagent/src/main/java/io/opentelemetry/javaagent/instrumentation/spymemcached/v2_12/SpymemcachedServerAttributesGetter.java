@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGett
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-/** The node that answered an operation, which is only known once it has been dispatched. */
 final class SpymemcachedServerAttributesGetter
     implements ServerAttributesGetter<SpymemcachedRequest> {
 

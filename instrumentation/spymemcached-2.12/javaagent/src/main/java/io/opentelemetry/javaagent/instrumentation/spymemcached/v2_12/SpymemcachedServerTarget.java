@@ -6,42 +6,44 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * The single server a Spymemcached client was configured with, captured while its connection is
- * being created.
- *
- * <p>Clients configured with several nodes have no single configured server. Their requests report
- * the node that handles each operation instead.
- */
 public class SpymemcachedServerTarget {
 
   private final String address;
-  private final int port;
+  @Nullable private final Integer port;
 
-  /**
-   * The target of a client configured with one node, or {@code null} when the client has no single
-   * configured server.
-   *
-   * <p>The node is copied here and then forgotten, so a caller is free to keep changing the list it
-   * handed over.
-   */
   @Nullable
   public static SpymemcachedServerTarget create(@Nullable List<InetSocketAddress> nodes) {
-    if (nodes == null || nodes.size() != 1) {
+    if (nodes == null || nodes.isEmpty()) {
       return null;
     }
-    InetSocketAddress node = nodes.get(0);
-    String host = node == null ? null : clean(node.getHostString());
-    if (host == null || node.getPort() <= 0) {
-      return null;
+    List<String> hosts = new ArrayList<>(nodes.size());
+    List<Integer> ports = new ArrayList<>(nodes.size());
+    for (InetSocketAddress node : nodes) {
+      String host = node == null ? null : clean(node.getHostString());
+      if (host == null || node.getPort() <= 0) {
+        return null;
+      }
+      hosts.add(host);
+      ports.add(node.getPort());
     }
-    return new SpymemcachedServerTarget(host, node.getPort());
+    if (hosts.size() == 1) {
+      return new SpymemcachedServerTarget(hosts.get(0), ports.get(0));
+    }
+    StringBuilder address = new StringBuilder();
+    for (int i = 0; i < hosts.size(); i++) {
+      if (i > 0) {
+        address.append(',');
+      }
+      appendNode(address, hosts.get(i), ports.get(i));
+    }
+    return new SpymemcachedServerTarget(address.toString(), null);
   }
 
-  private SpymemcachedServerTarget(String address, int port) {
+  private SpymemcachedServerTarget(String address, @Nullable Integer port) {
     this.address = address;
     this.port = port;
   }
@@ -50,16 +52,20 @@ public class SpymemcachedServerTarget {
     return address;
   }
 
-  public int getPort() {
+  @Nullable
+  public Integer getPort() {
     return port;
   }
 
-  /**
-   * The bare host of a configured node, or {@code null} when it names none.
-   *
-   * <p>A lone host is reported unbracketed, where brackets would only get in the way of matching it
-   * against a configured peer.
-   */
+  private static void appendNode(StringBuilder address, String host, int port) {
+    if (host.indexOf(':') >= 0) {
+      address.append('[').append(host).append(']');
+    } else {
+      address.append(host);
+    }
+    address.append(':').append(port);
+  }
+
   @Nullable
   private static String clean(@Nullable String host) {
     if (host == null) {

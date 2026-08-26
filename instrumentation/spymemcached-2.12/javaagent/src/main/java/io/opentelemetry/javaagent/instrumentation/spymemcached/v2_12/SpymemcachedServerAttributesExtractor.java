@@ -29,8 +29,6 @@ class SpymemcachedServerAttributesExtractor
       SpymemcachedRequest request,
       @Nullable Object object,
       @Nullable Throwable error) {
-    // The handling node is only known after dispatch. A captured configured target already
-    // describes the server under stable semantic conventions.
     if (!emitStableDatabaseSemconv() || request.getServerTarget() == null) {
       delegate.onStart(attributes, context, request);
     }

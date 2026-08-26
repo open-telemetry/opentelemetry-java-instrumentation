@@ -18,11 +18,6 @@ import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import org.junit.jupiter.api.Test;
 
-/**
- * Runs in every semantic convention mode the module supports, so that each assertion below reads as
- * what that mode describes. Stable and dual report a single configured target; the old conventions
- * describe the node that answered instead, which is only known once the request has ended.
- */
 class SpymemcachedAttributesGetterTest {
 
   private final SpymemcachedAttributesGetter getter = new SpymemcachedAttributesGetter();
@@ -38,12 +33,13 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
-  void severalConfiguredNodesHaveNoSingleServerAddress() {
+  void severalConfiguredNodesAreReportedWithoutAPort() {
     SpymemcachedRequest request =
         request(asList(node("one.example", 11211), node("two.example", 11212)));
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
-    assertThat(getter.getServerAddress(request)).isNull();
+    assertThat(getter.getServerAddress(request))
+        .isEqualTo(emitStableDatabaseSemconv() ? "one.example:11211,two.example:11212" : null);
     assertThat(getter.getServerPort(request)).isNull();
   }
 

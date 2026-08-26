@@ -29,21 +29,14 @@ class SpymemcachedRequestTest {
   @Test
   void requestCarriesTheTargetItsConnectionWasCreatedFor() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(connection, singletonList(node("one.example", 11211)));
-
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
-
-    assertThat(request.getServerTarget().getAddress()).isEqualTo("one.example");
-    assertThat(request.getServerTarget().getPort()).isEqualTo(11211);
-  }
-
-  @Test
-  void severalConfiguredNodesHaveNoSingleTarget() {
-    MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedServerTargets.capture(
         connection, asList(node("one.example", 11211), node("two.example", 11212)));
 
-    assertThat(SpymemcachedRequest.create(connection, "asyncGet").getServerTarget()).isNull();
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
+
+    assertThat(request.getServerTarget().getAddress())
+        .isEqualTo("one.example:11211,two.example:11212");
+    assertThat(request.getServerTarget().getPort()).isNull();
   }
 
   @Test
@@ -69,9 +62,10 @@ class SpymemcachedRequestTest {
   }
 
   @Test
-  void stableSingleConfiguredTargetIsNotOverwrittenByHandlingNode() {
+  void stableConfiguredTargetIsNotOverwrittenByHandlingNode() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(connection, singletonList(node("one.example", 11211)));
+    SpymemcachedServerTargets.capture(
+        connection, asList(node("one.example", 11211), node("two.example", 11212)));
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
     request.setHandlingNode(memcachedNode("selected.example", 11213));
     AttributesBuilder attributes = Attributes.builder();
@@ -86,23 +80,6 @@ class SpymemcachedRequestTest {
       assertThat(result.get(SERVER_ADDRESS)).isEqualTo("selected.example");
       assertThat(result.get(SERVER_PORT)).isEqualTo(11213);
     }
-  }
-
-  @Test
-  void severalConfiguredNodesFallBackToHandlingNode() {
-    MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(
-        connection, asList(node("one.example", 11211), node("two.example", 11212)));
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
-    request.setHandlingNode(memcachedNode("two.example", 11212));
-    AttributesBuilder attributes = Attributes.builder();
-
-    new SpymemcachedServerAttributesExtractor()
-        .onEnd(attributes, Context.root(), request, null, null);
-
-    Attributes result = attributes.build();
-    assertThat(result.get(SERVER_ADDRESS)).isEqualTo("two.example");
-    assertThat(result.get(SERVER_PORT)).isEqualTo(11212);
   }
 
   @Test
@@ -122,25 +99,29 @@ class SpymemcachedRequestTest {
   @Test
   void handlingNodeIsKeptBesideTheConfiguredTarget() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(connection, singletonList(node("one.example", 11211)));
+    SpymemcachedServerTargets.capture(
+        connection, asList(node("one.example", 11211), node("two.example", 11212)));
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
 
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
-    assertThat(request.getServerTarget().getAddress()).isEqualTo("one.example");
+    assertThat(request.getServerTarget().getAddress())
+        .isEqualTo("one.example:11211,two.example:11212");
   }
 
   @Test
   void retryOntoAnotherNodeForgetsTheHandlingNodeButKeepsTheTarget() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(connection, singletonList(node("one.example", 11211)));
+    SpymemcachedServerTargets.capture(
+        connection, asList(node("one.example", 11211), node("two.example", 11212)));
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
 
     request.setHandlingNode(memcachedNode("one.example", 11211));
     request.setHandlingNode(memcachedNode("two.example", 11212));
     assertThat(request.getHandlingNodeAddress()).isNull();
-    assertThat(request.getServerTarget().getAddress()).isEqualTo("one.example");
+    assertThat(request.getServerTarget().getAddress())
+        .isEqualTo("one.example:11211,two.example:11212");
   }
 
   @Test
