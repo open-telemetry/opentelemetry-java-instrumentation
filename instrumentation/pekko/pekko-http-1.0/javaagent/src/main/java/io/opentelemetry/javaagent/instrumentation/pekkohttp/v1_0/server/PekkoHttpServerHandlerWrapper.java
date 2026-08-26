@@ -28,17 +28,11 @@ import scala.util.Try;
  * responses can arrive in any order. Wrapping the handler function pairs each request with the
  * future that completes with the response for that request.
  */
-public final class PekkoHttpServerHandlerWrapper
+public class PekkoHttpServerHandlerWrapper
     extends AbstractFunction1<HttpRequest, Future<HttpResponse>> {
 
   private final Function1<HttpRequest, Future<HttpResponse>> handler;
   private final ExecutionContext executionContext;
-
-  private PekkoHttpServerHandlerWrapper(
-      Function1<HttpRequest, Future<HttpResponse>> handler, ExecutionContext executionContext) {
-    this.handler = handler;
-    this.executionContext = executionContext;
-  }
 
   public static Function1<HttpRequest, Future<HttpResponse>> wrap(
       Function1<HttpRequest, Future<HttpResponse>> handler, ExecutionContext executionContext) {
@@ -46,6 +40,12 @@ public final class PekkoHttpServerHandlerWrapper
       return handler;
     }
     return new PekkoHttpServerHandlerWrapper(handler, executionContext);
+  }
+
+  private PekkoHttpServerHandlerWrapper(
+      Function1<HttpRequest, Future<HttpResponse>> handler, ExecutionContext executionContext) {
+    this.handler = handler;
+    this.executionContext = executionContext;
   }
 
   @Override
@@ -64,9 +64,11 @@ public final class PekkoHttpServerHandlerWrapper
           return handler.apply(serverRequest);
         }
       }
-      // request was upgraded from http/1.1 to http/2, the span for the upgrade request has already
-      // been ended with the "101 Switching Protocols" response, start a new span for the http/2
-      // request
+      // request was upgraded from http/1.1 to http/2 and replayed through the http/2 stack, the
+      // span that PekkoHttpServerTracer started for it belongs to the upgrade request, start a new
+      // span for the replayed request. Only clients that send the request that is to be served as
+      // the upgrade request get here, clients that negotiate the upgrade with a separate request
+      // arrive with no attribute at all.
     }
 
     Context parentContext = Context.current();
@@ -84,10 +86,10 @@ public final class PekkoHttpServerHandlerWrapper
     Future<HttpResponse> responseFuture;
     try (Scope ignored = context.makeCurrent()) {
       responseFuture = handler.apply(applicationRequest);
-    } catch (Throwable throwable) {
-      PekkoHttpServerSingletons.endSpanWithError(tracingRequest, throwable);
+    } catch (Throwable t) {
+      PekkoHttpServerSingletons.endSpanWithError(tracingRequest, t);
       // rethrowing without any wrapping to avoid any change to the underlying application behavior
-      throw sneakyThrow(throwable);
+      throw sneakyThrow(t);
     }
     if (responseFuture == null) {
       PekkoHttpServerSingletons.endSpanWithError(tracingRequest, null);
@@ -102,8 +104,8 @@ public final class PekkoHttpServerHandlerWrapper
   }
 
   @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"}) // fine
-  private static <T extends Throwable> T sneakyThrow(Throwable throwable) throws T {
-    throw (T) throwable;
+  private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
+    throw (T) t;
   }
 
   private static class EndSpanHandler
