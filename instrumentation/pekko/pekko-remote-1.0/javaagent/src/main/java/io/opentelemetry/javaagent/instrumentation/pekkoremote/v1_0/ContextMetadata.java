@@ -76,7 +76,7 @@ public final class ContextMetadata {
         // rewind, pekko treats writing nothing as "this instrument has no metadata"
         buffer.position(startPosition);
       }
-    } catch (BufferOverflowException exception) {
+    } catch (BufferOverflowException ignored) {
       buffer.position(startPosition);
     }
   }
