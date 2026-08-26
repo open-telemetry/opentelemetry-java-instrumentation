@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.io.{BufferedReader, InputStreamReader, OutputStreamWriter}
-import java.net.{ServerSocket, Socket}
+import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.util.function.Consumer
 import scala.collection.mutable.ListBuffer
@@ -43,17 +43,15 @@ class PekkoHttpServerParsingErrorTest {
     // guaranteed to be running and no other test may terminate its actor system
     implicit val system: ActorSystem = ActorSystem("parsing-error-test")
     try {
-      val port = {
-        val socket = new ServerSocket(0)
-        try socket.getLocalPort
-        finally socket.close()
-      }
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
+      // bind to an ephemeral port rather than picking one up front, picking one leaves a window
+      // where another process can claim it before pekko binds
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", port),
+          Http().bindAndHandleSync(handler, "localhost", 0),
           10.seconds
         )
+      val port = binding.localAddress.getPort
 
       try {
         val response = send(
@@ -70,7 +68,7 @@ class PekkoHttpServerParsingErrorTest {
                   .hasName("HTTP")
                   .hasKind(SpanKind.SERVER)
                   .hasNoParent()
-                  .hasAttributesSatisfying(
+                  .hasAttributesSatisfyingExactly(
                     equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "_OTHER"),
                     equalTo(
                       HttpAttributes.HTTP_RESPONSE_STATUS_CODE,

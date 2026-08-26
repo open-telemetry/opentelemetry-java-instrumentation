@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.List;
@@ -39,7 +40,10 @@ class PekkoHttpParsingErrorAttributesGetter
   @Override
   public List<String> getHttpResponseHeader(
       PekkoHttpParsingError request, HttpResponse response, String name) {
-    return emptyList();
+    return response
+        .getHeader(name)
+        .map(header -> singletonList(header.value()))
+        .orElse(emptyList());
   }
 
   @Nullable
