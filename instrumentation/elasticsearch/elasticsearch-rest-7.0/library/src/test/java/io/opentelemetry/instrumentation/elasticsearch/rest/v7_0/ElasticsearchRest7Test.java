@@ -11,6 +11,8 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -26,6 +28,8 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.apache.http.HttpHost;
@@ -55,7 +59,7 @@ class ElasticsearchRest7Test {
   static ObjectMapper objectMapper;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws UnknownHostException {
     elasticsearch =
         new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.10.2");
     cleanup.deferAfterAll(elasticsearch::stop);
@@ -65,7 +69,7 @@ class ElasticsearchRest7Test {
         "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     elasticsearch.start();
 
-    httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
+    httpHost = resolvedHost(HttpHost.create(elasticsearch.getHttpHostAddress()));
 
     client =
         ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
@@ -100,6 +104,8 @@ class ElasticsearchRest7Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PEER_ADDRESS, httpHost.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"))));
@@ -159,6 +165,8 @@ class ElasticsearchRest7Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PEER_ADDRESS, httpHost.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
@@ -219,6 +227,11 @@ class ElasticsearchRest7Test {
   private static HttpHost deadHost() {
     // nothing listens on this port, so a request is served by the running server after a retry
     return new HttpHost(httpHost.getHostName(), httpHost.getPort() + 1, httpHost.getSchemeName());
+  }
+
+  private static HttpHost resolvedHost(HttpHost host) throws UnknownHostException {
+    InetAddress address = InetAddress.getByName(host.getHostName());
+    return new HttpHost(address, host.getHostName(), host.getPort(), host.getSchemeName());
   }
 
   private static String hostList(HttpHost deadHost) {

@@ -14,9 +14,11 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
 
 /**
@@ -89,6 +91,31 @@ final class ElasticsearchDbAttributesGetter
       }
     }
     return null;
+  }
+
+  @Override
+  @Nullable
+  public String getNetworkPeerAddress(
+      ElasticsearchRestRequest request, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
+    HttpHost host = response.getHost();
+    if (host == null) {
+      return null;
+    }
+    InetAddress address = host.getAddress();
+    return address != null ? address.getHostAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getNetworkPeerPort(ElasticsearchRestRequest request, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
+    HttpHost host = response.getHost();
+    return host != null ? host.getPort() : null;
   }
 
   @Override
