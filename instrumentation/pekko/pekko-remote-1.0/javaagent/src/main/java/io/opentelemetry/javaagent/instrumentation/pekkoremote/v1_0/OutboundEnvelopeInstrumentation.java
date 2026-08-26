@@ -34,6 +34,8 @@ class OutboundEnvelopeInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("init").and(takesArguments(3)), getClass().getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
+        named("copy").and(takesArguments(0)), getClass().getName() + "$CopyAdvice");
+    transformer.applyAdviceToMethod(
         named("clear").and(takesArguments(0)), getClass().getName() + "$ClearAdvice");
   }
 
@@ -45,6 +47,18 @@ class OutboundEnvelopeInstrumentation implements TypeInstrumentation {
       Context context = Java8BytecodeBridge.currentContext();
       OUTBOUND_ENVELOPE_CONTEXT.set(
           envelope, context == Java8BytecodeBridge.rootContext() ? null : context);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CopyAdvice {
+
+    // copy() builds the new envelope with init, which pekko calls on the stream thread that copies
+    // the envelope, the context of the sender is only on the envelope that is copied
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This OutboundEnvelope envelope, @Advice.Return OutboundEnvelope copy) {
+      OUTBOUND_ENVELOPE_CONTEXT.set(copy, OUTBOUND_ENVELOPE_CONTEXT.get(envelope));
     }
   }
 
