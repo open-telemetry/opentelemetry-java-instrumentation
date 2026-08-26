@@ -33,6 +33,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,10 +58,13 @@ abstract class AbstractOpenSearchTest {
   protected OpenSearchAsyncClient openSearchAsyncClient;
   protected OpensearchContainer opensearch;
   protected URI httpHost;
+  protected String peerAddress;
 
   protected abstract OpenSearchClient buildOpenSearchClient() throws Exception;
 
   protected abstract OpenSearchAsyncClient buildOpenSearchAsyncClient() throws Exception;
+
+  protected abstract boolean capturesActualPeer();
 
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -80,6 +84,7 @@ abstract class AbstractOpenSearchTest {
         "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
+    peerAddress = InetAddress.getByName(httpHost.getHost()).getHostAddress();
     openSearchClient = buildOpenSearchClient();
     openSearchAsyncClient = buildOpenSearchAsyncClient();
   }
@@ -179,13 +184,25 @@ abstract class AbstractOpenSearchTest {
 
     getTesting().waitForTraces(1);
 
-    assertDurationMetric(
-        getTesting(),
-        "io.opentelemetry.opensearch-java-3.0",
-        DB_OPERATION_NAME,
-        DB_SYSTEM_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+    if (capturesActualPeer()) {
+      assertDurationMetric(
+          getTesting(),
+          "io.opentelemetry.opensearch-java-3.0",
+          DB_OPERATION_NAME,
+          DB_SYSTEM_NAME,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT,
+          SERVER_ADDRESS,
+          SERVER_PORT);
+    } else {
+      assertDurationMetric(
+          getTesting(),
+          "io.opentelemetry.opensearch-java-3.0",
+          DB_OPERATION_NAME,
+          DB_SYSTEM_NAME,
+          SERVER_ADDRESS,
+          SERVER_PORT);
+    }
   }
 
   String openSearchSpanName(String method) {
@@ -196,8 +213,9 @@ abstract class AbstractOpenSearchTest {
 
   List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
-    result.add(equalTo(NETWORK_PEER_ADDRESS, null));
-    result.add(equalTo(NETWORK_PEER_PORT, null));
+    result.add(equalTo(NETWORK_PEER_ADDRESS, capturesActualPeer() ? peerAddress : null));
+    result.add(
+        equalTo(NETWORK_PEER_PORT, capturesActualPeer() ? Long.valueOf(httpHost.getPort()) : null));
     if (emitStableDatabaseSemconv()) {
       result.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
       result.add(equalTo(SERVER_PORT, httpHost.getPort()));
@@ -209,17 +227,19 @@ abstract class AbstractOpenSearchTest {
     String nodeList =
         httpHost.getHost()
             + ":"
-            + httpHost.getPort()
+            + (httpHost.getPort() + 1)
             + ","
             + httpHost.getHost()
             + ":"
-            + (httpHost.getPort() + 1);
+            + httpHost.getPort();
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 assertThat(trace.getSpan(0))
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfying(
+                        equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                        equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                         equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null),
                         equalTo(SERVER_PORT, null)));
   }

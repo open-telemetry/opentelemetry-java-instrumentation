@@ -150,6 +150,11 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
     return new OpenSearchAsyncClient(transport);
   }
 
+  @Override
+  protected boolean capturesActualPeer() {
+    return false;
+  }
+
   @Test
   @Override
   void shouldGetStatusAsyncWithTraces() throws Exception {

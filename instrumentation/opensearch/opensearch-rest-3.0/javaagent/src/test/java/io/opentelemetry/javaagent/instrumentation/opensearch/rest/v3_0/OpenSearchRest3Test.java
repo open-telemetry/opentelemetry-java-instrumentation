@@ -96,6 +96,6 @@ class OpenSearchRest3Test extends AbstractOpenSearchRestTest {
 
   @Override
   protected boolean capturesActualPeer() {
-    return false;
+    return true;
   }
 }

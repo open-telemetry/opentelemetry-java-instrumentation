@@ -56,9 +56,14 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
     return new OpenSearchAsyncClient(buildTransport(configuredHost()));
   }
 
+  @Override
+  protected boolean capturesActualPeer() {
+    return true;
+  }
+
   @Test
   void configuredNodeListIsTheWholeTarget() throws Exception {
-    try (OpenSearchTransport transport = buildTransport(configuredHost(), hostThatIsDown())) {
+    try (OpenSearchTransport transport = buildTransport(hostThatIsDown(), configuredHost())) {
       OpenSearchClient nodeListClient = new OpenSearchClient(transport);
 
       HealthResponse healthResponse = nodeListClient.cluster().health();
