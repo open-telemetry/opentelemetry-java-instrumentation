@@ -3,12 +3,115 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-if ! ./gradlew spotlessCheck; then
-  ./gradlew spotlessApply
-  echo ""
-  echo ""
-  echo -e "\033[0;33mCode has been formatted; please git diff/add and recommit."
-  echo ""
-  echo ""
+# Spotless still owns Scala, Groovy, and the miscellaneous files listed here. Flint
+# owns changed-file discovery; the ownership patterns remain a property of this
+# caller so that adding a Spotless target does not require a Flint release.
+temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/otel-pre-commit.XXXXXX")
+trap 'rm -rf "$temp_dir"' EXIT
+
+# Keep staged and unstaged changes separate so this also works before the first
+# commit, when HEAD does not exist. `git diff --cached` compares the index with
+# the empty tree on an unborn branch. The fixed separator makes the two binary
+# diffs unambiguous while keeping the snapshot independent of Git's color and
+# rename configuration.
+snapshot_tracked_diffs() {
+  local output=$1
+  if ! : >"$output"; then
+    return 1
+  fi
+  if ! git diff --no-ext-diff --no-color --no-renames --binary -- >"$output"; then
+    return 1
+  fi
+  if ! printf '\0' >>"$output"; then
+    return 1
+  fi
+  if ! git diff --cached --no-ext-diff --no-color --no-renames --binary -- >>"$output"; then
+    return 1
+  fi
+}
+
+spotless_files="$temp_dir/spotless-files"
+if ! mise exec -- flint changed-files --null >"$spotless_files"; then
+  echo "Unable to determine Spotless-owned changed files with Flint." >&2
   exit 1
 fi
+
+# Keep the NUL-delimited output in a file rather than putting paths in a shell
+# variable. Spotless ownership is deliberately kept here rather than in Flint:
+# this exact path list mirrors the Spotless configuration, including root-level
+# misc files and nested examples/gradle.properties targets.
+run_spotless=false
+while IFS= read -r -d '' file; do
+  if [[ "$file" == *.scala || "$file" == *.groovy \
+    || "$file" == .gitignore || "$file" == .gitattributes \
+    || "$file" == .gitconfig || "$file" == .editorconfig \
+    || "$file" == gradle.properties \
+    || "$file" =~ ^\.github/.*\.sh$ \
+    || "$file" =~ ^examples/(.*/)?gradle\.properties$ ]]; then
+    run_spotless=true
+    break
+  fi
+done <"$spotless_files"
+
+# Flint's fix mode has strict exit semantics: it returns nonzero when it found
+# and fixed a problem. Keep that status; the commit must be retried so that the
+# index contains the fixes. Spotless runs independently below, even when Flint
+# reports changes.
+flint_status=0
+if mise run lint:fix; then
+  flint_status=0
+else
+  flint_status=$?
+fi
+
+spotless_status=0
+spotless_failed=false
+spotless_changed=false
+if [[ "$run_spotless" == true ]]; then
+  before_diff="$temp_dir/before.diff"
+  after_diff="$temp_dir/after.diff"
+
+  # Flint may have changed tracked files. Capture the complete tracked worktree
+  # state after Flint so those changes are not attributed to Spotless. Spotless
+  # must not change the index, and any worktree changes it makes are reported so
+  # the commit can be retried explicitly.
+  if ! snapshot_tracked_diffs "$before_diff"; then
+    echo "Unable to snapshot tracked changes before Spotless." >&2
+    exit 1
+  fi
+  if ./gradlew spotlessApply; then
+    spotless_status=0
+  else
+    spotless_status=$?
+    spotless_failed=true
+  fi
+  if ! snapshot_tracked_diffs "$after_diff"; then
+    echo "Unable to snapshot tracked changes after Spotless." >&2
+    exit 1
+  fi
+  if ! cmp -s "$before_diff" "$after_diff"; then
+    spotless_changed=true
+    if [[ "$spotless_status" -eq 0 ]]; then
+      spotless_status=1
+    fi
+  fi
+fi
+
+if [[ "$spotless_status" -ne 0 ]]; then
+  echo ""
+  echo ""
+  if [[ "$spotless_failed" == false && "$spotless_changed" == true ]]; then
+    echo -e "\033[0;33mSpotless formatted tracked files; please git diff/add and recommit."
+  else
+    echo -e "\033[0;33mSpotless failed; please fix the formatting and recommit."
+  fi
+  echo ""
+  echo ""
+fi
+
+# Flint's strict status takes precedence over Spotless. This preserves the
+# formatter that made the change as the primary reason for retrying the commit.
+if [[ "$flint_status" -ne 0 ]]; then
+  exit "$flint_status"
+fi
+exit "$spotless_status"

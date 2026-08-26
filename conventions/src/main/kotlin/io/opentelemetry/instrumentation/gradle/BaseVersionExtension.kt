@@ -29,6 +29,5 @@ open class BaseVersionExtension(private val project: Project) {
 class BaseVersion(private val project: Project, private val baseVersion: String) {
   fun orLatest(): String = orLatest("latest.release")
 
-  fun orLatest(latestConstraint: String): String =
-    if (project.findProperty("testLatestDeps") == "true") latestConstraint else baseVersion
+  fun orLatest(latestConstraint: String): String = if (project.findProperty("testLatestDeps") == "true") latestConstraint else baseVersion
 }

@@ -31,9 +31,10 @@ The first source of truth is always the deterministic CI bundle produced by [.gi
    ```
 
 5. Diagnose the root cause from the downloaded logs and make the smallest appropriate fix on the PR branch.
-6. For deterministic generated-file or formatting failures, run the repository task instead of editing generated output by hand. Common examples:
+6. For deterministic generated-file or formatting failures, run the repository task instead of editing generated output by hand. Use Flint for Java, Kotlin, Markdown, and other Flint-managed files; Spotless remains responsible for Scala and miscellaneous Spotless-managed files. Common examples:
 
    ```bash
+   mise run lint:fix
    ./gradlew spotlessApply
    ./gradlew generateFossaConfiguration
    ```

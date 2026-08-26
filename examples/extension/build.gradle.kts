@@ -13,6 +13,8 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id("com.gradleup.shadow") version "9.6.1"
+  // Spotless keeps this example self-contained when it is copied out of this repository.
+  // Copied projects may optionally use Flint instead.
   id("com.diffplug.spotless") version "8.10.0"
 
   id("io.opentelemetry.instrumentation.muzzle-generation") version "2.32.0-alpha-SNAPSHOT"
@@ -48,14 +50,14 @@ configurations {
   We create a separate gradle configuration to grab a published Otel instrumentation agent.
   We don't need the agent during development of this extension module.
   This agent is used only during integration test.
-  */
+   */
   create("otel")
 }
 
 spotless {
   java {
     googleJavaFormat()
-    licenseHeaderFile(rootProject.file("../../buildscripts/spotless.license.java"), "(package|import|public)")
+    licenseHeaderFile(rootProject.file("spotless.license.java"), "(package|import|public)")
     target("src/**/*.java")
   }
 }
@@ -76,7 +78,7 @@ dependencies {
   compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 
-  //Provides @AutoService annotation that makes registration of our SPI implementations much easier
+  // Provides @AutoService annotation that makes registration of our SPI implementations much easier
   deps.getValue("autoservice").let {
     compileOnly(it)
     annotationProcessor(it)
@@ -99,7 +101,7 @@ dependencies {
    */
   implementation("org.apache.commons:commons-lang3:3.20.0")
 
-  //All dependencies below are only for tests
+  // All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:2.0.5")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
   testImplementation("com.google.protobuf:protobuf-java-util:4.35.1")
@@ -115,18 +117,18 @@ dependencies {
 
   testRuntimeOnly("ch.qos.logback:logback-classic:1.6.3")
 
-  //Otel Java instrumentation that we use and extend during integration tests
+  // Otel Java instrumentation that we use and extend during integration tests
   add("otel", "io.opentelemetry.javaagent:opentelemetry-javaagent:${versions["opentelemetryJavaagent"]}")
 
-  //TODO remove when start using io.opentelemetry.instrumentation.javaagent-instrumentation plugin
+  // TODO remove when start using io.opentelemetry.instrumentation.javaagent-instrumentation plugin
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions["opentelemetryJavaagentAlpha"]}")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions["opentelemetryJavaagentAlpha"]}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions["opentelemetryJavaagentAlpha"]}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions["opentelemetryJavaagentAlpha"]}")
 }
 
-//Produces a copy of upstream javaagent with this extension jar included inside it
-//The location of extension directory inside agent jar is hard-coded in the agent source code
+// Produces a copy of upstream javaagent with this extension jar included inside it
+// The location of extension directory inside agent jar is hard-coded in the agent source code
 val extendedAgent = tasks.register<Jar>("extendedAgent") {
   dependsOn(configurations.named("otel"))
   archiveFileName.set("opentelemetry-javaagent.jar")
@@ -135,7 +137,7 @@ val extendedAgent = tasks.register<Jar>("extendedAgent") {
     into("extensions")
   }
 
-  //Preserve MANIFEST.MF file from the upstream javaagent
+  // Preserve MANIFEST.MF file from the upstream javaagent
   doFirst {
     manifest.from(
       zipTree(configurations.named("otel").get().singleFile).matching {

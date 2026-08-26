@@ -55,10 +55,6 @@ configurations.testRuntimeClasspath {
 spotless {
   groovy {
     target("src/**/*.groovy")
-    licenseHeaderFile(
-      rootProject.file("buildscripts/spotless.license.java"),
-      "(package|import|(?:abstract )?class)"
-    )
     endWithNewline()
   }
 }

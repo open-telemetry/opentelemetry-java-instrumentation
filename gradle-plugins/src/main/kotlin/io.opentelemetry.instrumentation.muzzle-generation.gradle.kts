@@ -1,6 +1,6 @@
-import java.net.URLConnection
 import net.bytebuddy.ClassFileVersion
 import net.bytebuddy.build.gradle.ByteBuddySimpleTask
+import java.net.URLConnection
 
 plugins {
   `java-library`
@@ -44,7 +44,7 @@ URLConnection.setDefaultUseCaches("jar", false)
 
 val languageTasks = LANGUAGES.map { language ->
   // Inspecting source contents here invalidates the configuration cache after every source edit.
-  if (!file("src/${sourceSet.name}/${language}").isDirectory) {
+  if (!file("src/${sourceSet.name}/$language").isDirectory) {
     return@map null
   }
   val compileTaskName = sourceSet.getCompileTaskName(language)
@@ -62,24 +62,24 @@ tasks {
 }
 
 fun createLanguageTask(
-  compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*> {
-  return tasks.register<ByteBuddySimpleTask>(name) {
-    group = "Byte Buddy"
-    outputs.cacheIf { true }
-    classFileVersion = ClassFileVersion.JAVA_V8
-    isWarnOnEmptyTypeSet = false
-    val compileTask = compileTaskProvider.get()
-    // this does not work for kotlin as compile task does not extend AbstractCompile
-    if (compileTask is AbstractCompile) {
-      val classesDirectory = compileTask.destinationDirectory.asFile.get()
-      val rawClassesDirectory: File = File(classesDirectory.parent, "${classesDirectory.name}raw")
-        .absoluteFile
-      compileTask.destinationDirectory.set(rawClassesDirectory)
-      source = rawClassesDirectory
-      target = classesDirectory
-      classPath = compileTask.classpath.plus(inputClasspath.plus(files(rawClassesDirectory)))
-      dependsOn(compileTask, sourceSet.processResourcesTaskName)
-      discoverySet = codegen
-    }
+  compileTaskProvider: TaskProvider<*>,
+  name: String
+): TaskProvider<*> = tasks.register<ByteBuddySimpleTask>(name) {
+  group = "Byte Buddy"
+  outputs.cacheIf { true }
+  classFileVersion = ClassFileVersion.JAVA_V8
+  isWarnOnEmptyTypeSet = false
+  val compileTask = compileTaskProvider.get()
+  // this does not work for kotlin as compile task does not extend AbstractCompile
+  if (compileTask is AbstractCompile) {
+    val classesDirectory = compileTask.destinationDirectory.asFile.get()
+    val rawClassesDirectory: File = File(classesDirectory.parent, "${classesDirectory.name}raw")
+      .absoluteFile
+    compileTask.destinationDirectory.set(rawClassesDirectory)
+    source = rawClassesDirectory
+    target = classesDirectory
+    classPath = compileTask.classpath.plus(inputClasspath.plus(files(rawClassesDirectory)))
+    dependsOn(compileTask, sourceSet.processResourcesTaskName)
+    discoverySet = codegen
   }
 }
