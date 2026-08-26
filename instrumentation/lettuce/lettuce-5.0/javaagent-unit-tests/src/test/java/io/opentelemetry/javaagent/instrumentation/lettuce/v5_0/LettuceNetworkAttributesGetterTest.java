@@ -25,7 +25,7 @@ class LettuceNetworkAttributesGetterTest {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
     RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER_ADDRESS.set(command, address);
+    LettuceSingletons.recordCommandPeer(command, address);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
@@ -36,7 +36,7 @@ class LettuceNetworkAttributesGetterTest {
   @Test
   void commandDropsUnresolvedSelectedAddress() {
     RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER_ADDRESS.set(
+    LettuceSingletons.recordCommandPeer(
         command, InetSocketAddress.createUnresolved("redis.example", PORT));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
@@ -46,32 +46,32 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void batchUsesResolvedSelectedAddress() throws UnknownHostException {
+  void batchOmitsSelectedAddress() throws UnknownHostException {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
+    RedisCommand<?, ?, ?> command = command();
+    LettuceSingletons.recordCommandPeer(command, address);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(singletonList(command()), null, address, null, null);
-
-    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
-
-    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("10.1.2.3");
-    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(PORT);
-  }
-
-  @Test
-  void batchDropsUnresolvedSelectedAddress() {
-    LettuceBatchRequest request =
-        LettuceBatchRequest.create(
-            singletonList(command()),
-            null,
-            InetSocketAddress.createUnresolved("redis.example", PORT),
-            null,
-            null);
+        LettuceBatchRequest.create(singletonList(command), null, null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+  }
+
+  @Test
+  void commandDropsAmbiguousSelectedAddress() throws UnknownHostException {
+    RedisCommand<?, ?, ?> command = command();
+    LettuceSingletons.recordCommandPeer(
+        command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
+    LettuceSingletons.recordCommandPeer(
+        command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT));
+
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
   }
 
   private static RedisCommand<?, ?, ?> command() {

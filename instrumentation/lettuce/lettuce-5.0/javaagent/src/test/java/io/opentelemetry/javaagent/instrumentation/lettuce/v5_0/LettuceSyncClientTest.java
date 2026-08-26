@@ -394,8 +394,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                                   equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
                                   equalTo(maybeStable(DB_OPERATION), "DEBUG"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port))));
+                                  equalTo(NETWORK_PEER_ADDRESS, null),
+                                  equalTo(NETWORK_PEER_PORT, null))));
         });
   }
 
@@ -422,8 +422,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                                   equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
                                   equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port))));
+                                  equalTo(NETWORK_PEER_ADDRESS, null),
+                                  equalTo(NETWORK_PEER_PORT, null))));
         });
   }
 }

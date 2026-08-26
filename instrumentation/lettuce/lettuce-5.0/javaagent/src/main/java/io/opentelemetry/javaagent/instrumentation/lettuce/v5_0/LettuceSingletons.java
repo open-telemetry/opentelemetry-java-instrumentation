@@ -12,9 +12,9 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.protocol.AsyncCommand;
+import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
-import io.netty.channel.Channel;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -30,7 +30,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 public class LettuceSingletons {
@@ -49,17 +48,14 @@ public class LettuceSingletons {
   public static final VirtualField<DefaultEndpoint, InetSocketAddress> ENDPOINT_ADDRESS =
       VirtualField.find(DefaultEndpoint.class, InetSocketAddress.class);
 
-  public static final VirtualField<DefaultEndpoint, SocketAddress> ENDPOINT_PEER_ADDRESS =
-      VirtualField.find(DefaultEndpoint.class, SocketAddress.class);
-
-  public static final VirtualField<DefaultEndpoint, Channel> ENDPOINT_CHANNEL =
-      VirtualField.find(DefaultEndpoint.class, Channel.class);
-
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
       VirtualField.find(RedisCommand.class, InetSocketAddress.class);
 
-  public static final VirtualField<RedisCommand<?, ?, ?>, SocketAddress> COMMAND_PEER_ADDRESS =
-      VirtualField.find(RedisCommand.class, SocketAddress.class);
+  private static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
+      VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
+
+  private static final VirtualField<RedisCommand<?, ?, ?>, Boolean> REACTIVE_COMMAND =
+      VirtualField.find(RedisCommand.class, Boolean.class);
 
   public static final VirtualField<DefaultEndpoint, Integer> ENDPOINT_DATABASE_INDEX =
       VirtualField.find(DefaultEndpoint.class, Integer.class);
@@ -157,11 +153,73 @@ public class LettuceSingletons {
       if (channelWriter instanceof DefaultEndpoint) {
         DefaultEndpoint endpoint = (DefaultEndpoint) channelWriter;
         COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get(endpoint));
-        COMMAND_PEER_ADDRESS.set(command, ENDPOINT_PEER_ADDRESS.get(endpoint));
         COMMAND_DATABASE_INDEX.set(command, ENDPOINT_DATABASE_INDEX.get(endpoint));
         COMMAND_TARGET.set(command, ENDPOINT_TARGET.get(endpoint));
       }
     }
+  }
+
+  static void recordCommandPeer(RedisCommand<?, ?, ?> command, InetSocketAddress peerAddress) {
+    synchronized (command) {
+      LettuceCommandPeer peer = COMMAND_PEER.get(command);
+      if (peer == null) {
+        peer = new LettuceCommandPeer();
+        COMMAND_PEER.set(command, peer);
+      }
+      peer.record(peerAddress);
+    }
+  }
+
+  public static void linkCommandPeer(RedisCommand<?, ?, ?> command) {
+    RedisCommand<?, ?, ?> innermost = command;
+    while (innermost instanceof CommandWrapper) {
+      innermost = ((CommandWrapper<?, ?, ?>) innermost).getDelegate();
+    }
+    synchronized (innermost) {
+      LettuceCommandPeer peer = null;
+      RedisCommand<?, ?, ?> current = command;
+      while (current != null && peer == null) {
+        peer = COMMAND_PEER.get(current);
+        current =
+            current instanceof CommandWrapper
+                ? ((CommandWrapper<?, ?, ?>) current).getDelegate()
+                : null;
+      }
+      if (peer == null) {
+        peer = new LettuceCommandPeer();
+      }
+      current = command;
+      while (current != null) {
+        COMMAND_PEER.set(current, peer);
+        current =
+            current instanceof CommandWrapper
+                ? ((CommandWrapper<?, ?, ?>) current).getDelegate()
+                : null;
+      }
+    }
+  }
+
+  @Nullable
+  static InetSocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
+    if (Boolean.TRUE.equals(REACTIVE_COMMAND.get(command)) || closesConnection(command)) {
+      return null;
+    }
+    LettuceCommandPeer peer = COMMAND_PEER.get(command);
+    return peer == null ? null : peer.getAddress();
+  }
+
+  private static boolean closesConnection(RedisCommand<?, ?, ?> command) {
+    String commandName = LettuceInstrumentationUtil.getCommandName(command);
+    if ("SHUTDOWN".equals(commandName)) {
+      return true;
+    }
+    return "DEBUG".equals(commandName)
+        && command.getArgs() != null
+        && "SEGFAULT".equals(command.getArgs().toCommandString().trim());
+  }
+
+  public static void markReactiveCommand(RedisCommand<?, ?, ?> command) {
+    REACTIVE_COMMAND.set(command, true);
   }
 
   private LettuceSingletons() {}

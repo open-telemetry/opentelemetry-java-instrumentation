@@ -543,8 +543,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             asList(
                 equalTo(SERVER_ADDRESS, host),
                 equalTo(SERVER_PORT, port),
-                equalTo(NETWORK_PEER_ADDRESS, ip),
-                equalTo(NETWORK_PEER_PORT, port),
+                equalTo(NETWORK_PEER_ADDRESS, null),
+                equalTo(NETWORK_PEER_PORT, null),
                 equalTo(maybeStable(DB_SYSTEM), REDIS),
                 equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                 equalTo(maybeStable(DB_STATEMENT), "DEL key1 key2"),
@@ -602,8 +602,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SADD SKEY ? ?"),
@@ -651,8 +651,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
@@ -712,8 +712,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
                             equalTo(
@@ -901,12 +901,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                               .hasAttributesSatisfyingExactly(
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, port),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
                                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                                   equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
-                                  equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
+                                  equalTo(maybeStable(DB_OPERATION), "DEBUG"),
+                                  equalTo(NETWORK_PEER_ADDRESS, null),
+                                  equalTo(NETWORK_PEER_PORT, null))));
         });
   }
 
@@ -929,12 +929,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                               .hasAttributesSatisfyingExactly(
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, port),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
                                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                                   equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
-                                  equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
+                                  equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
+                                  equalTo(NETWORK_PEER_ADDRESS, null),
+                                  equalTo(NETWORK_PEER_PORT, null))));
         });
   }
 }

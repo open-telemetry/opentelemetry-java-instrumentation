@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
@@ -58,13 +57,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceScope {
-    private final Context context;
-    private final Scope scope;
+    private final Context parentContext;
     private final JedisRequest request;
 
-    private AdviceScope(Context context, Scope scope, JedisRequest request) {
-      this.context = context;
-      this.scope = scope;
+    private AdviceScope(Context parentContext, JedisRequest request) {
+      this.parentContext = parentContext;
       this.request = request;
     }
 
@@ -75,21 +72,22 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         // span rather than getting their own spans.
         return null;
       }
-      Context parentContext = Context.current();
-      if (JedisPipelineContext.capture(request)) {
-        // A pipeline or transaction is active, so this command is captured and aggregated into the
-        // batch span created at sync()/exec() rather than getting its own span.
-        return null;
-      }
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return null;
-      }
-      Context context = instrumenter().start(parentContext, request);
-      return new AdviceScope(context, context.makeCurrent(), request);
+      return new AdviceScope(Context.current(), request);
     }
 
     public void end(@Nullable Throwable throwable) {
-      scope.close();
+      if (throwable == null) {
+        request.capturePeerAddress();
+      }
+      if (JedisPipelineContext.capture(request)) {
+        // A pipeline or transaction is active, so this command is captured and aggregated into the
+        // batch span created at sync()/exec() rather than getting its own span.
+        return;
+      }
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+      Context context = instrumenter().start(parentContext, request);
       JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
   }

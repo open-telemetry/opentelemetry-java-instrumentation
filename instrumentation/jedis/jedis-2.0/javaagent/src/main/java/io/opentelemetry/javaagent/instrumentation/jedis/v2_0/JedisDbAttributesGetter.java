@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import javax.annotation.Nullable;
 
 class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
@@ -72,10 +71,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       JedisRequest request, @Nullable Void unused) {
-    Socket socket = request.getConnection().getSocket();
-    if (socket != null && socket.getRemoteSocketAddress() instanceof InetSocketAddress) {
-      return (InetSocketAddress) socket.getRemoteSocketAddress();
-    }
-    return null;
+    return request.getPeerAddress();
   }
 }

@@ -58,6 +58,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       RedisCommand<K, V, T> command = supplier.get();
+      LettuceSingletons.markReactiveCommand(command);
       LettuceSingletons.attachAddress(command, commands.getConnection());
       return command;
     }
@@ -90,6 +91,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       RedisCommand<K, V, T> command = supplier.get();
+      LettuceSingletons.markReactiveCommand(command);
       LettuceSingletons.attachAddress(command, commands.getConnection());
       return command;
     }
