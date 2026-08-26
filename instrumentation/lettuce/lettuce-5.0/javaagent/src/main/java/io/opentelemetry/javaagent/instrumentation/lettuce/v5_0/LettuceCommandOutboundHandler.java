@@ -5,32 +5,40 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.RedisCommand;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Collection;
 
 public final class LettuceCommandOutboundHandler extends ChannelOutboundHandlerAdapter {
   public static final String NAME = LettuceCommandOutboundHandler.class.getName();
 
   @Override
   public void write(ChannelHandlerContext context, Object message, ChannelPromise promise) {
+    SocketAddress remoteAddress = context.channel().remoteAddress();
+    if (remoteAddress instanceof InetSocketAddress) {
+      recordCommands(message, (InetSocketAddress) remoteAddress);
+    }
+    context.write(message, promise);
+  }
+
+  static void recordCommands(Object message, InetSocketAddress remoteAddress) {
     if (message instanceof RedisCommand) {
-      SocketAddress remoteAddress = context.channel().remoteAddress();
-      if (remoteAddress instanceof InetSocketAddress) {
-        RedisCommand<?, ?, ?> command = (RedisCommand<?, ?, ?>) message;
-        while (command != null) {
-          LettuceSingletons.recordCommandPeer(command, (InetSocketAddress) remoteAddress);
-          command =
-              command instanceof CommandWrapper
-                  ? ((CommandWrapper<?, ?, ?>) command).getDelegate()
-                  : null;
+      recordCommand((RedisCommand<?, ?, ?>) message, remoteAddress);
+    } else if (message instanceof Collection) {
+      for (Object item : (Collection<?>) message) {
+        if (item instanceof RedisCommand) {
+          recordCommand((RedisCommand<?, ?, ?>) item, remoteAddress);
         }
       }
     }
-    context.write(message, promise);
+  }
+
+  private static void recordCommand(
+      RedisCommand<?, ?, ?> command, InetSocketAddress remoteAddress) {
+    LettuceSingletons.recordCommandPeer(command, remoteAddress);
   }
 }

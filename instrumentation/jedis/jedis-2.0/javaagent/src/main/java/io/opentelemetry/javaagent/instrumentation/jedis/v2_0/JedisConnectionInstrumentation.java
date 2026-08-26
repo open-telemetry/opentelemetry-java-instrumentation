@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
@@ -57,11 +58,13 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceScope {
-    private final Context parentContext;
+    @Nullable private final Context context;
+    @Nullable private final Scope scope;
     private final JedisRequest request;
 
-    private AdviceScope(Context parentContext, JedisRequest request) {
-      this.parentContext = parentContext;
+    private AdviceScope(@Nullable Context context, @Nullable Scope scope, JedisRequest request) {
+      this.context = context;
+      this.scope = scope;
       this.request = request;
     }
 
@@ -72,23 +75,31 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         // span rather than getting their own spans.
         return null;
       }
-      return new AdviceScope(Context.current(), request);
+      Context parentContext = Context.current();
+      if (JedisPipelineContext.capture(request)) {
+        // Keep the request until method exit so its post-send peer snapshot is available to the
+        // batch span created at sync()/exec().
+        return new AdviceScope(null, null, request);
+      }
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return null;
+      }
+      Context context = instrumenter().start(parentContext, request);
+      return new AdviceScope(context, context.makeCurrent(), request);
     }
 
     public void end(@Nullable Throwable throwable) {
-      if (throwable == null) {
-        request.capturePeerAddress();
+      try {
+        if (throwable == null) {
+          request.capturePeerAddress();
+        }
+      } finally {
+        Context context = this.context;
+        if (scope != null && context != null) {
+          scope.close();
+          JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+        }
       }
-      if (JedisPipelineContext.capture(request)) {
-        // A pipeline or transaction is active, so this command is captured and aggregated into the
-        // batch span created at sync()/exec() rather than getting its own span.
-        return;
-      }
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-      Context context = instrumenter().start(parentContext, request);
-      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
   }
 
