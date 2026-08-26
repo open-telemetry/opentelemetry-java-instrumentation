@@ -16,4 +16,27 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseAsyncClientTest {
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
     return CouchbaseUtil.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
   }
+
+  @Override
+  protected boolean includesNetworkAttributes() {
+    return true;
+  }
+
+  @Override
+  protected boolean includesLocalAddressAttribute() {
+    // core-io before 2.6.0 has no localSocket field to capture it from.
+    return false;
+  }
+
+  @Override
+  protected boolean includesOperationIdAttribute() {
+    // core-io before 2.6.0 has no CouchbaseRequest.operationId() to correlate with.
+    return false;
+  }
+
+  @Override
+  protected boolean includesOldServerAddressAttribute() {
+    // this module never resolves a node string to pair with the actual peer address.
+    return false;
+  }
 }
