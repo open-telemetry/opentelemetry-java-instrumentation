@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse;
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DERBY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB;
@@ -77,6 +79,97 @@ class JdbcConnectionUrlParserTest {
             .setPort(9999)
             .setName("stdDatabaseName")
             .build());
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "jdbc:mariadb:failover://user:p,a/ss@h1:3306,h2:3306/db",
+        "jdbc:mariadb:failover://user:p,a?ss@h1:3306,h2:3306/db",
+        "jdbc:mariadb:failover://user:p,a#ss@h1:3306,h2:3306/db"
+      })
+  void ambiguousMariaDbCredentialsDoNotBecomeAConfiguredTarget(String url) {
+    DbInfo dbInfo = parse(url, null);
+    assertThat(dbInfo.getServerAddressGroup()).isNull();
+    assertThat(dbInfo.getHost()).isNull();
+    assertThat(dbInfo.getName()).isNull();
+  }
+
+  @Test
+  void ambiguousPostgresCredentialsDoNotBecomeAConfiguredTarget() {
+    DbInfo dbInfo = parse("jdbc:postgresql://user:123,a/ss@pg.host:5432", null);
+    assertThat(dbInfo.getServerAddressGroup()).isNull();
+    assertThat(dbInfo.getHost()).isEqualTo("localhost");
+    assertThat(dbInfo.getName()).isNull();
+  }
+
+  @Test
+  void atInPostgresQueryDoesNotDisableConfiguredTargetParsing() {
+    DbInfo dbInfo =
+        parse(
+            "jdbc:postgresql://pg.host1:5432,pg.host2:5433/pgdb"
+                + "?user=admin@corp.com&currentSchema=test,public",
+            null);
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("pg.host1:5432,pg.host2:5433");
+    assertThat(dbInfo.getName()).isEqualTo("pgdb");
+  }
+
+  @Test
+  void atInPostgresQueryWithoutDatabaseDoesNotDisableConfiguredTargetParsing() {
+    DbInfo dbInfo =
+        parse("jdbc:postgresql://h1:5432,h2:5432?options=email=user@example.com,mode=strict", null);
+
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("h1:5432,h2:5432");
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "",
+        "&serverSslCert=/etc/ssl/ca.pem",
+        "&sessionVariables=sql_mode=ANSI,time_zone=UTC",
+        "&sessionVariables=email='user@example.com',sql_mode=ANSI"
+      })
+  void atInMariaDbQueryDoesNotDisableConfiguredTargetParsing(String trailingParameters) {
+    String url =
+        "jdbc:mariadb:failover://h1:3306,h2:3306/db?user="
+            + "admin"
+            + "@"
+            + "corp.com"
+            + trailingParameters;
+
+    DbInfo dbInfo = parse(url, null);
+
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("h1:3306,h2:3306");
+    assertThat(dbInfo.getHost()).isEqualTo("h1");
+    assertThat(dbInfo.getName()).isEqualTo("db");
+    assertThat(dbInfo.getDbUser()).isEqualTo("admin@corp.com");
+  }
+
+  @Test
+  void hostSpecificPropertiesAreExcludedFromConfiguredTargets() {
+    assertThat(
+            sanitizeHostList(
+                "address=(host=h1)(port=3306)(trustCertificateKeyStorePassword=secret),"
+                    + "address=(host=h2)(port=3307)(customProperty=value)"))
+        .isEqualTo("address=(host=h1)(port=3306),address=(host=h2)(port=3307)");
+  }
+
+  @Test
+  void malformedHostEntriesAreExcludedFromConfiguredTargets() {
+    assertThat(sanitizeHostList("h1:3306,unexpected=value")).isNull();
+  }
+
+  @Test
+  void atInMariaDbQueryWithoutDatabaseDoesNotDisableConfiguredTargetParsing() {
+    DbInfo dbInfo =
+        parse(
+            "jdbc:mariadb:failover://h1,h2"
+                + "?sessionVariables=email='user@example.com',sql_mode=ANSI",
+            null);
+
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("h1,h2");
+    assertThat(dbInfo.getHost()).isEqualTo("h1");
   }
 
   private static Stream<Arguments> mySqlArguments() {
@@ -175,6 +268,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("127.0.0.1")
             .setPort(3306)
             .setName("mdbdb")
+            .setServerAddressGroup("127.0.0.1,127.0.0.1:3306")
             .build(),
         arg("jdbc:mysql:replication://address=(HOST=127.0.0.1)(port=33)(user=mdbuser)(password=PW),address=(host=mdb.host)(port=3306)(user=otheruser)(password=PW)/mdbdb?user=wrong&password=PW")
             .setShortUrl("mysql:replication://127.0.0.1:33")
@@ -184,6 +278,8 @@ class JdbcConnectionUrlParserTest {
             .setHost("127.0.0.1")
             .setPort(33)
             .setName("mdbdb")
+            .setServerAddressGroup(
+                "address=(host=127.0.0.1)(port=33),address=(host=mdb.host)(port=3306)")
             .build(),
         arg("jdbc:mysql:replication://address=(HOST=mdb.host),address=(host=anotherhost)(port=3306)(user=wrong)(password=PW)/mdbdb?user=mdbuser&password=PW")
             .setShortUrl("mysql:replication://mdb.host:3306")
@@ -193,6 +289,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host")
             .setPort(3306)
             .setName("mdbdb")
+            .setServerAddressGroup("address=(host=mdb.host),address=(host=anotherhost)(port=3306)")
             .build(),
         arg("jdbc:mysql:replication://address=(host=::1)(port=33)/mydb")
             .setShortUrl("mysql:replication://[::1]:33")
@@ -471,6 +568,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host1")
             .setPort(33)
             .setName("mdbdb")
+            .setServerAddressGroup("mdb.host1:33,mdb.host")
             .build(),
         arg("jdbc:mariadb:sequential://mdb.host1,mdb.host2:33/mdbdb")
             .setShortUrl("mariadb:sequential://mdb.host1:3306")
@@ -479,6 +577,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host1")
             .setPort(3306)
             .setName("mdbdb")
+            .setServerAddressGroup("mdb.host1,mdb.host2:33")
             .build(),
         arg("jdbc:mariadb:loadbalance://127.0.0.1:33,mdb.host/mdbdb")
             .setShortUrl("mariadb:loadbalance://127.0.0.1:33")
@@ -487,6 +586,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("127.0.0.1")
             .setPort(33)
             .setName("mdbdb")
+            .setServerAddressGroup("127.0.0.1:33,mdb.host")
             .build(),
         arg("jdbc:mariadb:loadbalance://127.0.0.1:33/mdbdb")
             .setShortUrl("mariadb:loadbalance://127.0.0.1:33")
@@ -503,6 +603,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("2001:0660:7401:0200:0000:0000:0edf:bdd7")
             .setPort(33)
             .setName("mdbdb")
+            .setServerAddressGroup("[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host")
             .build(),
         arg("jdbc:mariadb:replication://localhost:33,anotherhost:3306/mdbdb")
             .setShortUrl("mariadb:replication://localhost:33")
@@ -511,6 +612,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(33)
             .setName("mdbdb")
+            .setServerAddressGroup("localhost:33,anotherhost:3306")
             .build(),
         arg("jdbc:mariadb:loadbalance://localhost")
             .setShortUrl("mariadb:loadbalance://localhost:3306")
@@ -815,6 +917,22 @@ class JdbcConnectionUrlParserTest {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 
+  @Test
+  void sqlServerDataSourceFailoverPartnerOverridesUrlPartner() {
+    Properties properties = new Properties();
+    properties.setProperty("serverName", "property.host1");
+    properties.setProperty("instanceName", "propertyInstance");
+    properties.setProperty("portNumber", "1444");
+    properties.setProperty("failoverPartner", "property.host2");
+
+    DbInfo info = parse("jdbc:sqlserver://url.host1:1433;failoverPartner=url.host2", properties);
+
+    assertThat(info.getServerAddress()).isEqualTo("property.host1");
+    assertThat(info.getServerPort()).isEqualTo(1444);
+    assertThat(info.getServerAddressGroup())
+        .isEqualTo("property.host1\\propertyInstance:1444,property.host2");
+  }
+
   private static Stream<Arguments> oracleArguments() {
     return args(
         // https://docs.oracle.com/cd/B28359_01/java.111/b31224/urls.htm
@@ -915,6 +1033,12 @@ class JdbcConnectionUrlParserTest {
             .setHost("orcl.host1")
             .setPort(1521)
             .setName("orclsn")
+            .setServerAddressGroup(
+                "oracle:thin:@(description=(address_list="
+                    + "(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
+                    + "(address=(protocol=tcp)(host=orcl.host2)(port=1521))"
+                    + "(address=(protocol=tcp)(host=orcl.host3)(port=1521))"
+                    + "(address=(protocol=tcp)(host=orcl.host4)(port=1521))))")
             .build(),
 
         // https://docs.oracle.com/cd/B28359_01/java.111/b31224/instclnt.htm
@@ -1854,6 +1978,207 @@ class JdbcConnectionUrlParserTest {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 
+  private static Stream<Arguments> serverAddressGroupArguments() {
+    // the legacy fields hold what the parser reports today. An authority that lists more than one
+    // host is not a server-based uri, so the host, the port and the connection string keep the
+    // driver defaults, and only the group target names every configured host.
+    return args(
+        // https://jdbc.postgresql.org/documentation/use/#connection-fail-over
+        arg("jdbc:postgresql://pg.host1:5432,pg.host2:5433/pgdb")
+            .setShortUrl("postgresql://localhost:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("localhost")
+            .setPort(5432)
+            .setName("pgdb")
+            .setServerAddressGroup("pg.host1:5432,pg.host2:5433")
+            .build(),
+        arg("jdbc:postgresql://pg.host1,pg.host2/pgdb")
+            .setShortUrl("postgresql://localhost:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("localhost")
+            .setPort(5432)
+            .setName("pgdb")
+            .setServerAddressGroup("pg.host1,pg.host2")
+            .build(),
+        // a bracketed ipv6 host list is not a legal registry-based authority either, so the uri
+        // parse fails and the database name is not read
+        arg("jdbc:postgresql://[2001:db8::1]:5432,[2001:db8::2]:5433/pgdb")
+            .setShortUrl("postgresql://localhost:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("localhost")
+            .setPort(5432)
+            .setServerAddressGroup("[2001:db8::1]:5432,[2001:db8::2]:5433")
+            .build(),
+        arg("jdbc:postgresql://pguser:pgpass@pg.host1:5432,pg.host2:5432/pgdb?ssl=true#frag")
+            .setShortUrl("postgresql://localhost:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("localhost")
+            .setPort(5432)
+            .setName("pgdb")
+            .setServerAddressGroup("pg.host1:5432,pg.host2:5432")
+            .build(),
+        // the user info of a url shaped authority ends at its last '@', so a password that holds a
+        // comma cannot leave a fragment of itself among the hosts
+        arg("jdbc:postgresql://pguser:p,ss@pg.host1:5432,pg.host2:5433/pgdb")
+            .setShortUrl("postgresql://localhost:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("localhost")
+            .setPort(5432)
+            .setName("pgdb")
+            .setServerAddressGroup("pg.host1:5432,pg.host2:5433")
+            .build(),
+        // a password that holds a parenthesis makes the authority look like an address block, and
+        // an entry that still carries an '@' is dropped rather than reported
+        arg("jdbc:postgresql://pguser:p(x)y@pg.host1:5432,pg.host2:5433/pgdb")
+            .setShortUrl("postgresql://localhost:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("localhost")
+            .setPort(5432)
+            .setName("pgdb")
+            .build(),
+        // https://dev.mysql.com/doc/connector-j/en/connector-j-multi-host-connections.html
+        arg("jdbc:mysql://mysql.host1:3306,mysql.host2:3307/mydb")
+            .setShortUrl("mysql://localhost:3306")
+            .setSystem(MYSQL)
+            .setHost("localhost")
+            .setPort(3306)
+            .setName("mydb")
+            .setServerAddressGroup("mysql.host1:3306,mysql.host2:3307")
+            .build(),
+        // an address block spells its credentials out as attributes, so a password may hold an '@'
+        // and characters that look like delimiters; none of it may reach the group target
+        arg("jdbc:mysql:replication://address=(host=mdb.host1)(port=33)(user=mdbuser)"
+                + "(password=p@ss,w0rd),address=(host=mdb.host2)(port=3306)/mdbdb")
+            .setShortUrl("mysql:replication://mdb.host1:33")
+            .setSystem(MYSQL)
+            .setSubtype("replication")
+            .setUser("mdbuser")
+            .setHost("mdb.host1")
+            .setPort(33)
+            .setName("mdbdb")
+            .setServerAddressGroup(
+                "address=(host=mdb.host1)(port=33)," + "address=(host=mdb.host2)(port=3306)")
+            .build(),
+        // https://learn.microsoft.com/en-us/sql/connect/jdbc/setting-the-connection-properties
+        arg("jdbc:sqlserver://ss.host1:1433;databaseName=ssdb;failoverPartner=ss.host2")
+            .setShortUrl("sqlserver://ss.host1:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setHost("ss.host1")
+            .setPort(1433)
+            .setName("ssdb")
+            .setServerAddressGroup("ss.host1:1433,ss.host2")
+            .build(),
+        arg("jdbc:sqlserver://ss.host1\\instance1:1433;databaseName=ssdb;"
+                + "failoverPartner=ss.host2\\instance2")
+            .setShortUrl("sqlserver://ss.host1:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setHost("ss.host1")
+            .setPort(1433)
+            .setNamespace("instance1|ssdb")
+            .setName("instance1")
+            .setServerAddressGroup("ss.host1\\instance1:1433,ss.host2\\instance2")
+            .build(),
+        arg("jdbc:sqlserver://ss.host1;instanceName=instance1;failoverPartner=ss.host2")
+            .setShortUrl("sqlserver://ss.host1:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setHost("ss.host1")
+            .setPort(1433)
+            .setNamespace("instance1")
+            .setName("instance1")
+            .setServerAddressGroup("ss.host1\\instance1,ss.host2")
+            .build(),
+        arg("jdbc:sqlserver://[2001:db8::1]:1433;failoverPartner=2001:db8::2")
+            .setShortUrl("sqlserver://[2001:db8::1]:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setHost("2001:db8::1")
+            .setPort(1433)
+            .setServerAddressGroup("[2001:db8::1]:1433,[2001:db8::2]")
+            .build(),
+        // an ADDRESS_LIST is optional, a DESCRIPTION may hold the addresses directly
+        arg("jdbc:oracle:thin:@(description=(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
+                + "(address=(protocol=tcp)(host=orcl.host2)(port=1522))"
+                + "(connect_data=(service_name=orclsn)))")
+            .setShortUrl("oracle:thin://orcl.host1:1521")
+            .setSystem("oracle.db")
+            .setOldSystem("oracle")
+            .setSubtype("thin")
+            .setHost("orcl.host1")
+            .setPort(1521)
+            .setName("orclsn")
+            .setServerAddressGroup(
+                "oracle:thin:@(description=(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
+                    + "(address=(protocol=tcp)(host=orcl.host2)(port=1522)))")
+            .build(),
+        // a DESCRIPTION_LIST holds independent descriptions, so its addresses are not one group
+        arg("jdbc:oracle:thin:@(description_list="
+                + "(description=(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
+                + "(connect_data=(service_name=orclsn)))"
+                + "(description=(address=(protocol=tcp)(host=orcl.host2)(port=1522))"
+                + "(connect_data=(service_name=orclsn))))")
+            .setShortUrl("oracle:thin://orcl.host1:1521")
+            .setSystem("oracle.db")
+            .setOldSystem("oracle")
+            .setSubtype("thin")
+            .setHost("orcl.host1")
+            .setPort(1521)
+            .setName("orclsn")
+            .build(),
+        arg("jdbc:mariadb:failover://mdb.host:3306/mdbdb")
+            .setShortUrl("mariadb:failover://mdb.host:3306")
+            .setSystem(MARIADB)
+            .setSubtype("failover")
+            .setHost("mdb.host")
+            .setPort(3306)
+            .setName("mdbdb")
+            .build(),
+        // a single address block is not a group either, and its password stays out of every field
+        arg("jdbc:mariadb:failover://address=(host=mdb.host)(port=3306)(user=mdbuser)"
+                + "(password=p@ss,w0rd)/mdbdb")
+            .setShortUrl("mariadb:failover://mdb.host:3306")
+            .setSystem(MARIADB)
+            .setSubtype("failover")
+            .setUser("mdbuser")
+            .setHost("mdb.host")
+            .setPort(3306)
+            .setName("mdbdb")
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("serverAddressGroupArguments")
+  void testServerAddressGroupParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "postgresql://user:123,a/ss@pg.host:5432",
+        "postgresql://user:p,a/ss@pg.host:5432/db",
+        "postgresql://user:p,a/ss@pg.host:5432",
+        "postgresql://user:pa,ss/word@pg.host1:5432,pg.host2:5433/pgdb",
+        "postgresql://user:p@ss,w/ord@pg.host1:5432,pg.host2:5433/pgdb"
+      })
+  void testAmbiguousUserInfoIsNotExtractedAsAuthority(String url) {
+    assertThat(extractAuthority(url)).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"postgresql://h1,h2/db/admin@corp.com", "postgresql://h1,h2/db#admin@corp.com"})
+  void testAtAfterCommaSeparatedAuthorityIsAmbiguous(String url) {
+    assertThat(extractAuthority(url)).isNull();
+  }
+
+  @Test
+  void testAtInQueryParameterDoesNotHideAuthority() {
+    assertThat(extractAuthority("postgresql://h1,h2/db?user=admin@corp.com")).isEqualTo("h1,h2");
+  }
+
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {
     DbInfo info = parse(argument.url, argument.properties);
     DbInfo expected = argument.dbInfo;
@@ -1861,6 +2186,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(info.getDbSystemName()).isEqualTo(expected.getDbSystemName());
     assertThat(info.getServerAddress()).isEqualTo(expected.getServerAddress());
     assertThat(info.getServerPort()).isEqualTo(expected.getServerPort());
+    assertThat(info.getServerAddressGroup()).isEqualTo(expected.getServerAddressGroup());
     assertThat(info.getDbUser()).isEqualTo(expected.getDbUser());
     assertThat(info.getDbNamespace()).isEqualTo(expected.getDbNamespace());
     assertThat(info.getDbName()).isEqualTo(expected.getDbName());
@@ -1890,6 +2216,7 @@ class JdbcConnectionUrlParserTest {
               .dbName(oldDbName)
               .serverAddress(builder.host)
               .serverPort(builder.port)
+              .serverAddressGroup(builder.serverAddressGroup)
               .build();
     }
 
@@ -1910,6 +2237,7 @@ class JdbcConnectionUrlParserTest {
     Integer port;
     String namespace;
     String name;
+    String serverAddressGroup;
 
     ParseTestArgumentBuilder(String url) {
       this.url = url;
@@ -1965,6 +2293,11 @@ class JdbcConnectionUrlParserTest {
 
     ParseTestArgumentBuilder setName(String name) {
       this.name = name;
+      return this;
+    }
+
+    ParseTestArgumentBuilder setServerAddressGroup(String serverAddressGroup) {
+      this.serverAddressGroup = serverAddressGroup;
       return this;
     }
 

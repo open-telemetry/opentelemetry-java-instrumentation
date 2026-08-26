@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import java.util.Map;
+import java.util.Properties;
 import javax.annotation.Nullable;
 
 /**
@@ -66,9 +67,111 @@ public final class MssqlUrlParser implements JdbcUrlParser {
 
     // DataSource properties applied last — SQL Server driver gives DataSource precedence over URL
     ctx.applyDataSourceProperties();
+    String targetInstanceName = resolveInstanceName(ctx.props(), urlParams, instanceName);
 
     // Namespace depends on the effective databaseName, so derive it after DataSource overrides.
-    setNamespace(ctx, instanceName);
+    setNamespace(ctx, targetInstanceName != null ? targetInstanceName : instanceName);
+
+    applyFailoverPartnerGroup(
+        ctx, urlParams, targetInstanceName, hasConfiguredPort(jdbcUrl, urlParams, ctx.props()));
+  }
+
+  private static void applyFailoverPartnerGroup(
+      ParseContext ctx,
+      Map<String, String> params,
+      @Nullable String instanceName,
+      boolean portConfigured) {
+    String failoverPartner = null;
+    if (ctx.props() != null) {
+      failoverPartner = ctx.props().getProperty("failoverPartner");
+    }
+    if (failoverPartner == null || failoverPartner.isEmpty()) {
+      failoverPartner = params.get("failoverpartner");
+    }
+    String host = ctx.host();
+    if (failoverPartner == null || failoverPartner.isEmpty() || host == null) {
+      return;
+    }
+    StringBuilder group = new StringBuilder();
+    appendPrimary(group, ctx, host, instanceName, portConfigured);
+    group.append(',');
+    appendFailoverPartner(group, failoverPartner);
+    ctx.serverAddressGroup(group.toString());
+  }
+
+  private static void appendPrimary(
+      StringBuilder group,
+      ParseContext ctx,
+      String host,
+      @Nullable String instanceName,
+      boolean portConfigured) {
+    if (instanceName == null || instanceName.isEmpty()) {
+      UrlParsingUtils.appendHostPort(group, host, portConfigured ? ctx.port() : null);
+      return;
+    }
+    appendFailoverPartner(group, host + "\\" + instanceName);
+    if (portConfigured && ctx.port() != null) {
+      group.append(':').append(ctx.port());
+    }
+  }
+
+  @Nullable
+  private static String resolveInstanceName(
+      @Nullable Properties properties,
+      Map<String, String> params,
+      @Nullable String parsedInstanceName) {
+    String instanceName = parsedInstanceName;
+    if (instanceName == null || instanceName.isEmpty()) {
+      instanceName = params.get("instancename");
+    }
+    if (properties == null) {
+      return instanceName;
+    }
+    String propertyInstanceName = properties.getProperty("instanceName");
+    if (propertyInstanceName != null && !propertyInstanceName.isEmpty()) {
+      return propertyInstanceName;
+    }
+    String propertyServerName = properties.getProperty("serverName");
+    return propertyServerName == null || propertyServerName.isEmpty() ? instanceName : null;
+  }
+
+  private static boolean hasConfiguredPort(
+      String jdbcUrl, Map<String, String> params, @Nullable Properties properties) {
+    if (properties != null
+        && UrlParsingUtils.parsePort(properties.getProperty("portNumber")) != null) {
+      return true;
+    }
+    if (UrlParsingUtils.parsePort(params.get("portnumber")) != null) {
+      return true;
+    }
+
+    String urlPart = jdbcUrl.split(";", 2)[0];
+    int hostIndex = urlPart.indexOf("://");
+    if (hostIndex <= 0) {
+      return false;
+    }
+    String serverName = urlPart.substring(hostIndex + 3);
+    int pathLoc = serverName.indexOf('/');
+    if (pathLoc > 0) {
+      serverName = serverName.substring(0, pathLoc);
+    }
+    return UrlParsingUtils.extractHostPort(serverName).port() != null;
+  }
+
+  private static void appendFailoverPartner(StringBuilder group, String failoverPartner) {
+    int instanceStart = failoverPartner.indexOf('\\');
+    String hostPort =
+        instanceStart < 0 ? failoverPartner : failoverPartner.substring(0, instanceStart);
+    boolean unbracketedIpv6 =
+        !hostPort.startsWith("[") && hostPort.indexOf(':') != hostPort.lastIndexOf(':');
+    if (unbracketedIpv6) {
+      group.append('[').append(hostPort).append(']');
+    } else {
+      group.append(hostPort);
+    }
+    if (instanceStart >= 0) {
+      group.append(failoverPartner, instanceStart, failoverPartner.length());
+    }
   }
 
   /**

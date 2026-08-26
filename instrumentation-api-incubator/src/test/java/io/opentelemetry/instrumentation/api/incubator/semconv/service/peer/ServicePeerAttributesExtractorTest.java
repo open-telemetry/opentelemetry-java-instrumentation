@@ -113,6 +113,27 @@ class ServicePeerAttributesExtractorTest {
     }
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  void shouldMatchConfiguredTargetExactly() {
+    String target = "db1.example:5432,db2.example:5432";
+    ServicePeerResolver resolver = createResolver(mapping(target, "myService", null));
+    AttributesExtractor<String, String> underTest =
+        new ServicePeerAttributesExtractor<>(attributesGetter, resolver);
+    when(attributesGetter.getServerAddress(any())).thenReturn(target);
+
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onEnd(attributes, Context.root(), "request", "response", null);
+
+    Attributes attrs = attributes.build();
+    if (emitOldServicePeerSemconv() && emitStableServicePeerSemconv()) {
+      assertThat(attrs)
+          .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
+    } else {
+      assertThat(attrs).containsOnly(entry(maybeStablePeerService(), "myService"));
+    }
+  }
+
   private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
