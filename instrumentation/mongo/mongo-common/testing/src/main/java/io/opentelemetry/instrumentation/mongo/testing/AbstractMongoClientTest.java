@@ -15,6 +15,9 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -34,6 +37,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,6 +59,7 @@ public abstract class AbstractMongoClientTest<T> {
   private GenericContainer<?> mongodb;
   protected String host;
   protected int port;
+  private String networkPeerAddress;
 
   @BeforeAll
   void setup() {
@@ -65,6 +70,12 @@ public abstract class AbstractMongoClientTest<T> {
     mongodb.start();
     host = mongodb.getHost();
     port = mongodb.getMappedPort(27017);
+    try (Socket socket = new Socket(host, port)) {
+      InetSocketAddress peer = (InetSocketAddress) socket.getRemoteSocketAddress();
+      networkPeerAddress = peer.getAddress().getHostAddress();
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   @AfterAll
@@ -75,6 +86,10 @@ public abstract class AbstractMongoClientTest<T> {
   }
 
   protected abstract InstrumentationExtension testing();
+
+  protected boolean supportsNetworkPeer() {
+    return false;
+  }
 
   // Different client versions have different APIs to do these operations. If adding a test for a
   // new version, refer to existing ones on how to implement these operations.
@@ -524,6 +539,9 @@ public abstract class AbstractMongoClientTest<T> {
                                 "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
                                 "{\"create\":\""
                                     + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
@@ -557,6 +575,21 @@ public abstract class AbstractMongoClientTest<T> {
     span.hasAttributesSatisfyingExactly(
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
+        equalTo(
+            NETWORK_PEER_ADDRESS,
+            supportsNetworkPeer()
+                ? networkPeerAddress
+                : (emitStableDatabaseSemconv() ? host : null)),
+        equalTo(
+            NETWORK_PEER_PORT,
+            supportsNetworkPeer()
+                ? Long.valueOf(port)
+                : (emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
+        equalTo(
+            NETWORK_TYPE,
+            supportsNetworkPeer() && !emitStableDatabaseSemconv()
+                ? (networkPeerAddress.contains(":") ? "ipv6" : "ipv4")
+                : null),
         satisfies(
             maybeStable(DB_STATEMENT),
             val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", "")))),

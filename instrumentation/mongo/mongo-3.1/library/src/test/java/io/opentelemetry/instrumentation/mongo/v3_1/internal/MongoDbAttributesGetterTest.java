@@ -14,6 +14,12 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import com.mongodb.MongoException;
 import com.mongodb.MongoSocketException;
 import com.mongodb.ServerAddress;
+import com.mongodb.connection.ClusterId;
+import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.connection.ServerId;
+import com.mongodb.event.CommandStartedEvent;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.stream.Stream;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
@@ -106,6 +112,29 @@ class MongoDbAttributesGetterTest {
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
     assertThat(getter.getErrorType(null, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  @Test
+  void networkPeerRequiresAnAgentResolver() {
+    ConnectionDescription connectionDescription =
+        new ConnectionDescription(
+            new ServerId(new ClusterId(), new ServerAddress("configured.example", 27017)));
+    CommandStartedEvent event =
+        new CommandStartedEvent(
+            1,
+            connectionDescription,
+            "test",
+            "find",
+            new BsonDocument("find", new BsonString("collection")));
+    InetSocketAddress peer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 27018);
+
+    MongoDbAttributesGetter libraryGetter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
+    MongoDbAttributesGetter agentGetter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+
+    assertThat(libraryGetter.getNetworkPeerInetSocketAddress(event, null)).isNull();
+    assertThat(agentGetter.getNetworkPeerInetSocketAddress(event, null)).isSameAs(peer);
   }
 
   private static Stream<Arguments> errorTypes() {

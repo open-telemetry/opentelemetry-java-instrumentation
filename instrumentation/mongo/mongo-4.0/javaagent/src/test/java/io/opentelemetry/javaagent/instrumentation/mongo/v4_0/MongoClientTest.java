@@ -57,6 +57,11 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
+  protected boolean supportsNetworkPeer() {
+    return true;
+  }
+
+  @Override
   protected void createCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName);
     db.createCollection(collectionName);

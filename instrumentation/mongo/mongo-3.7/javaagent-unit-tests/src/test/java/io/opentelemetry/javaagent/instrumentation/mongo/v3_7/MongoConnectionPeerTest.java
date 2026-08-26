@@ -1,0 +1,94 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.mongodb.ServerAddress;
+import com.mongodb.connection.ClusterId;
+import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.connection.ServerId;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import org.junit.jupiter.api.Test;
+
+class MongoConnectionPeerTest {
+
+  @Test
+  void correlatesEachConnectedSocketWithItsConnectionDescription() throws IOException {
+    ConnectionDescription firstDescription = connectionDescription(1);
+    ConnectionDescription secondDescription = connectionDescription(2);
+
+    InetSocketAddress firstPeer = captureConnectedPeer(firstDescription);
+    InetSocketAddress secondPeer = captureConnectedPeer(secondDescription);
+
+    assertThat(MongoConnectionPeer.resolve(firstDescription)).isEqualTo(firstPeer);
+    assertThat(MongoConnectionPeer.resolve(secondDescription)).isEqualTo(secondPeer);
+    assertThat(firstPeer).isNotEqualTo(secondPeer);
+  }
+
+  @Test
+  void failedAndMissingSocketCapturesDoNotLeakToTheNextConnection() throws IOException {
+    ConnectionDescription failedDescription = connectionDescription(1);
+    MongoConnectionPeer.OpenState failedState = MongoConnectionPeer.startOpen();
+    try (ConnectedSocket connectedSocket = ConnectedSocket.open()) {
+      MongoConnectionPeer.capture(connectedSocket.client);
+      MongoConnectionPeer.endOpen(
+          failedState, failedDescription, new IOException("handshake failed"));
+    }
+
+    ConnectionDescription nextDescription = connectionDescription(2);
+    MongoConnectionPeer.OpenState nextState = MongoConnectionPeer.startOpen();
+    MongoConnectionPeer.endOpen(nextState, nextDescription, null);
+
+    assertThat(MongoConnectionPeer.resolve(failedDescription)).isNull();
+    assertThat(MongoConnectionPeer.resolve(nextDescription)).isNull();
+  }
+
+  private static InetSocketAddress captureConnectedPeer(ConnectionDescription connectionDescription)
+      throws IOException {
+    MongoConnectionPeer.OpenState state = MongoConnectionPeer.startOpen();
+    try (ConnectedSocket connectedSocket = ConnectedSocket.open()) {
+      InetSocketAddress peer = (InetSocketAddress) connectedSocket.client.getRemoteSocketAddress();
+      MongoConnectionPeer.capture(connectedSocket.client);
+      MongoConnectionPeer.endOpen(state, connectionDescription, null);
+      return peer;
+    }
+  }
+
+  private static ConnectionDescription connectionDescription(int port) {
+    return new ConnectionDescription(
+        new ServerId(new ClusterId(), new ServerAddress("configured.example", port)));
+  }
+
+  private static final class ConnectedSocket implements AutoCloseable {
+    private final ServerSocket server;
+    private final Socket client;
+    private final Socket accepted;
+
+    private ConnectedSocket(ServerSocket server, Socket client, Socket accepted) {
+      this.server = server;
+      this.client = client;
+      this.accepted = accepted;
+    }
+
+    private static ConnectedSocket open() throws IOException {
+      ServerSocket server = new ServerSocket(0, 1, InetAddress.getLoopbackAddress());
+      Socket client = new Socket(server.getInetAddress(), server.getLocalPort());
+      return new ConnectedSocket(server, client, server.accept());
+    }
+
+    @Override
+    public void close() throws IOException {
+      accepted.close();
+      client.close();
+      server.close();
+    }
+  }
+}

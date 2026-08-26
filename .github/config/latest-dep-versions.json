@@ -446,6 +446,7 @@
     "org.jetbrains.kotlinx:kotlinx-coroutines-reactor#+": "1.11.0",
     "org.jodd:jodd-http#+": "6.3.0",
     "org.mongodb:mongo-java-driver#+": "3.12.14",
+    "org.mongodb:mongo-java-driver#3.+": "3.12.14",
     "org.mongodb:mongodb-driver-async#+": "3.12.14",
     "org.mongodb:mongodb-driver-core#+": "5.11.0",
     "org.mongodb:mongodb-driver-reactivestreams#+": "5.11.0",
