@@ -1,0 +1,59 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.couchbase.network.v2_0;
+
+import static io.opentelemetry.javaagent.instrumentation.couchbase.network.v2_0.VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
+import com.couchbase.client.core.message.CouchbaseRequest;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+class CouchbaseCoreInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("com.couchbase.client.core.CouchbaseCore");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isPublic()
+            .and(takesArgument(0, named("com.couchbase.client.core.message.CouchbaseRequest")))
+            .and(named("send")),
+        getClass().getName() + "$CouchbaseCoreAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class CouchbaseCoreAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void bridgeRequestInfoToRequest(@Advice.Argument(0) CouchbaseRequest request) {
+      CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
+      if (requestInfo != null) {
+        return;
+      }
+
+      Context currentContext = Java8BytecodeBridge.currentContext();
+      requestInfo = CouchbaseRequestInfo.get(currentContext);
+      if (requestInfo != null) {
+        // The scope from the initial rxJava subscribe is not available to the networking layer
+        // To transfer the request info it is added to the context store. Unlike couchbase-2.6,
+        // core-io before 2.6.0 has no CouchbaseRequest.operationId() to record here.
+        COUCHBASE_REQUEST_INFO.set(request, requestInfo);
+      }
+    }
+  }
+}

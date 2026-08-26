@@ -140,7 +140,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, operationServerAddress()),
                             satisfies(SERVER_PORT, operationServerPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()))));
+                                stringKey("couchbase.local.address"), localAddressAttribute()))));
   }
 
   @ParameterizedTest
@@ -196,9 +196,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, operationServerAddress()),
                             satisfies(SERVER_PORT, operationServerPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
   }
 
   @ParameterizedTest
@@ -261,9 +261,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, operationServerAddress()),
                             satisfies(SERVER_PORT, operationServerPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute())),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
+                            satisfies(stringKey("couchbase.operation_id"), operationIdAttribute())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -281,9 +280,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, operationServerAddress()),
                             satisfies(SERVER_PORT, operationServerPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
   }
 
   @Test
@@ -346,9 +345,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, operationServerAddress()),
                             satisfies(SERVER_PORT, operationServerPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
   }
 
   @ParameterizedTest
@@ -407,7 +406,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
             satisfies(SERVER_ADDRESS, operationServerAddress()),
             satisfies(SERVER_PORT, operationServerPort()),
-            satisfies(stringKey("couchbase.local.address"), experimentalAttribute()),
-            satisfies(stringKey("couchbase.operation_id"), experimentalAttribute()));
+            satisfies(stringKey("couchbase.local.address"), localAddressAttribute()),
+            satisfies(stringKey("couchbase.operation_id"), operationIdAttribute()));
   }
 }

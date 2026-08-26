@@ -91,6 +91,15 @@ class CouchbaseAttributesGetterTest {
   }
 
   @Test
+  void omitsUnresolvedNetworkPeer() {
+    CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", null, getClass(), "get");
+    request.setNode(InetSocketAddress.createUnresolved("node.example", 11210), null);
+
+    assertThat(new CouchbaseAttributesGetter().getNetworkPeerInetSocketAddress(request, null))
+        .isNull();
+  }
+
+  @Test
   void keepsTheSocketAndTheAddressOfTheLastContactedNodeTogether() {
     CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", null, getClass(), "get");
     InetSocketAddress firstPeer = new InetSocketAddress("192.0.2.1", 32768);

@@ -33,6 +33,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.4:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-network-2.0:javaagent"))
 
   latestDepTestLibrary("org.springframework.data:spring-data-couchbase:3.1.+") // see couchbase-3.1 module
   latestDepTestLibrary("com.couchbase.client:java-client:2.+") // see couchbase-3.1 module

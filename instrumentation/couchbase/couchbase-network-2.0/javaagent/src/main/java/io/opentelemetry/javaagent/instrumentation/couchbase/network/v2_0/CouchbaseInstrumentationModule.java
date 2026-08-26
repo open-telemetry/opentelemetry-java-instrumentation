@@ -3,37 +3,34 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v3_4;
+package io.opentelemetry.javaagent.instrumentation.couchbase.network.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseCoreInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseMessageHandlerInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
+
   public CouchbaseInstrumentationModule() {
-    super("couchbase", "couchbase-3.4");
+    super("couchbase", "couchbase-network-2.0");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 3.4.0 (via com.couchbase.client:core-io 2.4.0)
-    return hasClassesNamed(
-        "com.couchbase.client.core.transaction.components.CoreTransactionRequest");
+    // NetworkResolution was added in core-io 1.6.0, which ships with Couchbase 2.6. Its absence
+    // distinguishes the core-io 1.0-1.5 line handled by this module.
+    return not(hasClassesNamed("com.couchbase.client.core.env.NetworkResolution"));
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new CouchbaseEnvironmentInstrumentation(),
-        new CouchbaseCoreInstrumentation(),
-        new CouchbaseMessageHandlerInstrumentation());
+    return asList(new CouchbaseCoreInstrumentation(), new CouchbaseNetworkInstrumentation());
   }
 }

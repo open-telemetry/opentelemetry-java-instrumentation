@@ -108,6 +108,37 @@ public abstract class AbstractCouchbaseTest {
   }
 
   /**
+   * Override to return false in subclasses that capture the network peer but not the local socket
+   * address, because core-io before 2.6.0 has no field to read it from (e.g., 2.0-2.5). Defaults to
+   * {@link #includesNetworkAttributes()} since every other subclass that has one also has the
+   * other.
+   */
+  protected boolean includesLocalAddressAttribute() {
+    return includesNetworkAttributes();
+  }
+
+  /**
+   * Override to return false in subclasses that capture the network peer but cannot correlate a
+   * request with its operation id, because core-io before 2.6.0 has no method to read it from
+   * (e.g., 2.0-2.5). Defaults to {@link #includesNetworkAttributes()} since every other subclass
+   * that has one also has the other.
+   */
+  protected boolean includesOperationIdAttribute() {
+    return includesNetworkAttributes();
+  }
+
+  /**
+   * Override to return false in subclasses that capture the network peer but not the node the
+   * driver considers itself connected to, because core-io before 2.6.0 has no reliable method to
+   * read it from for the whole 2.0-2.5 range. This only affects the old (non-stable) semantic
+   * conventions' server address/port fallback; defaults to {@link #includesNetworkAttributes()}
+   * since every other subclass that has one also has the other.
+   */
+  protected boolean includesOldServerAddressAttribute() {
+    return includesNetworkAttributes();
+  }
+
+  /**
    * Override to return true in subclasses where experimental attributes are enabled (when
    * otel.instrumentation.couchbase.experimental-span-attributes=true).
    */
@@ -135,11 +166,11 @@ public abstract class AbstractCouchbaseTest {
     if (emitStableDatabaseSemconv()) {
       return val -> val.isEqualTo(serverAddress());
     }
-    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+    return includesOldServerAddressAttribute() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
   protected LongAssertConsumer operationServerPort() {
-    return !emitStableDatabaseSemconv() && includesNetworkAttributes()
+    return !emitStableDatabaseSemconv() && includesOldServerAddressAttribute()
         ? val -> val.isNotNull()
         : val -> val.isNull();
   }
@@ -148,7 +179,15 @@ public abstract class AbstractCouchbaseTest {
     return emitStableDatabaseSemconv() ? operation + " " + serverAddress() : operation;
   }
 
-  protected StringAssertConsumer experimentalAttribute() {
-    return includesExperimentalAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+  protected StringAssertConsumer operationIdAttribute() {
+    return includesExperimentalAttributes() && includesOperationIdAttribute()
+        ? val -> val.isNotNull()
+        : val -> val.isNull();
+  }
+
+  protected StringAssertConsumer localAddressAttribute() {
+    return includesExperimentalAttributes() && includesLocalAddressAttribute()
+        ? val -> val.isNotNull()
+        : val -> val.isNull();
   }
 }

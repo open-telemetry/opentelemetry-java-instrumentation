@@ -114,7 +114,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             satisfies(SERVER_ADDRESS, operationServerAddress()),
                             satisfies(SERVER_PORT, operationServerPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()))));
+                                stringKey("couchbase.local.address"), localAddressAttribute()))));
   }
 
   @ParameterizedTest
@@ -173,9 +173,8 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             satisfies(SERVER_ADDRESS, operationServerAddress()),
                             satisfies(SERVER_PORT, operationServerPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute())),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
+                            satisfies(stringKey("couchbase.operation_id"), operationIdAttribute())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -193,9 +192,9 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             satisfies(SERVER_ADDRESS, operationServerAddress()),
                             satisfies(SERVER_PORT, operationServerPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
   }
 
   @Test
@@ -246,8 +245,8 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             satisfies(SERVER_ADDRESS, operationServerAddress()),
                             satisfies(SERVER_PORT, operationServerPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
   }
 }
