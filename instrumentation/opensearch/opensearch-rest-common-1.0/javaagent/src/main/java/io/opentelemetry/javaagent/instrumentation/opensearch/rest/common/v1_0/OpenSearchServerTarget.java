@@ -94,16 +94,16 @@ public class OpenSearchServerTarget {
         return null;
       }
       String host = hostName;
-      int credentialsEnd = host.lastIndexOf('@');
-      if (credentialsEnd >= 0) {
-        host = host.substring(credentialsEnd + 1);
-      }
       for (int i = 0; i < host.length(); i++) {
         char c = host.charAt(i);
         if (c == '/' || c == '?' || c == '#') {
           host = host.substring(0, i);
           break;
         }
+      }
+      int credentialsEnd = host.lastIndexOf('@');
+      if (credentialsEnd >= 0) {
+        host = host.substring(credentialsEnd + 1);
       }
       if (host.length() >= 2 && host.charAt(0) == '[' && host.charAt(host.length() - 1) == ']') {
         host = host.substring(1, host.length() - 1);
