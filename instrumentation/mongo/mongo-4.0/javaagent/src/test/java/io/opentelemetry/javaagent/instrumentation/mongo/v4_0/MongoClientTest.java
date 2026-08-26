@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.abort;
 
 import com.mongodb.MongoClientSettings;
@@ -17,15 +18,22 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.event.CommandFailedEvent;
+import com.mongodb.event.CommandListener;
+import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest;
+import io.opentelemetry.instrumentation.mongo.testing.ClusterIdCapture;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
@@ -77,6 +85,41 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
     MongoClient mongoClient = MongoClients.create(settings.build());
     cleanup.deferCleanup(mongoClient);
     mongoClient.getDatabase(dbName).createCollection(collectionName);
+  }
+
+  @Test
+  void commandUsesTheClusterIdentityFromClientConstruction() {
+    ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
+    AtomicReference<Object> commandClusterId = new AtomicReference<>();
+    CommandListener commandListener =
+        new CommandListener() {
+          @Override
+          public void commandStarted(CommandStartedEvent event) {
+            commandClusterId.set(
+                event.getConnectionDescription().getConnectionId().getServerId().getClusterId());
+          }
+
+          @Override
+          public void commandSucceeded(CommandSucceededEvent event) {}
+
+          @Override
+          public void commandFailed(CommandFailedEvent event) {}
+        };
+    MongoClientSettings settings =
+        MongoClientSettings.builder()
+            .applyToClusterSettings(
+                builder ->
+                    builder
+                        .hosts(singletonList(new ServerAddress(host, port)))
+                        .addClusterListener(clusterIdCapture))
+            .addCommandListener(commandListener)
+            .build();
+    MongoClient mongoClient = MongoClients.create(settings);
+    cleanup.deferCleanup(mongoClient);
+
+    mongoClient.getDatabase("admin").runCommand(new Document("ping", 1));
+
+    assertThat(commandClusterId.get()).isSameAs(clusterIdCapture.getClusterId());
   }
 
   @Override
