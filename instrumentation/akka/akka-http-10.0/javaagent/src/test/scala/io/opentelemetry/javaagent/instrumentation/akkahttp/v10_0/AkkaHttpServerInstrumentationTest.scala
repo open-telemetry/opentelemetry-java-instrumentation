@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerInstrumentationExtension,
-  HttpServerTestOptions,
-  ServerEndpoint
+  HttpServerTestOptions
 }
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.testing.internal.armeria.common.{
@@ -22,8 +20,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-import java.util
-import java.util.function.{BiFunction, Consumer, Function}
+import java.util.function.Consumer
 
 class AkkaHttpServerInstrumentationTest
     extends AbstractHttpServerInstrumentationTest {
@@ -42,26 +39,7 @@ class AkkaHttpServerInstrumentationTest
       options: HttpServerTestOptions
   ): Unit = {
     super.configure(options)
-    // exception doesn't propagate
-    options.setTestException(false)
-    options.setTestPathParam(true)
-
-    options.setHttpAttributes(
-      new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
-        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
-          HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
-        }
-      }
-    )
-
-    val expectedRoute = new BiFunction[ServerEndpoint, String, String] {
-      def apply(endpoint: ServerEndpoint, method: String): String = {
-        if (endpoint eq ServerEndpoint.PATH_PARAM)
-          return "/path/*/param"
-        expectedHttpRoute(endpoint, method)
-      }
-    }
-    options.setExpectedHttpRoute(expectedRoute)
+    configureRouteServer(options)
   }
 
   @Test def testPathMatchers(): Unit = {
@@ -106,4 +84,7 @@ class AkkaHttpServerInstrumentationTest
         })
     })
   }
+
+  @Test def testClientAddressWithoutForwardingHeader(): Unit =
+    assertClientAddressWithoutForwardingHeader()
 }
