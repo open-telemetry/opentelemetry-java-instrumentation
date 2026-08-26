@@ -65,6 +65,17 @@ dependencies {
 
 testing {
   suites {
+    // the agent matches methods of pekko classes by name, some of them are private and scala
+    // mangles their names, run the tests against the scala 3 artifacts to catch a name that only
+    // holds for scala 2
+    register<JvmTestSuite>("scala3Test") {
+      dependencies {
+        implementation("org.scala-lang:scala3-library_3:3.3.6")
+        implementation("org.apache.pekko:pekko-http_3:${baseVersion("1.0.0").orLatest()}")
+        implementation("org.apache.pekko:pekko-stream_3:${baseVersion("1.0.1").orLatest()}")
+      }
+    }
+
     register<JvmTestSuite>("tapirTest") {
       dependencies {
         val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
@@ -78,6 +89,19 @@ testing {
       }
     }
   }
+}
+
+// the scala 3 suite runs the same tests as the scala 2 suite, against the _3 artifacts
+sourceSets.named("scala3Test") {
+  java.srcDir("src/test/java")
+  resources.srcDir("src/test/resources")
+  extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
+}
+
+// -target:jvm-1.8 is scala 2 syntax, the scala 3 compiler rejects it
+tasks.named<ScalaCompile>("compileScala3TestScala") {
+  scalaCompileOptions.additionalParameters =
+    scalaCompileOptions.additionalParameters.orEmpty().filter { it != "-target:jvm-1.8" }
 }
 
 tasks {
