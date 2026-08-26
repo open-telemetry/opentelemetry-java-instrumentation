@@ -58,8 +58,16 @@ public class SpringAiStreamTracing {
     }
 
     try {
-      SpringAiMessageAttributes.setInputMessages(context, request);
-      SpringAiMessageEvents.emitPromptEvents(context, request);
+      try {
+        SpringAiMessageAttributes.setInputMessages(context, request);
+      } catch (Throwable ignored) {
+        // best effort
+      }
+      try {
+        SpringAiMessageEvents.emitPromptEvents(context, request);
+      } catch (Throwable ignored) {
+        // best effort
+      }
       AtomicBoolean ended = new AtomicBoolean();
       StreamState state =
           new StreamState(

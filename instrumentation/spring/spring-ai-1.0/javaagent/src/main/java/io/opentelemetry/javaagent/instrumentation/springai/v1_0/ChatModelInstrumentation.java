@@ -94,8 +94,16 @@ class ChatModelInstrumentation implements TypeInstrumentation {
           }
           context = instrumenter().start(parentContext, request);
           scope = context.makeCurrent();
-          SpringAiMessageAttributes.setInputMessages(context, request);
-          SpringAiMessageEvents.emitPromptEvents(context, request);
+          try {
+            SpringAiMessageAttributes.setInputMessages(context, request);
+          } catch (Throwable ignored) {
+            // best effort
+          }
+          try {
+            SpringAiMessageEvents.emitPromptEvents(context, request);
+          } catch (Throwable ignored) {
+            // best effort
+          }
           AdviceScope adviceScope = new AdviceScope(callDepth, context, scope, request);
           completed = true;
           return adviceScope;

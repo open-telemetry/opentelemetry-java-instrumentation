@@ -52,6 +52,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
@@ -172,6 +173,31 @@ class ChatModelTest {
     testing.runWithSpan("parent", () -> chatModel.call(prompt()));
 
     assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isEqualTo(1);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    assertMetrics();
+  }
+
+  @Test
+  void optionalPromptProcessingFailureStillTracesCall() {
+    testing.runWithSpan("parent", () -> chatModel.call(promptWithFailingInstructions()));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    assertMetrics();
+  }
+
+  @Test
+  void optionalPromptProcessingFailureStillTracesStream() {
+    testing.runWithSpan(
+        "parent", () -> chatModel.stream(promptWithFailingInstructions()).blockLast());
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1081,6 +1107,15 @@ class ChatModelTest {
 
   private static Prompt prompt() {
     return new Prompt(PROMPT);
+  }
+
+  private static Prompt promptWithFailingInstructions() {
+    return new Prompt(PROMPT) {
+      @Override
+      public List<Message> getInstructions() {
+        throw new IllegalStateException("prompt processing failed");
+      }
+    };
   }
 
   private static Prompt toolCallingPrompt() {
