@@ -1,0 +1,8 @@
+display_name: Couchbase Client
+description: >
+  This instrumentation adds network peer address information to Couchbase 2.0-2.5 operations,
+  supplementing the couchbase-2.0 instrumentation. It targets the core-io 1.0-1.5 line used by
+  Couchbase clients before 2.6, which couchbase-2.6 covers on its own.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+library_link: https://github.com/couchbase/couchbase-java-client
