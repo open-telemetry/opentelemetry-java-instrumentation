@@ -21,6 +21,11 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseSpringRepositoryTes
   }
 
   @Override
+  protected boolean includesConfiguredServerTarget() {
+    return true;
+  }
+
+  @Override
   protected TestDocument findById(TestRepository repository, String id) {
     return repository.findOne(id);
   }

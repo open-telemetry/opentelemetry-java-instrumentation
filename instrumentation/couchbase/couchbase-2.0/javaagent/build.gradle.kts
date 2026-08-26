@@ -19,6 +19,7 @@ muzzle {
 }
 
 dependencies {
+  implementation(project(":instrumentation:couchbase:couchbase-common:javaagent"))
   implementation(project(":instrumentation:couchbase:couchbase-common-2.0:javaagent"))
   implementation(project(":instrumentation:rxjava:rxjava-1.0:library"))
 
