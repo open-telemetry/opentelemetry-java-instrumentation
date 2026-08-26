@@ -94,6 +94,14 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getName()).isNull();
   }
 
+  @Test
+  void ambiguousPostgresCredentialsDoNotBecomeAConfiguredTarget() {
+    DbInfo dbInfo = parse("jdbc:postgresql://user:123,a/ss@pg.host:5432", null);
+    assertThat(dbInfo.getServerAddressGroup()).isNull();
+    assertThat(dbInfo.getHost()).isEqualTo("localhost");
+    assertThat(dbInfo.getName()).isNull();
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {
@@ -2080,6 +2088,7 @@ class JdbcConnectionUrlParserTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
+        "postgresql://user:123,a/ss@pg.host:5432",
         "postgresql://user:p,a/ss@pg.host:5432/db",
         "postgresql://user:p,a/ss@pg.host:5432",
         "postgresql://user:pa,ss/word@pg.host1:5432,pg.host2:5433/pgdb",
@@ -2096,8 +2105,8 @@ class JdbcConnectionUrlParserTest {
         "postgresql://h1,h2/db?user=admin@corp.com",
         "postgresql://h1,h2/db#admin@corp.com"
       })
-  void testAtInUrlComponentDoesNotHideAuthority(String url) {
-    assertThat(extractAuthority(url)).isEqualTo("h1,h2");
+  void testAtAfterCommaSeparatedAuthorityIsAmbiguous(String url) {
+    assertThat(extractAuthority(url)).isNull();
   }
 
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {

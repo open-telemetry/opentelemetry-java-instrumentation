@@ -45,7 +45,9 @@ public final class GenericUrlParser implements JdbcUrlParser {
       ctx.system(OTHER_SQL);
     }
 
-    applyHostGroup(jdbcUrl, ctx);
+    if (!applyHostGroup(jdbcUrl, ctx)) {
+      return;
+    }
 
     URI uri;
     try {
@@ -94,14 +96,15 @@ public final class GenericUrlParser implements JdbcUrlParser {
    * Keep the whole host list of an authority that routes to more than one host, e.g. {@code
    * postgresql://h1:5432,h2:5432/db}, as the configured group target.
    */
-  private static void applyHostGroup(String jdbcUrl, ParseContext ctx) {
+  private static boolean applyHostGroup(String jdbcUrl, ParseContext ctx) {
     String authority = extractAuthority(jdbcUrl);
     if (authority == null) {
-      return;
+      return jdbcUrl.indexOf("://") < 0;
     }
     String hostList = sanitizeHostList(authority);
     if (hostList != null) {
       ctx.serverAddressGroup(hostList);
     }
+    return true;
   }
 }

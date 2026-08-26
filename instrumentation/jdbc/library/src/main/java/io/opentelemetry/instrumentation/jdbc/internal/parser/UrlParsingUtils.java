@@ -9,8 +9,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.FINE;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -279,29 +277,13 @@ public final class UrlParsingUtils {
       int commaAfterAt = url.indexOf(',', lastAt + 1);
       int commaBeforeEnd = url.indexOf(',', start);
       if ((commaAfterAt >= 0 && commaAfterAt < possibleAuthorityEnd)
-          || (commaBeforeEnd >= 0
-              && commaBeforeEnd < end
-              && (possibleAuthorityEnd < url.length()
-                  || !hasOnlyServerBasedEndpoints(url.substring(start, end))))) {
+          || (commaBeforeEnd >= 0 && commaBeforeEnd < end)) {
         // Comma-separated text around an early delimiter may be part of a malformed password.
         // Dropping the group is safer than reporting credential text as a host.
         return null;
       }
     }
     return end < 0 ? url.substring(start) : url.substring(start, end);
-  }
-
-  private static boolean hasOnlyServerBasedEndpoints(String hostList) {
-    for (String entry : splitHostList(hostList)) {
-      try {
-        if (new URI("otel://" + entry.trim()).getHost() == null) {
-          return false;
-        }
-      } catch (URISyntaxException ignored) {
-        return false;
-      }
-    }
-    return true;
   }
 
   /**
