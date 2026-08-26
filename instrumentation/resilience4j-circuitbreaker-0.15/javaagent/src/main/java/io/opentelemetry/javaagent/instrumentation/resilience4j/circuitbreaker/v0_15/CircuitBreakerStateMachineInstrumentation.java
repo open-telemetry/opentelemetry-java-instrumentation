@@ -148,7 +148,11 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable callbackThrowable) {
       Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback(circuitBreaker);
       Resilience4jCircuitBreakerSpans.end(
-          circuitBreaker, "failure", callbackThrowable == null ? throwable : callbackThrowable);
+          circuitBreaker,
+          "failure",
+          callbackThrowable == null
+              ? Resilience4jCircuitBreakerSpans.unwrapCompletionException(throwable)
+              : callbackThrowable);
     }
   }
 
@@ -167,7 +171,11 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable callbackThrowable) {
       Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback(circuitBreaker);
       Resilience4jCircuitBreakerSpans.end(
-          circuitBreaker, "failure", callbackThrowable == null ? throwable : callbackThrowable);
+          circuitBreaker,
+          "failure",
+          callbackThrowable == null
+              ? Resilience4jCircuitBreakerSpans.unwrapCompletionException(throwable)
+              : callbackThrowable);
     }
   }
 

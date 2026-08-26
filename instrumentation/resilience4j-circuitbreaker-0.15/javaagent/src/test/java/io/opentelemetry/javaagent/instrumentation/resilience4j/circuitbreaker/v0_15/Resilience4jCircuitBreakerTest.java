@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -53,6 +54,40 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(result).isEqualTo("ok");
     assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void circuitBreakerSpanIsParentOfProtectedOperationSpans() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Supplier<String> supplier =
+        CircuitBreaker.decorateSupplier(
+            circuitBreaker, () -> testing.runWithSpan("protected-operation", () -> "ok"));
+
+    String result = testing.runWithSpan("parent", supplier::get);
+
+    assertThat(result).isEqualTo("ok");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience.policy.name"),
+                                experimental("test-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.outcome"),
+                                experimental("success"))),
+                span ->
+                    span.hasName("protected-operation")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))));
   }
 
   @Test
@@ -163,16 +198,30 @@ class Resilience4jCircuitBreakerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasKind(SpanKind.INTERNAL)
+                    span.hasName("CircuitBreaker outer-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience.policy.name"),
+                                experimental("outer-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.state"),
+                                experimental("closed")),
                             equalTo(
                                 stringKey("resilience.circuit_breaker.outcome"),
                                 experimental("success"))),
                 span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                    span.hasName("CircuitBreaker inner-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience.policy.name"),
+                                experimental("inner-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.state"),
+                                experimental("closed")),
                             equalTo(
                                 stringKey("resilience.circuit_breaker.outcome"),
                                 experimental("success")))));
@@ -212,6 +261,52 @@ class Resilience4jCircuitBreakerTest {
     }
 
     assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void circuitBreakerSpanIsParentOfDecoratedCompletionStageWork() throws Exception {
+    Method decorateCompletionStage = decorateCompletionStageMethod();
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    Supplier<CompletionStage<String>> supplier =
+        () ->
+            CompletableFuture.supplyAsync(
+                () -> testing.runWithSpan("protected-operation", () -> "ok"), executor);
+    Supplier<CompletionStage<String>> decoratedSupplier =
+        (Supplier<CompletionStage<String>>)
+            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+    try {
+      CompletionStage<String> stage = testing.runWithSpan("parent", decoratedSupplier::get);
+
+      assertThat(stage.toCompletableFuture().get()).isEqualTo("ok");
+    } finally {
+      executor.shutdownNow();
+    }
+
+    assertCircuitBreakerSpanIsParentOfProtectedOperation("success");
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void createsFailureSpanWhenDecoratedCompletionStageCompletesWithCompletionException()
+      throws Exception {
+    Method decorateCompletionStage = decorateCompletionStageMethod();
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    IllegalStateException cause = new IllegalStateException("boom");
+    CompletableFuture<String> future = new CompletableFuture<>();
+    Supplier<CompletionStage<String>> supplier = () -> future;
+    Supplier<CompletionStage<String>> decoratedSupplier =
+        (Supplier<CompletionStage<String>>)
+            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+
+    CompletionStage<String> stage = testing.runWithSpan("parent", decoratedSupplier::get);
+    future.completeExceptionally(new CompletionException(cause));
+
+    Throwable thrown = catchThrowable(() -> stage.toCompletableFuture().get());
+
+    assertThat(thrown).isInstanceOf(ExecutionException.class);
+    assertCircuitBreakerSpan("closed", "failure", cause);
   }
 
   @Test
@@ -295,6 +390,27 @@ class Resilience4jCircuitBreakerTest {
     }
 
     assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void circuitBreakerSpanIsParentOfDecoratedFutureWork() throws Exception {
+    Method decorateFuture = decorateFutureMethod();
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    Supplier<Future<String>> supplier =
+        () -> executor.submit(() -> testing.runWithSpan("protected-operation", () -> "ok"));
+    Supplier<Future<String>> decoratedSupplier =
+        (Supplier<Future<String>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+    try {
+      Future<String> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
+
+      assertThat(decoratedFuture.get()).isEqualTo("ok");
+    } finally {
+      executor.shutdownNow();
+    }
+
+    assertCircuitBreakerSpanIsParentOfProtectedOperation("success");
   }
 
   @Test
@@ -519,7 +635,7 @@ class Resilience4jCircuitBreakerTest {
                 span ->
                     span.hasName("CircuitBreaker test-circuit-breaker")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+                        .hasParent(trace.getSpan(1))));
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
         .filteredOn(span -> span.getStatus().equals(StatusData.unset()))
@@ -969,6 +1085,31 @@ class Resilience4jCircuitBreakerTest {
       }
       throw new AssertionError(exception);
     }
+  }
+
+  private static void assertCircuitBreakerSpanIsParentOfProtectedOperation(String outcome) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience.policy.name"),
+                                experimental("test-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.outcome"),
+                                experimental(outcome))),
+                span ->
+                    span.hasName("protected-operation")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))));
   }
 
   private static void assertCircuitBreakerSpan(String state, String outcome) {

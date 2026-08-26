@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.opentelemetry.context.Scope;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -183,13 +184,18 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public CompletionStage<T> get() {
-      // decorateCompletionStage's user supplier is wrapped before Resilience4j builds its
-      // decorated supplier, so this wrapper runs immediately after permission acquisition. Claim
-      // that acquisition before invoking user code, which may perform nested acquisitions.
+      // decorateCompletionStage and decorateFuture have different internal call ordering in
+      // Resilience4j. For CompletionStage, instrumentation wraps the user supplier before
+      // Resilience4j builds its decorated supplier, so this wrapper runs immediately after
+      // permission acquisition. Claim that acquisition before invoking user code, which may perform
+      // nested acquisitions.
       Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
           Resilience4jCircuitBreakerSpans.claimRecentAcquisition(circuitBreaker);
       try {
-        CompletionStage<T> result = delegate.get();
+        CompletionStage<T> result;
+        try (Scope ignored = pendingSpan == null ? null : pendingSpan.makeCurrent()) {
+          result = delegate.get();
+        }
         if (pendingSpan == null) {
           return result;
         }
@@ -224,14 +230,17 @@ public class Resilience4jCircuitBreakerDecorators {
           Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         Future<T> result = delegate.get();
-        // decorateFuture's returned supplier is wrapped after Resilience4j builds it, so
-        // permission is acquired inside delegate.get(). Claim only the span created by that
-        // specific acquisition and make the returned Future wrapper own it.
+        // decorateFuture is the opposite of decorateCompletionStage: instrumentation wraps the
+        // returned supplier after Resilience4j builds it, so permission is acquired inside
+        // delegate.get(). Claim only the span created by that specific acquisition and make the
+        // returned Future wrapper own it.
         Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
             Resilience4jCircuitBreakerSpans.endCapture(capture);
         if (pendingSpan != null) {
           try {
-            return new FutureWrapper<>(result, pendingSpan);
+            Future<T> wrapped = new FutureWrapper<>(result, pendingSpan);
+            pendingSpan.closeOperationScope();
+            return wrapped;
           } catch (Throwable t) {
             pendingSpan.end("failure", t);
             throw t;
@@ -601,7 +610,11 @@ public class Resilience4jCircuitBreakerDecorators {
         Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
         try {
           invokeWhenComplete(callback, result, throwable);
-          pendingSpan.end(throwable == null ? "success" : "failure", throwable);
+          pendingSpan.end(
+              throwable == null ? "success" : "failure",
+              throwable == null
+                  ? null
+                  : Resilience4jCircuitBreakerSpans.unwrapCompletionException(throwable));
         } catch (Throwable t) {
           pendingSpan.end("failure", t);
           throw t;
