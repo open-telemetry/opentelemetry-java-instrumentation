@@ -29,6 +29,8 @@ public class ElasticsearchTransportServerTargets {
       VirtualField.find(AbstractClient.class, String.class);
   private static final VirtualField<AbstractClient, Integer> SERVER_PORT =
       VirtualField.find(AbstractClient.class, Integer.class);
+  // an agent owned lock, so that the agent never blocks on a monitor that application code holds
+  private static final Object captureLock = new Object();
 
   public static boolean isCaptured(AbstractClient client) {
     return SERVER_ADDRESS.get(client) != null;
@@ -38,12 +40,17 @@ public class ElasticsearchTransportServerTargets {
       AbstractClient client,
       @Nullable List<ElasticsearchTransportServerTarget.Endpoint> endpoints) {
     ElasticsearchTransportServerTarget target = ElasticsearchTransportServerTarget.of(endpoints);
-    if (target == null) {
-      SERVER_ADDRESS.set(client, NO_TARGET);
-      return;
+    synchronized (captureLock) {
+      if (isCaptured(client)) {
+        return;
+      }
+      if (target == null) {
+        SERVER_ADDRESS.set(client, NO_TARGET);
+        return;
+      }
+      SERVER_PORT.set(client, target.getPort());
+      SERVER_ADDRESS.set(client, target.getAddress());
     }
-    SERVER_PORT.set(client, target.getPort());
-    SERVER_ADDRESS.set(client, target.getAddress());
   }
 
   @Nullable
