@@ -20,6 +20,8 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -117,6 +119,7 @@ public abstract class AbstractHbaseTest {
 
   protected Connection connection;
   private String serverTarget;
+  private String networkPeerAddress;
 
   protected abstract InstrumentationExtension testing();
 
@@ -210,6 +213,8 @@ public abstract class AbstractHbaseTest {
     config.set("hbase.zookeeper.property.clientPort", "2181");
     connection = ConnectionFactory.createConnection(config);
     serverTarget = host + ":2181:/hbase";
+    networkPeerAddress =
+        reportsNetworkPeerAddress() ? InetAddress.getByName(hostname).getHostAddress() : null;
     cleanup.deferAfterAll(connection);
     testing()
         .runWithSpan(
@@ -370,6 +375,12 @@ public abstract class AbstractHbaseTest {
                               equalTo(
                                   SERVER_PORT,
                                   emitStableDatabaseSemconv()
+                                      ? null
+                                      : Long.valueOf(REGION_SERVER_PORT)),
+                              equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
+                              equalTo(
+                                  NETWORK_PEER_PORT,
+                                  networkPeerAddress == null
                                       ? null
                                       : Long.valueOf(REGION_SERVER_PORT)),
                               equalTo(
@@ -650,7 +661,18 @@ public abstract class AbstractHbaseTest {
       table.get(new Get(Bytes.toBytes(ROW_1)));
     }
     testing().waitForTraces(1);
-    if (emitStableDatabaseSemconv()) {
+    if (reportsNetworkPeerAddress()) {
+      assertDurationMetric(
+          testing(),
+          instrumentationName(),
+          DB_SYSTEM_NAME,
+          maybeStable(DB_OPERATION),
+          maybeStable(DB_NAME),
+          DB_COLLECTION_NAME,
+          SERVER_ADDRESS,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT);
+    } else if (emitStableDatabaseSemconv()) {
       assertDurationMetric(
           testing(),
           instrumentationName(),
@@ -725,11 +747,19 @@ public abstract class AbstractHbaseTest {
                             emitStableDatabaseSemconv() ? expectedServerTarget : hostname),
                         equalTo(
                             SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                        equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
+                        equalTo(
+                            NETWORK_PEER_PORT,
+                            networkPeerAddress == null ? null : Long.valueOf(port)),
                         satisfies(
                             DB_USER,
                             emitStableDatabaseSemconv()
                                 ? AbstractAssert::isNull
                                 : AbstractAssert::isNotNull)));
+  }
+
+  protected boolean reportsNetworkPeerAddress() {
+    return false;
   }
 
   private static String dbNamespace(TableName table, boolean hasTable) {
