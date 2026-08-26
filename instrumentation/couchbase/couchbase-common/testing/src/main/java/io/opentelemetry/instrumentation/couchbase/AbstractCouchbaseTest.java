@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.couchbase;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -106,6 +107,10 @@ public abstract class AbstractCouchbaseTest {
     return false;
   }
 
+  protected boolean includesConfiguredServerTarget() {
+    return false;
+  }
+
   /**
    * Override to return true in subclasses where experimental attributes are enabled (when
    * otel.instrumentation.couchbase.experimental-span-attributes=true).
@@ -126,12 +131,28 @@ public abstract class AbstractCouchbaseTest {
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
-  protected StringAssertConsumer serverAddress() {
+  protected String serverAddress() {
+    return includesConfiguredServerTarget() && emitStableDatabaseSemconv() ? "127.0.0.1" : null;
+  }
+
+  protected StringAssertConsumer operationServerAddress() {
+    if (includesConfiguredServerTarget() && emitStableDatabaseSemconv()) {
+      return val -> val.isEqualTo(serverAddress());
+    }
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
-  protected LongAssertConsumer serverPort() {
-    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+  protected LongAssertConsumer operationServerPort() {
+    return !(includesConfiguredServerTarget() && emitStableDatabaseSemconv())
+            && includesNetworkAttributes()
+        ? val -> val.isNotNull()
+        : val -> val.isNull();
+  }
+
+  protected String spanName(String operation) {
+    return includesConfiguredServerTarget() && emitStableDatabaseSemconv()
+        ? operation + " " + serverAddress()
+        : operation;
   }
 
   protected StringAssertConsumer experimentalAttribute() {
