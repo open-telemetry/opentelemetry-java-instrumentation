@@ -6,19 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.autoconfigure.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringBootActuatorInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class SpringBootActuatorInstrumentationModule extends InstrumentationModule {
 
   public SpringBootActuatorInstrumentationModule() {
     super(
@@ -53,7 +52,9 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new AutoConfigurationImportSelectorInstrumentation());
+    return asList(
+        new AutoConfigurationImportSelectorInstrumentation(),
+        new CompositeMeterRegistryInstrumentation());
   }
 
   @Override

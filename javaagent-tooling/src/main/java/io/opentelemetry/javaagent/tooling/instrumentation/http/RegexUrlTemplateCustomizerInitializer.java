@@ -17,6 +17,7 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import javax.annotation.Nullable;
 
 @AutoService(BeforeAgentListener.class)
 public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentListener {
@@ -48,6 +49,7 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
             });
   }
 
+  @Nullable
   private static Pattern toPattern(String patternString) {
     try {
       // ensure that pattern matches the whole url

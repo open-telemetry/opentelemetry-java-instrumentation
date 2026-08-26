@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static java.util.Collections.singletonList;
-
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,7 +25,11 @@ class NatsDispatcherTest extends AbstractNatsDispatcherTest {
   void wrapConnection() {
     connection =
         NatsTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedHeaders(singletonList("Test-Message-Header"))
+            .setHeaders(
+                IncludeExclude.builder()
+                    .setIncluded("Test-Message-*")
+                    .setExcluded("*-Excluded-Header")
+                    .build())
             .build()
             .wrap(connection);
   }

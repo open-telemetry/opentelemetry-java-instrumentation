@@ -10,7 +10,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest, Void> {
+class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest, Void> {
 
   @Override
   public String getDbSystemName(RedissonRequest request) {
@@ -20,6 +20,13 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   @Nullable
   @Override
   public String getDbNamespace(RedissonRequest request) {
+    Long databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
+  }
+
+  @Nullable
+  @Override
+  public String getDbName(RedissonRequest request) {
     return null;
   }
 
@@ -39,6 +46,20 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   @Override
   public Long getDbOperationBatchSize(RedissonRequest request) {
     return request.getOperationBatchSize();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(RedissonRequest request) {
+    InetSocketAddress address = request.getAddress();
+    return address != null ? address.getHostString() : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(RedissonRequest request) {
+    InetSocketAddress address = request.getAddress();
+    return address != null ? address.getPort() : null;
   }
 
   @Override

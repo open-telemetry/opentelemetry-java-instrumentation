@@ -53,10 +53,11 @@ public class TracingSession implements Session {
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query);
     } catch (Throwable t) {
-      instrumenter().end(context, request, null, t);
+      instrumenter().end(context, request, CassandraResponse.create(t), t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    instrumenter()
+        .end(context, request, CassandraResponse.create(resultSet.getExecutionInfo()), null);
     return resultSet;
   }
 
@@ -68,10 +69,11 @@ public class TracingSession implements Session {
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query, values);
     } catch (Throwable t) {
-      instrumenter().end(context, request, null, t);
+      instrumenter().end(context, request, CassandraResponse.create(t), t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    instrumenter()
+        .end(context, request, CassandraResponse.create(resultSet.getExecutionInfo()), null);
     return resultSet;
   }
 
@@ -83,10 +85,11 @@ public class TracingSession implements Session {
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query, values);
     } catch (Throwable t) {
-      instrumenter().end(context, request, null, t);
+      instrumenter().end(context, request, CassandraResponse.create(t), t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    instrumenter()
+        .end(context, request, CassandraResponse.create(resultSet.getExecutionInfo()), null);
     return resultSet;
   }
 
@@ -98,10 +101,11 @@ public class TracingSession implements Session {
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(statement);
     } catch (Throwable t) {
-      instrumenter().end(context, request, null, t);
+      instrumenter().end(context, request, CassandraResponse.create(t), t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    instrumenter()
+        .end(context, request, CassandraResponse.create(resultSet.getExecutionInfo()), null);
     return resultSet;
   }
 
@@ -114,7 +118,7 @@ public class TracingSession implements Session {
       addCallbackToEndSpan(future, context, request);
       return future;
     } catch (Throwable t) {
-      instrumenter().end(context, request, null, t);
+      instrumenter().end(context, request, CassandraResponse.create(t), t);
       throw t;
     }
   }
@@ -128,7 +132,7 @@ public class TracingSession implements Session {
       addCallbackToEndSpan(future, context, request);
       return future;
     } catch (Throwable t) {
-      instrumenter().end(context, request, null, t);
+      instrumenter().end(context, request, CassandraResponse.create(t), t);
       throw t;
     }
   }
@@ -142,7 +146,7 @@ public class TracingSession implements Session {
       addCallbackToEndSpan(future, context, request);
       return future;
     } catch (Throwable t) {
-      instrumenter().end(context, request, null, t);
+      instrumenter().end(context, request, CassandraResponse.create(t), t);
       throw t;
     }
   }
@@ -156,7 +160,7 @@ public class TracingSession implements Session {
       addCallbackToEndSpan(future, context, request);
       return future;
     } catch (Throwable t) {
-      instrumenter().end(context, request, null, t);
+      instrumenter().end(context, request, CassandraResponse.create(t), t);
       throw t;
     }
   }
@@ -213,12 +217,14 @@ public class TracingSession implements Session {
         new FutureCallback<ResultSet>() {
           @Override
           public void onSuccess(ResultSet resultSet) {
-            instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+            instrumenter()
+                .end(
+                    context, request, CassandraResponse.create(resultSet.getExecutionInfo()), null);
           }
 
           @Override
           public void onFailure(Throwable t) {
-            instrumenter().end(context, request, null, t);
+            instrumenter().end(context, request, CassandraResponse.create(t), t);
           }
         },
         Runnable::run);

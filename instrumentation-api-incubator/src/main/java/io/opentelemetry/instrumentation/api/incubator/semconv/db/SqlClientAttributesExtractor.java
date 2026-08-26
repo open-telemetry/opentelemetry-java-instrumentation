@@ -97,15 +97,17 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
     SqlDialect dialect = getter.getSqlDialect(request);
 
     Long batchSize = getter.getDbOperationBatchSize(request);
-    boolean isBatch = batchSize != null && batchSize > 1;
+    // db.operation.batch.size is captured for every batch execution (including an empty batch with
+    // size 0); it is only omitted for a single-statement batch, which is reported as a non-batch
+    boolean isBatch = batchSize != null && batchSize != 1;
 
     if (emitOldDatabaseSemconv()) {
-      if (rawQueryTexts.size() == 1) { // for backcompat(?)
-        String rawQueryText = rawQueryTexts.iterator().next();
+      Collection<String> oldSemconvRawQueryTexts = getter.getRawQueryTextsForOldSemconv(request);
+      if (oldSemconvRawQueryTexts.size() == 1) { // for backcompat(?)
+        String rawQueryText = oldSemconvRawQueryTexts.iterator().next();
         SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryText, dialect);
         String operationName = analyzedQuery.getOperationName();
         attributes.put(
@@ -118,6 +120,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     }
 
     if (emitStableDatabaseSemconv()) {
+      Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
       if (isBatch) {
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
@@ -149,7 +152,15 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         MultiQuery multiQuery = builder.build();
         attributes.put(DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
         attributes.put(DB_QUERY_SUMMARY, multiQuery.getQuerySummary());
+        if (singleOperationAndCollection) {
+          attributes.put(DB_OPERATION_NAME, multiQuery.getOperationName());
+          attributes.put(DB_COLLECTION_NAME, multiQuery.getCollectionName());
+        }
         attributes.put(DB_STORED_PROCEDURE_NAME, multiQuery.getStoredProcedureName());
+      } else if (isBatch) {
+        // an explicit empty batch (no query texts) — summarize as BATCH to match the span name
+        // produced by DbClientSpanNameExtractor
+        attributes.put(DB_QUERY_SUMMARY, "BATCH");
       }
     }
 

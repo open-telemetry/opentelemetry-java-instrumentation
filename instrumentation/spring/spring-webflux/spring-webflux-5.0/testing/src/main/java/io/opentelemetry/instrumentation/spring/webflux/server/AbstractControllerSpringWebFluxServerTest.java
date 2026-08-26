@@ -112,10 +112,5 @@ public abstract class AbstractControllerSpringWebFluxServerTest
     options.setVerifyServerSpanEndTime(false);
 
     options.setResponseCodeOnNonStandardHttpMethod(405);
-
-    // TODO fails on java 21
-    // span name set to "HTTP
-    // org.springframework.web.reactive.function.server.RequestPredicates$$Lambda/0x00007fa574969238@4aaf6fa2"
-    options.disableTestNonStandardHttpMethod();
   }
 }

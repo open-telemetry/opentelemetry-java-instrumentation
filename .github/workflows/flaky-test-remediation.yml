@@ -21,9 +21,10 @@ jobs:
       method: ${{ steps.select.outputs.method }}
       source_file: ${{ steps.select.outputs.source_file }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0  # need history to detect recently-modified files
+          persist-credentials: false
 
       - name: Fetch progress branch
         run: git fetch origin otelbot/flaky-test-remediation-progress
@@ -77,19 +78,22 @@ jobs:
       TEST_SOURCE_FILE: ${{ needs.analyze.outputs.source_file }}
       OUT_DIR: build/flaky-test-remediation
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK
-        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287 # v5.3.0
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
           cache-read-only: true
 
@@ -158,14 +162,17 @@ jobs:
 
       - name: Push branch
         if: steps.changes.outputs.committed == 'true'
-        run: git push -f origin "${{ steps.branch.outputs.name }}"
+        env:
+          STEPS_BRANCH_OUTPUTS_NAME: ${{ steps.branch.outputs.name }}
+        run: git push -f origin "${STEPS_BRANCH_OUTPUTS_NAME}"
 
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         if: steps.changes.outputs.committed == 'true'
         with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
+          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-pull-requests: write
 
       - name: Create PR
         if: steps.changes.outputs.committed == 'true'
@@ -178,10 +185,12 @@ jobs:
 
       - name: Check out progress branch
         if: steps.changes.outputs.committed == 'true'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: otelbot/flaky-test-remediation-progress
           path: progress
+          # zizmor: ignore[artipacked] Credentials are required by the progress branch push below.
+          persist-credentials: true
 
       - name: Use CLA approved bot
         if: steps.changes.outputs.committed == 'true'

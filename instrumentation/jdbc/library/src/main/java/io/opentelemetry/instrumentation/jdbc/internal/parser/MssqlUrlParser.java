@@ -131,11 +131,12 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     // SQL Server-specific: Extract backslash-separated instance name (host\instance)
     int instanceLoc = serverName.indexOf("\\");
     if (instanceLoc > 0) {
-      if (hostPort.ipv6Address() != null) {
+      String ipv6Address = hostPort.ipv6Address();
+      if (ipv6Address != null) {
         int closingBracket = serverName.lastIndexOf(']');
         int instanceEnd = closingBracket > instanceLoc ? closingBracket : serverName.length();
         instanceName = serverName.substring(instanceLoc + 1, instanceEnd);
-        serverName = "[" + hostPort.ipv6Address() + "]";
+        serverName = ipv6Address;
       } else {
         instanceName = serverName.substring(instanceLoc + 1);
         serverName = serverName.substring(0, instanceLoc);

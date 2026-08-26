@@ -21,6 +21,12 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_DC;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_ID;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_PAGE_SIZE;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_QUERY_IDEMPOTENT;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -57,7 +63,9 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
 
   @Container
   private static final CassandraContainer cassandra =
-      new CassandraContainer("cassandra:3.11.2").withExposedPorts(9042);
+      new CassandraContainer("cassandra:3.11.2")
+          .withEnv("MAX_HEAP_SIZE", "128M")
+          .withExposedPorts(9042);
 
   private static String host;
 
@@ -162,7 +170,14 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               equalTo(
                                   DB_QUERY_TEXT,
                                   "select * from test.users where id=1 ALLOW FILTERING"),
-                              equalTo(DB_QUERY_SUMMARY, "select test.users"))));
+                              equalTo(DB_QUERY_SUMMARY, "select test.users"),
+                              equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                              equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                              satisfies(
+                                  CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                              equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                              equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
+                              equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0))));
     } else {
       testing.waitAndAssertTraces(
           trace ->

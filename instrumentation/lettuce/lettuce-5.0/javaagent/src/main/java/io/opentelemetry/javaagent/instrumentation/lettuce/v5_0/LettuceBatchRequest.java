@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 
 import io.lettuce.core.protocol.RedisCommand;
@@ -12,6 +13,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -24,19 +26,32 @@ final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
+  @Nullable private final InetSocketAddress serverAddress;
+  @Nullable private final Integer databaseIndex;
 
   private LettuceBatchRequest(
-      String operationName, @Nullable String queryText, @Nullable Long batchSize) {
+      String operationName,
+      @Nullable String queryText,
+      @Nullable Long batchSize,
+      @Nullable InetSocketAddress serverAddress,
+      @Nullable Integer databaseIndex) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
+    this.serverAddress = serverAddress;
+    this.databaseIndex = databaseIndex;
   }
 
-  static LettuceBatchRequest create(List<RedisCommand<?, ?, ?>> commands) {
+  static LettuceBatchRequest create(
+      List<RedisCommand<?, ?, ?>> commands,
+      @Nullable InetSocketAddress serverAddress,
+      @Nullable Integer databaseIndex) {
     return new LettuceBatchRequest(
         operationName(commands),
         queryText(commands),
-        commands.size() != 1 ? (long) commands.size() : null);
+        commands.size() != 1 ? (long) commands.size() : null,
+        serverAddress,
+        databaseIndex);
   }
 
   String getOperationName() {
@@ -51,6 +66,16 @@ final class LettuceBatchRequest {
   @Nullable
   Long getBatchSize() {
     return batchSize;
+  }
+
+  @Nullable
+  InetSocketAddress getServerAddress() {
+    return serverAddress;
+  }
+
+  @Nullable
+  Integer getDatabaseIndex() {
+    return databaseIndex;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {
@@ -75,7 +100,7 @@ final class LettuceBatchRequest {
     StringBuilder builder = new StringBuilder();
     for (RedisCommand<?, ?, ?> command : commands) {
       String commandQueryText = queryText(command);
-      String separator = builder.length() == 0 ? "" : ";";
+      String separator = builder.length() == 0 ? "" : batchQuerySeparator();
       if (builder.length() + separator.length() + commandQueryText.length() > LIMIT) {
         break;
       }
@@ -91,5 +116,9 @@ final class LettuceBatchRequest {
             ? emptyList()
             : LettuceArgSplitter.splitArgs(command.getArgs().toCommandString());
     return sanitizer.sanitize(commandName, args);
+  }
+
+  private static String batchQuerySeparator() {
+    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 }

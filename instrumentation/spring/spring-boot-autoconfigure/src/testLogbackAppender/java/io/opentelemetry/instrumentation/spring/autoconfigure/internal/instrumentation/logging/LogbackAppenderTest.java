@@ -6,13 +6,16 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.read.ListAppender;
 import ch.qos.logback.core.spi.AppenderAttachable;
+import ch.qos.logback.core.status.Status;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.common.Attributes;
@@ -27,6 +30,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,6 +46,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.StandardEnvironment;
 
 class LogbackAppenderTest {
 
@@ -80,10 +88,16 @@ class LogbackAppenderTest {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:" + configurationFile);
     if (declarativeConfig) {
-      properties.put("otel.file_format", "1.0");
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.included",
+          "key*");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.excluded",
+          "key2");
       properties.put(
           "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
-          "*");
+          "key2");
       properties.put(
           "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
           false);
@@ -92,7 +106,11 @@ class LogbackAppenderTest {
           true);
     } else {
       properties.put(
-          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "key*");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded", "key2");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "key2");
       properties.put(
           "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
       properties.put("otel.instrumentation.logback-appender.experimental.capture-template", true);
@@ -129,12 +147,11 @@ class LogbackAppenderTest {
               assertThat(logRecord.getBodyValue().asString()).contains("test log message: arg");
 
               Attributes attributes = logRecord.getAttributes();
-              // key1 and key2, the code attributes should not be present because they are enabled
+              // key1, the code attributes should not be present because they are enabled
               // in the logback.xml file but are disabled with a property
               assertThat(attributes.asMap())
-                  .hasSize(3)
+                  .hasSize(2)
                   .containsEntry(stringKey("key1"), "val1")
-                  .containsEntry(stringKey("key2"), "val2")
                   .containsEntry(stringKey("log.body.template"), "test log message: {}");
             });
 
@@ -145,6 +162,795 @@ class LogbackAppenderTest {
                     .satisfies(
                         e -> assertThat(e.getMessage()).isEqualTo("test log message: {}"),
                         e -> assertThat(e.getMDCPropertyMap()).containsOnlyKeys("key1", "key2")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedMdcPropertySelectsKeysLiterally(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
+          "*,key1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+          false);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*,key1");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+    }
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("key1", "val1");
+    MDC.put("key2", "val2");
+    try {
+      LoggerFactory.getLogger("test").info("legacy MDC property");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsExactly(entry(stringKey("key1"), "val1")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedMdcPropertyWithSoleWildcardSelectsEveryKey(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
+          "*");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+          false);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+    }
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("key1", "val1");
+    MDC.put("key2", "val2");
+    try {
+      LoggerFactory.getLogger("test").info("legacy MDC property");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsOnly(
+                        entry(stringKey("key1"), "val1"), entry(stringKey("key2"), "val2")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void excludedOnlyMdcPropertySelectsEveryOtherKey(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.excluded",
+          "key2");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+          false);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded", "key2");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+    }
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("key1", "val1");
+    MDC.put("key2", "val2");
+    try {
+      LoggerFactory.getLogger("test").info("excluded MDC property");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsExactly(entry(stringKey("key1"), "val1")));
+  }
+
+  @Test
+  void declarativeYamlSequenceMdcSelector() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    properties.put("otel.file_format", "1.1");
+    // a YAML sequence is flattened by the Spring environment into indexed properties
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.included[0]",
+        "request-*");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.included[1]",
+        "user-?");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.excluded[0]",
+        "*-secret");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+        false);
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("request-id", "123");
+    MDC.put("user-1", "alice");
+    MDC.put("user-name", "ignored");
+    MDC.put("request-secret", "shh");
+    try {
+      LoggerFactory.getLogger("test").info("declarative MDC selector");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsOnly(
+                        entry(stringKey("request-id"), "123"),
+                        entry(stringKey("user-1"), "alice")));
+  }
+
+  @Test
+  void declarativeYamlSequenceDeprecatedMdcProperty() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    properties.put("otel.file_format", "1.1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development[0]",
+        "*");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development[1]",
+        "key1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+        false);
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("key1", "val1");
+    MDC.put("key2", "val2");
+    try {
+      LoggerFactory.getLogger("test").info("declarative deprecated MDC property");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsExactly(entry(stringKey("key1"), "val1")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void keyValuePairSelectorFromPropertiesTakesPrecedenceOverDeprecatedProperty(
+      boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_key_value_pair_attributes/development",
+          true);
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.key_value_pair_attributes/development.included",
+          "key1");
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
+          true);
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included",
+          "key1");
+    }
+
+    assertThat(keyValuePairDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @Test
+  void declarativeYamlSequenceKeyValuePairSelectorTakesPrecedenceOverDeprecatedProperty() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("otel.file_format", "1.1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_key_value_pair_attributes/development",
+        true);
+    // a YAML sequence is flattened by the Spring environment into indexed properties
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.key_value_pair_attributes/development.excluded[0]",
+        "secret");
+
+    assertThat(keyValuePairDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedKeyValuePairPropertyWarns(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_key_value_pair_attributes/development",
+          true);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
+          true);
+    }
+
+    assertThat(keyValuePairDeprecationWarnings(properties)).hasSize(1);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting keeps its meaning
+  void emptyKeyValuePairSelectorPropertyDoesNotReplaceAppenderSettings() {
+    Map<String, Object> properties = new HashMap<>();
+    // an empty property value cannot be distinguished from an unset one, so it leaves the settings
+    // declared in logback.xml alone
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included",
+        "");
+
+    assertThat(
+            keyValuePairDeprecationWarnings(
+                properties, appender -> appender.setCaptureKeyValuePairAttributes(true)))
+        .hasSize(1);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting is replaced
+  void keyValuePairSelectorPropertyTakesPrecedenceOverDeprecatedAppenderSetting() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included",
+        "key1");
+
+    assertThat(
+            keyValuePairDeprecationWarnings(
+                properties, appender -> appender.setCaptureKeyValuePairAttributes(true)))
+        .isEmpty();
+  }
+
+  /**
+   * Applies {@code properties} to a fresh appender and returns the deprecation warnings the
+   * appender reported while resolving its key value pair selector.
+   */
+  private static List<Status> keyValuePairDeprecationWarnings(Map<String, Object> properties) {
+    return keyValuePairDeprecationWarnings(properties, appender -> {});
+  }
+
+  /**
+   * Applies {@code properties} to an appender prepared by {@code declaredInXml}, simulating the
+   * settings of an appender declared in {@code logback.xml}, and returns the deprecation warnings
+   * the appender reported while resolving its key value pair selector.
+   */
+  private static List<Status> keyValuePairDeprecationWarnings(
+      Map<String, Object> properties, Consumer<OpenTelemetryAppender> declaredInXml) {
+    return deprecationWarnings(
+        properties,
+        declaredInXml,
+        LogbackAppenderInstaller::initializeKeyValuePairAttributesFromProperties,
+        "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes");
+  }
+
+  /**
+   * Applies {@code properties} to an appender prepared by {@code declaredInXml}, simulating the
+   * settings of an appender declared in {@code logback.xml}, and returns the deprecation warnings
+   * the appender reported while resolving its MDC selector.
+   */
+  private static List<Status> mdcDeprecationWarnings(
+      Map<String, Object> properties, Consumer<OpenTelemetryAppender> declaredInXml) {
+    return deprecationWarnings(
+        properties,
+        declaredInXml,
+        LogbackAppenderInstaller::initializeMdcAttributesFromProperties,
+        "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes");
+  }
+
+  private static List<Status> deprecationWarnings(
+      Map<String, Object> properties,
+      Consumer<OpenTelemetryAppender> declaredInXml,
+      BiConsumer<ConfigurableEnvironment, OpenTelemetryAppender> initializeFromProperties,
+      String deprecatedProperty) {
+    StandardEnvironment environment = new StandardEnvironment();
+    environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+    OpenTelemetryAppender appender = new OpenTelemetryAppender();
+    appender.setContext(new LoggerContext());
+    appender.setOpenTelemetry(OpenTelemetry.noop());
+    declaredInXml.accept(appender);
+
+    initializeFromProperties.accept(environment, appender);
+    appender.start();
+
+    return appender.getContext().getStatusManager().getCopyOfStatusList().stream()
+        .filter(
+            status ->
+                status.getMessage() != null && status.getMessage().contains(deprecatedProperty))
+        .collect(toList());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void loggerContextSelectorFromPropertiesTakesPrecedenceOverDeprecatedProperty(
+      boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_logger_context_attributes/development",
+          true);
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.logger_context_attributes/development.included",
+          "key1");
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
+          true);
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included",
+          "key1");
+    }
+
+    assertThat(loggerContextDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @Test
+  void declarativeYamlSequenceLoggerContextSelectorTakesPrecedenceOverDeprecatedProperty() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("otel.file_format", "1.1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_logger_context_attributes/development",
+        true);
+    // a YAML sequence is flattened by the Spring environment into indexed properties
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.logger_context_attributes/development.excluded[0]",
+        "secret");
+
+    assertThat(loggerContextDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedLoggerContextPropertyWarns(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_logger_context_attributes/development",
+          true);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
+          true);
+    }
+
+    assertThat(loggerContextDeprecationWarnings(properties)).hasSize(1);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting keeps its meaning
+  void emptyLoggerContextSelectorPropertyDoesNotReplaceAppenderSettings() {
+    Map<String, Object> properties = new HashMap<>();
+    // an empty property value cannot be distinguished from an unset one, so it leaves the settings
+    // declared in logback.xml alone
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included",
+        "");
+
+    assertThat(
+            loggerContextDeprecationWarnings(
+                properties, appender -> appender.setCaptureLoggerContext(true)))
+        .hasSize(1);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting is replaced
+  void loggerContextSelectorPropertyTakesPrecedenceOverDeprecatedAppenderSetting() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included",
+        "key1");
+
+    assertThat(
+            loggerContextDeprecationWarnings(
+                properties, appender -> appender.setCaptureLoggerContext(true)))
+        .isEmpty();
+  }
+
+  /**
+   * Applies {@code properties} to a fresh appender and returns the deprecation warnings the
+   * appender reported while resolving its logger context selector.
+   */
+  private static List<Status> loggerContextDeprecationWarnings(Map<String, Object> properties) {
+    return loggerContextDeprecationWarnings(properties, appender -> {});
+  }
+
+  /**
+   * Applies {@code properties} to an appender prepared by {@code declaredInXml}, simulating the
+   * settings of an appender declared in {@code logback.xml}, and returns the deprecation warnings
+   * the appender reported while resolving its logger context selector.
+   */
+  private static List<Status> loggerContextDeprecationWarnings(
+      Map<String, Object> properties, Consumer<OpenTelemetryAppender> declaredInXml) {
+    StandardEnvironment environment = new StandardEnvironment();
+    environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+    OpenTelemetryAppender appender = new OpenTelemetryAppender();
+    appender.setContext(new LoggerContext());
+    appender.setOpenTelemetry(OpenTelemetry.noop());
+    declaredInXml.accept(appender);
+
+    LogbackAppenderInstaller.initializeLoggerContextAttributesFromProperties(environment, appender);
+    appender.start();
+
+    return appender.getContext().getStatusManager().getCopyOfStatusList().stream()
+        .filter(
+            status ->
+                status.getMessage() != null
+                    && status
+                        .getMessage()
+                        .contains(
+                            "otel.instrumentation.logback-appender.experimental"
+                                + ".capture-logger-context-attributes"))
+        .collect(toList());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void logstashMarkerSelectorFromPropertiesTakesPrecedenceOverDeprecatedProperty(
+      boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_logstash_marker_attributes/development",
+          true);
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.logstash_marker_attributes/development.included",
+          "key1");
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
+          true);
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included",
+          "key1");
+    }
+
+    assertThat(logstashMarkerDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @Test
+  void declarativeYamlSequenceLogstashMarkerSelectorTakesPrecedenceOverDeprecatedProperty() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("otel.file_format", "1.1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_logstash_marker_attributes/development",
+        true);
+    // a YAML sequence is flattened by the Spring environment into indexed properties
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.logstash_marker_attributes/development.excluded[0]",
+        "secret");
+
+    assertThat(logstashMarkerDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedLogstashMarkerPropertyWarns(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_logstash_marker_attributes/development",
+          true);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
+          true);
+    }
+
+    assertThat(logstashMarkerDeprecationWarnings(properties)).hasSize(1);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting keeps its meaning
+  void emptyLogstashMarkerSelectorPropertyDoesNotReplaceAppenderSettings() {
+    Map<String, Object> properties = new HashMap<>();
+    // an empty property value cannot be distinguished from an unset one, so it leaves the settings
+    // declared in logback.xml alone
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included",
+        "");
+
+    assertThat(
+            logstashMarkerDeprecationWarnings(
+                properties, appender -> appender.setCaptureLogstashMarkerAttributes(true)))
+        .hasSize(1);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting is replaced
+  void logstashMarkerSelectorPropertyTakesPrecedenceOverDeprecatedAppenderSetting() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included",
+        "key1");
+
+    assertThat(
+            logstashMarkerDeprecationWarnings(
+                properties, appender -> appender.setCaptureLogstashMarkerAttributes(true)))
+        .isEmpty();
+  }
+
+  /**
+   * Applies {@code properties} to a fresh appender and returns the deprecation warnings the
+   * appender reported while resolving its Logstash marker selector.
+   */
+  private static List<Status> logstashMarkerDeprecationWarnings(Map<String, Object> properties) {
+    return logstashMarkerDeprecationWarnings(properties, appender -> {});
+  }
+
+  /**
+   * Applies {@code properties} to an appender prepared by {@code declaredInXml}, simulating the
+   * settings of an appender declared in {@code logback.xml}, and returns the deprecation warnings
+   * the appender reported while resolving its Logstash marker selector.
+   */
+  private static List<Status> logstashMarkerDeprecationWarnings(
+      Map<String, Object> properties, Consumer<OpenTelemetryAppender> declaredInXml) {
+    StandardEnvironment environment = new StandardEnvironment();
+    environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+    OpenTelemetryAppender appender = new OpenTelemetryAppender();
+    appender.setContext(new LoggerContext());
+    appender.setOpenTelemetry(OpenTelemetry.noop());
+    declaredInXml.accept(appender);
+
+    LogbackAppenderInstaller.initializeLogstashMarkerAttributesFromProperties(
+        environment, appender);
+    appender.start();
+
+    return appender.getContext().getStatusManager().getCopyOfStatusList().stream()
+        .filter(
+            status ->
+                status.getMessage() != null
+                    && status
+                        .getMessage()
+                        .contains(
+                            "otel.instrumentation.logback-appender.experimental"
+                                + ".capture-logstash-marker-attributes"))
+        .collect(toList());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void logstashStructuredArgumentSelectorFromPropertiesTakesPrecedenceOverDeprecatedProperty(
+      boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_logstash_structured_arguments/development",
+          "not-a-boolean");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.logstash_structured_argument_attributes/development.included",
+          "key1");
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
+          "not-a-boolean");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included",
+          "key1");
+    }
+
+    assertThat(logstashStructuredArgumentDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @Test
+  void
+      declarativeYamlSequenceLogstashStructuredArgumentSelectorTakesPrecedenceOverDeprecatedProperty() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("otel.file_format", "1.1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_logstash_structured_arguments/development",
+        "not-a-boolean");
+    // a YAML sequence is flattened by the Spring environment into indexed properties
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.logstash_structured_argument_attributes/development.excluded[0]",
+        "secret");
+
+    assertThat(logstashStructuredArgumentDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedLogstashStructuredArgumentPropertyWarns(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_logstash_structured_arguments/development",
+          true);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
+          true);
+    }
+
+    assertThat(logstashStructuredArgumentDeprecationWarnings(properties)).hasSize(1);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting keeps its meaning
+  void emptyLogstashStructuredArgumentSelectorPropertyDoesNotReplaceAppenderSettings() {
+    Map<String, Object> properties = new HashMap<>();
+    // an empty property value cannot be distinguished from an unset one, so it leaves the settings
+    // declared in logback.xml alone
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental"
+            + ".logstash-structured-argument-attributes.included",
+        "");
+
+    assertThat(
+            logstashStructuredArgumentDeprecationWarnings(
+                properties, appender -> appender.setCaptureLogstashStructuredArguments(true)))
+        .hasSize(1);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting is replaced
+  void logstashStructuredArgumentSelectorPropertyTakesPrecedenceOverDeprecatedAppenderSetting() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental"
+            + ".logstash-structured-argument-attributes.included",
+        "key1");
+
+    assertThat(
+            logstashStructuredArgumentDeprecationWarnings(
+                properties, appender -> appender.setCaptureLogstashStructuredArguments(true)))
+        .isEmpty();
+  }
+
+  /**
+   * Applies {@code properties} to a fresh appender and returns the deprecation warnings the
+   * appender reported while resolving its Logstash structured argument selector.
+   */
+  private static List<Status> logstashStructuredArgumentDeprecationWarnings(
+      Map<String, Object> properties) {
+    return logstashStructuredArgumentDeprecationWarnings(properties, appender -> {});
+  }
+
+  /**
+   * Applies {@code properties} to an appender prepared by {@code declaredInXml}, simulating the
+   * settings of an appender declared in {@code logback.xml}, and returns the deprecation warnings
+   * the appender reported while resolving its Logstash structured argument selector.
+   */
+  private static List<Status> logstashStructuredArgumentDeprecationWarnings(
+      Map<String, Object> properties, Consumer<OpenTelemetryAppender> declaredInXml) {
+    StandardEnvironment environment = new StandardEnvironment();
+    environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+    OpenTelemetryAppender appender = new OpenTelemetryAppender();
+    appender.setContext(new LoggerContext());
+    appender.setOpenTelemetry(OpenTelemetry.noop());
+    declaredInXml.accept(appender);
+
+    LogbackAppenderInstaller.initializeLogstashStructuredArgumentAttributesFromProperties(
+        environment, appender);
+    appender.start();
+
+    return appender.getContext().getStatusManager().getCopyOfStatusList().stream()
+        .filter(
+            status ->
+                status.getMessage() != null
+                    && status
+                        .getMessage()
+                        .contains(
+                            "otel.instrumentation.logback-appender.experimental"
+                                + ".capture-logstash-structured-arguments"))
+        .collect(toList());
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting keeps its meaning
+  void emptyMdcSelectorPropertyDoesNotReplaceAppenderSettings() {
+    Map<String, Object> properties = new HashMap<>();
+    // an empty property value cannot be distinguished from an unset one, so it leaves the settings
+    // declared in logback.xml alone
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "");
+
+    assertThat(
+            mdcDeprecationWarnings(
+                properties, appender -> appender.setCaptureMdcAttributes("key1")))
+        .hasSize(1);
+  }
+
+  @Test
+  void deprecatedMdcPropertyDoesNotWarnWhenReplacementConfigured() {
+    ch.qos.logback.classic.Logger installerLogger =
+        (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LogbackAppenderInstaller.class);
+    ListAppender<ILoggingEvent> warningAppender = new ListAppender<>();
+    warningAppender.start();
+    installerLogger.addAppender(warningAppender);
+    try {
+      Map<String, Object> properties = new HashMap<>();
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "key1");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "key2");
+      StandardEnvironment environment = new StandardEnvironment();
+      environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+
+      LogbackAppenderInstaller.initializeMdcAttributesFromProperties(
+          environment, new OpenTelemetryAppender());
+
+      assertThat(warningAppender.list)
+          .filteredOn(
+              event ->
+                  event
+                      .getFormattedMessage()
+                      .contains(
+                          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"))
+          .isEmpty();
+    } finally {
+      installerLogger.detachAppender(warningAppender);
+      warningAppender.stop();
+    }
   }
 
   @Test
@@ -174,7 +980,7 @@ class LogbackAppenderTest {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test.xml");
     if (declarativeConfig) {
-      properties.put("otel.file_format", "1.0");
+      properties.put("otel.file_format", "1.1");
       properties.put(
           "otel.distribution.spring_starter.instrumentation.disabled[0]", "logback_appender");
       properties.put("otel.instrumentation/development.java.logback_mdc.add_baggage", "true");

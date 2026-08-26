@@ -65,7 +65,6 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
 
     // 1 set trace
     testing().waitForTraces(1);
-    testing().clearData();
   }
 
   @Test

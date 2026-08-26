@@ -74,7 +74,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
 
   private final Map<String, BytecodeWithUrl> additionalInjectedClasses;
   private final ClassLoader agentOrExtensionCl;
-  private volatile MethodHandles.Lookup cachedLookup;
+  @Nullable private volatile MethodHandles.Lookup cachedLookup;
 
   @Nullable private final ClassLoader instrumentedCl;
 
@@ -148,9 +148,14 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   synchronized void installModule(InstrumentationModule module, boolean forMuzzleCheck) {
-    if (module.getClass().getClassLoader() != agentOrExtensionCl) {
+    ClassLoader moduleCl = module.getClass().getClassLoader();
+    if (moduleCl != agentOrExtensionCl) {
       throw new IllegalArgumentException(
-          module.getClass().getName() + " is not loaded by " + agentOrExtensionCl);
+          module.getClass().getName()
+              + " is not loaded by "
+              + agentOrExtensionCl
+              + " but is loaded by "
+              + moduleCl);
     }
     if (!installedModules.add(module)) {
       return;
@@ -166,20 +171,20 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       ExperimentalInstrumentationModule experimentalModule =
           (ExperimentalInstrumentationModule) module;
       hiddenAgentPackages.addAll(experimentalModule.agentPackagesToHide());
-      if (!forMuzzleCheck && !experimentalModule.exposedClassNames().isEmpty()) {
-        // Using a weak reference because HelperInjector.addExposedClass places the supplier into
-        // a weak map where instrumentedCl is the key. We must ensure that the value of the map
-        // does not strongly reference the key, otherwise we would leak class loaders.
-        WeakReference<ClassLoader> classLoaderWeakReference = new WeakReference<>(this);
-        for (String className : experimentalModule.exposedClassNames()) {
-          HelperInjector.addExposedClass(
-              instrumentedCl,
-              className,
-              () -> {
-                ClassLoader cl = classLoaderWeakReference.get();
-                return cl != null ? tryLoad(cl, className) : null;
-              });
-        }
+    }
+    if (!forMuzzleCheck && instrumentedCl != null && !module.exposedClassNames().isEmpty()) {
+      // Using a weak reference because HelperInjector.addExposedClass places the supplier into
+      // a weak map where instrumentedCl is the key. We must ensure that the value of the map
+      // does not strongly reference the key, otherwise we would leak class loaders.
+      WeakReference<ClassLoader> classLoaderWeakReference = new WeakReference<>(this);
+      for (String className : module.exposedClassNames()) {
+        HelperInjector.addExposedClass(
+            instrumentedCl,
+            className,
+            () -> {
+              ClassLoader cl = classLoaderWeakReference.get();
+              return cl != null ? tryLoad(cl, className) : null;
+            });
       }
     }
   }
@@ -198,9 +203,8 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     // TODO (Jonas): Make muzzle include advice classes as helper classes
     // so that we don't have to include them here
     toInject.addAll(getModuleAdviceNames(module));
-    if (module instanceof ExperimentalInstrumentationModule) {
-      toInject.removeAll(((ExperimentalInstrumentationModule) module).injectedClassNames());
-    }
+    toInject.removeAll(module.injectedClassNames());
+
     return toInject;
   }
 
@@ -284,6 +288,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     return true;
   }
 
+  @Nullable
   private static Class<?> tryLoad(@Nullable ClassLoader cl, String name) {
     try {
       return Class.forName(name, false, cl);

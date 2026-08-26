@@ -93,9 +93,12 @@ public final class ParseContext {
     return host;
   }
 
-  /** Set the host value. */
+  /**
+   * Set the host value. Enclosing brackets are removed from literal IPv6 addresses so that {@code
+   * server.address} always holds the address alone, regardless of which parser produced it.
+   */
   public void host(@Nullable String host) {
-    this.host = host;
+    this.host = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
   }
 
   /** The port value accumulated so far. */
@@ -192,7 +195,7 @@ public final class ParseContext {
       return;
     }
     if (params.containsKey("servername")) {
-      this.host = params.get("servername");
+      host(params.get("servername"));
     }
     Integer port = UrlParsingUtils.parsePort(params.get("portnumber"));
     if (port != null) {
@@ -220,7 +223,7 @@ public final class ParseContext {
 
     String serverName = props.getProperty("serverName");
     if (serverName != null && !serverName.isEmpty()) {
-      this.host = serverName;
+      host(serverName);
     }
 
     Integer parsedPort = UrlParsingUtils.parsePort(props.getProperty("portNumber"));
@@ -300,7 +303,7 @@ public final class ParseContext {
       this.port = hostPort.port();
     }
     if (!hostPort.host().isEmpty()) {
-      this.host = hostPort.host();
+      host(hostPort.host());
     }
   }
 

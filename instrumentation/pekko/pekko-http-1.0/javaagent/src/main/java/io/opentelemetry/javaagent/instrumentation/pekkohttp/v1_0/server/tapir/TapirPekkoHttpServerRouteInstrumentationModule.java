@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class TapirPekkoHttpServerRouteInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class TapirPekkoHttpServerRouteInstrumentationModule extends InstrumentationModule {
   public TapirPekkoHttpServerRouteInstrumentationModule() {
     super(
         "pekko-http",
@@ -24,11 +22,6 @@ public class TapirPekkoHttpServerRouteInstrumentationModule extends Instrumentat
         "pekko-http-server-route",
         "tapir-pekko-http-server",
         "tapir-pekko-http-server-route");
-  }
-
-  @Override
-  public String getModuleGroup() {
-    return "pekko-server";
   }
 
   @Override

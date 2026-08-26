@@ -1,6 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.CheckMavenPublicationCoordinatesTask
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
 import java.time.Duration
 import java.util.Base64
 
@@ -26,7 +29,7 @@ plugins {
 
 buildscript {
   dependencies {
-    classpath("com.squareup.okhttp3:okhttp:5.4.0")
+    classpath("com.squareup.okhttp3:okhttp:5.5.0")
     classpath("org.apache.commons:commons-lang3:3.20.0")
   }
 }
@@ -64,6 +67,22 @@ if (project.findProperty("skipTests") as String? == "true") {
     tasks.withType<Test>().configureEach {
       enabled = false
     }
+  }
+}
+
+val mavenPublicationCoordinates = objects.listProperty<String>()
+
+subprojects {
+  val projectPath = path
+  pluginManager.withPlugin("maven-publish") {
+    extensions.getByType<PublishingExtension>().publications
+      .withType<MavenPublication>()
+      .configureEach {
+        val publication = this
+        mavenPublicationCoordinates.add(provider {
+          "${publication.groupId}:${publication.artifactId}:${publication.version}=$projectPath:${publication.name}"
+        })
+      }
   }
 }
 
@@ -128,6 +147,21 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
 
 tasks {
   val stableVersion = version.toString().replace("-alpha", "")
+
+  val checkMavenPublicationCoordinates = register<CheckMavenPublicationCoordinatesTask>("checkMavenPublicationCoordinates") {
+    group = "Verification"
+    description = "Checks that Maven publications have unique coordinates"
+    publicationCoordinates.set(mavenPublicationCoordinates)
+  }
+
+  subprojects {
+    tasks.matching { it.name == "check" }.configureEach {
+      dependsOn(checkMavenPublicationCoordinates)
+    }
+    tasks.withType<PublishToMavenRepository>().configureEach {
+      dependsOn(checkMavenPublicationCoordinates)
+    }
+  }
 
   register<DefaultTask>("generateFossaConfiguration") {
     group = "Help"

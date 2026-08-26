@@ -217,6 +217,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
    * @param key The key of the entry.
    * @return The removed entry or {@code null} if it does not exist.
    */
+  @Nullable
   public V remove(K key) {
     if (key == null) {
       throw new NullPointerException();

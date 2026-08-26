@@ -80,4 +80,16 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   public String getDbOperationName(GeodeRequest request) {
     return request.getOperationName();
   }
+
+  @Override
+  @Nullable
+  public String getServerAddress(GeodeRequest request) {
+    return request.serverAddress().address();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(GeodeRequest request) {
+    return request.serverAddress().port();
+  }
 }

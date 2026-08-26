@@ -223,13 +223,88 @@ If an instrumentation module has configuration options, they should be documente
 Each configuration should include:
 
 - `name`: The full configuration property name, for example `otel.instrumentation.common.db.query-sanitization.enabled`.
+  Optional only for declarative-only configs that have no flat property (see Structured Lists below);
+  such entries must instead provide a `declarative_name`.
+- `declarative_name` (optional): The declarative configuration YAML key path, for example
+  `java.common.db.query_sanitization.enabled`.
 - `description`: A brief description of what the configuration does.
-- `type`: The data type of the configuration value. Supported types are: `boolean`, `string`, `list`, and `map`.
+- `type`: The data type of the configuration value. Supported types are: `boolean`, `string`, `list`,
+  and `map`. This describes the **flat** (system property) form.
 - `default`: The default value for the configuration.
 
 If a configuration enables experimental attributes, list them, for example:
 
 > Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
+
+#### Structured Lists
+
+Some configurations are **lists of objects** in declarative configuration even though their flat
+system-property form is a scalar or map. For these, keep `type` describing the flat form and add:
+
+- `declarative_type`: set to `structured_list`.
+- `declarative_schema`: the per-item object schema, mirroring the JSON-schema style used by
+  [opentelemetry-configuration](https://github.com/open-telemetry/opentelemetry-configuration). It
+  consists of `type: object`, a `required` list, and named `properties` (each with `type`, an
+  optional `description`, an optional `default`, and an optional `example`). The `required` keys
+  must be a subset of `properties`.
+
+The generated `docs/declarative-configuration-example.yaml` emits the empty-list default for a
+structured list and documents the entry shape in the comment above it, using each property's
+`example` (falling back to its `default`, then to a `<property-name>` placeholder) for the sample
+entry.
+
+For example, `service_peer_mapping` is a `host=service` map as a flat property but a list of
+`{peer, service_name}` objects in declarative configuration:
+
+```yaml
+configurations:
+  - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
+    description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
+    default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required: [peer, service_name]
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+          example: host
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
+          example: serviceName
+```
+
+A configuration that exists only in declarative configuration (no flat system property) omits `name`
+and is identified solely by its `declarative_name`, for example `url_template_rules`:
+
+```yaml
+configurations:
+  - declarative_name: java.common.http.client.url_template_rules
+    description: Rules for deriving low-cardinality URL templates from HTTP client request URLs.
+    type: list
+    default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required: [pattern, template]
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+          example: '/users/\d+'
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+          example: '/users/{id}'
+        override:
+          type: boolean
+          default: false
+          description: Whether this rule overrides an already-applied template.
+```
 
 ### Classification (optional)
 

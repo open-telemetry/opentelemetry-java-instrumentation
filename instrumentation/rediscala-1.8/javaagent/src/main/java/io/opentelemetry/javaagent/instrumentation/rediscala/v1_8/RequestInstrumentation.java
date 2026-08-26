@@ -24,6 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.ActorRequest;
 import redis.BufferedRequest;
+import redis.RedisClientActorLike;
 import redis.RedisCommand;
 import redis.Request;
 import redis.RoundRobinPoolRequest;
@@ -77,7 +78,11 @@ class RequestInstrumentation implements TypeInstrumentation {
           return null;
         }
 
-        RediscalaRequest request = RediscalaRequest.create(cmd);
+        ServerEndpoint endpoint = null;
+        if (action instanceof RedisClientActorLike) {
+          endpoint = ServerEndpoint.create((RedisClientActorLike) action);
+        }
+        RediscalaRequest request = RediscalaRequest.create(cmd, endpoint);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

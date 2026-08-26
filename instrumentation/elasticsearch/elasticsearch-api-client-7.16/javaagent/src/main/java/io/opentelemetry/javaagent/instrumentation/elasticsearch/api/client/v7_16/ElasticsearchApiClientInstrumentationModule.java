@@ -12,13 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule {
   public ElasticsearchApiClientInstrumentationModule() {
     super("elasticsearch-api-client", "elasticsearch-api-client-7.16", "elasticsearch");
   }
@@ -30,11 +28,6 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
         // artifact presence gate (provides native OTel support)
         // added in co.elastic.clients:elasticsearch-java 8.10
         .and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
-  }
-
-  @Override
-  public String getModuleGroup() {
-    return "elasticsearch";
   }
 
   @Override

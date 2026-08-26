@@ -28,7 +28,10 @@ AUTHOR_FILTER = r"^(?!renovate\[bot\] )"
 SRC_MAIN_JAVA_PATHSPEC = "*/src/main/**/*.java"
 PR_SUFFIX_RE = re.compile(r"\s*\(#(\d+)\)$")
 VERSION_RE = re.compile(r'val stableVersion = "(\d+\.\d+\.\d+)')
-ISSUE_REF_RE = re.compile(r"(?:issues|pull)/(\d+)|(?<![A-Za-z0-9/])#(\d+)\b")
+ISSUE_REF_RE = re.compile(
+    rf"https?://github\.com/{re.escape(REPO)}/(?:issues|pull)/([1-9]\d*)\b"
+    r"|(?<![A-Za-z0-9/])#([1-9]\d*)\b"
+)
 GH_FETCH_WORKERS = 8
 GH_FETCH_RETRIES = 3
 GH_FETCH_RETRY_DELAY = 5.0
@@ -478,7 +481,11 @@ def _is_candidate_fresh(candidate_dir: Path, candidate: Candidate) -> bool:
     existing = _load_existing_meta(meta_path)
     if not isinstance(existing, dict):
         return False
-    return existing.get("commit_hash") == candidate.commit_hash
+    return (
+        existing.get("commit_hash") == candidate.commit_hash
+        and "deprecated_added" in existing
+        and "deprecated_removed" in existing
+    )
 
 
 def prepare_bundle(

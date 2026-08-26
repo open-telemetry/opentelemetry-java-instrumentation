@@ -14,6 +14,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
+import redis.commands.TransactionBuilder;
 
 public class RediscalaSingletons {
 
@@ -21,14 +24,27 @@ public class RediscalaSingletons {
 
   private static final Instrumenter<RediscalaRequest, Void> instrumenter;
 
+  public static final VirtualField<TransactionBuilder, ServerEndpoint> TRANSACTION_ENDPOINT =
+      VirtualField.find(TransactionBuilder.class, ServerEndpoint.class);
+
   static {
     RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();
+    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
+    // span name.
+    RediscalaAttributesGetter spanNameAttributesGetter =
+        new RediscalaAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(RediscalaRequest request) {
+            return null;
+          }
+        };
 
     InstrumenterBuilder<RediscalaRequest, Void> builder =
         Instrumenter.<RediscalaRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);

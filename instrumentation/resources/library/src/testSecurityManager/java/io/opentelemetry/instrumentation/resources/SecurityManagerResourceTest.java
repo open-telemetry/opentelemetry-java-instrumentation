@@ -37,7 +37,7 @@ class SecurityManagerResourceTest {
 
   @Test
   void processResourceEmpty() {
-    Attributes attributes = ProcessResource.buildResource().getAttributes();
+    Attributes attributes = ProcessResource.create().getAttributes();
     assertThat(attributes.asMap()).containsOnlyKeys(PROCESS_PID);
   }
 

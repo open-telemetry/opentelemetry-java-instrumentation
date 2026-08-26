@@ -35,8 +35,6 @@ final class CassandraSqlAttributesGetter
     return DOUBLE_QUOTES_ARE_IDENTIFIERS;
   }
 
-  // getSession() is deprecated only because its visibility will be reduced in the future.
-  @SuppressWarnings("deprecation")
   @Override
   @Nullable
   public String getDbNamespace(CassandraRequest request) {

@@ -28,11 +28,12 @@ No targets are enabled by default. The supported target environments are listed 
 - [activemq](library/activemq.md)
 - [camel](library/camel.md)
 - [jetty](library/jetty.md)
-- [experimental-kafka-broker](javaagent/kafka-broker.md)
+- [experimental-kafka-broker](library/kafka-broker.md)
 - [experimental-kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
 - [hadoop](library/hadoop.md)
+- [experimental-cassandra](library/cassandra.md)
 
 The [jvm](library/jvm.md) metrics definitions are also included in the [jmx-metrics library](./library)
 to allow reusing them without instrumentation. When using instrumentation, the [runtime-telemetry](../runtime-telemetry)
@@ -496,7 +497,7 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 
 - align and reuse [semantic conventions metrics recommendations and definitions](https://opentelemetry.io/docs/specs/semconv/general/metrics/) when possible.
 - namespace metric names and metric attributes with the target system as prefix.
-- metrics measuring time should prefer to use `duration` over `time`, also the metric value should use seconds as unit, using unit conversion if needed.
+- metrics measuring time should prefer to use `duration` over `time`, also the metric value should use seconds as unit (following [semantic conventions recommendations](https://opentelemetry.io/docs/specs/semconv/general/metrics/#instrument-units)), using unit conversion if needed.
 - metric name should not be the prefix of another metric, for example `request.duration` and `request.duration.last` should be avoided.
 - when a metric is exposed in JMX as "current value", only capture the "current value" and ignore any pre-aggregation (for example mean, min, max, ...) as it is better handled by a backend, for example
   - `threadpool.thread.count`
@@ -516,3 +517,6 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 - when metrics represent an upper and lower bounds or a resource, use the `.limit.upper` and `.limit.lower`suffixes, for example:
   - `pool.limit.upper` to represent the upper limit of the pool size (maximum capacity)
   - `pool.limit.lower` to represent the minimum number of threads that should be kept in the pool, even if there is no load.
+- when a metric represents a percentile, use the `.pXX` suffix where `XX` is the percentile value, for example:
+  - `request.duration.p50` for the 50th percentile (median)
+  - `request.duration.p99` for the 99th percentile

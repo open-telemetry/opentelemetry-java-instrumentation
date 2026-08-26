@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -20,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -87,6 +89,7 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -96,6 +99,7 @@ class JedisClientTest {
         "io.opentelemetry.jedis-2.0",
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
+        DB_NAMESPACE,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -117,6 +121,7 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))),
@@ -129,6 +134,7 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -151,6 +157,7 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))),
@@ -166,6 +173,34 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
+  }
+
+  @Test
+  void nonDefaultDatabaseIndex() {
+    jedis.select(1);
+    // jedis 2.0.0 through 2.6.x record the new database index before sending SELECT, while jedis
+    // 2.7.0 onwards record it after reading the reply, so the index on the SELECT span itself is
+    // not stable across the supported version range
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    jedis.set("foo", "bar");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -196,6 +231,7 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
@@ -232,6 +268,7 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
@@ -255,30 +292,36 @@ class JedisClientTest {
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
         // no span is created for empty pipelines
-        Arguments.argumentSet("empty", BatchScenario.<Pipeline>builder().build()),
-        Arguments.argumentSet(
+        argumentSet("empty", BatchScenario.<Pipeline>builder().build()),
+        argumentSet(
             "single",
             BatchScenario.<Pipeline>builder()
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
                 .operationName("SET")
                 .queryText("SET batch1 ?")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.<Pipeline>builder()
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
                 .addCommand(pipeline -> pipeline.set("batch2", "v2"))
                 .operationName("PIPELINE SET")
-                .queryText("SET batch1 ?;SET batch2 ?")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; SET batch2 ?"
+                        : "SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.<Pipeline>builder()
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
                 .addCommand(pipeline -> pipeline.get("batch1"))
                 .operationName("PIPELINE")
-                .queryText("SET batch1 ?;GET batch1")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; GET batch1"
+                        : "SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()));
   }
@@ -286,30 +329,31 @@ class JedisClientTest {
   private static Stream<Arguments> transactionScenarios() {
     return Stream.of(
         // no span is created for empty transactions
-        Arguments.argumentSet("empty", BatchScenario.<Transaction>builder().build()),
-        Arguments.argumentSet(
+        argumentSet("empty", BatchScenario.<Transaction>builder().build()),
+        argumentSet(
             "single",
             BatchScenario.<Transaction>builder()
                 .addCommand(transaction -> transaction.set("tx1", "v1"))
                 .operationName("SET")
                 .queryText("SET tx1 ?")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.<Transaction>builder()
                 .addCommand(transaction -> transaction.set("tx1", "v1"))
                 .addCommand(transaction -> transaction.set("tx2", "v2"))
                 .operationName("MULTI SET")
-                .queryText("SET tx1 ?;SET tx2 ?")
+                .queryText(
+                    emitStableDatabaseSemconv() ? "SET tx1 ?; SET tx2 ?" : "SET tx1 ?;SET tx2 ?")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.<Transaction>builder()
                 .addCommand(transaction -> transaction.set("tx1", "v1"))
                 .addCommand(transaction -> transaction.get("tx1"))
                 .operationName("MULTI")
-                .queryText("SET tx1 ?;GET tx1")
+                .queryText(emitStableDatabaseSemconv() ? "SET tx1 ?; GET tx1" : "SET tx1 ?;GET tx1")
                 .batchSize(2)
                 .build()));
   }

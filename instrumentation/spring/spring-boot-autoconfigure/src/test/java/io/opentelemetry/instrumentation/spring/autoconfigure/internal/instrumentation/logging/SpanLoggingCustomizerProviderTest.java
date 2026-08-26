@@ -46,13 +46,13 @@ class SpanLoggingCustomizerProviderTest {
 
     String yaml =
         alreadyAdded
-            ? "file_format: \"1.0\"\n"
+            ? "file_format: \"1.1\"\n"
                 + "tracer_provider:\n"
                 + "  processors:\n"
                 + "    - simple:\n"
                 + "        exporter:\n"
                 + "          console: {}\n"
-            : "file_format: \"1.0\"\n" + debug;
+            : "file_format: \"1.1\"\n" + debug;
 
     OpenTelemetryConfigurationModel model =
         applyCustomizer(

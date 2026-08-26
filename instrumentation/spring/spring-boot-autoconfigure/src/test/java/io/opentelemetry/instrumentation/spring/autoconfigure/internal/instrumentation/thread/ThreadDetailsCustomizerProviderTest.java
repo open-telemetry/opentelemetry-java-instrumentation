@@ -37,7 +37,7 @@ class ThreadDetailsCustomizerProviderTest {
                 + propertyValue
                 + "\n";
 
-    String yaml = "file_format: \"1.0\"\n" + enabled;
+    String yaml = "file_format: \"1.1\"\n" + enabled;
 
     OpenTelemetryConfigurationModel model =
         DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -14,14 +13,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilde
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class DubboInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class DubboInstrumentationModule extends InstrumentationModule {
   public DubboInstrumentationModule() {
     super("apache-dubbo", "apache-dubbo-2.7");
   }
@@ -46,7 +43,11 @@ public class DubboInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ResourceInjectingTypeInstrumentation());
+    return asList(
+        new ResourceInjectingTypeInstrumentation(),
+        new DubboProtocolInstrumentation(),
+        new DecodeableRpcInvocationInstrumentation(),
+        new GrpcRequestHandlerMappingInstrumentation());
   }
 
   // A type instrumentation is needed to trigger resource injection.

@@ -1,4 +1,4 @@
-file_format: "1.0"
+file_format: "1.1"
 
 instrumentation/development:
   java:
@@ -7,7 +7,6 @@ instrumentation/development:
 
 distribution:
   javaagent:
-    indy/development: true
     force_synchronous_agent_listeners/development: false
     thread_details_enabled: true
     exclude_classes:

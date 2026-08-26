@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -16,12 +17,12 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.core.impl.future.PromiseInternal;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.PreparedStatement;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import java.util.Collection;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -48,8 +49,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
-      // copy connection options from ThreadLocal to VirtualField
-      QueryExecutorUtil.setConnectOptions(queryExecutor, getSqlConnectOptions());
+      // copy client data from ThreadLocal to VirtualField
+      VertxSqlClientUtil.setQueryExecutorData(
+          queryExecutor, new VertxSqlClientData(getSqlConnectOptions(), getDbSystem()));
     }
   }
 
@@ -85,7 +87,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         // PreparedStatement, use the first argument that is either of these. PromiseInternal is
         // always at the end of the argument list.
         String sql = null;
-        boolean preparedStatement = false;
+        boolean parameterizedQuery = !methodName.equals("executeSimpleQuery");
         PromiseInternal<?> promiseInternal = null;
         Long batchSize = null;
         for (Object argument : arguments) {
@@ -94,35 +96,42 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
               sql = (String) argument;
             } else if (argument instanceof PreparedStatement) {
               sql = ((PreparedStatement) argument).sql();
-              preparedStatement = true;
             }
           } else if (argument instanceof PromiseInternal) {
             promiseInternal = (PromiseInternal<?>) argument;
           }
           if (methodName.equals("executeBatchQuery") && argument instanceof Collection) {
             int size = ((Collection<?>) argument).size();
-            batchSize = size > 1 ? (long) size : null;
+            batchSize = size == 1 ? null : (long) size;
           }
         }
         if (sql == null || promiseInternal == null) {
           return new AdviceScope(callDepth);
         }
 
-        SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
+        VertxSqlClientData data = VertxSqlClientUtil.getQueryExecutorData(queryExecutor);
+        if (data == null) {
+          return new AdviceScope(callDepth);
+        }
+        SqlConnectOptions connectOptions = data.getConnectOptions();
         // connectOptions is null when the pool was created via JDBCPool which bypasses the
         // Pool.pool() factory, in that case we skip vertx-sql-client span creation and let JDBC
         // instrumentation handle it
         if (connectOptions == null) {
           return new AdviceScope(callDepth);
         }
-        // Try db system stored from pool class first (handles generic SqlConnectOptions),
-        // fall back to class name detection on the connect options itself
-        String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
+        // Prefer the db system captured when the prepared statement was created, then the value
+        // stored from the pool class (handles generic SqlConnectOptions), and finally fall back to
+        // class name detection on the connect options itself
+        String dbSystem = data.getDbSystem();
+        if (dbSystem == null) {
+          dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
+        }
         if (dbSystem == null) {
           dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
         }
         VertxSqlClientRequest otelRequest =
-            new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem, batchSize);
+            new VertxSqlClientRequest(sql, connectOptions, parameterizedQuery, dbSystem, batchSize);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return new AdviceScope(callDepth);

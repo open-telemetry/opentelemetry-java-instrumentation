@@ -96,31 +96,34 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   Collection<String> getRawQueryTexts(REQUEST request);
 
   /**
-   * Returns whether the query is parameterized. Prepared statements are always considered
-   * parameterized even if no parameters are bound. By using a parameterized query the user is
-   * giving a strong signal that any sensitive data will be passed as parameter values, and so the
-   * query does not need to be sanitized. See <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sanitization-of-dbquerytext">sanitization
-   * of db.query.text</a>.
+   * Returns the raw SQL query texts used to derive old semantic convention attributes and span
+   * names.
    *
-   * @deprecated use {@link #isParameterizedQuery(Object, int)} instead
+   * <p>By default, this returns {@link #getRawQueryTexts(Object)}. Instrumentations may override
+   * this method when preserving old semantic convention telemetry requires a different query
+   * representation.
+   *
+   * @deprecated This method supports old database semantic conventions and will be removed in 3.0.
    */
-  @Deprecated
-  default boolean isParameterizedQuery(REQUEST request) {
-    return false;
+  @Deprecated // to be removed in 3.0
+  default Collection<String> getRawQueryTextsForOldSemconv(REQUEST request) {
+    return getRawQueryTexts(request);
   }
 
   /**
    * Returns whether the query at {@code queryIndex} in {@link #getRawQueryTexts(Object)} is
-   * parameterized.
+   * parameterized. Prepared statements are always considered parameterized even if no parameters
+   * are bound. By using a parameterized query the user is giving a strong signal that any sensitive
+   * data will be passed as parameter values, and so the query does not need to be sanitized. See <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sanitization-of-dbquerytext">sanitization
+   * of db.query.text</a>.
    *
    * <p>The {@code queryIndex} is zero-based and follows the iteration order of {@link
    * #getRawQueryTexts(Object)}. This supports batch operations where individual entries may have
    * different parameterization.
    */
   // TODO: make this required to implement
-  @SuppressWarnings("deprecation")
   default boolean isParameterizedQuery(REQUEST request, int queryIndex) {
-    return isParameterizedQuery(request);
+    return false;
   }
 }

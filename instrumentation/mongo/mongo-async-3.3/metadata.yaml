@@ -14,8 +14,4 @@ configurations:
       otel.instrumentation.common.db.query-sanitization.enabled.
     type: boolean
     default: true
-  - name: otel.instrumentation.common.db.query-sanitization.enabled
-    declarative_name: java.common.db.query_sanitization.enabled
-    description: Enables query sanitization for database queries.
-    type: boolean
-    default: true
+  - ref: common.db.query-sanitization.enabled

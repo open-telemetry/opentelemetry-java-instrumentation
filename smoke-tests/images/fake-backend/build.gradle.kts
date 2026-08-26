@@ -12,7 +12,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-grpc:1.40.0")
+  implementation("com.linecorp.armeria:armeria-grpc:1.41.0")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   runtimeOnly("org.slf4j:slf4j-simple")
 }
@@ -59,6 +59,11 @@ tasks {
   }
 
   shadowJar {
+    // avoid warning about duplicate kotlin module files being silently dropped
+    filesMatching("META-INF/*.kotlin_module") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+
     manifest {
       attributes("Main-Class" to "io.opentelemetry.smoketest.fakebackend.FakeBackendMain")
     }

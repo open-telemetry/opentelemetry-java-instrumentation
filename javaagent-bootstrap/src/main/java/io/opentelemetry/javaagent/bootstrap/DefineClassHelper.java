@@ -7,17 +7,19 @@ package io.opentelemetry.javaagent.bootstrap;
 
 import io.opentelemetry.instrumentation.api.internal.Initializer;
 import java.nio.ByteBuffer;
+import javax.annotation.Nullable;
 
 public class DefineClassHelper {
 
   /** Helper class for {@code ClassLoader.defineClass} callbacks. */
   public interface Handler {
+    @Nullable
     DefineClassContext beforeDefineClass(
         ClassLoader classLoader, String className, byte[] classBytes, int offset, int length);
 
     DefineClassContext beforeDefineLambdaClass(Class<?> lambdaInterface);
 
-    void afterDefineClass(DefineClassContext context);
+    void afterDefineClass(@Nullable DefineClassContext context);
 
     /** Context returned from {@code beforeDefineClass} and passed to {@code afterDefineClass}. */
     interface DefineClassContext {
@@ -27,11 +29,13 @@ public class DefineClassHelper {
 
   private static volatile Handler handler;
 
+  @Nullable
   public static Handler.DefineClassContext beforeDefineClass(
       ClassLoader classLoader, String className, byte[] classBytes, int offset, int length) {
     return handler.beforeDefineClass(classLoader, className, classBytes, offset, length);
   }
 
+  @Nullable
   public static Handler.DefineClassContext beforeDefineClass(
       ClassLoader classLoader, String className, ByteBuffer byteBuffer) {
     // see how ClassLoader handles ByteBuffer
@@ -55,7 +59,7 @@ public class DefineClassHelper {
     return handler.beforeDefineLambdaClass(lambdaInterface);
   }
 
-  public static void afterDefineClass(Handler.DefineClassContext context) {
+  public static void afterDefineClass(@Nullable Handler.DefineClassContext context) {
     handler.afterDefineClass(context);
   }
 

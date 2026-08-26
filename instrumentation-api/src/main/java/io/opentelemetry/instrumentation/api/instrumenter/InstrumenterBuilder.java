@@ -24,7 +24,6 @@ import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
@@ -34,11 +33,14 @@ import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomi
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -53,6 +55,7 @@ import javax.annotation.Nullable;
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
+  private static final AtomicBoolean spanSuppressionPropertyWarningLogged = new AtomicBoolean();
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
@@ -74,6 +77,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   @Nullable InternalExceptionEventExtractor<? super REQUEST> exceptionEventExtractor;
+  @Nullable private SpanSuppressionStrategy spanSuppressionStrategy;
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
 
@@ -87,6 +91,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         (builder, exceptionEventExtractor) ->
             builder.exceptionEventExtractor =
                 requireNonNull(exceptionEventExtractor, "exceptionEventExtractor"));
+    Experimental.internalSetSpanSuppressionStrategy(
+        (builder, strategy) ->
+            builder.spanSuppressionStrategy =
+                SpanSuppressionStrategy.fromProgrammatic(
+                    requireNonNull(strategy, "spanSuppressionStrategy")));
   }
 
   InstrumenterBuilder(
@@ -393,12 +402,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   SpanSuppressor buildSpanSuppressor() {
     return new SpanSuppressors.ByContextKey(
-        SpanSuppressionStrategy.fromConfig(getSpanSuppressionStrategy())
-            .create(getSpanKeysFromAttributesExtractors()));
+        getSpanSuppressionStrategy().create(getSpanKeysFromAttributesExtractors()));
   }
 
-  @Nullable
-  private String getSpanSuppressionStrategy() {
+  private SpanSuppressionStrategy getSpanSuppressionStrategy() {
+    if (spanSuppressionStrategy != null) {
+      return spanSuppressionStrategy;
+    }
     // we cannot use DeclarativeConfigUtil here because it's not available in instrumentation-api
     DeclarativeConfigProperties commonConfig = empty();
     if (openTelemetry instanceof ExtendedOpenTelemetry) {
@@ -408,13 +418,21 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               .getInstrumentationConfig("common");
     }
 
-    @SuppressWarnings("deprecation") // using deprecated config property
-    String result =
-        commonConfig.getString(
-            "span_suppression_strategy/development",
-            ConfigPropertiesUtil.getString(
-                "otel.instrumentation.experimental.span-suppression-strategy", ""));
-    return result.isEmpty() ? null : result;
+    String result = commonConfig.getString("span_suppression_strategy/development");
+    if (result == null && !SemconvStability.v3Preview(openTelemetry)) {
+      String deprecatedResult =
+          SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
+      if (deprecatedResult != null) {
+        if (spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
+          logger.warning(
+              "The otel.instrumentation.experimental.span-suppression-strategy setting is"
+                  + " deprecated and will be removed in 3.0. Use the programmatic API or equivalent"
+                  + " declarative instrumentation configuration instead.");
+        }
+        result = deprecatedResult;
+      }
+    }
+    return SpanSuppressionStrategy.fromConfig(result);
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {

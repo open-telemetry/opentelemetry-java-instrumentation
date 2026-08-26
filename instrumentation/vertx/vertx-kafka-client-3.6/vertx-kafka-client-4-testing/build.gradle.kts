@@ -49,15 +49,44 @@ tasks {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}Experimental") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
+
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+        isEnabled = sourceTask.enabled
+      }
+    }
+
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+  }
+
+  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
+    testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
+    classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
 
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, experimentalSuites, testMessagingPreview, testBothSemconv, testMessagingPreviewNoReceiveTelemetry)
   }
 }

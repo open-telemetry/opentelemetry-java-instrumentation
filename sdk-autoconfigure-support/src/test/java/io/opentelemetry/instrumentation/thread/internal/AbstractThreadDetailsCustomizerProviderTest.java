@@ -31,7 +31,7 @@ class AbstractThreadDetailsCustomizerProviderTest {
     OpenTelemetryConfigurationModel model =
         applyCustomizer(
             DeclarativeConfiguration.parse(
-                new ByteArrayInputStream("file_format: \"1.0\"\n".getBytes(UTF_8))),
+                new ByteArrayInputStream("file_format: \"1.1\"\n".getBytes(UTF_8))),
             new TestCustomizerProvider(enabled));
 
     assertThat(threadDetailsProcessorPresent(model)).isEqualTo(enabled);
