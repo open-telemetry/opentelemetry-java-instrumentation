@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 class SpymemcachedAttributesGetter
@@ -40,6 +41,13 @@ class SpymemcachedAttributesGetter
   @SuppressWarnings("deprecation") // old database semconv still use db.operation
   public String getDbOperation(SpymemcachedRequest spymemcachedRequest) {
     return spymemcachedRequest.getOperationName();
+  }
+
+  @Override
+  @Nullable
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      SpymemcachedRequest spymemcachedRequest, @Nullable Object response) {
+    return spymemcachedRequest.getHandlingNodeAddress();
   }
 
   @Override
