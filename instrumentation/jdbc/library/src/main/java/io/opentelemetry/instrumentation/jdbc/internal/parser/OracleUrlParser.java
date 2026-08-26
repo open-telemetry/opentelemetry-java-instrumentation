@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,6 +42,12 @@ public final class OracleUrlParser implements JdbcUrlParser {
   // LIMITATION: Simple regex matching across entire DESCRIPTION may extract values from
   // non-primary ADDRESS blocks when the first block has incomplete specifications.
   private static final Pattern DESCRIPTION_PATTERN = Pattern.compile("@\\s*\\(\\s*description");
+  private static final Pattern DESCRIPTION_LIST_PATTERN =
+      Pattern.compile("\\(\\s*description_list\\s*=");
+  private static final Pattern ADDRESS_LIST_PATTERN = Pattern.compile("\\(\\s*address_list\\s*=");
+  private static final Pattern ADDRESS_PATTERN = Pattern.compile("\\(\\s*address\\s*=");
+  private static final Pattern PROTOCOL_PATTERN =
+      Pattern.compile("\\(\\s*protocol\\s*=\\s*([^ )]+)\\s*\\)");
   private static final Pattern HOST_PATTERN =
       Pattern.compile("\\(\\s*host\\s*=\\s*([^ )]+)\\s*\\)");
   private static final Pattern PORT_PATTERN =
@@ -65,14 +73,13 @@ public final class OracleUrlParser implements JdbcUrlParser {
     int typeEndIndex = jdbcUrl.indexOf(":", subtypeStart);
     String subtype = jdbcUrl.substring(subtypeStart, typeEndIndex);
     String remainder = jdbcUrl.substring(typeEndIndex + 1);
+    ctx.subtype(subtype);
 
     if (remainder.contains("@")) {
       parseAtFormat(remainder, ctx);
     } else {
       parseConnectInfo(remainder, ctx);
     }
-
-    ctx.subtype(subtype);
   }
 
   private static void parseAtFormat(String jdbcUrl, ParseContext ctx) {
@@ -132,6 +139,77 @@ public final class OracleUrlParser implements JdbcUrlParser {
     Matcher instanceMatcher = SERVICE_NAME_PATTERN.matcher(atSplit[1]);
     if (instanceMatcher.find()) {
       ctx.databaseName(instanceMatcher.group(1));
+    }
+
+    applyAddressListGroup(atSplit[1], ctx);
+  }
+
+  private static void applyAddressListGroup(String description, ParseContext ctx) {
+    // A DESCRIPTION_LIST contains independent targets, not one failover/load-balancing group.
+    if (DESCRIPTION_LIST_PATTERN.matcher(description).find()) {
+      return;
+    }
+
+    List<String> addresses = new ArrayList<>();
+    Matcher addressMatcher = ADDRESS_PATTERN.matcher(description);
+    int searchFrom = 0;
+    while (addressMatcher.find(searchFrom)) {
+      int end = findClosingParen(description, addressMatcher.start());
+      if (end < 0) {
+        return;
+      }
+      addresses.add(renderAddress(description.substring(addressMatcher.start(), end + 1)));
+      searchFrom = end + 1;
+    }
+    if (addresses.size() < 2) {
+      return;
+    }
+
+    StringBuilder group = new StringBuilder("@(description=");
+    boolean addressList = ADDRESS_LIST_PATTERN.matcher(description).find();
+    if (addressList) {
+      group.append("(address_list=");
+    }
+    for (String address : addresses) {
+      group.append(address);
+    }
+    if (addressList) {
+      group.append(')');
+    }
+    group.append(')');
+    ctx.opaqueServerAddressGroup(group.toString());
+  }
+
+  private static int findClosingParen(String text, int openParen) {
+    int depth = 0;
+    for (int i = openParen; i < text.length(); i++) {
+      char c = text.charAt(i);
+      if (c == '(') {
+        depth++;
+      } else if (c == ')') {
+        depth--;
+        if (depth == 0) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+  private static String renderAddress(String address) {
+    StringBuilder rendered = new StringBuilder("(address=");
+    appendAttribute(rendered, "protocol", PROTOCOL_PATTERN, address);
+    appendAttribute(rendered, "host", HOST_PATTERN, address);
+    appendAttribute(rendered, "port", PORT_PATTERN, address);
+    rendered.append(')');
+    return rendered.toString();
+  }
+
+  private static void appendAttribute(
+      StringBuilder rendered, String name, Pattern pattern, String address) {
+    Matcher matcher = pattern.matcher(address);
+    if (matcher.find()) {
+      rendered.append('(').append(name).append('=').append(matcher.group(1)).append(')');
     }
   }
 

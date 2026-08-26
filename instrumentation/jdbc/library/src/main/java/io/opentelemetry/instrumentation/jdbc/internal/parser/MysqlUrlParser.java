@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -99,6 +102,21 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     return -1;
   }
 
+  private static boolean applyHostGroup(String jdbcUrl, ParseContext ctx) {
+    String authority = extractAuthority("mariadb://" + jdbcUrl);
+    if (authority == null) {
+      authority = extractAuthorityWithQueryAt(jdbcUrl);
+      if (authority == null) {
+        return false;
+      }
+    }
+    String hostList = sanitizeHostList(authority);
+    if (hostList != null) {
+      ctx.serverAddressGroup(hostList);
+    }
+    return true;
+  }
+
   private static void parseNonStandardUrl(String jdbcUrl, ParseContext ctx) {
     int typeEndLoc = jdbcUrl.indexOf(':');
     int sectionEnd = indexOf(jdbcUrl, typeEndLoc + 1, ':', '/', '?');
@@ -145,6 +163,12 @@ public final class MysqlUrlParser implements JdbcUrlParser {
   }
 
   private static void parseMariaSubProtocol(String jdbcUrl, ParseContext ctx) {
+    if (!applyHostGroup(jdbcUrl, ctx)) {
+      ctx.host(null);
+      ctx.port(null);
+      return;
+    }
+
     int hostEndLoc;
     int ipv6End = jdbcUrl.startsWith("[") ? jdbcUrl.indexOf("]") : -1;
     int sectionEnd = indexOf(jdbcUrl, Math.max(0, ipv6End), ':', '/', '?', ',');

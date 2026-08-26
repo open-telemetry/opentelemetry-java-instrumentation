@@ -57,6 +57,9 @@ public abstract class DbInfo {
   public abstract Integer getServerPort();
 
   @Nullable
+  public abstract String getServerAddressGroup();
+
+  @Nullable
   public final String getSystem() {
     return getDbSystem() != null ? getDbSystem() : getDbSystemName();
   }
@@ -96,7 +99,8 @@ public abstract class DbInfo {
         .dbName(getDbName())
         .dbNamespace(getDbNamespace())
         .serverAddress(getServerAddress())
-        .serverPort(getServerPort());
+        .serverPort(getServerPort())
+        .serverAddressGroup(getServerAddressGroup());
   }
 
   /**
@@ -128,6 +132,8 @@ public abstract class DbInfo {
     public abstract Builder serverAddress(String serverAddress);
 
     public abstract Builder serverPort(Integer serverPort);
+
+    public abstract Builder serverAddressGroup(String serverAddressGroup);
 
     public final Builder system(String system) {
       return dbSystemName(system).dbSystem(system);
