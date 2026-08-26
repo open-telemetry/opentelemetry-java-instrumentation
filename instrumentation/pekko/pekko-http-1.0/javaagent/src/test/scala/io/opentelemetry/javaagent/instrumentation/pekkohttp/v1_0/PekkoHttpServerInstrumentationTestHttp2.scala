@@ -18,6 +18,7 @@ import io.opentelemetry.sdk.testing.assertj.{
   TraceAssert
 }
 import io.opentelemetry.sdk.trace.data.{SpanData, StatusData}
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION
 import io.opentelemetry.testing.internal.armeria.client.{
   ClientFactory,
@@ -106,14 +107,17 @@ class PekkoHttpServerInstrumentationTestHttp2
     })
   }
 
-  // the client negotiates an upgrade from http/1.1 to h2c instead of using the http/2 preface,
-  // the request that is served over the upgraded connection must produce exactly one server span
+  // the client negotiates an upgrade from http/1.1 to h2c rather than using the http/2 preface.
+  // pekko replays the request that was upgraded with through the http/2 stack, so it arrives with
+  // the attribute that PekkoHttpServerTracer attached to it while it was still an http/1.1
+  // request, and has to be given a span of its own
   @Test def testHttp2Upgrade(): Unit = {
     val factory = ClientFactory.builder().useHttp2Preface(false).build()
     val response =
       try {
+        // an h2c uri would make armeria use the preface, http lets it negotiate
         WebClient
-          .builder(s"h2c://localhost:$port")
+          .builder(s"http://localhost:$port")
           .factory(factory)
           .build()
           .get("/" + ServerEndpoint.SUCCESS.rawPath())
@@ -126,16 +130,48 @@ class PekkoHttpServerInstrumentationTestHttp2
       }
     assertThat(response.status.code).isEqualTo(ServerEndpoint.SUCCESS.getStatus)
 
-    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
-      override def accept(trace: TraceAssert): Unit = {
-        trace.hasSpansSatisfyingExactly(
-          serverSpan("2"),
-          controllerSpan(trace)
-        )
+    testing.waitAndAssertTraces(
+      // the http/1.1 exchange that carried the upgrade, answered with 101 Switching Protocols
+      new Consumer[TraceAssert] {
+        override def accept(trace: TraceAssert): Unit = {
+          trace.hasSpansSatisfyingExactly(upgradeSpan(101))
+          ()
+        }
+      },
+      // the upgraded request, replayed through the http/2 stack, gets a span of its own rather
+      // than reusing the one that was ended with the 101 response
+      new Consumer[TraceAssert] {
+        override def accept(trace: TraceAssert): Unit = {
+          trace.hasSpansSatisfyingExactly(upgradeSpan(404))
+          ()
+        }
+      },
+      // the request that the test sent, over the upgraded connection
+      new Consumer[TraceAssert] {
+        override def accept(trace: TraceAssert): Unit = {
+          trace.hasSpansSatisfyingExactly(
+            serverSpan("2"),
+            controllerSpan(trace)
+          )
+          ()
+        }
+      }
+    )
+  }
+
+  private def upgradeSpan(status: Long): Consumer[SpanDataAssert] =
+    new Consumer[SpanDataAssert] {
+      override def accept(span: SpanDataAssert): Unit = {
+        span
+          .hasKind(SpanKind.SERVER)
+          .hasNoParent()
+          .hasAttribute(
+            HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+            java.lang.Long.valueOf(status)
+          )
         ()
       }
-    })
-  }
+    }
 
   private def serverSpan(protocolVersion: String): Consumer[SpanDataAssert] =
     new Consumer[SpanDataAssert] {

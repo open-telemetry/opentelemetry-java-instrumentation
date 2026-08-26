@@ -65,10 +65,8 @@ public class PekkoHttpServerHandlerWrapper
         }
       }
       // request was upgraded from http/1.1 to http/2 and replayed through the http/2 stack, the
-      // span that PekkoHttpServerTracer started for it belongs to the upgrade request, start a new
-      // span for the replayed request. Only clients that send the request that is to be served as
-      // the upgrade request get here, clients that negotiate the upgrade with a separate request
-      // arrive with no attribute at all.
+      // span that PekkoHttpServerTracer started for it was ended with the "101 Switching
+      // Protocols" response, so the replayed request needs a span of its own
     }
 
     Context parentContext = Context.current();

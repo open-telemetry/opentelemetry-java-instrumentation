@@ -9,8 +9,14 @@ import com.typesafe.config.ConfigFactory
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
+import org.apache.pekko.http.scaladsl.model.HttpMethods.GET
+import org.apache.pekko.http.scaladsl.model.{
+  HttpRequest,
+  HttpResponse,
+  StatusCodes
+}
 
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object PekkoHttpTestHttp2WebServer {
   // `preview.enable-http2` is the setting used by pekko-http 1.0, it was replaced with
@@ -26,6 +32,18 @@ object PekkoHttpTestHttp2WebServer {
   )
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
+  // a client that negotiates an h2c upgrade sends an OPTIONS * request to upgrade with, the
+  // handler that the other tests share only answers GET
+  private val handler: HttpRequest => Future[HttpResponse] = {
+    val getHandler = PekkoHttpTestAsyncHandler.asyncHandler
+    request =>
+      if (request.method == GET) {
+        getHandler(request)
+      } else {
+        Future.successful(HttpResponse(status = StatusCodes.NotFound))
+      }
+  }
+
   private var binding: ServerBinding = _
 
   def start(port: Int): Unit = synchronized {
@@ -34,7 +52,7 @@ object PekkoHttpTestHttp2WebServer {
       binding = Await.result(
         Http()
           .newServerAt("localhost", port)
-          .bind(PekkoHttpTestAsyncHandler.asyncHandler),
+          .bind(handler),
         10.seconds
       )
     }
