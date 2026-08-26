@@ -50,9 +50,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
 
   @Test
   void anSrvHostIsPreferredOverTheSeedsItStandsIn() {
-    // driver 3.10 is the first that keeps an srv host in its cluster settings instead of resolving
-    // it into seeds while parsing the connection string, and is also the first that hands the
-    // client a placeholder seed list naming a host it never talks to
+    // srvHost was added in 3.10
     Method srvHost = srvHostSetter();
     assumeTrue(srvHost != null);
 
@@ -66,9 +64,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
                 })
             .build();
 
-    // this client is deliberately left open: an srv host is watched by a daemon thread that keeps
-    // re-resolving it, and closing the client interrupts that thread while it publishes what it
-    // resolved, which surfaces as an exception with no test to attribute it to
+    // closing an SRV client races the resolver thread and can report an uncaught exception
     runCommand(createClient(settings, clusterId));
 
     assertFindSpan("cluster0.example.invalid", null);

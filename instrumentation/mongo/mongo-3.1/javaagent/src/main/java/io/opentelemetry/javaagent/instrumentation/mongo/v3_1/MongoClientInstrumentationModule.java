@@ -34,7 +34,6 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // the legacy client, which is the only client this module instruments
     return hasClassesNamed("com.mongodb.MongoClientOptions");
   }
 

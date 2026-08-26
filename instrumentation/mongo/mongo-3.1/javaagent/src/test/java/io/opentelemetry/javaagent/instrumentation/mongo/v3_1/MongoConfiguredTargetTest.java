@@ -38,14 +38,11 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
 
   @Override
   protected boolean supportsIpv6Seeds() {
+    // driver 3.1 strips IPv6 brackets while reparsing cluster settings, then rejects the address
     return false;
   }
 
-  /**
-   * Driver 3.1 has no way to observe the cluster a client is given, which the 3.3 release added as
-   * a cluster listener. The cluster the client holds is read directly instead, so that the floor
-   * this module supports is the one being tested.
-   */
+  // driver 3.1 predates cluster listeners, so read the id directly from the client
   private static ClusterId clusterId(MongoClient client) {
     try {
       Method getCluster = Mongo.class.getDeclaredMethod("getCluster");
@@ -57,7 +54,6 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
           clusterIdField.setAccessible(true);
           return (ClusterId) clusterIdField.get(cluster);
         } catch (NoSuchFieldException ignored) {
-          // the field is declared by BaseCluster, further up the hierarchy
         }
       }
       throw new IllegalStateException("No cluster id in " + cluster.getClass());

@@ -20,20 +20,13 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Records the target a cluster was configured with while the cluster is being constructed, which is
- * the earliest point at which the driver has settled the configuration and the last point at which
- * it is still the one the client was built with.
- *
- * <p>A load balanced cluster, added in 4.3, is not a {@code BaseCluster} but takes the same first
- * two constructor arguments, so both types are matched.
- */
 final class ClusterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
         "com.mongodb.internal.connection.BaseCluster",
+        // since 4.3
         "com.mongodb.internal.connection.LoadBalancedCluster");
   }
 
@@ -52,8 +45,7 @@ final class ClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void captureConfiguredTarget(
         @Advice.Argument(0) ClusterId clusterId, @Advice.Argument(1) ClusterSettings settings) {
-      // A client that resolves an SRV host is given a placeholder seed list naming a host it never
-      // talks to, so the SRV host is read first.
+      // SRV settings include a placeholder seed that the client never contacts
       MongoServerTarget target = MongoServerTarget.srvHost(settings.getSrvHost());
       if (target == null) {
         target = MongoServerTarget.seeds(settings.getHosts());

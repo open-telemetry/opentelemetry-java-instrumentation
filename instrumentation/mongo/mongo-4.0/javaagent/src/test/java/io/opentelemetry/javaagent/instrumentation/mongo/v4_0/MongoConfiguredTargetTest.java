@@ -56,8 +56,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
 
   @Test
   void anSrvHostIsPreferredOverTheSeedsItStandsIn() {
-    // a client that resolves an SRV host is given a placeholder seed list naming a host it never
-    // talks to, which is why the srv host has to win
+    // SRV settings include a placeholder seed that the client never contacts
     ClusterIdCapture clusterId = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
@@ -66,9 +65,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
                     builder.srvHost("cluster0.example.invalid").addClusterListener(clusterId))
             .build();
 
-    // this client is deliberately left open: an srv host is watched by a daemon thread that keeps
-    // re-resolving it, and closing the client interrupts that thread while it publishes what it
-    // resolved, which surfaces as an exception with no test to attribute it to
+    // closing an SRV client races the resolver thread and can report an uncaught exception
     runCommand(createClient(settings, clusterId));
 
     assertFindSpan("cluster0.example.invalid", null);

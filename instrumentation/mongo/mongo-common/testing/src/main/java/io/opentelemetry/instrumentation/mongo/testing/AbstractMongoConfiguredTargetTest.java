@@ -42,40 +42,22 @@ import org.bson.BsonString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-/**
- * Verifies that a client configured with one address reports it instead of the server that answered
- * a command, while a client configured with several seeds keeps reporting the selected server.
- *
- * <p>The client is built against seeds it never connects to, which is enough for the driver to
- * construct its cluster. The command events a connected client would deliver are handed to the same
- * listener the instrumentation installed, describing a different selected server. What is exercised
- * is the whole path a real command takes: the driver builds the client, the instrumentation reads
- * the cluster configuration, and every command event finds it again through the selected server.
- */
 @TestInstance(PER_CLASS)
 public abstract class AbstractMongoConfiguredTargetTest {
 
   private static final String DATABASE_NAME = "test_db";
   private static final String COLLECTION_NAME = "testCollection";
 
-  // the server the driver picked, which is deliberately none of the configured seeds
+  // deliberately different from every configured seed
   private static final ServerAddress SELECTED_SERVER = new ServerAddress("selected.example", 27099);
 
   private static final AtomicInteger requestIds = new AtomicInteger();
 
   protected abstract InstrumentationExtension testing();
 
-  /**
-   * Builds a client configured with {@code seeds} and returns the cluster identity the driver gave
-   * it together with the command listener the instrumentation added to it. The client is never
-   * connected to, so the seeds do not have to exist.
-   */
+  // the client is never connected, so seeds do not need to resolve
   protected abstract ConfiguredClient createClient(List<ServerAddress> seeds);
 
-  /**
-   * Whether the driver can hold a literal ipv6 address in its cluster settings, which it re-parses
-   * without brackets before 3.3 and therefore rejects.
-   */
   protected boolean supportsIpv6Seeds() {
     return true;
   }
@@ -273,8 +255,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
       try {
         return type.getConstructor(legacyParameterTypes).newInstance(legacyArguments);
       } catch (NoSuchMethodException ignored) {
-        // driver 5.0 replaced the constructor above with one that also carries a request context
-        // and an operation id
+        // driver 5.0 added request context and operation id constructor parameters
         return type.getConstructor(currentParameterTypes).newInstance(currentArguments);
       }
     } catch (ReflectiveOperationException e) {
@@ -286,12 +267,10 @@ public abstract class AbstractMongoConfiguredTargetTest {
     try {
       return Class.forName("com.mongodb.RequestContext");
     } catch (ClassNotFoundException ignored) {
-      // a driver without this class still has the constructors that do not take one
       return Void.class;
     }
   }
 
-  /** A client, the cluster the driver built for it and the listener the agent added to it. */
   protected static class ConfiguredClient implements AutoCloseable {
 
     private final ClusterId clusterId;

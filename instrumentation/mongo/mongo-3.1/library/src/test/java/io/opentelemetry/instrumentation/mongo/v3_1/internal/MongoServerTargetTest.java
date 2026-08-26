@@ -94,8 +94,7 @@ class MongoServerTargetTest {
     assertThat(target).isNull();
   }
 
-  // driver 3.3 to 3.7 hands over a literal ipv6 address with its brackets still on, which the
-  // driver version this module builds against strips
+  // drivers 3.3 through 3.7 preserve IPv6 brackets; the compile-time driver strips them
   private static ServerAddress bracketedSeed(String address, int port) {
     return new ServerAddress("[" + address + "]", port) {
       private static final long serialVersionUID = 1L;

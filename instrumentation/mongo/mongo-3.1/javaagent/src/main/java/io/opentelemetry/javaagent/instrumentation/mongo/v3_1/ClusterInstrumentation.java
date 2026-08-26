@@ -19,18 +19,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Records the target a cluster was configured with while the cluster is being constructed, which is
- * the earliest point at which the driver has settled the configuration and the last point at which
- * it is still the one the client was built with.
- *
- * <p>Only the driver 3.1 to 3.7 location of {@code BaseCluster} is matched here. From 3.8 the class
- * moved into an internal package that the newer instrumentation modules cover.
- *
- * <p>A driver at that location resolves an SRV host into seeds as it parses the connection string,
- * and it keeps no SRV host in its cluster settings, so a cluster here is always described by its
- * seeds.
- */
 final class ClusterInstrumentation implements TypeInstrumentation {
 
   @Override
@@ -53,6 +41,7 @@ final class ClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void captureConfiguredTarget(
         @Advice.Argument(0) ClusterId clusterId, @Advice.Argument(1) ClusterSettings settings) {
+      // drivers covered by this module resolve SRV hosts before constructing the cluster
       MongoClusterTargets.register(clusterId, MongoServerTarget.seeds(settings.getHosts()));
     }
   }

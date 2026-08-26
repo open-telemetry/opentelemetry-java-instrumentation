@@ -137,8 +137,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public String getServerAddress(CommandStartedEvent event) {
-    // The configured target is preferred only under the stable conventions; the old ones are frozen
-    // and keep describing the server that answered.
+    // Legacy database conventions are frozen and continue to report the selected server.
     if (emitStableDatabaseSemconv()) {
       MongoServerTarget target = MongoClusterTargets.get(event);
       if (target != null) {
