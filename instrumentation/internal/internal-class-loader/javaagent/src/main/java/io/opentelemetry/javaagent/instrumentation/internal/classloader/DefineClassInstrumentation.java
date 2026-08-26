@@ -53,8 +53,7 @@ class DefineClassInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Enter DefineClassContext context, @Advice.Return Class<?> returned) {
+    public static void onExit(@Advice.Enter DefineClassContext context) {
       DefineClassHelper.afterDefineClass(context);
     }
   }
@@ -70,8 +69,7 @@ class DefineClassInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Enter DefineClassContext context, @Advice.Return Class<?> returned) {
+    public static void onExit(@Advice.Enter DefineClassContext context) {
       DefineClassHelper.afterDefineClass(context);
     }
   }

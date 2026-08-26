@@ -15,6 +15,12 @@ import java.security.ProtectionDomain;
  * <p>A placeholder for java.lang.ClassLoader to allow compilation of advice classes that invoke
  * protected methods of ClassLoader (like defineClass and findLoadedClass). During the build we'll
  * use shadow plugin to replace reference to this class with the real java.lang.ClassLoader.
+ *
+ * <p>This class is in {@code io.opentelemetry.javaagent.bootstrap} package rather than {@code
+ * io.opentelemetry.javaagent.instrumentation} to avoid getting it added as a helper class. Since
+ * during build references to this class are renamed to {@code java.lang.ClassLoader} having it
+ * added as helper would really get {@code java.lang.ClassLoader} added as helper which breaks some
+ * tests.
  */
 @SuppressWarnings("JavaLangClash")
 public abstract class ClassLoader {
