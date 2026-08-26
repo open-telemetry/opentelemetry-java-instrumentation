@@ -74,4 +74,20 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
     InetSocketAddress serverAddress = LettuceSingletons.COMMAND_ADDRESS.get(request);
     return serverAddress != null ? serverAddress.getPort() : null;
   }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
+    InetSocketAddress serverAddress = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    return serverAddress != null && !serverAddress.isUnresolved()
+        ? serverAddress.getAddress().getHostAddress()
+        : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
+    InetSocketAddress serverAddress = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    return serverAddress != null && !serverAddress.isUnresolved() ? serverAddress.getPort() : null;
+  }
 }
