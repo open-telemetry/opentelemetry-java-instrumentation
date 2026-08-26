@@ -9,6 +9,7 @@ import com.mongodb.ServerAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
+@SuppressWarnings("OtelInternalJavadoc")
 public final class MongoServerTarget {
 
   // the driver reports its default port for socket paths, but the port is not part of the target
@@ -27,10 +28,23 @@ public final class MongoServerTarget {
 
   @Nullable
   public static MongoServerTarget seeds(@Nullable List<ServerAddress> seeds) {
-    if (seeds == null || seeds.size() != 1) {
+    if (seeds == null || seeds.isEmpty()) {
       return null;
     }
-    return single(seeds.get(0));
+    if (seeds.size() == 1) {
+      return single(seeds.get(0));
+    }
+    StringBuilder group = new StringBuilder();
+    for (ServerAddress seed : seeds) {
+      if (seed == null || seed.getHost() == null || seed.getHost().isEmpty()) {
+        return null;
+      }
+      if (group.length() > 0) {
+        group.append(',');
+      }
+      appendHostAndPort(group, seed);
+    }
+    return new MongoServerTarget(group.toString(), null);
   }
 
   private MongoServerTarget(String address, @Nullable Integer port) {
@@ -48,6 +62,21 @@ public final class MongoServerTarget {
       return null;
     }
     return new MongoServerTarget(host, isUnixSocket(host) ? null : seed.getPort());
+  }
+
+  private static void appendHostAndPort(StringBuilder group, ServerAddress seed) {
+    String host = seed.getHost();
+    if (isUnixSocket(host)) {
+      group.append(host);
+      return;
+    }
+    // Group members bracket IPv6 literals so their ports remain unambiguous.
+    if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
+      group.append('[').append(host).append(']');
+    } else {
+      group.append(host);
+    }
+    group.append(':').append(seed.getPort());
   }
 
   // server.address uses the host without URI brackets around IPv6 literals

@@ -54,6 +54,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
           clusterIdField.setAccessible(true);
           return (ClusterId) clusterIdField.get(cluster);
         } catch (NoSuchFieldException ignored) {
+          // Driver versions place clusterId at different levels of this hierarchy.
         }
       }
       throw new IllegalStateException("No cluster id in " + cluster.getClass());

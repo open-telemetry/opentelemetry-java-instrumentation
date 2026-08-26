@@ -28,15 +28,17 @@ class MongoConfiguredTargetTest {
       new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
   @Test
-  void configuredSeedGroupKeepsReportingTheSelectedServer() {
-    ClusterId clusterId = new ClusterId();
-    MongoClusterTargets.register(
-        clusterId,
-        MongoServerTarget.seeds(asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
+  void configuredSeedGroupDescribesEveryCommand() {
+    ClusterId clusterId =
+        configuredCluster(
+            MongoServerTarget.seeds(
+                asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
-    assertThat(getter.getServerAddress(event)).isEqualTo("db2.example");
-    assertThat(getter.getServerPort(event)).isEqualTo(27018);
+    assertThat(getter.getServerAddress(event))
+        .isEqualTo(
+            emitStableDatabaseSemconv() ? "db1.example:27017,db2.example:27018" : "db2.example");
+    assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
   }
 
   @Test
@@ -81,18 +83,20 @@ class MongoConfiguredTargetTest {
   }
 
   @Test
-  void commandWithNoDatabaseIsNamedByTheSelectedServerForASeedGroup() {
-    ClusterId clusterId = new ClusterId();
-    MongoClusterTargets.register(
-        clusterId,
-        MongoServerTarget.seeds(asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
+  void commandWithNoDatabaseIsNamedByTheConfiguredTarget() {
+    ClusterId clusterId =
+        configuredCluster(
+            MongoServerTarget.seeds(
+                asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
     CommandStartedEvent event = commandStartedEvent(clusterId, null, "listDatabases");
 
     String spanName = new MongoSpanNameExtractor(getter).extract(event);
 
     assertThat(spanName)
         .isEqualTo(
-            emitStableDatabaseSemconv() ? "listDatabases db2.example:27018" : "listDatabases");
+            emitStableDatabaseSemconv()
+                ? "listDatabases db1.example:27017,db2.example:27018"
+                : "listDatabases");
   }
 
   private static ClusterId configuredCluster(MongoServerTarget target) {

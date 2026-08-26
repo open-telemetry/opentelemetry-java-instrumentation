@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 
 import com.mongodb.MongoClientSettings;
@@ -72,7 +71,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void theSelectedServerDimensionsTheOperationDurationMetricForSeveralSeeds() {
+  void theConfiguredTargetDimensionsTheOperationDurationMetric() {
     try (ConfiguredClient client =
         createClient(
             asList(
@@ -81,7 +80,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("selected.example", 27099L);
+    assertFindSpan("db1.example:27017,db2.example:27018", null);
     assertDurationMetric(
         testing,
         "io.opentelemetry.mongo-4.0",
@@ -89,8 +88,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
         DB_NAMESPACE,
         DB_OPERATION_NAME,
         DB_COLLECTION_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        SERVER_ADDRESS);
     if (emitStableDatabaseSemconv()) {
       testing.waitAndAssertMetrics(
           "io.opentelemetry.mongo-4.0",
@@ -101,9 +99,8 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
                       histogram ->
                           histogram.hasPointsSatisfying(
                               point ->
-                                  point
-                                      .hasAttribute(SERVER_ADDRESS, "selected.example")
-                                      .hasAttribute(SERVER_PORT, 27099L))));
+                                  point.hasAttribute(
+                                      SERVER_ADDRESS, "db1.example:27017,db2.example:27018"))));
     }
   }
 }

@@ -63,7 +63,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void severalSeedsKeepReportingTheSelectedServer() {
+  void severalSeedsAreReportedAsOneTarget() {
     try (ConfiguredClient client =
         createClient(
             asList(
@@ -72,7 +72,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("selected.example", 27099L);
+    assertFindSpan("db1.example:27017,db2.example:27018", null);
   }
 
   @Test
@@ -86,7 +86,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void severalIpv6SeedsKeepReportingTheSelectedServer() {
+  void ipv6SeedsAreBracketed() {
     assumeTrue(supportsIpv6Seeds());
 
     try (ConfiguredClient client =
@@ -95,7 +95,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("selected.example", 27099L);
+    assertFindSpan("[::1]:27017,[fe80::1]:27018", null);
   }
 
   @Test
@@ -116,7 +116,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "listDatabases selected.example:27099"
+                                    ? "listDatabases db1.example:27017,db2.example:27018"
                                     : "listDatabases")
                             .hasKind(CLIENT)));
   }

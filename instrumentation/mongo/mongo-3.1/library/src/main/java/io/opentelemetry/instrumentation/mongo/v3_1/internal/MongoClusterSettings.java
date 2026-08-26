@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
+@SuppressWarnings("OtelInternalJavadoc")
 public final class MongoClusterSettings {
 
   // getSrvHost was added in 3.10; reflection keeps this compatible with older drivers
