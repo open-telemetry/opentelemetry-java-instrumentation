@@ -58,8 +58,7 @@ final class ElasticsearchDbAttributesGetter
     ElasticsearchEndpointDefinition epDefinition = request.getEndpointDefinition();
     HttpEntity httpEntity = request.getHttpEntity();
     if (captureSearchQuery
-        && epDefinition != null
-        && epDefinition.isSearchEndpoint()
+        && isSearchEndpoint(request.getEndpoint(), epDefinition)
         && httpEntity != null
         && httpEntity.isRepeatable()) {
       // Retrieve HTTP body for search-type Elasticsearch requests when captureSearchQuery is
@@ -77,6 +76,50 @@ final class ElasticsearchDbAttributesGetter
       return sanitizer.apply(body);
     }
     return null;
+  }
+
+  private static boolean isSearchEndpoint(
+      String endpoint, @Nullable ElasticsearchEndpointDefinition endpointDefinition) {
+    if (endpointDefinition != null) {
+      return endpointDefinition.isSearchEndpoint();
+    }
+
+    int queryStart = endpoint.indexOf('?');
+    String path = queryStart == -1 ? endpoint : endpoint.substring(0, queryStart);
+    if (!path.startsWith("/")) {
+      return false;
+    }
+
+    String[] segments = path.substring(1).split("/", -1);
+    for (String segment : segments) {
+      if (segment.isEmpty()) {
+        return false;
+      }
+    }
+
+    if (segments.length == 1) {
+      return isSearchAction(segments[0]);
+    }
+    if (segments.length == 2) {
+      return isSearchAction(segments[1])
+          || segments[1].equals("_terms_enum")
+          || ((segments[0].equals("_search") || segments[0].equals("_msearch"))
+              && segments[1].equals("template"))
+          || (segments[0].equals("_render") && segments[1].equals("template"));
+    }
+    if (segments.length == 3) {
+      return ((segments[1].equals("_search") || segments[1].equals("_msearch"))
+              && segments[2].equals("template"))
+          || (segments[0].equals("_render") && segments[1].equals("template"))
+          || (segments[1].equals("_eql") && segments[2].equals("search"));
+    }
+    return false;
+  }
+
+  private static boolean isSearchAction(String segment) {
+    return segment.equals("_search")
+        || segment.equals("_msearch")
+        || segment.equals("_async_search");
   }
 
   @Nullable

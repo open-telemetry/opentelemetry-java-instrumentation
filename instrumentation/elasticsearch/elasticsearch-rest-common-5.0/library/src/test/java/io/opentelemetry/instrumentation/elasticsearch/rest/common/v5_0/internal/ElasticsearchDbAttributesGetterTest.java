@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ElasticsearchDbAttributesGetterTest {
 
@@ -55,6 +56,54 @@ class ElasticsearchDbAttributesGetterTest {
                 searchRequest(new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON))))
         .isEqualTo(SANITIZED_BODY);
     assertThat(sanitizer.sanitized).containsExactly(SEARCH_BODY);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "/_search",
+        "/test-index/_search?preference=local",
+        "/_msearch",
+        "/test-index/_msearch",
+        "/_search/template",
+        "/test-index/_search/template",
+        "/_msearch/template",
+        "/test-index/_msearch/template",
+        "/_async_search",
+        "/test-index/_async_search",
+        "/_render/template",
+        "/_render/template/private-template",
+        "/test-index/_terms_enum",
+        "/test-index/_eql/search"
+      })
+  void recognizesSearchPathWithoutEndpointDefinition(String endpoint) {
+    RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    ElasticsearchRestRequest request =
+        ElasticsearchRestRequest.create(
+            "POST", endpoint, null, new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON));
+
+    assertThat(getter.getDbQueryText(request)).isEqualTo(SANITIZED_BODY);
+    assertThat(sanitizer.sanitized).containsExactly(SEARCH_BODY);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "/test-index/_doc/_search",
+        "/_search/scroll",
+        "/test-index/_rollup_search",
+        "/_application/search_application/private-app/_search"
+      })
+  void rejectsNonSearchPathWithoutEndpointDefinition(String endpoint) {
+    RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    ElasticsearchRestRequest request =
+        ElasticsearchRestRequest.create(
+            "POST", endpoint, null, new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON));
+
+    assertThat(getter.getDbQueryText(request)).isNull();
+    assertThat(sanitizer.sanitized).isEmpty();
   }
 
   @Test

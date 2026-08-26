@@ -22,12 +22,11 @@ import org.elasticsearch.client.Response;
 
 public class ElasticsearchRestJavaagentInstrumenterFactory {
 
-  // semconv says db.query.text "Should be collected by default for search-type queries and only if
-  // there is sanitization that excludes sensitive information", which the sanitizer now provides.
-  // The default flips only under v3-preview so that existing 2.x deployments keep their span shape.
   private static final boolean CAPTURE_SEARCH_QUERY =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "elasticsearch")
-          .getBoolean("capture_search_query", AgentCommonConfig.get().isV3Preview());
+      ElasticsearchRestConfig.captureSearchQuery(
+          DeclarativeConfigUtil.getInstrumentationConfig(
+              GlobalOpenTelemetry.get(), "elasticsearch"),
+          AgentCommonConfig.get().isV3Preview());
 
   private static final boolean SANITIZE_SEARCH_QUERY =
       DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "elasticsearch");
