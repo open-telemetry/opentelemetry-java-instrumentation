@@ -98,10 +98,13 @@ sourceSets.named("scala3Test") {
   extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
 }
 
-// -target:jvm-1.8 is scala 2 syntax, the scala 3 compiler rejects it
+// -target:jvm-1.8 is scala 2 syntax that the scala 3 compiler rejects, -release is how scala 3
+// targets an older jvm, without it the tests are compiled for whichever jdk runs the build and
+// can not be loaded when the tests run on java 8
 tasks.named<ScalaCompile>("compileScala3TestScala") {
   scalaCompileOptions.additionalParameters =
-    scalaCompileOptions.additionalParameters.orEmpty().filter { it != "-target:jvm-1.8" }
+    scalaCompileOptions.additionalParameters.orEmpty().filter { it != "-target:jvm-1.8" } +
+    "-release:8"
 }
 
 tasks {
