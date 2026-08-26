@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jmx.rules.kafka;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -139,6 +141,68 @@ class KafkaConnectTest extends TargetSystemTest {
     copyAgentToTarget(kafkaConnect);
     copyYamlFilesToTarget(kafkaConnect, yamlFiles);
 
+    startWeaverValidation(
+        "kafka-connect.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("kafka.connect.")
+                .checkRegisteredMetrics(
+                    "kafka.connect.",
+                    asList(
+                        "kafka.connect.worker.connector.count",
+                        "kafka.connect.worker.connector.startup.count",
+                        "kafka.connect.worker.task.count",
+                        "kafka.connect.worker.task.startup.count",
+                        "kafka.connect.worker.connector.task.count",
+                        "kafka.connect.worker.rebalance.completed.count",
+                        "kafka.connect.worker.rebalance.protocol",
+                        "kafka.connect.worker.rebalance.epoch",
+                        "kafka.connect.worker.rebalance.time.average",
+                        "kafka.connect.worker.rebalance.time.max",
+                        "kafka.connect.worker.rebalance.active",
+                        "kafka.connect.connector.status",
+                        "kafka.connect.task.batch.size.average",
+                        "kafka.connect.task.batch.size.max",
+                        "kafka.connect.task.offset.commit.failure.ratio",
+                        "kafka.connect.task.running.ratio",
+                        "kafka.connect.task.status",
+                        "kafka.connect.sink.offset.commit.completed.count",
+                        "kafka.connect.sink.offset.commit.seq",
+                        "kafka.connect.sink.offset.commit.skipped.count",
+                        "kafka.connect.sink.partition.count",
+                        "kafka.connect.sink.put.batch.time.average",
+                        "kafka.connect.sink.put.batch.time.max",
+                        "kafka.connect.sink.record.active.count",
+                        "kafka.connect.sink.record.read.count",
+                        "kafka.connect.sink.record.send.count",
+                        "kafka.connect.source.poll.batch.time.average",
+                        "kafka.connect.source.poll.batch.time.max",
+                        "kafka.connect.source.record.active.count",
+                        "kafka.connect.source.record.poll.count",
+                        "kafka.connect.source.record.write.count",
+                        "kafka.connect.task.error.deadletterqueue.produce.failure.count",
+                        "kafka.connect.task.error.deadletterqueue.produce.request.count",
+                        "kafka.connect.task.error.last.error.timestamp",
+                        "kafka.connect.task.error.logged.count",
+                        "kafka.connect.task.error.record.error.count",
+                        "kafka.connect.task.error.record.failure.count",
+                        "kafka.connect.task.error.record.skipped.count",
+                        "kafka.connect.task.error.retry.count"),
+                    OPTIONAL_APACHE_METRICS)
+                .checkRegisteredAttributes(
+                    "kafka.connect.",
+                    asList(
+                        "kafka.connect.connector",
+                        "kafka.connect.task.id",
+                        "kafka.connect.worker.connector.startup.result",
+                        "kafka.connect.worker.task.startup.result",
+                        "kafka.connect.worker.connector.task.state",
+                        "kafka.connect.protocol.state",
+                        "kafka.connect.worker.rebalance.state",
+                        "kafka.connect.connector.state",
+                        "kafka.connect.task.state"),
+                    emptyList()));
+
     startTarget(kafkaConnect, singletonList(kafka));
 
     String connectUrl = connectUrl(kafkaConnect);
@@ -270,8 +334,7 @@ class KafkaConnectTest extends TargetSystemTest {
             "kafka.connect.connector.status",
             metric ->
                 metric
-                    .hasDescription(
-                        "Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.")
+                    .hasDescription("Connector lifecycle state indicator.")
                     .hasUnit("1")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
@@ -331,8 +394,7 @@ class KafkaConnectTest extends TargetSystemTest {
             "kafka.connect.task.status",
             metric ->
                 metric
-                    .hasDescription(
-                        "The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values.")
+                    .hasDescription("The status of the connector task.")
                     .hasUnit("1")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
