@@ -176,15 +176,15 @@ class CassandraServerTargetTest {
 
   @Test
   void sessionUsesCapturedProgrammaticAndConfiguredContactPoints() {
+    configureContactPoints(singletonList("configured.example.com:9042"));
+    when(session.getContext()).thenReturn(context);
     Set<EndPoint> programmaticContactPoints =
         new LinkedHashSet<>(
             singletonList(
                 new DefaultEndPoint(
                     InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
 
-    CassandraServerTarget target =
-        CassandraServerTarget.of(
-            singletonList("configured.example.com:9042"), programmaticContactPoints);
+    CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress())

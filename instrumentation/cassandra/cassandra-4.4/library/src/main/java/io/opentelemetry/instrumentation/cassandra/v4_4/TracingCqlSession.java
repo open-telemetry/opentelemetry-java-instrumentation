@@ -44,13 +44,12 @@ final class TracingCqlSession {
     return wrapSession(session, serverTarget);
   }
 
-  CqlSession wrapSession(
-      CqlSession session,
-      @Nullable List<String> configuredContactPoints,
-      @Nullable Set<EndPoint> programmaticContactPoints) {
+  CqlSession wrapSession(CqlSession session, Set<EndPoint> programmaticContactPoints) {
+    // the driver configuration can be reloaded, so read the configured target once, here, and keep
+    // that snapshot for the life of the session
     CassandraServerTarget serverTarget =
         emitStableDatabaseSemconv()
-            ? CassandraServerTarget.of(configuredContactPoints, programmaticContactPoints)
+            ? CassandraServerTarget.of(session, programmaticContactPoints)
             : null;
     return wrapSession(session, serverTarget);
   }

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -23,7 +23,7 @@ public class CassandraClientInstrumentationModule extends InstrumentationModule 
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new SessionBuilderInstrumentation(), new ContactPointsInstrumentation());
+    return singletonList(new SessionBuilderInstrumentation());
   }
 
   @Override

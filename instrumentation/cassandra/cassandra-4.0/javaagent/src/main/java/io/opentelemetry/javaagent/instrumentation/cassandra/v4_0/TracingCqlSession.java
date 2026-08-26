@@ -30,13 +30,12 @@ import javax.annotation.Nullable;
 final class TracingCqlSession {
   private TracingCqlSession() {}
 
-  static CqlSession wrapSession(
-      CqlSession session,
-      @Nullable List<String> configuredContactPoints,
-      @Nullable Set<EndPoint> programmaticContactPoints) {
+  static CqlSession wrapSession(CqlSession session, Set<EndPoint> programmaticContactPoints) {
+    // the driver configuration can be reloaded, so read the configured target once, here, and keep
+    // that snapshot for the life of the session
     CassandraServerTarget serverTarget =
         emitStableDatabaseSemconv()
-            ? CassandraServerTarget.of(configuredContactPoints, programmaticContactPoints)
+            ? CassandraServerTarget.of(session, programmaticContactPoints)
             : null;
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();

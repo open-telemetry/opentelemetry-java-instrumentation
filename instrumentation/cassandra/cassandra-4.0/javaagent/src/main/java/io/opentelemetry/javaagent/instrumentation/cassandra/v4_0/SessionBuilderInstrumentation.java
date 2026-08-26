@@ -5,15 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -23,6 +24,8 @@ class SessionBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    // Note: Cassandra has a large driver and we instrument single class in it.
+    // The rest is ignored in AdditionalLibraryIgnoresMatcher
     return named("com.datastax.oss.driver.api.core.session.SessionBuilder");
   }
 
@@ -36,12 +39,6 @@ class SessionBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static ContactPointsCapture onEnter() {
-      return emitStableDatabaseSemconv() ? ContactPointsCapture.start() : null;
-    }
-
     /**
      * Strategy: each time we build a connection to a Cassandra cluster, the
      * com.datastax.oss.driver.api.core.session.SessionBuilder.buildAsync() method is called. The
@@ -51,20 +48,11 @@ class SessionBuilderInstrumentation implements TypeInstrumentation {
      *     replaced with new session
      */
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletionStage<?> injectTracingSession(
-        @Advice.Return @Nullable CompletionStage<?> stage,
-        @Advice.Enter @Nullable ContactPointsCapture capture) {
-      if (capture != null) {
-        capture.end();
-      }
-      if (stage == null) {
-        return null;
-      }
-      return stage.thenApply(
-          new CompletionStageFunction(
-              capture == null ? null : capture.getConfiguredContactPoints(),
-              capture == null ? null : capture.getProgrammaticContactPoints()));
+        @Advice.Return CompletionStage<?> stage,
+        @Advice.FieldValue("programmaticContactPoints") Set<EndPoint> programmaticContactPoints) {
+      return stage.thenApply(new CompletionStageFunction(new HashSet<>(programmaticContactPoints)));
     }
   }
 }
