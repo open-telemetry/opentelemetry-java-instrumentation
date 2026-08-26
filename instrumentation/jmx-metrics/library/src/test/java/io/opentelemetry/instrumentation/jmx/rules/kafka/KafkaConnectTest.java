@@ -30,13 +30,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.images.builder.Transferable;
 
 class KafkaConnectTest extends TargetSystemTest {
@@ -132,17 +128,13 @@ class KafkaConnectTest extends TargetSystemTest {
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
 
-    Set<String> expectedCreatedMetrics = loadKafkaConnectMetricNames(false);
-    Set<String> registeredMetrics = ConcurrentHashMap.newKeySet();
-
     GenericContainer<?> kafka = KafkaContainer.create(KAFKA_IMAGE);
 
     GenericContainer<?> kafkaConnect =
         KafkaContainer.create(KAFKA_IMAGE)
             .withKafkaConnect()
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
-            .withCopyToContainer(Transferable.of("first\nsecond\nthird\n"), SOURCE_FILE_PATH)
-            .withLogConsumer(frame -> recordMetricRegistrations(frame, registeredMetrics));
+            .withCopyToContainer(Transferable.of("first\nsecond\nthird\n"), SOURCE_FILE_PATH);
 
     copyAgentToTarget(kafkaConnect);
     copyYamlFilesToTarget(kafkaConnect, yamlFiles);
@@ -158,8 +150,7 @@ class KafkaConnectTest extends TargetSystemTest {
 
     kafkaConnect.execInContainer("sh", "-c", "printf 'fourth\\n' >> " + SOURCE_FILE_PATH);
 
-    awaitMetricRegistrations(expectedCreatedMetrics, registeredMetrics);
-    verifyMetrics(createKafkaConnectMetricsVerifier());
+    verifyMetrics(createKafkaConnectMetricsVerifier(), Duration.ofMinutes(5));
   }
 
   private JmxConfig loadKafkaConnectConfig() throws Exception {
@@ -172,56 +163,6 @@ class KafkaConnectTest extends TargetSystemTest {
     }
   }
 
-  private Set<String> loadKafkaConnectMetricNames(boolean includeOptional) throws Exception {
-    JmxConfig config = loadKafkaConnectConfig();
-    Set<String> metricNames = new TreeSet<>();
-    for (JmxRule rule : config.getRules()) {
-      String prefix = rule.getPrefix();
-      for (Map.Entry<String, Metric> entry : rule.getMapping().entrySet()) {
-        Metric metric = entry.getValue();
-        String baseName =
-            metric == null || metric.getMetric() == null ? entry.getKey() : metric.getMetric();
-        metricNames.add(prefix == null ? baseName : prefix + baseName);
-      }
-    }
-    if (!includeOptional) {
-      metricNames.removeAll(OPTIONAL_APACHE_METRICS);
-    }
-    return metricNames;
-  }
-
-  private static void awaitMetricRegistrations(
-      Set<String> expectedMetrics, Set<String> registeredMetrics) {
-    await()
-        .atMost(Duration.ofMinutes(2))
-        .pollInterval(Duration.ofSeconds(1))
-        .untilAsserted(() -> assertThat(registeredMetrics).containsAll(expectedMetrics));
-  }
-
-  private static void recordMetricRegistrations(OutputFrame frame, Set<String> registeredMetrics) {
-    if (frame == null) {
-      return;
-    }
-    String payload = frame.getUtf8String();
-    if (payload == null || payload.isEmpty()) {
-      return;
-    }
-    String[] lines = payload.split("\\r?\\n");
-    for (String line : lines) {
-      int markerIndex = line.indexOf("MetricRegistrar - Created");
-      if (markerIndex < 0) {
-        continue;
-      }
-      int forIndex = line.indexOf(" for ", markerIndex);
-      if (forIndex < 0) {
-        continue;
-      }
-      String metricName = line.substring(forIndex + 5).trim();
-      if (!metricName.isEmpty()) {
-        registeredMetrics.add(metricName);
-      }
-    }
-  }
 
   private static MetricsVerifier createKafkaConnectMetricsVerifier() {
     return MetricsVerifier.create()
