@@ -534,6 +534,21 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void checkedSupplierReturningSupplierPreservesApplicationResultIdentity() throws Exception {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Supplier<String> applicationSupplier = () -> "ok";
+    Object checkedSupplier =
+        CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> applicationSupplier);
+    Method unchecked = uncheckedMethod(checkedSupplier);
+    Supplier<?> supplier = (Supplier<?>) unchecked.invoke(checkedSupplier);
+
+    Object result = testing.runWithSpan("parent", supplier::get);
+
+    assertThat(result).isSameAs(applicationSupplier);
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
   void createsCircuitBreakerSpanWhenVavrCheckedFunctionAdapterSucceeds() throws Exception {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     Object checkedFunction = decorateVavrCheckedFunction(circuitBreaker, value -> value);
