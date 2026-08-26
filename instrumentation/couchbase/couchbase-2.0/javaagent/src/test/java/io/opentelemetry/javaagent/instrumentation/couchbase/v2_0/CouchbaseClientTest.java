@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +28,29 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
     return CouchbaseUtil.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
   }
 
+  @Override
+  protected boolean includesNetworkAttributes() {
+    return true;
+  }
+
+  @Override
+  protected boolean includesLocalAddressAttribute() {
+    // core-io before 2.6.0 has no localSocket field to capture it from.
+    return false;
+  }
+
+  @Override
+  protected boolean includesOperationIdAttribute() {
+    // core-io before 2.6.0 has no CouchbaseRequest.operationId() to correlate with.
+    return false;
+  }
+
+  @Override
+  protected boolean includesOldServerAddressAttribute() {
+    // this module never resolves a node string to pair with the actual peer address.
+    return false;
+  }
+
   @Test
   void hasDurationMetric() {
     CouchbaseCluster cluster = getCluster(bucketCouchbase);
@@ -42,6 +67,8 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
         "io.opentelemetry.couchbase-2.0",
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS);
   }
 }

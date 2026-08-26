@@ -38,6 +38,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -144,7 +146,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()))));
+                                stringKey("couchbase.local.address"), localAddressAttribute()))));
   }
 
   @ParameterizedTest
@@ -203,9 +205,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
   }
 
   @ParameterizedTest
@@ -271,9 +273,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute())),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
+                            satisfies(stringKey("couchbase.operation_id"), operationIdAttribute())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -291,9 +292,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
   }
 
   @Test
@@ -359,9 +360,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), localAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
   }
 
   @ParameterizedTest
@@ -403,45 +404,27 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
                             equalTo(SERVER_ADDRESS, configuredServerAddress())),
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Bucket.upsert " + bucketSettings.name()
-                                : "Bucket.upsert")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
-                            equalTo(NETWORK_TYPE, networkType()),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, serverAddress()),
-                            satisfies(SERVER_PORT, serverPort()),
-                            satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute())),
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Bucket.upsert " + bucketSettings.name()
-                                : "Bucket.upsert")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
-                            equalTo(NETWORK_TYPE, networkType()),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, serverAddress()),
-                            satisfies(SERVER_PORT, serverPort()),
-                            satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                span -> upsertSpan(trace, bucketSettings, span),
+                span -> upsertSpan(trace, bucketSettings, span)));
+  }
+
+  private void upsertSpan(TraceAssert trace, BucketSettings bucketSettings, SpanDataAssert span) {
+    span.hasName(
+            emitStableDatabaseSemconv()
+                ? "Bucket.upsert " + bucketSettings.name()
+                : "Bucket.upsert")
+        .hasKind(SpanKind.CLIENT)
+        .hasParent(trace.getSpan(1))
+        .hasAttributesSatisfyingExactly(
+            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
+            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
+            equalTo(NETWORK_TYPE, networkType()),
+            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
+            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+            satisfies(SERVER_ADDRESS, serverAddress()),
+            satisfies(SERVER_PORT, serverPort()),
+            satisfies(stringKey("couchbase.local.address"), localAddressAttribute()),
+            satisfies(stringKey("couchbase.operation_id"), operationIdAttribute()));
   }
 }
