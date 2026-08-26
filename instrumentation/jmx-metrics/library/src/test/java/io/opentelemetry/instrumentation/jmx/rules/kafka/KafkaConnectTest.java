@@ -394,8 +394,7 @@ class KafkaConnectTest extends TargetSystemTest {
             "kafka.connect.connector.status",
             metric ->
                 metric
-                    .hasDescription(
-                        "Connector lifecycle state indicator.")
+                    .hasDescription("Connector lifecycle state indicator.")
                     .hasUnit("1")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
@@ -455,8 +454,7 @@ class KafkaConnectTest extends TargetSystemTest {
             "kafka.connect.task.status",
             metric ->
                 metric
-                    .hasDescription(
-                        "The status of the connector task.")
+                    .hasDescription("The status of the connector task.")
                     .hasUnit("1")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
