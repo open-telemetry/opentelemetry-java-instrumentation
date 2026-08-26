@@ -11,7 +11,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.JedisShardInfo;
 
-/** Renders the target a sharded client was configured with from its shard list. */
 public final class JedisServerTargets {
 
   @Nullable

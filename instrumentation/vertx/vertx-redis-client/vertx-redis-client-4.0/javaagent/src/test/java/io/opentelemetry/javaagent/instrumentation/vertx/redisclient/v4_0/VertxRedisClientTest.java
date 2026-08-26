@@ -322,8 +322,7 @@ class VertxRedisClientTest {
                 .setConnectionString("redis://" + host + ":" + port));
     cleanup.deferCleanup(sentinelClient::close);
 
-    // the server is a plain Redis, so discovering the master fails, but the discovery command
-    // itself is traced
+    // A plain Redis server cannot complete Sentinel discovery, but the discovery command is traced.
     assertThatThrownBy(
             () ->
                 sentinelClient.connect().toCompletionStage().toCompletableFuture().get(30, SECONDS))
@@ -344,7 +343,6 @@ class VertxRedisClientTest {
                         emitStableDatabaseSemconv() ? host + ":" + port + "/themaster" : host);
                 assertThat(span.getAttributes().get(SERVER_PORT))
                     .isEqualTo(emitStableDatabaseSemconv() ? null : Long.valueOf(port));
-                // the socket the command went to is reported independently of the configured target
                 assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
                 assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
                     .isEqualTo(Long.valueOf(port));

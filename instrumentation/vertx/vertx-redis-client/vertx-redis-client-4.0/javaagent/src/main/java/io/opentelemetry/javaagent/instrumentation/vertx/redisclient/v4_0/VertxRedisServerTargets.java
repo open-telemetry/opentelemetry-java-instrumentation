@@ -15,13 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * Renders the target a client was configured with from the {@link RedisOptions} it was created
- * with, and keeps it on the {@link RedisURI} of the endpoint the client connects through.
- *
- * <p>{@code RedisOptions} is mutable, so the target is rendered once while the client is being set
- * up and kept as an immutable value from then on.
- */
 public final class VertxRedisServerTargets {
 
   private static final VirtualField<RedisURI, RedisServerTarget> TARGET_FIELD =
@@ -33,13 +26,10 @@ public final class VertxRedisServerTargets {
       return null;
     }
     if (options.getType() == RedisClientType.SENTINEL) {
-      // the master name is only meaningful for a sentinel client; every other client type carries
-      // the default name whether or not it was configured
       return RedisServerTarget.ofEndpointsAndLogicalName(
           sentinelEndpoints(options.getEndpoints()), options.getMasterName());
     }
     if (options.getType() == RedisClientType.STANDALONE) {
-      // a standalone client only ever talks to the endpoint it picks, even when more are configured
       return RedisServerTarget.ofEndpoint(options.getEndpoint());
     }
     return RedisServerTarget.ofEndpoints(options.getEndpoints());

@@ -16,11 +16,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.util.Sharded;
 
-/**
- * Hands the configured shard list to the connection of the shard a command is routed to. The list
- * itself is rendered once when the sharded client is constructed, so routing a command only copies
- * an already rendered value.
- */
 class ShardedRoutingInstrumentation implements TypeInstrumentation {
 
   @Override

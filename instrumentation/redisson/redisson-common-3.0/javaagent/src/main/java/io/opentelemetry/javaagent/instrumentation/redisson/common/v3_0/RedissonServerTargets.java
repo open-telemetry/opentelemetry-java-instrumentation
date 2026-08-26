@@ -12,15 +12,6 @@ import org.redisson.client.RedisClient;
 import org.redisson.client.RedisConnection;
 import org.redisson.connection.MasterSlaveConnectionManager;
 
-/**
- * Carries the target a client was configured with from the connection manager the configuration was
- * handed to, through the per node clients the manager creates, to the connections those clients
- * open.
- *
- * <p>A connection has no way back to the manager, so the target travels forward: the manager
- * renders it once from the configuration it was built with, and every client the manager creates is
- * given a copy of the already rendered value.
- */
 public final class RedissonServerTargets {
 
   private static final VirtualField<MasterSlaveConnectionManager, RedisServerTarget>

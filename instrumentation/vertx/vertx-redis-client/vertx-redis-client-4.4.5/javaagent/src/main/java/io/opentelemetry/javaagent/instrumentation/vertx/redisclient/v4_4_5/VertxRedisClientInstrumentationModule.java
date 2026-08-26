@@ -14,11 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Captures the target a client was configured with for the versions that build their connections
- * from {@code RedisConnectOptions}. The spans themselves are created by the {@code
- * vertx-redis-client-4.0} module, which reads the target back from the endpoint it connects to.
- */
 @AutoService(InstrumentationModule.class)
 public class VertxRedisClientInstrumentationModule extends InstrumentationModule {
 

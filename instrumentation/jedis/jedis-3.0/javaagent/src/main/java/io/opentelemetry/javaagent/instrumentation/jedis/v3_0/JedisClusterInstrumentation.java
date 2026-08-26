@@ -21,14 +21,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClusterConnectionHandler;
 
-/**
- * Captures the nodes a cluster client was configured with and hands them to the connection the
- * cluster picks for a command, so that a command is reported against the cluster rather than the
- * node that happens to own the slot.
- *
- * <p>The slot based handler is the only handler that picks a connection: its superclass declares
- * both picking methods as abstract.
- */
 class JedisClusterInstrumentation implements TypeInstrumentation {
 
   @Override

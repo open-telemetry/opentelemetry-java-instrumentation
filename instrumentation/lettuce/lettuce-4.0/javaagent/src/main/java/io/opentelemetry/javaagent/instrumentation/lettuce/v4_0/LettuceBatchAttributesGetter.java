@@ -68,7 +68,6 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   public Integer getServerPort(LettuceBatchRequest request) {
     RedisServerTarget serverTarget = request.getServerTarget();
     if (emitStableDatabaseSemconv() && serverTarget != null) {
-      // a target that names several endpoints already carries the port of each of them
       return serverTarget.getPort();
     }
     InetSocketAddress serverAddress = request.getServerAddress();

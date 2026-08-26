@@ -18,15 +18,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.util.Pool;
 
-/**
- * Captures the sentinels and master a Sentinel backed pool was configured with. Sentinel pools were
- * added in jedis 2.2, so on earlier versions this matches nothing and only the pool itself is
- * instrumented.
- */
 class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    // added in Jedis 2.2
     return named("redis.clients.jedis.JedisSentinelPool");
   }
 

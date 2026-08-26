@@ -23,16 +23,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Keeps the seed URIs a cluster client was configured with, so that a command routed to a
- * discovered node is still reported against the cluster the client was asked to talk to.
- *
- * <p>The cluster client hands out two kinds of connection: the cluster connection every routed
- * command is written through, and the per node connections an application asks for by node. Both
- * are picked up where the client returns them, because that is the only shape the whole 4.x line
- * shares: the argument lists of the methods that build them changed several times, while the
- * returned types did not.
- */
 class LettuceClusterClientInstrumentation implements TypeInstrumentation {
 
   @Override

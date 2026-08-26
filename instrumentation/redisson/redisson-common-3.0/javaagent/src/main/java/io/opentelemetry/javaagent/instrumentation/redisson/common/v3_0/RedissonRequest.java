@@ -95,7 +95,6 @@ public abstract class RedissonRequest {
   @Nullable
   public abstract Long getDatabaseIndex();
 
-  /** The target the client was configured with, or {@code null} when it was not captured. */
   @Nullable
   public abstract RedisServerTarget getServerTarget();
 

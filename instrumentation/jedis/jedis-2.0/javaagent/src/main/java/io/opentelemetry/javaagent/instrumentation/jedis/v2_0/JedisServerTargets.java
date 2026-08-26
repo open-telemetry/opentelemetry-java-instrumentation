@@ -13,10 +13,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.JedisShardInfo;
 
-/** Renders the target a client was configured with from the endpoints it was built with. */
 public final class JedisServerTargets {
 
-  /** The target of a sharded client, built from its shard list. */
   @Nullable
   public static RedisServerTarget ofShards(@Nullable List<JedisShardInfo> shards) {
     if (shards == null || shards.isEmpty()) {
@@ -29,17 +27,12 @@ public final class JedisServerTargets {
     return RedisServerTarget.ofEndpoints(endpoints);
   }
 
-  /** The target of a Sentinel backed client, scoped by its sentinels and master name. */
   @Nullable
   public static RedisServerTarget ofSentinels(
       @Nullable String masterName, @Nullable Collection<?> sentinels) {
     return RedisServerTarget.ofEndpointsAndLogicalName(endpointStrings(sentinels), masterName);
   }
 
-  /**
-   * The target of a client configured with several nodes, built from the {@code host:port}
-   * rendering each node carries.
-   */
   @Nullable
   public static RedisServerTarget ofNodes(@Nullable Collection<?> nodes) {
     List<String> endpoints = endpointStrings(nodes);

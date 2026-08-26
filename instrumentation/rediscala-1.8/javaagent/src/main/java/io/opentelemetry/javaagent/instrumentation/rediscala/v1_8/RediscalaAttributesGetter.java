@@ -74,7 +74,6 @@ class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaReq
   public Integer getServerPort(RediscalaRequest request) {
     RedisServerTarget serverTarget = request.getServerTarget();
     if (emitStableDatabaseSemconv() && serverTarget != null) {
-      // a target that names several endpoints already carries the port of each of them
       return serverTarget.getPort();
     }
     return request.getPort();

@@ -128,7 +128,6 @@ class VertxRedisClientRequest {
   @Nullable
   Integer getServerPort() {
     if (emitStableDatabaseSemconv() && serverTarget != null) {
-      // a target that names several endpoints already carries the port of each of them
       return serverTarget.getPort();
     }
     if (redisUri == null) {

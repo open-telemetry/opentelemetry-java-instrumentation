@@ -55,7 +55,6 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   public Integer getServerPort(JedisRequest request) {
     RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
     if (emitStableDatabaseSemconv() && target != null) {
-      // a target that names several shards already carries the port of each of them
       return target.getPort();
     }
     return request.getConnection().getPort();

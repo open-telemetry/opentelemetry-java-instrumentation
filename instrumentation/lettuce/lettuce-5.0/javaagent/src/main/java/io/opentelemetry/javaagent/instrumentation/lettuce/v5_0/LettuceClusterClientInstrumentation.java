@@ -26,10 +26,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Keeps the seed URIs a cluster client was configured with, so that a command routed to a
- * discovered node is still reported against the cluster the client was asked to talk to.
- */
 class LettuceClusterClientInstrumentation implements TypeInstrumentation {
 
   @Override
@@ -42,8 +38,6 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("java.lang.Iterable"))),
         getClass().getName() + "$ConstructorAdvice");
-    // connectStateful builds the cluster's own connection and connectStatefulAsync the per node
-    // connections; both hand over the endpoint and the URI in the same positions
     transformer.applyAdviceToMethod(
         nameStartsWith("connectStateful")
             .and(takesArgument(1, named("io.lettuce.core.protocol.DefaultEndpoint")))
@@ -66,8 +60,6 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AttachEndpointAdvice {
 
-    // runs before lettuce dispatches the connection initialization commands, so that a SELECT for a
-    // non-default database can find the connection database index
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.This RedisClusterClient client,

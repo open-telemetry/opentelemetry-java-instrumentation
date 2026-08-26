@@ -12,22 +12,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import javax.annotation.Nullable;
 
-/**
- * The Redis target a client was configured with, rendered once from the configuration the client
- * was built with rather than from the node that happens to answer a command.
- *
- * <p>A client configured with a single endpoint keeps that endpoint's host and its port. A client
- * configured with several endpoints carries all of them in the address, in the client's own {@code
- * host:port,host:port} syntax, and has no port of its own. A discovery-backed client can scope each
- * configured endpoint with the same logical name, as {@code host:port/name,host:port/name}, and has
- * no port of its own.
- *
- * <p>Credentials, the selected database, query parameters and fragments are removed from every
- * endpoint.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
- */
+@SuppressWarnings("OtelInternalJavadoc")
 public final class RedisServerTarget {
 
   private final String address;
@@ -38,10 +23,6 @@ public final class RedisServerTarget {
     this.port = port;
   }
 
-  /**
-   * The target of a client configured against a logical name, such as a Redis Sentinel master name,
-   * or {@code null} when the name is empty.
-   */
   @Nullable
   public static RedisServerTarget ofLogicalName(@Nullable String name) {
     if (name == null) {
@@ -51,29 +32,17 @@ public final class RedisServerTarget {
     return trimmed.isEmpty() ? null : new RedisServerTarget(trimmed, null);
   }
 
-  /**
-   * The target of a client configured with a single endpoint in the client's own syntax, or {@code
-   * null} when nothing usable is left of it.
-   */
   @Nullable
   public static RedisServerTarget ofEndpoint(@Nullable String endpoint) {
     Endpoint parsed = Endpoint.parse(endpoint);
     return parsed == null ? null : new RedisServerTarget(parsed.host, parsed.port);
   }
 
-  /**
-   * The target of a client configured with a single host and port, or {@code null} when the host is
-   * empty.
-   */
   @Nullable
   public static RedisServerTarget ofHostAndPort(@Nullable String host, int port) {
     return ofEndpoint(endpoint(host, port));
   }
 
-  /**
-   * The target of a client configured with {@code endpoints}, each in the client's own syntax, or
-   * {@code null} when nothing usable is left of them.
-   */
   @Nullable
   public static RedisServerTarget ofEndpoints(@Nullable List<String> endpoints) {
     if (endpoints == null || endpoints.isEmpty()) {
@@ -104,11 +73,6 @@ public final class RedisServerTarget {
     return new RedisServerTarget(String.join(",", rendered), null);
   }
 
-  /**
-   * The target of a discovery-backed client configured with {@code endpoints} and a logical {@code
-   * name}. Every endpoint is independently scoped as {@code endpoint/name}; endpoints are sorted
-   * and deduplicated because their configuration order is not part of the target identity.
-   */
   @Nullable
   public static RedisServerTarget ofEndpointsAndLogicalName(
       @Nullable List<String> endpoints, @Nullable String name) {
@@ -135,7 +99,6 @@ public final class RedisServerTarget {
     return new RedisServerTarget(String.join(",", scoped), null);
   }
 
-  /** Renders {@code host} and {@code port} as a single endpoint in the usual Redis syntax. */
   public static String endpoint(@Nullable String host, int port) {
     if (host == null) {
       return "";
@@ -161,7 +124,6 @@ public final class RedisServerTarget {
     return address;
   }
 
-  /** The port of a single configured endpoint, or {@code null} when the target is not singular. */
   @Nullable
   public Integer getPort() {
     return port;

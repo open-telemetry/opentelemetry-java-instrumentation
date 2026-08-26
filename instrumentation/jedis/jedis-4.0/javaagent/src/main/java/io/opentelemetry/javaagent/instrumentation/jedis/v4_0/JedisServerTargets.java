@@ -13,10 +13,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.HostAndPort;
 
-/** Renders the target a client was configured with from the endpoints it was built with. */
 public final class JedisServerTargets {
 
-  /** The target of a client configured with several nodes, built from every node it was given. */
   @Nullable
   public static RedisServerTarget ofNodes(@Nullable Collection<HostAndPort> nodes) {
     if (nodes == null || nodes.isEmpty()) {
@@ -32,7 +30,6 @@ public final class JedisServerTargets {
     return RedisServerTarget.ofEndpoints(endpoints);
   }
 
-  /** The target of a Sentinel backed client, scoped by its sentinels and master name. */
   @Nullable
   public static RedisServerTarget ofSentinels(
       @Nullable String masterName, @Nullable Collection<?> sentinels) {
@@ -48,10 +45,7 @@ public final class JedisServerTargets {
     return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, masterName);
   }
 
-  /**
-   * Finds the Sentinel collection in constructor arguments whose position varies between Jedis
-   * releases.
-   */
+  // Sentinel constructor argument order varies across supported Jedis 4 releases.
   @Nullable
   public static RedisServerTarget ofSentinelsFromArguments(
       @Nullable String masterName, @Nullable Object[] arguments) {

@@ -87,19 +87,14 @@ public class JedisSingletons {
     CLUSTER_TARGET.set(handler, target);
   }
 
-  /**
-   * Hands the target the sharded client was configured with to the shard a command is routed to.
-   */
   public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
     attach(SHARDED_TARGET.get(sharded), shard);
   }
 
-  /** Hands the target the pool was configured with to the resource it just handed out. */
   public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
     attach(POOL_TARGET.get(pool), resource);
   }
 
-  /** Hands the target the cluster was configured with to the connection it just picked. */
   public static void attachClusterTarget(
       JedisClusterConnectionHandler handler, @Nullable Object connection) {
     attach(CLUSTER_TARGET.get(handler), connection);

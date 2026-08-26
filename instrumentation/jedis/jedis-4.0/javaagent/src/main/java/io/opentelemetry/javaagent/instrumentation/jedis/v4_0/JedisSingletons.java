@@ -89,7 +89,6 @@ public class JedisSingletons {
     }
   }
 
-  /** Hands the target the pool was configured with to the resource it just handed out. */
   public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
     RedisServerTarget target = POOL_TARGET.get(pool);
     if (target != null && resource instanceof Jedis) {
@@ -97,7 +96,6 @@ public class JedisSingletons {
     }
   }
 
-  /** Hands the target the client was configured with to the connection its provider just picked. */
   public static void attachProviderTarget(Object provider, @Nullable Connection connection) {
     setConnectionTarget(connection, providerTargets.get(provider));
   }

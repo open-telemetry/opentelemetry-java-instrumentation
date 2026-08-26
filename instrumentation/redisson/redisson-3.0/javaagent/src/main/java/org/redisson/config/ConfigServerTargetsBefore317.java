@@ -14,17 +14,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import javax.annotation.Nullable;
 
-// This helper is in the Redisson package in order to read the per mode configuration, which Config
-// only exposes to its own package.
 public final class ConfigServerTargetsBefore317 {
 
-  /**
-   * The target the configuration names, which is the Sentinel endpoints scoped by their master, or
-   * the cluster nodes when the client was configured against a cluster.
-   *
-   * <p>A client configured with a single address needs no target of its own: the address the
-   * connection reports is already the address it was configured with.
-   */
   @Nullable
   public static RedisServerTarget of(@Nullable Config config) {
     if (config == null) {
@@ -46,10 +37,7 @@ public final class ConfigServerTargetsBefore317 {
     return null;
   }
 
-  /**
-   * Reads the master address reflectively because Redisson returns it as {@code URI}, {@code URL},
-   * or {@code String} across the supported versions.
-   */
+  // Redisson changes the master address return type across supported versions.
   private static Object getMasterAddress(MasterSlaveServersConfig config) {
     try {
       return config.getClass().getMethod("getMasterAddress").invoke(config);
@@ -58,10 +46,7 @@ public final class ConfigServerTargetsBefore317 {
     }
   }
 
-  /**
-   * Renders addresses that Redisson holds using different types across the supported versions,
-   * which is why they are read as plain objects.
-   */
+  // Redisson stores addresses as URI, URL, or String across supported versions.
   @Nullable
   private static RedisServerTarget ofAddresses(@Nullable Collection<?> addresses) {
     if (addresses == null || addresses.isEmpty()) {

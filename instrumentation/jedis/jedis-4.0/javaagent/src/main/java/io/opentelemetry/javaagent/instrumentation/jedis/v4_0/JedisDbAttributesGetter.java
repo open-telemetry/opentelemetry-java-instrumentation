@@ -65,7 +65,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   public Integer getServerPort(JedisRequest request) {
     RedisServerTarget target = request.getServerTarget();
     if (emitStableDatabaseSemconv() && target != null) {
-      // a target that names several endpoints already carries the port of each of them
       return target.getPort();
     }
     return request.getServerPort();

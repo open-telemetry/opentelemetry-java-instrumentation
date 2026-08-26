@@ -16,11 +16,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.util.Pool;
 
-/**
- * Hands the target a pool was configured with to the connection of the resource it just handed out.
- * A pool that was not configured against a logical target, such as a plain host and port pool or a
- * pool a cluster keeps per node, carries no target and is left alone.
- */
 class PoolResourceInstrumentation implements TypeInstrumentation {
 
   @Override

@@ -68,7 +68,6 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
     if (emitStableDatabaseSemconv()) {
       RedisServerTarget target = LettuceSingletons.COMMAND_TARGET.get(request);
       if (target != null) {
-        // a target that names several endpoints already carries the port of each of them
         return target.getPort();
       }
     }

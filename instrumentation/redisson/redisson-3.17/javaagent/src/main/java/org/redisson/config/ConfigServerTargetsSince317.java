@@ -20,8 +20,6 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-// This helper is in the Redisson package in order to read the per mode configuration, which Config
-// only exposes to its own package.
 public final class ConfigServerTargetsSince317 {
 
   private static final Logger logger =
@@ -45,13 +43,6 @@ public final class ConfigServerTargetsSince317 {
     }
   }
 
-  /**
-   * The target the configuration names, which is the Sentinel endpoints scoped by their master, or
-   * the configured nodes when the client was configured against a cluster or a replicated set.
-   *
-   * <p>A client configured with a single address needs no target of its own: the address the
-   * connection reports is already the address it was configured with.
-   */
   @Nullable
   public static RedisServerTarget of(@Nullable Config config) {
     if (config == null) {
@@ -77,10 +68,6 @@ public final class ConfigServerTargetsSince317 {
     return null;
   }
 
-  /**
-   * The target of a connection manager that was handed the service manager the configuration lives
-   * in, which is how redisson 3.20 through 3.29 build their connection managers.
-   */
   @Nullable
   public static RedisServerTarget ofServiceManager(@Nullable Object serviceManager) {
     if (serviceManager == null || SERVICE_MANAGER_GET_CFG == null) {

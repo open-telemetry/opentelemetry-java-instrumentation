@@ -19,11 +19,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.util.Sharded;
 
-/**
- * Captures the shards a sharded client was configured with. The shard list is rendered once, while
- * the client is being constructed, and is handed to the connection of whichever shard a command is
- * routed to.
- */
 class ShardedJedisInstrumentation implements TypeInstrumentation {
 
   @Override

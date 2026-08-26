@@ -22,11 +22,6 @@ import org.redisson.config.Config;
 import org.redisson.config.ConfigServerTargetsSince317;
 import org.redisson.connection.MasterSlaveConnectionManager;
 
-/**
- * Renders the target a client was configured with while its connection manager is being built, and
- * hands it to every per node client the manager creates. Every connection manager redisson has,
- * including the cluster, Sentinel and replicated ones, is built on top of this one.
- */
 class ConnectionManagerInstrumentation implements TypeInstrumentation {
 
   @Override

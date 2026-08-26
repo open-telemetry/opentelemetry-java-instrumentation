@@ -9,12 +9,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 
-/**
- * Keeps the target a client was configured with on its connection manager.
- *
- * <p>{@code RedisConnectionManager} is not visible outside of this package, so callers pass the
- * manager in as an {@link Object}.
- */
 public class RedisConnectionManagerUtil {
 
   private static final VirtualField<RedisConnectionManager, RedisServerTarget> TARGET_FIELD =

@@ -84,7 +84,6 @@ class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Object manager, @Advice.FieldValue("redisURI") RedisURI redisUri) {
-      // RedisConnectionManager is not visible from this package
       VertxRedisServerTargets.set(redisUri, RedisConnectionManagerUtil.getServerTarget(manager));
     }
   }

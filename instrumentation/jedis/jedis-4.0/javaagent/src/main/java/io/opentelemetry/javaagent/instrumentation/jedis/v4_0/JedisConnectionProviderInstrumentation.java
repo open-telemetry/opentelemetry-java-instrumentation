@@ -22,14 +22,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
 
-/**
- * Captures the endpoints a cluster, sharded or Sentinel backed client was configured with and hands
- * them to every connection the client's provider produces.
- *
- * <p>The provider interface was renamed between jedis 4.0.0-beta1 and 4.0.0, and the sentineled
- * provider only arrived in 4.4, so both spellings are matched by name and no advice names a
- * provider type.
- */
 class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
   @Override

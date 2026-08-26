@@ -16,13 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * Renders the target a client was configured with from the {@link RedisConnectOptions} it connects
- * with, and keeps it on the {@link RedisURI} of the endpoint the client connects through.
- *
- * <p>{@code RedisConnectOptions} is mutable, so the target is rendered once while the client is
- * being set up and kept as an immutable value from then on.
- */
 public final class VertxRedisServerTargets {
 
   private static final VirtualField<RedisURI, RedisServerTarget> TARGET_FIELD =
@@ -39,7 +32,6 @@ public final class VertxRedisServerTargets {
           ((RedisSentinelConnectOptions) options).getMasterName());
     }
     if (options instanceof RedisStandaloneConnectOptions) {
-      // a standalone client only ever talks to the endpoint it picks, even when more are configured
       return RedisServerTarget.ofEndpoint(options.getEndpoint());
     }
     return RedisServerTarget.ofEndpoints(options.getEndpoints());

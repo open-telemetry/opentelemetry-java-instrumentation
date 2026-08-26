@@ -25,14 +25,6 @@ import scala.Tuple2;
 import scala.collection.Iterable;
 import scala.collection.Iterator;
 
-/**
- * Renders the target a rediscala client was configured with.
- *
- * <p>A sentinel monitored client is named by the master it was configured to follow, a {@link
- * RedisClientPool} or mutable pool by the servers it is configured with, and a plain client by its
- * own host and port. None of these carry an actor system type, so this works the same for the Akka
- * and the Pekko builds of rediscala.
- */
 public final class RediscalaServerTargets {
 
   private static final Logger logger = Logger.getLogger(RediscalaServerTargets.class.getName());

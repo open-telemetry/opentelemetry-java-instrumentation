@@ -60,10 +60,8 @@ class ShardedJedis30ClientTest {
 
   private static ShardedJedis sharded;
 
-  // the endpoints the client was configured with, in the order it was given them
   private static String configuredTarget;
 
-  // the shard the key used by this test is routed to
   private static String shardHost;
   private static int shardPort;
   private static String shardIp;
@@ -103,7 +101,6 @@ class ShardedJedis30ClientTest {
     sharded.set("foo", "bar");
 
     assertThat(sharded.get("foo")).isEqualTo("bar");
-    // the two servers listen on ports of their own, so the target names both of them
     assertThat(configuredTarget).contains(",");
 
     testing.waitAndAssertTraces(
@@ -130,15 +127,12 @@ class ShardedJedis30ClientTest {
                 equalTo(maybeStable(DB_OPERATION), operation),
                 equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null)));
     if (emitStableDatabaseSemconv()) {
-      // the address names every shard, so it carries no port of its own and no longer matches the
-      // peer service mapping the test configures for a single host
       assertions.add(equalTo(SERVER_ADDRESS, configuredTarget));
     } else {
       assertions.add(equalTo(maybeStablePeerService(), "test-peer-service"));
       assertions.add(equalTo(SERVER_ADDRESS, shardHost));
       assertions.add(equalTo(SERVER_PORT, shardPort));
     }
-    // the node that answered the command is still reported as the peer
     assertions.add(equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null));
     assertions.add(equalTo(NETWORK_PEER_ADDRESS, shardIp));
     assertions.add(satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative));

@@ -19,16 +19,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Captures the nodes a cluster client was configured with and hands them to the connection the
- * cluster picks for a command, so that a command is reported against the cluster rather than the
- * node that happens to own the slot.
- *
- * <p>The slot based handler is the only handler that picks a connection: its superclass declares
- * both picking methods as abstract. Cluster support was added in jedis 2.4, so on earlier versions
- * this matches nothing. The advice names no cluster type, because {@code HostAndPort} only arrived
- * with the cluster and the module also covers the versions before it.
- */
 class JedisClusterInstrumentation implements TypeInstrumentation {
 
   @Override

@@ -174,31 +174,24 @@ class RedisServerTargetTest {
 
   @ParameterizedTest
   @CsvSource({
-    // credentials
     "redis://user:password@localhost:6379, localhost, 6379",
     "redis://:password@localhost:6379, localhost, 6379",
     "redis://user@localhost:6379, localhost, 6379",
     "user:password@localhost:6379, localhost, 6379",
     "redis://user:p%40ss@localhost:6379, localhost, 6379",
-    // selected database
     "redis://localhost:6379/2, localhost, 6379",
     "redis://localhost:6379/, localhost, 6379",
-    // query and fragment
     "redis://localhost:6379?timeout=5s, localhost, 6379",
     "redis://localhost:6379/2?timeout=5s, localhost, 6379",
     "redis://localhost:6379#fragment, localhost, 6379",
     "redis://localhost:6379/2?timeout=5s#fragment, localhost, 6379",
     "redis://user:pass@localhost:6379/2?timeout=5s#fragment, localhost, 6379",
-    // no port
     "redis://localhost, localhost, ",
     "localhost, localhost, ",
-    // bracketed IPv6
     "redis://[::1]:6379, ::1, 6379",
     "[2001:db8::1]:6380, 2001:db8::1, 6380",
     "redis://[::1], ::1, ",
-    // unbracketed IPv6 carries no port
     "::1, ::1, ",
-    // adversarial ports
     "localhost:banana, localhost:banana, ",
     "localhost:70000, localhost:70000, ",
     "localhost:, localhost:, ",

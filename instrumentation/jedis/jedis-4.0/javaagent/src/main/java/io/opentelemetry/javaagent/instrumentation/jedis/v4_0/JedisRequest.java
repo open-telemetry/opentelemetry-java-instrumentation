@@ -114,7 +114,6 @@ public abstract class JedisRequest {
   @Nullable
   public abstract Integer getServerPort();
 
-  /** The target the client was configured with, or {@code null} when it was not captured. */
   @Nullable
   public abstract RedisServerTarget getServerTarget();
 
