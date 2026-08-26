@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
-import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -17,10 +16,9 @@ import javax.annotation.Nullable;
 public class SqsCreateRequest {
 
   @Nullable private final String queueUrl;
-  private final Map<String, MessageAttributeValue> messageAttributes;
+  private final Map<String, String> messageAttributes;
 
-  SqsCreateRequest(
-      @Nullable String queueUrl, Map<String, MessageAttributeValue> messageAttributes) {
+  SqsCreateRequest(@Nullable String queueUrl, Map<String, String> messageAttributes) {
     this.queueUrl = queueUrl;
     this.messageAttributes = messageAttributes;
   }
@@ -36,8 +34,7 @@ public class SqsCreateRequest {
 
   @Nullable
   String getMessageAttribute(String name) {
-    MessageAttributeValue value = messageAttributes.get(name);
-    return value != null ? value.getStringValue() : null;
+    return messageAttributes.get(name);
   }
 
   Collection<String> getMessageAttributeNames() {

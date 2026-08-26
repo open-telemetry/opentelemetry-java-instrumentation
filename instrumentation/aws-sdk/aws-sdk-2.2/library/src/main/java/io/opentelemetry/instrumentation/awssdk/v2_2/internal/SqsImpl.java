@@ -234,7 +234,7 @@ public final class SqsImpl {
       }
 
       SqsCreateRequest createRequest =
-          new SqsCreateRequest(batchRequest.queueUrl(), messageAttributes);
+          new SqsCreateRequest(batchRequest.queueUrl(), stringMessageAttributes(messageAttributes));
       if (!producerCreateInstrumenter.shouldStart(creationParentContext, createRequest)) {
         continue;
       }
@@ -251,6 +251,13 @@ public final class SqsImpl {
     }
     TracingExecutionInterceptor.setBatchMessageContexts(executionAttributes, creationContexts);
     return batchRequest.toBuilder().entries(entries).build();
+  }
+
+  private static Map<String, String> stringMessageAttributes(
+      Map<String, MessageAttributeValue> messageAttributes) {
+    Map<String, String> values = new HashMap<>();
+    messageAttributes.forEach((name, value) -> values.put(name, value.stringValue()));
+    return values;
   }
 
   private static io.opentelemetry.context.Context creationContext(
