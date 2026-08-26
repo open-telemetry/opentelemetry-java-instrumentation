@@ -18,6 +18,8 @@ public class OpenSearchServerTargets {
       VirtualField.find(OpenSearchTransport.class, String.class);
   private static final VirtualField<OpenSearchTransport, Integer> SERVER_PORT =
       VirtualField.find(OpenSearchTransport.class, Integer.class);
+  private static final VirtualField<OpenSearchTransport, Boolean> PEER_CAPTURE_ENABLED =
+      VirtualField.find(OpenSearchTransport.class, Boolean.class);
 
   public static void capture(
       OpenSearchTransport transport, @Nullable List<OpenSearchServerTarget.Endpoint> endpoints) {
@@ -31,6 +33,14 @@ public class OpenSearchServerTargets {
     }
     SERVER_ADDRESS.set(transport, target.getAddress());
     SERVER_PORT.set(transport, target.getPort());
+  }
+
+  public static void enablePeerCapture(OpenSearchTransport transport) {
+    PEER_CAPTURE_ENABLED.set(transport, Boolean.TRUE);
+  }
+
+  public static boolean isPeerCaptureEnabled(OpenSearchTransport transport) {
+    return Boolean.TRUE.equals(PEER_CAPTURE_ENABLED.get(transport));
   }
 
   @Nullable

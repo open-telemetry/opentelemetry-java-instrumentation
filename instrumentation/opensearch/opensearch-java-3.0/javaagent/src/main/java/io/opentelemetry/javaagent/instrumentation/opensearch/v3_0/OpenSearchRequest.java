@@ -6,10 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SearchPeerState;
 import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class OpenSearchRequest {
+
+  private final SearchPeerState peerState = new SearchPeerState();
 
   public static OpenSearchRequest create(
       String method,
@@ -32,4 +35,8 @@ public abstract class OpenSearchRequest {
 
   @Nullable
   public abstract Integer getServerPort();
+
+  public final SearchPeerState getPeerState() {
+    return peerState;
+  }
 }

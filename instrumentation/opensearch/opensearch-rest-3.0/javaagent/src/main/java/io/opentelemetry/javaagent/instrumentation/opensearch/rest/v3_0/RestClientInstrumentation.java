@@ -72,7 +72,10 @@ class RestClientInstrumentation implements TypeInstrumentation {
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return null;
       }
-      Context context = instrumenter().start(parentContext, otelRequest);
+      Context context =
+          otelRequest
+              .getPeerState()
+              .storeInContext(instrumenter().start(parentContext, otelRequest));
       return new AdviceScope(otelRequest, parentContext, context, context.makeCurrent());
     }
 

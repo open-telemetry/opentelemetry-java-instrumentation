@@ -48,6 +48,7 @@ class ApacheHttpClient5TransportInstrumentation implements TypeInstrumentation {
         HttpHost host = node.getHost();
         endpoints.add(new OpenSearchServerTarget.Endpoint(host.getHostName(), host.getPort()));
       }
+      OpenSearchServerTargets.enablePeerCapture(transport);
       OpenSearchServerTargets.capture(transport, endpoints);
     }
   }

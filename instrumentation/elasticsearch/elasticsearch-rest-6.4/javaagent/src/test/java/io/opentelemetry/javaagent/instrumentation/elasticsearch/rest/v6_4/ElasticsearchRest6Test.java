@@ -13,6 +13,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -31,6 +33,8 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.apache.http.HttpHost;
@@ -54,13 +58,14 @@ class ElasticsearchRest6Test {
   static ElasticsearchContainer elasticsearch;
 
   static HttpHost httpHost;
+  static String peerAddress;
 
   static RestClient client;
 
   static ObjectMapper objectMapper;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws UnknownHostException {
     elasticsearch =
         new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:6.8.16");
     // limit memory usage
@@ -71,6 +76,7 @@ class ElasticsearchRest6Test {
     cleanup.deferAfterAll(elasticsearch::stop);
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
+    peerAddress = InetAddress.getByName(httpHost.getHostName()).getHostAddress();
     client =
         RestClient.builder(httpHost)
             .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
@@ -107,6 +113,8 @@ class ElasticsearchRest6Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
@@ -127,6 +135,8 @@ class ElasticsearchRest6Test {
         testing,
         "io.opentelemetry.elasticsearch-rest-6.4",
         DB_SYSTEM_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -185,6 +195,8 @@ class ElasticsearchRest6Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
@@ -209,7 +221,7 @@ class ElasticsearchRest6Test {
   @Test
   void configuredNodeListIsTheWholeTarget() throws IOException {
     HttpHost deadHost = deadHost();
-    RestClient nodeListClient = RestClient.builder(httpHost, deadHost).build();
+    RestClient nodeListClient = RestClient.builder(deadHost, httpHost).build();
     cleanup.deferCleanup(nodeListClient);
 
     nodeListClient.performRequest(new Request("GET", "_cluster/health"));
@@ -235,13 +247,13 @@ class ElasticsearchRest6Test {
   }
 
   private static String hostList(HttpHost deadHost) {
-    return httpHost.getHostName()
+    return deadHost.getHostName()
         + ":"
-        + httpHost.getPort()
+        + deadHost.getPort()
         + ","
-        + deadHost.getHostName()
+        + httpHost.getHostName()
         + ":"
-        + deadHost.getPort();
+        + httpHost.getPort();
   }
 
   private static void assertConfiguredTarget(String hostList) {
@@ -257,6 +269,8 @@ class ElasticsearchRest6Test {
                         : "GET")
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfying(
+                    equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                    equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                     equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
                     equalTo(
                         SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort()))));

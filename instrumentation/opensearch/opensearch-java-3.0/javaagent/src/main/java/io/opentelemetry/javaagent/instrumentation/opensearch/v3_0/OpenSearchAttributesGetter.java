@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import java.util.concurrent.CompletionException;
 import javax.annotation.Nullable;
 import org.opensearch.client.opensearch._types.OpenSearchException;
@@ -70,5 +71,19 @@ final class OpenSearchAttributesGetter
   @Nullable
   public Integer getServerPort(OpenSearchRequest request) {
     return emitStableDatabaseSemconv() ? request.getServerPort() : null;
+  }
+
+  @Override
+  @Nullable
+  public String getNetworkPeerAddress(OpenSearchRequest request, @Nullable Void response) {
+    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+    return peerAddress != null ? peerAddress.getAddress().getHostAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getNetworkPeerPort(OpenSearchRequest request, @Nullable Void response) {
+    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+    return peerAddress != null ? peerAddress.getPort() : null;
   }
 }

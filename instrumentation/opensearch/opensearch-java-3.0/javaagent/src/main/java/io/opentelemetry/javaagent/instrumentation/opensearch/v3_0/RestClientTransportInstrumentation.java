@@ -37,6 +37,7 @@ class RestClientTransportInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This OpenSearchTransport transport, @Advice.Argument(0) Object restClient) {
+      OpenSearchServerTargets.enablePeerCapture(transport);
       OpenSearchServerTargets.capture(transport, OpenSearchRestClientNodes.target(restClient));
     }
   }

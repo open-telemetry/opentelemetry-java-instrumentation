@@ -15,6 +15,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -194,6 +196,8 @@ abstract class AbstractOpenSearchTest {
 
   List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
+    result.add(equalTo(NETWORK_PEER_ADDRESS, null));
+    result.add(equalTo(NETWORK_PEER_PORT, null));
     if (emitStableDatabaseSemconv()) {
       result.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
       result.add(equalTo(SERVER_PORT, httpHost.getPort()));

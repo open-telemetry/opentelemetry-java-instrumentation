@@ -9,9 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class OpenSearchRestAttributesGetter
@@ -74,32 +72,19 @@ final class OpenSearchRestAttributesGetter
     return target != null ? target.getPort() : null;
   }
 
-  @Nullable
-  @Override
-  public String getNetworkType(
-      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (response == null) {
-      return null;
-    }
-    InetAddress address = response.getAddress();
-    if (address instanceof Inet4Address) {
-      return "ipv4";
-    } else if (address instanceof Inet6Address) {
-      return "ipv6";
-    }
-    return null;
-  }
-
   @Override
   @Nullable
   public String getNetworkPeerAddress(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (response != null) {
-      InetAddress address = response.getAddress();
-      if (address != null) {
-        return address.getHostAddress();
-      }
-    }
-    return null;
+    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+    return peerAddress != null ? peerAddress.getAddress().getHostAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getNetworkPeerPort(
+      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
+    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+    return peerAddress != null ? peerAddress.getPort() : null;
   }
 }

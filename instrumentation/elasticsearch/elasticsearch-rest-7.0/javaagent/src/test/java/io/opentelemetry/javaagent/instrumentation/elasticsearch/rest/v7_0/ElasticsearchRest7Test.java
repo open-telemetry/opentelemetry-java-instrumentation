@@ -60,6 +60,7 @@ class ElasticsearchRest7Test {
   private static ElasticsearchContainer elasticsearch;
 
   private static HttpHost httpHost;
+  private static String peerAddress;
 
   private static RestClient client;
 
@@ -74,7 +75,8 @@ class ElasticsearchRest7Test {
         "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     elasticsearch.start();
 
-    httpHost = resolvedHost(HttpHost.create(elasticsearch.getHttpHostAddress()));
+    httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
+    peerAddress = InetAddress.getByName(httpHost.getHostName()).getHostAddress();
 
     client =
         RestClient.builder(httpHost)
@@ -107,7 +109,7 @@ class ElasticsearchRest7Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(NETWORK_PEER_ADDRESS, httpHost.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
                             equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -117,8 +119,6 @@ class ElasticsearchRest7Test {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, httpHost.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
@@ -192,7 +192,7 @@ class ElasticsearchRest7Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(NETWORK_PEER_ADDRESS, httpHost.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
                             equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -202,8 +202,6 @@ class ElasticsearchRest7Test {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, httpHost.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
@@ -241,7 +239,7 @@ class ElasticsearchRest7Test {
   @Test
   void configuredNodeListIsTheWholeTarget() throws IOException {
     HttpHost deadHost = deadHost();
-    RestClient nodeListClient = RestClient.builder(httpHost, deadHost).build();
+    RestClient nodeListClient = RestClient.builder(deadHost, httpHost).build();
     cleanup.deferCleanup(nodeListClient);
 
     nodeListClient.performRequest(new Request("GET", "_cluster/health"));
@@ -266,19 +264,14 @@ class ElasticsearchRest7Test {
     return new HttpHost(httpHost.getHostName(), httpHost.getPort() + 1, httpHost.getSchemeName());
   }
 
-  private static HttpHost resolvedHost(HttpHost host) throws UnknownHostException {
-    InetAddress address = InetAddress.getByName(host.getHostName());
-    return new HttpHost(address, host.getHostName(), host.getPort(), host.getSchemeName());
-  }
-
   private static String hostList(HttpHost deadHost) {
-    return httpHost.getHostName()
+    return deadHost.getHostName()
         + ":"
-        + httpHost.getPort()
+        + deadHost.getPort()
         + ","
-        + deadHost.getHostName()
+        + httpHost.getHostName()
         + ":"
-        + deadHost.getPort();
+        + httpHost.getPort();
   }
 
   private static void assertConfiguredTarget(String hostList) {
@@ -294,6 +287,8 @@ class ElasticsearchRest7Test {
                         : "GET")
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfying(
+                    equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                    equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                     equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
                     equalTo(
                         SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort()))));

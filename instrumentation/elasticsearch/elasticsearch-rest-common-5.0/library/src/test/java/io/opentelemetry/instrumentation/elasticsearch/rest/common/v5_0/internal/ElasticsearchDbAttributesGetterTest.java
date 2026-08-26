@@ -8,63 +8,56 @@ package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SearchPeerState;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import org.apache.http.HttpHost;
-import org.elasticsearch.client.Response;
+import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
 
 class ElasticsearchDbAttributesGetterTest {
 
-  private static final ElasticsearchRestRequest REQUEST =
-      ElasticsearchRestRequest.create("GET", "/");
-
   private final ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(false);
 
   @Test
-  void capturesResolvedResponseHost() throws UnknownHostException {
-    Response response = mock(Response.class);
-    when(response.getHost())
-        .thenReturn(
-            new HttpHost(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 9200, "http"));
+  void capturesPeerFromRequestState() throws Exception {
+    ElasticsearchRestRequest request = ElasticsearchRestRequest.create("GET", "/");
+    Context context = request.getPeerState().storeInContext(Context.root());
+    SearchPeerState.capture(context, new InetSocketAddress(InetAddress.getLoopbackAddress(), 9200));
 
-    assertThat(getter.getNetworkPeerAddress(REQUEST, response)).isEqualTo("127.0.0.1");
-    assertThat(getter.getNetworkPeerPort(REQUEST, response)).isEqualTo(9200);
-    assertThat(extractAttributes(response))
+    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("127.0.0.1");
+    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(9200);
+    assertThat(extractAttributes(request))
         .isEqualTo(Attributes.of(NETWORK_PEER_ADDRESS, "127.0.0.1", NETWORK_PEER_PORT, 9200L));
   }
 
   @Test
-  void doesNotResolveHostnameOnlyResponseHost() {
-    Response response = mock(Response.class);
-    when(response.getHost()).thenReturn(new HttpHost("elasticsearch.example", 9200, "http"));
+  void doesNotResolveConfiguredHostname() {
+    ElasticsearchRestRequest request = ElasticsearchRestRequest.create("GET", "/");
+    Context context = request.getPeerState().storeInContext(Context.root());
+    SearchPeerState.capture(context, InetSocketAddress.createUnresolved("search.example", 9200));
 
-    assertThat(getter.getNetworkPeerAddress(REQUEST, response)).isNull();
-    assertThat(getter.getNetworkPeerPort(REQUEST, response)).isEqualTo(9200);
-    assertThat(extractAttributes(response)).isEqualTo(Attributes.empty());
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+    assertThat(extractAttributes(request)).isEqualTo(Attributes.empty());
   }
 
   @Test
-  void handlesMissingResponseHost() {
-    Response response = mock(Response.class);
+  void handlesMissingPeer() {
+    ElasticsearchRestRequest request = ElasticsearchRestRequest.create("GET", "/");
 
-    assertThat(getter.getNetworkPeerAddress(REQUEST, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(REQUEST, null)).isNull();
-    assertThat(getter.getNetworkPeerAddress(REQUEST, response)).isNull();
-    assertThat(getter.getNetworkPeerPort(REQUEST, response)).isNull();
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+    assertThat(extractAttributes(request)).isEqualTo(Attributes.empty());
   }
 
-  private Attributes extractAttributes(Response response) {
+  private Attributes extractAttributes(ElasticsearchRestRequest request) {
     AttributesBuilder attributes = Attributes.builder();
     DbClientAttributesExtractor.create(getter)
-        .onEnd(attributes, Context.root(), REQUEST, response, null);
+        .onEnd(attributes, Context.root(), request, null, null);
     return attributes.build();
   }
 }

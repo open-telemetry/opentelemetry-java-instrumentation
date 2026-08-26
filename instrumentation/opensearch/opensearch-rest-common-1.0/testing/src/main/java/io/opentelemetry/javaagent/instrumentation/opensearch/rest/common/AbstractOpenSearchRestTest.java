@@ -15,6 +15,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -32,6 +34,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +60,7 @@ public abstract class AbstractOpenSearchRestTest {
   protected OpensearchContainer opensearch;
   protected RestClient client;
   protected URI httpHost;
+  protected String peerAddress;
 
   protected abstract InstrumentationExtension getTesting();
 
@@ -67,6 +71,8 @@ public abstract class AbstractOpenSearchRestTest {
   protected abstract int getResponseStatus(Response response);
 
   protected abstract String getInstrumentationName();
+
+  protected abstract boolean capturesActualPeer();
 
   @BeforeAll
   void setUp() throws Exception {
@@ -80,6 +86,7 @@ public abstract class AbstractOpenSearchRestTest {
         "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
+    peerAddress = InetAddress.getByName(httpHost.getHost()).getHostAddress();
 
     client = buildRestClient(opensearch.getHttpHostAddress());
     cleanup.deferAfterAll(client);
@@ -191,19 +198,31 @@ public abstract class AbstractOpenSearchRestTest {
 
     getTesting().waitForTraces(1);
 
-    assertDurationMetric(
-        getTesting(),
-        getInstrumentationName(),
-        DB_OPERATION_NAME,
-        DB_SYSTEM_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+    if (capturesActualPeer()) {
+      assertDurationMetric(
+          getTesting(),
+          getInstrumentationName(),
+          DB_OPERATION_NAME,
+          DB_SYSTEM_NAME,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT,
+          SERVER_ADDRESS,
+          SERVER_PORT);
+    } else {
+      assertDurationMetric(
+          getTesting(),
+          getInstrumentationName(),
+          DB_OPERATION_NAME,
+          DB_SYSTEM_NAME,
+          SERVER_ADDRESS,
+          SERVER_PORT);
+    }
   }
 
   @Test
   void configuredNodeListIsTheWholeTarget() throws Exception {
     RestClient nodeListClient =
-        buildRestClient(opensearch.getHttpHostAddress(), addressOfHostThatIsDown());
+        buildRestClient(addressOfHostThatIsDown(), opensearch.getHttpHostAddress());
     cleanup.deferCleanup(nodeListClient);
 
     nodeListClient.performRequest(new Request("GET", "_cluster/health"));
@@ -231,11 +250,11 @@ public abstract class AbstractOpenSearchRestTest {
   private String nodeList() {
     return httpHost.getHost()
         + ":"
-        + httpHost.getPort()
+        + (httpHost.getPort() + 1)
         + ","
         + httpHost.getHost()
         + ":"
-        + (httpHost.getPort() + 1);
+        + httpHost.getPort();
   }
 
   private String openSearchSpanName() {
@@ -253,6 +272,10 @@ public abstract class AbstractOpenSearchRestTest {
                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                 equalTo(maybeStable(DB_OPERATION), "GET"),
                 equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")));
+    if (capturesActualPeer()) {
+      assertions.add(equalTo(NETWORK_PEER_ADDRESS, peerAddress));
+      assertions.add(equalTo(NETWORK_PEER_PORT, httpHost.getPort()));
+    }
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
       assertions.add(equalTo(SERVER_PORT, httpHost.getPort()));
@@ -272,6 +295,10 @@ public abstract class AbstractOpenSearchRestTest {
                 assertThat(trace.getSpan(0))
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfying(
+                        equalTo(NETWORK_PEER_ADDRESS, capturesActualPeer() ? peerAddress : null),
+                        equalTo(
+                            NETWORK_PEER_PORT,
+                            capturesActualPeer() ? Long.valueOf(httpHost.getPort()) : null),
                         equalTo(SERVER_ADDRESS, expectedAddress),
                         equalTo(SERVER_PORT, expectedPort)));
   }

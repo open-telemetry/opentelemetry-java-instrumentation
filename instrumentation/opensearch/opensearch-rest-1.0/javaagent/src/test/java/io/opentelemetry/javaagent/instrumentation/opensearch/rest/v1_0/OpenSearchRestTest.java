@@ -81,4 +81,9 @@ class OpenSearchRestTest extends AbstractOpenSearchRestTest {
   protected String getInstrumentationName() {
     return "io.opentelemetry.opensearch-rest-1.0";
   }
+
+  @Override
+  protected boolean capturesActualPeer() {
+    return true;
+  }
 }

@@ -97,6 +97,9 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         return null;
       }
       Context context = instrumenter().start(parentContext, otelRequest);
+      if (OpenSearchServerTargets.isPeerCaptureEnabled(transport)) {
+        context = otelRequest.getPeerState().storeInContext(context);
+      }
       return new AdviceScope(otelRequest, parentContext, context, context.makeCurrent());
     }
 
