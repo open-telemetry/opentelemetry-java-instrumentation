@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
@@ -78,12 +80,12 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
   @Nullable
   @Override
   public String getServerAddress(HbaseRequest request) {
-    return request.getHost();
+    return emitStableDatabaseSemconv() ? request.getServerTarget() : request.getHost();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(HbaseRequest request) {
-    return request.getPort();
+    return emitStableDatabaseSemconv() ? null : request.getPort();
   }
 }
