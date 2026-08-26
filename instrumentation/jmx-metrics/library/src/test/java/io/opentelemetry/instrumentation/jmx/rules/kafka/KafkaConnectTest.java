@@ -163,7 +163,6 @@ class KafkaConnectTest extends TargetSystemTest {
     }
   }
 
-
   private static MetricsVerifier createKafkaConnectMetricsVerifier() {
     return MetricsVerifier.create()
         // Worker metrics
