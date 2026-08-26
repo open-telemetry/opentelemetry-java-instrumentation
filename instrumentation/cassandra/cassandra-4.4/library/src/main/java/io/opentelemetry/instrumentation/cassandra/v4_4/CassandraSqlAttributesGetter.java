@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer.get;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -73,6 +74,10 @@ final class CassandraSqlAttributesGetter
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     if (executionInfo == null) {
       return null;
+    }
+    InetSocketAddress peer = get(executionInfo);
+    if (peer != null) {
+      return peer;
     }
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {

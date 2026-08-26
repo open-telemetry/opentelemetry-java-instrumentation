@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -23,6 +24,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -216,6 +218,18 @@ class CassandraEndpointAttributesTest {
     assertThat(peer).isNotNull();
     assertThat(peer.getHostString()).isEqualTo("127.0.0.1");
     assertThat(peer.getPort()).isEqualTo(9042);
+  }
+
+  @Test
+  void responsePeerPrecedesEndpointDerivedData() throws UnknownHostException {
+    InetSocketAddress responsePeer = resolved(19042);
+    VirtualField.find(ExecutionInfo.class, InetSocketAddress.class)
+        .set(executionInfo, responsePeer);
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    verifyNoInteractions(coordinator, customEndPoint);
   }
 
   private Attributes serverAttributes(CassandraServerTarget serverTarget) {
