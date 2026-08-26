@@ -14,12 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Records the configured target of the transport that talks to opensearch through the AWS SDK.
- *
- * <p>The AWS SDK is not a dependency of the opensearch java client, so this instrumentation is kept
- * in a module of its own and the rest of the opensearch instrumentation stays available without it.
- */
 @AutoService(InstrumentationModule.class)
 public class OpenSearchAwsSdk2InstrumentationModule extends InstrumentationModule {
   public OpenSearchAwsSdk2InstrumentationModule() {

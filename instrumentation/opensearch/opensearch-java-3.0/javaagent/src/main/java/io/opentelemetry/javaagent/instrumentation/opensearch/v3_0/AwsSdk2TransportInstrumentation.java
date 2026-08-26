@@ -16,7 +16,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.opensearch.client.transport.OpenSearchTransport;
 
-/** Records the endpoint an AWS SDK 2 transport was built with. */
 class AwsSdk2TransportInstrumentation implements TypeInstrumentation {
 
   @Override

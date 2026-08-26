@@ -63,14 +63,12 @@ final class OpenSearchAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(OpenSearchRequest request) {
-    // old semantic conventions do not record the server at all
     return emitStableDatabaseSemconv() ? request.getServerAddress() : null;
   }
 
   @Override
   @Nullable
   public Integer getServerPort(OpenSearchRequest request) {
-    // a target that names several endpoints already carries the port of each of them
     return emitStableDatabaseSemconv() ? request.getServerPort() : null;
   }
 }

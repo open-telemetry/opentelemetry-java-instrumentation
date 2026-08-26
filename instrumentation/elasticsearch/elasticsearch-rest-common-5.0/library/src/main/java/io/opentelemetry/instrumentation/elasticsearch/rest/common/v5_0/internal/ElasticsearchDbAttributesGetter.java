@@ -94,7 +94,7 @@ final class ElasticsearchDbAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(ElasticsearchRestRequest request) {
-    // old semantic conventions record the host that answered instead, on span end
+
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
@@ -109,7 +109,7 @@ final class ElasticsearchDbAttributesGetter
       return null;
     }
     ElasticsearchServerTarget target = request.getServerTarget();
-    // a target that names several hosts already carries the port of each of them
+
     return target != null ? target.getPort() : null;
   }
 }

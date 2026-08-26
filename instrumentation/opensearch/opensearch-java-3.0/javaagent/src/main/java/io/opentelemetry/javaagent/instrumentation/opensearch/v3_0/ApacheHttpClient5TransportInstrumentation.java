@@ -21,10 +21,7 @@ import org.apache.hc.core5.http.HttpHost;
 import org.opensearch.client.transport.OpenSearchTransport;
 import org.opensearch.client.transport.httpclient5.internal.Node;
 
-/**
- * Records the target an Apache HTTP Client 5 transport was built with. The transport replaces the
- * nodes it routes to as they fail and recover, and the configured target must not follow them.
- */
+// capture the initial nodes before failure handling can replace the routing nodes
 class ApacheHttpClient5TransportInstrumentation implements TypeInstrumentation {
 
   @Override

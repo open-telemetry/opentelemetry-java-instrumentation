@@ -57,7 +57,6 @@ final class OpenSearchRestAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(OpenSearchRestRequest request) {
-    // old semantic conventions do not record the server at all
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
@@ -72,7 +71,6 @@ final class OpenSearchRestAttributesGetter
       return null;
     }
     OpenSearchServerTarget target = request.getServerTarget();
-    // a target that names several nodes already carries the port of each of them
     return target != null ? target.getPort() : null;
   }
 

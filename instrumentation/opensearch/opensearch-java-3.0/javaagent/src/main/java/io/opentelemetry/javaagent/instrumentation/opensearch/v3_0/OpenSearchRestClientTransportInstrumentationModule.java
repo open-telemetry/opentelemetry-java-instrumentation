@@ -14,13 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Records the configured target of the transport that talks to opensearch through a rest client.
- *
- * <p>The rest client is not a dependency of the opensearch java client, so this instrumentation is
- * kept in a module of its own and the rest of the opensearch instrumentation stays available
- * without it.
- */
 @AutoService(InstrumentationModule.class)
 public class OpenSearchRestClientTransportInstrumentationModule extends InstrumentationModule {
   public OpenSearchRestClientTransportInstrumentationModule() {

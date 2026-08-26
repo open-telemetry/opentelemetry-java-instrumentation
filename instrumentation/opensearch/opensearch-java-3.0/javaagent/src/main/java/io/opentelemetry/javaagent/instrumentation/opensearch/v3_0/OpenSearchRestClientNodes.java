@@ -11,13 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * Reads the nodes of an {@code org.opensearch.client.RestClient}.
- *
- * <p>The rest client comes from {@code opensearch-rest-client}, which the opensearch java client
- * does not depend on, so it is read reflectively and the instrumentation of the other transports
- * stays available when that artifact is missing.
- */
+// read optional opensearch-rest-client nodes reflectively to keep other transports independent
 public class OpenSearchRestClientNodes {
 
   @Nullable

@@ -43,7 +43,6 @@ class ElasticsearchTransportServerTargetTest {
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("10.0.0.1:9300,10.0.0.2:9301");
-    // the target already carries the port of every address it names
     assertThat(target.getPort()).isNull();
   }
 

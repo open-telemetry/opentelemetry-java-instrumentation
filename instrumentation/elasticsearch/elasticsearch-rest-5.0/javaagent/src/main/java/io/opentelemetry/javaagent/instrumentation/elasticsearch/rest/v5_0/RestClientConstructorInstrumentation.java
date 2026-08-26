@@ -19,10 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 
-/**
- * Records the target a rest client was built with. {@code RestClient.setHosts} replaces the hosts a
- * client routes to afterwards, and the configured target must not follow it.
- */
+// capture the initial hosts before RestClient.setHosts can replace them
 class RestClientConstructorInstrumentation implements TypeInstrumentation {
 
   @Override

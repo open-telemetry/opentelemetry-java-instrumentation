@@ -58,11 +58,10 @@ class OpenSearchConfiguredHostTest {
   }
 
   @Test
-  void queryContainingAtSignIsRemovedBeforeCredentials() {
+  void credentialsContainingPathSeparatorAreRemoved() {
     OpenSearchServerTarget target =
         OpenSearchServerTarget.of(
-            singletonList(
-                new OpenSearchServerTarget.Endpoint("os.example?token=user@secret", 9200)));
+            singletonList(new OpenSearchServerTarget.Endpoint("user:pa/ss@os.example", 9200)));
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("os.example");

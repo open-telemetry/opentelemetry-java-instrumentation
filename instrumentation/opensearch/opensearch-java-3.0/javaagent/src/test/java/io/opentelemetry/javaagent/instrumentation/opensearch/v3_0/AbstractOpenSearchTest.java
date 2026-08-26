@@ -186,17 +186,12 @@ abstract class AbstractOpenSearchTest {
         SERVER_PORT);
   }
 
-  /**
-   * The stable span name falls back to the target, because opensearch has no namespace or
-   * collection to name.
-   */
   String openSearchSpanName(String method) {
     return emitStableDatabaseSemconv()
         ? method + " " + httpHost.getHost() + ":" + httpHost.getPort()
         : method;
   }
 
-  /** Adds the server the transport was configured with, which only stable semconv records. */
   List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
     if (emitStableDatabaseSemconv()) {
@@ -206,11 +201,6 @@ abstract class AbstractOpenSearchTest {
     return result;
   }
 
-  /**
-   * Asserts that the target of a transport configured with the running server and a host that is
-   * down names both. Only the opensearch span is asserted, because a request that first reaches the
-   * host that is down is retried and reports a second http span.
-   */
   void assertNodeListTarget() {
     String nodeList =
         httpHost.getHost()
@@ -226,7 +216,6 @@ abstract class AbstractOpenSearchTest {
                 assertThat(trace.getSpan(0))
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfying(
-                        // old semantic conventions record no server at all
                         equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null),
                         equalTo(SERVER_PORT, null)));
   }

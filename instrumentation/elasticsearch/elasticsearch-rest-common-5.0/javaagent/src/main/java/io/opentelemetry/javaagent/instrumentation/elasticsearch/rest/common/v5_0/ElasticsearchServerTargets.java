@@ -12,10 +12,7 @@ import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 
-/**
- * Keeps the target a rest client was built with. The hosts a rest client reports later are the ones
- * it currently routes to, which sniffing and {@code setNodes} can replace at any time.
- */
+// keep the initial target separate from the mutable routing hosts
 public class ElasticsearchServerTargets {
 
   private static final VirtualField<RestClient, ElasticsearchServerTarget> SERVER_TARGET =

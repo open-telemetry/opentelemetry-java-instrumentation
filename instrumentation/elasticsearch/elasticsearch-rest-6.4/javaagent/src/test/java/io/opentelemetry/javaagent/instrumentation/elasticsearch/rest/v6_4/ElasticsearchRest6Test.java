@@ -244,12 +244,6 @@ class ElasticsearchRest6Test {
         + deadHost.getPort();
   }
 
-  /**
-   * Asserts the server of the elasticsearch span, where {@code hostList} is the whole configured
-   * list, or null when a single host was configured. Only the elasticsearch span is asserted,
-   * because a request that first reaches the host that is down is retried and reports a second http
-   * span.
-   */
   private static void assertConfiguredTarget(String hostList) {
     boolean stableHostList = emitStableDatabaseSemconv() && hostList != null;
     testing.waitAndAssertTraces(

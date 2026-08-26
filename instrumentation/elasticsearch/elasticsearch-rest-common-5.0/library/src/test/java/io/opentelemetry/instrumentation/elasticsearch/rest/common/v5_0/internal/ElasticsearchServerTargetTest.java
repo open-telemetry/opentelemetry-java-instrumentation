@@ -60,7 +60,6 @@ class ElasticsearchServerTargetTest {
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9201");
-    // the target already carries the port of every host it names
     assertThat(target.getPort()).isNull();
   }
 
@@ -92,7 +91,7 @@ class ElasticsearchServerTargetTest {
             new HttpHost("h2/prefix", 9200, "https"),
             new HttpHost("h3?token=secret", 9200, "https"),
             new HttpHost("h4#secret", 9200, "https"),
-            new HttpHost("h5?token=user@secret", 9200, "https"));
+            new HttpHost("user:pa/ss@h5", 9200, "https"));
 
     ElasticsearchServerTarget target = ElasticsearchServerTarget.of(hosts);
 

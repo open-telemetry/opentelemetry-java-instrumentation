@@ -9,23 +9,12 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 
-/**
- * The target a rest client was configured with, rendered once from the hosts the client was built
- * with.
- *
- * <p>A client configured with a single host keeps that host and its port. A client configured with
- * several hosts carries all of them in the address as {@code host:port,host:port}, and has no port
- * of its own.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
- */
+@SuppressWarnings("OtelInternalJavadoc")
 public class ElasticsearchServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
 
-  /** The target of {@code hosts}, or {@code null} when there is no usable host. */
   @Nullable
   public static ElasticsearchServerTarget of(@Nullable List<HttpHost> hosts) {
     if (hosts == null || hosts.isEmpty()) {
@@ -66,7 +55,6 @@ public class ElasticsearchServerTarget {
   }
 
   private static void appendHostAndPort(StringBuilder group, String host, int port) {
-    // a literal IPv6 address is bracketed so that the port stays unambiguous
     if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
       group.append('[').append(host).append(']');
     } else {
@@ -77,26 +65,22 @@ public class ElasticsearchServerTarget {
     }
   }
 
-  /**
-   * The host name without credentials, path, query or fragment, or {@code null} when nothing is
-   * left of it.
-   */
   @Nullable
   private static String sanitizeHost(@Nullable String hostName) {
     if (hostName == null) {
       return null;
     }
     String host = hostName;
+    int credentialsEnd = host.lastIndexOf('@');
+    if (credentialsEnd >= 0) {
+      host = host.substring(credentialsEnd + 1);
+    }
     for (int i = 0; i < host.length(); i++) {
       char c = host.charAt(i);
       if (c == '/' || c == '?' || c == '#') {
         host = host.substring(0, i);
         break;
       }
-    }
-    int credentialsEnd = host.lastIndexOf('@');
-    if (credentialsEnd >= 0) {
-      host = host.substring(credentialsEnd + 1);
     }
     if (host.length() >= 2 && host.charAt(0) == '[' && host.charAt(host.length() - 1) == ']') {
       host = host.substring(1, host.length() - 1);
@@ -108,7 +92,6 @@ public class ElasticsearchServerTarget {
     return address;
   }
 
-  /** The port of a single configured host, or {@code null} when the target names several hosts. */
   @Nullable
   public Integer getPort() {
     return port;

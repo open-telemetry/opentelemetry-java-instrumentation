@@ -22,10 +22,7 @@ import org.apache.http.HttpHost;
 import org.opensearch.client.Node;
 import org.opensearch.client.RestClient;
 
-/**
- * Records the target a rest client was built with. Sniffing and {@code RestClient.setNodes} replace
- * the nodes a client routes to afterwards, and the configured target must not follow them.
- */
+// capture the initial nodes before sniffing or RestClient.setNodes can replace them
 class RestClientConstructorInstrumentation implements TypeInstrumentation {
 
   @Override

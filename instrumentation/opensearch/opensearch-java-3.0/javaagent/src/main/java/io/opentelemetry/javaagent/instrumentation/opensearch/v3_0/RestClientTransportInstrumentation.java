@@ -16,11 +16,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.opensearch.client.transport.OpenSearchTransport;
 
-/**
- * Records the target the rest client a transport was built with is configured with. The rest client
- * is read while the transport is built, because sniffing and {@code setNodes} replace the nodes it
- * routes to afterwards.
- */
+// capture the initial nodes before sniffing or setNodes can replace them
 class RestClientTransportInstrumentation implements TypeInstrumentation {
 
   @Override

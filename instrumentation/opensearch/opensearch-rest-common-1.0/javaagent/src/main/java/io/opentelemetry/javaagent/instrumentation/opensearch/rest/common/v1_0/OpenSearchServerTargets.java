@@ -10,10 +10,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.opensearch.client.RestClient;
 
-/**
- * Keeps the target a rest client was built with. The nodes a rest client reports later are the ones
- * it currently routes to, which sniffing and {@code setNodes} can replace at any time.
- */
+// keep the initial target separate from the mutable routing nodes
 public class OpenSearchServerTargets {
 
   private static final VirtualField<RestClient, OpenSearchServerTarget> SERVER_TARGET =

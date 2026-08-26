@@ -20,14 +20,9 @@ public abstract class ElasticTransportRequest {
 
   public abstract Object getRequest();
 
-  /**
-   * The address of the target the client was configured with, or {@code null} for a client that
-   * talks to a node in the same process.
-   */
   @Nullable
   public abstract String getServerAddress();
 
-  /** The port of a single configured address, {@code null} for a target that names several. */
   @Nullable
   public abstract Integer getServerPort();
 }

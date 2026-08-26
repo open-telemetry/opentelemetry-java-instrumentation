@@ -20,9 +20,6 @@ public abstract class OpenSearchRestRequest {
 
   public abstract String getEndpoint();
 
-  /**
-   * The target the rest client was configured with, or {@code null} when it could not be captured.
-   */
   @Nullable
   public abstract OpenSearchServerTarget getServerTarget();
 }

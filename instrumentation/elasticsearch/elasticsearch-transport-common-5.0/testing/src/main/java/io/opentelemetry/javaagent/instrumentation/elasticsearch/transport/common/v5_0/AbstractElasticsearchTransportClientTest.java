@@ -117,7 +117,6 @@ public abstract class AbstractElasticsearchTransportClientTest
     return result;
   }
 
-  /** Adds the address the client was configured with, which only stable semconv records. */
   private List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
     if (emitStableDatabaseSemconv()) {
@@ -127,10 +126,6 @@ public abstract class AbstractElasticsearchTransportClientTest
     return result;
   }
 
-  /**
-   * The stable span name falls back to the target, because elasticsearch has no namespace or
-   * collection to name.
-   */
   private String spanName(String action, String wireAction) {
     return emitStableDatabaseSemconv() ? wireAction + " " + getAddress() + ":" + getPort() : action;
   }

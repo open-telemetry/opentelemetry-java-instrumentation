@@ -65,14 +65,12 @@ public class ElasticsearchTransportAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(ElasticTransportRequest request) {
-    // old semantic conventions record only the node that answered, as the network peer
     return emitStableDatabaseSemconv() ? request.getServerAddress() : null;
   }
 
   @Override
   @Nullable
   public Integer getServerPort(ElasticTransportRequest request) {
-    // a target that names several addresses already carries the port of each of them
     return emitStableDatabaseSemconv() ? request.getServerPort() : null;
   }
 }

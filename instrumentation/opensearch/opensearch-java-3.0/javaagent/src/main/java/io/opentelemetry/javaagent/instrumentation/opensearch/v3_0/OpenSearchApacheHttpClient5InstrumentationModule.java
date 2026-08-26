@@ -14,10 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Records the configured target of the transport that talks to opensearch over Apache HTTP Client
- * 5.
- */
 @AutoService(InstrumentationModule.class)
 public class OpenSearchApacheHttpClient5InstrumentationModule extends InstrumentationModule {
   public OpenSearchApacheHttpClient5InstrumentationModule() {

@@ -15,7 +15,6 @@ import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.TransportAddress;
 
-/** Builds the request of a client, together with the target that client is configured with. */
 class Elasticsearch5TransportRequests {
 
   static ElasticTransportRequest request(
@@ -30,11 +29,6 @@ class Elasticsearch5TransportRequests {
         ElasticsearchTransportServerTargets.port(client));
   }
 
-  /**
-   * The addresses {@code client} was configured with, or null when it talks to a node in the same
-   * process. A transport client reports the addresses it was given, never the ones it found by
-   * sniffing the cluster.
-   */
   @Nullable
   private static List<ElasticsearchTransportServerTarget.Endpoint> configuredEndpoints(
       AbstractClient client) {

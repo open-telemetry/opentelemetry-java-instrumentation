@@ -48,9 +48,6 @@ public abstract class ElasticsearchRestRequest {
   @Nullable
   public abstract HttpEntity getHttpEntity();
 
-  /**
-   * The target the rest client was configured with, or {@code null} when it could not be captured.
-   */
   @Nullable
   public abstract ElasticsearchServerTarget getServerTarget();
 }

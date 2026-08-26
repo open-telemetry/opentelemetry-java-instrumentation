@@ -11,13 +11,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.opensearch.client.transport.OpenSearchTransport;
 
-/**
- * Keeps the target a transport was built with, so that a request records the whole configured
- * target rather than the node that happened to answer.
- *
- * <p>The target is held in fields of types the JDK already provides, because the transport that
- * records it and the request that reads it are covered by separate instrumentation modules.
- */
+// use JDK field types because separate instrumentation modules write and read this state
 public class OpenSearchServerTargets {
 
   private static final VirtualField<OpenSearchTransport, String> SERVER_ADDRESS =

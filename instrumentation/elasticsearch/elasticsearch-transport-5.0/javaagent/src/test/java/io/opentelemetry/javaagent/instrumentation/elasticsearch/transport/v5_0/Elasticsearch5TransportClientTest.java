@@ -162,7 +162,6 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     client.admin().cluster().prepareHealth().execute().actionGet(TIMEOUT);
   }
 
-  /** Asserts the server of the elasticsearch span of a single request. */
   private void assertConfiguredTarget(String addressList) {
     boolean stableAddressList = emitStableDatabaseSemconv() && addressList != null;
     testing.waitAndAssertTraces(

@@ -10,13 +10,8 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchServerTarget;
 import javax.annotation.Nullable;
 
-/**
- * Reads the target out of the endpoint string an AWS SDK 2 transport is configured with, for
- * example {@code https://search-domain.us-east-1.es.amazonaws.com}.
- */
 public class OpenSearchConfiguredHost {
 
-  /** The target {@code host} names, or {@code null} when nothing usable is left of it. */
   @Nullable
   public static OpenSearchServerTarget parse(@Nullable String host) {
     if (host == null) {

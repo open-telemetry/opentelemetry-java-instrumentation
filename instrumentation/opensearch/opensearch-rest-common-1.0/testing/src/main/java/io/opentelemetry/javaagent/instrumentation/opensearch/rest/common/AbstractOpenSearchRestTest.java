@@ -60,10 +60,8 @@ public abstract class AbstractOpenSearchRestTest {
 
   protected abstract InstrumentationExtension getTesting();
 
-  /** A rest client configured with every one of {@code hostAddresses}. */
   protected abstract RestClient buildRestClient(String... hostAddresses) throws Exception;
 
-  /** Replaces the nodes {@code client} routes to, the way sniffing does. */
   protected abstract void resetNodes(RestClient client, String... hostAddresses) throws Exception;
 
   protected abstract int getResponseStatus(Response response);
@@ -262,13 +260,7 @@ public abstract class AbstractOpenSearchRestTest {
     return assertions;
   }
 
-  /**
-   * Asserts the server of the opensearch span, where {@code nodeList} is the whole configured list,
-   * or null when a single node was configured. Only the opensearch span is asserted, because a
-   * request that first reaches the host that is down is retried and reports a second http span.
-   */
   private void assertConfiguredTarget(String nodeList) {
-    // old semantic conventions record no server at all
     String expectedAddress =
         !emitStableDatabaseSemconv() ? null : (nodeList != null ? nodeList : httpHost.getHost());
     Long expectedPort =

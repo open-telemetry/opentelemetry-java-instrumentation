@@ -232,10 +232,6 @@ class ElasticsearchRest5Test {
     assertConfiguredTarget(hostList());
   }
 
-  /**
-   * A client whose configured target is a list. The running server is named twice, so that every
-   * attempt reaches it and the request never depends on a host that is down.
-   */
   private static RestClient hostListClient() {
     return RestClient.builder(httpHost, httpHost)
         .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
@@ -247,10 +243,6 @@ class ElasticsearchRest5Test {
     return endpoint + "," + endpoint;
   }
 
-  /**
-   * Asserts the server of the elasticsearch span, where {@code hostList} is the whole configured
-   * list.
-   */
   private static void assertConfiguredTarget(String hostList) {
     testing.waitAndAssertTraces(
         trace ->

@@ -135,17 +135,12 @@ abstract class AbstractOpenSearchQueryTest {
     opensearch.stop();
   }
 
-  /**
-   * The stable span name falls back to the target, because opensearch has no namespace or
-   * collection to name.
-   */
   String openSearchSpanName(String method) {
     return emitStableDatabaseSemconv()
         ? method + " " + httpHost.getHost() + ":" + httpHost.getPort()
         : method;
   }
 
-  /** Adds the server the transport was configured with, which only stable semconv records. */
   List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
     if (emitStableDatabaseSemconv()) {

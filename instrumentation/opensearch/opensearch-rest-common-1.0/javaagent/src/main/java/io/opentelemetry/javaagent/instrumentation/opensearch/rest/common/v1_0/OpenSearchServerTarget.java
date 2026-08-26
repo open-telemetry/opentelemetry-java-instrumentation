@@ -8,20 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * The target a rest client was configured with, rendered once from the nodes the client was built
- * with.
- *
- * <p>A client configured with a single node keeps that host and its port. A client configured with
- * several nodes carries all of them in the address as {@code host:port,host:port}, and has no port
- * of its own.
- */
 public class OpenSearchServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
 
-  /** The target of {@code endpoints}, or {@code null} when there is no usable endpoint. */
   @Nullable
   public static OpenSearchServerTarget of(@Nullable List<Endpoint> endpoints) {
     if (endpoints == null || endpoints.isEmpty()) {
@@ -54,7 +45,6 @@ public class OpenSearchServerTarget {
       if (i > 0) {
         group.append(',');
       }
-      // a literal IPv6 address is bracketed so that the port stays unambiguous
       if (endpoint.host.indexOf(':') >= 0 && !endpoint.host.startsWith("[")) {
         group.append('[').append(endpoint.host).append(']');
       } else {
@@ -71,13 +61,11 @@ public class OpenSearchServerTarget {
     return address;
   }
 
-  /** The port of a single configured node, or {@code null} when the target names several nodes. */
   @Nullable
   public Integer getPort() {
     return port;
   }
 
-  /** A single configured endpoint, with credentials, path, query and fragment already removed. */
   public static class Endpoint {
 
     @Nullable private final String host;
@@ -94,16 +82,16 @@ public class OpenSearchServerTarget {
         return null;
       }
       String host = hostName;
+      int credentialsEnd = host.lastIndexOf('@');
+      if (credentialsEnd >= 0) {
+        host = host.substring(credentialsEnd + 1);
+      }
       for (int i = 0; i < host.length(); i++) {
         char c = host.charAt(i);
         if (c == '/' || c == '?' || c == '#') {
           host = host.substring(0, i);
           break;
         }
-      }
-      int credentialsEnd = host.lastIndexOf('@');
-      if (credentialsEnd >= 0) {
-        host = host.substring(credentialsEnd + 1);
       }
       if (host.length() >= 2 && host.charAt(0) == '[' && host.charAt(host.length() - 1) == ']') {
         host = host.substring(1, host.length() - 1);

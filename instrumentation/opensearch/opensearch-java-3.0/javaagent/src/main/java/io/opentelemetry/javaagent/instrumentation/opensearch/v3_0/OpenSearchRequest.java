@@ -27,14 +27,9 @@ public abstract class OpenSearchRequest {
   @Nullable
   public abstract String getBody();
 
-  /**
-   * The address of the target the transport was configured with, or {@code null} when it could not
-   * be captured.
-   */
   @Nullable
   public abstract String getServerAddress();
 
-  /** The port of a single configured endpoint, {@code null} for a target that names several. */
   @Nullable
   public abstract Integer getServerPort();
 }
