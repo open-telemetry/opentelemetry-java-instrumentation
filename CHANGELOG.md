@@ -7,6 +7,12 @@
 - Remove the deprecated `HostIdResource.REGISTRY_QUERY` in favor of the absolute-path `reg.exe` lookup used by
   `HostIdResource`. ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
 
+### 🚫 Deprecations
+
+- Deprecate `otel.instrumentation.opensearch.capture-search-query` and
+  `otel.instrumentation.graphql.capture-query` for removal in 3.0. OpenSearch search query bodies
+  and GraphQL queries will always be captured in 3.0; there are no replacement properties.
+
 ## Version 2.31.1 (2026-08-23)
 
 This release targets the OpenTelemetry SDK 1.65.0.

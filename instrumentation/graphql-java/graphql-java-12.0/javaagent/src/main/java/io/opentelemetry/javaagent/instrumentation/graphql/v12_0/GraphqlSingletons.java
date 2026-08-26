@@ -57,7 +57,7 @@ public class GraphqlSingletons {
       DeclarativeConfigProperties config =
           DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "graphql");
 
-      this.captureQuery = config.getBoolean("capture_query", true);
+      this.captureQuery = GraphqlConfig.getCaptureQuery(config);
       this.querySanitizationEnabled = getQuerySanitizationEnabled(config);
       this.operationNameInSpanNameEnabled = GraphqlConfig.getOperationNameInSpanNameEnabled(config);
     }

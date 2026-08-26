@@ -385,7 +385,8 @@ definitions:
     otel.instrumentation.graphql.capture-query:
       name: otel.instrumentation.graphql.capture-query
       declarative_name: java.graphql.capture_query
-      description: Whether to capture the query in `graphql.document` span attribute.
+      description: |
+        Deprecated and will be removed in 3.0, when queries are always captured in the `graphql.document` span attribute. There is no replacement. Until then, set this to false to disable capture.
       type: boolean
       default: true
     otel.instrumentation.graphql.data-fetcher.enabled:
@@ -1075,7 +1076,7 @@ definitions:
       name: otel.instrumentation.opensearch.capture-search-query
       declarative_name: java.opensearch.capture_search_query
       description: |
-        Enable the capture of sanitized search query bodies. Search queries may contain personal or sensitive information.
+        Deprecated and will be removed in 3.0, when sanitized search query bodies are always captured. There is no replacement. Until then, set this to false to disable capture. Search queries may contain personal or sensitive information.
       type: boolean
       default: true
     otel.instrumentation.opentelemetry-annotations.exclude-methods:
