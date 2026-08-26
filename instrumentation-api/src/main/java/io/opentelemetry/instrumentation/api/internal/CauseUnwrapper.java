@@ -42,11 +42,17 @@ public final class CauseUnwrapper {
       Throwable error,
       Predicate<Throwable> shouldUnwrap,
       Function<Throwable, Throwable> nextCause) {
-    Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+    Set<Throwable> visited = null;
     Throwable current = error;
     while (shouldUnwrap.test(current)) {
       Throwable next = nextCause.apply(current);
-      if (next == null || !visited.add(current)) {
+      if (next == null) {
+        break;
+      }
+      if (visited == null) {
+        visited = Collections.newSetFromMap(new IdentityHashMap<>());
+      }
+      if (!visited.add(current)) {
         break;
       }
       current = next;
