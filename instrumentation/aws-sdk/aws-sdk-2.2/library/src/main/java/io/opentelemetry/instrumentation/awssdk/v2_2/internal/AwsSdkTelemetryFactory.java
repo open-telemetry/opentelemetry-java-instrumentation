@@ -66,12 +66,13 @@ public final class AwsSdkTelemetryFactory {
                         false)));
     Experimental.setMessageCreateSpansEnabled(
         builder,
-        awsSdk
-            .get("message_create_spans/development")
+        messaging
+            .get("batch_send")
+            .get("message_creation_spans")
             .getBoolean(
                 "enabled",
                 systemProperties.getBoolean(
-                    "otel.instrumentation.aws-sdk.experimental.message-create-spans.enabled",
+                    "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled",
                     true)));
     return builder
         .setRecordIndividualHttpError(

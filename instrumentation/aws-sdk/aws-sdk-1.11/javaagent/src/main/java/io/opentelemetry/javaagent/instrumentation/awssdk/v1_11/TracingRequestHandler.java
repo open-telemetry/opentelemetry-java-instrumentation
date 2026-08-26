@@ -53,8 +53,10 @@ public class TracingRequestHandler extends RequestHandler2 {
             .setHeaders(ExperimentalConfig.get().getMessagingHeaders());
     Experimental.setMessageCreateSpansEnabled(
         builder,
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
-            .get("message_create_spans/development")
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
+            .get("messaging")
+            .get("batch_send")
+            .get("message_creation_spans")
             .getBoolean("enabled", true));
     return builder.build().createRequestHandler();
   }

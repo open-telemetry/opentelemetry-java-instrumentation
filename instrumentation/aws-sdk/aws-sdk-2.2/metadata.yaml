@@ -34,11 +34,7 @@ configurations:
     description: Determines whether the configured TextMapPropagator should be used to inject into supported messaging attributes (for SQS).
     type: boolean
     default: false
-  - name: otel.instrumentation.aws-sdk.experimental.message-create-spans.enabled
-    declarative_name: java.aws_sdk.message_create_spans/development.enabled
-    description: Determines whether to create a producer span for each message in an SQS batch send when stable messaging semantic conventions and a per-message propagation carrier are available.
-    type: boolean
-    default: true
+  - ref: messaging.batch-send.message-creation-spans.enabled
   - name: otel.instrumentation.genai.capture-message-content
     declarative_name: java.common.gen_ai.capture_message_content
     description: >

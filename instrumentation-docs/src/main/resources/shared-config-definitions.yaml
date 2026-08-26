@@ -125,3 +125,10 @@ configurations:
     description: "Deprecated: use `otel.instrumentation.messaging.experimental.headers.included` instead. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
     type: list
     default: ""
+
+  messaging.batch-send.message-creation-spans.enabled:
+    name: otel.instrumentation.messaging.batch-send.message-creation-spans.enabled
+    declarative_name: java.common.messaging.batch_send.message_creation_spans.enabled
+    description: "Determines whether to create a producer span for each eligible message in a batch send when stable messaging semantic conventions are enabled."
+    type: boolean
+    default: true
