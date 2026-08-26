@@ -9,9 +9,7 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `otel.instrumentation.opensearch.capture-search-query`,
-  `otel.instrumentation.graphql.capture-query`, and the GraphQL library
-  `setCaptureQuery(boolean)` APIs. There are no replacements.
+- Deprecate `otel.instrumentation.opensearch.capture-search-query`. There is no replacement.
 
 ## Version 2.31.1 (2026-08-23)
 

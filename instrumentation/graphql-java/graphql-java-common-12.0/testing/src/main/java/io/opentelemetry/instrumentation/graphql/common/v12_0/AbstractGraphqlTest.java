@@ -30,7 +30,6 @@ import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -52,10 +51,6 @@ public abstract class AbstractGraphqlTest {
 
   private static final boolean DATA_FETCHER_ENABLED =
       Boolean.getBoolean("otel.instrumentation.graphql.data-fetcher.enabled");
-  private static final boolean CAPTURE_QUERY =
-      SemconvStability.v3Preview()
-          || Boolean.parseBoolean(
-              System.getProperty("otel.instrumentation.graphql.capture-query", "true"));
 
   private final List<Map<String, String>> books = new ArrayList<>();
   private final List<Map<String, String>> authors = new ArrayList<>();
@@ -189,7 +184,7 @@ public abstract class AbstractGraphqlTest {
                           .hasAttributesSatisfyingExactly(
                               equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                               equalTo(GRAPHQL_OPERATION_TYPE, "query"),
-                              queryEqualsTo(
+                              normalizedQueryEqualsTo(
                                   GRAPHQL_DOCUMENT,
                                   "query findBookById { bookById(id: ?) { name } }")));
               if (includeDataFetcher()) {
@@ -234,7 +229,8 @@ public abstract class AbstractGraphqlTest {
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(GRAPHQL_OPERATION_TYPE, "query"),
-                              queryEqualsTo(GRAPHQL_DOCUMENT, "{ bookById(id: ?) { name } }")));
+                              normalizedQueryEqualsTo(
+                                  GRAPHQL_DOCUMENT, "{ bookById(id: ?) { name } }")));
               if (includeDataFetcher()) {
                 assertions.add(
                     span ->
@@ -347,15 +343,13 @@ public abstract class AbstractGraphqlTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(GRAPHQL_OPERATION_NAME, "addNewBook"),
                                 equalTo(GRAPHQL_OPERATION_TYPE, "mutation"),
-                                queryEqualsTo(
+                                normalizedQueryEqualsTo(
                                     GRAPHQL_DOCUMENT,
                                     "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id } }"))));
   }
 
-  protected static AttributeAssertion queryEqualsTo(AttributeKey<String> key, String value) {
-    if (!CAPTURE_QUERY) {
-      return equalTo(key, null);
-    }
+  protected static AttributeAssertion normalizedQueryEqualsTo(
+      AttributeKey<String> key, String value) {
     return satisfies(
         key,
         val ->

@@ -26,22 +26,17 @@ public class GraphqlSingletons {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     Configuration config = new Configuration(openTelemetry);
 
-    telemetry = createTelemetry(openTelemetry, config);
+    telemetry =
+        GraphQLTelemetry.builder(openTelemetry)
+            .setCaptureQuery(config.captureQuery)
+            .setQuerySanitizationEnabled(config.querySanitizationEnabled)
+            .setOperationNameInSpanNameEnabled(config.operationNameInSpanNameEnabled)
+            .build();
   }
 
   public static Instrumentation addInstrumentation(Instrumentation instrumentation) {
     Instrumentation ourInstrumentation = telemetry.createInstrumentation();
     return InstrumentationUtil.addInstrumentation(instrumentation, ourInstrumentation);
-  }
-
-  @SuppressWarnings("deprecation") // setCaptureQuery remains supported until 3.0
-  private static GraphQLTelemetry createTelemetry(
-      OpenTelemetry openTelemetry, Configuration config) {
-    return GraphQLTelemetry.builder(openTelemetry)
-        .setCaptureQuery(config.captureQuery)
-        .setQuerySanitizationEnabled(config.querySanitizationEnabled)
-        .setOperationNameInSpanNameEnabled(config.operationNameInSpanNameEnabled)
-        .build();
   }
 
   // instrumentation/development:
@@ -62,7 +57,7 @@ public class GraphqlSingletons {
       DeclarativeConfigProperties config =
           DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "graphql");
 
-      this.captureQuery = GraphqlConfig.getCaptureQuery(config);
+      this.captureQuery = config.getBoolean("capture_query", true);
       this.querySanitizationEnabled = getQuerySanitizationEnabled(config);
       this.operationNameInSpanNameEnabled = GraphqlConfig.getOperationNameInSpanNameEnabled(config);
     }

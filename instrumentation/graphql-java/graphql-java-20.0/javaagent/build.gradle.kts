@@ -40,41 +40,8 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.graphql.data-fetcher.enabled=true")
   }
 
-  val testDeprecatedCaptureQueryDisabled = register<Test>("testDeprecatedCaptureQueryDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("GraphqlTest")
-    }
-    jvmArgs("-Dotel.instrumentation.graphql.capture-query=false")
-    systemProperty("metadataConfig", "otel.instrumentation.graphql.capture-query=false")
-  }
-
-  val testDeprecatedCaptureQueryV3Preview =
-    register<Test>("testDeprecatedCaptureQueryV3Preview") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-
-      filter {
-        includeTestsMatching("GraphqlTest")
-      }
-      jvmArgs(
-        "-Dotel.instrumentation.graphql.capture-query=false",
-        "-Dotel.instrumentation.common.v3-preview=true",
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.graphql.capture-query=false,otel.instrumentation.common.v3-preview=true",
-      )
-    }
-
   check {
-    dependsOn(
-      testDataFetcher,
-      testDeprecatedCaptureQueryDisabled,
-      testDeprecatedCaptureQueryV3Preview,
-    )
+    dependsOn(testDataFetcher)
   }
 }
 

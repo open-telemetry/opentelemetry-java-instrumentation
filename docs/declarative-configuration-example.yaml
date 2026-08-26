@@ -223,9 +223,7 @@ instrumentation/development:
       # Semicolon-separated list of annotation class names to instrument.
       include: []
     graphql:
-      # Deprecated and will be removed in 3.0, when queries are always captured in the
-      # `graphql.document` span attribute. There is no replacement. Until then, set this to false to
-      # disable capture.
+      # Whether to capture the query in `graphql.document` span attribute.
       capture_query: true
       data_fetcher:
         # Enables span generation for data fetchers.
