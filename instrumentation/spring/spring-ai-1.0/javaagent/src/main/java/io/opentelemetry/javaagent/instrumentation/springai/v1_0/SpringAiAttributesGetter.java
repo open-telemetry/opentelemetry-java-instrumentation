@@ -93,8 +93,7 @@ final class SpringAiAttributesGetter
     }
     return response.getResults().stream()
         .map(Generation::getMetadata)
-        .filter(ChatGenerationMetadata.class::isInstance)
-        .map(ChatGenerationMetadata.class::cast)
+        .filter(metadata -> metadata != null)
         .map(ChatGenerationMetadata::getFinishReason)
         .filter(reason -> reason != null)
         .collect(toList());
