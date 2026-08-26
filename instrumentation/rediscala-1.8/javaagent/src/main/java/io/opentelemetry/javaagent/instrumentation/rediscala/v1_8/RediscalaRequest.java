@@ -52,15 +52,15 @@ class RediscalaRequest {
   }
 
   static RediscalaRequest createTransaction(
-      Queue<Operation<?, ?>> operations, @Nullable ServerEndpoint endpoint) {
+      Queue<Operation<?, ?>> operations,
+      @Nullable ServerEndpoint endpoint,
+      @Nullable RedisServerTarget serverTarget) {
     return new RediscalaRequest(
         transactionOperationName(operations, /* stable= */ false),
         transactionOperationName(operations, /* stable= */ true),
         batchSize(operations),
         endpoint,
-        endpoint == null
-            ? null
-            : RedisServerTarget.ofHostAndPort(endpoint.getHost(), endpoint.getPort()));
+        serverTarget);
   }
 
   private RediscalaRequest(

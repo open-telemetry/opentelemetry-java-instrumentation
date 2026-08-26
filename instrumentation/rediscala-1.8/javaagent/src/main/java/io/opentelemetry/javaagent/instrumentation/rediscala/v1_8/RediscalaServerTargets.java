@@ -33,7 +33,7 @@ import scala.collection.Iterator;
  * port. None of these carry an actor system type, so this works the same for the Akka and the Pekko
  * builds of rediscala.
  */
-final class RediscalaServerTargets {
+public final class RediscalaServerTargets {
 
   private static final Logger logger = Logger.getLogger(RediscalaServerTargets.class.getName());
 
@@ -73,7 +73,7 @@ final class RediscalaServerTargets {
   }
 
   @Nullable
-  static RedisServerTarget get(Object client) {
+  public static RedisServerTarget get(Object client) {
     if (client instanceof ActorRequest) {
       return get(ACTOR_REQUEST_TARGET, (ActorRequest) client);
     }
