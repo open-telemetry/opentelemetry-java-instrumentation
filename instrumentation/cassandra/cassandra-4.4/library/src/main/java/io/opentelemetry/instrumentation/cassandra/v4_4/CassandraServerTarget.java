@@ -77,13 +77,13 @@ final class CassandraServerTarget {
   }
 
   @Nullable
-  static CassandraServerTarget of(Session session, Set<EndPoint> programmaticContactPoints) {
+  static CassandraServerTarget of(
+      @Nullable List<String> configuredContactPoints,
+      @Nullable Set<EndPoint> programmaticContactPoints) {
+    if (configuredContactPoints == null || programmaticContactPoints == null) {
+      return null;
+    }
     try {
-      DriverContext context = session.getContext();
-      DriverExecutionProfile config = context.getConfig().getDefaultProfile();
-      // basic.contact-points has no default, so the single argument lookup would throw when a
-      // session names its contact points on the builder alone
-      List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
       List<CassandraServerTarget> contactPoints = valid(configuredContactPoints);
       for (EndPoint endPoint : programmaticContactPoints) {
         if (endPoint instanceof SniEndPoint) {

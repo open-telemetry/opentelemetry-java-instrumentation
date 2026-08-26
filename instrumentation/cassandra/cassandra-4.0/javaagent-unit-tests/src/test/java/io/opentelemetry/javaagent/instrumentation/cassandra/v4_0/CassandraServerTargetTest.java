@@ -10,32 +10,16 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
-import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
-import com.datastax.oss.driver.api.core.config.DriverConfig;
-import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
-import com.datastax.oss.driver.api.core.session.Session;
-import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
-import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import java.net.InetSocketAddress;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 class CassandraServerTargetTest {
-
-  @Mock private Session session;
-  @Mock private InternalDriverContext context;
-  @Mock private DriverConfig config;
-  @Mock private DriverExecutionProfile defaultProfile;
 
   @Test
   void singleContactPointKeepsItsHostAndPort() {
@@ -112,23 +96,20 @@ class CassandraServerTargetTest {
 
   @Test
   void sessionThatNamesNoContactPointHasNoTarget() {
-    configureContactPoints(emptyList());
-    when(session.getContext()).thenReturn(context);
-
-    assertThat(CassandraServerTarget.of(session, emptySet())).isNull();
+    assertThat(CassandraServerTarget.of(emptyList(), emptySet())).isNull();
   }
 
   @Test
   void sessionUsesMergedProgrammaticAndConfiguredContactPoints() {
-    configureContactPoints(singletonList("configured.example.com:9042"));
-    when(session.getContext()).thenReturn(context);
     Set<EndPoint> programmaticContactPoints =
         new LinkedHashSet<>(
             singletonList(
                 new DefaultEndPoint(
                     InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
 
-    CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
+    CassandraServerTarget target =
+        CassandraServerTarget.of(
+            singletonList("configured.example.com:9042"), programmaticContactPoints);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
@@ -138,15 +119,15 @@ class CassandraServerTargetTest {
 
   @Test
   void sessionDoesNotResolveConfiguredContactPointsAgain() {
-    configureContactPoints(singletonList("configured.invalid:9042"));
-    when(session.getContext()).thenReturn(context);
     Set<EndPoint> programmaticContactPoints =
         new LinkedHashSet<>(
             singletonList(
                 new DefaultEndPoint(
                     InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
 
-    CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
+    CassandraServerTarget target =
+        CassandraServerTarget.of(
+            singletonList("configured.invalid:9042"), programmaticContactPoints);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
@@ -161,10 +142,7 @@ class CassandraServerTargetTest {
             singletonList(
                 new DefaultEndPoint(
                     InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
-    configureContactPoints(emptyList());
-    when(session.getContext()).thenReturn(context);
-
-    CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
+    CassandraServerTarget target = CassandraServerTarget.of(emptyList(), programmaticContactPoints);
 
     programmaticContactPoints.clear();
 
@@ -174,28 +152,17 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void sessionWithOnlyProgrammaticContactPointsReadsTheRealDriverConfiguration() {
-    // basic.contact-points has no default, so a lookup without one throws on a session that names
-    // its contact points on the builder alone
-    when(session.getContext()).thenReturn(context);
-    when(context.getConfig()).thenReturn(new DefaultDriverConfigLoader().getInitialConfig());
+  void sessionWithOnlyProgrammaticContactPointsHasATarget() {
     Set<EndPoint> programmaticContactPoints =
         new LinkedHashSet<>(
             singletonList(
                 new DefaultEndPoint(
                     InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
 
-    CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
+    CassandraServerTarget target = CassandraServerTarget.of(emptyList(), programmaticContactPoints);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("programmatic.example.com");
     assertThat(target.getPort()).isEqualTo(9142);
-  }
-
-  private void configureContactPoints(List<String> contactPoints) {
-    when(context.getConfig()).thenReturn(config);
-    when(config.getDefaultProfile()).thenReturn(defaultProfile);
-    when(defaultProfile.getStringList(DefaultDriverOption.CONTACT_POINTS, emptyList()))
-        .thenReturn(contactPoints);
   }
 }
