@@ -30,10 +30,9 @@ dependencies {
 
 testing {
   suites {
-    // Do not prefix these suite names with "test". When -PtestLatestDeps=true, the base plugin
-    // applies this module's lettuce-core:5.0.+ latestDepTestLibrary override to every resolvable
-    // configuration whose name starts with "test". That would replace the explicit Lettuce versions
-    // below with 5.0.x.
+    // Keep these suite names from starting with "test". Under -PtestLatestDeps=true, the
+    // module-level Lettuce 5.0.x test dependency override applies to every resolvable
+    // configuration with that prefix, which would replace the explicit versions below.
     register<JvmTestSuite>("v3PreviewLettuce51Test") {
       sources {
         java {
