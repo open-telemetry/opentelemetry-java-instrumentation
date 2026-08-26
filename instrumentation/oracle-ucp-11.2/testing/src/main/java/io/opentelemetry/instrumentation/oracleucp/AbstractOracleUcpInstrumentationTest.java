@@ -110,7 +110,7 @@ public abstract class AbstractOracleUcpInstrumentationTest {
         + oracle.getDatabaseName().toLowerCase(Locale.ROOT);
   }
 
-  protected void assertNoConnectionPoolMetrics() {
+  private void assertNoConnectionPoolMetrics() {
     testing().clearData();
 
     await()

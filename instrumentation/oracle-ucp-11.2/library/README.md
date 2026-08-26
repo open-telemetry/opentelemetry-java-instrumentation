@@ -60,6 +60,7 @@ properties and the JDBC URL, when present. Without a JDBC URL, it also uses the 
 `serverName`, `portNumber`, and `databaseName` values exposed directly by the `PoolDataSource`.
 This applies only when the `PoolDataSource` does
 not have an explicitly configured connection pool name. The derived format is
-`host[:port][/database-or-service]`; when the connection information is unavailable, the fallback
-name is `oracle-ucp`. Pools connected to the same database intentionally share the derived name, so
+`host[:port][/database-or-service]`, or just `database-or-service` when no host is known. When the
+connection information is unavailable, the fallback name is `oracle-ucp`. Pools connected to the
+same database intentionally share the derived name, so
 their asynchronous metric observations are aggregated under the same pool name.
