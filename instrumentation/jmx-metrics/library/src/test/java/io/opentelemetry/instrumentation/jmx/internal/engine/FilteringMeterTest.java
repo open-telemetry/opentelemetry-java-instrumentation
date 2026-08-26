@@ -1,32 +1,33 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.metrics.BatchCallback;
-import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
-import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
-import io.opentelemetry.api.metrics.LongCounterBuilder;
-import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableMeasurement;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class FilteringMeterTest {
 
-  private static final IncludeExclude INCLUDE_EXCLUDE = IncludeExclude.builder()
-      .setExcluded("excluded*").build();
+  private static final IncludeExclude INCLUDE_EXCLUDE =
+      IncludeExclude.builder().setExcluded("excluded*").build();
 
-  private static void dummyRunnable() {}
-
+  private InMemoryMetricReader metricReader;
   private FilteringMeter meter;
 
   @BeforeEach
   void before() {
-    InMemoryMetricReader metricReader = InMemoryMetricReader.create();
+    metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     Meter sdkMeter = meterProvider.get("test");
@@ -35,76 +36,74 @@ class FilteringMeterTest {
 
   @Test
   void counter() {
-    LongCounterBuilder noopBuilder = meter.counterBuilder("excluded");
-    checkNoop(noopBuilder);
-    checkNoop(noopBuilder.buildObserver());
+    meter.counterBuilder("excluded").build().add(1);
+    assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    checkBatchCallback(noopBuilder.buildObserver());
-
-    LongCounterBuilder builder = meter.counterBuilder("included");
-    checkSdk(builder);
-    checkSdk(builder.buildObserver());
-
-    checkBatchCallback(builder.buildObserver());
-    checkBatchCallback(builder.buildObserver(), noopBuilder.buildObserver(), meter.counterBuilder("included2").buildObserver());
+    meter.counterBuilder("included").build().add(1);
+    checkReportedMetrics("included");
   }
 
   @Test
   void upDownCounter() {
-    LongUpDownCounterBuilder noopBuilder = meter.upDownCounterBuilder("excluded");
-    checkNoop(noopBuilder);
-    checkNoop(noopBuilder.buildObserver());
+    meter.upDownCounterBuilder("excluded").build().add(1);
+    assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    checkBatchCallback(noopBuilder.buildObserver());
-
-    LongUpDownCounterBuilder builder = meter.upDownCounterBuilder("included");
-    checkSdk(builder);
-    checkSdk(builder.buildObserver());
-
-    checkBatchCallback(builder.buildObserver());
-    checkBatchCallback(builder.buildObserver(), noopBuilder.buildObserver(), meter.upDownCounterBuilder("included2").buildObserver());
+    meter.upDownCounterBuilder("included").build().add(1);
+    checkReportedMetrics("included");
   }
 
   @Test
   void histogram() {
-    DoubleHistogramBuilder noopBuilder = meter.histogramBuilder("excluded");
-    checkNoop(noopBuilder);
+    meter.histogramBuilder("excluded").build().record(1.0);
+    assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    DoubleHistogramBuilder builder = meter.histogramBuilder("included");
-    checkSdk(builder);
+    meter.histogramBuilder("included").build().record(1.0);
+    checkReportedMetrics("included");
   }
 
   @Test
   void gauge() {
-    DoubleGaugeBuilder noopBuilder = meter.gaugeBuilder("excluded");
-    checkNoop(noopBuilder);
-    checkNoop(noopBuilder.buildObserver());
+    meter.gaugeBuilder("excluded").build().set(1.0);
+    assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    checkBatchCallback(noopBuilder.buildObserver());
-
-    DoubleGaugeBuilder builder = meter.gaugeBuilder("included");
-    checkSdk(builder);
-    checkSdk(builder.buildObserver());
-
-    checkBatchCallback(builder.buildObserver());
-    checkBatchCallback(builder.buildObserver(), noopBuilder.buildObserver(), meter.gaugeBuilder("included2").buildObserver());
+    meter.gaugeBuilder("included").build().set(1.0);
+    checkReportedMetrics("included");
   }
 
+  @Test
+  void batchCallbackFiltering() {
+    ObservableLongMeasurement excludedObs = meter.counterBuilder("excluded").buildObserver();
+    ObservableLongMeasurement included1 = meter.counterBuilder("included.first").buildObserver();
+    ObservableLongMeasurement included2 = meter.counterBuilder("included.second").buildObserver();
 
-  private void checkBatchCallback(ObservableMeasurement first, ObservableMeasurement... rest) {
-    try(BatchCallback callback = meter.batchCallback(FilteringMeterTest::dummyRunnable, first,
-        rest)) {
+    // all noop: callback not registered, nothing recorded
+    try (BatchCallback bc = meter.batchCallback(() -> excludedObs.record(1), excludedObs)) {
+      assertThat(metricReader.collectAllMetrics()).isEmpty();
+    }
+
+    // real only: callback registered, metric recorded
+    try (BatchCallback bc = meter.batchCallback(() -> included1.record(1), included1)) {
+      checkReportedMetrics("included.first");
+    }
+
+    // mixed noop + real: noop filtered out, real delegated
+    try (BatchCallback bc =
+        meter.batchCallback(
+            () -> {
+              excludedObs.record(1);
+              included1.record(1);
+              included2.record(1);
+            },
+            excludedObs,
+            included1,
+            included2)) {
+      checkReportedMetrics("included.first", "included.second");
     }
   }
 
-  private static void checkNoop(Object o) {
-    String className = o.getClass().getName();
-    assertThat(className).startsWith("io.opentelemetry.api.").contains("Noop");
+  private void checkReportedMetrics(String... names) {
+    assertThat(metricReader.collectAllMetrics())
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(names);
   }
-
-  private static void checkSdk(Object o) {
-    String className = o.getClass().getName();
-    assertThat(className).startsWith("io.opentelemetry.sdk.").doesNotContain("Noop");
-  }
-
 }
