@@ -21,6 +21,7 @@ import redis.RedisServer;
 import redis.RoundRobinPoolRequest;
 import redis.SentinelMonitoredRedisBlockingClient;
 import redis.SentinelMonitoredRedisClient;
+import scala.Tuple2;
 import scala.collection.Iterable;
 import scala.collection.Iterator;
 
@@ -36,9 +37,16 @@ final class RediscalaServerTargets {
 
   private static final Logger logger = Logger.getLogger(RediscalaServerTargets.class.getName());
 
-  // the collection type of RedisClientPool#redisServers() differs between the scala 2.12 and the
-  // scala 2.13 builds, so the method is resolved reflectively rather than called directly
+  // Scala collection return types differ between the Scala 2.12 and 2.13 builds, so
+  // collection-returning methods are resolved reflectively rather than called directly.
   @Nullable private static final Method REDIS_SERVERS = findRedisServers();
+
+  @Nullable
+  private static final Method SENTINELS = findSentinels(SentinelMonitoredRedisClient.class);
+
+  @Nullable
+  private static final Method BLOCKING_SENTINELS =
+      findSentinels(SentinelMonitoredRedisBlockingClient.class);
 
   private static final VirtualField<ActorRequest, RedisServerTarget> ACTOR_REQUEST_TARGET =
       VirtualField.find(ActorRequest.class, RedisServerTarget.class);
@@ -50,6 +58,15 @@ final class RediscalaServerTargets {
   private static Method findRedisServers() {
     try {
       return RedisClientPool.class.getMethod("redisServers");
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Method findSentinels(Class<?> clientClass) {
+    try {
+      return clientClass.getMethod("sentinels");
     } catch (NoSuchMethodException e) {
       return null;
     }
@@ -82,11 +99,11 @@ final class RediscalaServerTargets {
   @Nullable
   private static RedisServerTarget of(Object client) {
     if (client instanceof SentinelMonitoredRedisClient) {
-      return RedisServerTarget.ofLogicalName(((SentinelMonitoredRedisClient) client).master());
+      return ofSentinel(client, SENTINELS, ((SentinelMonitoredRedisClient) client).master());
     }
     if (client instanceof SentinelMonitoredRedisBlockingClient) {
-      return RedisServerTarget.ofLogicalName(
-          ((SentinelMonitoredRedisBlockingClient) client).master());
+      return ofSentinel(
+          client, BLOCKING_SENTINELS, ((SentinelMonitoredRedisBlockingClient) client).master());
     }
     if (client instanceof RedisClientPool) {
       return ofPool((RedisClientPool) client);
@@ -96,6 +113,43 @@ final class RediscalaServerTargets {
       return RedisServerTarget.ofHostAndPort(actorClient.host(), actorClient.port());
     }
     return null;
+  }
+
+  @Nullable
+  private static RedisServerTarget ofSentinel(
+      Object client, @Nullable Method sentinelsMethod, String master) {
+    if (sentinelsMethod == null) {
+      return RedisServerTarget.ofLogicalName(master);
+    }
+    Object sentinels;
+    try {
+      sentinels = sentinelsMethod.invoke(client);
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to read the configured rediscala Sentinel servers", e);
+      return RedisServerTarget.ofLogicalName(master);
+    }
+    return ofSentinelEndpoints(sentinels, master);
+  }
+
+  @Nullable
+  private static RedisServerTarget ofSentinelEndpoints(Object sentinels, String master) {
+    if (!(sentinels instanceof Iterable)) {
+      return RedisServerTarget.ofLogicalName(master);
+    }
+    List<String> endpoints = new ArrayList<>();
+    Iterator<?> iterator = ((Iterable<?>) sentinels).iterator();
+    while (iterator.hasNext()) {
+      Object sentinel = iterator.next();
+      if (sentinel instanceof Tuple2) {
+        Tuple2<?, ?> endpoint = (Tuple2<?, ?>) sentinel;
+        if (endpoint._1() instanceof String && endpoint._2() instanceof Number) {
+          endpoints.add(
+              RedisServerTarget.endpoint(
+                  (String) endpoint._1(), ((Number) endpoint._2()).intValue()));
+        }
+      }
+    }
+    return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, master);
   }
 
   @Nullable
