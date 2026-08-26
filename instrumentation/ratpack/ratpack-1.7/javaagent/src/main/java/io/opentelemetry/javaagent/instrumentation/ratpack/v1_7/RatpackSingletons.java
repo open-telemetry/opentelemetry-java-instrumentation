@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryHttpC
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import ratpack.exec.Execution;
+import ratpack.http.client.RequestSpec;
 
 public class RatpackSingletons {
 
@@ -24,6 +25,7 @@ public class RatpackSingletons {
         new OpenTelemetryHttpClient(
             RatpackClientInstrumenterBuilderFactory.create(
                     "io.opentelemetry.ratpack-1.7", GlobalOpenTelemetry.get())
+                .addAttributesExtractor(new RatpackProtocolVersionAttributesExtractor())
                 .configure(AgentCommonConfig.get())
                 .build());
   }
@@ -39,6 +41,14 @@ public class RatpackSingletons {
             .map(ContextHolder::context)
             .orElse(Context.current());
     channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(parentContext);
+  }
+
+  public static void captureProtocolVersion(Execution execution, Channel channel) {
+    RequestSpec request =
+        execution.maybeGet(ContextHolder.class).map(ContextHolder::requestSpec).orElse(null);
+    if (request != null) {
+      RatpackHttpProtocolVersion.attach(request, channel);
+    }
   }
 
   private RatpackSingletons() {}
