@@ -48,7 +48,7 @@ class CassandraResponsePeerTest {
   }
 
   @Test
-  void omitsUnresolvedAndNonInetChannelAddresses() {
+  void omitsUnresolvedAndNonInetChannelAddresses() throws Exception {
     ChannelHandlerContext context = mock(ChannelHandlerContext.class);
     Channel channel = mock(Channel.class);
     Frame unresolvedFrame = frame(1);
@@ -73,11 +73,60 @@ class CassandraResponsePeerTest {
     assertThat(getter.getNetworkPeerInetSocketAddress(null, nonInetExecutionInfo)).isNull();
   }
 
+  @Test
+  void supportsPackageIndependentPublicContextInterfaces() throws Exception {
+    InetSocketAddress peer = resolved(39042);
+    Frame responseFrame = frame(1);
+    ExecutionInfo executionInfo = mock(ExecutionInfo.class);
+
+    InFlightHandlerInstrumentation.ChannelReadAdvice.onEnter(
+        new TestContext(new TestChannel(peer)), responseFrame);
+    DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(executionInfo, responseFrame);
+
+    assertThat(
+            new CassandraSqlAttributesGetter().getNetworkPeerInetSocketAddress(null, executionInfo))
+        .isEqualTo(peer);
+  }
+
   private static InetSocketAddress resolved(int port) throws Exception {
     return new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), port);
   }
 
   private static Frame frame(int streamId) {
     return new Frame(4, false, streamId, false, null, 0, 0, emptyMap(), emptyList(), null);
+  }
+
+  public interface PublicContext {
+    PublicChannel channel();
+  }
+
+  public interface PublicChannel {
+    SocketAddress remoteAddress();
+  }
+
+  private static final class TestContext implements PublicContext {
+    private final PublicChannel channel;
+
+    private TestContext(PublicChannel channel) {
+      this.channel = channel;
+    }
+
+    @Override
+    public PublicChannel channel() {
+      return channel;
+    }
+  }
+
+  private static final class TestChannel implements PublicChannel {
+    private final SocketAddress remoteAddress;
+
+    private TestChannel(SocketAddress remoteAddress) {
+      this.remoteAddress = remoteAddress;
+    }
+
+    @Override
+    public SocketAddress remoteAddress() {
+      return remoteAddress;
+    }
   }
 }

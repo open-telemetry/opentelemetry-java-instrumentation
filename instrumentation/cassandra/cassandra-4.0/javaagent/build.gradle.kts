@@ -9,6 +9,12 @@ muzzle {
     versions.set("[4.0,4.4)")
     assertInverse.set(true)
   }
+  pass {
+    group.set("com.datastax.oss")
+    module.set("java-driver-core-shaded")
+    versions.set("[4.0,4.4)")
+    assertInverse.set(true)
+  }
 }
 
 dependencies {
@@ -41,4 +47,29 @@ tasks {
   check {
     dependsOn(testStableSemconv)
   }
+
+  fun registerShadedTest(name: String, version: String, stableSemconv: Boolean = false) {
+    val shadedClasspath =
+      configurations.create("${name}RuntimeClasspath") {
+        isCanBeConsumed = false
+        isCanBeResolved = true
+        extendsFrom(configurations.testRuntimeClasspath.get())
+        resolutionStrategy.dependencySubstitution {
+          substitute(module("com.datastax.oss:java-driver-core"))
+            .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
+        }
+      }
+    register<Test>(name) {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = files(sourceSets.test.get().output, shadedClasspath)
+      if (stableSemconv) {
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      }
+    }
+  }
+
+  registerShadedTest("testShaded", "4.0.0")
+  registerShadedTest("testShadedStableSemconv", "4.0.0", stableSemconv = true)
+  registerShadedTest("testShadedLatest", "4.3.1")
 }
