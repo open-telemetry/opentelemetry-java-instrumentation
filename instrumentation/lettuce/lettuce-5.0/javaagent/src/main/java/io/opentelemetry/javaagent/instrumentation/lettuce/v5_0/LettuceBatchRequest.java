@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -28,6 +29,7 @@ final class LettuceBatchRequest {
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
   @Nullable private final InetSocketAddress serverAddress;
+  @Nullable private final SocketAddress peerAddress;
   @Nullable private final Integer databaseIndex;
   @Nullable private final RedisServerTarget serverTarget;
 
@@ -36,12 +38,14 @@ final class LettuceBatchRequest {
       @Nullable String queryText,
       @Nullable Long batchSize,
       @Nullable InetSocketAddress serverAddress,
+      @Nullable SocketAddress peerAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
     this.serverAddress = serverAddress;
+    this.peerAddress = peerAddress;
     this.databaseIndex = databaseIndex;
     this.serverTarget = serverTarget;
   }
@@ -49,6 +53,7 @@ final class LettuceBatchRequest {
   static LettuceBatchRequest create(
       List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
+      @Nullable SocketAddress peerAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
     return new LettuceBatchRequest(
@@ -56,6 +61,7 @@ final class LettuceBatchRequest {
         queryText(commands),
         commands.size() != 1 ? (long) commands.size() : null,
         serverAddress,
+        peerAddress,
         databaseIndex,
         serverTarget);
   }
@@ -77,6 +83,11 @@ final class LettuceBatchRequest {
   @Nullable
   InetSocketAddress getServerAddress() {
     return serverAddress;
+  }
+
+  @Nullable
+  SocketAddress getPeerAddress() {
+    return peerAddress;
   }
 
   @Nullable

@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.attachAddress;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 
+import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import java.util.function.BiConsumer;
@@ -17,16 +19,22 @@ import reactor.core.publisher.Mono;
 public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T, Throwable> {
 
   private final RedisCommand<?, ?, ?> command;
+  private final StatefulConnection<?, ?> connection;
   private final boolean finishSpanOnClose;
   private Context context;
 
-  public LettuceMonoDualConsumer(RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
+  public LettuceMonoDualConsumer(
+      RedisCommand<?, ?, ?> command,
+      StatefulConnection<?, ?> connection,
+      boolean finishSpanOnClose) {
     this.command = command;
+    this.connection = connection;
     this.finishSpanOnClose = finishSpanOnClose;
   }
 
   @Override
   public void accept(R r) {
+    attachAddress(command, connection);
     context = instrumenter().start(Context.current(), command);
     if (finishSpanOnClose) {
       instrumenter().end(context, command, null, null);

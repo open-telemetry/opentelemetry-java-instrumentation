@@ -9,10 +9,13 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_DATABASE_INDEX;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_PEER_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_TARGET;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_CHANNEL;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_PEER_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_TARGET;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -23,9 +26,12 @@ import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
+import io.netty.channel.Channel;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -55,6 +61,12 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$SetAutoFlushAdvice");
     transformer.applyAdviceToMethod(
         named("flushCommands").and(takesArguments(0)), getClass().getName() + "$FlushAdvice");
+    transformer.applyAdviceToMethod(
+        named("notifyChannelActive").and(takesArguments(1)),
+        getClass().getName() + "$ChannelActiveAdvice");
+    transformer.applyAdviceToMethod(
+        named("notifyChannelInactive").and(takesArguments(1)),
+        getClass().getName() + "$ChannelInactiveAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -65,6 +77,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       AsyncCommand<?, ?, ?> asyncCommand = asAsyncCommand(command);
       COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get(endpoint));
+      COMMAND_PEER_ADDRESS.set(command, ENDPOINT_PEER_ADDRESS.get(endpoint));
       COMMAND_DATABASE_INDEX.set(command, ENDPOINT_DATABASE_INDEX.get(endpoint));
       COMMAND_TARGET.set(command, ENDPOINT_TARGET.get(endpoint));
 
@@ -142,6 +155,33 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         // Normally, BatchScope.start attaches callbacks to the command futures, and those
         // callbacks report completion to the batch scope.
         batchScope.endOne(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ChannelActiveAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(
+        @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) Channel channel) {
+      SocketAddress remoteAddress = channel.remoteAddress();
+      ENDPOINT_CHANNEL.set(endpoint, channel);
+      ENDPOINT_PEER_ADDRESS.set(
+          endpoint,
+          remoteAddress instanceof InetSocketAddress ? (InetSocketAddress) remoteAddress : null);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ChannelInactiveAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(
+        @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) Channel channel) {
+      if (ENDPOINT_CHANNEL.get(endpoint) == channel) {
+        ENDPOINT_CHANNEL.set(endpoint, null);
+        ENDPOINT_PEER_ADDRESS.set(endpoint, null);
       }
     }
   }

@@ -67,13 +67,14 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V, T> Mono<T> monitorSpan(
-        @Advice.Return Mono<T> originalPublisher, @Advice.Enter RedisCommand<K, V, T> command) {
+        @Advice.This AbstractRedisReactiveCommands<K, V> commands,
+        @Advice.Return Mono<T> originalPublisher,
+        @Advice.Enter RedisCommand<K, V, T> command) {
       Mono<T> publisher = originalPublisher;
       boolean finishSpanOnClose = !expectsResponse(command);
       LettuceMonoDualConsumer<? super Subscription, T> mdc =
-          new LettuceMonoDualConsumer<>(command, finishSpanOnClose);
+          new LettuceMonoDualConsumer<>(command, commands.getConnection(), finishSpanOnClose);
       publisher = publisher.doOnSubscribe(mdc);
-      // register the call back to close the span only if necessary
       if (!finishSpanOnClose) {
         publisher = mdc.finishSpanOnTerminal(publisher);
       }
@@ -97,16 +98,15 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V, T> Flux<T> monitorSpan(
-        @Advice.Return Flux<T> originalPublisher, @Advice.Enter RedisCommand<K, V, T> command) {
+        @Advice.This AbstractRedisReactiveCommands<K, V> commands,
+        @Advice.Return Flux<T> originalPublisher,
+        @Advice.Enter RedisCommand<K, V, T> command) {
       Flux<T> publisher = originalPublisher;
 
       boolean expectsResponse = expectsResponse(command);
       LettuceFluxTerminationRunnable handler =
-          new LettuceFluxTerminationRunnable(command, expectsResponse);
+          new LettuceFluxTerminationRunnable(command, commands.getConnection(), expectsResponse);
       publisher = publisher.doOnSubscribe(handler.getOnSubscribeConsumer());
-      // don't register extra callbacks to finish the spans if the command being instrumented is one
-      // of those that return
-      // Mono<Void> (In here a flux is created first and then converted to Mono<Void>)
       if (expectsResponse) {
         publisher = publisher.doOnEach(handler);
         publisher = publisher.doOnCancel(handler);

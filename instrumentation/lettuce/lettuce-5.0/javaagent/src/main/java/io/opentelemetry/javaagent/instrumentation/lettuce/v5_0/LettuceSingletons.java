@@ -14,6 +14,7 @@ import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
+import io.netty.channel.Channel;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -29,6 +30,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 public class LettuceSingletons {
@@ -47,8 +49,17 @@ public class LettuceSingletons {
   public static final VirtualField<DefaultEndpoint, InetSocketAddress> ENDPOINT_ADDRESS =
       VirtualField.find(DefaultEndpoint.class, InetSocketAddress.class);
 
+  public static final VirtualField<DefaultEndpoint, SocketAddress> ENDPOINT_PEER_ADDRESS =
+      VirtualField.find(DefaultEndpoint.class, SocketAddress.class);
+
+  public static final VirtualField<DefaultEndpoint, Channel> ENDPOINT_CHANNEL =
+      VirtualField.find(DefaultEndpoint.class, Channel.class);
+
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
       VirtualField.find(RedisCommand.class, InetSocketAddress.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, SocketAddress> COMMAND_PEER_ADDRESS =
+      VirtualField.find(RedisCommand.class, SocketAddress.class);
 
   public static final VirtualField<DefaultEndpoint, Integer> ENDPOINT_DATABASE_INDEX =
       VirtualField.find(DefaultEndpoint.class, Integer.class);
@@ -146,6 +157,7 @@ public class LettuceSingletons {
       if (channelWriter instanceof DefaultEndpoint) {
         DefaultEndpoint endpoint = (DefaultEndpoint) channelWriter;
         COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get(endpoint));
+        COMMAND_PEER_ADDRESS.set(command, ENDPOINT_PEER_ADDRESS.get(endpoint));
         COMMAND_DATABASE_INDEX.set(command, ENDPOINT_DATABASE_INDEX.get(endpoint));
         COMMAND_TARGET.set(command, ENDPOINT_TARGET.get(endpoint));
       }
