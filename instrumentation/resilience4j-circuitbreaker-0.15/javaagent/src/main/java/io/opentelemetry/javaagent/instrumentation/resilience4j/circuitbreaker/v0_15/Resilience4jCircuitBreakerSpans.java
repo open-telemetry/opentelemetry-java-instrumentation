@@ -21,6 +21,7 @@ public class Resilience4jCircuitBreakerSpans {
   // out-of-order raw callbacks cannot be correlated safely. Decorated APIs capture the exact
   // acquisition token; raw same-thread callbacks are only best-effort for simple usage.
   private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
+  private static final ThreadLocal<Deque<PendingSpan>> attachedPendingSpans = new ThreadLocal<>();
   private static final ThreadLocal<Deque<AttemptToken>> currentAcquisitions = new ThreadLocal<>();
   private static final ThreadLocal<AttemptToken> recentAcquisition = new ThreadLocal<>();
   private static final ThreadLocal<Deque<Capture>> captures = new ThreadLocal<>();
@@ -140,7 +141,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
 
     PendingSpan pendingSpan =
-        new PendingSpan(request, instrumenter().start(parentContext, request));
+        new PendingSpan(circuitBreaker, request, instrumenter().start(parentContext, request));
     Deque<AttemptToken> tokens = currentAcquisitions.get();
     AttemptToken token = tokens == null ? null : tokens.peek();
     if (token != null && token.circuitBreaker == circuitBreaker) {
@@ -229,11 +230,12 @@ public class Resilience4jCircuitBreakerSpans {
       CircuitBreaker circuitBreaker, String outcome, @Nullable Throwable throwable) {
     AttemptToken captureToken = activeCaptureToken(circuitBreaker);
     AttemptToken recentToken = recentAcquisition.get();
-    PendingSpan pendingSpan = null;
+    PendingSpan pendingSpan = claimAttachedPendingSpan(circuitBreaker);
     // If user code performs a nested raw acquisition inside a decorated call and records that
     // result before the decorated call completes, prefer the newer raw acquisition. Otherwise, use
     // the active capture token owned by the decorator.
-    if (recentToken != null
+    if (pendingSpan == null
+        && recentToken != null
         && recentToken.circuitBreaker == circuitBreaker
         && recentToken != captureToken) {
       pendingSpan = claim(recentToken);
@@ -278,16 +280,22 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   public static void attachPendingSpan(PendingSpan pendingSpan) {
-    Deque<PendingSpan> spans = pendingSpans.get();
+    Deque<PendingSpan> spans = attachedPendingSpans.get();
     if (spans == null) {
       spans = new ArrayDeque<>();
-      pendingSpans.set(spans);
+      attachedPendingSpans.set(spans);
     }
     spans.push(pendingSpan);
   }
 
   public static void detachPendingSpan(PendingSpan pendingSpan) {
-    Deque<PendingSpan> spans = pendingSpans.get();
+    removePendingSpan(pendingSpans, pendingSpan);
+    removePendingSpan(attachedPendingSpans, pendingSpan);
+  }
+
+  private static void removePendingSpan(
+      ThreadLocal<Deque<PendingSpan>> threadLocal, PendingSpan pendingSpan) {
+    Deque<PendingSpan> spans = threadLocal.get();
     if (spans == null) {
       return;
     }
@@ -299,8 +307,23 @@ public class Resilience4jCircuitBreakerSpans {
       }
     }
     if (spans.isEmpty()) {
-      pendingSpans.remove();
+      threadLocal.remove();
     }
+  }
+
+  @Nullable
+  private static PendingSpan claimAttachedPendingSpan(CircuitBreaker circuitBreaker) {
+    Deque<PendingSpan> spans = attachedPendingSpans.get();
+    if (spans == null) {
+      return null;
+    }
+    for (PendingSpan pendingSpan : spans) {
+      if (pendingSpan.isFor(circuitBreaker)) {
+        detachPendingSpan(pendingSpan);
+        return pendingSpan;
+      }
+    }
+    return null;
   }
 
   @Nullable
@@ -353,13 +376,20 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   public static class PendingSpan {
+    private final CircuitBreaker circuitBreaker;
     private final Resilience4jCircuitBreakerRequest request;
     private final Context context;
     private volatile boolean ended;
 
-    private PendingSpan(Resilience4jCircuitBreakerRequest request, Context context) {
+    private PendingSpan(
+        CircuitBreaker circuitBreaker, Resilience4jCircuitBreakerRequest request, Context context) {
+      this.circuitBreaker = circuitBreaker;
       this.request = request;
       this.context = context;
+    }
+
+    private boolean isFor(CircuitBreaker circuitBreaker) {
+      return this.circuitBreaker == circuitBreaker;
     }
 
     public synchronized void end(String outcome, @Nullable Throwable throwable) {

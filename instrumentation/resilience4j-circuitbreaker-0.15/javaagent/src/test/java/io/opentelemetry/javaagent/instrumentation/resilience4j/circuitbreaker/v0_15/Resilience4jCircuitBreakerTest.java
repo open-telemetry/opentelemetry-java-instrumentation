@@ -239,6 +239,34 @@ class Resilience4jCircuitBreakerTest {
 
   @Test
   @SuppressWarnings("unchecked")
+  void createsFailureSpanWhenDecoratedCompletionStageResultMatchesPredicateOnDifferentThread()
+      throws Exception {
+    Method recordResultPredicate = recordResultPredicateMethod();
+    Method decorateCompletionStage = decorateCompletionStageMethod();
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    recordResultPredicate.invoke(
+        builder, (Predicate<Object>) result -> Integer.valueOf(500).equals(result));
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    CompletableFuture<Integer> future = new CompletableFuture<>();
+    Supplier<CompletionStage<Integer>> supplier = () -> future;
+    Supplier<CompletionStage<Integer>> decoratedSupplier =
+        (Supplier<CompletionStage<Integer>>)
+            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    try {
+      CompletionStage<Integer> stage = testing.runWithSpan("parent", decoratedSupplier::get);
+      executor.submit(() -> future.complete(500)).get();
+
+      assertThat(stage.toCompletableFuture().get()).isEqualTo(500);
+    } finally {
+      executor.shutdownNow();
+    }
+
+    assertCircuitBreakerSpan("closed", "failure", null);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
   void createsCircuitBreakerSpanWhenDecoratedFutureConsumedOnDifferentThread() throws Exception {
     Method decorateFuture = decorateFutureMethod();
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
@@ -287,6 +315,33 @@ class Resilience4jCircuitBreakerTest {
     Future<Integer> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
 
     assertThat(decoratedFuture.get()).isEqualTo(500);
+    assertCircuitBreakerSpan("closed", "failure", null);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void createsFailureSpanWhenDecoratedFutureResultMatchesPredicateOnDifferentThread()
+      throws Exception {
+    Method recordResultPredicate = recordResultPredicateMethod();
+    Method decorateFuture = decorateFutureMethod();
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    recordResultPredicate.invoke(
+        builder, (Predicate<Object>) result -> Integer.valueOf(500).equals(result));
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    CompletableFuture<Integer> future = CompletableFuture.completedFuture(500);
+    Supplier<Future<Integer>> supplier = () -> future;
+    Supplier<Future<Integer>> decoratedSupplier =
+        (Supplier<Future<Integer>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    try {
+      Future<Integer> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
+      Integer result = executor.submit(() -> decoratedFuture.get()).get();
+
+      assertThat(result).isEqualTo(500);
+    } finally {
+      executor.shutdownNow();
+    }
+
     assertCircuitBreakerSpan("closed", "failure", null);
   }
 
