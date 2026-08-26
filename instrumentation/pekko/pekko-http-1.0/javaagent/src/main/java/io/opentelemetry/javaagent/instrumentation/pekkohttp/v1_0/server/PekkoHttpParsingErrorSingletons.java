@@ -23,9 +23,9 @@ import org.apache.pekko.http.javadsl.model.HttpResponse;
  * reach the user handler, and never become an {@code HttpRequest}, so the regular server
  * instrumentation in {@link PekkoHttpServerTracer} does not see them.
  */
-public final class PekkoHttpParsingErrorSingletons {
+public class PekkoHttpParsingErrorSingletons {
 
-  private static final Instrumenter<PekkoHttpParsingError, HttpResponse> INSTRUMENTER =
+  private static final Instrumenter<PekkoHttpParsingError, HttpResponse> instrumenter =
       JavaagentHttpServerInstrumenters.create(
           PekkoHttpUtil.instrumentationName(),
           new PekkoHttpParsingErrorAttributesGetter(),
@@ -37,11 +37,11 @@ public final class PekkoHttpParsingErrorSingletons {
 
   public static void emitSpan(HttpResponse response) {
     Context parentContext = Context.current();
-    if (!INSTRUMENTER.shouldStart(parentContext, PekkoHttpParsingError.INSTANCE)) {
+    if (!instrumenter.shouldStart(parentContext, PekkoHttpParsingError.INSTANCE)) {
       return;
     }
-    Context context = INSTRUMENTER.start(parentContext, PekkoHttpParsingError.INSTANCE);
-    INSTRUMENTER.end(context, PekkoHttpParsingError.INSTANCE, response, null);
+    Context context = instrumenter.start(parentContext, PekkoHttpParsingError.INSTANCE);
+    instrumenter.end(context, PekkoHttpParsingError.INSTANCE, response, null);
   }
 
   private enum NoopTextMapGetter implements TextMapGetter<PekkoHttpParsingError> {
