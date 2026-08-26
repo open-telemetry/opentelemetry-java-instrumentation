@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
+import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.HTTP_REQUEST_PEER_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
@@ -12,9 +13,11 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
+import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Queue;
+import javax.annotation.Nullable;
 import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
@@ -50,13 +53,17 @@ public class PekkoHttpServerTracer
 
   @Override
   public GraphStageLogic createLogic(Attributes attributes) {
-    return new TracingLogic();
+    return new TracingLogic(
+        attributes
+            .getAttribute(PekkoHttpServerRemoteAddress.class)
+            .map(PekkoHttpServerRemoteAddress::getAddress)
+            .orElse(null));
   }
 
   private class TracingLogic extends GraphStageLogic {
     private final Queue<PekkoTracingRequest> requests = new ArrayDeque<>();
 
-    TracingLogic() {
+    TracingLogic(@Nullable InetSocketAddress remoteAddress) {
       super(shape);
 
       // server pulls response, pass response from user code to server
@@ -97,6 +104,9 @@ public class PekkoHttpServerTracer
             @Override
             public void onPush() {
               HttpRequest request = grab(requestIn);
+              if (remoteAddress != null) {
+                HTTP_REQUEST_PEER_ADDRESS.set(request, remoteAddress);
+              }
               PekkoTracingRequest tracingRequest = PekkoTracingRequest.EMPTY;
               Context parentContext = Context.current();
               if (instrumenter().shouldStart(parentContext, request)) {

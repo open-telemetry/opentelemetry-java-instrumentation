@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
   HttpServerTestOptions,
@@ -17,11 +18,13 @@ import io.opentelemetry.sdk.testing.assertj.{
   TraceAssert
 }
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.testing.internal.armeria.common.{
   AggregatedHttpRequest,
   HttpMethod
 }
+import io.opentelemetry.testing.internal.armeria.client.WebClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -79,6 +82,33 @@ abstract class AbstractHttpServerInstrumentationTest
           )
         })
       }
+    })
+  }
+
+  @Test def testClientAddressWithoutForwardedHeader(): Unit = {
+    val response = WebClient
+      .of()
+      .execute(
+        AggregatedHttpRequest.of(
+          HttpMethod.GET,
+          h1Address.resolve(ServerEndpoint.SUCCESS.rawPath()).toString
+        )
+      )
+      .aggregate
+      .join
+    assertThat(response.status.code).isEqualTo(ServerEndpoint.SUCCESS.getStatus)
+
+    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.anySatisfy(new Consumer[SpanData] {
+          override def accept(span: SpanData): Unit =
+            OpenTelemetryAssertions
+              .assertThat(span)
+              .hasKind(SpanKind.SERVER)
+              .hasAttribute(
+                OpenTelemetryAssertions.equalTo(CLIENT_ADDRESS, "127.0.0.1")
+              )
+        })
     })
   }
 }

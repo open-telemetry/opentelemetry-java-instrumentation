@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
+import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.HTTP_REQUEST_PEER_ADDRESS;
+
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.PekkoHttpUtil;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
@@ -66,5 +69,12 @@ class PekkoHttpServerAttributesGetter
   public String getNetworkProtocolVersion(
       HttpRequest request, @Nullable HttpResponse httpResponse) {
     return PekkoHttpUtil.protocolVersion(request);
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      HttpRequest request, @Nullable HttpResponse httpResponse) {
+    return HTTP_REQUEST_PEER_ADDRESS.get(request);
   }
 }
