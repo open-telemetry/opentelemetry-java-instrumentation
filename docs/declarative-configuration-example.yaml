@@ -39,9 +39,6 @@ instrumentation/development:
     # Stable semantic conventions will become the default in version 3.0 of the agent.
     stability_opt_in_list: ''
   java:
-    apache_commons_pool:
-      # Enables the Apache Commons Pool instrumentation.
-      enabled: false
     apache_elasticjob:
       # Enables experimental span attributes `job.system`, `scheduling.apache-elasticjob.job.name`,
       # `scheduling.apache-elasticjob.task.id`, `scheduling.apache-elasticjob.sharding.item.index`,
@@ -201,9 +198,6 @@ instrumentation/development:
     couchbase:
       # Enables experimental span attributes emitted from the underlying Couchbase library.
       experimental_span_attributes/development: false
-    dropwizard_metrics:
-      # Enables the dropwizard metrics instrumentation.
-      enabled: false
     elasticsearch:
       # Enable the capture of search query bodies. It is important to note that Elasticsearch
       # queries may contain personal or sensitive information.
