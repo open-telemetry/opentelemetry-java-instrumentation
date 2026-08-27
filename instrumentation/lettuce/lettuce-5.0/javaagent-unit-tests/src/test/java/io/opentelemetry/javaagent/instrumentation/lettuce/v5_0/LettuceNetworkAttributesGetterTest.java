@@ -56,6 +56,18 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
+  void commandThatDoesNotExpectResponseDropsSelectedAddress() throws UnknownHostException {
+    RedisCommand<?, ?, ?> command = new Command<>(CommandType.DEBUG, null);
+    LettuceSingletons.recordCommandPeer(
+        command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
+
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+  }
+
+  @Test
   void batchOmitsSelectedAddress() throws UnknownHostException {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
