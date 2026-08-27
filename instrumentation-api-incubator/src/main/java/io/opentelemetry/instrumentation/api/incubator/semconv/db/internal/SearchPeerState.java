@@ -20,6 +20,8 @@ public final class SearchPeerState {
   private static final ContextKey<StackEntry> KEY =
       ContextKey.named("opentelemetry-search-peer-state");
 
+  @Nullable private volatile InetSocketAddress peerAddress;
+
   public static boolean isActive(Context context) {
     return context.get(KEY) != null;
   }
@@ -39,8 +41,6 @@ public final class SearchPeerState {
       entry = entry.previous;
     }
   }
-
-  @Nullable private volatile InetSocketAddress peerAddress;
 
   public Context storeInContext(Context context) {
     return context.with(KEY, new StackEntry(this, context.get(KEY)));
