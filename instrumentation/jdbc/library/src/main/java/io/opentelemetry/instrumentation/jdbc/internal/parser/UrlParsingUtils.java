@@ -228,7 +228,7 @@ public final class UrlParsingUtils {
     return indexOfAny(str, 0, chars);
   }
 
-  public static int indexOfAny(String str, int fromIndex, char... chars) {
+  private static int indexOfAny(String str, int fromIndex, char... chars) {
     for (int i = Math.max(fromIndex, 0); i < str.length(); i++) {
       char c = str.charAt(i);
       for (char match : chars) {
