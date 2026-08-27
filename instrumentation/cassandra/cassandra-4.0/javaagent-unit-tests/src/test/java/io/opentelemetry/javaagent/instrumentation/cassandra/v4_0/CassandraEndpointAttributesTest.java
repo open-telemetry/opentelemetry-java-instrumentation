@@ -235,6 +235,18 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
+  void networkPeerIsOmittedUnderUnresolvedDefaultEndPoint() {
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    when(coordinator.getEndPoint())
+        .thenReturn(
+            new DefaultEndPoint(InetSocketAddress.createUnresolved("node.example.com", 9042)));
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isNull();
+  }
+
+  @Test
   void networkPeerIsResolvedAddressUnderDefaultEndPoint() throws UnknownHostException {
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
     when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
@@ -286,9 +298,9 @@ class CassandraEndpointAttributesTest {
     assertThat(attributes.get(SERVER_PORT)).isEqualTo(29042L);
   }
 
-  // DefaultEndPoint requires a resolved address; build one from raw loopback bytes so getHostString
-  // returns the literal without a lookup. Do not build an SNI proxy address this way, because
-  // SniEndPoint.resolve() reads getHostName(), which reverse-resolves an address built from bytes.
+  // Build resolved addresses from raw loopback bytes so getHostString returns the literal without
+  // a lookup. Do not build an SNI proxy address this way, because SniEndPoint.resolve() reads
+  // getHostName(), which reverse-resolves an address built from bytes.
   private static InetSocketAddress resolved(int port) throws UnknownHostException {
     return new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), port);
   }

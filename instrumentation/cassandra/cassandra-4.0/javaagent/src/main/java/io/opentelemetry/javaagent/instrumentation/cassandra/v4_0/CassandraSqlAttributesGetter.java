@@ -91,9 +91,12 @@ final class CassandraSqlAttributesGetter
     if (emitStableDatabaseSemconv() && isSniEndPoint(endPoint)) {
       return null;
     }
-    // DefaultEndPoint.resolve() returns an existing InetSocketAddress without doing a DNS lookup.
     SocketAddress address = endPoint.resolve();
-    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+    if (!(address instanceof InetSocketAddress)) {
+      return null;
+    }
+    InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
+    return inetSocketAddress.isUnresolved() ? null : inetSocketAddress;
   }
 
   @Override
