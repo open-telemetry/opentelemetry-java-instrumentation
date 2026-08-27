@@ -97,7 +97,7 @@ public class RabbitSingletons {
     if (messagingOperation && emitStableMessagingSemconv()) {
       builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
     }
-    if (RabbitConnectionAttributes.enabled()) {
+    if (messagingOperation && RabbitConnectionAttributes.enabled()) {
       builder.addAttributesExtractor(
           new RabbitConnectionAttributesExtractor<ChannelAndMethod, Void>(
               channelAndMethod -> channelAndMethod.getChannel().getConnection()));
