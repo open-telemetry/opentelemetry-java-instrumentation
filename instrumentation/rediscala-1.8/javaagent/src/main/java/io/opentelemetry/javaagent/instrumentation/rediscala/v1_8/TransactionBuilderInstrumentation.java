@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_ENDPOINT;
-import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_TARGET;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -49,10 +48,7 @@ class TransactionBuilderInstrumentation implements TypeInstrumentation {
           TRANSACTION_ENDPOINT.set(
               transactionBuilder, ServerEndpoint.create((RedisClientActorLike) client));
         }
-        RedisServerTarget serverTarget = RediscalaServerTargets.get(client);
-        if (serverTarget != null) {
-          TRANSACTION_TARGET.set(transactionBuilder, serverTarget);
-        }
+        TRANSACTION_CLIENT.set(transactionBuilder, client);
       }
     }
   }
