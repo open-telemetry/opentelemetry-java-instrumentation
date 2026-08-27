@@ -10,9 +10,12 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import io.opentelemetry.cassandra.common.v4_0.AbstractCassandraTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -33,7 +36,23 @@ class CassandraTest extends AbstractCassandraTest {
 
   @Test
   void responsePeerComesFromTheChannel() {
-    CqlSession session = getSession(null);
+    EndPoint customEndPoint =
+        new EndPoint() {
+          @Override
+          public SocketAddress resolve() {
+            return new InetSocketAddress(cassandraHost, cassandraPort);
+          }
+
+          @Override
+          public String asMetricPrefix() {
+            return "response_peer_test";
+          }
+        };
+    CqlSession session =
+        CqlSession.builder()
+            .addContactEndPoint(customEndPoint)
+            .withLocalDatacenter("datacenter1")
+            .build();
     cleanup.deferCleanup(session);
 
     session.execute("SELECT release_version FROM system.local");

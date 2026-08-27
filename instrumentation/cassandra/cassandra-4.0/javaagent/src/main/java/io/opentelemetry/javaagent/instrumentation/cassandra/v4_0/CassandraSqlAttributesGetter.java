@@ -13,12 +13,12 @@ import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
+import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -86,12 +86,12 @@ final class CassandraSqlAttributesGetter
     if (coordinator == null) {
       return null;
     }
-    if (emitStableDatabaseSemconv()) {
-      return null;
-    }
     EndPoint endPoint = coordinator.getEndPoint();
-    SocketAddress address = endPoint.resolve();
-    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+    if (endPoint instanceof DefaultEndPoint) {
+      // resolve() returns the already-resolved InetSocketAddress, it does not do a dns lookup
+      return (InetSocketAddress) endPoint.resolve();
+    }
+    return null;
   }
 
   @Override

@@ -62,6 +62,9 @@ tasks {
     return register<Test>(name) {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = files(sourceSets.test.get().output, shadedClasspath)
+      if (otelProps.denyUnsafe) {
+        systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
+      }
       if (stableSemconv) {
         jvmArgs("-Dotel.semconv-stability.opt-in=database")
         systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
