@@ -193,6 +193,53 @@ class PekkoHttpServerParsingErrorTest {
     } finally Await.result(system.terminate(), 10.seconds)
   }
 
+  /** A target that failed to parse is attacker controlled and reaches url.path,
+    * which is not sanitized on the way out the way url.query is, so the control
+    * characters it is allowed to contain are percent encoded.
+    */
+  @Test def controlCharactersInTheTargetArePercentEncoded(): Unit = {
+    implicit val system: ActorSystem = ActorSystem("parsing-error-control-test")
+    try {
+      val handler: HttpRequest => HttpResponse = _ => HttpResponse()
+      val binding =
+        Await.result(
+          Http().bindAndHandleSync(handler, "localhost", 0),
+          10.seconds
+        )
+      val port = binding.localAddress.getPort
+
+      try {
+        // an escape character terminates neither the request target nor the request line
+        val response = send(
+          port,
+          "GET /bad\u001bpath HTTP/1.1\r\nHost: localhost:" + port + "\r\n\r\n"
+        )
+        assertThat(response.head).contains("400 Bad Request")
+
+        testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit =
+            trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                span
+                  .hasName("GET")
+                  .hasKind(SpanKind.SERVER)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(
+                    equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(UrlAttributes.URL_PATH, "/bad%1Bpath"),
+                    equalTo(
+                      HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+                      java.lang.Long.valueOf(400)
+                    )
+                  )
+                ()
+              }
+            })
+        })
+      } finally Await.result(binding.unbind(), 10.seconds)
+    } finally Await.result(system.terminate(), 10.seconds)
+  }
+
   private def send(port: Int, request: String): List[String] = {
     val socket = new Socket("localhost", port)
     try {

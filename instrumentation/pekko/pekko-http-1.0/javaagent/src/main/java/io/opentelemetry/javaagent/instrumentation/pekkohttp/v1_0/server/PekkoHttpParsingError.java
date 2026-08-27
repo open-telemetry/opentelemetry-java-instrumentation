@@ -17,6 +17,8 @@ import org.apache.pekko.util.ByteString;
  */
 final class PekkoHttpParsingError {
 
+  private static final char[] HEX = "0123456789ABCDEF".toCharArray();
+
   static final PekkoHttpParsingError UNKNOWN = new PekkoHttpParsingError(null, null, null);
 
   @Nullable private final String method;
@@ -26,8 +28,37 @@ final class PekkoHttpParsingError {
   private PekkoHttpParsingError(
       @Nullable String method, @Nullable String path, @Nullable String query) {
     this.method = method;
-    this.path = path;
-    this.query = query;
+    this.path = escapeControlCharacters(path);
+    this.query = escapeControlCharacters(query);
+  }
+
+  /**
+   * Percent encodes control characters. A request target cannot contain a space, a tab, CR or LF,
+   * because those end the token the parser reads it from, but every other control character can
+   * reach here when the target is the thing that failed to parse, and {@code url.path} is not
+   * sanitized on the way out the way {@code url.query} is. It is applied to a target that
+   * pekko-http did parse as well, rather than depending on how {@code Uri.Path} renders one.
+   */
+  @Nullable
+  private static String escapeControlCharacters(@Nullable String value) {
+    if (value == null) {
+      return null;
+    }
+    StringBuilder escaped = null;
+    for (int i = 0; i < value.length(); i++) {
+      char character = value.charAt(i);
+      if (character > 0x1f && character != 0x7f) {
+        if (escaped != null) {
+          escaped.append(character);
+        }
+        continue;
+      }
+      if (escaped == null) {
+        escaped = new StringBuilder(value.length() + 8).append(value, 0, i);
+      }
+      escaped.append('%').append(HEX[character >> 4]).append(HEX[character & 0xf]);
+    }
+    return escaped == null ? value : escaped.toString();
   }
 
   /**
