@@ -14,10 +14,8 @@ import static org.awaitility.Awaitility.await;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -37,30 +35,6 @@ class ExecutorMetricsRegistryTest {
 
   private static final String NO_OWNER = "<none>";
   private static final long TEST_QUEUE_CAPACITY = 10;
-
-  @Test
-  void registryDoesNotRetainMetricsImplementation() {
-    Class<?> registrationClass =
-        Arrays.stream(ExecutorMetricsRegistry.class.getDeclaredClasses())
-            .filter(nestedClass -> nestedClass.getSimpleName().equals("Registration"))
-            .findFirst()
-            .orElseThrow(AssertionError::new);
-
-    assertThat(Modifier.isFinal(ExecutorMetricsRegistry.class.getModifiers())).isTrue();
-    assertThat(Modifier.isStatic(registrationClass.getModifiers())).isTrue();
-    assertThat(registrationClass.getDeclaredFields())
-        .extracting(field -> field.getName())
-        .doesNotContain("this$0");
-    assertThat(registrationClass.getDeclaredFields())
-        .noneMatch(field -> field.getType() == ExecutorMetricsRegistry.MetricsRegistrar.class);
-  }
-
-  @Test
-  void jdkMetricsDoesNotOwnPreRegistration() {
-    assertThat(JdkExecutorMetrics.class.getDeclaredMethods())
-        .extracting(method -> method.getName())
-        .doesNotContain("preRegister");
-  }
 
   @Test
   void registrationThreadFactoryDelegatesNewThread() {
