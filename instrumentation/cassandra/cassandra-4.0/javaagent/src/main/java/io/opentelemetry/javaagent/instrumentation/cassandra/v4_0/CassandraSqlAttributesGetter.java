@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 final class CassandraSqlAttributesGetter
     implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo> {
 
-  private static final VirtualField<ExecutionInfo, InetSocketAddress> executionInfoPeer =
+  private static final VirtualField<ExecutionInfo, InetSocketAddress> EXECUTION_INFO_PEER =
       VirtualField.find(ExecutionInfo.class, InetSocketAddress.class);
 
   @Override
@@ -79,7 +79,7 @@ final class CassandraSqlAttributesGetter
     if (executionInfo == null) {
       return null;
     }
-    InetSocketAddress peer = executionInfoPeer.get(executionInfo);
+    InetSocketAddress peer = EXECUTION_INFO_PEER.get(executionInfo);
     if (peer != null) {
       return peer;
     }
