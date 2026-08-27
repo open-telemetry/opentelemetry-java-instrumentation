@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isSniEndPoint;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -55,14 +53,14 @@ final class CassandraSqlAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CassandraRequest request) {
-    CassandraServerTarget serverTarget = getServerTarget(request);
+    CassandraServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(CassandraRequest request) {
-    CassandraServerTarget serverTarget = getServerTarget(request);
+    CassandraServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getPort();
   }
 
@@ -86,18 +84,5 @@ final class CassandraSqlAttributesGetter
   @Override
   public boolean isParameterizedQuery(CassandraRequest request, int queryIndex) {
     return request.isParameterizedQuery(queryIndex);
-  }
-
-  @Nullable
-  private static CassandraServerTarget getServerTarget(CassandraRequest request) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
-    for (Node node : request.getSession().getMetadata().getNodes().values()) {
-      if (isSniEndPoint(node.getEndPoint())) {
-        return null;
-      }
-    }
-    return request.getServerTarget();
   }
 }
