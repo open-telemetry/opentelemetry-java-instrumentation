@@ -5,11 +5,29 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
+  LongAssertConsumer,
+  equalTo,
+  satisfies
+}
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS
+import io.opentelemetry.semconv.HttpAttributes.{
+  HTTP_REQUEST_METHOD,
+  HTTP_RESPONSE_STATUS_CODE,
+  HTTP_ROUTE
+}
+import io.opentelemetry.semconv.NetworkAttributes.{
+  NETWORK_PEER_ADDRESS,
+  NETWORK_PEER_PORT,
+  NETWORK_PROTOCOL_VERSION
+}
+import io.opentelemetry.semconv.ServerAttributes.{SERVER_ADDRESS, SERVER_PORT}
+import io.opentelemetry.semconv.UrlAttributes.{URL_PATH, URL_SCHEME}
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.AbstractLongAssert
 
 import java.net.{InetSocketAddress, Socket}
 import java.nio.charset.StandardCharsets.US_ASCII
@@ -98,9 +116,29 @@ abstract class AbstractHttpServerInstrumentationTest
         trace.hasSpansSatisfyingExactly(
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit =
-              span.hasAttributesSatisfying(
-                equalTo(CLIENT_ADDRESS, "127.0.0.1")
-              )
+              span
+                .hasName("GET /success")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent
+                .hasAttributesSatisfyingExactly(
+                  equalTo(URL_SCHEME, "http"),
+                  equalTo(URL_PATH, "/success"),
+                  equalTo(HTTP_ROUTE, "/success"),
+                  equalTo(HTTP_REQUEST_METHOD, "GET"),
+                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                  equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                  equalTo(SERVER_ADDRESS, "localhost"),
+                  equalTo(SERVER_PORT, port),
+                  equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                  satisfies(
+                    NETWORK_PEER_PORT,
+                    new LongAssertConsumer {
+                      override def accept(value: AbstractLongAssert[_]): Unit =
+                        value.isNotEqualTo(port)
+                    }
+                  )
+                )
           },
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit =
