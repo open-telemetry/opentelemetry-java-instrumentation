@@ -29,9 +29,12 @@ Follow `docs/contributing/style-guide.md`.
   methods.
 - **Uppercase field names**: use `SCREAMING_SNAKE_CASE` only for constant-like
   values — literals, immutable value constants (e.g. `Duration` timeouts),
-  semantic keys/handles (`AttributeKey`, `ContextKey`, `VirtualField`,
-  `MethodHandle`, `Pattern`), and canonical singletons (`INSTANCE`, `EMPTY`,
-  `NOOP`). Use lower camel case for runtime collaborators (loggers,
+  canonical singletons (`INSTANCE`, `EMPTY`, `NOOP`), and semantic key/handle
+  types (`AttributeKey`, `ContextKey`, `VirtualField`, `MethodHandle`,
+  `Pattern`). A `static final VirtualField` field **must** be
+  `SCREAMING_SNAKE_CASE` regardless of visibility and regardless of the fact
+  that `VirtualField.find(...)` creates the handle at runtime rather than at
+  compile time. Use lower camel case for runtime collaborators (loggers,
   instrumenters, helpers, caches), even when `static final`.
 - **Collection constants**: public, protected, and package-private collection
   constants must be unmodifiable. Private collection constants must also be

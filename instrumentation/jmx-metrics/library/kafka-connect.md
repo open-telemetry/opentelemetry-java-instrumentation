@@ -48,23 +48,23 @@ State values: destroyed, failed, paused, restarting, running, unassigned.
 
 Attributes: `kafka.connect.connector` and the state attribute shown.
 
-| Metric Name                    | Type          | Unit | Attributes                    | Description                                                                                                                      |
-| ------------------------------ | ------------- | ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| kafka.connect.connector.status | UpDownCounter | 1    | kafka.connect.connector.state | Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values. |
+| Metric Name                    | Type          | Unit | Attributes                    | Description                          |
+| ------------------------------ | ------------- | ---- | ----------------------------- | ------------------------------------ |
+| kafka.connect.connector.status | UpDownCounter | 1    | kafka.connect.connector.state | Connector lifecycle state indicator. |
 
 ## Connector task metrics
 
 All metrics include `kafka.connect.connector` and `kafka.connect.task.id`. Attributes column lists any additional state attributes.
 
-| Metric Name                                    | Type          | Unit     | Attributes               | Description                                                                                                                                                                |
-| ---------------------------------------------- | ------------- | -------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| kafka.connect.task.batch.size.average          | Gauge         | {record} |                          | The average number of records in the batches the task has processed so far.                                                                                                |
-| kafka.connect.task.batch.size.max              | Gauge         | {record} |                          | The number of records in the largest batch the task has processed so far.                                                                                                  |
-| kafka.connect.task.offset.commit.time.average  | Gauge         | s        |                          | The average time in seconds taken by this task to commit offsets.                                                                                                          |
-| kafka.connect.task.offset.commit.failure.ratio | Gauge         | 1        |                          | The average ratio of this task's offset commit attempts that failed.                                                                                                       |
-| kafka.connect.task.offset.commit.time.max      | Gauge         | s        |                          | The maximum time in seconds taken by this task to commit offsets.                                                                                                          |
-| kafka.connect.task.running.ratio               | Gauge         | 1        |                          | The fraction of time this task has spent in the running state.                                                                                                             |
-| kafka.connect.task.status                      | UpDownCounter | 1        | kafka.connect.task.state | The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values. |
+| Metric Name                                    | Type          | Unit     | Attributes               | Description                                                                 |
+| ---------------------------------------------- | ------------- | -------- | ------------------------ | --------------------------------------------------------------------------- |
+| kafka.connect.task.batch.size.average          | Gauge         | {record} |                          | The average number of records in the batches the task has processed so far. |
+| kafka.connect.task.batch.size.max              | Gauge         | {record} |                          | The number of records in the largest batch the task has processed so far.   |
+| kafka.connect.task.offset.commit.time.average  | Gauge         | s        |                          | The average time in seconds taken by this task to commit offsets.           |
+| kafka.connect.task.offset.commit.failure.ratio | Gauge         | 1        |                          | The average ratio of this task's offset commit attempts that failed.        |
+| kafka.connect.task.offset.commit.time.max      | Gauge         | s        |                          | The maximum time in seconds taken by this task to commit offsets.           |
+| kafka.connect.task.running.ratio               | Gauge         | 1        |                          | The fraction of time this task has spent in the running state.              |
+| kafka.connect.task.status                      | UpDownCounter | 1        | kafka.connect.task.state | The status of the connector task.                                           |
 
 ## Sink task metrics
 
