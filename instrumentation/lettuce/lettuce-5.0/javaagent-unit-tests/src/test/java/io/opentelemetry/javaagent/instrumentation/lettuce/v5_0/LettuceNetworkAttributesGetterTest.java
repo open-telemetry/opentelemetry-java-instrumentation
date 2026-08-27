@@ -7,14 +7,21 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.Command;
 import io.lettuce.core.protocol.CommandType;
 import io.lettuce.core.protocol.RedisCommand;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Test;
@@ -90,6 +97,22 @@ class LettuceNetworkAttributesGetterTest {
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
     assertThat(getter.getNetworkPeerAddress(wrapper, null)).isEqualTo("10.1.2.3");
     assertThat(getter.getNetworkPeerPort(wrapper, null)).isEqualTo(PORT);
+  }
+
+  @Test
+  void outboundWriteContinuesWhenRecordingFails() {
+    InetSocketAddress address = new InetSocketAddress("localhost", PORT);
+    Channel channel = mock(Channel.class);
+    when(channel.remoteAddress()).thenReturn(address);
+    ChannelHandlerContext context = mock(ChannelHandlerContext.class);
+    when(context.channel()).thenReturn(channel);
+    ChannelPromise promise = mock(ChannelPromise.class);
+    Collection<?> message = mock(Collection.class);
+    when(message.iterator()).thenThrow(new IllegalStateException("test"));
+
+    new LettuceCommandOutboundHandler().write(context, message, promise);
+
+    verify(context).write(message, promise);
   }
 
   @Test
