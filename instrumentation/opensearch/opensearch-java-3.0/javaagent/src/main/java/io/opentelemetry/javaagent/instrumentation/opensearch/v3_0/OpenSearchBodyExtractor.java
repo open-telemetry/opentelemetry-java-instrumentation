@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import jakarta.json.stream.JsonGenerator;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -31,10 +30,11 @@ class OpenSearchBodyExtractor {
   public static String extractSanitized(JsonpMapper mapper, Object request) {
     try {
       if (request instanceof NdJsonpSerializable) {
-        return serializeNdJsonSanitized(mapper, (NdJsonpSerializable) request);
+        return serializeNdJsonSanitized(
+            mapper, (NdJsonpSerializable) request, MAX_QUERY_BODY_LENGTH);
       }
 
-      return serializeSanitized(mapper, request);
+      return serializeSanitized(mapper, request, MAX_QUERY_BODY_LENGTH);
     } catch (Exception e) {
       logger.log(FINE, "Failure extracting body", e);
       return null;
@@ -42,64 +42,142 @@ class OpenSearchBodyExtractor {
   }
 
   @Nullable
-  private static String serializeSanitized(JsonpMapper mapper, Object item) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+  private static String serializeSanitized(JsonpMapper mapper, Object item, int maxLength)
+      throws IOException {
+    BoundedStringWriter writer = new BoundedStringWriter(maxLength);
 
-    if (mapper instanceof JacksonJsonpMapper) {
-      // Use Jackson-based sanitizing generator for JacksonJsonpMapper
-      com.fasterxml.jackson.core.JsonGenerator jacksonGenerator =
-          JSON_FACTORY.createGenerator(baos);
-      com.fasterxml.jackson.core.JsonGenerator sanitizingGenerator =
-          new SanitizingJacksonJsonGenerator(jacksonGenerator);
-      try (JsonGenerator generator = new JacksonJsonpGenerator(sanitizingGenerator)) {
-        mapper.serialize(item, generator);
+    try {
+      if (mapper instanceof JacksonJsonpMapper) {
+        // Use Jackson-based sanitizing generator for JacksonJsonpMapper
+        com.fasterxml.jackson.core.JsonGenerator jacksonGenerator =
+            JSON_FACTORY.createGenerator(writer);
+        com.fasterxml.jackson.core.JsonGenerator sanitizingGenerator =
+            new SanitizingJacksonJsonGenerator(jacksonGenerator);
+        try (JsonGenerator generator = new JacksonJsonpGenerator(sanitizingGenerator)) {
+          mapper.serialize(item, generator);
+        }
+      } else {
+        // Fallback for other mappers (may not work for all implementations)
+        JsonGenerator rawGenerator = mapper.jsonProvider().createGenerator(writer);
+        try (JsonGenerator generator = new SanitizingJsonGenerator(rawGenerator)) {
+          mapper.serialize(item, generator);
+        }
       }
-    } else {
-      // Fallback for other mappers (may not work for all implementations)
-      JsonGenerator rawGenerator = mapper.jsonProvider().createGenerator(baos);
-      try (JsonGenerator generator = new SanitizingJsonGenerator(rawGenerator)) {
-        mapper.serialize(item, generator);
+    } catch (RuntimeException e) {
+      if (!causedByQueryBodyLimit(e)) {
+        throw e;
       }
     }
 
-    String result = baos.toString(UTF_8).trim();
-    return result.isEmpty() ? null : truncate(result);
+    String result = writer.toString().trim();
+    return result.isEmpty() ? null : result;
   }
 
   @Nullable
-  private static String serializeNdJsonSanitized(JsonpMapper mapper, NdJsonpSerializable value)
-      throws IOException {
-    StringBuilder result = new StringBuilder();
+  private static String serializeNdJsonSanitized(
+      JsonpMapper mapper, NdJsonpSerializable value, int maxLength) throws IOException {
+    StringBuilder result = new StringBuilder(Math.min(maxLength, 1024));
     Iterator<?> values = value._serializables();
     boolean first = true;
 
-    while (values.hasNext()) {
+    while (values.hasNext() && result.length() < maxLength) {
       Object item = values.next();
       String itemStr;
+      int remaining = maxLength - result.length();
 
       if (item instanceof NdJsonpSerializable && item != value) {
         // Recursively handle nested NdJsonpSerializable
-        itemStr = serializeNdJsonSanitized(mapper, (NdJsonpSerializable) item);
+        itemStr = serializeNdJsonSanitized(mapper, (NdJsonpSerializable) item, remaining);
       } else {
-        itemStr = serializeSanitized(mapper, item);
+        itemStr = serializeSanitized(mapper, item, remaining);
       }
 
       if (itemStr != null && !itemStr.isEmpty()) {
         if (!first) {
-          result.append(QUERY_SEPARATOR);
+          appendPrefix(result, QUERY_SEPARATOR, maxLength);
         }
-        result.append(itemStr);
+        if (result.length() < maxLength) {
+          appendPrefix(result, itemStr, maxLength);
+        }
         first = false;
       }
     }
 
-    return result.length() == 0 ? null : truncate(result.toString());
+    return result.length() == 0 ? null : result.toString();
   }
 
-  private static String truncate(String value) {
-    return value.length() <= MAX_QUERY_BODY_LENGTH
-        ? value
-        : value.substring(0, MAX_QUERY_BODY_LENGTH);
+  private static void appendPrefix(StringBuilder result, String value, int maxLength) {
+    int length = Math.min(value.length(), maxLength - result.length());
+    result.append(value, 0, length);
+  }
+
+  private static boolean causedByQueryBodyLimit(Throwable t) {
+    while (t != null) {
+      if (t instanceof QueryBodyLimitException) {
+        return true;
+      }
+      t = t.getCause();
+    }
+    return false;
+  }
+
+  private static final class BoundedStringWriter extends Writer {
+
+    private final StringBuilder result;
+    private final int maxLength;
+
+    private BoundedStringWriter(int maxLength) {
+      this.result = new StringBuilder(Math.min(maxLength, 1024));
+      this.maxLength = maxLength;
+    }
+
+    @Override
+    public void write(char[] buffer, int offset, int length) {
+      int writeLength = Math.min(length, maxLength - result.length());
+      result.append(buffer, offset, writeLength);
+      abortIfFull();
+    }
+
+    @Override
+    public void write(int value) {
+      if (result.length() < maxLength) {
+        result.append((char) value);
+      }
+      abortIfFull();
+    }
+
+    @Override
+    public void write(String value, int offset, int length) {
+      int writeLength = Math.min(length, maxLength - result.length());
+      result.append(value, offset, offset + writeLength);
+      abortIfFull();
+    }
+
+    private void abortIfFull() {
+      if (result.length() == maxLength) {
+        throw new QueryBodyLimitException();
+      }
+    }
+
+    @Override
+    public void flush() {}
+
+    @Override
+    public void close() {}
+
+    @Override
+    public String toString() {
+      return result.toString();
+    }
+  }
+
+  private static final class QueryBodyLimitException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
+    private QueryBodyLimitException() {
+      super(null, null, false, false);
+    }
   }
 
   private OpenSearchBodyExtractor() {}
