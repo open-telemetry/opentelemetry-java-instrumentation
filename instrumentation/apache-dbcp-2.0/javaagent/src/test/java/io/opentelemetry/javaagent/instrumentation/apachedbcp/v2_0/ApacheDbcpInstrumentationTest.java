@@ -87,7 +87,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
   }
 
   @Test
-  void shouldNotReportCommonsPoolMetricsForInternalPool() throws Exception {
+  void shouldNotReportCommonsPoolMetrics() throws Exception {
     BasicDataSource dataSource = createDataSource();
 
     try {
