@@ -118,8 +118,8 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       try {
         if (throwable == null) {
           request.capturePeerAddress();
-          JedisPipelineContext.captureTransactionFramingPeer(request);
         }
+        JedisPipelineContext.captureTransactionFramingPeer(request);
       } finally {
         Context context = this.context;
         if (scope != null && context != null) {
