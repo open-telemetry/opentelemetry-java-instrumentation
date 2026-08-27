@@ -32,6 +32,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY;
+import static net.spy.memcached.FailureMode.Redistribute;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -46,6 +47,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.channels.SocketChannel;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,9 +66,17 @@ import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.DefaultConnectionFactory;
 import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.MemcachedConnection;
+import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.internal.CheckedOperationTimeoutException;
+import net.spy.memcached.internal.GetFuture;
+import net.spy.memcached.ops.GetOperation;
+import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationQueueFactory;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.protocol.binary.BinaryMemcachedNodeImpl;
+import net.spy.memcached.protocol.binary.MultiGetOperationImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -154,11 +164,17 @@ class SpymemcachedTest {
   }
 
   private static MemcachedClient getMemcached(List<InetSocketAddress> nodes) {
-    ConnectionFactory connectionFactory =
+    return getMemcached(nodes, builder -> {});
+  }
+
+  private static MemcachedClient getMemcached(
+      List<InetSocketAddress> nodes, Consumer<ConnectionFactoryBuilder> customizer) {
+    ConnectionFactoryBuilder connectionFactoryBuilder =
         new ConnectionFactoryBuilder()
             .setListenerExecutorService(MoreExecutors.newDirectExecutorService())
-            .setProtocol(BINARY)
-            .build();
+            .setProtocol(BINARY);
+    customizer.accept(connectionFactoryBuilder);
+    ConnectionFactory connectionFactory = connectionFactoryBuilder.build();
     try {
       MemcachedClient memcached = new MemcachedClient(connectionFactory, nodes);
       cleanup.deferCleanup(memcached::shutdown);
@@ -1251,6 +1267,146 @@ class SpymemcachedTest {
   }
 
   @Test
+  void optimizedRetryUsesReassignedNode() throws Exception {
+    GenericContainer<?> retryContainer =
+        new GenericContainer<>("memcached:1.6.41")
+            .withExposedPorts(11211)
+            .withStartupTimeout(Duration.ofMinutes(2));
+    retryContainer.start();
+    cleanup.deferCleanup(retryContainer::stop);
+    InetSocketAddress retryContainerAddress =
+        new InetSocketAddress(retryContainer.getHost(), retryContainer.getMappedPort(11211));
+
+    ReentrantLock queueLock = new ReentrantLock();
+    OperationQueueFactory lockableQueueFactory = () -> getLockableQueue(queueLock);
+    MemcachedClient memcached =
+        getMemcached(
+            asList(memcachedAddress, retryContainerAddress),
+            builder ->
+                builder.setFailureMode(Redistribute).setOpQueueFactory(lockableQueueFactory));
+    MemcachedConnection connection = memcached.getConnection();
+    List<MemcachedNode> nodes = new ArrayList<>(connection.getLocator().getAll());
+    assertThat(nodes).hasSize(2);
+    MemcachedNode failedNode = connection.getLocator().getPrimary(key("optimized-retry-0"));
+    MemcachedNode retryNode = nodes.get(0) == failedNode ? nodes.get(1) : nodes.get(0);
+    InetSocketAddress retryAddress = (InetSocketAddress) retryNode.getSocketAddress();
+    List<String> keys = keysForNode(connection, failedNode, 2);
+
+    List<GetFuture<Object>> futures;
+    queueLock.lock();
+    try {
+      futures =
+          testing.runWithSpan(
+              "parent",
+              () -> asList(memcached.asyncGet(keys.get(0)), memcached.asyncGet(keys.get(1))));
+      Collection<Operation> operations = failedNode.destroyInputQueue();
+      assertThat(operations).hasSize(2);
+
+      ConnectionFactory optimizerFactory =
+          new ConnectionFactoryBuilder().setProtocol(BINARY).build();
+      BlockingQueue<Operation> readQueue = optimizerFactory.createReadOperationQueue();
+      try (SocketChannel channel = SocketChannel.open()) {
+        BinaryMemcachedNodeImpl optimizer =
+            new BinaryMemcachedNodeImpl(
+                InetSocketAddress.createUnresolved("optimizer", 11211),
+                channel,
+                optimizerFactory.getReadBufSize(),
+                readQueue,
+                optimizerFactory.createWriteOperationQueue(),
+                optimizerFactory.createOperationQueue(),
+                optimizerFactory.getOpQueueMaxBlockTime(),
+                false,
+                optimizerFactory.getOperationTimeout(),
+                optimizerFactory.getAuthWaitTime(),
+                optimizerFactory);
+        GetOperation dummyOperation =
+            optimizerFactory
+                .getOperationFactory()
+                .get(
+                    "optimizer",
+                    new GetOperation.Callback() {
+                      @Override
+                      public void gotData(String key, int flags, byte[] data) {}
+
+                      @Override
+                      public void receivedStatus(OperationStatus status) {}
+
+                      @Override
+                      public void complete() {}
+                    });
+        dummyOperation.setHandlingNode(optimizer);
+        dummyOperation.initialize();
+        optimizer.addOp(dummyOperation);
+        for (Operation operation : operations) {
+          optimizer.addOp(operation);
+        }
+        optimizer.copyInputQueue();
+        optimizer.fillWriteBuffer(true);
+      }
+      assertThat(readQueue).hasSize(2);
+      Operation standaloneOperation = readQueue.remove();
+      Operation optimizedOperation = readQueue.remove();
+      standaloneOperation.cancel();
+      assertThat(((KeyedOperation) optimizedOperation).getKeys()).hasSize(2);
+      ((MultiGetOperationImpl) optimizedOperation).getRetryKeys().addAll(keys);
+      failedNode.reconnecting();
+      connection.redistributeOperation(optimizedOperation);
+    } finally {
+      queueLock.unlock();
+    }
+
+    for (GetFuture<Object> future : futures) {
+      assertThat(future.get()).isNull();
+    }
+
+    String target = configuredTarget(memcachedAddress, retryContainerAddress);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(spanName("get", target))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? target
+                                    : retryAddress.getHostString()),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : (long) retryAddress.getPort()),
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, retryAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, retryAddress.getPort()),
+                            equalTo(stringKey("spymemcached.result"), experimental("miss"))),
+                span ->
+                    span.hasName(spanName("get", target))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? target
+                                    : retryAddress.getHostString()),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : (long) retryAddress.getPort()),
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, retryAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, retryAddress.getPort()),
+                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+  }
+
+  @Test
   void severalConfiguredNodesAreReportedTogether() {
     MemcachedClient memcached = getMemcached(asList(memcachedAddress, memcachedLiteralAddress));
     testing.runWithSpan(
@@ -1338,6 +1494,18 @@ class SpymemcachedTest {
 
   private static String key(String k) {
     return KEY_PREFIX + k;
+  }
+
+  private static List<String> keysForNode(
+      MemcachedConnection connection, MemcachedNode node, int count) {
+    List<String> keys = new ArrayList<>();
+    for (int i = 0; keys.size() < count; i++) {
+      String candidate = key("optimized-retry-" + i);
+      if (connection.getLocator().getPrimary(candidate) == node) {
+        keys.add(candidate);
+      }
+    }
+    return keys;
   }
 
   private static String spanName(String operation) {
