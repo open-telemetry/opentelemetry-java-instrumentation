@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
@@ -12,34 +15,54 @@ import javax.annotation.Nullable;
 
 public final class CassandraChannel {
 
-  private static final ClassValue<Method> channelMethods =
-      new ClassValue<Method>() {
+  private static final MethodType ACCESSOR_TYPE = MethodType.methodType(Object.class, Object.class);
+
+  private static final ClassValue<MethodHandle> channelMethods =
+      new ClassValue<MethodHandle>() {
         @Override
-        protected Method computeValue(Class<?> type) {
-          return findPublicInterfaceMethod(type, "channel");
+        protected MethodHandle computeValue(Class<?> type) {
+          return createAccessor(type, "channel");
         }
       };
 
-  private static final ClassValue<Method> remoteAddressMethods =
-      new ClassValue<Method>() {
+  private static final ClassValue<MethodHandle> remoteAddressMethods =
+      new ClassValue<MethodHandle>() {
         @Override
-        protected Method computeValue(Class<?> type) {
-          return findPublicInterfaceMethod(type, "remoteAddress");
+        protected MethodHandle computeValue(Class<?> type) {
+          return createAccessor(type, "remoteAddress");
         }
       };
 
   @Nullable
-  public static InetSocketAddress getRemoteAddress(Object context)
-      throws ReflectiveOperationException {
-    Object channel = channelMethods.get(context.getClass()).invoke(context);
-    Object remoteAddress = remoteAddressMethods.get(channel.getClass()).invoke(channel);
-    if (!(remoteAddress instanceof InetSocketAddress)
-        || ((InetSocketAddress) remoteAddress).isUnresolved()) {
+  public static InetSocketAddress getRemoteAddress(Object context) {
+    try {
+      Object channel = (Object) channelMethods.get(context.getClass()).invokeExact(context);
+      Object remoteAddress =
+          (Object) remoteAddressMethods.get(channel.getClass()).invokeExact(channel);
+      if (!(remoteAddress instanceof InetSocketAddress)
+          || ((InetSocketAddress) remoteAddress).isUnresolved()) {
+        return null;
+      }
+      return (InetSocketAddress) remoteAddress;
+    } catch (Throwable ignored) {
       return null;
     }
-    return (InetSocketAddress) remoteAddress;
   }
 
+  private static MethodHandle createAccessor(Class<?> type, String name) {
+    Method method = findPublicInterfaceMethod(type, name);
+    if (method == null) {
+      throw new IllegalStateException(
+          "No public " + name + "() interface method on " + type.getName());
+    }
+    try {
+      return MethodHandles.publicLookup().unreflect(method).asType(ACCESSOR_TYPE);
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException("Cannot access " + method, e);
+    }
+  }
+
+  @Nullable
   private static Method findPublicInterfaceMethod(Class<?> type, String name) {
     for (Class<?> interfaceType : type.getInterfaces()) {
       if (Modifier.isPublic(interfaceType.getModifiers())) {
@@ -49,18 +72,16 @@ public final class CassandraChannel {
           // Continue with the other public interfaces.
         }
       }
-      try {
-        return findPublicInterfaceMethod(interfaceType, name);
-      } catch (IllegalStateException ignored) {
-        // Continue with the other interfaces.
+      Method method = findPublicInterfaceMethod(interfaceType, name);
+      if (method != null) {
+        return method;
       }
     }
     Class<?> superclass = type.getSuperclass();
     if (superclass != null) {
       return findPublicInterfaceMethod(superclass, name);
     }
-    throw new IllegalStateException(
-        "No public " + name + "() interface method on " + type.getName());
+    return null;
   }
 
   private CassandraChannel() {}
