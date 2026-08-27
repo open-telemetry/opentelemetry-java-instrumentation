@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
@@ -14,6 +16,7 @@ import static java.util.Arrays.asList;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.net.InetAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +52,7 @@ abstract class AbstractOpenSearchQueryTest {
   OpenSearchClient openSearchClient;
   OpensearchContainer opensearch;
   URI httpHost;
+  String peerAddress;
 
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -67,6 +71,7 @@ abstract class AbstractOpenSearchQueryTest {
         "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
+    peerAddress = InetAddress.getByName(httpHost.getHost()).getHostAddress();
     openSearchClient = buildOpenSearchClient();
 
     String documentId = "test-doc-1";
@@ -143,6 +148,8 @@ abstract class AbstractOpenSearchQueryTest {
 
   List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
+    result.add(equalTo(NETWORK_PEER_ADDRESS, peerAddress));
+    result.add(equalTo(NETWORK_PEER_PORT, httpHost.getPort()));
     if (emitStableDatabaseSemconv()) {
       result.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
       result.add(equalTo(SERVER_PORT, httpHost.getPort()));
