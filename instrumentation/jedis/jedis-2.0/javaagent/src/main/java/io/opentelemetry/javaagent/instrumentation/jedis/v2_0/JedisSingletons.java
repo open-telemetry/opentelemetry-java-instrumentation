@@ -27,7 +27,7 @@ import redis.clients.jedis.Connection;
 import redis.clients.util.Pool;
 import redis.clients.util.Sharded;
 
-public class JedisSingletons {
+class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-2.0";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
@@ -80,34 +80,34 @@ public class JedisSingletons {
     return instrumenter;
   }
 
-  public static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
+  static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
     SHARDED_TARGET.set(sharded, target);
   }
 
-  public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
+  static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
     POOL_TARGET.set(pool, target);
   }
 
-  public static void setClusterTarget(Object handler, @Nullable RedisServerTarget target) {
+  static void setClusterTarget(Object handler, @Nullable RedisServerTarget target) {
     if (target != null) {
       clusterTargets.put(handler, target);
     }
   }
 
-  public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
+  static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
     attach(SHARDED_TARGET.get(sharded), shard);
   }
 
-  public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
+  static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
     attach(POOL_TARGET.get(pool), resource);
   }
 
-  public static void attachClusterTarget(Object handler, @Nullable Object connection) {
+  static void attachClusterTarget(Object handler, @Nullable Object connection) {
     attach(clusterTargets.get(handler), connection);
   }
 
   @Nullable
-  public static Scope openClusterTargetScope(Object handler) {
+  static Scope openClusterTargetScope(Object handler) {
     RedisServerTarget target = clusterTargets.get(handler);
     return target == null
         ? null
