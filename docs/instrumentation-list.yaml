@@ -1742,6 +1742,27 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    db.client.operation.duration-6dc4ed81:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     db.client.operation.duration-8ae2b8ce:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -4295,7 +4316,7 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    messaging.client.operation.duration-df200871:
+    messaging.client.operation.duration-f4822aab:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
         client.
@@ -4303,9 +4324,9 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes:
-      - name: messaging.destination.name
+      - name: messaging.consumer.group.name
         type: STRING
-      - name: messaging.destination.subscription.name
+      - name: messaging.destination.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -4313,10 +4334,6 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     messaging.client.sent.messages-38a90199:
       name: messaging.client.sent.messages
       description: Number of messages producer attempted to send to the broker.
@@ -13089,7 +13106,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-bfd9d23c
+    - db.client.operation.duration-6dc4ed81
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14976,7 +14993,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-df200871
+    - messaging.client.operation.duration-dab7c60a
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
@@ -15611,7 +15628,7 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.semconv-stability.preview=messaging
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.process.duration-5301bc21
     spans:
@@ -16308,7 +16325,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-73097de6
-    - messaging.client.operation.duration-68138657
+    - messaging.client.operation.duration-f4822aab
     - messaging.client.sent.messages-a16c8de0
     - messaging.process.duration-b45860c7
     spans:

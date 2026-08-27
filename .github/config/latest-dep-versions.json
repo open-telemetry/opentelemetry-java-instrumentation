@@ -332,6 +332,7 @@
     "org.apache.pekko:pekko-slf4j_2.13#+": "1.7.0",
     "org.apache.pekko:pekko-stream_2.12#+": "1.4.0",
     "org.apache.pekko:pekko-stream_2.13#+": "1.7.0",
+    "org.apache.pekko:pekko-stream_3#+": "1.7.0",
     "org.apache.pulsar:pulsar-client#+": "4.2.4",
     "org.apache.pulsar:pulsar-client-admin#+": "4.2.4",
     "org.apache.rocketmq:rocketmq-client#+": "5.5.0",
