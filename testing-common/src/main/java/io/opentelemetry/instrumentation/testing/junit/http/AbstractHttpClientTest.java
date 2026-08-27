@@ -1116,8 +1116,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
       SpanDataAssert span,
       URI uri,
       String method,
-      @Nullable Integer responseCode,
-      @Nullable Integer resendCount,
+      Integer responseCode,
+      Integer resendCount,
       boolean responseReceived) {
     Set<AttributeKey<?>> httpClientAttributes = options.getHttpAttributes().apply(uri);
     return span.hasName(options.getExpectedClientSpanNameMapper().apply(uri, method))
