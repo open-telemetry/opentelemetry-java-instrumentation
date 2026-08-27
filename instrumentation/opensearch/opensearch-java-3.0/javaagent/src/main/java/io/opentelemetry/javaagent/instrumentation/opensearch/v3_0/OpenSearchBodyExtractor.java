@@ -7,9 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static java.util.logging.Level.FINE;
 
-import com.fasterxml.jackson.core.JsonFactory;
 import jakarta.json.stream.JsonGenerator;
-import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -24,7 +22,6 @@ class OpenSearchBodyExtractor {
   private static final Logger logger = Logger.getLogger(OpenSearchBodyExtractor.class.getName());
   private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024;
   private static final String QUERY_SEPARATOR = ";";
-  private static final JsonFactory JSON_FACTORY = new JsonFactory();
 
   @Nullable
   public static String extractSanitized(JsonpMapper mapper, Object request) {
@@ -35,22 +32,23 @@ class OpenSearchBodyExtractor {
       }
 
       return serializeSanitized(mapper, request, MAX_QUERY_BODY_LENGTH);
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       logger.log(FINE, "Failure extracting body", e);
       return null;
     }
   }
 
   @Nullable
-  private static String serializeSanitized(JsonpMapper mapper, Object item, int maxLength)
-      throws IOException {
+  private static String serializeSanitized(JsonpMapper mapper, Object item, int maxLength) {
     BoundedStringWriter writer = new BoundedStringWriter(maxLength);
 
     try {
       if (mapper instanceof JacksonJsonpMapper) {
         // Use Jackson-based sanitizing generator for JacksonJsonpMapper
+        JacksonJsonpGenerator jacksonJsonpGenerator =
+            (JacksonJsonpGenerator) mapper.jsonProvider().createGenerator(writer);
         com.fasterxml.jackson.core.JsonGenerator jacksonGenerator =
-            JSON_FACTORY.createGenerator(writer);
+            jacksonJsonpGenerator.jacksonGenerator();
         com.fasterxml.jackson.core.JsonGenerator sanitizingGenerator =
             new SanitizingJacksonJsonGenerator(jacksonGenerator);
         try (JsonGenerator generator = new JacksonJsonpGenerator(sanitizingGenerator)) {
@@ -75,7 +73,7 @@ class OpenSearchBodyExtractor {
 
   @Nullable
   private static String serializeNdJsonSanitized(
-      JsonpMapper mapper, NdJsonpSerializable value, int maxLength) throws IOException {
+      JsonpMapper mapper, NdJsonpSerializable value, int maxLength) {
     StringBuilder result = new StringBuilder(Math.min(maxLength, 1024));
     Iterator<?> values = value._serializables();
     boolean first = true;
