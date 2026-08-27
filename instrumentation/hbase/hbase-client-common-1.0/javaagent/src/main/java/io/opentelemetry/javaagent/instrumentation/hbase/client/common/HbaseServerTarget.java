@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -12,6 +14,7 @@ import java.util.TreeSet;
 import javax.annotation.Nullable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.zookeeper.ZKConfig;
 
 public class HbaseServerTarget {
 
@@ -95,8 +98,10 @@ public class HbaseServerTarget {
   @Nullable
   private static String zkTarget(
       Configuration configuration, boolean supportsClientZkConfig, boolean supportsZkConfigFile) {
-    // When supported and enabled, zoo.cfg overrides the HBase ZooKeeper properties.
-    if (supportsZkConfigFile && configuration.getBoolean(READ_ZK_CONFIG_KEY, false)) {
+    // When supported and enabled, a usable zoo.cfg overrides the HBase ZooKeeper properties.
+    if (supportsZkConfigFile
+        && configuration.getBoolean(READ_ZK_CONFIG_KEY, false)
+        && hasUsableZooCfg(configuration)) {
       return null;
     }
 
@@ -126,6 +131,20 @@ public class HbaseServerTarget {
       return null;
     }
     return String.join(",", hosts) + ":" + parsedClientPort + ":" + znodeParent;
+  }
+
+  // HBase 1.x uses this deprecated parser when zoo.cfg support is enabled.
+  @SuppressWarnings("deprecation")
+  private static boolean hasUsableZooCfg(Configuration configuration) {
+    try (InputStream inputStream = ZKConfig.class.getClassLoader().getResourceAsStream("zoo.cfg")) {
+      if (inputStream == null) {
+        return false;
+      }
+      ZKConfig.parseZooCfg(configuration, inputStream);
+      return true;
+    } catch (IOException ignored) {
+      return false;
+    }
   }
 
   @Nullable
