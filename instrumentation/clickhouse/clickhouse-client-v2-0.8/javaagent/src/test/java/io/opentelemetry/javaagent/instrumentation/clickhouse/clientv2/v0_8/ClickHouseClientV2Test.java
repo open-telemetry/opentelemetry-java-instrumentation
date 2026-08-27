@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -32,11 +33,14 @@ import com.clickhouse.client.api.query.QueryResponse;
 import com.clickhouse.client.api.query.QuerySettings;
 import com.clickhouse.client.api.query.Records;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -473,5 +477,146 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testMultipleEndpointsReportTheWholeConfiguredTarget() throws Exception {
+    String secondEndpoint = "http://127.0.0.1:" + port;
+    Client client =
+        new Client.Builder()
+            .addEndpoint(Protocol.HTTP, host, port, false)
+            .addEndpoint(secondEndpoint)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false")
+            .build();
+    cleanup.deferCleanup(client);
+
+    List<String> endpoints = new ArrayList<>(asList(host + ":" + port, "127.0.0.1:" + port));
+    Collections.sort(endpoints);
+    String addressGroup = String.join(",", endpoints);
+    String firstEndpoint = client.getEndpoints().iterator().next();
+    String legacyAddress = UrlParser.getHost(firstEndpoint);
+    Integer legacyPort = UrlParser.getPort(firstEndpoint);
+
+    QueryResponse response = client.query("select * from " + TABLE_NAME).join();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? addressGroup : legacyAddress),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(legacyPort)),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testBuilderReuseDoesNotChangeAnExistingClientTarget() throws Exception {
+    Client.Builder builder =
+        new Client.Builder()
+            .addEndpoint(Protocol.HTTP, host, port, false)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false");
+    Client firstClient = builder.build();
+    cleanup.deferCleanup(firstClient);
+    Client secondClient = builder.addEndpoint("http://unused.invalid:8123").build();
+    cleanup.deferCleanup(secondClient);
+
+    QueryResponse response = firstClient.query("select * from " + TABLE_NAME).join();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "select test_table"
+                                : "SELECT " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testMultipleEndpointsExcludeCredentialsAndUrlComponents() {
+    List<String> endpoints =
+        new ArrayList<>(
+            asList(
+                "https://user:secret@[2001:db8::1]:8443/database?option=value#fragment",
+                "http://host.example:8123"));
+
+    Client.Builder builder =
+        new Client.Builder()
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setConnectTimeout(100)
+            .setMaxRetries(0);
+    for (String endpoint : endpoints) {
+      builder.addEndpoint(endpoint);
+    }
+    Client testClient = builder.build();
+    cleanup.deferCleanup(testClient);
+    boolean ipv6First = testClient.getEndpoints().iterator().next().contains("[2001:db8::1]");
+    String legacyAddress = ipv6First ? "2001:db8::1" : "host.example";
+    long legacyPort = ipv6First ? 8443 : 8123;
+
+    Throwable thrown = catchThrowable(() -> testClient.query("select 1").join());
+    assertThat(thrown).isNotNull();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? "[2001:db8::1]:8443,host.example:8123"
+                                    : legacyAddress),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : legacyPort),
+                            equalTo(maybeStable(DB_STATEMENT), "select ?"),
+                            equalTo(
+                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? thrown.getClass().getName()
+                                    : null))));
   }
 }

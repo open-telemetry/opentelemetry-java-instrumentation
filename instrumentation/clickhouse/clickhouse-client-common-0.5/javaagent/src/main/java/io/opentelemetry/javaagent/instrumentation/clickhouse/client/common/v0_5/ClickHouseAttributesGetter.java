@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -61,12 +62,19 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   @Nullable
   @Override
   public String getServerAddress(ClickHouseDbRequest request) {
+    String addressGroup = request.getServerAddressGroup();
+    if (emitStableDatabaseSemconv() && addressGroup != null) {
+      return addressGroup;
+    }
     return request.getHost();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(ClickHouseDbRequest request) {
+    if (emitStableDatabaseSemconv() && request.getServerAddressGroup() != null) {
+      return null;
+    }
     return request.getPort();
   }
 }

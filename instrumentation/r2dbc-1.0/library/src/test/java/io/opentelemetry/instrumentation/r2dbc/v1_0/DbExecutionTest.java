@@ -152,4 +152,86 @@ class DbExecutionTest {
     DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
     assertThat(dbExecution.getSystemName()).isEqualTo(expectedSystemName);
   }
+
+  @Test
+  void dbExecutionKeepsMultiHostAddressVerbatim() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.parse("r2dbc:mariadb:sequential://host1:3306,host2:3307/db");
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getServerAddress()).isEqualTo("host1:3306,host2:3307");
+    assertThat(dbExecution.getServerPort()).isNull();
+    assertThat(dbExecution.getServerAddressGroup()).isEqualTo("host1:3306,host2:3307");
+  }
+
+  @Test
+  void dbExecutionGivesEveryHostOfAProgrammaticListThePort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "mariadb")
+            .option(ConnectionFactoryOptions.HOST, "host1,host2")
+            .option(ConnectionFactoryOptions.PORT, 3306)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getServerAddress()).isEqualTo("host1,host2");
+    assertThat(dbExecution.getServerPort()).isEqualTo(3306);
+    assertThat(dbExecution.getServerAddressGroup()).isEqualTo("host1:3306,host2:3306");
+  }
+
+  @Test
+  void dbExecutionKeepsTheHostsThatAlreadyCarryAPort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "mariadb")
+            .option(
+                ConnectionFactoryOptions.HOST, "host1:3307,[2001:db8::1]:3308,host3,[2001:db8::2]")
+            .option(ConnectionFactoryOptions.PORT, 3306)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getServerAddressGroup())
+        .isEqualTo("host1:3307,[2001:db8::1]:3308,host3:3306,[2001:db8::2]:3306");
+  }
+
+  @Test
+  void dbExecutionBracketsUnbracketedIpv6HostsBeforeAddingThePort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, "2001:db8::1,2001:db8::2")
+            .option(ConnectionFactoryOptions.PORT, 5432)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getServerAddressGroup())
+        .isEqualTo("[2001:db8::1]:5432,[2001:db8::2]:5432");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"host1", "/var/run/postgresql", "[2001:db8::1]"})
+  void dbExecutionTreatsSingleHostAsSingular(String host) {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, host)
+            .option(ConnectionFactoryOptions.PORT, 5432)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getServerAddress()).isEqualTo(host);
+    assertThat(dbExecution.getServerAddressGroup()).isNull();
+  }
+
+  private static QueryExecutionInfo queryExecutionInfo() {
+    return MockQueryExecutionInfo.builder()
+        .queryInfo(new QueryInfo("SELECT 1"))
+        .connectionInfo(MockConnectionInfo.builder().build())
+        .build();
+  }
 }

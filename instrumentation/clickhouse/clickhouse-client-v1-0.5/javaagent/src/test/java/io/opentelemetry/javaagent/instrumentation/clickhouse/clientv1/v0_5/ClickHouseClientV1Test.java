@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import com.clickhouse.client.ClickHouseClient;
 import com.clickhouse.client.ClickHouseException;
 import com.clickhouse.client.ClickHouseNode;
+import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.ClickHouseParameterizedQuery;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseResponse;
@@ -556,6 +557,85 @@ class ClickHouseClientV1Test {
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " where s={s:String}"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testNodeListReportsTheWholeConfiguredTarget() throws ClickHouseException {
+    String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
+    String addressGroup = host + ":" + port + "," + host + ":" + (port + 1);
+    ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
+
+    ClickHouseResponse response =
+        client
+            .read(nodes)
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + TABLE_NAME)
+            .executeAndWait();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testFaultyNodeStaysInTheConfiguredTarget() throws ClickHouseException {
+    String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 2);
+    String addressGroup = host + ":" + port + "," + host + ":" + (port + 2);
+    ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
+
+    for (ClickHouseNode node : nodes.getNodes()) {
+      if (node.getPort() == port + 2) {
+        nodes.update(node, ClickHouseNode.Status.FAULTY);
+      }
+    }
+    assertThat(nodes.getNodes()).hasSize(1);
+
+    ClickHouseResponse response =
+        client
+            .read(nodes)
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + TABLE_NAME)
+            .executeAndWait();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "select test_table" : null),

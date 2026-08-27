@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -98,12 +99,19 @@ public final class R2dbcSqlAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(DbExecution request) {
+    String addressGroup = request.getServerAddressGroup();
+    if (emitStableDatabaseSemconv() && addressGroup != null) {
+      return addressGroup;
+    }
     return request.getServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(DbExecution request) {
+    if (emitStableDatabaseSemconv() && request.getServerAddressGroup() != null) {
+      return null;
+    }
     return request.getServerPort();
   }
 

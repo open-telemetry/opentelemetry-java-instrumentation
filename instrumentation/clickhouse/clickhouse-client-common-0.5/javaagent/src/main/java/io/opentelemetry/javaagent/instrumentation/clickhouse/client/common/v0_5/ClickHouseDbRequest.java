@@ -12,8 +12,12 @@ import javax.annotation.Nullable;
 public abstract class ClickHouseDbRequest {
 
   public static ClickHouseDbRequest create(
-      @Nullable String host, @Nullable Integer port, @Nullable String namespace, String sql) {
-    return new AutoValue_ClickHouseDbRequest(host, port, namespace, sql);
+      @Nullable String host,
+      @Nullable Integer port,
+      @Nullable String serverAddressGroup,
+      @Nullable String namespace,
+      String sql) {
+    return new AutoValue_ClickHouseDbRequest(host, port, serverAddressGroup, namespace, sql);
   }
 
   @Nullable
@@ -21,6 +25,9 @@ public abstract class ClickHouseDbRequest {
 
   @Nullable
   public abstract Integer getPort();
+
+  @Nullable
+  public abstract String getServerAddressGroup();
 
   @Nullable
   public abstract String getNamespace();
