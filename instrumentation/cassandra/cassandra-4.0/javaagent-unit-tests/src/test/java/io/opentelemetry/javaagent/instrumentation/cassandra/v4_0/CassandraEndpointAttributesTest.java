@@ -171,11 +171,12 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void stableSniEndPointDoesNotResolveNetworkPeerAddress() {
+  void stableSniEndPointDoesNotResolveNetworkPeerAddress() throws UnknownHostException {
+    InetSocketAddress resolvedProxyAddress = resolved(29042);
     when(coordinator.getEndPoint()).thenReturn(sniEndPoint);
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
     if (!emitStableDatabaseSemconv()) {
-      when(sniEndPoint.resolve()).thenReturn(PROXY_ADDRESS);
+      when(sniEndPoint.resolve()).thenReturn(resolvedProxyAddress);
     }
     CassandraRequest request = CassandraRequest.create(session, null, "SELECT 1");
 
@@ -186,7 +187,7 @@ class CassandraEndpointAttributesTest {
       assertThat(peerAddress).isNull();
       verify(sniEndPoint, never()).resolve();
     } else {
-      assertThat(peerAddress).isEqualTo(PROXY_ADDRESS);
+      assertThat(peerAddress).isEqualTo(resolvedProxyAddress);
       verify(sniEndPoint).resolve();
     }
   }
@@ -260,7 +261,7 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void responsePeerPrecedesCustomEndpointData() throws UnknownHostException {
+  void responsePeerPrecedesEndpointFallback() throws UnknownHostException {
     InetSocketAddress responsePeer = resolved(19042);
     VirtualField.find(ExecutionInfo.class, InetSocketAddress.class)
         .set(executionInfo, responsePeer);
@@ -268,7 +269,7 @@ class CassandraEndpointAttributesTest {
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
     assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
-    verifyNoInteractions(coordinator, customEndPoint);
+    verifyNoInteractions(coordinator);
   }
 
   private Attributes serverAttributes(DbServerTarget serverTarget) {
