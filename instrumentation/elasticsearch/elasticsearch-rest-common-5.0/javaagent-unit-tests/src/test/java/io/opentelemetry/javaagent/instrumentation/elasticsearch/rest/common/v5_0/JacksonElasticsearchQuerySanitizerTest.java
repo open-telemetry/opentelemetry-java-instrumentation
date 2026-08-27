@@ -140,6 +140,7 @@ class JacksonElasticsearchQuerySanitizerTest {
     assertThat(sanitize(exactLimit)).isEqualTo(exactLimit);
     assertThat(sanitize(overLimit))
         .isEqualTo(overLimit.substring(0, JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH));
+    assertThat(sanitize(overLimit + " trailing")).isNull();
   }
 
   @Test

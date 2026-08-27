@@ -11,7 +11,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.StreamReadConstraints;
 import io.opentelemetry.javaagent.bootstrap.elasticsearch.ElasticsearchQuerySanitizerAccess;
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.Writer;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
@@ -58,7 +58,7 @@ final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> 
   @Nullable
   public String apply(String body) {
     JsonFactory jsonFactory = JsonFactoryHolder.jsonFactory;
-    StringWriter out = new StringWriter(Math.min(body.length(), MAX_QUERY_LENGTH));
+    TruncatingWriter out = new TruncatingWriter(Math.min(body.length(), MAX_QUERY_LENGTH));
     try (JsonParser parser = jsonFactory.createParser(body)) {
       boolean empty = true;
       while (parser.nextToken() != null) {
@@ -83,10 +83,7 @@ final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> 
       // MAX_NESTING_DEPTH. Either way it must not be captured raw, so drop it instead.
       return null;
     }
-    String sanitized = out.toString();
-    return sanitized.length() <= MAX_QUERY_LENGTH
-        ? sanitized
-        : sanitized.substring(0, MAX_QUERY_LENGTH);
+    return out.toString();
   }
 
   /**
@@ -127,5 +124,32 @@ final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> 
       }
     } while (parser.nextToken() != null);
     return false;
+  }
+
+  private static class TruncatingWriter extends Writer {
+    private final StringBuilder output;
+
+    TruncatingWriter(int initialSize) {
+      output = new StringBuilder(initialSize);
+    }
+
+    @Override
+    public void write(char[] buffer, int offset, int length) {
+      int remaining = MAX_QUERY_LENGTH - output.length();
+      if (remaining > 0) {
+        output.append(buffer, offset, Math.min(length, remaining));
+      }
+    }
+
+    @Override
+    public void flush() {}
+
+    @Override
+    public void close() {}
+
+    @Override
+    public String toString() {
+      return output.toString();
+    }
   }
 }

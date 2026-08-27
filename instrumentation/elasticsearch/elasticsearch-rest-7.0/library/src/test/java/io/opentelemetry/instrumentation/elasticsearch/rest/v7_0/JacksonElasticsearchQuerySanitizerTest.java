@@ -60,6 +60,7 @@ class JacksonElasticsearchQuerySanitizerTest {
     assertThat(sanitizer.apply(exactLimit)).isEqualTo(exactLimit);
     assertThat(sanitizer.apply(overLimit))
         .isEqualTo(overLimit.substring(0, JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH));
+    assertThat(sanitizer.apply(overLimit + " trailing")).isNull();
   }
 
   private static String nestedArray(int depth, String innermost) {
