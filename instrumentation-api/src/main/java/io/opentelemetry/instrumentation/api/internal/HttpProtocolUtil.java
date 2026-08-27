@@ -32,6 +32,8 @@ public final class HttpProtocolUtil {
   public static String normalizeHttpVersion(String version) {
     if ("2.0".equals(version)) {
       return "2";
+    } else if ("3.0".equals(version)) {
+      return "3";
     }
 
     return version;
