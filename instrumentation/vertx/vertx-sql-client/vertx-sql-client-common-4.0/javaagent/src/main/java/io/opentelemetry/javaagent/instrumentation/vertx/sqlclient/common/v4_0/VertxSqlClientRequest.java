@@ -15,18 +15,21 @@ public class VertxSqlClientRequest {
   private final boolean parameterizedQuery;
   private final String dbSystemName;
   @Nullable private final Long operationBatchSize;
+  @Nullable private final VertxSqlAddressGroup addressGroup;
 
   public VertxSqlClientRequest(
       String queryText,
       @Nullable SqlConnectOptions sqlConnectOptions,
       boolean parameterizedQuery,
       String dbSystemName,
-      @Nullable Long operationBatchSize) {
+      @Nullable Long operationBatchSize,
+      @Nullable VertxSqlAddressGroup addressGroup) {
     this.queryText = queryText;
     this.sqlConnectOptions = sqlConnectOptions;
     this.parameterizedQuery = parameterizedQuery;
     this.dbSystemName = dbSystemName;
     this.operationBatchSize = operationBatchSize;
+    this.addressGroup = addressGroup;
   }
 
   public String getQueryText() {
@@ -51,6 +54,11 @@ public class VertxSqlClientRequest {
   @Nullable
   public Integer getPort() {
     return sqlConnectOptions != null ? sqlConnectOptions.getPort() : null;
+  }
+
+  @Nullable
+  public String getServerAddressGroup() {
+    return addressGroup != null ? addressGroup.getAddress() : null;
   }
 
   public boolean isParameterizedQuery() {

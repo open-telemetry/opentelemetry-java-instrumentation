@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -38,12 +39,14 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
       VertxSqlClientData data = VertxSqlClientUtil.getPreparedStatementData(preparedStatement);
       setSqlConnectOptions(data != null ? data.getConnectOptions() : null);
       setDbSystem(data != null ? data.getDbSystem() : null);
+      setAddressGroup(data != null ? data.getAddressGroup() : null);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit() {
       setSqlConnectOptions(null);
       setDbSystem(null);
+      setAddressGroup(null);
     }
   }
 }

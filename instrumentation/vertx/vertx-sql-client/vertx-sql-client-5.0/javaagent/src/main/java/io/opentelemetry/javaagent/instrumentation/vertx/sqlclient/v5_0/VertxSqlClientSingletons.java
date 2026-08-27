@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
@@ -15,7 +16,10 @@ import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.impl.ClientBuilderBase;
 import io.vertx.sqlclient.internal.SqlClientBase;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {
@@ -31,6 +35,12 @@ public class VertxSqlClientSingletons {
 
   private static final VirtualField<SqlClientBase, SqlConnectOptions> CONNECT_OPTIONS =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
+
+  private static final VirtualField<SqlClientBase, VertxSqlAddressGroup> ADDRESS_GROUP =
+      VirtualField.find(SqlClientBase.class, VertxSqlAddressGroup.class);
+
+  private static final VirtualField<ClientBuilderBase<?>, List<SqlConnectOptions>>
+      BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
 
   @Nullable
   private static final VirtualField<Object, Context> COMMAND_CONTEXT =
@@ -96,20 +106,47 @@ public class VertxSqlClientSingletons {
     return CONNECT_OPTIONS.get(sqlClientBase);
   }
 
-  public static void attachConnectOptions(
-      SqlClientBase sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
-    CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
+  @Nullable
+  public static VertxSqlAddressGroup getAddressGroup(SqlClientBase sqlClientBase) {
+    return ADDRESS_GROUP.get(sqlClientBase);
   }
 
-  public static Future<SqlConnection> attachConnectOptions(
-      Future<SqlConnection> future, @Nullable SqlConnectOptions connectOptions) {
+  public static void attachClientState(
+      SqlClientBase sqlClientBase,
+      @Nullable SqlConnectOptions connectOptions,
+      @Nullable VertxSqlAddressGroup addressGroup) {
+    CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
+    ADDRESS_GROUP.set(sqlClientBase, addressGroup);
+  }
+
+  public static Future<SqlConnection> attachClientState(
+      Future<SqlConnection> future,
+      @Nullable SqlConnectOptions connectOptions,
+      @Nullable VertxSqlAddressGroup addressGroup) {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {
-            CONNECT_OPTIONS.set((SqlClientBase) sqlConnection, connectOptions);
+            attachClientState((SqlClientBase) sqlConnection, connectOptions, addressGroup);
           }
           return sqlConnection;
         });
+  }
+
+  public static void storeBuilderDatabases(
+      Object clientBuilder, @Nullable List<SqlConnectOptions> databases) {
+    if (clientBuilder instanceof ClientBuilderBase) {
+      // The list belongs to the caller and may be mutated or reused.
+      BUILDER_DATABASES.set(
+          (ClientBuilderBase<?>) clientBuilder,
+          databases == null ? null : new ArrayList<>(databases));
+    }
+  }
+
+  @Nullable
+  public static List<SqlConnectOptions> getBuilderDatabases(Object clientBuilder) {
+    return clientBuilder instanceof ClientBuilderBase
+        ? BUILDER_DATABASES.get((ClientBuilderBase<?>) clientBuilder)
+        : null;
   }
 
   private VertxSqlClientSingletons() {}

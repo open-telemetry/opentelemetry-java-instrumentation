@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
@@ -72,6 +74,7 @@ class PoolInstrumentation implements TypeInstrumentation {
 
       // set connection options to ThreadLocal, they will be read in SqlClientBase constructor
       setSqlConnectOptions(sqlConnectOptions);
+      setAddressGroup(null);
       return callDepth;
     }
 
@@ -98,10 +101,9 @@ class PoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<SqlConnection> onExit(
         @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
-      // copy connect options stored on pool to new connection
-      SqlConnectOptions sqlConnectOptions = getPoolSqlConnectOptions(pool);
-
-      return wrapContext(VertxSqlClientSingletons.attachConnectOptions(future, sqlConnectOptions));
+      return wrapContext(
+          VertxSqlClientSingletons.attachClientState(
+              future, getPoolSqlConnectOptions(pool), getPoolAddressGroup(pool)));
     }
   }
 }
