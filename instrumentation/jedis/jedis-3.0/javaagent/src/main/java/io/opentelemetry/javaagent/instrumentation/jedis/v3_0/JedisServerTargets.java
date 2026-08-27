@@ -39,7 +39,7 @@ public final class JedisServerTargets {
           HostAndPort hostAndPort = (HostAndPort) sentinel;
           endpoints.add(RedisServerTarget.endpoint(hostAndPort.getHost(), hostAndPort.getPort()));
         } else if (sentinel != null) {
-          endpoints.add(sentinel.toString());
+          endpoints.add(normalizeSentinelEndpoint(sentinel.toString()));
         }
       }
     }
@@ -59,6 +59,37 @@ public final class JedisServerTargets {
     }
     Collections.sort(endpoints);
     return RedisServerTarget.ofEndpoints(endpoints);
+  }
+
+  private static String normalizeSentinelEndpoint(String endpoint) {
+    if (endpoint.startsWith("[")) {
+      return endpoint;
+    }
+    int firstColon = endpoint.indexOf(':');
+    int lastColon = endpoint.lastIndexOf(':');
+    if (firstColon < 0 || firstColon == lastColon) {
+      return endpoint;
+    }
+    String port = endpoint.substring(lastColon + 1);
+    if (!isPort(port)) {
+      return endpoint;
+    }
+    return "[" + endpoint.substring(0, lastColon) + "]:" + port;
+  }
+
+  private static boolean isPort(String value) {
+    if (value.isEmpty() || value.length() > 5) {
+      return false;
+    }
+    int port = 0;
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      if (c < '0' || c > '9') {
+        return false;
+      }
+      port = port * 10 + (c - '0');
+    }
+    return port <= 65535;
   }
 
   private JedisServerTargets() {}
