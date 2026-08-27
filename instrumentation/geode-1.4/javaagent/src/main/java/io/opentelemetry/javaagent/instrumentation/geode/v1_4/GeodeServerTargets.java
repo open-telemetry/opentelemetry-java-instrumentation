@@ -57,7 +57,7 @@ public class GeodeServerTargets {
   }
 
   @Nullable
-  public static GeodeServerTarget get(Region<?, ?> region) {
+  static GeodeServerTarget get(Region<?, ?> region) {
     Pool pool = PoolManager.find(region);
     return pool == null ? null : POOL_TARGETS.get(pool);
   }
