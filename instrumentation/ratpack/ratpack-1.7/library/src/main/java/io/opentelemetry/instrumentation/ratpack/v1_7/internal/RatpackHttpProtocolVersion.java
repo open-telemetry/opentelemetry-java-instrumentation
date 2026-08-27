@@ -11,7 +11,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.HttpVersion;
+import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import ratpack.http.client.RequestSpec;
@@ -72,7 +72,7 @@ public final class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapt
       HttpResponse response = (HttpResponse) message;
       int statusCode = response.status().code();
       if (statusCode < 100 || statusCode >= 200) {
-        protocolVersion = normalize(response.protocolVersion());
+        protocolVersion = HttpProtocolUtil.getVersion(response.protocolVersion().text());
         removeFromPipeline();
       }
     }
@@ -96,11 +96,5 @@ public final class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapt
     if (pipeline.context(this) != null) {
       pipeline.remove(this);
     }
-  }
-
-  private static String normalize(HttpVersion version) {
-    int major = version.majorVersion();
-    int minor = version.minorVersion();
-    return minor == 0 ? Integer.toString(major) : major + "." + minor;
   }
 }

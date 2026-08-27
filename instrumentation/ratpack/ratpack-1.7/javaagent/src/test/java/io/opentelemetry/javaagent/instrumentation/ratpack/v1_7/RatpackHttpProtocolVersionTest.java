@@ -11,16 +11,22 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_0;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackHttpProtocolVersion;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import ratpack.http.client.RequestSpec;
 
 class RatpackHttpProtocolVersionTest {
@@ -53,7 +59,7 @@ class RatpackHttpProtocolVersionTest {
 
     RatpackHttpProtocolVersion.attach(request, channel);
     channel.writeInbound(new DefaultHttpResponse(HTTP_1_0, FOUND));
-    assertThat(RatpackHttpProtocolVersion.get(request)).isEqualTo("1");
+    assertThat(RatpackHttpProtocolVersion.get(request)).isEqualTo("1.0");
 
     RatpackHttpProtocolVersion.attach(request, channel);
     channel.writeInbound(new DefaultHttpResponse(HTTP_1_1, OK));
@@ -62,6 +68,29 @@ class RatpackHttpProtocolVersionTest {
     RatpackHttpProtocolVersion.clearRequest(request);
     assertThat(RatpackHttpProtocolVersion.get(request)).isNull();
     channel.finishAndReleaseAll();
+  }
+
+  @ParameterizedTest
+  @MethodSource("protocolVersions")
+  void capturesProtocolVersion(HttpVersion version, String expected) {
+    RequestSpec request = mock(RequestSpec.class);
+    EmbeddedChannel channel = channel();
+
+    RatpackHttpProtocolVersion.attach(request, channel);
+    channel.writeInbound(new DefaultHttpResponse(version, OK));
+
+    assertThat(RatpackHttpProtocolVersion.get(request)).isEqualTo(expected);
+
+    RatpackHttpProtocolVersion.clearRequest(request);
+    channel.finishAndReleaseAll();
+  }
+
+  private static Stream<Arguments> protocolVersions() {
+    return Stream.of(
+        argumentSet("HTTP/1.0", HTTP_1_0, "1.0"),
+        argumentSet("HTTP/1.1", HTTP_1_1, "1.1"),
+        argumentSet("HTTP/2.0", new HttpVersion("HTTP/2.0", true), "2"),
+        argumentSet("HTTP/3.0", new HttpVersion("HTTP/3.0", true), "3"));
   }
 
   @Test
