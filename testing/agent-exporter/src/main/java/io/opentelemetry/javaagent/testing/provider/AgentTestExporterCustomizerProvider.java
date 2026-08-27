@@ -13,6 +13,7 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigura
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ConsoleExporterModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.LogRecordExporterModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.LogRecordExporterPropertyModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.LogRecordProcessorModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.LoggerProviderModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.MeterProviderModel;
@@ -20,9 +21,11 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.MetricReaderMo
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.PeriodicMetricReaderModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.PushMetricExporterModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.PushMetricExporterPropertyModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SimpleLogRecordProcessorModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SimpleSpanProcessorModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SpanExporterModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SpanExporterPropertyModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SpanProcessorModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.TracerProviderModel;
 import java.util.ArrayList;
@@ -62,13 +65,15 @@ public class AgentTestExporterCustomizerProvider
     //      processors:
     //        - simple:
     //            exporter:
-    //              agent_test:
+    //              agent_test: {}
     //        - simple:
     //            exporter:
     //              console:
     List<SpanProcessorModel> processors = new ArrayList<>();
     processors.add(
-        getProcessorModel(new SpanExporterModel().withAdditionalProperty("agent_test", null)));
+        getProcessorModel(
+            new SpanExporterModel()
+                .withAdditionalProperty("agent_test", new SpanExporterPropertyModel())));
     processors.add(
         getProcessorModel(new SpanExporterModel().withConsole(new ConsoleExporterModel())));
     model.withTracerProvider(new TracerProviderModel().withProcessors(processors));
@@ -85,7 +90,7 @@ public class AgentTestExporterCustomizerProvider
     //      processors:
     //        - simple:
     //            exporter:
-    //              agent_test:
+    //              agent_test: {}
     model.withLoggerProvider(
         new LoggerProviderModel()
             .withProcessors(
@@ -95,7 +100,9 @@ public class AgentTestExporterCustomizerProvider
                             new SimpleLogRecordProcessorModel()
                                 .withExporter(
                                     new LogRecordExporterModel()
-                                        .withAdditionalProperty("agent_test", null))))));
+                                        .withAdditionalProperty(
+                                            "agent_test",
+                                            new LogRecordExporterPropertyModel()))))));
   }
 
   private static void addMeterProvider(OpenTelemetryConfigurationModel model) {
@@ -105,7 +112,7 @@ public class AgentTestExporterCustomizerProvider
     //        - periodic:
     //            interval: 1000000
     //            exporter:
-    //              agent_test:
+    //              agent_test: {}
     model.withMeterProvider(
         new MeterProviderModel()
             .withReaders(
@@ -118,6 +125,8 @@ public class AgentTestExporterCustomizerProvider
                                 .withInterval(1000000)
                                 .withExporter(
                                     new PushMetricExporterModel()
-                                        .withAdditionalProperty("agent_test", null))))));
+                                        .withAdditionalProperty(
+                                            "agent_test",
+                                            new PushMetricExporterPropertyModel()))))));
   }
 }
