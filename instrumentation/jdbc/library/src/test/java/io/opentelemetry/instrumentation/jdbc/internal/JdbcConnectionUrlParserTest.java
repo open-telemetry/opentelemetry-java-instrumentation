@@ -87,7 +87,8 @@ class JdbcConnectionUrlParserTest {
         "jdbc:mariadb:failover://user:p,a/ss@h1:3306,h2:3306/db",
         "jdbc:mariadb:failover://user:p,a?ss@h1:3306,h2:3306/db",
         "jdbc:mariadb:failover://user:p,a#ss@h1:3306,h2:3306/db",
-        "jdbc:mariadb:failover://user:123,a?x=y@h1:3306,h2:3306/db"
+        "jdbc:mariadb:failover://user:123,a?x=y@h1:3306,h2:3306/db",
+        "jdbc:mariadb:failover://user:123,a?x=y@address=(host=h1),address=(host=h2)/db"
       })
   void ambiguousMariaDbCredentialsDoNotBecomeAConfiguredTarget(String url) {
     DbInfo dbInfo = parse(url, null);
@@ -170,6 +171,18 @@ class JdbcConnectionUrlParserTest {
             null);
 
     assertThat(dbInfo.getServerAddressGroup()).isEqualTo("h1,h2");
+    assertThat(dbInfo.getHost()).isEqualTo("h1");
+  }
+
+  @Test
+  void atInMariaDbAddressBlockQueryWithoutDatabaseDoesNotDisableConfiguredTargetParsing() {
+    DbInfo dbInfo =
+        parse(
+            "jdbc:mariadb:failover://address=(host=h1),address=(host=h2)"
+                + "?sessionVariables=email='user@example.com',sql_mode=ANSI",
+            null);
+
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("address=(host=h1),address=(host=h2)");
     assertThat(dbInfo.getHost()).isEqualTo("h1");
   }
 
