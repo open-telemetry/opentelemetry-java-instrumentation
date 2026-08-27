@@ -951,8 +951,7 @@ class JdbcConnectionUrlParserTest {
 
     assertThat(info.getServerAddress()).isEqualTo("property.host1");
     assertThat(info.getServerPort()).isEqualTo(1444);
-    assertThat(info.getServerAddressGroup())
-        .isEqualTo("property.host1\\propertyInstance:1444,property.host2");
+    assertThat(info.getServerAddressGroup()).isEqualTo("property.host1:1444,property.host2");
   }
 
   private static Stream<Arguments> oracleArguments() {
@@ -2100,7 +2099,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(1433)
             .setNamespace("instance1|ssdb")
             .setName("instance1")
-            .setServerAddressGroup("ss.host1\\instance1:1433,ss.host2\\instance2")
+            .setServerAddressGroup("ss.host1:1433,ss.host2\\instance2")
             .build(),
         arg("jdbc:sqlserver://ss.host1;instanceName=instance1;failoverPartner=ss.host2")
             .setShortUrl("sqlserver://ss.host1:1433")
