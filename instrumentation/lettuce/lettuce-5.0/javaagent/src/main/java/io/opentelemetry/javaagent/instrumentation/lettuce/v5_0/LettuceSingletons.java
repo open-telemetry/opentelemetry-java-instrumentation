@@ -204,6 +204,11 @@ public class LettuceSingletons {
   }
 
   public static void linkCommandPeer(RedisCommand<?, ?, ?> command) {
+    LettuceCommandPeer peer = findCommandPeer(command);
+    if (peer != null) {
+      attachCommandPeer(command, peer);
+      return;
+    }
     synchronized (commandPeerLock) {
       attachCommandPeer(command, findCommandPeer(command));
     }
