@@ -13,10 +13,13 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackHttpProtocolVersion;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import ratpack.http.client.RequestSpec;
 
@@ -39,6 +42,7 @@ class RatpackHttpProtocolVersionTest {
     assertThat(channel.pipeline().context(RatpackHttpProtocolVersion.class)).isNull();
 
     RatpackHttpProtocolVersion.clearRequest(request);
+    assertThat(RatpackHttpProtocolVersion.get(request)).isNull();
     channel.finishAndReleaseAll();
   }
 
@@ -56,6 +60,7 @@ class RatpackHttpProtocolVersionTest {
     assertThat(RatpackHttpProtocolVersion.get(request)).isEqualTo("1.1");
 
     RatpackHttpProtocolVersion.clearRequest(request);
+    assertThat(RatpackHttpProtocolVersion.get(request)).isNull();
     channel.finishAndReleaseAll();
   }
 
@@ -72,13 +77,80 @@ class RatpackHttpProtocolVersionTest {
     channel.writeInbound(new DefaultHttpResponse(HTTP_1_1, OK));
     assertThat(RatpackHttpProtocolVersion.get(secondRequest)).isEqualTo("1.1");
 
+    RatpackHttpProtocolVersion.clearRequest(firstRequest);
     RatpackHttpProtocolVersion.clearRequest(secondRequest);
     channel.finishAndReleaseAll();
   }
 
+  @Test
+  void clearRequestRemovesPendingHandler() {
+    RequestSpec request = mock(RequestSpec.class);
+    EmbeddedChannel channel = channel();
+
+    RatpackHttpProtocolVersion.attach(request, channel);
+    RatpackHttpProtocolVersion.clearRequest(request);
+
+    assertThat(RatpackHttpProtocolVersion.get(request)).isNull();
+    assertThat(channel.pipeline().context(RatpackHttpProtocolVersion.class)).isNull();
+
+    channel.finishAndReleaseAll();
+  }
+
+  @Test
+  void channelInactiveRemovesHandlerAndForwardsEvent() {
+    RequestSpec request = mock(RequestSpec.class);
+    AtomicBoolean inactive = new AtomicBoolean();
+    EmbeddedChannel channel =
+        channel(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void channelInactive(ChannelHandlerContext context) {
+                inactive.set(true);
+                context.fireChannelInactive();
+              }
+            });
+
+    RatpackHttpProtocolVersion.attach(request, channel);
+    channel.close();
+
+    assertThat(channel.pipeline().context(RatpackHttpProtocolVersion.class)).isNull();
+    assertThat(inactive).isTrue();
+
+    RatpackHttpProtocolVersion.clearRequest(request);
+    channel.finishAndReleaseAll();
+  }
+
+  @Test
+  void exceptionCaughtRemovesHandlerAndForwardsEvent() {
+    RequestSpec request = mock(RequestSpec.class);
+    RuntimeException error = new RuntimeException();
+    AtomicReference<Throwable> forwardedError = new AtomicReference<>();
+    EmbeddedChannel channel =
+        channel(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
+                forwardedError.set(cause);
+              }
+            });
+
+    RatpackHttpProtocolVersion.attach(request, channel);
+    channel.pipeline().fireExceptionCaught(error);
+
+    assertThat(channel.pipeline().context(RatpackHttpProtocolVersion.class)).isNull();
+    assertThat(forwardedError).hasValue(error);
+
+    RatpackHttpProtocolVersion.clearRequest(request);
+    channel.finishAndReleaseAll();
+  }
+
   private static EmbeddedChannel channel() {
+    return channel(new ChannelInboundHandlerAdapter());
+  }
+
+  private static EmbeddedChannel channel(ChannelInboundHandlerAdapter redirectHandler) {
     EmbeddedChannel channel = new EmbeddedChannel();
-    channel.pipeline().addLast("redirect", new ChannelInboundHandlerAdapter());
+    channel.pipeline().addLast("redirect", redirectHandler);
     return channel;
   }
 }

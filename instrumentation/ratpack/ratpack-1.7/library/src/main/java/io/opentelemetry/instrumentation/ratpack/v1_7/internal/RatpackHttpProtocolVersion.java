@@ -13,7 +13,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.lang.ref.WeakReference;
 import javax.annotation.Nullable;
 import ratpack.http.client.RequestSpec;
 
@@ -29,23 +28,22 @@ public final class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapt
       REQUEST_PROTOCOL_VERSION =
           VirtualField.find(RequestSpec.class, RatpackHttpProtocolVersion.class);
 
-  private final WeakReference<RequestSpec> request;
   private final Channel channel;
   @Nullable private volatile String protocolVersion;
 
   public static void attach(RequestSpec request, Channel channel) {
     RatpackHttpProtocolVersion previous = REQUEST_PROTOCOL_VERSION.get(request);
     if (previous != null) {
-      previous.clear();
+      previous.removeFromPipeline();
     }
 
     ChannelPipeline pipeline = channel.pipeline();
     ChannelHandler existingHandler = pipeline.get(HANDLER_NAME);
     if (existingHandler instanceof RatpackHttpProtocolVersion) {
-      ((RatpackHttpProtocolVersion) existingHandler).clear();
+      ((RatpackHttpProtocolVersion) existingHandler).removeFromPipeline();
     }
 
-    RatpackHttpProtocolVersion handler = new RatpackHttpProtocolVersion(request, channel);
+    RatpackHttpProtocolVersion handler = new RatpackHttpProtocolVersion(channel);
     REQUEST_PROTOCOL_VERSION.set(request, handler);
     pipeline.addBefore(REDIRECT_HANDLER_NAME, HANDLER_NAME, handler);
   }
@@ -58,13 +56,13 @@ public final class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapt
 
   public static void clearRequest(RequestSpec request) {
     RatpackHttpProtocolVersion handler = REQUEST_PROTOCOL_VERSION.get(request);
+    REQUEST_PROTOCOL_VERSION.set(request, null);
     if (handler != null) {
-      handler.clear();
+      handler.removeFromPipeline();
     }
   }
 
-  private RatpackHttpProtocolVersion(RequestSpec request, Channel channel) {
-    this.request = new WeakReference<>(request);
+  private RatpackHttpProtocolVersion(Channel channel) {
     this.channel = channel;
   }
 
@@ -83,22 +81,14 @@ public final class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapt
 
   @Override
   public void channelInactive(ChannelHandlerContext context) {
-    clear();
+    removeFromPipeline();
     context.fireChannelInactive();
   }
 
   @Override
   public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
-    clear();
-    context.fireExceptionCaught(cause);
-  }
-
-  private void clear() {
-    RequestSpec request = this.request.get();
-    if (request != null && REQUEST_PROTOCOL_VERSION.get(request) == this) {
-      REQUEST_PROTOCOL_VERSION.set(request, null);
-    }
     removeFromPipeline();
+    context.fireExceptionCaught(cause);
   }
 
   private void removeFromPipeline() {
