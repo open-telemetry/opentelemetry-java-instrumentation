@@ -17,6 +17,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -42,6 +44,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -99,12 +103,15 @@ class CouchbaseClient34Test {
   }
 
   @Test
-  void testEmitsSpans() {
+  void testEmitsSpans() throws UnknownHostException {
     try {
       collection.get("id");
     } catch (DocumentNotFoundException ignored) {
       // Expected
     }
+
+    String networkPeerAddress = networkPeerAddress();
+    Long networkPeerPort = networkPeerPort();
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
@@ -125,7 +132,21 @@ class CouchbaseClient34Test {
                           equalTo(SERVER_ADDRESS, serverAddress()),
                           equalTo(SERVER_PORT, serverPort()));
                 },
-                span -> span.hasName("dispatch_to_server")));
+                span ->
+                    span.hasName("dispatch_to_server")
+                        .hasAttributesSatisfying(
+                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
+                            equalTo(NETWORK_PEER_PORT, networkPeerPort))));
+  }
+
+  private static String networkPeerAddress() throws UnknownHostException {
+    return emitStableDatabaseSemconv()
+        ? InetAddress.getByName(couchbase.getHost()).getHostAddress()
+        : null;
+  }
+
+  private static Long networkPeerPort() {
+    return emitStableDatabaseSemconv() ? serverPort() : null;
   }
 
   @ParameterizedTest
