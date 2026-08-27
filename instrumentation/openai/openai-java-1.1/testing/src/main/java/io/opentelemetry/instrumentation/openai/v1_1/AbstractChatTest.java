@@ -1018,6 +1018,39 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   }
 
   @Test
+  void streamMalformedChoiceIndex() {
+    ChatCompletionCreateParams params =
+        ChatCompletionCreateParams.builder()
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .model(TEST_CHAT_MODEL)
+            .seed(19746)
+            .build();
+
+    List<ChatCompletionChunk> chunks = doCompletionsStreaming(params);
+
+    assertThat(chunks).hasSize(2);
+    assertThat(chunks.get(0).choices().get(0).index()).isEqualTo(-1);
+    assertThat(chunks.get(0).choices().get(0).delta().content()).hasValue("Atlantic Ocean.");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                equalTo(GEN_AI_REQUEST_SEED, 19746),
+                                satisfies(GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
+                                equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                satisfies(
+                                    GEN_AI_RESPONSE_FINISH_REASONS,
+                                    val -> val.containsExactly("stop"))))));
+  }
+
+  @Test
   void streamIncludeUsage() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
