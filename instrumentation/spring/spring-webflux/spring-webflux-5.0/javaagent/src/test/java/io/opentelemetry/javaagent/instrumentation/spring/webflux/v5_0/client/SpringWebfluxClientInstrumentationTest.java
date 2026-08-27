@@ -42,9 +42,7 @@ class SpringWebfluxClientInstrumentationTest
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          if (uri.getPort() == PortUtils.UNUSABLE_PORT
-              || uri.getHost().equals("192.0.2.1")
-              || uri.getPath().endsWith("/read-timeout")) {
+          if (uri.getPort() == PortUtils.UNUSABLE_PORT || uri.getHost().equals("192.0.2.1")) {
             attributes.remove(NETWORK_PROTOCOL_VERSION);
           }
           return attributes;
