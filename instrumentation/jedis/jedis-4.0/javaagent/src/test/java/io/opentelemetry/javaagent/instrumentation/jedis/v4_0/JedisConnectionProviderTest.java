@@ -60,6 +60,7 @@ class JedisConnectionProviderTest {
           .withExposedPorts(6379);
 
   private static Jedis jedis;
+  private static JedisClusterConnectionProvider provider;
   private static String configuredTarget;
   private static String host;
   private static String ip;
@@ -79,7 +80,7 @@ class JedisConnectionProviderTest {
     Set<HostAndPort> configuredNodes = new LinkedHashSet<>(asList(selectedNode, unavailableNode));
     configuredTarget = host + ":1," + host + ":" + port;
 
-    JedisClusterConnectionProvider provider =
+    provider =
         new JedisClusterConnectionProvider(
             configuredNodes, DefaultJedisClientConfig.builder().build());
     cleanup.deferAfterAll(provider);
@@ -87,6 +88,32 @@ class JedisConnectionProviderTest {
     Connection connection = provider.getConnection(selectedNode);
     jedis = new Jedis(connection);
     cleanup.deferAfterAll(jedis);
+  }
+
+  @Test
+  void internalHealthCheckUsesConfiguredClusterNodesAsServerTarget() {
+    try (Connection ignored = provider.getConnection()) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(
+                              emitStableDatabaseSemconv() ? "PING " + configuredTarget : "PING")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(maybeStable(DB_SYSTEM), REDIS),
+                              equalTo(maybeStable(DB_STATEMENT), "PING"),
+                              equalTo(maybeStable(DB_OPERATION), "PING"),
+                              equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                              equalTo(
+                                  SERVER_ADDRESS,
+                                  emitStableDatabaseSemconv() ? configuredTarget : host),
+                              equalTo(
+                                  SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
+                              equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                              equalTo(NETWORK_PEER_PORT, port),
+                              equalTo(NETWORK_PEER_ADDRESS, ip))));
+    }
   }
 
   @Test

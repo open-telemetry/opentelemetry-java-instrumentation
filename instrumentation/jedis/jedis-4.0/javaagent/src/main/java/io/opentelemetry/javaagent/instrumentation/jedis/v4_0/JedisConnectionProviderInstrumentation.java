@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
@@ -93,10 +94,24 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetConnectionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.This Object provider) {
+      return JedisSingletons.openProviderTargetScope(provider);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This Object provider, @Advice.Return @Nullable Connection connection) {
-      JedisSingletons.attachProviderTarget(provider, connection);
+        @Advice.This Object provider,
+        @Advice.Return @Nullable Connection connection,
+        @Advice.Enter @Nullable Scope scope) {
+      try {
+        JedisSingletons.attachProviderTarget(provider, connection);
+      } finally {
+        if (scope != null) {
+          scope.close();
+        }
+      }
     }
   }
 }
