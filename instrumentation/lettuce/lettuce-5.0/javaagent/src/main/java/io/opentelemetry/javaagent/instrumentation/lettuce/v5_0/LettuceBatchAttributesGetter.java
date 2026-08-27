@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
@@ -73,25 +72,5 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
     }
     InetSocketAddress serverAddress = request.getServerAddress();
     return serverAddress != null ? serverAddress.getPort() : null;
-  }
-
-  @Nullable
-  @Override
-  public String getNetworkPeerAddress(LettuceBatchRequest request, @Nullable Void unused) {
-    SocketAddress peerAddress = request.getPeerAddress();
-    return peerAddress instanceof InetSocketAddress
-            && !((InetSocketAddress) peerAddress).isUnresolved()
-        ? ((InetSocketAddress) peerAddress).getAddress().getHostAddress()
-        : null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getNetworkPeerPort(LettuceBatchRequest request, @Nullable Void unused) {
-    SocketAddress peerAddress = request.getPeerAddress();
-    return peerAddress instanceof InetSocketAddress
-            && !((InetSocketAddress) peerAddress).isUnresolved()
-        ? ((InetSocketAddress) peerAddress).getPort()
-        : null;
   }
 }
