@@ -88,7 +88,7 @@ class AttributeExtractorTest {
     @Override
     public float getFloatAttribute() {
       if (extremeValues) {
-        return negativeValues ? Float.MIN_VALUE : Float.MAX_VALUE;
+        return negativeValues ? -Float.MAX_VALUE : Float.MAX_VALUE;
       }
       return negativeValues ? -14.0f : 14.0f;
     }
@@ -96,7 +96,7 @@ class AttributeExtractorTest {
     @Override
     public double getDoubleAttribute() {
       if (extremeValues) {
-        return negativeValues ? Double.MIN_VALUE : Double.MAX_VALUE;
+        return negativeValues ? -Double.MAX_VALUE : Double.MAX_VALUE;
       }
       return negativeValues ? -15.0 : 15.0;
     }

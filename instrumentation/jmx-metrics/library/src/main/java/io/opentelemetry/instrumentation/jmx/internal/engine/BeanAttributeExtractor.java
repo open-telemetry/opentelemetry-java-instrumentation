@@ -304,7 +304,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
       @Override
       protected Number extractNumericalAttribute(
           MBeanServerConnection connection, ObjectName objectName) {
-        Number v = super.extractNumericalAttribute(connection, objectName);
+        Number v = extractor.extractNumericalAttribute(connection, objectName);
         if (v instanceof Long || v instanceof Integer || v instanceof Short || v instanceof Byte) {
           return v.longValue() < 0 ? null : v;
         } else if (v instanceof Double || v instanceof Float) {
@@ -321,7 +321,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
       @Override
       protected Number extractNumericalAttribute(
           MBeanServerConnection connection, ObjectName objectName) {
-        Number v = super.extractNumericalAttribute(connection, objectName);
+        Number v = extractor.extractNumericalAttribute(connection, objectName);
         if (v instanceof Long) {
           long longValue = v.longValue();
           return longValue == Long.MIN_VALUE || longValue == Long.MAX_VALUE ? null : longValue;
@@ -340,13 +340,15 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
         }
         if (v instanceof Double) {
           double doubleValue = v.doubleValue();
-          return doubleValue == Double.MIN_VALUE || doubleValue == Double.MAX_VALUE
+          return doubleValue == -Double.MAX_VALUE || doubleValue == Double.MAX_VALUE
               ? null
               : doubleValue;
         }
         if (v instanceof Float) {
           float floatValue = v.floatValue();
-          return floatValue == Float.MIN_VALUE || floatValue == Float.MAX_VALUE ? null : floatValue;
+          return floatValue == -Float.MAX_VALUE || floatValue == Float.MAX_VALUE
+              ? null
+              : floatValue;
         }
         return v;
       }
