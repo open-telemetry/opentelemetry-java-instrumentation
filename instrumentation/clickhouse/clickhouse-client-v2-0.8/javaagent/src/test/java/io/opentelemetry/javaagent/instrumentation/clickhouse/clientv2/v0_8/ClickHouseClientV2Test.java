@@ -619,4 +619,42 @@ class ClickHouseClientV2Test {
                                     ? thrown.getClass().getName()
                                     : null))));
   }
+
+  @Test
+  void testSingleEndpointExcludesUrlComponents() {
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint("http://[2001:db8::1]:8443/database?option=value#fragment")
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setConnectTimeout(100)
+            .setMaxRetries(0)
+            .build();
+    cleanup.deferCleanup(testClient);
+
+    Throwable thrown = catchThrowable(() -> testClient.query("select 1").join());
+    assertThat(thrown).isNotNull();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, "2001:db8::1"),
+                            equalTo(SERVER_PORT, 8443),
+                            equalTo(maybeStable(DB_STATEMENT), "select ?"),
+                            equalTo(
+                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? thrown.getClass().getName()
+                                    : null))));
+  }
 }

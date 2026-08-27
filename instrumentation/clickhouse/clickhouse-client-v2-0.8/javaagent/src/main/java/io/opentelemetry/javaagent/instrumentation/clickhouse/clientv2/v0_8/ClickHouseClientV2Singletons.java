@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
 import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.ServerException;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
@@ -69,8 +68,8 @@ public class ClickHouseClientV2Singletons {
         return new ServerInfo(null, null, null);
       }
       if (endpoints.size() == 1) {
-        String endpoint = endpoints.iterator().next();
-        return new ServerInfo(UrlParser.getHost(endpoint), UrlParser.getPort(endpoint), null);
+        String endpoint = sanitizeEndpoint(endpoints.iterator().next());
+        return new ServerInfo(endpointAddress(endpoint), endpointPort(endpoint), null);
       }
 
       String first = sanitizeEndpoint(endpoints.iterator().next());
