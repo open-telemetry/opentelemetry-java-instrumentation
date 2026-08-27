@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 class CommonsPoolMetricsSuppressionTest {
 
   @Test
-  void shouldScopeSuppressionToUpdatedContext() {
+  void testSuppression() {
     Context original = Context.current();
     Context suppressed = CommonsPoolMetricsSuppression.suppress(original);
 
