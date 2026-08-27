@@ -105,7 +105,8 @@ final class ElasticsearchDbAttributesGetter
           || (segments[0].equals("_render") && segments[1].equals("template"));
     }
     if (segments.length == 3) {
-      return ((segments[1].equals("_search") || segments[1].equals("_msearch"))
+      return segments[2].equals("_search")
+          || ((segments[1].equals("_search") || segments[1].equals("_msearch"))
               && segments[2].equals("template"))
           || (segments[0].equals("_render") && segments[1].equals("template"))
           || (segments[1].equals("_eql") && segments[2].equals("search"));

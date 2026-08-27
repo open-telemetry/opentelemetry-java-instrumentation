@@ -74,6 +74,8 @@ class ElasticsearchDbAttributesGetterTest {
         "/test-index/_msearch/template",
         "/_async_search",
         "/test-index/_async_search",
+        "/test-index/_doc/_search",
+        "test-index/_doc/_search",
         "/_render/template",
         "/_render/template/private-template",
         "/test-index/_terms_enum",
@@ -94,7 +96,6 @@ class ElasticsearchDbAttributesGetterTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "/test-index/_doc/_search",
         "/_search/scroll",
         "/test-index/_rollup_search",
         "/_application/search_application/private-app/_search"
