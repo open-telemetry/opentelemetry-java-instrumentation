@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -192,10 +193,15 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
   }
 
   @Test
-  void shouldTruncateMsearchQueryBodyByUtf8Bytes() throws IOException {
-    String field = "\u0800".repeat(MAX_QUERY_BODY_BYTES);
+  void shouldNotSplitSupplementaryCharacterAtByteLimit() throws IOException {
+    String supplementaryCharacter = new String(Character.toChars(0x10000));
+    String field = "a" + supplementaryCharacter.repeat(MAX_QUERY_BODY_BYTES);
     String expected =
-        NDJSON_PREFIX + "\u0800".repeat((MAX_QUERY_BODY_BYTES - NDJSON_PREFIX.length()) / 3);
+        NDJSON_PREFIX
+            + "a"
+            + supplementaryCharacter.repeat(
+                (MAX_QUERY_BODY_BYTES - NDJSON_PREFIX.length() - 1) / 4);
+    assertThat(MAX_QUERY_BODY_BYTES - expected.getBytes(UTF_8).length).isBetween(1, 3);
 
     openSearchClient.msearch(msearchRequest(field), TestDocument.class);
 
