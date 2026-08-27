@@ -29,11 +29,6 @@ class CouchbaseClient26Test extends AbstractCouchbaseClientTest {
   }
 
   @Override
-  protected boolean includesConfiguredServerTarget() {
-    return true;
-  }
-
-  @Override
   protected boolean includesNetworkAttributes() {
     return true;
   }
