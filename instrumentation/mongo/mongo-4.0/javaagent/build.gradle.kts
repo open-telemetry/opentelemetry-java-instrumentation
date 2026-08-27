@@ -20,9 +20,6 @@ dependencies {
   testLibrary("org.mongodb:mongodb-driver-core:4.0.1")
   testLibrary("org.mongodb:mongodb-driver-sync:4.0.0")
   testLibrary("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
-  latestDepTestLibrary("org.mongodb:mongodb-driver-core:latest.release")
-  latestDepTestLibrary("org.mongodb:mongodb-driver-sync:latest.release")
-  latestDepTestLibrary("org.mongodb:mongodb-driver-reactivestreams:latest.release")
 
   testImplementation(project(":instrumentation:mongo:mongo-common:testing"))
 
