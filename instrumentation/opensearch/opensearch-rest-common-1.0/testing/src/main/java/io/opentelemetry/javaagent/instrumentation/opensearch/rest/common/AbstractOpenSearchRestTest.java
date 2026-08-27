@@ -72,8 +72,6 @@ public abstract class AbstractOpenSearchRestTest {
 
   protected abstract String getInstrumentationName();
 
-  protected abstract boolean capturesActualPeer();
-
   @BeforeAll
   void setUp() throws Exception {
     opensearch =
@@ -198,25 +196,15 @@ public abstract class AbstractOpenSearchRestTest {
 
     getTesting().waitForTraces(1);
 
-    if (capturesActualPeer()) {
-      assertDurationMetric(
-          getTesting(),
-          getInstrumentationName(),
-          DB_OPERATION_NAME,
-          DB_SYSTEM_NAME,
-          NETWORK_PEER_ADDRESS,
-          NETWORK_PEER_PORT,
-          SERVER_ADDRESS,
-          SERVER_PORT);
-    } else {
-      assertDurationMetric(
-          getTesting(),
-          getInstrumentationName(),
-          DB_OPERATION_NAME,
-          DB_SYSTEM_NAME,
-          SERVER_ADDRESS,
-          SERVER_PORT);
-    }
+    assertDurationMetric(
+        getTesting(),
+        getInstrumentationName(),
+        DB_OPERATION_NAME,
+        DB_SYSTEM_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
@@ -271,11 +259,9 @@ public abstract class AbstractOpenSearchRestTest {
             asList(
                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")));
-    if (capturesActualPeer()) {
-      assertions.add(equalTo(NETWORK_PEER_ADDRESS, peerAddress));
-      assertions.add(equalTo(NETWORK_PEER_PORT, httpHost.getPort()));
-    }
+                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
+                equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                equalTo(NETWORK_PEER_PORT, httpHost.getPort())));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
       assertions.add(equalTo(SERVER_PORT, httpHost.getPort()));
@@ -295,10 +281,8 @@ public abstract class AbstractOpenSearchRestTest {
                 assertThat(trace.getSpan(0))
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfying(
-                        equalTo(NETWORK_PEER_ADDRESS, capturesActualPeer() ? peerAddress : null),
-                        equalTo(
-                            NETWORK_PEER_PORT,
-                            capturesActualPeer() ? Long.valueOf(httpHost.getPort()) : null),
+                        equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                        equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                         equalTo(SERVER_ADDRESS, expectedAddress),
                         equalTo(SERVER_PORT, expectedPort)));
   }
