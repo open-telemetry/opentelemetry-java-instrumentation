@@ -43,8 +43,6 @@ public final class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapt
     ChannelHandler existingHandler = pipeline.get(HANDLER_NAME);
     if (existingHandler instanceof RatpackHttpProtocolVersion) {
       ((RatpackHttpProtocolVersion) existingHandler).clear();
-    } else if (existingHandler != null) {
-      pipeline.remove(existingHandler);
     }
 
     RatpackHttpProtocolVersion handler = new RatpackHttpProtocolVersion(request, channel);
