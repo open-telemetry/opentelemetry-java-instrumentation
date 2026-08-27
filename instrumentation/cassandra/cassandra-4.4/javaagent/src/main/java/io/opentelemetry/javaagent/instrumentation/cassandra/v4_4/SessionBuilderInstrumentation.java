@@ -5,12 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_4.CassandraSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
+import io.opentelemetry.instrumentation.cassandra.v4_4.CompletionStageFunction;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -46,8 +51,11 @@ class SessionBuilderInstrumentation implements TypeInstrumentation {
      */
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static CompletionStage<?> injectTracingSession(@Advice.Return CompletionStage<?> stage) {
-      return stage.thenApply(new CompletionStageFunction());
+    public static CompletionStage<?> injectTracingSession(
+        @Advice.Return CompletionStage<?> stage,
+        @Advice.FieldValue("programmaticContactPoints") Set<EndPoint> programmaticContactPoints) {
+      return stage.thenApply(
+          new CompletionStageFunction(telemetry(), new HashSet<>(programmaticContactPoints)));
     }
   }
 }

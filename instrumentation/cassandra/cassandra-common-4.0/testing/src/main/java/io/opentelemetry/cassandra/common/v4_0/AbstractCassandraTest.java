@@ -32,6 +32,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
+import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -51,6 +52,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -190,6 +192,76 @@ public abstract class AbstractCassandraTest {
                                 equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
                                 equalTo(
                                     maybeStable(DB_CASSANDRA_TABLE), "simple_values_test.users"))));
+  }
+
+  @Test
+  void configuredContactPointsAreTheServerTarget() {
+    // The second contact point is unreachable on purpose; only its configured value is reported.
+    String unreachableContactPoint = "127.0.0.2:9042";
+    CqlSession session =
+        getSessionWithConfiguredContactPoints(
+            asList(cassandraIp + ":" + cassandraPort, unreachableContactPoint));
+    cleanup.deferCleanup(session);
+
+    session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
+    session.execute(
+        "CREATE KEYSPACE contact_points_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    session.execute("CREATE TABLE contact_points_test.users ( name text PRIMARY KEY, age int )");
+    testing().waitForTraces(3);
+    testing().clearData();
+
+    session.execute(
+        SimpleStatement.newInstance(
+            "INSERT INTO contact_points_test.users (name, age) values ('alice', ?)", 1));
+
+    String configuredTarget = cassandraIp + ":" + cassandraPort + "," + unreachableContactPoint;
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("INSERT contact_points_test.users")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                satisfies(
+                                    NETWORK_TYPE,
+                                    emitStableDatabaseSemconv()
+                                        ? val -> val.isNull()
+                                        : val -> val.isIn("ipv4", "ipv6")),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? configuredTarget : cassandraIp),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv() ? null : (long) cassandraPort),
+                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                                equalTo(NETWORK_PEER_PORT, cassandraPort),
+                                equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv()
+                                        ? "INSERT INTO contact_points_test.users (name, age) values ('alice', ?)"
+                                        : "INSERT INTO contact_points_test.users (name, age) values (?, ?)"),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv()
+                                        ? "INSERT contact_points_test.users"
+                                        : null),
+                                equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                                equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                                equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                                satisfies(
+                                    maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    maybeStable(DB_CASSANDRA_IDEMPOTENCE),
+                                    val -> val.isInstanceOf(Boolean.class)),
+                                equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                                equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
+                                equalTo(
+                                    maybeStable(DB_CASSANDRA_TABLE),
+                                    "contact_points_test.users"))));
   }
 
   @ParameterizedTest
@@ -587,6 +659,20 @@ public abstract class AbstractCassandraTest {
   protected CqlSessionBuilder addContactPoint(CqlSessionBuilder sessionBuilder) {
     sessionBuilder.addContactPoint(new InetSocketAddress(cassandra.getHost(), cassandraPort));
     return sessionBuilder;
+  }
+
+  protected CqlSession getSessionWithConfiguredContactPoints(List<String> contactPoints) {
+    DriverConfigLoader configLoader =
+        DefaultDriverConfigLoader.builder()
+            .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
+            .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(10))
+            .withStringList(DefaultDriverOption.CONTACT_POINTS, contactPoints)
+            .build();
+    return wrap(
+        CqlSession.builder()
+            .withConfigLoader(configLoader)
+            .withLocalDatacenter("datacenter1")
+            .build());
   }
 
   private static class BatchScenario {

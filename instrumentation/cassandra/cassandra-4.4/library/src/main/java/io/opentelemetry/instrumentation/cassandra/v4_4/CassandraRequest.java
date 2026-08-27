@@ -22,18 +22,29 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class CassandraRequest {
 
-  static CassandraRequest create(Session session, String queryText) {
-    return create(session, singleton(queryText), false, null, null);
+  static CassandraRequest create(
+      Session session, @Nullable CassandraServerTarget serverTarget, String queryText) {
+    return create(session, serverTarget, singleton(queryText), false, null, null);
   }
 
-  static CassandraRequest create(Session session, Statement<?> statement) {
+  static CassandraRequest create(
+      Session session, @Nullable CassandraServerTarget serverTarget, Statement<?> statement) {
     if (statement instanceof BatchStatement) {
-      return create(session, (BatchStatement) statement);
+      return create(session, serverTarget, (BatchStatement) statement);
     }
-    return create(session, singleton(getQuery(statement)), hasQueryValues(statement), null, null);
+    return create(
+        session,
+        serverTarget,
+        singleton(getQuery(statement)),
+        hasQueryValues(statement),
+        null,
+        null);
   }
 
-  private static CassandraRequest create(Session session, BatchStatement batchStatement) {
+  private static CassandraRequest create(
+      Session session,
+      @Nullable CassandraServerTarget serverTarget,
+      BatchStatement batchStatement) {
     List<String> queryTexts = new ArrayList<>();
     List<Boolean> mixedParameterizedQueries = null;
     boolean allQueriesParameterized = true;
@@ -65,6 +76,7 @@ public abstract class CassandraRequest {
     }
     return create(
         session,
+        serverTarget,
         queryTexts,
         allQueriesParameterizedResult,
         mixedParameterizedQueries,
@@ -73,12 +85,18 @@ public abstract class CassandraRequest {
 
   private static CassandraRequest create(
       Session session,
+      @Nullable CassandraServerTarget serverTarget,
       Collection<String> queryTexts,
       boolean allQueriesParameterized,
       @Nullable List<Boolean> mixedParameterizedQueries,
       @Nullable Long batchSize) {
     return new AutoValue_CassandraRequest(
-        session, queryTexts, allQueriesParameterized, mixedParameterizedQueries, batchSize);
+        session,
+        serverTarget,
+        queryTexts,
+        allQueriesParameterized,
+        mixedParameterizedQueries,
+        batchSize);
   }
 
   private static String getQuery(Statement<?> statement) {
@@ -105,6 +123,9 @@ public abstract class CassandraRequest {
   }
 
   abstract Session getSession();
+
+  @Nullable
+  abstract CassandraServerTarget getServerTarget();
 
   abstract Collection<String> getQueryTexts();
 
