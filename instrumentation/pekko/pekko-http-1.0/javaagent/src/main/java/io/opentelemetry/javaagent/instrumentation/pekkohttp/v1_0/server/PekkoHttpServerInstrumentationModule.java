@@ -35,6 +35,7 @@ public class PekkoHttpServerInstrumentationModule extends InstrumentationModule 
         new HttpPrepareAttributesInstrumentation(),
         new HttpServerBluePrintInstrumentation(),
         new GraphInterpreterInstrumentation(),
-        new PekkoHttpServerSourceInstrumentation());
+        new PekkoHttpServerSourceInstrumentation(),
+        new Http2ExtServerInstrumentation());
   }
 }
