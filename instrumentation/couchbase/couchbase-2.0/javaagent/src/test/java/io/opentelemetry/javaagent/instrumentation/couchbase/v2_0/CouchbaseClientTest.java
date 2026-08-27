@@ -35,13 +35,13 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
 
   @Override
   protected boolean includesLocalAddressAttribute() {
-    // core-io before 2.6.0 has no localSocket field to capture it from.
+    // core-io before 1.6.0 has no localSocket field to capture it from.
     return false;
   }
 
   @Override
   protected boolean includesOperationIdAttribute() {
-    // core-io before 2.6.0 has no CouchbaseRequest.operationId() to correlate with.
+    // core-io before 1.6.0 has no CouchbaseRequest.operationId() to correlate with.
     return false;
   }
 

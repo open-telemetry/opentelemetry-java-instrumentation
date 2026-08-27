@@ -51,7 +51,7 @@ class CouchbaseCoreInstrumentation implements TypeInstrumentation {
       if (requestInfo != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the request info it is added to the context store. Unlike couchbase-2.6,
-        // core-io before 2.6.0 has no CouchbaseRequest.operationId() to record here.
+        // core-io before 1.6.0 has no CouchbaseRequest.operationId() to record here.
         COUCHBASE_REQUEST_INFO.set(request, requestInfo);
       }
     }

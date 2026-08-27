@@ -50,7 +50,7 @@ class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {
-        // core-io before 2.6.0 has no reliable, version-stable way to read the node string the
+        // core-io before 1.6.0 has no reliable, version-stable way to read the node string the
         // driver considers itself connected to, so unlike couchbase-2.6 this only records the
         // actual peer the driver connected to, leaving the old (non-stable) semconv server
         // address/port fallback unset rather than guessing at an unresolved value.

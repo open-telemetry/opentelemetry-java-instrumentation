@@ -109,7 +109,7 @@ public abstract class AbstractCouchbaseTest {
 
   /**
    * Override to return false in subclasses that capture the network peer but not the local socket
-   * address, because core-io before 2.6.0 has no field to read it from (e.g., 2.0-2.5). Defaults to
+   * address, because core-io before 1.6.0 has no field to read it from (e.g., 2.0-2.5). Defaults to
    * {@link #includesNetworkAttributes()} since every other subclass that has one also has the
    * other.
    */
@@ -119,7 +119,7 @@ public abstract class AbstractCouchbaseTest {
 
   /**
    * Override to return false in subclasses that capture the network peer but cannot correlate a
-   * request with its operation id, because core-io before 2.6.0 has no method to read it from
+   * request with its operation id, because core-io before 1.6.0 has no method to read it from
    * (e.g., 2.0-2.5). Defaults to {@link #includesNetworkAttributes()} since every other subclass
    * that has one also has the other.
    */
@@ -129,7 +129,7 @@ public abstract class AbstractCouchbaseTest {
 
   /**
    * Override to return false in subclasses that capture the network peer but not the node the
-   * driver considers itself connected to, because core-io before 2.6.0 has no reliable method to
+   * driver considers itself connected to, because core-io before 1.6.0 has no reliable method to
    * read it from for the whole 2.0-2.5 range. This only affects the old (non-stable) semantic
    * conventions' server address/port fallback; defaults to {@link #includesNetworkAttributes()}
    * since every other subclass that has one also has the other.
