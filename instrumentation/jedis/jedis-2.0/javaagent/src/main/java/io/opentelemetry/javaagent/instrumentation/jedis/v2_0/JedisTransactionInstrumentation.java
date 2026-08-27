@@ -52,14 +52,15 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(transaction);
         // Suppress the EXEC framing command's own span; the transaction is reported as a single
         // batch span here.
-        JedisPipelineContext.enterTransactionFraming();
         if (requests.isEmpty()) {
           // An empty transaction sends nothing for the batch, and with no captured request there
           // is no connection to derive server attributes from, so it is not reported as a batch
           // span.
+          JedisPipelineContext.enterTransactionFraming();
           return new AdviceScope(null, null, null);
         }
         JedisRequest request = JedisRequest.createTransaction(requests);
+        JedisPipelineContext.enterTransactionFraming(request);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return new AdviceScope(null, null, null);

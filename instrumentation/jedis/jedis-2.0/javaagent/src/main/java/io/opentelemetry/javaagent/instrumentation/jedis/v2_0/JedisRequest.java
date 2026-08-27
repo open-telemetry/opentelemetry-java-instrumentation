@@ -12,6 +12,9 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.BinaryClient;
@@ -24,6 +27,7 @@ public abstract class JedisRequest {
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jedis"));
   private static final int LIMIT = 32 * 1024;
+  @Nullable private InetSocketAddress peerAddress;
 
   public static JedisRequest create(Connection connection, Protocol.Command command) {
     return create(connection, command, emptyList());
@@ -46,11 +50,14 @@ public abstract class JedisRequest {
 
   private static JedisRequest createBatch(List<JedisRequest> requests, String prefix) {
     JedisRequest first = requests.get(0);
-    return new AutoValue_JedisRequest(
-        first.getConnection(),
-        batchOperationName(requests, prefix),
-        pipelineQueryText(requests),
-        requests.size() != 1 ? (long) requests.size() : null);
+    JedisRequest request =
+        new AutoValue_JedisRequest(
+            first.getConnection(),
+            batchOperationName(requests, prefix),
+            pipelineQueryText(requests),
+            requests.size() != 1 ? (long) requests.size() : null);
+    request.peerAddress = commonPeerAddress(requests);
+    return request;
   }
 
   public abstract Connection getConnection();
@@ -71,6 +78,42 @@ public abstract class JedisRequest {
 
   @Nullable
   public abstract Long getBatchSize();
+
+  public void capturePeerAddress() {
+    Socket socket = getConnection().getSocket();
+    if (socket == null || !socket.isConnected() || socket.isClosed()) {
+      return;
+    }
+    SocketAddress address = socket.getRemoteSocketAddress();
+    if (address instanceof InetSocketAddress && !((InetSocketAddress) address).isUnresolved()) {
+      peerAddress = (InetSocketAddress) address;
+    }
+  }
+
+  @Nullable
+  public InetSocketAddress getPeerAddress() {
+    return peerAddress;
+  }
+
+  public void retainCommonPeerAddress(JedisRequest request) {
+    if (peerAddress == null || !peerAddress.equals(request.peerAddress)) {
+      peerAddress = null;
+    }
+  }
+
+  @Nullable
+  private static InetSocketAddress commonPeerAddress(List<JedisRequest> requests) {
+    InetSocketAddress peerAddress = requests.get(0).getPeerAddress();
+    if (peerAddress == null) {
+      return null;
+    }
+    for (int i = 1; i < requests.size(); i++) {
+      if (!peerAddress.equals(requests.get(i).getPeerAddress())) {
+        return null;
+      }
+    }
+    return peerAddress;
+  }
 
   private static String batchOperationName(List<JedisRequest> requests, String prefix) {
     if (requests.size() == 1) {

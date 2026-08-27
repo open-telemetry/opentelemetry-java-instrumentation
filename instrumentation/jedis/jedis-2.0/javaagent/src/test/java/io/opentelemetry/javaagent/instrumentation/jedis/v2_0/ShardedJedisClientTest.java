@@ -5,11 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -24,6 +29,8 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -53,10 +60,11 @@ class ShardedJedisClientTest {
   private static String configuredTarget;
 
   private static String shardHost;
+  private static String shardIp;
   private static int shardPort;
 
   @BeforeAll
-  static void setup() {
+  static void setup() throws UnknownHostException {
     firstServer.start();
     cleanup.deferAfterAll(firstServer::stop);
     secondServer.start();
@@ -81,6 +89,7 @@ class ShardedJedisClientTest {
 
     Jedis shard = sharded.getShard("foo");
     shardHost = shard.getClient().getHost();
+    shardIp = InetAddress.getByName(shardHost).getHostAddress();
     shardPort = shard.getClient().getPort();
   }
 
@@ -135,6 +144,9 @@ class ShardedJedisClientTest {
         equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
         equalTo(maybeStablePeerService(), emitStableDatabaseSemconv() ? null : "test-peer-service"),
         equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? configuredTarget : selectedHost),
-        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) selectedPort));
+        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) selectedPort),
+        equalTo(NETWORK_PEER_ADDRESS, shardIp),
+        equalTo(NETWORK_PEER_PORT, (long) shardPort),
+        equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null));
   }
 }

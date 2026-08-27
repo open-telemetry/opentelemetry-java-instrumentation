@@ -17,6 +17,7 @@ import redis.clients.jedis.Transaction;
 public final class JedisPipelineContext {
   private static final ThreadLocal<Queable> currentBatch = new ThreadLocal<>();
   private static final ThreadLocal<Boolean> inTransactionFraming = new ThreadLocal<>();
+  private static final ThreadLocal<JedisRequest> currentTransactionRequest = new ThreadLocal<>();
   private static final VirtualField<Queable, List<JedisRequest>> CAPTURED_REQUESTS =
       VirtualField.find(Queable.class, List.class);
 
@@ -37,12 +38,25 @@ public final class JedisPipelineContext {
     inTransactionFraming.set(Boolean.TRUE);
   }
 
+  public static void enterTransactionFraming(JedisRequest request) {
+    enterTransactionFraming();
+    currentTransactionRequest.set(request);
+  }
+
   public static void exitTransactionFraming() {
     inTransactionFraming.remove();
+    currentTransactionRequest.remove();
   }
 
   public static boolean inTransactionFraming() {
     return Boolean.TRUE.equals(inTransactionFraming.get());
+  }
+
+  public static void captureTransactionFramingPeer(JedisRequest request) {
+    JedisRequest transactionRequest = currentTransactionRequest.get();
+    if (transactionRequest != null) {
+      transactionRequest.retainCommonPeerAddress(request);
+    }
   }
 
   public static boolean capture(JedisRequest request) {
