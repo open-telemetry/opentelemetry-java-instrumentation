@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.oss.protocol.internal.Frame;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
@@ -42,7 +41,7 @@ class InFlightHandlerInstrumentation implements TypeInstrumentation {
       }
       InetSocketAddress remoteAddress = CassandraChannel.getRemoteAddress(context);
       if (remoteAddress != null) {
-        VirtualField.find(Frame.class, InetSocketAddress.class).set((Frame) message, remoteAddress);
+        CassandraResponsePeers.setFramePeer((Frame) message, remoteAddress);
       }
     }
   }

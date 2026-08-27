@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.protocol.internal.Frame;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
@@ -45,9 +44,9 @@ class DefaultExecutionInfoInstrumentation implements TypeInstrumentation {
       if (frame == null) {
         return;
       }
-      InetSocketAddress peer = VirtualField.find(Frame.class, InetSocketAddress.class).get(frame);
+      InetSocketAddress peer = CassandraResponsePeers.getFramePeer(frame);
       if (peer != null) {
-        VirtualField.find(ExecutionInfo.class, InetSocketAddress.class).set(executionInfo, peer);
+        CassandraResponsePeers.setExecutionInfoPeer(executionInfo, peer);
       }
     }
   }
