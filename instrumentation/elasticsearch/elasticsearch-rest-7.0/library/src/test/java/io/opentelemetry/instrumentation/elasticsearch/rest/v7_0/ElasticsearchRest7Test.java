@@ -190,6 +190,30 @@ class ElasticsearchRest7Test {
   }
 
   @Test
+  void existingClientHasNoConfiguredTarget() throws IOException {
+    RestClient wrappedClient =
+        ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
+            .wrap(RestClient.builder(httpHost).build());
+    cleanup.deferCleanup(wrappedClient);
+
+    wrappedClient.performRequest(new Request("GET", "_cluster/health"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? ELASTICSEARCH : "GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"))));
+  }
+
+  @Test
   void configuredNodeListIsTheWholeTarget() throws IOException {
     HttpHost deadHost = deadHost();
     RestClient nodeListClient =
