@@ -48,7 +48,8 @@ class SpymemcachedAttributesGetter
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       SpymemcachedRequest spymemcachedRequest, @Nullable Object response) {
-    return spymemcachedRequest.getHandlingNodeAddress();
+    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
+    return address == null || address.isUnresolved() ? null : address;
   }
 
   @Override
