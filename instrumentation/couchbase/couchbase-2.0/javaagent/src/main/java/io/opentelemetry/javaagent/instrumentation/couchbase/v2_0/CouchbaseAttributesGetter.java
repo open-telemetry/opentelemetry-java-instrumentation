@@ -111,7 +111,7 @@ final class CouchbaseAttributesGetter
       CouchbaseRequestInfo request,
       @Nullable Void unused,
       @Nullable Throwable error) {
-    if (emitStableDatabaseSemconv() && request.getServerTarget() != null) {
+    if (emitStableDatabaseSemconv()) {
       return;
     }
     Node node = request.getNode();
