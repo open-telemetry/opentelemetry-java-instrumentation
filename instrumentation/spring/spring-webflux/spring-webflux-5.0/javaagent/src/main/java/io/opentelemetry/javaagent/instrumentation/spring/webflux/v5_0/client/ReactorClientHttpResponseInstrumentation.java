@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -44,18 +43,8 @@ class ReactorClientHttpResponseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This ClientHttpResponse clientHttpResponse,
-        @Advice.Argument(0) Object reactorClientHttpResponse)
-        throws Exception {
-      String responseTypeName =
-          reactorClientHttpResponse.getClass().getName().startsWith("reactor.ipc.")
-              ? "reactor.ipc.netty.http.client.HttpClientResponse"
-              : "reactor.netty.http.client.HttpClientResponse";
-      Class<?> responseType =
-          Class.forName(
-              responseTypeName, false, reactorClientHttpResponse.getClass().getClassLoader());
-      HttpVersion version =
-          (HttpVersion) responseType.getMethod("version").invoke(reactorClientHttpResponse);
-      HttpProtocolVersion.set(clientHttpResponse, version);
+        @Advice.Argument(0) Object reactorClientHttpResponse) {
+      HttpProtocolVersion.set(clientHttpResponse, reactorClientHttpResponse);
     }
   }
 }
