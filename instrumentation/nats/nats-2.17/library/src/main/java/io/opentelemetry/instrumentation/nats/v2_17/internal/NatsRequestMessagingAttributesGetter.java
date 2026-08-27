@@ -29,16 +29,13 @@ final class NatsRequestMessagingAttributesGetter
 
   @Override
   public String getDestination(NatsRequest request) {
-    if (boundJetStreamAckDestination && NatsSubject.isJetStreamAck(request.getSubject())) {
-      return NatsSubject.JETSTREAM_ACK_SUBJECT;
-    }
     return request.getSubject();
   }
 
   @Nullable
   @Override
   public String getDestinationTemplate(NatsRequest request) {
-    if (boundJetStreamAckDestination && NatsSubject.isJetStreamAck(request.getSubject())) {
+    if (boundJetStreamAckDestination && NatsSubject.isJetStreamSettlement(request.getSubject())) {
       return NatsSubject.JETSTREAM_ACK_SUBJECT;
     }
     if (isTemporaryDestination(request)) {

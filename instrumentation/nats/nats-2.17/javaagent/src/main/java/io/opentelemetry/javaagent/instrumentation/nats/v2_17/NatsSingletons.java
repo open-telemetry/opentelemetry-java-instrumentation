@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createConsumerProcessInstrumenter;
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createPublishInstrumenter;
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createRequestInstrumenter;
@@ -42,6 +43,12 @@ class NatsSingletons {
 
   static Instrumenter<NatsRequest, NatsRequest> settleInstrumenter() {
     return settleInstrumenter;
+  }
+
+  static Instrumenter<NatsRequest, NatsRequest> instrumenterFor(NatsRequest request) {
+    return emitStableMessagingSemconv() && request.isJetStreamSettlement()
+        ? settleInstrumenter
+        : requestInstrumenter;
   }
 
   static Instrumenter<NatsRequest, Void> consumerProcessInstrumenter() {

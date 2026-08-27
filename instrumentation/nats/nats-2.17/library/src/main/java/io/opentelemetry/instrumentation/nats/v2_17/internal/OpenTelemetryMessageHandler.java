@@ -18,11 +18,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 public final class OpenTelemetryMessageHandler implements MessageHandler {
 
   private final MessageHandler delegate;
+  private final Instrumenter<NatsRequest, NatsRequest> settleInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   public OpenTelemetryMessageHandler(
-      MessageHandler delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
+      MessageHandler delegate,
+      Instrumenter<NatsRequest, NatsRequest> settleInstrumenter,
+      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.delegate = delegate;
+    this.settleInstrumenter = settleInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
@@ -32,7 +36,7 @@ public final class OpenTelemetryMessageHandler implements MessageHandler {
     NatsRequest natsRequest = NatsRequest.create(message.getConnection(), message);
 
     if (!consumerProcessInstrumenter.shouldStart(parentContext, natsRequest)) {
-      delegate.onMessage(message);
+      delegate.onMessage(OpenTelemetryMessage.wrap(message, settleInstrumenter));
       return;
     }
 
@@ -40,7 +44,7 @@ public final class OpenTelemetryMessageHandler implements MessageHandler {
     Throwable error = null;
 
     try (Scope ignored = processContext.makeCurrent()) {
-      delegate.onMessage(message);
+      delegate.onMessage(OpenTelemetryMessage.wrap(message, settleInstrumenter));
     } catch (Throwable t) {
       error = t;
       throw t;

@@ -36,21 +36,17 @@ public final class NatsInstrumenterFactory {
 
   public static Instrumenter<NatsRequest, NatsRequest> createPublishInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers) {
-    return createProducerInstrumenter(openTelemetry, headers, PUBLISH_OPERATION_NAME, false);
+    return createProducerInstrumenter(openTelemetry, headers, PUBLISH_OPERATION_NAME);
   }
 
   public static Instrumenter<NatsRequest, NatsRequest> createRequestInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers) {
-    return createProducerInstrumenter(openTelemetry, headers, REQUEST_OPERATION_NAME, false);
+    return createProducerInstrumenter(openTelemetry, headers, REQUEST_OPERATION_NAME);
   }
 
   private static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
-      OpenTelemetry openTelemetry,
-      IncludeExclude headers,
-      String operationName,
-      boolean boundJetStreamAckDestination) {
-    NatsRequestMessagingAttributesGetter getter =
-        new NatsRequestMessagingAttributesGetter(boundJetStreamAckDestination);
+      OpenTelemetry openTelemetry, IncludeExclude headers, String operationName) {
+    NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(false);
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
                 openTelemetry,
@@ -70,12 +66,12 @@ public final class NatsInstrumenterFactory {
     NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(true);
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessagingOperationType.SETTLE, "settle"))
+                openTelemetry, INSTRUMENTATION_NAME, NatsSpanNameExtractor.create(getter, "settle"))
             .addAttributesExtractor(
                 messagingAttributesExtractor(
-                    getter, MessagingOperationType.SETTLE, "settle", headers));
+                    getter, MessagingOperationType.SETTLE, "settle", headers))
+            .addAttributesExtractor(new NatsSettlementOperationNameExtractor())
+            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
     setMessagingSettleExceptionEventExtractor(builder);
     return builder.buildClientInstrumenter(new NatsRequestTextMapSetter());
   }
