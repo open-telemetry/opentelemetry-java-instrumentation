@@ -9,7 +9,10 @@ import com.mongodb.ServerAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("OtelInternalJavadoc")
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class MongoServerTarget {
 
   // the driver reports its default port for socket paths, but the port is not part of the target
