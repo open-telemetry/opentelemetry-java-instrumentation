@@ -9,41 +9,63 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_DC;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_ID;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_IDEMPOTENCE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.ExecutionInfo;
+import com.datastax.driver.core.Host;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SimpleStatement;
+import com.datastax.driver.core.exceptions.InvalidQueryException;
+import com.datastax.driver.core.exceptions.SyntaxError;
+import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
@@ -63,6 +85,9 @@ class CassandraClientTest {
   private static final Logger logger = LoggerFactory.getLogger(CassandraClientTest.class);
 
   private static final ExecutorService executor = Executors.newCachedThreadPool();
+
+  private static final boolean speculativeExecutionCountAvailable = hasSpeculativeExecutionCount();
+  private static final boolean coordinatorIdAvailable = hasCoordinatorId();
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -103,6 +128,94 @@ class CassandraClientTest {
     cleanup.deferAfterAll(() -> executor.shutdownNow());
   }
 
+  @Test
+  void shouldEmitRequestAttributesWhenExecutionFails() {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+    SimpleStatement statement = new SimpleStatement("SELECT * FROM missing_table");
+    statement.setConsistencyLevel(ConsistencyLevel.ONE);
+    statement.setFetchSize(123);
+    statement.setIdempotent(true);
+
+    Throwable thrown = catchThrowable(() -> session.execute(statement));
+
+    assertThat(thrown).isInstanceOf(InvalidQueryException.class);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT missing_table")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM missing_table"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT missing_table" : null),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_CASSANDRA_TABLE), "missing_table"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), true),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 123),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? InvalidQueryException.class.getName()
+                                    : null))));
+  }
+
+  @Test
+  void shouldOmitPageSizeWhenPagingIsDisabled() {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+    SimpleStatement statement = new SimpleStatement("SELECT * FROM missing_table");
+    statement.setConsistencyLevel(ConsistencyLevel.ONE);
+    // the driver treats Integer.MAX_VALUE as a request to disable paging
+    statement.setFetchSize(Integer.MAX_VALUE);
+    statement.setIdempotent(true);
+
+    Throwable thrown = catchThrowable(() -> session.execute(statement));
+
+    assertThat(thrown).isInstanceOf(InvalidQueryException.class);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT missing_table")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM missing_table"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT missing_table" : null),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_CASSANDRA_TABLE), "missing_table"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), true),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? InvalidQueryException.class.getName()
+                                    : null))));
+  }
+
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideSyncParameters")
   void syncTest(Parameter parameter) {
@@ -135,9 +248,21 @@ class CassandraClientTest {
                                   emitStableDatabaseSemconv() ? "USE" : null),
                               equalTo(
                                   DB_QUERY_SUMMARY,
-                                  emitStableDatabaseSemconv()
-                                      ? "USE " + parameter.keyspace
-                                      : null))),
+                                  emitStableDatabaseSemconv() ? "USE " + parameter.keyspace : null),
+                              equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                              equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                  coordinatorIdAvailable
+                                      ? val -> val.isInstanceOf(String.class)
+                                      : val -> val.isNull()),
+                              equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                              equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                  speculativeExecutionCountAvailable
+                                      ? val -> val.isEqualTo(0)
+                                      : val -> val.isNull()))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -157,6 +282,20 @@ class CassandraClientTest {
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
+                              equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                              equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                  coordinatorIdAvailable
+                                      ? val -> val.isInstanceOf(String.class)
+                                      : val -> val.isNull()),
+                              equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                              equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                  speculativeExecutionCountAvailable
+                                      ? val -> val.isEqualTo(0)
+                                      : val -> val.isNull()),
                               equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
     } else {
       testing.waitAndAssertTraces(
@@ -178,6 +317,20 @@ class CassandraClientTest {
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
+                              equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                              equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                  coordinatorIdAvailable
+                                      ? val -> val.isInstanceOf(String.class)
+                                      : val -> val.isNull()),
+                              equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                              equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                  speculativeExecutionCountAvailable
+                                      ? val -> val.isEqualTo(0)
+                                      : val -> val.isNull()),
                               equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
     }
   }
@@ -219,9 +372,21 @@ class CassandraClientTest {
                                   emitStableDatabaseSemconv() ? "USE" : null),
                               equalTo(
                                   DB_QUERY_SUMMARY,
-                                  emitStableDatabaseSemconv()
-                                      ? "USE " + parameter.keyspace
-                                      : null))),
+                                  emitStableDatabaseSemconv() ? "USE " + parameter.keyspace : null),
+                              equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                              equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                  coordinatorIdAvailable
+                                      ? val -> val.isInstanceOf(String.class)
+                                      : val -> val.isNull()),
+                              equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                              equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                  speculativeExecutionCountAvailable
+                                      ? val -> val.isEqualTo(0)
+                                      : val -> val.isNull()))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -242,6 +407,20 @@ class CassandraClientTest {
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
+                              equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                              equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                  coordinatorIdAvailable
+                                      ? val -> val.isInstanceOf(String.class)
+                                      : val -> val.isNull()),
+                              equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                              equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                  speculativeExecutionCountAvailable
+                                      ? val -> val.isEqualTo(0)
+                                      : val -> val.isNull()),
                               equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
                   span ->
                       span.hasName("callbackListener")
@@ -268,12 +447,104 @@ class CassandraClientTest {
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
+                              equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                              equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                  coordinatorIdAvailable
+                                      ? val -> val.isInstanceOf(String.class)
+                                      : val -> val.isNull()),
+                              equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                              equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                              satisfies(
+                                  maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                  speculativeExecutionCountAvailable
+                                      ? val -> val.isEqualTo(0)
+                                      : val -> val.isNull()),
                               equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
                           .hasParent(trace.getSpan(0))));
     }
+  }
+
+  @ParameterizedTest
+  @MethodSource("simpleStatementScenarios")
+  void simpleStatementSanitization(
+      SimpleStatement statement, String stableQueryText, String legacyQueryText) {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+
+    session.execute("DROP KEYSPACE IF EXISTS simple_values_test");
+    session.execute(
+        "CREATE KEYSPACE simple_values_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    session.execute("CREATE TABLE simple_values_test.users ( name text PRIMARY KEY, age int )");
+    testing.clearData();
+
+    session.execute(statement);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("INSERT simple_values_test.users")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv() ? stableQueryText : legacyQueryText),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT simple_values_test.users"
+                                    : null),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                            satisfies(
+                                maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                coordinatorIdAvailable
+                                    ? val -> val.isInstanceOf(String.class)
+                                    : val -> val.isNull()),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                            satisfies(
+                                maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                speculativeExecutionCountAvailable
+                                    ? val -> val.isEqualTo(0)
+                                    : val -> val.isNull()),
+                            equalTo(maybeStable(DB_CASSANDRA_TABLE), "simple_values_test.users"))));
+  }
+
+  private static Stream<Arguments> simpleStatementScenarios() {
+    return Stream.of(
+        argumentSet(
+            "no values",
+            new SimpleStatement(
+                "INSERT INTO simple_values_test.users (name, age) values ('carol', 3)"),
+            "INSERT INTO simple_values_test.users (name, age) values (?, ?)",
+            "INSERT INTO simple_values_test.users (name, age) values (?, ?)"),
+        argumentSet(
+            "positional values",
+            new SimpleStatement(
+                "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)", 1),
+            "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)",
+            "INSERT INTO simple_values_test.users (name, age) values (?, ?)"),
+        argumentSet(
+            "named values",
+            new SimpleStatement(
+                "INSERT INTO simple_values_test.users (name, age) values ('bob', :age)",
+                ImmutableMap.<String, Object>of("age", 2)),
+            "INSERT INTO simple_values_test.users (name, age) values ('bob', :age)",
+            "INSERT INTO simple_values_test.users (name, age) values (?, :age)"));
   }
 
   @Test
@@ -351,7 +622,96 @@ class CassandraClientTest {
                                 maybeStable(DB_CASSANDRA_TABLE),
                                 emitStableDatabaseSemconv()
                                     ? scenario.collectionName
-                                    : scenario.oldCollectionName()))));
+                                    : scenario.oldCollectionName()),
+                            equalTo(
+                                maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL),
+                                scenario.consistencyLevel),
+                            equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                            satisfies(
+                                maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                coordinatorIdAvailable
+                                    ? val -> val.isInstanceOf(String.class)
+                                    : val -> val.isNull()),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), scenario.idempotent),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), scenario.pageSize),
+                            satisfies(
+                                maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                speculativeExecutionCountAvailable
+                                    ? val -> val.isEqualTo(0)
+                                    : val -> val.isNull()))));
+  }
+
+  private static boolean hasSpeculativeExecutionCount() {
+    try {
+      ExecutionInfo.class.getMethod("getSpeculativeExecutions");
+      return true;
+    } catch (NoSuchMethodException ignored) {
+      return false;
+    }
+  }
+
+  private static boolean hasCoordinatorId() {
+    try {
+      Host.class.getMethod("getHostId");
+      return true;
+    } catch (NoSuchMethodException ignored) {
+      return false;
+    }
+  }
+
+  @ParameterizedTest
+  @MethodSource("failureScenarios")
+  void failureTelemetry(Consumer<Session> execute) {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+    testing.clearData();
+
+    assertThatThrownBy(() -> execute.accept(session)).isInstanceOf(SyntaxError.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "cassandra" : "DB Query")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, SyntaxError.class.getName()),
+                                        satisfies(
+                                            EXCEPTION_MESSAGE,
+                                            val -> val.contains("line 1:0 no viable alternative")),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class))))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(maybeStable(DB_STATEMENT), "invalid"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? SyntaxError.class.getName()
+                                    : null))));
+  }
+
+  private static Stream<Arguments> failureScenarios() {
+    return Stream.of(
+        argumentSet("sync", (Consumer<Session>) session -> session.execute("invalid")),
+        argumentSet(
+            "async",
+            (Consumer<Session>) session -> session.executeAsync("invalid").getUninterruptibly()));
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -364,6 +724,7 @@ class CassandraClientTest {
                 .oldSpanName("DB Query")
                 .querySummary("BATCH")
                 .batchSize(0)
+                .idempotent(true)
                 .build()),
         argumentSet(
             "single",
@@ -372,7 +733,11 @@ class CassandraClientTest {
                     session -> {
                       PreparedStatement insert =
                           session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
-                      return new BatchStatement().add(insert.bind(1, 1));
+                      BatchStatement batch = new BatchStatement().add(insert.bind(1, 1));
+                      batch.setConsistencyLevel(ConsistencyLevel.ONE);
+                      batch.setFetchSize(123);
+                      batch.setIdempotent(true);
+                      return batch;
                     })
                 .spanName("INSERT batch_test.records")
                 .oldSpanName("INSERT batch_test.records")
@@ -381,6 +746,9 @@ class CassandraClientTest {
                 .querySummary("INSERT batch_test.records")
                 .operationName("INSERT")
                 .collectionName("batch_test.records")
+                .consistencyLevel("ONE")
+                .pageSize(123)
+                .idempotent(true)
                 .build()),
         argumentSet(
             "twoSameOperation",
@@ -404,10 +772,10 @@ class CassandraClientTest {
             BatchScenario.builder()
                 .buildBatch(
                     session -> {
-                      PreparedStatement insert =
-                          session.prepare("INSERT INTO batch_test.records (id, num) values (4, ?)");
                       return new BatchStatement()
-                          .add(insert.bind(4))
+                          .add(
+                              new SimpleStatement(
+                                  "INSERT INTO batch_test.records (id, num) values (4, ?)", 4))
                           .add(
                               new SimpleStatement(
                                   "UPDATE batch_test.records SET num = 5 WHERE id = 4"));
@@ -565,6 +933,9 @@ class CassandraClientTest {
     final Long batchSize;
     final String operationName;
     final String collectionName;
+    final String consistencyLevel;
+    final int pageSize;
+    final boolean idempotent;
 
     BatchScenario(Builder builder) {
       this.buildBatch = builder.buildBatch;
@@ -576,6 +947,9 @@ class CassandraClientTest {
       this.batchSize = builder.batchSize;
       this.operationName = builder.operationName;
       this.collectionName = builder.collectionName;
+      this.consistencyLevel = builder.consistencyLevel;
+      this.pageSize = builder.pageSize;
+      this.idempotent = builder.idempotent;
     }
 
     static Builder builder() {
@@ -600,6 +974,9 @@ class CassandraClientTest {
       private Long batchSize;
       private String operationName;
       private String collectionName;
+      private String consistencyLevel = "LOCAL_ONE";
+      private int pageSize = 5000;
+      private boolean idempotent;
 
       Builder buildBatch(Function<Session, BatchStatement> buildBatch) {
         this.buildBatch = buildBatch;
@@ -643,6 +1020,21 @@ class CassandraClientTest {
 
       Builder collectionName(String collectionName) {
         this.collectionName = collectionName;
+        return this;
+      }
+
+      Builder consistencyLevel(String consistencyLevel) {
+        this.consistencyLevel = consistencyLevel;
+        return this;
+      }
+
+      Builder pageSize(int pageSize) {
+        this.pageSize = pageSize;
+        return this;
+      }
+
+      Builder idempotent(boolean idempotent) {
+        this.idempotent = idempotent;
         return this;
       }
 

@@ -19,11 +19,13 @@ class HelidonServerTest extends AbstractHelidonTest {
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
 
   @Override
+  @SuppressWarnings("deprecation") // testing deprecated API
   protected void configureRoutes(HttpRouting.Builder routing) {
     var feature =
         HelidonTelemetry.builder(testing.getOpenTelemetry())
+            // keeps coverage of the deprecated exact-name setter
             .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
             .build();
     routing.addFilter(feature.createFilter());
   }

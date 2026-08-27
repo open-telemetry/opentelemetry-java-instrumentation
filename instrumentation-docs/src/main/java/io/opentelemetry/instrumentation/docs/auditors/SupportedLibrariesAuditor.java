@@ -11,6 +11,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -76,14 +78,9 @@ public class SupportedLibrariesAuditor implements DocumentationAuditor {
    * @return list of library names from the local file
    */
   private static List<String> parseLocalSupportedLibraries() {
-    String baseRepoPath = System.getProperty("basePath");
-    if (baseRepoPath == null) {
-      baseRepoPath = "./";
-    } else {
-      baseRepoPath += "/";
-    }
+    String basePath = System.getProperty("basePath");
+    Path file = Paths.get(basePath == null ? "." : basePath).resolve("docs/supported-libraries.md");
 
-    String file = baseRepoPath + "docs/supported-libraries.md";
     String fileContent = FileManager.readFileToString(file);
 
     if (fileContent == null) {

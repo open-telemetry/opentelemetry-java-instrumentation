@@ -7,4 +7,6 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
 
   annotationProcessor("com.google.auto.value:auto-value")
+
+  testImplementation("org.elasticsearch.client:rest:5.0.0")
 }

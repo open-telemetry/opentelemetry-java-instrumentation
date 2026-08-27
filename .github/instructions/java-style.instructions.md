@@ -29,16 +29,43 @@ Follow `docs/contributing/style-guide.md`.
   methods.
 - **Uppercase field names**: use `SCREAMING_SNAKE_CASE` only for constant-like
   values — literals, immutable value constants (e.g. `Duration` timeouts),
-  semantic keys/handles (`AttributeKey`, `ContextKey`, `VirtualField`,
-  `MethodHandle`, `Pattern`), and canonical singletons (`INSTANCE`, `EMPTY`,
-  `NOOP`). Use lower camel case for runtime collaborators (loggers,
+  canonical singletons (`INSTANCE`, `EMPTY`, `NOOP`), and semantic key/handle
+  types (`AttributeKey`, `ContextKey`, `VirtualField`, `MethodHandle`,
+  `Pattern`). A `static final VirtualField` field **must** be
+  `SCREAMING_SNAKE_CASE` regardless of visibility and regardless of the fact
+  that `VirtualField.find(...)` creates the handle at runtime rather than at
+  compile time. Use lower camel case for runtime collaborators (loggers,
   instrumenters, helpers, caches), even when `static final`.
+- **Collection constants**: public, protected, and package-private collection
+  constants must be unmodifiable. Private collection constants must also be
+  unmodifiable when their collection reference escapes the declaring class.
+  Source sets target Java 8 by default, so use `Collections.unmodifiableList`,
+  `unmodifiableSet`, and `unmodifiableMap` there. In a source set that targets
+  Java 9 or later, prefer `List.of`, `Set.of`, and `Map.of` when the source
+  data meets their input restrictions, including for private constants. Do not
+  add an unmodifiable wrapper to a private, non-escaping collection constant;
+  it must remain unmodified after class initialization. `Arrays.asList(...)`
+  is fixed-size, not unmodifiable.
 - **Avoid throwaway forwarding locals** that mirror an existing constant,
   argument, or SDK field into both an SDK call and span attributes; pass the
   original value directly unless real derivation justifies a local.
 - **`Optional`**: do not use in public API signatures or on the hot path.
-- **Semconv constants**: in `library/src/main/`, copy incubating semconv
-  constants locally as `private static final` with a `// copied from <Class>`
-  comment; do not depend on the semconv incubating artifact. In
-  `javaagent/src/main/` and tests, use semconv constants directly.
+- **Semconv constants**: before constructing an `AttributeKey` for a
+  semantic-convention attribute, search the stable and incubating semconv
+  artifacts. Reuse a constant only when its attribute name and `AttributeKey`
+  type match exactly; direct reuse prevents local copies from drifting from the
+  canonical name or type.
+  - In `javaagent/src/main/`, import stable and incubating constants directly,
+    including deprecated constants intentionally used for legacy semconv
+    emission. The Java agent vendors the semconv artifacts into the agent
+    artifact, so these imports do not expose an incubating or deprecated
+    dependency to applications.
+  - In `library/src/main/`, import stable constants directly, but copy
+    incubating constants locally as `private static final` fields with a
+    `// copied from <ClassName>` comment. Library artifacts must not depend on or
+    expose the incubating semconv artifact.
+  - In tests, import stable and incubating constants directly.
 - **`@Nullable` in tests**: do not add it to test code.
+- **Deprecation suppressions**: use `@SuppressWarnings("deprecation")`, not
+  `@SuppressWarnings("OtelDeprecatedApiUsage")`. Add one only for intentional
+  use of an API verified to be deprecated.

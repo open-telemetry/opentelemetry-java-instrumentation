@@ -44,8 +44,7 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
         "io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracerProvider");
   }
 
-  @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+  static ElementMatcher.Junction<ClassLoader> azureCoreClassLoaderMatcher() {
     // added in 1.36
     return hasClassesNamed("com.azure.core.util.tracing.TracerProvider")
         // added in 1.53
@@ -56,11 +55,13 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    return azureCoreClassLoaderMatcher();
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new EmptyTypeInstrumentation(),
-        new AzureContextInstrumentation(),
-        new AzureHttpClientInstrumentation());
+    return asList(new EmptyTypeInstrumentation(), new AzureHttpClientInstrumentation());
   }
 
   private static class EmptyTypeInstrumentation implements TypeInstrumentation {

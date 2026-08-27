@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.producerInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.requestInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -73,7 +73,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, byte[].class))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestFutureBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -82,14 +82,14 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, named("io.nats.client.impl.Headers")))
             .and(takesArgument(2, byte[].class))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestFutureHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.nats.client.Message")))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestFutureMessageAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -98,7 +98,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, byte[].class))
             .and(takesArgument(2, Duration.class))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestTimeoutFutureBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -108,7 +108,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("io.nats.client.impl.Headers")))
             .and(takesArgument(2, byte[].class))
             .and(takesArgument(3, Duration.class))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestTimeoutFutureHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -116,7 +116,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, named("io.nats.client.Message")))
             .and(takesArgument(1, Duration.class))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestTimeoutFutureMessageAdvice");
   }
 
@@ -137,10 +137,10 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     @Nullable
     public static MessageFutureAdviceScope start(NatsRequest request) {
       Context parentContext = Context.current();
-      if (!producerInstrumenter().shouldStart(parentContext, request)) {
+      if (!requestInstrumenter().shouldStart(parentContext, request)) {
         return null;
       }
-      Context context = producerInstrumenter().start(parentContext, request);
+      Context context = requestInstrumenter().start(parentContext, request);
       return new MessageFutureAdviceScope(request, parentContext, context, context.makeCurrent());
     }
 
@@ -150,13 +150,13 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Nullable Throwable throwable) {
       scope.close();
       if (throwable != null || messageFuture == null) {
-        producerInstrumenter().end(context, request, null, throwable);
+        requestInstrumenter().end(context, request, null, throwable);
         return messageFuture;
       }
 
       messageFuture =
           messageFuture.whenComplete(
-              new SpanFinisher(producerInstrumenter(), context, connection, request));
+              new SpanFinisher(requestInstrumenter(), context, connection, request));
       return CompletableFutureWrapper.wrap(messageFuture, parentContext);
     }
   }
@@ -202,10 +202,10 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(NatsRequest request) {
         Context parentContext = Context.current();
-        if (!producerInstrumenter().shouldStart(parentContext, request)) {
+        if (!requestInstrumenter().shouldStart(parentContext, request)) {
           return null;
         }
-        Context context = producerInstrumenter().start(parentContext, request);
+        Context context = requestInstrumenter().start(parentContext, request);
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
@@ -218,7 +218,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
           response = NatsRequest.create(connection, message);
         }
 
-        producerInstrumenter().end(context, request, response, throwable);
+        requestInstrumenter().end(context, request, response, throwable);
       }
     }
 

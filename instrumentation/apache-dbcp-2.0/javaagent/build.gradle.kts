@@ -15,6 +15,9 @@ dependencies {
   library("org.apache.commons:commons-dbcp2:2.0")
 
   implementation(project(":instrumentation:apache-dbcp-2.0:library"))
+  implementation(project(":instrumentation:jdbc:javaagent-common"))
+
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
 
   testImplementation(project(":instrumentation:apache-dbcp-2.0:testing"))
 }

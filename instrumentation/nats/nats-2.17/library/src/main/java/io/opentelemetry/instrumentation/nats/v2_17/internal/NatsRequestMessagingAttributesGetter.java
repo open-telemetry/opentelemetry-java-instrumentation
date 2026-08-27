@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import io.nats.client.impl.Headers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -86,5 +87,11 @@ final class NatsRequestMessagingAttributesGetter
     }
     List<String> result = headers.get(name);
     return result == null ? emptyList() : result;
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(NatsRequest request) {
+    Headers headers = request.getHeaders();
+    return headers == null ? emptyList() : headers.keySet();
   }
 }

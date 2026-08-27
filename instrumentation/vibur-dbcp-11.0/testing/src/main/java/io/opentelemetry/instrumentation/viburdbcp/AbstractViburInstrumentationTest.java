@@ -24,8 +24,8 @@ import org.vibur.dbcp.ViburDBCPDataSource;
 public abstract class AbstractViburInstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
 
-  @Mock private DataSource dataSourceMock;
-  @Mock private Connection connectionMock;
+  @Mock protected DataSource dataSourceMock;
+  @Mock protected Connection connectionMock;
 
   protected abstract InstrumentationExtension testing();
 
@@ -48,15 +48,7 @@ public abstract class AbstractViburInstrumentationTest {
     Connection viburConnection = viburDataSource.getConnection();
 
     // then
-    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "testPool")
-        .disableMinIdleConnections()
-        .disableMaxIdleConnections()
-        .disablePendingRequests()
-        .disableConnectionTimeouts()
-        .disableCreateTime()
-        .disableWaitTime()
-        .disableUseTime()
-        .assertConnectionPoolEmitsMetrics();
+    assertConnectionPoolEmitsMetrics("testPool");
 
     // when
     viburConnection.close();
@@ -79,5 +71,17 @@ public abstract class AbstractViburInstrumentationTest {
             INSTRUMENTATION_NAME,
             emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max",
             AbstractIterableAssert::isEmpty);
+  }
+
+  protected void assertConnectionPoolEmitsMetrics(String poolName) {
+    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, poolName)
+        .disableMinIdleConnections()
+        .disableMaxIdleConnections()
+        .disablePendingRequests()
+        .disableConnectionTimeouts()
+        .disableCreateTime()
+        .disableWaitTime()
+        .disableUseTime()
+        .assertConnectionPoolEmitsMetrics();
   }
 }

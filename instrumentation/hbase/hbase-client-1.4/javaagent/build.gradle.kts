@@ -17,16 +17,14 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:hbase:hbase-client-common-1.4:javaagent"))
-
   library("org.apache.hbase:hbase-client:1.4.0")
 
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
+  implementation(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent"))
 
   compileOnly("org.apache.hbase:hbase-shaded-client:1.4.0")
 
-  testImplementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))
+  testImplementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
+  testInstrumentation(project(":instrumentation:hbase:hbase-client-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:hbase:hbase-client-2.0:javaagent"))
 
   latestDepTestLibrary("org.apache.hbase:hbase-client:1.+") // see hbase-client-2.0 module
@@ -43,7 +41,7 @@ testing {
     register<JvmTestSuite>("shadedClientTest") {
       dependencies {
         implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.4.0").orLatest("1.+")}")
-        implementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))
+        implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
       }
     }
   }

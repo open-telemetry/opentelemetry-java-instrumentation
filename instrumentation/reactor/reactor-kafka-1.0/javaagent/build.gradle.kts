@@ -83,14 +83,25 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}Experimental") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
 
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-  }
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        val experimentalConfig = "otel.instrumentation.kafka.experimental-span-attributes=true"
+        jvmArgs("-D$experimentalConfig")
+        systemProperty(
+          "metadataConfig",
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig).joinToString(","),
+        )
+        isEnabled = sourceTask.enabled
+      }
+    }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -98,6 +109,67 @@ tasks {
 
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
   }
+
+  val messagingPreviewSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}MessagingPreview") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
+
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        val semconvConfig = "otel.semconv-stability.preview=messaging"
+        jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+        jvmArgs("-D$semconvConfig")
+        systemProperty(
+          "metadataConfig",
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], semconvConfig).joinToString(","),
+        )
+        isEnabled = sourceTask.enabled
+      }
+    }
+
+  val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}BothSemconv") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
+
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        val semconvConfig = "otel.semconv-stability.preview=messaging/dup"
+        jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+        jvmArgs("-D$semconvConfig")
+        systemProperty(
+          "metadataConfig",
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], semconvConfig).joinToString(","),
+        )
+        isEnabled = sourceTask.enabled
+      }
+    }
+
+  val messagingPreviewReceiveSpansDisabledSuites =
+    testing.suites.withType(JvmTestSuite::class)
+      .map { suite ->
+        register<Test>("${suite.name}MessagingPreviewReceiveSpansDisabled") {
+          val sourceTask = named<Test>(suite.name).get()
+          setJvmArgs(sourceTask.jvmArgs)
+          setSystemProperties(sourceTask.systemProperties)
+
+          testClassesDirs = suite.sources.output.classesDirs
+          classpath = suite.sources.runtimeClasspath
+
+          val semconvConfig = "otel.semconv-stability.preview=messaging"
+          jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+          jvmArgs("-D$semconvConfig")
+          systemProperty("metadataConfig", semconvConfig)
+          isEnabled = sourceTask.enabled
+        }
+      }
 
   test {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
@@ -109,6 +181,13 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testExperimental, testReceiveSpansDisabled)
+    dependsOn(
+      testing.suites,
+      experimentalSuites,
+      testReceiveSpansDisabled,
+      messagingPreviewSuites,
+      bothSemconvSuites,
+      messagingPreviewReceiveSpansDisabledSuites,
+    )
   }
 }

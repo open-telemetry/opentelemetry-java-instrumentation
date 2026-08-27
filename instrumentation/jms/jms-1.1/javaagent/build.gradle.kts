@@ -70,6 +70,62 @@ tasks {
     include("**/Jms1SuppressReceiveSpansTest.*")
   }
 
+  val testMessagingPreviewReceiveSpansDisabled =
+    register<Test>("testMessagingPreviewReceiveSpansDisabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+      filter {
+        includeTestsMatching("Jms1SuppressReceiveSpansTest")
+      }
+      include("**/Jms1SuppressReceiveSpansTest.*")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    filter {
+      excludeTestsMatching("Jms1SuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testJms2MessagingPreview = register<Test>("testJms2MessagingPreview") {
+    testClassesDirs = sourceSets["jms2Test"].output.classesDirs
+    classpath = sourceSets["jms2Test"].runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testJms2BothSemconv = register<Test>("testJms2BothSemconv") {
+    testClassesDirs = sourceSets["jms2Test"].output.classesDirs
+    classpath = sourceSets["jms2Test"].runtimeClasspath
+    isEnabled = project.tasks.named("jms2Test").get().enabled
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    filter {
+      includeTestsMatching("Jms1InstrumentationTest")
+    }
+    include("**/Jms1InstrumentationTest.*")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+  }
+
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     filter {
@@ -83,7 +139,15 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testReceiveSpansDisabled)
+    dependsOn(
+      testing.suites,
+      testReceiveSpansDisabled,
+      testMessagingPreview,
+      testMessagingPreviewReceiveSpansDisabled,
+      testJms2MessagingPreview,
+      testJms2BothSemconv,
+      testBothSemconv,
+    )
   }
 }
 

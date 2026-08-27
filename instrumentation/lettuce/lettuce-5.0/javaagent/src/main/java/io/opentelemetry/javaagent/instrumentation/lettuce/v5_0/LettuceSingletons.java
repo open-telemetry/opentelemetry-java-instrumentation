@@ -26,6 +26,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.net.InetSocketAddress;
+import javax.annotation.Nullable;
 
 public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.0";
@@ -40,20 +42,36 @@ public class LettuceSingletons {
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
 
-  public static final VirtualField<DefaultEndpoint, RedisURI> ENDPOINT_URI =
-      VirtualField.find(DefaultEndpoint.class, RedisURI.class);
+  public static final VirtualField<DefaultEndpoint, InetSocketAddress> ENDPOINT_ADDRESS =
+      VirtualField.find(DefaultEndpoint.class, InetSocketAddress.class);
 
-  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_URI =
-      VirtualField.find(RedisCommand.class, RedisURI.class);
+  public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
+      VirtualField.find(RedisCommand.class, InetSocketAddress.class);
+
+  public static final VirtualField<DefaultEndpoint, Integer> ENDPOINT_DATABASE_INDEX =
+      VirtualField.find(DefaultEndpoint.class, Integer.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE_INDEX =
+      VirtualField.find(RedisCommand.class, Integer.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
+    // span name.
+    LettuceDbAttributesGetter spanNameAttributesGetter =
+        new LettuceDbAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(RedisCommand<?, ?, ?> request) {
+            return null;
+          }
+        };
 
     InstrumenterBuilder<RedisCommand<?, ?, ?>, Void> builder =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
@@ -61,11 +79,19 @@ public class LettuceSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     LettuceBatchAttributesGetter batchAttributesGetter = new LettuceBatchAttributesGetter();
+    LettuceBatchAttributesGetter batchSpanNameAttributesGetter =
+        new LettuceBatchAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(LettuceBatchRequest request) {
+            return null;
+          }
+        };
     InstrumenterBuilder<LettuceBatchRequest, Void> batchBuilder =
         Instrumenter.<LettuceBatchRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(batchAttributesGetter))
+                DbClientSpanNameExtractor.create(batchSpanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(batchAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(batchBuilder);
@@ -107,7 +133,9 @@ public class LettuceSingletons {
     if (connection instanceof RedisChannelHandler) {
       Object channelWriter = ((RedisChannelHandler<?, ?>) connection).getChannelWriter();
       if (channelWriter instanceof DefaultEndpoint) {
-        COMMAND_URI.set(command, ENDPOINT_URI.get((DefaultEndpoint) channelWriter));
+        DefaultEndpoint endpoint = (DefaultEndpoint) channelWriter;
+        COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get(endpoint));
+        COMMAND_DATABASE_INDEX.set(command, ENDPOINT_DATABASE_INDEX.get(endpoint));
       }
     }
   }

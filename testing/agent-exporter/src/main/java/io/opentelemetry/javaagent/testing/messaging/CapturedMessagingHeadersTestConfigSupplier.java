@@ -24,7 +24,7 @@ public class CapturedMessagingHeadersTestConfigSupplier
   private static Map<String, String> getTestProperties() {
     Map<String, String> testConfig = new HashMap<>();
     testConfig.put(
-        "otel.instrumentation.messaging.experimental.capture-headers",
+        "otel.instrumentation.messaging.experimental.headers.included",
         // most tests use "Test-Message-Header". "Test_Message_Header" is used for JMS2+ because
         // '-' is not allowed in a JMS property name. JMS property name should be a valid java
         // identifier.

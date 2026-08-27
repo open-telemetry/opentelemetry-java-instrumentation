@@ -15,6 +15,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -24,38 +25,115 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class TomcatJdbcInstrumentationTest {
 
+  private static final String DEFAULT_POOL_NAME = "tomcat-jdbc";
+
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Mock javax.sql.DataSource dataSourceMock;
   @Mock Connection connectionMock;
 
-  @Test
-  void shouldReportMetrics() throws SQLException {
-    // given
+  @BeforeEach
+  void setUp() throws SQLException {
     when(dataSourceMock.getConnection()).thenReturn(connectionMock);
+  }
 
-    DataSource tomcatDataSource = new DataSource();
-    tomcatDataSource.setDataSource(dataSourceMock);
+  @Test
+  void shouldUseJdbcUrlForDefaultPoolName() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    // there shouldn't be any problems if this method gets called more than once
-    tomcatDataSource.createPool();
-    tomcatDataSource.createPool();
+    assertConnectionPoolMetrics(dataSource, "db.example:5432/orders");
+  }
 
-    // when
-    Connection connection = tomcatDataSource.getConnection();
-    connection.close();
+  @Test
+  void shouldUseIpv6JdbcUrlForDefaultPoolName() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
 
-    // then
-    assertConnectionPoolMetrics(tomcatDataSource.getPoolName());
+    assertConnectionPoolMetrics(dataSource, "[2001:db8::1]:5432/orders");
+  }
 
-    // when
-    // this one too shouldn't cause any problems when called more than once
-    tomcatDataSource.close();
-    tomcatDataSource.close();
-    testing.clearData();
+  @Test
+  void shouldUseConnectionPropertiesForDefaultPoolName() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setUrl("jdbc:postgresql:ignored");
+    dataSource.setConnectionProperties(
+        "serverName=properties.example;portNumber=5433;databaseName=inventory");
 
-    // then
+    assertConnectionPoolMetrics(dataSource, "properties.example:5433/inventory");
+  }
+
+  @Test
+  void shouldUseServerAddressWhenPortAndNamespaceAreMissing() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setUrl("jdbc:custom:ignored");
+    dataSource.setConnectionProperties("serverName=address-only.example");
+
+    assertConnectionPoolMetrics(dataSource, "address-only.example");
+  }
+
+  @Test
+  void shouldUseDbNamespaceWhenServerAddressIsMissing() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setUrl("jdbc:h2:mem:orders");
+
+    assertConnectionPoolMetrics(dataSource, "orders");
+  }
+
+  @Test
+  void shouldUseFixedPoolNameWhenUrlIsMissing() throws SQLException {
+    DataSource dataSource = newDataSource();
+
+    assertConnectionPoolMetrics(dataSource, DEFAULT_POOL_NAME);
+  }
+
+  @Test
+  void shouldUseConfiguredPoolName() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setName("testPool");
+
+    assertConnectionPoolMetrics(dataSource, "testPool");
+  }
+
+  @Test
+  void shouldUseConfiguredPoolNameThatMatchesDefaultName() throws SQLException {
+    DataSource dataSource = newDataSource();
+    String poolName = dataSource.getPoolProperties().getName();
+
+    dataSource.setName(poolName);
+
+    assertConnectionPoolMetrics(dataSource, poolName);
+  }
+
+  @Test
+  void shouldUseFixedPoolNameWhenConfiguredPoolNameIsEmpty() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setName("configured");
+    dataSource.setName("");
+
+    assertConnectionPoolMetrics(dataSource, DEFAULT_POOL_NAME);
+  }
+
+  private DataSource newDataSource() {
+    DataSource dataSource = new DataSource();
+    dataSource.setDataSource(dataSourceMock);
+    return dataSource;
+  }
+
+  private static void assertConnectionPoolMetrics(DataSource dataSource, String poolName)
+      throws SQLException {
+    try {
+      dataSource.createPool();
+      dataSource.createPool();
+      Connection connection = dataSource.getConnection();
+      connection.close();
+      assertConnectionPoolMetrics(poolName);
+    } finally {
+      dataSource.close();
+      dataSource.close();
+      testing.clearData();
+    }
     assertNoConnectionPoolMetrics();
   }
 

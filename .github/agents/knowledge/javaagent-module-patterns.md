@@ -478,6 +478,25 @@ sufficient for optimization.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
+- Direct argument and return-type matchers inside `transform()` use `Type.class` only when the type
+  is loadable from the agent class loader. For JDK types, use class literals only for primitives and
+  primitive arrays, or types from these exact package names: `java.io`, `java.lang`,
+  `java.lang.reflect`, `java.net`, `java.nio`, `java.time`, `java.util`, `java.util.concurrent`, and
+  `java.util.function`. These exact packages belong to the mandatory `java.base` module, so an
+  accessible type from one of them is present in every supported runtime image and safe to use as a
+  class literal when it is available at the module's minimum supported Java version. Package
+  matching is not recursive: `java.util` does not include `java.util.logging`.
+  Use `takesArgument(0, String.class)` and `returns(CompletableFuture.class)`, not
+  `takesArgument(0, named("java.lang.String"))` or
+  `returns(named("java.util.concurrent.CompletableFuture"))`.
+  Compiling against a type is not enough — `transform()` runs in the agent class loader, which sees
+  only JDK and agent classes, so a class literal for any other type fails to resolve and the whole
+  instrumentation module is dropped.
+  Keep `named(...)` for `typeMatcher()`, class-loader optimization, hierarchy matchers
+  (`extendsClass`, `implementsInterface`), all instrumented-library types, JDK types outside the
+  allowlist or unavailable at the module's minimum Java version, inaccessible JDK-internal classes,
+  and advice-class name strings. This method-signature convention does not change the type-level and
+  advice-class classloading guidance above and below.
 - `isMethod()` in method matchers inside `transform()` is redundant when the matcher
   already names a specific, non-empty method — e.g. `named("foo")` or `namedOneOf("foo", "bar")`.
   Keep `isMethod()` when the name could be empty, since `named("")` matches constructors and

@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -40,8 +39,8 @@ public class EmittedMetricsParser {
    * @return contents of aggregated files
    */
   public static Map<String, EmittedMetrics> getMetricsFromFiles(
-      String rootDir, String instrumentationDirectory) {
-    Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
+      Path rootDir, String instrumentationDirectory) {
+    Path telemetryDir = rootDir.resolve(instrumentationDirectory).resolve(".telemetry");
 
     Map<String, List<EmittedMetrics.MetricsByScope>> metricsByWhen =
         parseAllMetricFiles(telemetryDir);
@@ -65,7 +64,7 @@ public class EmittedMetricsParser {
             .filter(path -> path.getFileName().toString().startsWith("metrics-"))
             .forEach(
                 path -> {
-                  String content = FileManager.readFileToString(path.toString());
+                  String content = FileManager.readFileToString(path);
                   if (content != null) {
                     String whenKey = normalizeWhenCondition(content);
 
