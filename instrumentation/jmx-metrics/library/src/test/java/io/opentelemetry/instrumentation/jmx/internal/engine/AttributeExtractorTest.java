@@ -58,7 +58,7 @@ class AttributeExtractorTest {
       if (extremeValues) {
         return negativeValues ? Byte.MIN_VALUE : Byte.MAX_VALUE;
       }
-      return negativeValues ? (byte) -9 : 9;
+      return negativeValues ? (byte) -10 : 10;
     }
 
     @Override
@@ -66,7 +66,7 @@ class AttributeExtractorTest {
       if (extremeValues) {
         return negativeValues ? Short.MIN_VALUE : Short.MAX_VALUE;
       }
-      return negativeValues ? (short) -10 : 10;
+      return negativeValues ? (short) -11 : 11;
     }
 
     @Override
