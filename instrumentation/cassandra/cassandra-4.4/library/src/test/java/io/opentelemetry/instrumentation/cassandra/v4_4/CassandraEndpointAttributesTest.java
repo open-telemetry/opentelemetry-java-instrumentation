@@ -6,14 +6,17 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer.set;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.api.core.session.Session;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
@@ -41,6 +44,7 @@ class CassandraEndpointAttributesTest {
 
   @Mock private ExecutionInfo executionInfo;
   @Mock private Node coordinator;
+  @Mock private EndPoint customEndPoint;
   @Mock private Session session;
 
   @Test
@@ -178,6 +182,51 @@ class CassandraEndpointAttributesTest {
     assertThat(peer).isNotNull();
     assertThat(peer.getHostString()).isEqualTo("127.0.0.1");
     assertThat(peer.getPort()).isEqualTo(9042);
+  }
+
+  @Test
+  void networkPeerIsOmittedUnderSniWithoutAgentData() {
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "host-id"));
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isNull();
+  }
+
+  @Test
+  void networkPeerIsOmittedUnderCustomEndPointWithoutAgent() {
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    when(coordinator.getEndPoint()).thenReturn(customEndPoint);
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isNull();
+    verifyNoInteractions(customEndPoint);
+  }
+
+  @Test
+  void networkPeerIsTheCoordinatorSocketEvenWhenTheSessionNamesSeveralContactPoints()
+      throws UnknownHostException {
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+    InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
+
+    assertThat(peer).isNotNull();
+    assertThat(peer.getHostString()).isEqualTo("127.0.0.1");
+    assertThat(peer.getPort()).isEqualTo(9042);
+  }
+
+  @Test
+  void responsePeerIsTheSniProxySocket() throws UnknownHostException {
+    InetSocketAddress responsePeer = resolved(29042);
+    set(executionInfo, responsePeer);
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    verifyNoInteractions(coordinator);
   }
 
   private Attributes serverAttributes(DbServerTarget serverTarget) {
