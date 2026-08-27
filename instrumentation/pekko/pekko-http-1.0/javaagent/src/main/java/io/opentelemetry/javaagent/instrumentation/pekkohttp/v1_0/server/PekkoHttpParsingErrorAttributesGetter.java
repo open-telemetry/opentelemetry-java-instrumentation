@@ -14,8 +14,8 @@ import javax.annotation.Nullable;
 import org.apache.pekko.http.javadsl.model.HttpResponse;
 
 /**
- * The request failed to parse, so the only thing known about it is the response that pekko-http
- * generated. Everything that would come from the request is reported as unknown.
+ * The request failed to parse, so it is described by whatever the parser had read before it gave
+ * up. Anything it never got to is reported as unknown.
  */
 class PekkoHttpParsingErrorAttributesGetter
     implements HttpServerAttributesGetter<PekkoHttpParsingError, HttpResponse> {
@@ -23,7 +23,7 @@ class PekkoHttpParsingErrorAttributesGetter
   @Nullable
   @Override
   public String getHttpRequestMethod(PekkoHttpParsingError request) {
-    return null;
+    return request.method();
   }
 
   @Override
@@ -55,12 +55,12 @@ class PekkoHttpParsingErrorAttributesGetter
   @Nullable
   @Override
   public String getUrlPath(PekkoHttpParsingError request) {
-    return null;
+    return request.path();
   }
 
   @Nullable
   @Override
   public String getUrlQuery(PekkoHttpParsingError request) {
-    return null;
+    return request.query();
   }
 }
