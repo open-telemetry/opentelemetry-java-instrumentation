@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import com.couchbase.client.core.env.SeedNode;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Set;
@@ -37,7 +38,7 @@ public class CouchbaseSeedNodesInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void captureConfiguredTarget(
-        @Advice.Argument(0) String connectionString, @Advice.Return Set<?> seedNodes) {
+        @Advice.Argument(0) String connectionString, @Advice.Return Set<SeedNode> seedNodes) {
       if (seedNodes != null) {
         CouchbaseServerTargets.registerSeedNodes(
             seedNodes, CouchbaseConnectionStrings.target(connectionString));

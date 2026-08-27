@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
 import com.couchbase.client.core.Core;
+import com.couchbase.client.core.env.SeedNode;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import java.util.Set;
@@ -16,10 +17,11 @@ import javax.annotation.Nullable;
 // core construction.
 public class CouchbaseServerTargets {
 
-  private static final Cache<Set<?>, CouchbaseServerTarget> seedNodeTargets = Cache.weak();
+  private static final Cache<Set<SeedNode>, CouchbaseServerTarget> seedNodeTargets = Cache.weak();
   private static final Cache<Core, CouchbaseServerTarget> coreTargets = Cache.weak();
 
-  public static void registerSeedNodes(Set<?> seedNodes, @Nullable CouchbaseServerTarget target) {
+  public static void registerSeedNodes(
+      Set<SeedNode> seedNodes, @Nullable CouchbaseServerTarget target) {
     if (target != null) {
       seedNodeTargets.put(seedNodes, target);
     }
@@ -31,10 +33,24 @@ public class CouchbaseServerTargets {
     }
   }
 
-  public static void registerFromSeedNodes(Core core, @Nullable Set<?> seedNodes) {
+  public static void registerFromSeedNodes(Core core, @Nullable Set<SeedNode> seedNodes) {
     if (seedNodes != null) {
-      register(core, seedNodeTargets.get(seedNodes));
+      CouchbaseServerTarget target = seedNodeTargets.get(seedNodes);
+      register(core, target != null ? target : target(seedNodes));
     }
+  }
+
+  @Nullable
+  private static CouchbaseServerTarget target(Set<SeedNode> seedNodes) {
+    CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder();
+    for (SeedNode seedNode : seedNodes) {
+      if (seedNode == null) {
+        target.addSeed(null, 0);
+      } else {
+        target.addSeed(seedNode.address(), seedNode.kvPort().orElse(0));
+      }
+    }
+    return target.build();
   }
 
   @Nullable

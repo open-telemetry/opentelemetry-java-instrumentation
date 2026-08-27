@@ -16,7 +16,9 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static java.util.Collections.singleton;
 
+import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
@@ -29,6 +31,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -78,9 +81,15 @@ class CouchbaseClient31Test {
             .build();
     cleanup.deferAfterAll(environment::shutdown);
 
+    String seed = connectionString.substring(connectionString.indexOf("://") + 3);
+    int portSeparator = seed.lastIndexOf(':');
     cluster =
         Cluster.connect(
-            connectionString,
+            singleton(
+                SeedNode.create(
+                    seed.substring(0, portSeparator),
+                    Optional.of(Integer.valueOf(seed.substring(portSeparator + 1))),
+                    Optional.empty())),
             ClusterOptions.clusterOptions(couchbase.getUsername(), couchbase.getPassword())
                 .environment(environment));
     cleanup.deferAfterAll(cluster::disconnect);

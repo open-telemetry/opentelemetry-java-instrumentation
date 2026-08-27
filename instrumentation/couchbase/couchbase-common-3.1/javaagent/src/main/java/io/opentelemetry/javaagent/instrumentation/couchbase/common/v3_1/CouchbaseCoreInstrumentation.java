@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.Core;
+import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.util.ConnectionString;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -48,7 +49,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void captureConfiguredTarget(
-        @Advice.This Core core, @Advice.Argument(2) Set<?> seedNodes) {
+        @Advice.This Core core, @Advice.Argument(2) Set<SeedNode> seedNodes) {
       CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes);
     }
   }
@@ -59,7 +60,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void captureConfiguredTarget(
         @Advice.This Core core,
-        @Advice.Argument(2) Set<?> seedNodes,
+        @Advice.Argument(2) Set<SeedNode> seedNodes,
         @Advice.Argument(3) String connectionString) {
       if (connectionString == null) {
         CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes);
