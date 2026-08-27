@@ -65,6 +65,7 @@ public final class LettuceBatchContext {
     // flushCommands() does not re-enable auto-flush, so keep batching active with a fresh buffer
     BATCH_STATE.set(commands, new BatchState());
     InetSocketAddress serverAddress = LettuceSingletons.serverAddress(commands.getConnection());
+    InetSocketAddress peerAddress = LettuceSingletons.peerAddress(commands.getConnection());
     Integer databaseIndex = LettuceSingletons.databaseIndex(commands.getConnection());
     RedisServerTarget serverTarget = LettuceSingletons.serverTarget(commands.getConnection());
     return BatchScope.start(
@@ -72,6 +73,7 @@ public final class LettuceBatchContext {
         state.asyncCommands,
         state.parentContext,
         serverAddress,
+        peerAddress,
         databaseIndex,
         serverTarget);
   }
@@ -96,10 +98,12 @@ public final class LettuceBatchContext {
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
         @Nullable InetSocketAddress serverAddress,
+        @Nullable InetSocketAddress peerAddress,
         @Nullable Integer databaseIndex,
         @Nullable RedisServerTarget serverTarget) {
       LettuceBatchRequest request =
-          LettuceBatchRequest.create(commands, serverAddress, databaseIndex, serverTarget);
+          LettuceBatchRequest.create(
+              commands, serverAddress, peerAddress, databaseIndex, serverTarget);
       Context parentContext =
           capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {

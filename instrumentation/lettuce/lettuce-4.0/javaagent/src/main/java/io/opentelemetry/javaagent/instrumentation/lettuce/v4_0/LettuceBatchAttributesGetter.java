@@ -77,16 +77,16 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   @Nullable
   @Override
   public String getNetworkPeerAddress(LettuceBatchRequest request, @Nullable Void unused) {
-    InetSocketAddress serverAddress = request.getServerAddress();
-    return serverAddress != null && !serverAddress.isUnresolved()
-        ? serverAddress.getAddress().getHostAddress()
+    InetSocketAddress peerAddress = request.getPeerAddress();
+    return peerAddress != null && !peerAddress.isUnresolved()
+        ? peerAddress.getAddress().getHostAddress()
         : null;
   }
 
   @Nullable
   @Override
   public Integer getNetworkPeerPort(LettuceBatchRequest request, @Nullable Void unused) {
-    InetSocketAddress serverAddress = request.getServerAddress();
-    return serverAddress != null && !serverAddress.isUnresolved() ? serverAddress.getPort() : null;
+    InetSocketAddress peerAddress = request.getPeerAddress();
+    return peerAddress != null && !peerAddress.isUnresolved() ? peerAddress.getPort() : null;
   }
 }

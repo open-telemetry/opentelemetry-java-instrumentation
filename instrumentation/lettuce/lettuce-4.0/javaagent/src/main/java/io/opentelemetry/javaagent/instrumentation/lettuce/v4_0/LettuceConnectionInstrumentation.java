@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_ADDRESS;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_PEER;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -72,7 +73,7 @@ class LettuceConnectionInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("redisChannelHandler") @Nullable RedisChannelHandler<?, ?> connection) {
       SocketAddress address = context.channel().remoteAddress();
       if (connection != null && address instanceof InetSocketAddress) {
-        CONNECTION_ADDRESS.set(connection, (InetSocketAddress) address);
+        CONNECTION_PEER.set(connection, new LettucePeerAddress((InetSocketAddress) address));
       }
     }
   }
@@ -84,7 +85,7 @@ class LettuceConnectionInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.FieldValue("redisChannelHandler") @Nullable RedisChannelHandler<?, ?> connection) {
       if (connection != null) {
-        LettuceSingletons.clearConnectionAddress(connection);
+        LettuceSingletons.clearConnectionPeer(connection);
       }
     }
   }

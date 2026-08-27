@@ -27,7 +27,7 @@ class LettuceNetworkAttributesGetterTest {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
     RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_ADDRESS.set(command, address);
+    LettuceSingletons.COMMAND_PEER.set(command, new LettucePeerAddress(address));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
@@ -38,11 +38,25 @@ class LettuceNetworkAttributesGetterTest {
   @Test
   void commandDropsUnresolvedSelectedAddress() {
     RedisCommand<?, ?, ?> command = command();
+    LettuceSingletons.COMMAND_PEER.set(
+        command, new LettucePeerAddress(InetSocketAddress.createUnresolved("redis.example", PORT)));
+
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+  }
+
+  @Test
+  void commandKeepsConfiguredServerAddressWhenPeerIsUnknown() {
+    RedisCommand<?, ?, ?> command = command();
     LettuceSingletons.COMMAND_ADDRESS.set(
         command, InetSocketAddress.createUnresolved("redis.example", PORT));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
+    assertThat(getter.getServerAddress(command)).isEqualTo("redis.example");
+    assertThat(getter.getServerPort(command)).isEqualTo(PORT);
     assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
   }
@@ -52,7 +66,7 @@ class LettuceNetworkAttributesGetterTest {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(singletonList(command()), address, null, null);
+        LettuceBatchRequest.create(singletonList(command()), null, address, null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -65,6 +79,7 @@ class LettuceNetworkAttributesGetterTest {
     LettuceBatchRequest request =
         LettuceBatchRequest.create(
             singletonList(command()),
+            null,
             InetSocketAddress.createUnresolved("redis.example", PORT),
             null,
             null);
@@ -76,15 +91,19 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void disconnectDropsPreviousSelectedAddress() throws UnknownHostException {
+  void disconnectDropsPeerAndKeepsConfiguredServerAddress() throws UnknownHostException {
     RedisChannelHandler<?, ?> connection = mock(RedisChannelHandler.class);
-    LettuceSingletons.CONNECTION_ADDRESS.set(
+    InetSocketAddress configuredAddress = InetSocketAddress.createUnresolved("redis.example", PORT);
+    LettuceSingletons.CONNECTION_ADDRESS.set(connection, configuredAddress);
+    LettuceSingletons.CONNECTION_PEER.set(
         connection,
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
+        new LettucePeerAddress(
+            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT)));
 
-    LettuceSingletons.clearConnectionAddress(connection);
+    LettuceSingletons.clearConnectionPeer(connection);
 
-    assertThat(LettuceSingletons.CONNECTION_ADDRESS.get(connection)).isNull();
+    assertThat(LettuceSingletons.CONNECTION_PEER.get(connection)).isNull();
+    assertThat(LettuceSingletons.CONNECTION_ADDRESS.get(connection)).isEqualTo(configuredAddress);
   }
 
   private static RedisCommand<?, ?, ?> command() {
