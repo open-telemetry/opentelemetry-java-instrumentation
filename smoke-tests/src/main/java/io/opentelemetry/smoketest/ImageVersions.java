@@ -12,7 +12,7 @@ public class ImageVersions {
   public static final String FAKE_BACKEND_VERSION = "20260825.32803070924";
 
   // smoke-test-fake-backend-windows
-  public static final String FAKE_BACKEND_WINDOWS_VERSION = "20260825.32803070924";
+  public static final String FAKE_BACKEND_WINDOWS_VERSION = FAKE_BACKEND_VERSION;
 
   private ImageVersions() {}
 }
