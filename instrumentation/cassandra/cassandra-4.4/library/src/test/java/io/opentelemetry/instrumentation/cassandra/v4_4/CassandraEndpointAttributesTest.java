@@ -206,6 +206,18 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
+  void networkPeerIsOmittedForUnresolvedDefaultEndPoint() {
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    when(coordinator.getEndPoint())
+        .thenReturn(
+            new DefaultEndPoint(InetSocketAddress.createUnresolved("cassandra.example.com", 9042)));
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isNull();
+  }
+
+  @Test
   void networkPeerIsTheCoordinatorSocketEvenWhenTheSessionNamesSeveralContactPoints()
       throws UnknownHostException {
     when(executionInfo.getCoordinator()).thenReturn(coordinator);

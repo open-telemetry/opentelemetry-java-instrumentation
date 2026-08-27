@@ -18,16 +18,16 @@ import javax.annotation.Nullable;
  */
 public final class CassandraNetworkPeer {
 
-  private static final VirtualField<ExecutionInfo, InetSocketAddress> executionInfoPeer =
+  private static final VirtualField<ExecutionInfo, InetSocketAddress> EXECUTION_INFO_PEER =
       VirtualField.find(ExecutionInfo.class, InetSocketAddress.class);
 
   public static void set(ExecutionInfo executionInfo, InetSocketAddress peer) {
-    executionInfoPeer.set(executionInfo, peer);
+    EXECUTION_INFO_PEER.set(executionInfo, peer);
   }
 
   @Nullable
   public static InetSocketAddress get(ExecutionInfo executionInfo) {
-    return executionInfoPeer.get(executionInfo);
+    return EXECUTION_INFO_PEER.get(executionInfo);
   }
 
   private CassandraNetworkPeer() {}
