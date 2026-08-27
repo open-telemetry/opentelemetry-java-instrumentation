@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v3_18;
+package io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v2_3;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -13,8 +13,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoo
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
-import java.util.function.IntUnaryOperator;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.redisson.client.RedisClient;
 
@@ -25,8 +26,8 @@ public class RedissonConnectionPoolMetrics {
   public static void registerMetrics(
       String instrumentationName,
       RedisClient redisClient,
-      ConnectionPoolMetricsSource regular,
-      ConnectionPoolMetricsSource subscription) {
+      @Nullable ConnectionPoolMetricsSource regular,
+      @Nullable ConnectionPoolMetricsSource subscription) {
     clientMetrics.computeIfAbsent(
         redisClient,
         unused -> createRegistration(instrumentationName, redisClient, regular, subscription));
@@ -36,8 +37,8 @@ public class RedissonConnectionPoolMetrics {
   private static Registration createRegistration(
       String instrumentationName,
       RedisClient redisClient,
-      ConnectionPoolMetricsSource regular,
-      ConnectionPoolMetricsSource subscription) {
+      @Nullable ConnectionPoolMetricsSource regular,
+      @Nullable ConnectionPoolMetricsSource subscription) {
     BatchCallback regularCallback = createCallback(instrumentationName, redisClient, regular);
     BatchCallback subscriptionCallback =
         createCallback(instrumentationName, redisClient, subscription);
@@ -49,8 +50,10 @@ public class RedissonConnectionPoolMetrics {
 
   @Nullable
   private static BatchCallback createCallback(
-      String instrumentationName, RedisClient redisClient, ConnectionPoolMetricsSource source) {
-    if (source.maxConnections <= 0) {
+      String instrumentationName,
+      RedisClient redisClient,
+      @Nullable ConnectionPoolMetricsSource source) {
+    if (source == null || source.maxConnections <= 0) {
       return null;
     }
 
@@ -65,22 +68,32 @@ public class RedissonConnectionPoolMetrics {
     Attributes attributes = metrics.getAttributes();
     Attributes usedAttributes = metrics.getUsedConnectionsAttributes();
     Attributes idleAttributes = metrics.getIdleConnectionsAttributes();
-    ObservableLongMeasurement pending = metrics.pendingRequestsForConnection();
-    return metrics.batchCallback(
+    Supplier<Integer> pendingRequestsSupplier = source.pendingRequests;
+    ObservableLongMeasurement pending =
+        pendingRequestsSupplier == null ? null : metrics.pendingRequestsForConnection();
+    Runnable callback =
         () -> {
           int idleConnections = source.idleConnections.getAsInt();
-          int usedConnections = source.usedConnections.applyAsInt(idleConnections);
-          connections.record(
-              Math.min(source.maxConnections, Math.max(0, usedConnections)), usedAttributes);
+          Integer usedConnections = source.usedConnections.apply(idleConnections);
+          if (usedConnections != null) {
+            connections.record(
+                Math.min(source.maxConnections, Math.max(0, usedConnections)), usedAttributes);
+          }
           connections.record(Math.max(0, idleConnections), idleAttributes);
           minIdle.record(source.minIdleConnections, attributes);
           max.record(source.maxConnections, attributes);
-          pending.record(source.pendingRequests.getAsInt(), attributes);
-        },
-        connections,
-        minIdle,
-        max,
-        pending);
+          if (pendingRequestsSupplier != null && pending != null) {
+            Integer pendingRequests = pendingRequestsSupplier.get();
+            if (pendingRequests != null) {
+              pending.record(pendingRequests, attributes);
+            }
+          }
+        };
+
+    if (pending == null) {
+      return metrics.batchCallback(callback, connections, minIdle, max);
+    }
+    return metrics.batchCallback(callback, connections, minIdle, max, pending);
   }
 
   private static String poolName(String poolKind, @Nullable InetSocketAddress address) {
@@ -109,17 +122,17 @@ public class RedissonConnectionPoolMetrics {
     private final String poolKind;
     private final int minIdleConnections;
     private final int maxConnections;
-    private final IntUnaryOperator usedConnections;
+    private final IntFunction<Integer> usedConnections;
     private final IntSupplier idleConnections;
-    private final IntSupplier pendingRequests;
+    @Nullable private final Supplier<Integer> pendingRequests;
 
     private ConnectionPoolMetricsSource(
         String poolKind,
         int minIdleConnections,
         int maxConnections,
-        IntUnaryOperator usedConnections,
+        IntFunction<Integer> usedConnections,
         IntSupplier idleConnections,
-        IntSupplier pendingRequests) {
+        @Nullable Supplier<Integer> pendingRequests) {
       this.poolKind = poolKind;
       this.minIdleConnections = minIdleConnections;
       this.maxConnections = maxConnections;
@@ -132,9 +145,9 @@ public class RedissonConnectionPoolMetrics {
         String poolKind,
         int minIdleConnections,
         int maxConnections,
-        IntUnaryOperator usedConnections,
+        IntFunction<Integer> usedConnections,
         IntSupplier idleConnections,
-        IntSupplier pendingRequests) {
+        @Nullable Supplier<Integer> pendingRequests) {
       return new ConnectionPoolMetricsSource(
           poolKind,
           minIdleConnections,

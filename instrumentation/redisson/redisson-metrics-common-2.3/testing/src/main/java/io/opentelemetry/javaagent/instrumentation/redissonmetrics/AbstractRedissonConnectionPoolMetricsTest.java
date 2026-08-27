@@ -15,6 +15,8 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Collection;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -23,6 +25,7 @@ import org.redisson.Redisson;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
+import org.redisson.connection.ClientConnectionsEntry;
 import org.redisson.connection.ConnectionManager;
 import org.redisson.connection.MasterSlaveEntry;
 import org.testcontainers.containers.GenericContainer;
@@ -60,6 +63,14 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
 
   protected abstract String instrumentationName();
 
+  protected String serverAddress(String endpoint) throws ReflectiveOperationException {
+    return "redis://" + endpoint;
+  }
+
+  protected boolean supportsPendingRequests() throws ReflectiveOperationException {
+    return true;
+  }
+
   protected abstract void assertDynamicPoolMetrics(
       Redisson redisson, String regularPool, String subscriptionPool)
       throws ReflectiveOperationException;
@@ -94,23 +105,34 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
                     .isEmpty());
   }
 
-  private Redisson createRedissonClient() {
+  private Redisson createRedissonClient() throws ReflectiveOperationException {
     Config config = new Config();
     config.setCodec(StringCodec.INSTANCE);
     SingleServerConfig serverConfig = config.useSingleServer();
 
-    serverConfig
-        .setAddress("redis://" + endpoint)
-        .setTimeout(30_000)
-        .setConnectionMinimumIdleSize(REGULAR_MIN_IDLE)
-        .setConnectionPoolSize(REGULAR_MAX)
-        .setSubscriptionConnectionMinimumIdleSize(SUBSCRIPTION_MIN_IDLE)
-        .setSubscriptionConnectionPoolSize(SUBSCRIPTION_MAX)
-        .setPingConnectionInterval(0);
+    serverConfig.setAddress(serverAddress(endpoint));
+    serverConfig.setTimeout(30_000);
+    serverConfig.setConnectionMinimumIdleSize(REGULAR_MIN_IDLE);
+    serverConfig.setConnectionPoolSize(REGULAR_MAX);
+    serverConfig.setSubscriptionConnectionMinimumIdleSize(SUBSCRIPTION_MIN_IDLE);
+    serverConfig.setSubscriptionConnectionPoolSize(SUBSCRIPTION_MAX);
+    setPingConnectionInterval(serverConfig);
     return (Redisson) Redisson.create(config);
   }
 
-  private void assertConnectionPoolMetrics(String regularPool, String subscriptionPool) {
+  private static void setPingConnectionInterval(SingleServerConfig config)
+      throws ReflectiveOperationException {
+    try {
+      Method method = config.getClass().getMethod("setPingConnectionInterval", int.class);
+      method.setAccessible(true);
+      method.invoke(config, 0);
+    } catch (NoSuchMethodException ignored) {
+      // Not available in early Redisson versions.
+    }
+  }
+
+  private void assertConnectionPoolMetrics(String regularPool, String subscriptionPool)
+      throws ReflectiveOperationException {
     assertUsageMetric(regularPool, REGULAR_MIN_IDLE, 0, subscriptionPool, SUBSCRIPTION_MIN_IDLE, 0);
     assertPoolSizeMetric(
         "db.client.connection.idle.min",
@@ -128,7 +150,11 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
         REGULAR_MAX,
         subscriptionPool,
         SUBSCRIPTION_MAX);
-    assertPendingRequests(regularPool, 0, subscriptionPool, 0);
+    if (supportsPendingRequests()) {
+      assertPendingRequests(regularPool, 0, subscriptionPool, 0);
+    } else {
+      assertMetricNotEmitted(pendingRequestsMetricName());
+    }
   }
 
   protected final void clearMetrics() {
@@ -258,17 +284,19 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
     Field connectionManagerField = Redisson.class.getDeclaredField("connectionManager");
     connectionManagerField.setAccessible(true);
     ConnectionManager connectionManager = (ConnectionManager) connectionManagerField.get(redisson);
-    return connectionManager.getEntrySet().iterator().next();
+    Collection<?> entries =
+        (Collection<?>) ConnectionManager.class.getMethod("getEntrySet").invoke(connectionManager);
+    return (MasterSlaveEntry) entries.iterator().next();
   }
 
-  protected static Object getMasterConnectionsEntry(Object masterSlaveEntry)
-      throws ReflectiveOperationException {
+  protected static ClientConnectionsEntry getMasterConnectionsEntry(
+      MasterSlaveEntry masterSlaveEntry) throws ReflectiveOperationException {
     Field masterEntryField = MasterSlaveEntry.class.getDeclaredField("masterEntry");
     masterEntryField.setAccessible(true);
-    return masterEntryField.get(masterSlaveEntry);
+    return (ClientConnectionsEntry) masterEntryField.get(masterSlaveEntry);
   }
 
-  private void assertMetricNotEmitted(String metricName) {
+  protected final void assertMetricNotEmitted(String metricName) {
     assertThat(testing.metrics())
         .filteredOn(
             metric ->
@@ -287,6 +315,12 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
     return emitStableDatabaseSemconv()
         ? "db.client.connection.idle.max"
         : "db.client.connections.idle.max";
+  }
+
+  private static String pendingRequestsMetricName() {
+    return emitStableDatabaseSemconv()
+        ? "db.client.connection.pending_requests"
+        : "db.client.connections.pending_requests";
   }
 
   private static String poolNameKey() {

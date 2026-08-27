@@ -8,5 +8,5 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.testcontainers:testcontainers")
 
-  compileOnly("org.redisson:redisson:3.18.0")
+  compileOnly("org.redisson:redisson:2.3.0")
 }

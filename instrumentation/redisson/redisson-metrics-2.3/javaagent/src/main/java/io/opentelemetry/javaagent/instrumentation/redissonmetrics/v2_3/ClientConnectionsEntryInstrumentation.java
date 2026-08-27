@@ -14,11 +14,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
-import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.redisson.api.NodeType;
 import org.redisson.client.RedisClient;
 
 class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
@@ -59,40 +57,22 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) int subscriptionPoolMinSize,
         @Advice.Argument(4) int subscriptionPoolMaxSize,
         @Advice.Argument(5) Object connectionManager,
-        @Advice.Argument(6) NodeType nodeType,
         @Advice.FieldValue("freeConnectionsCounter") Object freeConnectionsCounter,
         @Advice.FieldValue("freeConnections") Collection<?> freeConnections,
         @Advice.FieldValue("freeSubscribeConnectionsCounter")
             Object freeSubscribeConnectionsCounter,
         @Advice.FieldValue("freeSubscribeConnections") Collection<?> freeSubscribeConnections) {
-      Supplier<Integer> availableConnections =
-          RedissonConnectionPoolAccessor.availableConnectionsSupplier(freeConnectionsCounter);
-      if (availableConnections != null) {
-        RedissonConnectionPoolMetrics.registerMetrics(
-            redisClient,
-            poolMinSize,
-            poolMaxSize,
-            nodeType,
-            availableConnections,
-            freeConnections,
-            RedissonConnectionPoolAccessor.pendingRequestsSupplier(freeConnectionsCounter));
-      }
-
-      Supplier<Integer> availableSubscriptionConnections =
-          RedissonConnectionPoolAccessor.availableConnectionsSupplier(
-              freeSubscribeConnectionsCounter);
-      if (availableSubscriptionConnections != null) {
-        RedissonConnectionPoolMetrics.registerSubscriptionMetrics(
-            redisClient,
-            connectionManager,
-            subscriptionPoolMinSize,
-            subscriptionPoolMaxSize,
-            nodeType,
-            availableSubscriptionConnections,
-            freeSubscribeConnections,
-            RedissonConnectionPoolAccessor.pendingRequestsSupplier(
-                freeSubscribeConnectionsCounter));
-      }
+      RedissonSingletons.registerMetrics(
+          redisClient,
+          poolMinSize,
+          poolMaxSize,
+          freeConnectionsCounter,
+          freeConnections,
+          subscriptionPoolMinSize,
+          subscriptionPoolMaxSize,
+          connectionManager,
+          freeSubscribeConnectionsCounter,
+          freeSubscribeConnections);
     }
   }
 }

@@ -16,9 +16,12 @@ muzzle {
 dependencies {
   library("org.redisson:redisson:2.3.0")
 
-  testImplementation("org.testcontainers:testcontainers")
+  implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:javaagent"))
+  testInstrumentation(project(":instrumentation:redisson:redisson-metrics-3.18:javaagent"))
+  testInstrumentation(project(":instrumentation:redisson:redisson-metrics-3.26:javaagent"))
+  testImplementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
 
-  latestDepTestLibrary("org.redisson:redisson:3.17.+") // documented limitation
+  latestDepTestLibrary("org.redisson:redisson:3.17.+") // see redisson-metrics-3.18 module
 }
 
 testing {
@@ -32,7 +35,7 @@ testing {
 
       dependencies {
         compileOnly(project())
-        implementation("org.testcontainers:testcontainers")
+        implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
 
         val version = baseVersion("3.11.0").orLatest("3.11.+")
         implementation("org.redisson:redisson:$version")
@@ -48,7 +51,7 @@ testing {
 
       dependencies {
         compileOnly(project())
-        implementation("org.testcontainers:testcontainers")
+        implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
         implementation("org.redisson:redisson:3.15.6")
       }
     }

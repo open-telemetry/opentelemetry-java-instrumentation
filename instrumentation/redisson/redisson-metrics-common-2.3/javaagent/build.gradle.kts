@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  compileOnly("org.redisson:redisson:3.18.0")
+  compileOnly("org.redisson:redisson:2.3.0")
 }
