@@ -240,7 +240,119 @@ class PekkoHttpServerParsingErrorTest {
     } finally Await.result(system.terminate(), 10.seconds)
   }
 
-  private def send(port: Int, request: String): List[String] = {
+  /** A connection that ends part way through the request line does not go
+    * through failMessageStart, the parser emits the error from its completion
+    * handling instead, so what was read must survive that route too.
+    */
+  @Test def connectionClosedMidRequestLineKeepsTheMethod(): Unit = {
+    implicit val system: ActorSystem = ActorSystem(
+      "parsing-error-truncated-test"
+    )
+    try {
+      val handler: HttpRequest => HttpResponse = _ => HttpResponse()
+      val binding =
+        Await.result(
+          Http().bindAndHandleSync(handler, "localhost", 0),
+          10.seconds
+        )
+      val port = binding.localAddress.getPort
+
+      try {
+        // cut off inside the request line itself, before the protocol token
+        send(port, "GET /truncated", halfClose = true)
+
+        testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit =
+            trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                span
+                  .hasName("GET")
+                  .hasKind(SpanKind.SERVER)
+                  .hasNoParent()
+                  // the target never finished parsing, so only the method is known
+                  .hasAttributesSatisfyingExactly(
+                    equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(
+                      HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+                      java.lang.Long.valueOf(400)
+                    )
+                  )
+                ()
+              }
+            })
+        })
+      } finally Await.result(binding.unbind(), 10.seconds)
+    } finally Await.result(system.terminate(), 10.seconds)
+  }
+
+  /** An overlong target is rejected by the scan that finds the end of it, which
+    * runs before the parser stores the target, so the field still holds the one
+    * from the request before it on this connection and must not be reported.
+    */
+  @Test def overlongTargetDoesNotReportTheTargetBefore(): Unit = {
+    implicit val system: ActorSystem = ActorSystem(
+      "parsing-error-too-long-test"
+    )
+    try {
+      val handler: HttpRequest => HttpResponse = _ => HttpResponse()
+      val binding =
+        Await.result(
+          Http().bindAndHandleSync(handler, "localhost", 0),
+          10.seconds
+        )
+      val port = binding.localAddress.getPort
+
+      try {
+        val host = "Host: localhost:" + port + "\r\n"
+        // max-uri-length defaults to 2048
+        val overlong = "/" + ("b" * 4000)
+        send(
+          port,
+          "GET /the/first/target HTTP/1.1\r\n" + host + "\r\n" +
+            "GET " + overlong + " HTTP/1.1\r\n" + host + "\r\n",
+          halfClose = true
+        )
+
+        testing.waitAndAssertTraces(
+          new Consumer[TraceAssert] {
+            override def accept(trace: TraceAssert): Unit =
+              trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+                override def accept(span: SpanDataAssert): Unit = {
+                  span.hasName("GET").hasKind(SpanKind.SERVER)
+                  ()
+                }
+              })
+          },
+          new Consumer[TraceAssert] {
+            override def accept(trace: TraceAssert): Unit =
+              trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+                override def accept(span: SpanDataAssert): Unit = {
+                  // the method is this request's, the target is reported as unknown
+                  span
+                    .hasName("GET")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                      equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                      equalTo(
+                        HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+                        java.lang.Long.valueOf(414)
+                      )
+                    )
+                  ()
+                }
+              })
+          }
+        )
+      } finally Await.result(binding.unbind(), 10.seconds)
+    } finally Await.result(system.terminate(), 10.seconds)
+  }
+
+  private def send(
+      port: Int,
+      request: String,
+      halfClose: Boolean = false
+  ): List[String] = {
     val socket = new Socket("localhost", port)
     try {
       val out =
@@ -250,6 +362,8 @@ class PekkoHttpServerParsingErrorTest {
         )
       out.write(request)
       out.flush()
+      // let the server see the end of the input rather than waiting for more
+      if (halfClose) socket.shutdownOutput()
 
       val in = new BufferedReader(
         new InputStreamReader(socket.getInputStream, StandardCharsets.US_ASCII)

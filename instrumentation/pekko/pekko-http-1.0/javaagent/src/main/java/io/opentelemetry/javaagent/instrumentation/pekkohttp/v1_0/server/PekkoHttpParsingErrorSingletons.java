@@ -22,6 +22,8 @@ import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.PekkoHttpUtil;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pekko.http.impl.engine.parsing.HttpMessageParser;
+import org.apache.pekko.http.impl.engine.parsing.ParserOutput;
+import org.apache.pekko.http.impl.engine.parsing.ParserOutput.MessageStartError;
 import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.javadsl.model.HttpResponse;
 import org.apache.pekko.http.scaladsl.model.ErrorInfo;
@@ -38,14 +40,14 @@ public class PekkoHttpParsingErrorSingletons {
 
   /** Holds what the parser read for the request it is currently working on. */
   @SuppressWarnings("rawtypes")
-  private static final VirtualField<HttpMessageParser, PekkoHttpParsingError> parserRequestLine =
+  private static final VirtualField<HttpMessageParser, PekkoHttpParsingError> PARSER_REQUEST_LINE =
       VirtualField.find(HttpMessageParser.class, PekkoHttpParsingError.class);
 
   /**
    * The {@code ErrorInfo} is the one object that pekko-http carries unchanged from the parser to
    * the parsing error handler, so it is what the recovered request line is bound to.
    */
-  private static final VirtualField<ErrorInfo, PekkoHttpParsingError> requestLine =
+  private static final VirtualField<ErrorInfo, PekkoHttpParsingError> REQUEST_LINE =
       VirtualField.find(ErrorInfo.class, PekkoHttpParsingError.class);
 
   private static final Instrumenter<PekkoHttpParsingError, HttpResponse> instrumenter =
@@ -57,32 +59,38 @@ public class PekkoHttpParsingErrorSingletons {
 
   /** Discards what an earlier request on the same connection left behind. */
   public static void startRequest(HttpMessageParser<?> parser) {
-    parserRequestLine.set(parser, null);
+    PARSER_REQUEST_LINE.set(parser, null);
   }
 
   /** Records a request line that pekko-http parsed and validated. */
   public static void captureParsedRequestLine(
       HttpMessageParser<?> parser, @Nullable HttpMethod method, @Nullable Uri uri) {
     if (uri != null) {
-      parserRequestLine.set(parser, PekkoHttpParsingError.parsed(method, uri));
+      PARSER_REQUEST_LINE.set(parser, PekkoHttpParsingError.parsed(method, uri));
     }
   }
 
   /** Records a request line whose target is what failed to parse. */
   public static void captureUnparsedRequestLine(
       HttpMessageParser<?> parser, @Nullable HttpMethod method, @Nullable ByteString uriBytes) {
-    parserRequestLine.set(parser, PekkoHttpParsingError.unparsed(method, uriBytes));
+    PARSER_REQUEST_LINE.set(parser, PekkoHttpParsingError.unparsed(method, uriBytes));
   }
 
   /**
    * Moves the request line onto the {@code ErrorInfo}, which is what reaches the parsing error
    * handler. Nothing is recorded when the failure happened before the request line was read, in
    * which case the span is emitted without a method or a target.
+   *
+   * <p>Called for every parser output, so it does as little as possible for the ones that are not a
+   * failure.
    */
-  public static void bindRequestLine(HttpMessageParser<?> parser, ErrorInfo info) {
-    PekkoHttpParsingError request = parserRequestLine.get(parser);
+  public static void bindRequestLine(HttpMessageParser<?> parser, ParserOutput output) {
+    if (!(output instanceof MessageStartError)) {
+      return;
+    }
+    PekkoHttpParsingError request = PARSER_REQUEST_LINE.get(parser);
     if (request != null) {
-      requestLine.set(info, request);
+      REQUEST_LINE.set(((MessageStartError) output).info(), request);
     }
   }
 
@@ -93,7 +101,7 @@ public class PekkoHttpParsingErrorSingletons {
    */
   @Nullable
   public static Object[] startSpan(ErrorInfo info) {
-    PekkoHttpParsingError request = requestLine.get(info);
+    PekkoHttpParsingError request = REQUEST_LINE.get(info);
     if (request == null) {
       request = PekkoHttpParsingError.UNKNOWN;
     }
