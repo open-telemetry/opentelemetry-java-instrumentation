@@ -50,8 +50,9 @@ public class HbaseServerTarget {
   private static final boolean SUPPORTS_REGISTRY_CONFIG =
       hasHbaseConstant("CLIENT_CONNECTION_REGISTRY_IMPL_CONF_KEY")
           || hasClassField(ASYNC_REGISTRY_FACTORY, "REGISTRY_IMPL_CONF_KEY");
+  @Nullable private static final Method PARSE_ZOO_CFG = findParseZooCfg();
   private static final boolean SUPPORTS_ZK_CONFIG_FILE =
-      hasHbaseConstant("HBASE_CONFIG_READ_ZOOKEEPER_CONFIG");
+      hasHbaseConstant("HBASE_CONFIG_READ_ZOOKEEPER_CONFIG") && PARSE_ZOO_CFG != null;
   private static final boolean USES_CONFIGURED_MASTER_PORT = usesConfiguredMasterPort();
 
   public static void store(AbstractRpcClient client, Configuration configuration) {
@@ -153,17 +154,32 @@ public class HbaseServerTarget {
     return String.join(",", hosts) + ":" + parsedClientPort + ":" + znodeParent;
   }
 
-  // HBase 1.x uses this deprecated parser when zoo.cfg support is enabled.
-  @SuppressWarnings("deprecation")
   private static boolean hasUsableZooCfg(Configuration configuration) {
+    if (PARSE_ZOO_CFG == null) {
+      return false;
+    }
     try (InputStream inputStream = ZKConfig.class.getClassLoader().getResourceAsStream("zoo.cfg")) {
       if (inputStream == null) {
         return false;
       }
-      ZKConfig.parseZooCfg(configuration, inputStream);
+      PARSE_ZOO_CFG.invoke(null, configuration, inputStream);
       return true;
-    } catch (IOException ignored) {
+    } catch (IOException
+        | ReflectiveOperationException
+        | SecurityException
+        | LinkageError ignored) {
       return false;
+    }
+  }
+
+  // Only HBase 1.x parses zoo.cfg, so this deprecated parser is looked up reflectively to keep the
+  // HBase 2.x instrumentation from being rejected over a method that version does not have.
+  @Nullable
+  private static Method findParseZooCfg() {
+    try {
+      return ZKConfig.class.getMethod("parseZooCfg", Configuration.class, InputStream.class);
+    } catch (NoSuchMethodException | SecurityException | LinkageError ignored) {
+      return null;
     }
   }
 
