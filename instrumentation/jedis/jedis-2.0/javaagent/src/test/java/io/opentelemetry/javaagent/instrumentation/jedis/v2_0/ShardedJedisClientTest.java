@@ -98,16 +98,37 @@ class ShardedJedisClientTest {
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(attributes("SET", "SET foo ?"))),
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET foo ?", shardHost, shardPort))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "GET " + configuredTarget : "GET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(attributes("GET", "GET foo"))));
+                        .hasAttributesSatisfyingExactly(
+                            attributes("GET", "GET foo", shardHost, shardPort))));
   }
 
-  private static List<AttributeAssertion> attributes(String operation, String queryText) {
+  @Test
+  void commandFromAllShardsUsesConfiguredTarget() {
+    Jedis shard = sharded.getAllShards().iterator().next();
+    String selectedHost = shard.getClient().getHost();
+    int selectedPort = shard.getClient().getPort();
+
+    shard.set("all-shards", "bar");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET all-shards ?", selectedHost, selectedPort))));
+  }
+
+  private static List<AttributeAssertion> attributes(
+      String operation, String queryText, String selectedHost, int selectedPort) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -119,8 +140,8 @@ class ShardedJedisClientTest {
       assertions.add(equalTo(SERVER_ADDRESS, configuredTarget));
     } else {
       assertions.add(equalTo(maybeStablePeerService(), "test-peer-service"));
-      assertions.add(equalTo(SERVER_ADDRESS, shardHost));
-      assertions.add(equalTo(SERVER_PORT, shardPort));
+      assertions.add(equalTo(SERVER_ADDRESS, selectedHost));
+      assertions.add(equalTo(SERVER_PORT, selectedPort));
     }
     return assertions;
   }

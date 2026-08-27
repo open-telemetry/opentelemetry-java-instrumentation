@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
+import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Connection;
 import redis.clients.util.Sharded;
 
@@ -61,6 +62,16 @@ public class JedisSingletons {
   @Nullable
   public static RedisServerTarget shardedTarget(Sharded<?, ?> sharded) {
     return SHARDED_TARGET.get(sharded);
+  }
+
+  public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
+    if (!(shard instanceof BinaryJedis)) {
+      return;
+    }
+    RedisServerTarget target = shardedTarget(sharded);
+    if (target != null) {
+      setConnectionTarget(((BinaryJedis) shard).getClient(), target);
+    }
   }
 
   public static void setConnectionTarget(

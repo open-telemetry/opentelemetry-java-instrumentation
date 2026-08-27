@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Collection;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -27,6 +28,8 @@ class ShardedRoutingInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getShard").and(takesArguments(1)), getClass().getName() + "$GetShardAdvice");
+    transformer.applyAdviceToMethod(
+        named("getAllShards").and(takesArguments(0)), getClass().getName() + "$GetAllShardsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -36,6 +39,20 @@ class ShardedRoutingInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This Sharded<?, ?> sharded, @Advice.Return @Nullable Object shard) {
       JedisSingletons.attachShardedTarget(sharded, shard);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class GetAllShardsAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Sharded<?, ?> sharded, @Advice.Return @Nullable Collection<?> returnedShards) {
+      if (returnedShards != null) {
+        for (Object shard : returnedShards) {
+          JedisSingletons.attachShardedTarget(sharded, shard);
+        }
+      }
     }
   }
 }
