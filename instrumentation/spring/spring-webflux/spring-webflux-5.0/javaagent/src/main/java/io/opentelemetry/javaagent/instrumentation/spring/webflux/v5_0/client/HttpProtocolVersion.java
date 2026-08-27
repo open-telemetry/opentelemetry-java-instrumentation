@@ -16,7 +16,7 @@ public class HttpProtocolVersion {
   private static final VirtualField<ClientHttpResponse, String>
       CLIENT_HTTP_RESPONSE_PROTOCOL_VERSION =
           VirtualField.find(ClientHttpResponse.class, String.class);
-  private static final VirtualField<ClientResponse, String> CLIENT_RESPONSE_PROTOCOL_VERSION =
+  public static final VirtualField<ClientResponse, String> CLIENT_RESPONSE_PROTOCOL_VERSION =
       VirtualField.find(ClientResponse.class, String.class);
 
   // the reactor and netty types are resolved reflectively; a compile-time reference to them would

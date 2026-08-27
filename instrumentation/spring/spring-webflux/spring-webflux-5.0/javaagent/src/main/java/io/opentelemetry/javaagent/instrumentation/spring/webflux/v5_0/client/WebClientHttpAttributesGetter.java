@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
+import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client.HttpProtocolVersion.CLIENT_RESPONSE_PROTOCOL_VERSION;
+
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -14,13 +15,10 @@ class WebClientHttpAttributesGetter
     extends io.opentelemetry.instrumentation.spring.webflux.v5_3.internal
         .WebClientHttpAttributesGetter {
 
-  private static final VirtualField<ClientResponse, String> PROTOCOL_VERSION =
-      VirtualField.find(ClientResponse.class, String.class);
-
   @Nullable
   @Override
   public String getNetworkProtocolVersion(
       ClientRequest request, @Nullable ClientResponse response) {
-    return response == null ? null : PROTOCOL_VERSION.get(response);
+    return response == null ? null : CLIENT_RESPONSE_PROTOCOL_VERSION.get(response);
   }
 }
