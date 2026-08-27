@@ -12,6 +12,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
@@ -108,6 +109,9 @@ class CassandraEndpointAttributesTest {
     assertThat(attributes.get(SERVER_ADDRESS))
         .isEqualTo(emitStableDatabaseSemconv() ? "cassandra.example.com" : null);
     assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? 9042L : null);
+    if (emitStableDatabaseSemconv()) {
+      verify(metadata).getNodes();
+    }
   }
 
   @Test
@@ -179,7 +183,7 @@ class CassandraEndpointAttributesTest {
   }
 
   private Attributes serverAttributes(CassandraServerTarget serverTarget) {
-    if (emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && serverTarget != null) {
       stubSessionNode();
     }
     CassandraRequest request = CassandraRequest.create(session, serverTarget, "SELECT 1");
