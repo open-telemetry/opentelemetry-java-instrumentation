@@ -33,19 +33,32 @@ public abstract class SpymemcachedRequest {
   private boolean hasMultipleHandlingNodes;
 
   public void setHandlingNode(@Nullable MemcachedNode node) {
+    captureHandlingNode(node, false);
+  }
+
+  public void setRetryHandlingNode(@Nullable MemcachedNode node) {
+    captureHandlingNode(node, true);
+  }
+
+  public void clearHandlingNode() {
+    hasMultipleHandlingNodes = true;
+    handlingNode = null;
+    handlingNodeAddress = null;
+  }
+
+  private void captureHandlingNode(@Nullable MemcachedNode node, boolean retry) {
     if (node == null || hasMultipleHandlingNodes) {
       return;
     }
-    if (handlingNode != null && node != handlingNode) {
+    if (!retry && handlingNode != null && node != handlingNode) {
       // bulk operations may have multiple nodes, so if we see a different node than the one we
       // already have, we will not set any node for this request
-      hasMultipleHandlingNodes = true;
-      handlingNode = null;
-      handlingNodeAddress = null;
+      clearHandlingNode();
       return;
     }
 
     handlingNode = node;
+    handlingNodeAddress = null;
     SocketAddress socketAddress = node.getSocketAddress();
     if (socketAddress instanceof InetSocketAddress) {
       handlingNodeAddress = (InetSocketAddress) socketAddress;

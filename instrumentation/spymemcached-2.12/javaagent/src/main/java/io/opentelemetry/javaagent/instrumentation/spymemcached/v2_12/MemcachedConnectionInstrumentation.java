@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,17 +33,36 @@ class MemcachedConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("net.spy.memcached.MemcachedNode")))
             .and(takesArgument(1, named("net.spy.memcached.ops.Operation"))),
         getClass().getName() + "$AddOperationAdvice");
+    transformer.applyAdviceToMethod(
+        named("redistributeOperation")
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("net.spy.memcached.ops.Operation"))),
+        getClass().getName() + "$RedistributeOperationAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class AddOperationAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Argument(1) Operation operation) {
-      // we are reading node from operation instead of using the node that was passed to the method,
-      // because we want to get the node that is actually handling the request, which could be
-      // different from the one passed to the method in case of retries
-      SpymemcachedRequestHolder.setHandlingNode(
-          Java8BytecodeBridge.currentContext(), operation.getHandlingNode());
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.Argument(1) Operation operation) {
+      SpymemcachedRequestHolder.associateOperation(Java8BytecodeBridge.currentContext(), operation);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class RedistributeOperationAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static SpymemcachedRequestHolder.RetryScope onEnter(
+        @Advice.Argument(0) Operation operation) {
+      return SpymemcachedRequestHolder.startRetry(operation);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Enter @Nullable SpymemcachedRequestHolder.RetryScope retryScope) {
+      if (retryScope != null) {
+        retryScope.close();
+      }
     }
   }
 }

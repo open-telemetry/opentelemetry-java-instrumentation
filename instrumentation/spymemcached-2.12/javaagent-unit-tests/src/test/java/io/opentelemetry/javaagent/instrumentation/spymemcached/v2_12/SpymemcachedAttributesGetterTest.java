@@ -12,7 +12,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
@@ -64,6 +66,36 @@ class SpymemcachedAttributesGetterTest {
     assertThat(getter.getServerPort(request)).isNull();
   }
 
+  @Test
+  void resolvedHandlingNodeIsTheNetworkPeer() throws UnknownHostException {
+    SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
+    InetSocketAddress peer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 11211);
+    request.setHandlingNode(memcachedNode(peer));
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isSameAs(peer);
+  }
+
+  @Test
+  void unresolvedHandlingNodeIsNotResolved() {
+    SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
+    InetSocketAddress unresolved = node("unresolved.example", 11211);
+    request.setHandlingNode(memcachedNode(unresolved));
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isSameAs(unresolved);
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+  }
+
+  @Test
+  void severalHandlingNodesHaveNoNetworkPeer() {
+    SpymemcachedRequest request =
+        request(asList(node("one.example", 11211), node("two.example", 11212)));
+    request.setHandlingNode(memcachedNode("one.example", 11211));
+    request.setHandlingNode(memcachedNode("two.example", 11212));
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
+  }
+
   private static SpymemcachedRequest request(List<InetSocketAddress> nodes) {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedServerTargets.capture(connection, nodes);
@@ -71,8 +103,12 @@ class SpymemcachedAttributesGetterTest {
   }
 
   private static MemcachedNode memcachedNode(String host, int port) {
+    return memcachedNode(node(host, port));
+  }
+
+  private static MemcachedNode memcachedNode(InetSocketAddress address) {
     MemcachedNode node = mock(MemcachedNode.class);
-    when(node.getSocketAddress()).thenReturn(node(host, port));
+    when(node.getSocketAddress()).thenReturn(address);
     return node;
   }
 
