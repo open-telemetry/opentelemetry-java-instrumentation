@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -27,6 +29,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -68,14 +72,16 @@ class LettuceReactiveClientTest {
 
   private static RedisReactiveCommands<String, String> reactiveCommands;
   private static String host;
+  private static String ip;
   private static int port;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws UnknownHostException {
     redisServer.start();
     cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     String embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
@@ -323,7 +329,9 @@ class LettuceReactiveClientTest {
                                   equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
                                   equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port))));
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, port))));
         });
   }
 

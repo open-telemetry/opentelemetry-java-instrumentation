@@ -14,6 +14,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -39,6 +41,8 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
@@ -78,6 +82,7 @@ class LettuceSyncClientTest {
           .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
 
   private static String host;
+  private static String ip;
   private static int port;
   private static int incorrectPort;
   private static String dbUriNonExistent;
@@ -95,11 +100,12 @@ class LettuceSyncClientTest {
   private static RedisCommands<String, String> syncCommands;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws UnknownHostException {
     redisServer.start();
     cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
@@ -196,7 +202,9 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port))));
 
     assertDurationMetric(
         testing,
@@ -205,7 +213,9 @@ class LettuceSyncClientTest {
         DB_OPERATION_NAME,
         DB_NAMESPACE,
         SERVER_ADDRESS,
-        SERVER_PORT);
+        SERVER_PORT,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT);
   }
 
   @SuppressWarnings("unchecked")
@@ -277,7 +287,9 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port))));
   }
 
   @Test
@@ -296,7 +308,9 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port))));
   }
 
   @Test
@@ -315,7 +329,9 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port))));
   }
 
   @Test
@@ -337,7 +353,9 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port))));
   }
 
   @Test
@@ -357,7 +375,9 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "LPUSH"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port))));
   }
 
   @Test
@@ -377,7 +397,9 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "HMSET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port))));
   }
 
   @Test
@@ -399,7 +421,9 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "HGETALL"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port))));
   }
 
   @Test
@@ -439,7 +463,9 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "DEBUG"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, serverPort))));
+                            equalTo(SERVER_PORT, serverPort),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, serverPort))));
   }
 
   @Test
@@ -481,6 +507,8 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, shutdownServerPort))));
+                            equalTo(SERVER_PORT, shutdownServerPort),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, shutdownServerPort))));
   }
 }
