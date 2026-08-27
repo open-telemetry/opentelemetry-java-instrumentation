@@ -62,10 +62,13 @@ class ElasticsearchDbAttributesGetterTest {
   @ValueSource(
       strings = {
         "/_search",
+        "_search",
         "/test-index/_search?preference=local",
+        "test-index/_search?preference=local",
         "/_msearch",
         "/test-index/_msearch",
         "/_search/template",
+        "_search/template",
         "/test-index/_search/template",
         "/_msearch/template",
         "/test-index/_msearch/template",
@@ -74,7 +77,8 @@ class ElasticsearchDbAttributesGetterTest {
         "/_render/template",
         "/_render/template/private-template",
         "/test-index/_terms_enum",
-        "/test-index/_eql/search"
+        "/test-index/_eql/search",
+        "test-index/_eql/search"
       })
   void recognizesSearchPathWithoutEndpointDefinition(String endpoint) {
     RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);

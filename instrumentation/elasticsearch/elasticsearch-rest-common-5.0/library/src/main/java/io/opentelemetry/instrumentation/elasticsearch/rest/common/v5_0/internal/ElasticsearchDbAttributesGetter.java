@@ -86,11 +86,8 @@ final class ElasticsearchDbAttributesGetter
 
     int queryStart = endpoint.indexOf('?');
     String path = queryStart == -1 ? endpoint : endpoint.substring(0, queryStart);
-    if (!path.startsWith("/")) {
-      return false;
-    }
-
-    String[] segments = path.substring(1).split("/", -1);
+    int pathStart = path.startsWith("/") ? 1 : 0;
+    String[] segments = path.substring(pathStart).split("/", -1);
     for (String segment : segments) {
       if (segment.isEmpty()) {
         return false;
