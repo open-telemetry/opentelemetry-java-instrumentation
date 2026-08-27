@@ -47,11 +47,13 @@ public class HttpProtocolVersion {
   }
 
   public static void set(ClientHttpResponse response, HttpVersion version) {
-    String value =
-        version.minorVersion() == 0
-            ? Integer.toString(version.majorVersion())
-            : version.majorVersion() + "." + version.minorVersion();
-    PROTOCOL_VERSION.set(response, value);
+    PROTOCOL_VERSION.set(response, format(version));
+  }
+
+  static String format(HttpVersion version) {
+    return version.minorVersion() == 0
+        ? Integer.toString(version.majorVersion())
+        : version.majorVersion() + "." + version.minorVersion();
   }
 
   private HttpProtocolVersion() {}
