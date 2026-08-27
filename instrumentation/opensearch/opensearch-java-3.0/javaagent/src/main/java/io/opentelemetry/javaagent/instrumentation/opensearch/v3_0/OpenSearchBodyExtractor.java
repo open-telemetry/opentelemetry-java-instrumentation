@@ -23,6 +23,7 @@ import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 class OpenSearchBodyExtractor {
 
   private static final Logger logger = Logger.getLogger(OpenSearchBodyExtractor.class.getName());
+  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024;
   private static final String QUERY_SEPARATOR = ";";
   private static final JsonFactory JSON_FACTORY = new JsonFactory();
 
@@ -62,7 +63,7 @@ class OpenSearchBodyExtractor {
     }
 
     String result = baos.toString(UTF_8).trim();
-    return result.isEmpty() ? null : result;
+    return result.isEmpty() ? null : truncate(result);
   }
 
   @Nullable
@@ -92,7 +93,13 @@ class OpenSearchBodyExtractor {
       }
     }
 
-    return result.length() == 0 ? null : result.toString();
+    return result.length() == 0 ? null : truncate(result.toString());
+  }
+
+  private static String truncate(String value) {
+    return value.length() <= MAX_QUERY_BODY_LENGTH
+        ? value
+        : value.substring(0, MAX_QUERY_BODY_LENGTH);
   }
 
   private OpenSearchBodyExtractor() {}
