@@ -20,7 +20,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import javax.net.ssl.SSLContext;
@@ -144,11 +143,10 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private void assertErrorTypeSpan() {
     List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            withServer(
-                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "GET"),
-                equalTo(maybeStable(DB_STATEMENT), "GET /invalid-index/_doc/1")));
+        withServer(
+            equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+            equalTo(maybeStable(DB_OPERATION), "GET"),
+            equalTo(maybeStable(DB_STATEMENT), "GET /invalid-index/_doc/1"));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "404"));
     }
