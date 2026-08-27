@@ -110,7 +110,7 @@ class CouchbaseConnectionStringsTest {
         .isNull();
   }
 
-  // Shape exposed by drivers 2.0-2.3 and 2.7.
+  // Shape exposed by drivers up to 2.5.6, which expose only hosts.
   public static class SeedListConnectionString {
 
     private final String scheme;
@@ -130,7 +130,8 @@ class CouchbaseConnectionStringsTest {
     }
   }
 
-  // Shape exposed by drivers 2.4-2.6, which drops unresolved seeds from hosts.
+  // Shape exposed by drivers 2.5.7 and later, which drop unresolved seeds from hosts and keep the
+  // configured seeds in allHosts.
   public static class ResolvedSeedListConnectionString extends SeedListConnectionString {
 
     private final List<?> allHosts;
