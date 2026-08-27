@@ -13,10 +13,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.javadsl.model.HttpResponse;
 
@@ -51,9 +55,32 @@ class ParsingErrorHandlerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Return Object response) {
-      PekkoHttpParsingErrorSingletons.emitSpan((HttpResponse) response);
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object[] onEnter() {
+      Context context = PekkoHttpParsingErrorSingletons.startSpan();
+      if (context == null) {
+        return null;
+      }
+      // the array carries the context and the scope from the enter advice to the exit advice
+      return new Object[] {context, context.makeCurrent()};
+    }
+
+    // the return value is written back because the response customizer may have added headers, and
+    // the typing is dynamic because a scala implementation declares the more specific scaladsl
+    // HttpResponse, which the javadsl one that is returned here is assignable to at runtime
+    @Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static Object onExit(
+        @Advice.Return Object response,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable Object[] enter) {
+      if (enter == null) {
+        return response;
+      }
+      ((Scope) enter[1]).close();
+      return PekkoHttpParsingErrorSingletons.endSpan(
+          (Context) enter[0], (HttpResponse) response, throwable);
     }
   }
 }
