@@ -86,7 +86,8 @@ class JdbcConnectionUrlParserTest {
       strings = {
         "jdbc:mariadb:failover://user:p,a/ss@h1:3306,h2:3306/db",
         "jdbc:mariadb:failover://user:p,a?ss@h1:3306,h2:3306/db",
-        "jdbc:mariadb:failover://user:p,a#ss@h1:3306,h2:3306/db"
+        "jdbc:mariadb:failover://user:p,a#ss@h1:3306,h2:3306/db",
+        "jdbc:mariadb:failover://user:123,a?x=y@h1:3306,h2:3306/db"
       })
   void ambiguousMariaDbCredentialsDoNotBecomeAConfiguredTarget(String url) {
     DbInfo dbInfo = parse(url, null);

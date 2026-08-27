@@ -294,11 +294,17 @@ public final class UrlParsingUtils {
     if (!hasValidHostPorts(authority)) {
       return null;
     }
+    String suffix = url.substring(credentialsEnd + 1, parameterEnd);
+    int suffixAuthorityEnd = indexOfAny(suffix, '/', '?', '#');
+    String suffixAuthority =
+        suffixAuthorityEnd < 0 ? suffix : suffix.substring(0, suffixAuthorityEnd);
+    if (hasValidHostPorts(suffixAuthority)) {
+      return null;
+    }
     if (authority.indexOf(',') >= 0) {
       return authority;
     }
 
-    String suffix = url.substring(credentialsEnd + 1, parameterEnd);
     return suffix.indexOf('/') < 0 && suffix.indexOf(',') < 0 ? authority : null;
   }
 
