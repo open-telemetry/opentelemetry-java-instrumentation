@@ -50,7 +50,6 @@ class CouchbaseConnectionStringsTest {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
-                "COUCHBASE",
                 asList(
                     InetSocketAddress.createUnresolved("one.example", 0),
                     InetSocketAddress.createUnresolved("two.example", 11210))));
@@ -64,7 +63,6 @@ class CouchbaseConnectionStringsTest {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(
             new ResolvedSeedListConnectionString(
-                "COUCHBASE",
                 asList(
                     InetSocketAddress.createUnresolved("resolvable.example", 0),
                     InetSocketAddress.createUnresolved("unresolvable.example", 0)),
@@ -78,7 +76,7 @@ class CouchbaseConnectionStringsTest {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
-                "COUCHBASES", asList(new Seed("2001:db8::1", 11207), new Seed("node.example", 0))));
+                asList(new Seed("2001:db8::1", 11207), new Seed("node.example", 0))));
 
     assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:11207,node.example");
   }
@@ -87,14 +85,12 @@ class CouchbaseConnectionStringsTest {
   void loneSeedNamesItselfWhateverTheShape() {
     assertThat(
             CouchbaseConnectionStrings.target(
-                    new SeedListConnectionString(
-                        "COUCHBASE", singletonList(new Seed("cluster.example", 0))))
+                    new SeedListConnectionString(singletonList(new Seed("cluster.example", 0))))
                 .getAddress())
         .isEqualTo("cluster.example");
     assertThat(
             CouchbaseConnectionStrings.target(
                     new SeedListConnectionString(
-                        "COUCHBASE",
                         singletonList(InetSocketAddress.createUnresolved("[2001:db8::1]", 11210))))
                 .getAddress())
         .isEqualTo("2001:db8::1");
@@ -104,25 +100,17 @@ class CouchbaseConnectionStringsTest {
   void anUnknownShapeHasNoTarget() {
     assertThat(CouchbaseConnectionStrings.target(null)).isNull();
     assertThat(CouchbaseConnectionStrings.target("couchbase://node.example")).isNull();
-    assertThat(
-            CouchbaseConnectionStrings.target(
-                new SeedListConnectionString("COUCHBASE", emptyList())))
+    assertThat(CouchbaseConnectionStrings.target(new SeedListConnectionString(emptyList())))
         .isNull();
   }
 
   // Shape exposed by drivers up to 2.5.6, which expose only hosts.
   public static class SeedListConnectionString {
 
-    private final String scheme;
     private final List<?> hosts;
 
-    SeedListConnectionString(String scheme, List<?> hosts) {
-      this.scheme = scheme;
+    SeedListConnectionString(List<?> hosts) {
       this.hosts = hosts;
-    }
-
-    public String scheme() {
-      return scheme;
     }
 
     public List<?> hosts() {
@@ -136,8 +124,8 @@ class CouchbaseConnectionStringsTest {
 
     private final List<?> allHosts;
 
-    ResolvedSeedListConnectionString(String scheme, List<?> allHosts, List<?> resolvedHosts) {
-      super(scheme, resolvedHosts);
+    ResolvedSeedListConnectionString(List<?> allHosts, List<?> resolvedHosts) {
+      super(resolvedHosts);
       this.allHosts = allHosts;
     }
 
