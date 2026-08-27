@@ -33,9 +33,7 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
             // java.util.zip.ZipException: Invalid CEN header (invalid zip64 extra data field size)
             + " -Djdk.util.zip.disableZip64ExtraFieldValidation=true");
 
-    // TODO (heya) update smoke tests to run using http/protobuf
-    // in the meantime, force smoke tests to use grpc protocol for all exporters
-    environment.put("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc");
+    environment.put("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf");
 
     environment.put("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1");
     environment.put("OTEL_BSP_SCHEDULE_DELAY", "10ms");
