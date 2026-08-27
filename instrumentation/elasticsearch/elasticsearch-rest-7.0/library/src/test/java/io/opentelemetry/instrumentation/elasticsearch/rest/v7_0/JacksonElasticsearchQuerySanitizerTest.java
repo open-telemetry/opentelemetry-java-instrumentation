@@ -50,6 +50,18 @@ class JacksonElasticsearchQuerySanitizerTest {
         .isNull();
   }
 
+  @Test
+  void limitsSanitizedQueryLength() {
+    String exactLimit =
+        objectWithEmptyArrayField(JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 7);
+    String overLimit =
+        objectWithEmptyArrayField(JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 6);
+
+    assertThat(sanitizer.apply(exactLimit)).isEqualTo(exactLimit);
+    assertThat(sanitizer.apply(overLimit))
+        .isEqualTo(overLimit.substring(0, JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH));
+  }
+
   private static String nestedArray(int depth, String innermost) {
     StringBuilder result = new StringBuilder();
     for (int i = 0; i < depth; i++) {
@@ -60,5 +72,14 @@ class JacksonElasticsearchQuerySanitizerTest {
       result.append(']');
     }
     return result.toString();
+  }
+
+  private static String objectWithEmptyArrayField(int fieldNameLength) {
+    StringBuilder body = new StringBuilder(fieldNameLength + 7);
+    body.append("{\"");
+    for (int i = 0; i < fieldNameLength; i++) {
+      body.append('a');
+    }
+    return body.append("\":[]}").toString();
   }
 }

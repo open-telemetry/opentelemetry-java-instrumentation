@@ -131,6 +131,18 @@ class JacksonElasticsearchQuerySanitizerTest {
   }
 
   @Test
+  void limitsSanitizedQueryLength() {
+    String exactLimit =
+        objectWithEmptyArrayField(JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 7);
+    String overLimit =
+        objectWithEmptyArrayField(JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 6);
+
+    assertThat(sanitize(exactLimit)).isEqualTo(exactLimit);
+    assertThat(sanitize(overLimit))
+        .isEqualTo(overLimit.substring(0, JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH));
+  }
+
+  @Test
   void outputIsValidJsonThatKeepsKeysAndDropsEveryLiteral() throws IOException {
     // property-style check against a real parser rather than a hand-written expectation
     String body =
@@ -198,5 +210,14 @@ class JacksonElasticsearchQuerySanitizerTest {
       sb.append(']');
     }
     return sb.toString();
+  }
+
+  private static String objectWithEmptyArrayField(int fieldNameLength) {
+    StringBuilder body = new StringBuilder(fieldNameLength + 7);
+    body.append("{\"");
+    for (int i = 0; i < fieldNameLength; i++) {
+      body.append('a');
+    }
+    return body.append("\":[]}").toString();
   }
 }

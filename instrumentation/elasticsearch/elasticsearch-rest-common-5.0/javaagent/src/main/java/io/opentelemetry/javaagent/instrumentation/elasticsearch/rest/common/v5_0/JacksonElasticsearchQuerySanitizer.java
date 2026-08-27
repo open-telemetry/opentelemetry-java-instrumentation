@@ -26,11 +26,15 @@ import javax.annotation.Nullable;
  *
  * <p>When the body is not a valid JSON value or sequence of JSON values, this returns {@code null}
  * so that the caller drops the body rather than capturing it raw.
+ *
+ * <p>Sanitized output longer than 32,768 characters is truncated.
  */
 final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> {
 
   private static final String MASKED_VALUE = "?";
   private static final char QUERY_SEPARATOR = ';';
+
+  static final int MAX_QUERY_LENGTH = 32 * 1024;
 
   // Rejects a body nested more deeply than this. The parser and the generator each hold one nesting
   // context per level, so an absurdly deep body costs memory and time on the application's own
@@ -54,7 +58,7 @@ final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> 
   @Nullable
   public String apply(String body) {
     JsonFactory jsonFactory = JsonFactoryHolder.jsonFactory;
-    StringWriter out = new StringWriter(body.length());
+    StringWriter out = new StringWriter(Math.min(body.length(), MAX_QUERY_LENGTH));
     try (JsonParser parser = jsonFactory.createParser(body)) {
       boolean empty = true;
       while (parser.nextToken() != null) {
@@ -79,7 +83,10 @@ final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> 
       // MAX_NESTING_DEPTH. Either way it must not be captured raw, so drop it instead.
       return null;
     }
-    return out.toString();
+    String sanitized = out.toString();
+    return sanitized.length() <= MAX_QUERY_LENGTH
+        ? sanitized
+        : sanitized.substring(0, MAX_QUERY_LENGTH);
   }
 
   /**
