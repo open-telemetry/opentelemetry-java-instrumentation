@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -42,11 +41,7 @@ class DefaultClientResponseInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This ClientResponse clientResponse,
         @Advice.Argument(0) ClientHttpResponse clientHttpResponse) {
-      String protocolVersion =
-          VirtualField.find(ClientHttpResponse.class, String.class).get(clientHttpResponse);
-      if (protocolVersion != null) {
-        VirtualField.find(ClientResponse.class, String.class).set(clientResponse, protocolVersion);
-      }
+      HttpProtocolVersion.copy(clientHttpResponse, clientResponse);
     }
   }
 }
