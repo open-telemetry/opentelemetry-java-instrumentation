@@ -15,6 +15,7 @@ import akka.stream.scaladsl.Tcp.IncomingConnection;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -36,11 +37,12 @@ class HttpServerAttributesInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PrepareAttributesAdvice {
+
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Argument(1) IncomingConnection connection,
-        @Advice.Return(readOnly = false) Attributes attributes) {
-      attributes = AkkaFlowWrapper.withRemoteAddress(attributes, connection.remoteAddress());
+    public static Attributes onExit(
+        @Advice.Argument(1) IncomingConnection connection, @Advice.Return Attributes attributes) {
+      return AkkaFlowWrapper.withRemoteAddress(attributes, connection.remoteAddress());
     }
   }
 }

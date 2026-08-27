@@ -56,11 +56,12 @@ class HttpExtServerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PrepareAttributesAdvice {
+
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Argument(1) InetSocketAddress remoteAddress,
-        @Advice.Return(readOnly = false) Attributes attributes) {
-      attributes = AkkaFlowWrapper.withRemoteAddress(attributes, remoteAddress);
+    public static Attributes onExit(
+        @Advice.Argument(1) InetSocketAddress remoteAddress, @Advice.Return Attributes attributes) {
+      return AkkaFlowWrapper.withRemoteAddress(attributes, remoteAddress);
     }
   }
 }
