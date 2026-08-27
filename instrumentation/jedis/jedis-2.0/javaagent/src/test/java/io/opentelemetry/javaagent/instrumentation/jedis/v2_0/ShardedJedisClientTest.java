@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV6;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -29,8 +30,8 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.Inet4Address;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
@@ -57,15 +58,12 @@ class ShardedJedisClientTest {
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
   private static ShardedJedis sharded;
+  private static Jedis shard;
 
   private static String configuredTarget;
 
-  private static String shardHost;
-  private static String shardIp;
-  private static int shardPort;
-
   @BeforeAll
-  static void setup() throws UnknownHostException {
+  static void setup() {
     firstServer.start();
     cleanup.deferAfterAll(firstServer::stop);
     secondServer.start();
@@ -88,10 +86,7 @@ class ShardedJedisClientTest {
     sharded = new ShardedJedis(shards);
     cleanup.deferAfterAll(sharded::disconnect);
 
-    Jedis shard = sharded.getShard("foo");
-    shardHost = shard.getClient().getHost();
-    shardIp = InetAddress.getByName(shardHost).getHostAddress();
-    shardPort = shard.getClient().getPort();
+    shard = sharded.getShard("foo");
   }
 
   @Test
@@ -107,22 +102,18 @@ class ShardedJedisClientTest {
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            attributes("SET", "SET foo ?", shardHost, shardPort))),
+                        .hasAttributesSatisfyingExactly(attributes("SET", "SET foo ?", shard))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "GET " + configuredTarget : "GET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            attributes("GET", "GET foo", shardHost, shardPort))));
+                        .hasAttributesSatisfyingExactly(attributes("GET", "GET foo", shard))));
   }
 
   @Test
   void commandFromAllShardsUsesConfiguredTarget() {
     Jedis shard = sharded.getAllShards().iterator().next();
-    String selectedHost = shard.getClient().getHost();
-    int selectedPort = shard.getClient().getPort();
 
     shard.set("all-shards", "bar");
 
@@ -133,11 +124,15 @@ class ShardedJedisClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            attributes("SET", "SET all-shards ?", selectedHost, selectedPort))));
+                            attributes("SET", "SET all-shards ?", shard))));
   }
 
   private static List<AttributeAssertion> attributes(
-      String operation, String queryText, String selectedHost, int selectedPort) {
+      String operation, String queryText, Jedis selectedShard) {
+    String selectedHost = selectedShard.getClient().getHost();
+    int selectedPort = selectedShard.getClient().getPort();
+    InetSocketAddress peerAddress =
+        (InetSocketAddress) selectedShard.getClient().getSocket().getRemoteSocketAddress();
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -152,9 +147,14 @@ class ShardedJedisClientTest {
       assertions.add(equalTo(SERVER_ADDRESS, selectedHost));
       assertions.add(equalTo(SERVER_PORT, selectedPort));
     }
-    assertions.add(equalTo(NETWORK_PEER_ADDRESS, shardIp));
-    assertions.add(equalTo(NETWORK_PEER_PORT, shardPort));
-    assertions.add(equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null));
+    assertions.add(equalTo(NETWORK_PEER_ADDRESS, peerAddress.getAddress().getHostAddress()));
+    assertions.add(equalTo(NETWORK_PEER_PORT, peerAddress.getPort()));
+    assertions.add(
+        equalTo(
+            NETWORK_TYPE,
+            emitOldDatabaseSemconv()
+                ? (peerAddress.getAddress() instanceof Inet4Address ? IPV4 : IPV6)
+                : null));
     return assertions;
   }
 }
