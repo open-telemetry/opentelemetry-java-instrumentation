@@ -93,7 +93,7 @@ abstract class AbstractHttpServerInstrumentationTest
       .execute(
         AggregatedHttpRequest.of(
           HttpMethod.GET,
-          h1Address.resolve(ServerEndpoint.SUCCESS.rawPath()).toString
+          resolveAddress(ServerEndpoint.SUCCESS, protocolPrefix)
         )
       )
       .aggregate
