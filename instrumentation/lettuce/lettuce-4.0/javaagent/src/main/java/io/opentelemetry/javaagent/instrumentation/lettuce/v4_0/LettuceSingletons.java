@@ -50,6 +50,12 @@ public class LettuceSingletons {
   public static final VirtualField<RedisChannelHandler<?, ?>, InetSocketAddress>
       CONNECTION_ADDRESS = VirtualField.find(RedisChannelHandler.class, InetSocketAddress.class);
 
+  static final VirtualField<RedisChannelHandler<?, ?>, LettucePeerAddress> CONNECTION_PEER =
+      VirtualField.find(RedisChannelHandler.class, LettucePeerAddress.class);
+
+  static final VirtualField<RedisCommand<?, ?, ?>, LettucePeerAddress> COMMAND_PEER =
+      VirtualField.find(RedisCommand.class, LettucePeerAddress.class);
+
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
       VirtualField.find(RedisCommand.class, InetSocketAddress.class);
 
@@ -144,6 +150,7 @@ public class LettuceSingletons {
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
+    COMMAND_PEER.set(command, connectionPeer(connection));
     COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));
     COMMAND_TARGET.set(command, serverTarget(connection));
   }
@@ -155,8 +162,27 @@ public class LettuceSingletons {
         : null;
   }
 
-  public static void clearConnectionAddress(RedisChannelHandler<?, ?> connection) {
-    CONNECTION_ADDRESS.set(connection, null);
+  @Nullable
+  static InetSocketAddress peerAddress(StatefulConnection<?, ?> connection) {
+    LettucePeerAddress peer = connectionPeer(connection);
+    return peer != null ? peer.getAddress() : null;
+  }
+
+  @Nullable
+  private static LettucePeerAddress connectionPeer(StatefulConnection<?, ?> connection) {
+    return connection instanceof RedisChannelHandler
+        ? CONNECTION_PEER.get((RedisChannelHandler<?, ?>) connection)
+        : null;
+  }
+
+  @Nullable
+  static InetSocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
+    LettucePeerAddress peer = COMMAND_PEER.get(command);
+    return peer != null ? peer.getAddress() : null;
+  }
+
+  static void clearConnectionPeer(RedisChannelHandler<?, ?> connection) {
+    CONNECTION_PEER.set(connection, null);
   }
 
   @Nullable
