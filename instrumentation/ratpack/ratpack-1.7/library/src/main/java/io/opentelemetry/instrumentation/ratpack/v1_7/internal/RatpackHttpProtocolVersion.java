@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ratpack.v1_7;
+package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -17,7 +17,11 @@ import java.lang.ref.WeakReference;
 import javax.annotation.Nullable;
 import ratpack.http.client.RequestSpec;
 
-class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapter {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapter {
 
   private static final String HANDLER_NAME = RatpackHttpProtocolVersion.class.getName();
   private static final String REDIRECT_HANDLER_NAME = "redirect";
@@ -29,7 +33,7 @@ class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapter {
   private final Channel channel;
   @Nullable private volatile String protocolVersion;
 
-  static void attach(RequestSpec request, Channel channel) {
+  public static void attach(RequestSpec request, Channel channel) {
     RatpackHttpProtocolVersion previous = REQUEST_PROTOCOL_VERSION.get(request);
     if (previous != null) {
       previous.clear();
@@ -49,12 +53,12 @@ class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapter {
   }
 
   @Nullable
-  static String get(RequestSpec request) {
+  public static String get(RequestSpec request) {
     RatpackHttpProtocolVersion handler = REQUEST_PROTOCOL_VERSION.get(request);
     return handler != null ? handler.protocolVersion : null;
   }
 
-  static void clearRequest(RequestSpec request) {
+  public static void clearRequest(RequestSpec request) {
     RatpackHttpProtocolVersion handler = REQUEST_PROTOCOL_VERSION.get(request);
     if (handler != null) {
       handler.clear();

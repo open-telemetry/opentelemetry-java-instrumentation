@@ -16,6 +16,7 @@ import static org.mockito.Mockito.mock;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackHttpProtocolVersion;
 import org.junit.jupiter.api.Test;
 import ratpack.http.client.RequestSpec;
 
