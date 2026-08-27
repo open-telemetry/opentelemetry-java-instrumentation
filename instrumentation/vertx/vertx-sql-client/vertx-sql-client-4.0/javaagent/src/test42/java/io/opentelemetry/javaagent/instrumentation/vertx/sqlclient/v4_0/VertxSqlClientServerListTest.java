@@ -26,12 +26,14 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlClient;
+import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -101,6 +103,20 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
+  void preparedStatementServerListIsReportedAsOneTarget()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    PgConnectOptions first = connectOptions().setPort(port);
+    PgConnectOptions second = connectOptions().setPort(port + 1);
+    Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
+    cleanup.deferCleanup(pool::close);
+    String query = "select cast($1 as integer)";
+
+    executePreparedStatement(pool, query, Tuple.of(1));
+
+    assertServerListTarget(host + ":" + port + "," + host + ":" + (port + 1), query);
+  }
+
+  @Test
   void nullServerDoesNotPoisonLaterPoolTarget()
       throws InterruptedException, ExecutionException, TimeoutException {
     PgConnectOptions first = connectOptions().setPort(port);
@@ -121,7 +137,10 @@ class VertxSqlClientServerListTest {
       throws InterruptedException, ExecutionException, TimeoutException {
     cleanup.deferCleanup(client::close);
     select(client);
+    assertServerListTarget(serverAddress, "select ?");
+  }
 
+  private static void assertServerListTarget(String serverAddress, String statement) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -133,7 +152,7 @@ class VertxSqlClientServerListTest {
                                 emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), "select ?"),
+                            equalTo(maybeStable(DB_STATEMENT), statement),
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
                             equalTo(
@@ -261,6 +280,28 @@ class VertxSqlClientServerListTest {
   private static void select(SqlClient client)
       throws InterruptedException, ExecutionException, TimeoutException {
     client.query("select 1").execute().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+  }
+
+  private static void executePreparedStatement(Pool pool, String query, Tuple tuple)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    pool.withConnection(
+            connection ->
+                connection
+                    .prepare(query)
+                    .compose(
+                        statement ->
+                            statement
+                                .query()
+                                .execute(tuple)
+                                .compose(
+                                    rows -> statement.close().map(rows),
+                                    error ->
+                                        statement
+                                            .close()
+                                            .compose(ignored -> Future.failedFuture(error)))))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
   }
 
   private static PoolOptions poolOptions() {

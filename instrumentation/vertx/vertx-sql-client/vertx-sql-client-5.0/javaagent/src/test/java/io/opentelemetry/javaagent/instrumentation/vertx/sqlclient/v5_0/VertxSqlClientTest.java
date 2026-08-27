@@ -150,6 +150,28 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testExplicitPreparedStatementWithServerListReportsTheWholeConfiguredTarget()
+      throws Exception {
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
+    Pool listPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(asList(first, second))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(listPool::close);
+    String query = "select * from test where id = $1";
+
+    executePreparedStatement(listPool, query, Tuple.of(1))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    testing.waitAndAssertTraces(trace -> assertServerGroup(trace, port + 1, query));
+  }
+
+  @Test
   void testOneBuilderGivesEachClientItsOwnTarget() throws Exception {
     PgConnectOptions first = connectOptions();
     ClientBuilder<Pool> builder =
@@ -208,6 +230,10 @@ class VertxSqlClientTest {
   }
 
   private static void assertServerGroup(TraceAssert trace, int secondPort) {
+    assertServerGroup(trace, secondPort, "select * from test");
+  }
+
+  private static void assertServerGroup(TraceAssert trace, int secondPort, String statement) {
     trace.hasSpansSatisfyingExactly(
         span ->
             span.hasKind(SpanKind.CLIENT)
@@ -216,7 +242,7 @@ class VertxSqlClientTest {
                         maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
                     equalTo(maybeStable(DB_NAME), DB),
                     equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                    equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                    equalTo(maybeStable(DB_STATEMENT), statement),
                     equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
                     equalTo(
                         maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -538,11 +564,23 @@ class VertxSqlClientTest {
     return executePreparedStatement(query, tuple, PreparedStatement::query);
   }
 
+  private static Future<?> executePreparedStatement(Pool targetPool, String query, Tuple tuple) {
+    return executePreparedStatement(targetPool, query, tuple, PreparedStatement::query);
+  }
+
   private static Future<?> executePreparedStatement(
       String query,
       Tuple tuple,
       Function<PreparedStatement, PreparedQuery<?>> preparedQueryFactory) {
-    return pool.withConnection(
+    return executePreparedStatement(pool, query, tuple, preparedQueryFactory);
+  }
+
+  private static Future<?> executePreparedStatement(
+      Pool targetPool,
+      String query,
+      Tuple tuple,
+      Function<PreparedStatement, PreparedQuery<?>> preparedQueryFactory) {
+    return targetPool.withConnection(
         connection ->
             connection
                 .prepare(query)
