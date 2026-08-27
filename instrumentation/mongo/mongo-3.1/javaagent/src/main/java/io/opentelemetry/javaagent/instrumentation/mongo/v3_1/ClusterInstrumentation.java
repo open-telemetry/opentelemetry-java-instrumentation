@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ClusterSettings;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoClusterSettings;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoClusterTargets;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -41,8 +42,12 @@ final class ClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void captureConfiguredTarget(
         @Advice.Argument(0) ClusterId clusterId, @Advice.Argument(1) ClusterSettings settings) {
-      // drivers covered by this module resolve SRV hosts before constructing the cluster
-      MongoClusterTargets.register(clusterId, MongoServerTarget.seeds(settings.getHosts()));
+      // SRV settings include a placeholder seed that the client never contacts
+      MongoServerTarget target = MongoServerTarget.srvHost(MongoClusterSettings.srvHost(settings));
+      if (target == null) {
+        target = MongoServerTarget.seeds(settings.getHosts());
+      }
+      MongoClusterTargets.register(clusterId, target);
     }
   }
 }
