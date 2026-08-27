@@ -269,12 +269,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     SdkRequest modifiedRequest =
-        SqsAccess.modifyRequest(
-            request,
-            otelContext,
-            useXrayPropagator,
-            messagingPropagator,
-            messageCreateSpansEnabled);
+        SqsAccess.modifyRequest(request, otelContext, useXrayPropagator, messagingPropagator);
     if (modifiedRequest != null) {
       return modifiedRequest;
     }

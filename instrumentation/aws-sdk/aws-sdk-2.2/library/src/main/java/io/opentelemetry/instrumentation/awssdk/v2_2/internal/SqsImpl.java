@@ -164,8 +164,7 @@ public final class SqsImpl {
       SdkRequest request,
       io.opentelemetry.context.Context otelContext,
       boolean useXrayPropagator,
-      TextMapPropagator messagingPropagator,
-      boolean messageCreateSpansEnabled) {
+      TextMapPropagator messagingPropagator) {
     if (request instanceof ReceiveMessageRequest) {
       return modifyReceiveMessageRequest(
           (ReceiveMessageRequest) request, useXrayPropagator, messagingPropagator);
@@ -175,14 +174,12 @@ public final class SqsImpl {
             (SendMessageRequest) request, otelContext, messagingPropagator);
       } else if (request instanceof SendMessageBatchRequest) {
         if (emitStableMessagingSemconv()) {
-          return messageCreateSpansEnabled
-              ? request
-              : injectIntoSendMessageBatchRequest(
-                  (SendMessageBatchRequest) request,
-                  otelContext,
-                  messagingPropagator,
-                  true,
-                  useXrayPropagator);
+          return injectIntoSendMessageBatchRequest(
+              (SendMessageBatchRequest) request,
+              otelContext,
+              messagingPropagator,
+              true,
+              useXrayPropagator);
         }
         return injectIntoSendMessageBatchRequest(
             (SendMessageBatchRequest) request,
