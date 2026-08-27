@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -14,6 +17,7 @@ import java.util.TreeSet;
 import javax.annotation.Nullable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.ipc.AbstractRpcClient;
 import org.apache.hadoop.hbase.zookeeper.ZKConfig;
 
 public class HbaseServerTarget {
@@ -48,6 +52,21 @@ public class HbaseServerTarget {
   private static final boolean SUPPORTS_ZK_CONFIG_FILE =
       hasHbaseConstant("HBASE_CONFIG_READ_ZOOKEEPER_CONFIG");
   private static final boolean USES_CONFIGURED_MASTER_PORT = usesConfiguredMasterPort();
+
+  public static void store(AbstractRpcClient client, Configuration configuration) {
+    if (!emitStableDatabaseSemconv()) {
+      return;
+    }
+    String serverTarget = from(configuration);
+    if (serverTarget != null) {
+      ServerTargetVirtualField.SERVER_TARGET.set(client, serverTarget);
+    }
+  }
+
+  @Nullable
+  public static String get(AbstractRpcClient client) {
+    return emitStableDatabaseSemconv() ? ServerTargetVirtualField.SERVER_TARGET.get(client) : null;
+  }
 
   @Nullable
   public static String from(Configuration configuration) {
@@ -303,6 +322,11 @@ public class HbaseServerTarget {
     } catch (ReflectiveOperationException | SecurityException | LinkageError ignored) {
       return false;
     }
+  }
+
+  private static class ServerTargetVirtualField {
+    private static final VirtualField<AbstractRpcClient, String> SERVER_TARGET =
+        VirtualField.find(AbstractRpcClient.class, String.class);
   }
 
   private HbaseServerTarget() {}

@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -65,10 +64,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This AbstractRpcClient<?> client, @Advice.Argument(0) Configuration configuration) {
-      String serverTarget = HbaseServerTarget.from(configuration);
-      if (serverTarget != null) {
-        VirtualField.find(AbstractRpcClient.class, String.class).set(client, serverTarget);
-      }
+      HbaseServerTarget.store(client, configuration);
     }
   }
 
@@ -100,7 +96,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
         operation = batchMetadata.getOperation();
         batchSize = batchMetadata.getOperationBatchSize();
       }
-      String serverTarget = VirtualField.find(AbstractRpcClient.class, String.class).get(client);
+      String serverTarget = HbaseServerTarget.get(client);
       HbaseRequest request =
           HbaseRequest.create(
               operation, getTableName(), ticket.getName(), hostname, port, serverTarget, batchSize);
