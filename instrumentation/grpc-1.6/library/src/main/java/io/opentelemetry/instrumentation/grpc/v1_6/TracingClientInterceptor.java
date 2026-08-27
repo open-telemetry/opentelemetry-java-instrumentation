@@ -22,7 +22,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcTargetParser;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.ParsedTarget;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import javax.annotation.Nullable;
 
 final class TracingClientInterceptor implements ClientInterceptor {
 
@@ -49,22 +52,25 @@ final class TracingClientInterceptor implements ClientInterceptor {
   private final ContextPropagators propagators;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean emitMessageEvents;
+  @Nullable private final ParsedTarget parsedTarget;
 
   TracingClientInterceptor(
       Instrumenter<GrpcRequest, Status> instrumenter,
       ContextPropagators propagators,
       boolean captureExperimentalSpanAttributes,
-      boolean emitMessageEvents) {
+      boolean emitMessageEvents,
+      @Nullable String target) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.emitMessageEvents = emitMessageEvents;
+    this.parsedTarget = GrpcTargetParser.parse(target);
   }
 
   @Override
   public <REQUEST, RESPONSE> ClientCall<REQUEST, RESPONSE> interceptCall(
       MethodDescriptor<REQUEST, RESPONSE> method, CallOptions callOptions, Channel next) {
-    GrpcRequest request = new GrpcRequest(method, null, null, next.authority());
+    GrpcRequest request = GrpcRequest.createClientRequest(method, next.authority(), parsedTarget);
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
       return next.newCall(method, callOptions);

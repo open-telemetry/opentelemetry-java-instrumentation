@@ -28,6 +28,11 @@ class GrpcTest extends AbstractGrpcTest {
   }
 
   @Override
+  protected boolean targetCaptureSupported() {
+    return true;
+  }
+
+  @Override
   protected InstrumentationExtension testing() {
     return testing;
   }

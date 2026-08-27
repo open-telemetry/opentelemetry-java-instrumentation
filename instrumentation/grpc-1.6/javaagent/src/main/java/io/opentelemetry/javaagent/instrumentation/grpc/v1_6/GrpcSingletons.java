@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetryBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcConfig;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
@@ -33,7 +34,7 @@ public class GrpcSingletons {
   public static final VirtualField<ServerBuilder<?>, Boolean> SERVER_BUILDER_INSTRUMENTED =
       VirtualField.find(ServerBuilder.class, Boolean.class);
 
-  private static final ClientInterceptor clientInterceptor;
+  private static final GrpcTelemetry telemetry;
 
   private static final ServerInterceptor serverInterceptor;
 
@@ -61,14 +62,10 @@ public class GrpcSingletons {
     if (serverRequestMetadata != null) {
       telemetryBuilder.setServerRequestMetadata(serverRequestMetadata);
     }
-    GrpcTelemetry telemetry = telemetryBuilder.build();
+    GrpcTelemetry configuredTelemetry = telemetryBuilder.build();
 
-    clientInterceptor = telemetry.createClientInterceptor();
-    serverInterceptor = telemetry.createServerInterceptor();
-  }
-
-  public static ClientInterceptor clientInterceptor() {
-    return clientInterceptor;
+    telemetry = configuredTelemetry;
+    serverInterceptor = configuredTelemetry.createServerInterceptor();
   }
 
   public static ServerInterceptor serverInterceptor() {
@@ -78,6 +75,10 @@ public class GrpcSingletons {
   @Nullable
   public static Context.Storage storage() {
     return storageReference.get();
+  }
+
+  public static ClientInterceptor createClientInterceptor(@Nullable String target) {
+    return Internal.createClientInterceptor(telemetry, target);
   }
 
   public static Context.Storage setStorage(Context.Storage storage) {

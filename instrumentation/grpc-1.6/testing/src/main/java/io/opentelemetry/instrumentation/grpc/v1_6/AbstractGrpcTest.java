@@ -34,6 +34,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.google.common.util.concurrent.Futures;
@@ -104,6 +105,8 @@ public abstract class AbstractGrpcTest {
 
   protected abstract ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client);
 
+  protected abstract boolean targetCaptureSupported();
+
   protected abstract InstrumentationExtension testing();
 
   protected final Queue<ThrowingRunnable<?>> closer = new ConcurrentLinkedQueue<>();
@@ -113,6 +116,55 @@ public abstract class AbstractGrpcTest {
     while (!closer.isEmpty()) {
       closer.poll().run();
     }
+  }
+
+  @Test
+  void targetCapturedFromManagedChannelBuilder() throws Exception {
+    assumeTrue(targetCaptureSupported());
+
+    BindableService greeter =
+        new GreeterGrpc.GreeterImplBase() {
+          @Override
+          public void sayHello(
+              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
+            responseObserver.onNext(
+                Helloworld.Response.newBuilder().setMessage("Hello " + req.getName()).build());
+            responseObserver.onCompleted();
+          }
+        };
+
+    Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
+    ManagedChannelBuilder<?> channelBuilder =
+        ManagedChannelBuilder.forTarget("dns:///localhost:" + server.getPort())
+            .overrideAuthority("fallback.invalid:1234");
+    ManagedChannel channel = createChannel(configureClient(channelBuilder));
+
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
+    Helloworld.Response response =
+        testing()
+            .runWithSpan(
+                "parent",
+                () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
+
+    assertThat(response.getMessage()).isEqualTo("Hello test");
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttribute(SERVER_ADDRESS, "localhost")
+                            .hasAttribute(SERVER_PORT, (long) server.getPort()),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(1))));
   }
 
   @ParameterizedTest

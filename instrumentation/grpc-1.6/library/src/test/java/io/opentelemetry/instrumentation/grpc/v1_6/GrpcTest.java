@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -61,14 +62,19 @@ class GrpcTest extends AbstractGrpcTest {
 
   @Override
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
-    return client.intercept(
-        GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setClientRequestMetadata(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList(CLIENT_REQUEST_METADATA_KEY))
-                    .build())
-            .build()
-            .createClientInterceptor());
+    GrpcTelemetry.builder(testing.getOpenTelemetry())
+        .setClientRequestMetadata(
+            IncludeExclude.builder()
+                .setIncluded(singletonList(CLIENT_REQUEST_METADATA_KEY))
+                .build())
+        .build()
+        .addClientInterceptor(client);
+    return client;
+  }
+
+  @Override
+  protected boolean targetCaptureSupported() {
+    return testLatestDeps();
   }
 
   @Override
@@ -219,16 +225,14 @@ class GrpcTest extends AbstractGrpcTest {
             .build()
             .start();
 
-    ManagedChannel channel =
-        createChannel(
-            ManagedChannelBuilder.forAddress("localhost", server.getPort())
-                .intercept(
-                    GrpcTelemetry.builder(testing.getOpenTelemetry())
-                        .addAttributesExtractor(new CustomAttributesExtractor())
-                        .addClientAttributeExtractor(
-                            new CustomAttributesExtractorV2("clientSideValue"))
-                        .build()
-                        .createClientInterceptor()));
+    ManagedChannelBuilder<?> channelBuilder =
+        ManagedChannelBuilder.forAddress("localhost", server.getPort());
+    GrpcTelemetry.builder(testing.getOpenTelemetry())
+        .addAttributesExtractor(new CustomAttributesExtractor())
+        .addClientAttributeExtractor(new CustomAttributesExtractorV2("clientSideValue"))
+        .build()
+        .addClientInterceptor(channelBuilder);
+    ManagedChannel channel = createChannel(channelBuilder);
 
     closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
