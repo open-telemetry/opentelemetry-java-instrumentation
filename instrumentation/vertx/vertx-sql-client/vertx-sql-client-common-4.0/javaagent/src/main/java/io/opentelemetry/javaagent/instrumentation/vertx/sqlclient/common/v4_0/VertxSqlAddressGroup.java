@@ -24,6 +24,9 @@ public class VertxSqlAddressGroup {
     }
     StringBuilder address = new StringBuilder();
     for (SqlConnectOptions database : databases) {
+      if (database == null) {
+        return null;
+      }
       String host = database.getHost();
       if (host == null) {
         return null;

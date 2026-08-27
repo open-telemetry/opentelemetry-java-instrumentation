@@ -100,6 +100,23 @@ class VertxSqlClientServerListTest {
     assertServerListTarget(client, host + ":" + port + "," + host + ":" + (port + 1));
   }
 
+  @Test
+  void nullServerDoesNotPoisonLaterPoolTarget()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    PgConnectOptions first = connectOptions().setPort(port);
+    try {
+      Pool malformedPool = PgPool.pool(vertx, asList(first, null), poolOptions());
+      cleanup.deferCleanup(malformedPool::close);
+    } catch (RuntimeException ignored) {
+      // Vert.x may reject malformed server lists.
+    }
+
+    PgConnectOptions second = connectOptions().setPort(port + 1);
+    Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
+
+    assertServerListTarget(pool, host + ":" + port + "," + host + ":" + (port + 1));
+  }
+
   private static void assertServerListTarget(SqlClient client, String serverAddress)
       throws InterruptedException, ExecutionException, TimeoutException {
     cleanup.deferCleanup(client::close);
