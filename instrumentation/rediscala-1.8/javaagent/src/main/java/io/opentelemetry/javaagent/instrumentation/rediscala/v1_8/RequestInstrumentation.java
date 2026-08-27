@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.instrumenter;
@@ -82,7 +83,11 @@ class RequestInstrumentation implements TypeInstrumentation {
         if (action instanceof RedisClientActorLike) {
           endpoint = ServerEndpoint.create((RedisClientActorLike) action);
         }
-        RediscalaRequest request = RediscalaRequest.create(cmd, endpoint);
+        RediscalaRequest request =
+            RediscalaRequest.create(
+                cmd,
+                endpoint,
+                emitStableDatabaseSemconv() ? RediscalaServerTargets.get(action) : null);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
