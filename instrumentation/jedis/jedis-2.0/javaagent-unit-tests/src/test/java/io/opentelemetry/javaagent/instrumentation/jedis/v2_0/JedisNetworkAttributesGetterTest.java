@@ -15,6 +15,7 @@ import java.net.SocketAddress;
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
+import redis.clients.jedis.Transaction;
 
 class JedisNetworkAttributesGetterTest {
 
@@ -152,6 +153,19 @@ class JedisNetworkAttributesGetterTest {
 
     assertThat(new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(request, null))
         .isEqualTo(first);
+  }
+
+  @Test
+  void ordinaryCommandDoesNotBecomeTransactionFramingRequest() {
+    JedisRequest request =
+        requestWithPeer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379));
+    request.capturePeerAddress();
+    Transaction transaction = new Transaction();
+
+    JedisPipelineContext.captureTransactionFramingPeer(request);
+    JedisPipelineContext.exitTransactionFraming(transaction);
+
+    assertThat(JedisPipelineContext.getAndClearTransactionFramingRequest(transaction)).isNull();
   }
 
   @Test
