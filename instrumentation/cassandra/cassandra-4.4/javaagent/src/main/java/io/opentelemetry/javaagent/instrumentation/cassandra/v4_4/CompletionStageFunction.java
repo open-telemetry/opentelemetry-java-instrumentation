@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.cassandra.v4_4;
+package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
+import io.opentelemetry.instrumentation.cassandra.v4_4.CassandraTelemetry;
+import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraTelemetryUtil;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -26,9 +28,10 @@ public class CompletionStageFunction implements Function<Object, Object> {
     if (session == null) {
       return null;
     }
+    // This should cover ours and OT's TracingCqlSession
     if (session.getClass().getName().endsWith("cassandra4.TracingCqlSession")) {
       return session;
     }
-    return telemetry.wrap((CqlSession) session, programmaticContactPoints);
+    return CassandraTelemetryUtil.wrap(telemetry, (CqlSession) session, programmaticContactPoints);
   }
 }
