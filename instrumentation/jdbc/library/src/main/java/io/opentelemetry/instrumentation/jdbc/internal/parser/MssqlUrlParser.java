@@ -95,7 +95,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     StringBuilder group = new StringBuilder();
     appendPrimary(group, ctx, host, instanceName, portConfigured);
     group.append(',');
-    appendFailoverPartner(group, failoverPartner);
+    appendServerAddress(group, failoverPartner);
     ctx.serverAddressGroup(group.toString());
   }
 
@@ -109,7 +109,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
       UrlParsingUtils.appendHostPort(group, host, portConfigured ? ctx.port() : null);
       return;
     }
-    appendFailoverPartner(group, host + "\\" + instanceName);
+    appendServerAddress(group, host + "\\" + instanceName);
     if (portConfigured && ctx.port() != null) {
       group.append(':').append(ctx.port());
     }
@@ -158,10 +158,9 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     return UrlParsingUtils.extractHostPort(serverName).port() != null;
   }
 
-  private static void appendFailoverPartner(StringBuilder group, String failoverPartner) {
-    int instanceStart = failoverPartner.indexOf('\\');
-    String hostPort =
-        instanceStart < 0 ? failoverPartner : failoverPartner.substring(0, instanceStart);
+  private static void appendServerAddress(StringBuilder group, String serverAddress) {
+    int instanceStart = serverAddress.indexOf('\\');
+    String hostPort = instanceStart < 0 ? serverAddress : serverAddress.substring(0, instanceStart);
     boolean unbracketedIpv6 =
         !hostPort.startsWith("[") && hostPort.indexOf(':') != hostPort.lastIndexOf(':');
     if (unbracketedIpv6) {
@@ -170,7 +169,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
       group.append(hostPort);
     }
     if (instanceStart >= 0) {
-      group.append(failoverPartner, instanceStart, failoverPartner.length());
+      group.append(serverAddress, instanceStart, serverAddress.length());
     }
   }
 
