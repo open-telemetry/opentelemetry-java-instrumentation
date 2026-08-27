@@ -51,8 +51,9 @@ class ElasticsearchRestConfigTest {
           .isEqualTo(
               "The otel.instrumentation.elasticsearch.capture-search-query setting and the"
                   + " equivalent declarative configuration property are deprecated and will be"
-                  + " removed in 3.0. In 3.0, sanitized search query bodies are always captured and"
-                  + " there is no replacement setting.");
+                  + " removed in 3.0. In 3.0, search query bodies are always captured, and"
+                  + " sanitization remains separately configurable. This setting has no"
+                  + " replacement.");
     } finally {
       logger.removeHandler(handler);
     }

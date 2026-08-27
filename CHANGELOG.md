@@ -16,9 +16,9 @@
 ### 🚫 Deprecations
 
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query` for removal in 3.0 with no
-  replacement. Elasticsearch REST instrumentation will always capture sanitized search query bodies
-  in 3.0. The property keeps its existing behavior outside v3-preview in 2.x, and v3-preview ignores
-  it.
+  replacement. Elasticsearch REST javaagent instrumentation will always capture search query bodies
+  in 3.0. Sanitization remains enabled by default and can be disabled separately. The property keeps
+  its existing behavior outside v3-preview in 2.x, and v3-preview ignores it.
   ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
 
 ## Version 2.31.1 (2026-08-23)

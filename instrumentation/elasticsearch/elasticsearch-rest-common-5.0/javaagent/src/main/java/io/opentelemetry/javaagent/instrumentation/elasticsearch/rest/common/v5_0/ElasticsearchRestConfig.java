@@ -16,9 +16,8 @@ final class ElasticsearchRestConfig {
       "otel.instrumentation.elasticsearch.capture-search-query";
 
   static boolean captureSearchQuery(DeclarativeConfigProperties config, boolean v3Preview) {
-    // This stable property must keep working through 2.x, but v3-preview reproduces 3.0 behavior
-    // and
-    // therefore must not read or warn about a property that 3.0 will not recognize.
+    // This stable property must keep working through 2.x. V3-preview reproduces the 3.0 capture
+    // behavior and must not read or warn about a property that 3.0 will not recognize.
     if (v3Preview) {
       return true;
     }
@@ -33,8 +32,8 @@ final class ElasticsearchRestConfig {
           "The "
               + CAPTURE_SEARCH_QUERY_PROPERTY
               + " setting and the equivalent declarative configuration property are deprecated"
-              + " and will be removed in 3.0. In 3.0, sanitized search query bodies are always"
-              + " captured and there is no replacement setting.");
+              + " and will be removed in 3.0. In 3.0, search query bodies are always captured, and"
+              + " sanitization remains separately configurable. This setting has no replacement.");
     }
     return configured;
   }
