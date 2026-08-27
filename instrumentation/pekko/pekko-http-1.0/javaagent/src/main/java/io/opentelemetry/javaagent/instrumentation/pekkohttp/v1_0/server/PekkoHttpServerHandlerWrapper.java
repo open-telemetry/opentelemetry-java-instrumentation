@@ -87,7 +87,7 @@ public class PekkoHttpServerHandlerWrapper
     } catch (Throwable t) {
       PekkoHttpServerSingletons.endSpanWithError(tracingRequest, t);
       // rethrowing without any wrapping to avoid any change to the underlying application behavior
-      throw sneakyThrow(t);
+      throw t;
     }
     if (responseFuture == null) {
       PekkoHttpServerSingletons.endSpanWithError(tracingRequest, null);
@@ -99,11 +99,6 @@ public class PekkoHttpServerHandlerWrapper
 
   private static boolean isHttp2(HttpRequest request) {
     return request.getAttribute(Http2$.MODULE$.streamId()).isPresent();
-  }
-
-  @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"}) // fine
-  private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
-    throw (T) t;
   }
 
   private static class EndSpanHandler
