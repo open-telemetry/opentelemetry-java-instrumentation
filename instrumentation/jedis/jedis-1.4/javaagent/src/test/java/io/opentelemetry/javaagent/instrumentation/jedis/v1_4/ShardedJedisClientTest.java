@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -94,22 +95,45 @@ class ShardedJedisClientTest {
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(attributes("SET", "SET foo ?"))),
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET foo ?", shardHost, shardPort))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "GET " + configuredTarget : "GET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(attributes("GET", "GET foo"))));
+                        .hasAttributesSatisfyingExactly(
+                            attributes("GET", "GET foo", shardHost, shardPort))));
   }
 
-  private static List<AttributeAssertion> attributes(String operation, String queryText) {
+  @Test
+  void commandFromAllShardsUsesConfiguredTarget() {
+    Object returnedShard = sharded.getAllShards().iterator().next();
+    assumeTrue(returnedShard instanceof Jedis);
+    Jedis shard = (Jedis) returnedShard;
+    String selectedHost = shard.getClient().getHost();
+    int selectedPort = shard.getClient().getPort();
+
+    shard.set("all-shards", "bar");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET all-shards ?", selectedHost, selectedPort))));
+  }
+
+  private static List<AttributeAssertion> attributes(
+      String operation, String queryText, String selectedHost, int selectedPort) {
     return asList(
         equalTo(maybeStable(DB_SYSTEM), REDIS),
         equalTo(maybeStable(DB_STATEMENT), queryText),
         equalTo(maybeStable(DB_OPERATION), operation),
         equalTo(maybeStablePeerService(), emitStableDatabaseSemconv() ? null : "test-peer-service"),
-        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? configuredTarget : shardHost),
-        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) shardPort));
+        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? configuredTarget : selectedHost),
+        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) selectedPort));
   }
 }
