@@ -26,11 +26,6 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
     return CouchbaseUtil.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
   }
 
-  @Override
-  protected boolean includesConfiguredServerTarget() {
-    return true;
-  }
-
   @Test
   void hasDurationMetric() {
     CouchbaseCluster cluster = getCluster(bucketCouchbase);

@@ -107,10 +107,6 @@ public abstract class AbstractCouchbaseTest {
     return false;
   }
 
-  protected boolean includesConfiguredServerTarget() {
-    return false;
-  }
-
   /**
    * Override to return true in subclasses where experimental attributes are enabled (when
    * otel.instrumentation.couchbase.experimental-span-attributes=true).
@@ -132,27 +128,24 @@ public abstract class AbstractCouchbaseTest {
   }
 
   protected String serverAddress() {
-    return includesConfiguredServerTarget() && emitStableDatabaseSemconv() ? "127.0.0.1" : null;
+    return emitStableDatabaseSemconv() ? "127.0.0.1" : null;
   }
 
   protected StringAssertConsumer operationServerAddress() {
-    if (includesConfiguredServerTarget() && emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       return val -> val.isEqualTo(serverAddress());
     }
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
   protected LongAssertConsumer operationServerPort() {
-    return !(includesConfiguredServerTarget() && emitStableDatabaseSemconv())
-            && includesNetworkAttributes()
+    return !emitStableDatabaseSemconv() && includesNetworkAttributes()
         ? val -> val.isNotNull()
         : val -> val.isNull();
   }
 
   protected String spanName(String operation) {
-    return includesConfiguredServerTarget() && emitStableDatabaseSemconv()
-        ? operation + " " + serverAddress()
-        : operation;
+    return emitStableDatabaseSemconv() ? operation + " " + serverAddress() : operation;
   }
 
   protected StringAssertConsumer experimentalAttribute() {

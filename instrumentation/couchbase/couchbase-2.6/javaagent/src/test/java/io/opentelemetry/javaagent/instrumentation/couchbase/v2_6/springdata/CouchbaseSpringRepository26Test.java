@@ -21,11 +21,6 @@ class CouchbaseSpringRepository26Test extends AbstractCouchbaseSpringRepositoryT
   }
 
   @Override
-  protected boolean includesConfiguredServerTarget() {
-    return true;
-  }
-
-  @Override
   protected boolean includesNetworkAttributes() {
     return true;
   }
