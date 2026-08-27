@@ -31,6 +31,7 @@ import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.SqlClient;
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -85,9 +86,24 @@ class VertxSqlClientServerListTest {
     PgConnectOptions first = connectOptions().setPort(port);
     PgConnectOptions second = connectOptions().setHost("/var/run/postgres:primary").setPort(5432);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
-    cleanup.deferCleanup(pool::close);
 
-    select(pool);
+    assertServerListTarget(pool, host + ":" + port + ",/var/run/postgres:primary:5432");
+  }
+
+  @Test
+  void clientServerListIsReportedAsOneTarget()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    PgConnectOptions first = connectOptions().setPort(port);
+    PgConnectOptions second = connectOptions().setPort(port + 1);
+    SqlClient client = PgPool.client(vertx, asList(first, second), poolOptions());
+
+    assertServerListTarget(client, host + ":" + port + "," + host + ":" + (port + 1));
+  }
+
+  private static void assertServerListTarget(SqlClient client, String serverAddress)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    cleanup.deferCleanup(client::close);
+    select(client);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -110,10 +126,7 @@ class VertxSqlClientServerListTest {
                                 maybeStablePeerService(),
                                 emitStableDatabaseSemconv() ? null : "test-peer-service"),
                             equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? host + ":" + port + ",/var/run/postgres:primary:5432"
-                                    : host),
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? serverAddress : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
@@ -228,9 +241,9 @@ class VertxSqlClientServerListTest {
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
   }
 
-  private static void select(Pool pool)
+  private static void select(SqlClient client)
       throws InterruptedException, ExecutionException, TimeoutException {
-    pool.query("select 1").execute().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    client.query("select 1").execute().toCompletionStage().toCompletableFuture().get(30, SECONDS);
   }
 
   private static PoolOptions poolOptions() {

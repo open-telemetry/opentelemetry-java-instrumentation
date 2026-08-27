@@ -21,6 +21,7 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.Ve
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -66,14 +67,14 @@ class PoolInstrumentation implements TypeInstrumentation {
             .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool")))),
         getClass().getName() + "$PoolAdvice");
 
-    // Added in 4.2, these overloads take the servers the pool load balances over.
+    // Added in 4.2, these overloads take the servers the client load balances over.
     transformer.applyAdviceToMethod(
-        named("pool")
+        namedOneOf("client", "pool")
             .and(isStatic())
             .and(takesArguments(3))
             .and(takesArgument(1, named("java.util.List")))
-            .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool")))),
-        getClass().getName() + "$PoolListAdvice");
+            .and(returns(hasSuperType(named("io.vertx.sqlclient.SqlClient")))),
+        getClass().getName() + "$ServerListAdvice");
 
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesNoArguments()).and(returns(named("io.vertx.core.Future"))),
@@ -116,7 +117,7 @@ class PoolInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class PoolListAdvice {
+  public static class ServerListAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter(@Advice.Argument(1) List<SqlConnectOptions> databases) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
@@ -133,7 +134,7 @@ class PoolInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Return Pool pool,
+        @Advice.Return Object client,
         @Advice.Argument(1) List<SqlConnectOptions> databases,
         @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
@@ -141,10 +142,13 @@ class PoolInstrumentation implements TypeInstrumentation {
       }
 
       SqlConnectOptions firstDatabase = firstDatabase(databases);
-      if (pool != null && firstDatabase != null) {
-        setPoolConnectOptions(pool, firstDatabase);
-        storeConnectOptionsDbSystem(firstDatabase, getDbSystemNameFromClassName(pool));
-        setPoolAddressGroup(pool, VertxSqlAddressGroup.of(databases));
+      if (client != null && firstDatabase != null) {
+        storeConnectOptionsDbSystem(firstDatabase, getDbSystemNameFromClassName(client));
+        if (client instanceof Pool) {
+          Pool pool = (Pool) client;
+          setPoolConnectOptions(pool, firstDatabase);
+          setPoolAddressGroup(pool, VertxSqlAddressGroup.of(databases));
+        }
       }
       setSqlConnectOptions(null);
       setAddressGroup(null);
