@@ -364,6 +364,7 @@ rules:
 Sometimes a negative or extreme value is returned by the MBean implementation when a metric is not available or not supported.
 
 For example:
+
 - [`OperatingSystemMXBean.getProcessCpuLoad`](<https://docs.oracle.com/javase/7/docs/jre/api/management/extension/com/sun/management/OperatingSystemMXBean.html#getProcessCpuLoad()>) can return a negative value.
 - `Long.MAX_VALUE` or `Double.MAX_VALUE` can be returned by some Mbean attributes.
 
