@@ -33,7 +33,7 @@ import org.opensearch.client.opensearch.core.SearchResponse;
 @SuppressWarnings("deprecation") // using deprecated semconv
 class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
 
-  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024;
+  private static final int MAX_QUERY_BODY_BYTES = 32 * 1024;
   private static final String JSON_PREFIX = "{\"query\":{\"match\":{\"";
   private static final String JSON_SUFFIX = "\":{\"query\":\"?\"}}}}";
   private static final String NDJSON_PREFIX = "{\"index\":[\"?\"]};" + JSON_PREFIX;
@@ -162,7 +162,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
 
   @Test
   void shouldKeepSearchQueryBodyAtLimit() throws IOException {
-    String field = "a".repeat(MAX_QUERY_BODY_LENGTH - JSON_PREFIX.length() - JSON_SUFFIX.length());
+    String field = "a".repeat(MAX_QUERY_BODY_BYTES - JSON_PREFIX.length() - JSON_SUFFIX.length());
     String expected = JSON_PREFIX + field + JSON_SUFFIX;
 
     openSearchClient.search(searchRequest(field), TestDocument.class);
@@ -173,18 +173,17 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
   @Test
   void shouldTruncateSearchQueryBodyOverLimit() throws IOException {
     String field =
-        "a".repeat(MAX_QUERY_BODY_LENGTH - JSON_PREFIX.length() - JSON_SUFFIX.length() + 1);
+        "a".repeat(MAX_QUERY_BODY_BYTES - JSON_PREFIX.length() - JSON_SUFFIX.length() + 1);
     String expected = JSON_PREFIX + field + JSON_SUFFIX;
 
     openSearchClient.search(searchRequest(field), TestDocument.class);
 
-    assertQueryBody(expected.substring(0, MAX_QUERY_BODY_LENGTH), "/" + INDEX_NAME + "/_search");
+    assertQueryBody(expected.substring(0, MAX_QUERY_BODY_BYTES), "/" + INDEX_NAME + "/_search");
   }
 
   @Test
   void shouldKeepMsearchQueryBodyAtLimit() throws IOException {
-    String field =
-        "a".repeat(MAX_QUERY_BODY_LENGTH - NDJSON_PREFIX.length() - JSON_SUFFIX.length());
+    String field = "a".repeat(MAX_QUERY_BODY_BYTES - NDJSON_PREFIX.length() - JSON_SUFFIX.length());
     String expected = NDJSON_PREFIX + field + JSON_SUFFIX;
 
     openSearchClient.msearch(msearchRequest(field), TestDocument.class);
@@ -193,14 +192,14 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
   }
 
   @Test
-  void shouldTruncateMsearchQueryBodyOverLimit() throws IOException {
-    String field =
-        "a".repeat(MAX_QUERY_BODY_LENGTH - NDJSON_PREFIX.length() - JSON_SUFFIX.length() + 1);
-    String expected = NDJSON_PREFIX + field + JSON_SUFFIX;
+  void shouldTruncateMsearchQueryBodyByUtf8Bytes() throws IOException {
+    String field = "\u0800".repeat(MAX_QUERY_BODY_BYTES);
+    String expected =
+        NDJSON_PREFIX + "\u0800".repeat((MAX_QUERY_BODY_BYTES - NDJSON_PREFIX.length()) / 3);
 
     openSearchClient.msearch(msearchRequest(field), TestDocument.class);
 
-    assertQueryBody(expected.substring(0, MAX_QUERY_BODY_LENGTH), "/_msearch?typed_keys=true");
+    assertQueryBody(expected, "/_msearch?typed_keys=true");
   }
 
   @Test
