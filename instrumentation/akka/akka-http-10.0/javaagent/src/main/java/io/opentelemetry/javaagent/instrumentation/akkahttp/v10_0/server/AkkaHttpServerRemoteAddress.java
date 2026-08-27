@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server;
 import akka.stream.Attributes;
 import java.net.InetSocketAddress;
 
-final class AkkaHttpServerRemoteAddress implements Attributes.Attribute {
+class AkkaHttpServerRemoteAddress implements Attributes.Attribute {
   private final InetSocketAddress remoteAddress;
 
   AkkaHttpServerRemoteAddress(InetSocketAddress remoteAddress) {

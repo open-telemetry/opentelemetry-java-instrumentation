@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class AkkaHttpServerRequestPeer {
+class AkkaHttpServerRequestPeer {
   private static final VirtualField<HttpRequest, InetSocketAddress> REQUEST_PEER =
       VirtualField.find(HttpRequest.class, InetSocketAddress.class);
 
