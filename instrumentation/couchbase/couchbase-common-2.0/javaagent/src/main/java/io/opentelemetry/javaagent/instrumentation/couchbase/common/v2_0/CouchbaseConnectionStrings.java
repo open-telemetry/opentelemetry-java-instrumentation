@@ -33,7 +33,8 @@ public class CouchbaseConnectionStrings {
       }
       return target.build();
     } catch (ReflectiveOperationException | RuntimeException ignored) {
-      // Fall back to the contacted node when the connection string shape is unknown.
+      // Stable semantic conventions omit the server target when parsing fails. Legacy semantic
+      // conventions report the contacted node later.
       return null;
     }
   }
