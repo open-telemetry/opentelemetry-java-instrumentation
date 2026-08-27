@@ -13,10 +13,6 @@ public class VertxSqlAddressGroup {
 
   private final String address;
 
-  private VertxSqlAddressGroup(String address) {
-    this.address = address;
-  }
-
   @Nullable
   public static VertxSqlAddressGroup of(@Nullable List<? extends SqlConnectOptions> databases) {
     if (databases == null || databases.size() < 2) {
@@ -39,6 +35,14 @@ public class VertxSqlAddressGroup {
     return new VertxSqlAddressGroup(address.toString());
   }
 
+  private VertxSqlAddressGroup(String address) {
+    this.address = address;
+  }
+
+  public String getAddress() {
+    return address;
+  }
+
   private static void appendHostPort(StringBuilder address, String host, int port) {
     // Bracket IPv6 literals; leave Unix socket paths unchanged.
     if (host.indexOf(':') >= 0 && !host.startsWith("[") && !host.startsWith("/")) {
@@ -47,9 +51,5 @@ public class VertxSqlAddressGroup {
       address.append(host);
     }
     address.append(':').append(port);
-  }
-
-  public String getAddress() {
-    return address;
   }
 }
