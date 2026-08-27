@@ -90,14 +90,25 @@ class ElasticsearchServerTargetTest {
             new HttpHost("user:secret@h1", 9200, "https"),
             new HttpHost("h2/prefix", 9200, "https"),
             new HttpHost("h3?token=secret", 9200, "https"),
-            new HttpHost("h4#secret", 9200, "https"),
-            new HttpHost("user:pa/ss@h5", 9200, "https"));
+            new HttpHost("h4#secret", 9200, "https"));
 
     ElasticsearchServerTarget target = ElasticsearchServerTarget.of(hosts);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9200,h3:9200,h4:9200,h5:9200");
+    assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9200,h3:9200,h4:9200");
     assertThat(target.getAddress()).doesNotContain("secret");
+  }
+
+  @Test
+  void userinfoAfterAuthorityHasNoTarget() {
+    assertThat(
+            ElasticsearchServerTarget.of(
+                singletonList(new HttpHost("es.example?token=user@secret", 9200))))
+        .isNull();
+    assertThat(
+            ElasticsearchServerTarget.of(
+                singletonList(new HttpHost("user:pa/ss@es.example", 9200))))
+        .isNull();
   }
 
   @Test

@@ -58,14 +58,16 @@ class OpenSearchConfiguredHostTest {
   }
 
   @Test
-  void credentialsContainingPathSeparatorAreRemoved() {
-    OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(
-            singletonList(new OpenSearchServerTarget.Endpoint("user:pa/ss@os.example", 9200)));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("os.example");
-    assertThat(target.getPort()).isEqualTo(9200);
+  void userinfoAfterAuthorityHasNoTarget() {
+    assertThat(
+            OpenSearchServerTarget.of(
+                singletonList(
+                    new OpenSearchServerTarget.Endpoint("os.example?token=user@secret", 9200))))
+        .isNull();
+    assertThat(
+            OpenSearchServerTarget.of(
+                singletonList(new OpenSearchServerTarget.Endpoint("user:pa/ss@os.example", 9200))))
+        .isNull();
   }
 
   @Test
