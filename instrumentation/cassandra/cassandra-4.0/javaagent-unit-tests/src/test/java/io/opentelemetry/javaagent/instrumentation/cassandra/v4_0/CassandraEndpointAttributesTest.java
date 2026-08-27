@@ -178,15 +178,19 @@ class CassandraEndpointAttributesTest {
   void stableSniEndPointDoesNotResolveNetworkPeerAddress() {
     when(coordinator.getEndPoint()).thenReturn(sniEndPoint);
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    if (!emitStableDatabaseSemconv()) {
+      when(sniEndPoint.resolve()).thenReturn(PROXY_ADDRESS);
+    }
     CassandraRequest request = CassandraRequest.create(session, null, "SELECT 1");
 
     InetSocketAddress peerAddress =
         new CassandraSqlAttributesGetter().getNetworkPeerInetSocketAddress(request, executionInfo);
 
-    assertThat(peerAddress).isNull();
     if (emitStableDatabaseSemconv()) {
+      assertThat(peerAddress).isNull();
       verify(sniEndPoint, never()).resolve();
     } else {
+      assertThat(peerAddress).isEqualTo(PROXY_ADDRESS);
       verify(sniEndPoint).resolve();
     }
   }
