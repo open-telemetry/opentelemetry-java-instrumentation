@@ -37,6 +37,7 @@ public class HbaseServerTarget {
   private static final String READ_ZK_CONFIG_KEY = "hbase.config.read.zookeeper.config";
   private static final String ZK_ZNODE_PARENT_KEY = "zookeeper.znode.parent";
   private static final String MASTER_ADDRESSES_KEY = "hbase.masters";
+  private static final String MASTER_HOSTNAME_KEY = "hbase.master.hostname";
   private static final String MASTER_PORT_KEY = "hbase.master.port";
 
   private static final String DEFAULT_ZK_QUORUM = "localhost";
@@ -174,8 +175,29 @@ public class HbaseServerTarget {
     if (defaultPort == null) {
       return null;
     }
-    Set<String> masters = canonicalEndpoints(configuration.get(MASTER_ADDRESSES_KEY), defaultPort);
+    Set<String> masters = canonicalEndpoints(masterAddresses(configuration), defaultPort);
     return masters == null ? null : String.join(",", masters);
+  }
+
+  @Nullable
+  private static String masterAddresses(Configuration configuration) {
+    String configuredMasters = configuration.get(MASTER_ADDRESSES_KEY);
+    if (configuredMasters != null && !configuredMasters.isEmpty()) {
+      return configuredMasters;
+    }
+    String configuredHostname = configuration.get(MASTER_HOSTNAME_KEY);
+    if (configuredHostname != null && !configuredHostname.isEmpty()) {
+      return configuredHostname + ":" + configuration.getInt(MASTER_PORT_KEY, DEFAULT_MASTER_PORT);
+    }
+    try {
+      Method getMasterAddr =
+          Class.forName(MASTER_REGISTRY, false, HbaseServerTarget.class.getClassLoader())
+              .getDeclaredMethod("getMasterAddr", Configuration.class);
+      getMasterAddr.setAccessible(true);
+      return (String) getMasterAddr.invoke(null, configuration);
+    } catch (ReflectiveOperationException | SecurityException | LinkageError ignored) {
+      return null;
+    }
   }
 
   @Nullable
