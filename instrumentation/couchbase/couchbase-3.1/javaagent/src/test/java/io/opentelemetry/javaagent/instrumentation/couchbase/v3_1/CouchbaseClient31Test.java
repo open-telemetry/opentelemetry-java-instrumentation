@@ -122,8 +122,6 @@ class CouchbaseClient31Test {
       // Expected
     }
 
-    String networkPeerAddress = networkPeerAddress();
-    Long networkPeerPort = networkPeerPort();
     List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
     dispatchAttributes.add(equalTo(maybeStable(DB_SYSTEM), "couchbase"));
     if (emitOldDatabaseSemconv() || EXPERIMENTAL_ATTRIBUTES) {
@@ -142,8 +140,10 @@ class CouchbaseClient31Test {
       dispatchAttributes.add(equalTo(stringKey("net.transport"), "IP.TCP"));
     }
     if (emitStableDatabaseSemconv()) {
-      dispatchAttributes.add(equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress));
-      dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, networkPeerPort));
+      dispatchAttributes.add(
+          equalTo(
+              NETWORK_PEER_ADDRESS, InetAddress.getByName(couchbase.getHost()).getHostAddress()));
+      dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, serverPort()));
     }
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
@@ -170,16 +170,6 @@ class CouchbaseClient31Test {
                 span ->
                     span.hasName("dispatch_to_server")
                         .hasAttributesSatisfyingExactly(dispatchAttributes)));
-  }
-
-  private static String networkPeerAddress() throws UnknownHostException {
-    return emitStableDatabaseSemconv()
-        ? InetAddress.getByName(couchbase.getHost()).getHostAddress()
-        : null;
-  }
-
-  private static Long networkPeerPort() {
-    return emitStableDatabaseSemconv() ? serverPort() : null;
   }
 
   private static String serverAddress() {
