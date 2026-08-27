@@ -15,6 +15,7 @@ import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -86,6 +87,34 @@ class SqsTracingTest extends AbstractSqsTracingTest {
                               .hasKind(SpanKind.PRODUCER)
                               .hasNoParent()
                               .hasTotalRecordedLinks(0)));
+    } finally {
+      client.shutdown();
+    }
+  }
+
+  @Test
+  void testNoopTelemetryDoesNotInjectInvalidCreationContext() {
+    assumeTrue(emitStableMessagingSemconv());
+    assumeTrue(supportsMessageSystemAttributes());
+    AmazonSQSAsync client =
+        newClientBuilder()
+            .withRequestHandlers(
+                AwsSdkTelemetry.builder(OpenTelemetry.noop()).build().createRequestHandler())
+            .build();
+    try {
+      String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+      client.createQueue("testSdkSqs");
+
+      assertThat(
+              client
+                  .sendMessageBatch(
+                      new SendMessageBatchRequest()
+                          .withQueueUrl(queueUrl)
+                          .withEntries(
+                              new SendMessageBatchRequestEntry("i1", "e1"),
+                              new SendMessageBatchRequestEntry("i2", "e2")))
+                  .getSuccessful())
+          .hasSize(2);
     } finally {
       client.shutdown();
     }

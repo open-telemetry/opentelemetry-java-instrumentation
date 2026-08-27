@@ -178,6 +178,11 @@ public final class SqsImpl {
         continue;
       }
       Context creationContext = producerCreateInstrumenter.start(parentContext, createRequest);
+      if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
+        producerCreateInstrumenter.end(creationContext, createRequest, null, null);
+        preparedEntries.add(entry.clone());
+        continue;
+      }
       SendMessageBatchRequestEntry preparedEntry =
           SqsMessageSystemAttributeAccess.withTraceHeader(
               entry, SqsParentContext.toTraceHeader(creationContext));

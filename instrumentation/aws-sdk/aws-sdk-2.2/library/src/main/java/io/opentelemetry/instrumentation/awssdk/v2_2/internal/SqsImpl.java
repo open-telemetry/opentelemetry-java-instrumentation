@@ -241,6 +241,10 @@ public final class SqsImpl {
 
       io.opentelemetry.context.Context creationContext =
           producerCreateInstrumenter.start(creationParentContext, createRequest);
+      if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
+        producerCreateInstrumenter.end(creationContext, createRequest, null, null);
+        continue;
+      }
       SendMessageBatchRequestEntry updatedEntry =
           injectCreationContext(entry, creationContext, useXrayPropagator, messagingPropagator);
       if (updatedEntry != null) {

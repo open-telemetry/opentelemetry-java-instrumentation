@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import java.net.URISyntaxException;
 import org.junit.jupiter.api.Test;
@@ -80,6 +81,25 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
                               .hasKind(SpanKind.PRODUCER)
                               .hasNoParent()
                               .hasTotalRecordedLinks(0)));
+    }
+  }
+
+  @Test
+  void testNoopTelemetryDoesNotInjectInvalidCreationContext() {
+    assumeTrue(emitStableMessagingSemconv());
+    assumeTrue(supportsMessageSystemAttributes());
+    AwsSdkTelemetry noopTelemetry = AwsSdkTelemetry.builder(OpenTelemetry.noop()).build();
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    builder.overrideConfiguration(
+        ClientOverrideConfiguration.builder()
+            .addExecutionInterceptor(noopTelemetry.createExecutionInterceptor())
+            .build());
+
+    try (SqsClient client = noopTelemetry.wrap(builder.build())) {
+      client.createQueue(createQueueRequest);
+
+      assertThat(client.sendMessageBatch(sendMessageBatchRequest).successful()).hasSize(3);
     }
   }
 }
