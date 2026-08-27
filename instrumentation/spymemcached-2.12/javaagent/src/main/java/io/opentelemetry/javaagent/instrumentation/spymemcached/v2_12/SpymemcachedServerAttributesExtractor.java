@@ -29,6 +29,10 @@ class SpymemcachedServerAttributesExtractor
       SpymemcachedRequest request,
       @Nullable Object object,
       @Nullable Throwable error) {
+    // the node that answers an operation is only known once the operation has been dispatched, so
+    // its attributes can only be added at the end; stable semantic conventions report the
+    // configured target from the start and fall back to the answering node only when the connection
+    // has no configured target
     if (!emitStableDatabaseSemconv() || request.getServerTarget() == null) {
       delegate.onStart(attributes, context, request);
     }

@@ -45,7 +45,9 @@ class SpymemcachedAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(SpymemcachedRequest spymemcachedRequest) {
-    // the old conventions describe the node that answered instead, and they are frozen
+    // the frozen old conventions describe the node that answered instead, so the configured target
+    // is reported only once stable conventions are on; when both are emitted the configured target
+    // wins, because server.address and server.port are shared between the two conventions
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
