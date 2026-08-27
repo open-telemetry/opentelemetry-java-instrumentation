@@ -22,7 +22,7 @@ import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 class OpenSearchBodyExtractor {
 
   private static final Logger logger = Logger.getLogger(OpenSearchBodyExtractor.class.getName());
-  private static final int MAX_QUERY_BODY_BYTES = 32 * 1024;
+  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024;
   private static final String QUERY_SEPARATOR = ";";
   private static final JsonFactory JSON_FACTORY = new JsonFactory();
 
@@ -31,10 +31,10 @@ class OpenSearchBodyExtractor {
     try {
       if (request instanceof NdJsonpSerializable) {
         return serializeNdJsonSanitized(
-            mapper, (NdJsonpSerializable) request, MAX_QUERY_BODY_BYTES);
+            mapper, (NdJsonpSerializable) request, MAX_QUERY_BODY_LENGTH);
       }
 
-      return serializeSanitized(mapper, request, MAX_QUERY_BODY_BYTES);
+      return serializeSanitized(mapper, request, MAX_QUERY_BODY_LENGTH);
     } catch (Exception e) {
       logger.log(FINE, "Failure extracting body", e);
       return null;
@@ -42,9 +42,9 @@ class OpenSearchBodyExtractor {
   }
 
   @Nullable
-  private static String serializeSanitized(JsonpMapper mapper, Object item, int maxBytes)
+  private static String serializeSanitized(JsonpMapper mapper, Object item, int maxLength)
       throws IOException {
-    BoundedStringWriter writer = new BoundedStringWriter(maxBytes);
+    BoundedStringWriter writer = new BoundedStringWriter(maxLength);
 
     try {
       if (mapper instanceof JacksonJsonpMapper) {
@@ -75,16 +75,15 @@ class OpenSearchBodyExtractor {
 
   @Nullable
   private static String serializeNdJsonSanitized(
-      JsonpMapper mapper, NdJsonpSerializable value, int maxBytes) throws IOException {
-    StringBuilder result = new StringBuilder(Math.min(maxBytes, 1024));
+      JsonpMapper mapper, NdJsonpSerializable value, int maxLength) throws IOException {
+    StringBuilder result = new StringBuilder(Math.min(maxLength, 1024));
     Iterator<?> values = value._serializables();
     boolean first = true;
-    int resultBytes = 0;
 
-    while (values.hasNext() && resultBytes < maxBytes) {
+    while (values.hasNext() && result.length() < maxLength) {
       Object item = values.next();
       String itemStr;
-      int remaining = maxBytes - resultBytes;
+      int remaining = maxLength - result.length();
 
       if (item instanceof NdJsonpSerializable && item != value) {
         // Recursively handle nested NdJsonpSerializable
@@ -95,10 +94,10 @@ class OpenSearchBodyExtractor {
 
       if (itemStr != null && !itemStr.isEmpty()) {
         if (!first) {
-          resultBytes = appendPrefix(result, QUERY_SEPARATOR, maxBytes, resultBytes);
+          appendPrefix(result, QUERY_SEPARATOR, maxLength);
         }
-        if (resultBytes < maxBytes) {
-          resultBytes = appendPrefix(result, itemStr, maxBytes, resultBytes);
+        if (result.length() < maxLength) {
+          appendPrefix(result, itemStr, maxLength);
         }
         first = false;
       }
@@ -107,34 +106,9 @@ class OpenSearchBodyExtractor {
     return result.length() == 0 ? null : result.toString();
   }
 
-  private static int appendPrefix(
-      StringBuilder result, String value, int maxBytes, int resultBytes) {
-    int offset = 0;
-    while (offset < value.length()) {
-      int codePoint = value.codePointAt(offset);
-      int codePointBytes = utf8Length(codePoint);
-      if (resultBytes + codePointBytes > maxBytes) {
-        break;
-      }
-      int charCount = Character.charCount(codePoint);
-      result.append(value, offset, offset + charCount);
-      offset += charCount;
-      resultBytes += codePointBytes;
-    }
-    return resultBytes;
-  }
-
-  private static int utf8Length(int codePoint) {
-    if (codePoint <= 0x7f) {
-      return 1;
-    }
-    if (codePoint <= 0x7ff) {
-      return 2;
-    }
-    if (codePoint <= 0xffff) {
-      return Character.isSurrogate((char) codePoint) ? 1 : 3;
-    }
-    return 4;
+  private static void appendPrefix(StringBuilder result, String value, int maxLength) {
+    int length = Math.min(value.length(), maxLength - result.length());
+    result.append(value, 0, length);
   }
 
   private static boolean causedByQueryBodyLimit(Throwable t) {
@@ -150,68 +124,37 @@ class OpenSearchBodyExtractor {
   private static final class BoundedStringWriter extends Writer {
 
     private final StringBuilder result;
-    private final int maxBytes;
-    private int resultBytes;
-    private char pendingHighSurrogate;
+    private final int maxLength;
 
-    private BoundedStringWriter(int maxBytes) {
-      this.result = new StringBuilder(Math.min(maxBytes, 1024));
-      this.maxBytes = maxBytes;
+    private BoundedStringWriter(int maxLength) {
+      this.result = new StringBuilder(Math.min(maxLength, 1024));
+      this.maxLength = maxLength;
     }
 
     @Override
     public void write(char[] buffer, int offset, int length) {
-      for (int i = offset; i < offset + length; i++) {
-        write(buffer[i]);
-      }
+      int writeLength = Math.min(length, maxLength - result.length());
+      result.append(buffer, offset, writeLength);
+      abortIfFull();
     }
 
     @Override
     public void write(int value) {
-      char ch = (char) value;
-      if (pendingHighSurrogate != 0) {
-        char highSurrogate = pendingHighSurrogate;
-        pendingHighSurrogate = 0;
-        if (Character.isLowSurrogate(ch)) {
-          append(highSurrogate, ch);
-          return;
-        }
-        append(highSurrogate, 1);
+      if (result.length() < maxLength) {
+        result.append((char) value);
       }
-      if (Character.isHighSurrogate(ch)) {
-        pendingHighSurrogate = ch;
-      } else {
-        append(ch, utf8Length(ch));
-      }
+      abortIfFull();
     }
 
     @Override
     public void write(String value, int offset, int length) {
-      for (int i = offset; i < offset + length; i++) {
-        write(value.charAt(i));
-      }
-    }
-
-    private void append(char ch, int bytes) {
-      if (resultBytes + bytes > maxBytes) {
-        throw new QueryBodyLimitException();
-      }
-      result.append(ch);
-      resultBytes += bytes;
-      abortIfFull();
-    }
-
-    private void append(char highSurrogate, char lowSurrogate) {
-      if (resultBytes + 4 > maxBytes) {
-        throw new QueryBodyLimitException();
-      }
-      result.append(highSurrogate).append(lowSurrogate);
-      resultBytes += 4;
+      int writeLength = Math.min(length, maxLength - result.length());
+      result.append(value, offset, offset + writeLength);
       abortIfFull();
     }
 
     private void abortIfFull() {
-      if (resultBytes == maxBytes) {
+      if (result.length() == maxLength) {
         throw new QueryBodyLimitException();
       }
     }
@@ -220,13 +163,7 @@ class OpenSearchBodyExtractor {
     public void flush() {}
 
     @Override
-    public void close() {
-      if (pendingHighSurrogate != 0) {
-        char highSurrogate = pendingHighSurrogate;
-        pendingHighSurrogate = 0;
-        append(highSurrogate, 1);
-      }
-    }
+    public void close() {}
 
     @Override
     public String toString() {

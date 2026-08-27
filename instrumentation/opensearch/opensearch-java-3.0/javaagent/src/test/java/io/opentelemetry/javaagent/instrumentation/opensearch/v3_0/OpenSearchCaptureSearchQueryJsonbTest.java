@@ -43,8 +43,9 @@ import org.opensearch.client.transport.rest_client.RestClientTransport;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest {
 
-  private static final int MAX_QUERY_BODY_BYTES = 32 * 1024;
+  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024;
   private static final String JSON_PREFIX = "{\"query\":{\"match\":{\"";
+  private static final String JSON_SUFFIX = "\":{\"query\":\"?\"}}}}";
 
   @SuppressWarnings("deprecation") // RestClientTransport is deprecated
   @Override
@@ -112,10 +113,10 @@ class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest 
   }
 
   @Test
-  void shouldTruncateSearchQueryBodyByUtf8BytesWithJsonbMapper() throws IOException {
-    String field = "\u0800".repeat(MAX_QUERY_BODY_BYTES);
-    String expected =
-        JSON_PREFIX + "\u0800".repeat((MAX_QUERY_BODY_BYTES - JSON_PREFIX.length()) / 3);
+  void shouldTruncateSearchQueryBodyOverLimitWithJsonbMapper() throws IOException {
+    String field =
+        "a".repeat(MAX_QUERY_BODY_LENGTH - JSON_PREFIX.length() - JSON_SUFFIX.length() + 1);
+    String expected = (JSON_PREFIX + field + JSON_SUFFIX).substring(0, MAX_QUERY_BODY_LENGTH);
     SearchRequest searchRequest =
         SearchRequest.of(
             request ->
