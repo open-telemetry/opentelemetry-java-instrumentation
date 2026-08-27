@@ -54,7 +54,9 @@ public class HttpProtocolVersion {
   }
 
   static String format(int majorVersion, int minorVersion) {
-    return minorVersion == 0 ? Integer.toString(majorVersion) : majorVersion + "." + minorVersion;
+    return majorVersion > 1 && minorVersion == 0
+        ? Integer.toString(majorVersion)
+        : majorVersion + "." + minorVersion;
   }
 
   private HttpProtocolVersion() {}
