@@ -359,27 +359,32 @@ rules:
 
 `sourceUnit` can also be defined on rule level (see [Making shortcuts](#making-shortcuts))
 
-### Filtering negative values
+### Filtering negative or extreme values
 
-Sometimes a negative value is returned by the MBean implementation when a metric is not available or not supported.
-For example, [`OperatingSystemMXBean.getProcessCpuLoad`](<https://docs.oracle.com/javase/7/docs/jre/api/management/extension/com/sun/management/OperatingSystemMXBean.html#getProcessCpuLoad()>) can return a negative value.
+Sometimes a negative or extreme value is returned by the MBean implementation when a metric is not available or not supported.
 
-In this case, it is recommended to filter out the negative values by setting the `dropNegativeValues` metric (or rule) property to `true`, it is set to `false` by default.
+For example:
+- [`OperatingSystemMXBean.getProcessCpuLoad`](<https://docs.oracle.com/javase/7/docs/jre/api/management/extension/com/sun/management/OperatingSystemMXBean.html#getProcessCpuLoad()>) can return a negative value.
+- `Long.MAX_VALUE` or `Double.MAX_VALUE` can be returned by some Mbean attributes.
+
+In this case, it is recommended to filter out those values by using `dropNegativeValues` and `dropExtremeValues` metric (or rule) property to `true`, those are set to `false` by default.
 
 ```yaml
 rules:
   - bean: java.lang:type=OperatingSystem
     # can also be set at rule-level (with lower priority)
     dropNegativeValues: false
+    dropExtremeValues: false
     mapping:
       # jvm.cpu.recent_utilization
       ProcessCpuLoad:
         metric: jvm.cpu.recent_utilization
         type: gauge
         unit: '1'
-        # setting dropNegativeValues at metric level has priority over rule level.
-        dropNegativeValues: true
         desc: Recent CPU utilization for the process as reported by the JVM.
+        # setting at metric level has priority over the rule level.
+        dropNegativeValues: true
+        dropExtremeValues: true
 ```
 
 ### Aggregation over multiple MBean instances
