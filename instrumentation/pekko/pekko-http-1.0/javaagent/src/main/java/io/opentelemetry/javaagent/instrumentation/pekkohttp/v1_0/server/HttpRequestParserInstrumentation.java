@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.impl.engine.parsing.HttpMessageParser;
-import org.apache.pekko.http.scaladsl.model.ErrorInfo;
+import org.apache.pekko.http.impl.engine.parsing.ParserOutput;
 import org.apache.pekko.http.scaladsl.model.HttpMethod;
 import org.apache.pekko.http.scaladsl.model.Uri;
 import org.apache.pekko.util.ByteString;
@@ -57,11 +57,10 @@ class HttpRequestParserInstrumentation implements TypeInstrumentation {
         named("parseRequestTarget").and(takesArguments(2)),
         getClass().getName() + "$ParseRequestTargetAdvice");
     transformer.applyAdviceToMethod(
-        named("failMessageStart")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.StatusCode")))
-            .and(takesArgument(1, named("org.apache.pekko.http.scaladsl.model.ErrorInfo"))),
-        getClass().getName() + "$FailMessageStartAdvice");
+        named("emit")
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("org.apache.pekko.http.impl.engine.parsing.ParserOutput"))),
+        getClass().getName() + "$EmitAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -81,14 +80,27 @@ class HttpRequestParserInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ParseRequestTargetAdvice {
 
+    /** Remembers the target of the request before this one, see the exit advice. */
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object onEnter(@Advice.FieldValue("uriBytes") @Nullable ByteString uriBytes) {
+      return uriBytes;
+    }
+
     /**
      * On a normal return the target is the one pekko-http parsed and validated. On a throw it is
      * the target that failed, which is only available as the raw bytes, and the {@code uri} field
      * still holds whatever the previous request on this connection left there.
+     *
+     * <p>The raw bytes can be stale as well: pekko-http throws {@code UriTooLong} from the scan
+     * that finds the end of the target, which runs before it assigns the field, so an overlong
+     * target would otherwise be reported as the path of the request before it. The field is only
+     * trusted when it changed during this call.
      */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This HttpMessageParser<?> parser,
+        @Advice.Enter @Nullable Object previousUriBytes,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.FieldValue("method") @Nullable HttpMethod method,
         @Advice.FieldValue("uri") @Nullable Uri uri,
@@ -96,19 +108,25 @@ class HttpRequestParserInstrumentation implements TypeInstrumentation {
       if (throwable == null) {
         PekkoHttpParsingErrorSingletons.captureParsedRequestLine(parser, method, uri);
       } else {
-        PekkoHttpParsingErrorSingletons.captureUnparsedRequestLine(parser, method, uriBytes);
+        PekkoHttpParsingErrorSingletons.captureUnparsedRequestLine(
+            parser, method, uriBytes == previousUriBytes ? null : uriBytes);
       }
     }
   }
 
   @SuppressWarnings("unused")
-  public static class FailMessageStartAdvice {
+  public static class EmitAdvice {
 
-    /** Every parsing failure funnels through here, whichever token it happened on. */
+    /**
+     * Every parsing failure reaches the rest of the stack as a {@code MessageStartError} passed to
+     * this method, whether it came from the parser giving up on a token or from the connection
+     * ending while a message was still incomplete, which does not go through {@code
+     * failMessageStart}.
+     */
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
-        @Advice.This HttpMessageParser<?> parser, @Advice.Argument(1) ErrorInfo info) {
-      PekkoHttpParsingErrorSingletons.bindRequestLine(parser, info);
+        @Advice.This HttpMessageParser<?> parser, @Advice.Argument(0) ParserOutput output) {
+      PekkoHttpParsingErrorSingletons.bindRequestLine(parser, output);
     }
   }
 }
