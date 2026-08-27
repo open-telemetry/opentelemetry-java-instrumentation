@@ -52,8 +52,6 @@ muzzle {
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:executors:bootstrap"))
-
   library("org.apache.pekko:pekko-http_2.12:1.0.0")
   library("org.apache.pekko:pekko-stream_2.12:1.0.1")
   compileOnly("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.12:1.7.0")
