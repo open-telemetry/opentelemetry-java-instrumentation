@@ -25,6 +25,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.util.UUID;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -81,7 +82,7 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      updateServerAddressAndPort(attributes, coordinator);
+      updateServerAddressAndPort(attributes, request, coordinator);
 
       String datacenter = coordinator.getDatacenter();
       if (emitStableDatabaseSemconv()) {
@@ -155,28 +156,66 @@ final class CassandraAttributesExtractor
     }
   }
 
-  private static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
+  static void updateServerAddressAndPort(
+      AttributesBuilder attributes, CassandraRequest request, Node coordinator) {
     EndPoint endPoint = coordinator.getEndPoint();
+    if (endPoint instanceof SniEndPoint) {
+      SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
+      if (emitStableDatabaseSemconv()) {
+        updateStableSniServerAddressAndPort(attributes, coordinator, sniEndPoint);
+      } else {
+        // Legacy semconv keeps recording the proxy as the server.
+        updateLegacySniServerAddressAndPort(attributes, sniEndPoint);
+      }
+      return;
+    }
+    // Preserve the configured target that stable semconv records on span start.
+    if (emitStableDatabaseSemconv() && request.getServerTarget() != null) {
+      return;
+    }
     if (endPoint instanceof DefaultEndPoint) {
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
       attributes.put(SERVER_ADDRESS, address.getHostString());
       attributes.put(SERVER_PORT, address.getPort());
-    } else if (endPoint instanceof SniEndPoint && PROXY_ADDRESS_FIELD != null) {
-      SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
-      Object object = null;
-      try {
-        object = PROXY_ADDRESS_FIELD.get(sniEndPoint);
-      } catch (Exception e) {
-        logger.log(
-            FINE,
-            "Error when accessing the private field proxyAddress of SniEndPoint using reflection.",
-            e);
-      }
-      if (object instanceof InetSocketAddress) {
-        InetSocketAddress address = (InetSocketAddress) object;
-        attributes.put(SERVER_ADDRESS, address.getHostString());
-        attributes.put(SERVER_PORT, address.getPort());
-      }
+    }
+  }
+
+  private static void updateStableSniServerAddressAndPort(
+      AttributesBuilder attributes, Node coordinator, SniEndPoint sniEndPoint) {
+    // SniEndPoint.resolve() returns the proxy, performs DNS, and advances the driver's shared
+    // round-robin counter. The broadcast RPC address identifies the server without those effects.
+    InetSocketAddress rpcAddress = coordinator.getBroadcastRpcAddress().orElse(null);
+    if (rpcAddress != null) {
+      attributes.put(SERVER_ADDRESS, rpcAddress.getHostString());
+      attributes.put(SERVER_PORT, rpcAddress.getPort());
+      return;
+    }
+    // Cloud deployments use the host id as the SNI name, not an address.
+    String serverName = sniEndPoint.getServerName();
+    UUID hostId = coordinator.getHostId();
+    if (hostId == null || !hostId.toString().equals(serverName)) {
+      attributes.put(SERVER_ADDRESS, serverName);
+    }
+  }
+
+  private static void updateLegacySniServerAddressAndPort(
+      AttributesBuilder attributes, SniEndPoint sniEndPoint) {
+    if (PROXY_ADDRESS_FIELD == null) {
+      return;
+    }
+    Object object = null;
+    try {
+      object = PROXY_ADDRESS_FIELD.get(sniEndPoint);
+    } catch (Exception e) {
+      logger.log(
+          FINE,
+          "Error when accessing the private field proxyAddress of SniEndPoint using reflection.",
+          e);
+    }
+    if (object instanceof InetSocketAddress) {
+      InetSocketAddress address = (InetSocketAddress) object;
+      attributes.put(SERVER_ADDRESS, address.getHostString());
+      attributes.put(SERVER_PORT, address.getPort());
     }
   }
 
