@@ -70,7 +70,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     String targetInstanceName = resolveInstanceName(ctx.props(), urlParams, instanceName);
 
     // Namespace depends on the effective databaseName, so derive it after DataSource overrides.
-    setNamespace(ctx, targetInstanceName != null ? targetInstanceName : instanceName);
+    setNamespace(ctx, instanceName);
 
     applyFailoverPartnerGroup(
         ctx, urlParams, targetInstanceName, hasConfiguredPort(jdbcUrl, urlParams, ctx.props()));
