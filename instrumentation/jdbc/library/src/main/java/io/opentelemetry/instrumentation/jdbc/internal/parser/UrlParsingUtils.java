@@ -291,14 +291,14 @@ public final class UrlParsingUtils {
     }
 
     String authority = url.substring(authorityStart, authorityEnd);
-    if (!hasValidHostPorts(authority)) {
+    if (!isEndpointAuthority(authority)) {
       return null;
     }
     String suffix = url.substring(credentialsEnd + 1, parameterEnd);
     int suffixAuthorityEnd = indexOfAny(suffix, '/', '?', '#');
     String suffixAuthority =
         suffixAuthorityEnd < 0 ? suffix : suffix.substring(0, suffixAuthorityEnd);
-    if (hasValidHostPorts(suffixAuthority)) {
+    if (isEndpointAuthority(suffixAuthority)) {
       return null;
     }
     if (authority.indexOf(',') >= 0) {
@@ -306,6 +306,10 @@ public final class UrlParsingUtils {
     }
 
     return suffix.indexOf('/') < 0 && suffix.indexOf(',') < 0 ? authority : null;
+  }
+
+  private static boolean isEndpointAuthority(String authority) {
+    return hasValidHostPorts(authority) || sanitizeHostList(authority) != null;
   }
 
   private static boolean isAtInQueryParameter(String url, int authorityEnd, int at) {
