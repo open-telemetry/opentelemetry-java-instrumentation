@@ -44,7 +44,7 @@ public class OracleUcpSingletons {
       return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_POOL_NAME);
     }
 
-    Properties poolNameProperties = new Properties();
+    Properties poolNameProperties = new Properties(connectionProperties);
     poolNameProperties.putAll(connectionProperties);
 
     String serverName = dataSource.getServerName();
