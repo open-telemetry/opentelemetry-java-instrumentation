@@ -177,6 +177,27 @@ class JedisNetworkAttributesGetterTest {
         .isNull();
   }
 
+  @Test
+  void transactionDropsPeerWhenExecFails() {
+    InetSocketAddress queuedPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
+    JedisRequest queuedRequest = requestWithPeer(queuedPeer);
+    queuedRequest.capturePeerAddress();
+    JedisRequest transactionRequest = JedisRequest.createTransaction(singletonList(queuedRequest));
+
+    JedisRequest execRequest = requestWithPeer(queuedPeer);
+
+    JedisPipelineContext.enterTransactionFraming(transactionRequest);
+    try {
+      JedisPipelineContext.captureTransactionFramingPeer(execRequest);
+    } finally {
+      JedisPipelineContext.exitTransactionFraming();
+    }
+
+    assertThat(
+            new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(transactionRequest, null))
+        .isNull();
+  }
+
   private static JedisRequest requestWithPeer(InetSocketAddress peerAddress) {
     Socket socket =
         new Socket() {
