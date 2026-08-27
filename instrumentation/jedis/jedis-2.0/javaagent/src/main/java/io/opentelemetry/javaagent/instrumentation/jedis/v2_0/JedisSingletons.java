@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
@@ -41,6 +44,9 @@ public class JedisSingletons {
   // the cluster connection handler was added in jedis 2.4, so it has no type that spans this
   // module's whole version range and cannot carry a virtual field
   private static final Cache<Object, RedisServerTarget> clusterTargets = Cache.weak();
+
+  private static final ContextKey<RedisServerTarget> CURRENT_CLUSTER_TARGET =
+      ContextKey.named("opentelemetry-jedis-cluster-target");
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -100,6 +106,14 @@ public class JedisSingletons {
     attach(clusterTargets.get(handler), connection);
   }
 
+  @Nullable
+  public static Scope openClusterTargetScope(Object handler) {
+    RedisServerTarget target = clusterTargets.get(handler);
+    return target == null
+        ? null
+        : Context.current().with(CURRENT_CLUSTER_TARGET, target).makeCurrent();
+  }
+
   private static void attach(@Nullable RedisServerTarget target, @Nullable Object jedis) {
     if (target == null || !(jedis instanceof BinaryJedis)) {
       return;
@@ -112,7 +126,8 @@ public class JedisSingletons {
 
   @Nullable
   static RedisServerTarget connectionTarget(Connection connection) {
-    return CONNECTION_TARGET.get(connection);
+    RedisServerTarget target = CONNECTION_TARGET.get(connection);
+    return target != null ? target : Context.current().get(CURRENT_CLUSTER_TARGET);
   }
 
   private JedisSingletons() {}

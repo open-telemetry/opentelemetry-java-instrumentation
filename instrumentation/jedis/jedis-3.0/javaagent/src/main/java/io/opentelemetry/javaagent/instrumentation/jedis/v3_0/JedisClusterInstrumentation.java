@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Set;
@@ -64,11 +65,24 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetConnectionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
+      return JedisSingletons.openClusterTargetScope(handler);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This JedisClusterConnectionHandler handler,
-        @Advice.Return @Nullable Object connection) {
-      JedisSingletons.attachClusterTarget(handler, connection);
+        @Advice.Return @Nullable Object connection,
+        @Advice.Enter @Nullable Scope scope) {
+      try {
+        JedisSingletons.attachClusterTarget(handler, connection);
+      } finally {
+        if (scope != null) {
+          scope.close();
+        }
+      }
     }
   }
 }
