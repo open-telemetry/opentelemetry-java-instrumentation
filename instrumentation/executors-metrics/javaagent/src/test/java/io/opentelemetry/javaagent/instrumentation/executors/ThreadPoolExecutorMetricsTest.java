@@ -177,6 +177,40 @@ class ThreadPoolExecutorMetricsTest {
   }
 
   @Test
+  void doesNotExportEffectivelyUnboundedMaximumThreadCount() throws Exception {
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            0,
+            Integer.MAX_VALUE,
+            60,
+            SECONDS,
+            new SynchronousQueue<>(),
+            new NamedThreadFactory("cached-pool"));
+    CountDownLatch started = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+
+    try {
+      executor.execute(
+          () -> {
+            started.countDown();
+            awaitLatch(release);
+          });
+      assertThat(started.await(10, SECONDS)).isTrue();
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "cached-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withActiveThreads(1)
+          .assertExecutorEmitsMetrics();
+      assertNoExecutorMetric(
+          testing, INSTRUMENTATION_NAME, "jvm.executor.thread.max", "cached-pool-*");
+    } finally {
+      release.countDown();
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
+  }
+
+  @Test
   void skipsScheduledThreadPoolExecutor() {
     ScheduledThreadPoolExecutor executor =
         new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("scheduled-pool"));

@@ -95,7 +95,10 @@ public final class JdkExecutorMetrics {
                   Math.max(threadPoolExecutor.getPoolSize() - active, 0),
                   metrics.getIdleThreadAttributes());
               coreThreads.record(threadPoolExecutor.getCorePoolSize(), metrics.getAttributes());
-              maxThreads.record(threadPoolExecutor.getMaximumPoolSize(), metrics.getAttributes());
+              int maximumPoolSize = threadPoolExecutor.getMaximumPoolSize();
+              if (maximumPoolSize < Integer.MAX_VALUE) {
+                maxThreads.record(maximumPoolSize, metrics.getAttributes());
+              }
               queueSize.record(threadPoolExecutor.getQueue().size(), metrics.getAttributes());
               if (queueCapacityValue < Integer.MAX_VALUE) {
                 queueCapacity.record(queueCapacityValue, metrics.getAttributes());
