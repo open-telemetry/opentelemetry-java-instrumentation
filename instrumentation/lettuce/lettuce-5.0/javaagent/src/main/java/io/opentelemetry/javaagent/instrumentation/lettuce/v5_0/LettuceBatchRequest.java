@@ -80,11 +80,6 @@ final class LettuceBatchRequest {
   }
 
   @Nullable
-  InetSocketAddress getPeerAddress() {
-    return null;
-  }
-
-  @Nullable
   Integer getDatabaseIndex() {
     return databaseIndex;
   }
