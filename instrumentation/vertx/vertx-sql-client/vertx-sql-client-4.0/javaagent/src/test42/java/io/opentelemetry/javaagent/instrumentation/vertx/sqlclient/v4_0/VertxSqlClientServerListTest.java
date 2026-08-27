@@ -80,10 +80,10 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void serverListIsReportedAsOneTarget()
+  void serverListWithUnixSocketIsReportedAsOneTarget()
       throws InterruptedException, ExecutionException, TimeoutException {
     PgConnectOptions first = connectOptions().setPort(port);
-    PgConnectOptions second = connectOptions().setPort(port + 1);
+    PgConnectOptions second = connectOptions().setHost("/var/run/postgres:primary").setPort(5432);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
     cleanup.deferCleanup(pool::close);
 
@@ -112,7 +112,7 @@ class VertxSqlClientServerListTest {
                             equalTo(
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv()
-                                    ? host + ":" + port + "," + host + ":" + (port + 1)
+                                    ? host + ":" + port + ",/var/run/postgres:primary:5432"
                                     : host),
                             equalTo(
                                 SERVER_PORT,

@@ -38,7 +38,7 @@ public class VertxSqlAddressGroup {
 
   private static void appendHostPort(StringBuilder address, String host, int port) {
     // Bracket IPv6 literals; leave Unix socket paths unchanged.
-    if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
+    if (host.indexOf(':') >= 0 && !host.startsWith("[") && !host.startsWith("/")) {
       address.append('[').append(host).append(']');
     } else {
       address.append(host);
