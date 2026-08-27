@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerInstrumentationExtension,
@@ -38,12 +39,10 @@ class PekkoHttpServerSourceInstrumentationTest
     options.setTestPathParam(true)
 
     options.setHttpAttributes(
-      new Function[ServerEndpoint, util.Set[
-        io.opentelemetry.api.common.AttributeKey[_]
-      ]] {
+      new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
         override def apply(
             v1: ServerEndpoint
-        ): util.Set[io.opentelemetry.api.common.AttributeKey[_]] =
+        ): util.Set[AttributeKey[_]] =
           HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
       }
     )
