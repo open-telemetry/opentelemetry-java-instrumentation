@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.cassandra.v4_4.CassandraTelemetry;
 
-public final class CassandraSingletons {
+final class CassandraSingletons {
 
   private static final CassandraTelemetry telemetry =
       CassandraTelemetry.builder(GlobalOpenTelemetry.get())
@@ -17,7 +17,7 @@ public final class CassandraSingletons {
               DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "cassandra"))
           .build();
 
-  public static CassandraTelemetry telemetry() {
+  static CassandraTelemetry telemetry() {
     return telemetry;
   }
 
