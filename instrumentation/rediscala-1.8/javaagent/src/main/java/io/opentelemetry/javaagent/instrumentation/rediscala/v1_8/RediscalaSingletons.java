@@ -11,7 +11,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -28,8 +27,8 @@ public class RediscalaSingletons {
   public static final VirtualField<TransactionBuilder, ServerEndpoint> TRANSACTION_ENDPOINT =
       VirtualField.find(TransactionBuilder.class, ServerEndpoint.class);
 
-  public static final VirtualField<TransactionBuilder, RedisServerTarget> TRANSACTION_TARGET =
-      VirtualField.find(TransactionBuilder.class, RedisServerTarget.class);
+  public static final VirtualField<TransactionBuilder, Object> TRANSACTION_CLIENT =
+      VirtualField.find(TransactionBuilder.class, Object.class);
 
   static {
     RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();

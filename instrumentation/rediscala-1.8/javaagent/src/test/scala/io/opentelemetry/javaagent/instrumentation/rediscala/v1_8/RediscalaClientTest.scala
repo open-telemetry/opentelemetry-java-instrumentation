@@ -33,6 +33,7 @@ import redis.commands.TransactionBuilder
 import redis.{RedisClient, RedisDispatcher, RedisServer}
 
 import java.lang.{Long => JLong}
+import java.net.InetAddress
 import java.util.function.Consumer
 import java.util.stream.Stream
 import scala.concurrent.duration.Duration
@@ -178,6 +179,61 @@ class RediscalaClientTest {
       assertThat(serverTarget(client)._1).isEqualTo("127.0.0.2")
       assertThat(serverTarget(client)._2)
         .isEqualTo(Integer.valueOf(16379))
+    } finally {
+      client.stop()
+    }
+  }
+
+  @Test def testTransactionRefreshesServerTarget(): Unit = {
+    val client = createClient(None)
+    try {
+      val transaction = client.multi()
+      transaction.set("transaction-refresh", "value")
+      val resolvedHost = InetAddress.getByName(host).getHostAddress
+      val reconnectHost =
+        if (resolvedHost == host) "localhost" else resolvedHost
+      client.reconnect(reconnectHost, port.intValue())
+
+      val result = testing.runWithSpan(
+        "parent",
+        new ThrowingSupplier[Future[_], Exception] {
+          override def get(): Future[_] = transaction.exec()
+        }
+      )
+
+      Await.result(result, Duration("3 second"))
+      testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+        override def accept(trace: TraceAssert): Unit =
+          trace.hasSpansSatisfyingExactly(
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                span.hasName("parent").hasNoParent
+              }
+            },
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                span
+                  .hasName(
+                    if (emitStableDatabaseSemconv())
+                      s"MULTI SET $reconnectHost:$port"
+                    else "MULTI SET"
+                  )
+                  .hasKind(CLIENT)
+                  .hasParent(trace.getSpan(0))
+                  .hasAttributesSatisfyingExactly(
+                    equalTo(maybeStable(DB_SYSTEM), REDIS),
+                    equalTo(maybeStable(DB_OPERATION), "MULTI SET"),
+                    equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
+                    equalTo(
+                      SERVER_ADDRESS,
+                      if (emitStableDatabaseSemconv()) reconnectHost else host
+                    ),
+                    equalTo(SERVER_PORT, port)
+                  )
+              }
+            }
+          )
+      })
     } finally {
       client.stop()
     }
