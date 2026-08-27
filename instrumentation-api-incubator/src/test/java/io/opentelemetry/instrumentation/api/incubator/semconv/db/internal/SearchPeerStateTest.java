@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 class SearchPeerStateTest {
 
   @Test
-  void ignoresCaptureWithoutActiveState() throws Exception {
+  void ignoresCaptureWithoutActiveState() {
     SearchPeerState state = new SearchPeerState();
 
     SearchPeerState.capture(
@@ -26,7 +26,7 @@ class SearchPeerStateTest {
   }
 
   @Test
-  void capturesOnlyResolvedInetSocketAddress() throws Exception {
+  void capturesOnlyResolvedInetSocketAddress() {
     SearchPeerState state = new SearchPeerState();
     Context context = state.storeInContext(Context.root());
 
@@ -42,7 +42,7 @@ class SearchPeerStateTest {
   }
 
   @Test
-  void updatesNestedStates() throws Exception {
+  void updatesNestedStates() {
     SearchPeerState outer = new SearchPeerState();
     Context outerContext = outer.storeInContext(Context.root());
     SearchPeerState inner = new SearchPeerState();
@@ -56,7 +56,7 @@ class SearchPeerStateTest {
   }
 
   @Test
-  void laterAttemptsReplaceEarlierPeer() throws Exception {
+  void laterAttemptsReplaceEarlierPeer() {
     SearchPeerState state = new SearchPeerState();
     Context context = state.storeInContext(Context.root());
     InetSocketAddress first = new InetSocketAddress(InetAddress.getLoopbackAddress(), 9200);

@@ -23,7 +23,7 @@ class ElasticsearchDbAttributesGetterTest {
   private final ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(false);
 
   @Test
-  void capturesPeerFromRequestState() throws Exception {
+  void capturesPeerFromRequestState() {
     ElasticsearchRestRequest request = ElasticsearchRestRequest.create("GET", "/");
     Context context = request.getPeerState().storeInContext(Context.root());
     SearchPeerState.capture(context, new InetSocketAddress(InetAddress.getLoopbackAddress(), 9200));
