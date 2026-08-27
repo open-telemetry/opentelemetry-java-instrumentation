@@ -44,6 +44,7 @@ tasks {
     filter {
       excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
       excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+      excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
     }
   }
 
@@ -86,6 +87,7 @@ tasks {
     filter {
       excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
       excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+      excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
     }
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
@@ -97,6 +99,7 @@ tasks {
 
     filter {
       includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+      includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
     }
     jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=false")
     systemProperty(
