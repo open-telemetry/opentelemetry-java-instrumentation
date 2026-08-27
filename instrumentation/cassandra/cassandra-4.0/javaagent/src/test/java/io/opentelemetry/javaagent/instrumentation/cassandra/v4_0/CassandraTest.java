@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -92,11 +93,13 @@ class CassandraTest extends AbstractCassandraTest {
 
   @Test
   void responsePeerComesFromTheChannel() {
+    AtomicReference<SocketAddress> fallbackAddress =
+        new AtomicReference<>(new InetSocketAddress(cassandraHost, cassandraPort));
     EndPoint customEndPoint =
         new EndPoint() {
           @Override
           public SocketAddress resolve() {
-            return new InetSocketAddress(cassandraHost, cassandraPort);
+            return fallbackAddress.get();
           }
 
           @Override
@@ -110,6 +113,7 @@ class CassandraTest extends AbstractCassandraTest {
             .withLocalDatacenter("datacenter1")
             .build();
     cleanup.deferCleanup(session);
+    fallbackAddress.set(InetSocketAddress.createUnresolved("fallback.invalid", cassandraPort));
 
     session.execute("SELECT release_version FROM system.local");
     testing.waitForTraces(1);
