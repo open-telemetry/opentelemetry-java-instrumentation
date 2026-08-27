@@ -50,6 +50,7 @@ class JedisNetworkAttributesGetterTest {
   @Test
   void dropsMissingSocketAddress() {
     JedisRequest request = JedisRequest.create(new Connection(), Protocol.Command.GET);
+    request.capturePeerAddress();
 
     assertThat(new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(request, null))
         .isNull();
