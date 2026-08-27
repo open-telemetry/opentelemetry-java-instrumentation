@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.attachAddress;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 
+import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -29,8 +31,9 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
   private Context context;
   private int numResults;
 
-  public LettuceFluxTerminationRunnable(RedisCommand<?, ?, ?> command, boolean expectsResponse) {
-    onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, expectsResponse);
+  public LettuceFluxTerminationRunnable(
+      RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection, boolean expectsResponse) {
+    onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, connection, expectsResponse);
   }
 
   public Consumer<Subscription> getOnSubscribeConsumer() {
@@ -73,19 +76,23 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
     private final LettuceFluxTerminationRunnable owner;
     private final RedisCommand<?, ?, ?> command;
+    private final StatefulConnection<?, ?> connection;
     private final boolean expectsResponse;
 
     public FluxOnSubscribeConsumer(
         LettuceFluxTerminationRunnable owner,
         RedisCommand<?, ?, ?> command,
+        StatefulConnection<?, ?> connection,
         boolean expectsResponse) {
       this.owner = owner;
       this.command = command;
+      this.connection = connection;
       this.expectsResponse = expectsResponse;
     }
 
     @Override
     public void accept(Subscription subscription) {
+      attachAddress(command, connection);
       owner.context = instrumenter().start(Context.current(), command);
       if (!expectsResponse) {
         instrumenter().end(owner.context, command, null, null);

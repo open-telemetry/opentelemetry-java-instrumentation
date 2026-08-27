@@ -155,6 +155,10 @@ public class LettuceSingletons {
         : null;
   }
 
+  public static void clearConnectionAddress(RedisChannelHandler<?, ?> connection) {
+    CONNECTION_ADDRESS.set(connection, null);
+  }
+
   @Nullable
   static RedisServerTarget serverTarget(StatefulConnection<?, ?> connection) {
     return connection instanceof RedisChannelHandler
