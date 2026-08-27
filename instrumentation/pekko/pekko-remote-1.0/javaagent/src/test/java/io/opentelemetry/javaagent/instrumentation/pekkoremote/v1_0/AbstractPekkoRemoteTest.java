@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pekko.actor.AbstractActor;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.actor.ActorSystem;
@@ -30,9 +31,14 @@ abstract class AbstractPekkoRemoteTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static ActorSystem senderSystem;
-  private static ActorSystem receiverSystem;
-  private static String receiverPath;
+  // each subclass tests a different transport and gets an instance of its own, the actor systems
+  // and the latch that the receiving actor counts down therefore belong to the instance, a system
+  // that is terminated for one transport keeps running for a while and would otherwise be able to
+  // count down the latch that the other transport is waiting on
+  private ActorSystem senderSystem;
+  private ActorSystem receiverSystem;
+  private String receiverPath;
+  private final AtomicReference<CountDownLatch> received = new AtomicReference<>();
 
   /** Configuration that sets up the transport under test. */
   protected abstract Config remoteConfig();
@@ -41,7 +47,7 @@ abstract class AbstractPekkoRemoteTest {
   void setUp() {
     senderSystem = ActorSystem.create("sender", remoteConfig());
     receiverSystem = ActorSystem.create("receiver", remoteConfig());
-    receiverSystem.actorOf(Props.create(EchoActor.class), "echo");
+    receiverSystem.actorOf(Props.create(EchoActor.class, received), "echo");
     receiverPath =
         ((ExtendedActorSystem) receiverSystem).provider().getDefaultAddress() + "/user/echo";
   }
@@ -62,10 +68,11 @@ abstract class AbstractPekkoRemoteTest {
         .withFallback(ConfigFactory.load());
   }
 
-  private static void send(String message) throws InterruptedException {
-    EchoActor.received = new CountDownLatch(1);
+  private void send(String message) throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    received.set(latch);
     senderSystem.actorSelection(receiverPath).tell(message, ActorRef.noSender());
-    if (!EchoActor.received.await(30, SECONDS)) {
+    if (!latch.await(30, SECONDS)) {
       throw new AssertionError("remote actor did not receive the message");
     }
   }
@@ -106,7 +113,11 @@ abstract class AbstractPekkoRemoteTest {
   }
 
   public static class EchoActor extends AbstractActor {
-    static volatile CountDownLatch received = new CountDownLatch(1);
+    private final AtomicReference<CountDownLatch> received;
+
+    public EchoActor(AtomicReference<CountDownLatch> received) {
+      this.received = received;
+    }
 
     @Override
     public Receive createReceive() {
@@ -115,7 +126,7 @@ abstract class AbstractPekkoRemoteTest {
               String.class,
               message -> {
                 testing.runWithSpan("remote", () -> {});
-                received.countDown();
+                received.get().countDown();
               })
           .build();
     }
