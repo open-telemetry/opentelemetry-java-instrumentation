@@ -22,9 +22,6 @@ public class ClickHouseClientV1Singletons {
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v1-0.5";
   private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
 
-  // "" marks a configuration that names a single node, which has no group target
-  private static final String NO_GROUP = "";
-
   private static final VirtualField<ClickHouseNodes, String> NODES_ADDRESS_GROUP =
       VirtualField.find(ClickHouseNodes.class, String.class);
 
@@ -51,8 +48,7 @@ public class ClickHouseClientV1Singletons {
     if (nodes == null) {
       return null;
     }
-    String addressGroup = NODES_ADDRESS_GROUP.get(nodes);
-    return addressGroup == null || NO_GROUP.equals(addressGroup) ? null : addressGroup;
+    return NODES_ADDRESS_GROUP.get(nodes);
   }
 
   public static void captureConfiguredNodes(
@@ -60,9 +56,10 @@ public class ClickHouseClientV1Singletons {
     NODES_ADDRESS_GROUP.set(nodes, renderAddressGroup(configuredNodes));
   }
 
+  @Nullable
   private static String renderAddressGroup(Collection<ClickHouseNode> nodes) {
     if (nodes.size() < 2) {
-      return NO_GROUP;
+      return null;
     }
 
     StringBuilder addressGroup = new StringBuilder();
