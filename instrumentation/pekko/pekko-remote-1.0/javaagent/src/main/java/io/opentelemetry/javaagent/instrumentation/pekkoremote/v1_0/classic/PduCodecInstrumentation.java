@@ -54,6 +54,11 @@ class PduCodecInstrumentation implements TypeInstrumentation {
       }
 
       byte[] message = pdu.toArrayUnsafe();
+      // a message that no longer fits is discarded rather than truncated, so it is sent without a
+      // context rather than not sent at all
+      if (!ClassicPayloadLimit.fits(message.length + field.length)) {
+        return pdu;
+      }
       byte[] result = new byte[message.length + field.length];
       System.arraycopy(message, 0, result, 0, message.length);
       System.arraycopy(field, 0, result, message.length, field.length);

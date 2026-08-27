@@ -17,11 +17,13 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pekko.remote.EndpointActor;
 import org.apache.pekko.remote.EndpointManager;
 
 /**
  * Makes the context of the sender current while the message is serialized, the codec writes the
- * context that is current when it builds the message.
+ * context that is current when it builds the message. Also records how large the pdu that the codec
+ * produces is allowed to be, see {@link ClassicPayloadLimit}.
  */
 class EndpointWriterInstrumentation implements TypeInstrumentation {
 
@@ -43,13 +45,16 @@ class EndpointWriterInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.Argument(0) EndpointManager.Send send) {
+    public static Scope onEnter(
+        @Advice.This EndpointActor writer, @Advice.Argument(0) EndpointManager.Send send) {
+      ClassicPayloadLimit.set(writer);
       Context context = SEND_CONTEXT.get(send);
       return context == null ? null : context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      ClassicPayloadLimit.clear();
       if (scope != null) {
         scope.close();
       }
