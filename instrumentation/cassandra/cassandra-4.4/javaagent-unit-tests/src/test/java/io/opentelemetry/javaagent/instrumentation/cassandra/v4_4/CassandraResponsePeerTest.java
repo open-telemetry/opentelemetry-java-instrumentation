@@ -99,20 +99,24 @@ class CassandraResponsePeerTest {
     SocketAddress remoteAddress();
   }
 
-  private static final class TestContext implements PublicContext {
-    private final PublicChannel channel;
+  private interface InternalContext extends PublicContext {}
 
-    private TestContext(PublicChannel channel) {
+  private interface InternalChannel extends PublicChannel {}
+
+  private static final class TestContext implements InternalContext {
+    private final InternalChannel channel;
+
+    private TestContext(InternalChannel channel) {
       this.channel = channel;
     }
 
     @Override
-    public PublicChannel channel() {
+    public InternalChannel channel() {
       return channel;
     }
   }
 
-  private static final class TestChannel implements PublicChannel {
+  private static final class TestChannel implements InternalChannel {
     private final SocketAddress remoteAddress;
 
     private TestChannel(SocketAddress remoteAddress) {
