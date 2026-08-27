@@ -41,13 +41,15 @@ public class CouchbaseServerTargets {
   }
 
   @Nullable
-  private static CouchbaseServerTarget target(Set<SeedNode> seedNodes) {
+  static CouchbaseServerTarget target(Set<SeedNode> seedNodes) {
     CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder();
     for (SeedNode seedNode : seedNodes) {
       if (seedNode == null) {
         target.addSeed(null, 0);
       } else {
-        target.addSeed(seedNode.address(), seedNode.kvPort().orElse(0));
+        target.addSeed(
+            seedNode.address(),
+            seedNode.kvPort().orElseGet(() -> seedNode.clusterManagerPort().orElse(0)));
       }
     }
     return target.build();
