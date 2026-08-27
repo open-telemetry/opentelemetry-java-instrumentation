@@ -19,7 +19,8 @@ configurations:
     declarative_name: java.opensearch.query_sanitization.enabled
     description: >
       Enables sanitization of captured search query bodies. Takes precedence over
-      otel.instrumentation.common.db.query-sanitization.enabled.
+      otel.instrumentation.common.db.query-sanitization.enabled. When disabled, bodies are captured
+      verbatim and may contain personal or sensitive information.
     type: boolean
     default: true
   - ref: common.db.query-sanitization.enabled
