@@ -242,7 +242,7 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void responsePeerIsTheSniProxySocket() throws UnknownHostException {
+  void networkPeerUsesAgentResponsePeer() throws UnknownHostException {
     InetSocketAddress responsePeer = resolved(29042);
     set(executionInfo, responsePeer);
 
