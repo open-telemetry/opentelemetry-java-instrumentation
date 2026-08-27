@@ -218,8 +218,7 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void networkPeerIsTheCoordinatorSocketEvenWhenTheSessionNamesSeveralContactPoints()
-      throws UnknownHostException {
+  void networkPeerIsTheResolvedDefaultEndPointSocket() throws UnknownHostException {
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
     when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
 
