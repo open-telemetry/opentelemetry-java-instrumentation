@@ -12,9 +12,11 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Metadata;
 import com.datastax.oss.driver.api.core.metadata.Node;
@@ -51,6 +53,8 @@ class CassandraEndpointAttributesTest {
   @Mock private Metadata metadata;
   @Mock private Node coordinator;
   @Mock private EndPoint customEndPoint;
+  @Mock private ExecutionInfo executionInfo;
+  @Mock private SniEndPoint sniEndPoint;
   @Mock private Session session;
 
   @Test
@@ -167,6 +171,23 @@ class CassandraEndpointAttributesTest {
       assertThat(attributes.get(SERVER_PORT)).isNull();
     } else {
       assertProxyIsServer(attributes);
+    }
+  }
+
+  @Test
+  void stableSniEndPointDoesNotResolveNetworkPeerAddress() {
+    when(coordinator.getEndPoint()).thenReturn(sniEndPoint);
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    CassandraRequest request = CassandraRequest.create(session, null, "SELECT 1");
+
+    InetSocketAddress peerAddress =
+        new CassandraSqlAttributesGetter().getNetworkPeerInetSocketAddress(request, executionInfo);
+
+    assertThat(peerAddress).isNull();
+    if (emitStableDatabaseSemconv()) {
+      verify(sniEndPoint, never()).resolve();
+    } else {
+      verify(sniEndPoint).resolve();
     }
   }
 
