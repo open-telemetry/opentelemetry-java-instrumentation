@@ -12,10 +12,16 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraTelemetryUtil;
 import java.util.Set;
 
 /** Entrypoint for instrumenting cassandra sessions. */
 public final class CassandraTelemetry {
+
+  static {
+    CassandraTelemetryUtil.setSessionWrapper(CassandraTelemetry::wrap);
+  }
+
   private final TracingCqlSession tracingCqlSession;
 
   /** Returns a new {@link CassandraTelemetry} configured with the given {@link OpenTelemetry}. */

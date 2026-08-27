@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
-import io.opentelemetry.instrumentation.cassandra.v4_4.CompletionStageFunction;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.HashSet;
