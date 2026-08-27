@@ -18,9 +18,13 @@ public final class LettuceCommandOutboundHandler extends ChannelOutboundHandlerA
 
   @Override
   public void write(ChannelHandlerContext context, Object message, ChannelPromise promise) {
-    SocketAddress remoteAddress = context.channel().remoteAddress();
-    if (remoteAddress instanceof InetSocketAddress) {
-      recordCommands(message, (InetSocketAddress) remoteAddress);
+    try {
+      SocketAddress remoteAddress = context.channel().remoteAddress();
+      if (remoteAddress instanceof InetSocketAddress) {
+        recordCommands(message, (InetSocketAddress) remoteAddress);
+      }
+    } catch (Throwable ignored) {
+      // Do not let telemetry collection disrupt Redis I/O.
     }
     context.write(message, promise);
   }
