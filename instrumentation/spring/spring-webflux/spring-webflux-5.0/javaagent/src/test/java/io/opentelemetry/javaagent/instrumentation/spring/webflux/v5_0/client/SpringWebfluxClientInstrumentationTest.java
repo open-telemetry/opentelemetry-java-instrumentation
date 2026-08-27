@@ -9,7 +9,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.spring.webflux.client.AbstractSpringWebfluxClientInstrumentationTest;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -59,7 +58,7 @@ class SpringWebfluxClientInstrumentationTest
 
   @Test
   void shouldNormalizeHttp2ProtocolVersion() {
-    assertThat(HttpProtocolVersion.format(new HttpVersion("HTTP", 2, 0, true))).isEqualTo("2");
+    assertThat(HttpProtocolVersion.format(2, 0)).isEqualTo("2");
   }
 
   @Test

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
-import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
@@ -16,11 +15,14 @@ public class HttpProtocolVersion {
   private static final VirtualField<ClientHttpResponse, String> PROTOCOL_VERSION =
       VirtualField.find(ClientHttpResponse.class, String.class);
 
-  private static final ClassValue<Method> versionMethod =
-      new ClassValue<Method>() {
+  // the reactor and netty types are resolved reflectively; a compile-time reference to them would
+  // add a muzzle reference that disables this instrumentation module in applications whose
+  // WebClient does not use reactor netty
+  private static final ClassValue<VersionAccessor> versionAccessor =
+      new ClassValue<VersionAccessor>() {
         @Nullable
         @Override
-        protected Method computeValue(Class<?> responseClass) {
+        protected VersionAccessor computeValue(Class<?> responseClass) {
           String responseTypeName =
               responseClass.getName().startsWith("reactor.ipc.")
                   ? "reactor.ipc.netty.http.client.HttpClientResponse"
@@ -28,7 +30,12 @@ public class HttpProtocolVersion {
           try {
             Class<?> responseType =
                 Class.forName(responseTypeName, false, responseClass.getClassLoader());
-            return responseType.getMethod("version");
+            Method versionMethod = responseType.getMethod("version");
+            Class<?> versionType = versionMethod.getReturnType();
+            return new VersionAccessor(
+                versionMethod,
+                versionType.getMethod("majorVersion"),
+                versionType.getMethod("minorVersion"));
           } catch (ReflectiveOperationException ignored) {
             return null;
           }
@@ -36,25 +43,43 @@ public class HttpProtocolVersion {
       };
 
   public static void set(ClientHttpResponse response, Object reactorClientHttpResponse) {
-    Method method = versionMethod.get(reactorClientHttpResponse.getClass());
-    if (method != null) {
+    VersionAccessor accessor = versionAccessor.get(reactorClientHttpResponse.getClass());
+    if (accessor != null) {
       try {
-        set(response, (HttpVersion) method.invoke(reactorClientHttpResponse));
+        PROTOCOL_VERSION.set(response, accessor.getProtocolVersion(reactorClientHttpResponse));
       } catch (ReflectiveOperationException ignored) {
         // ignored
       }
     }
   }
 
-  public static void set(ClientHttpResponse response, HttpVersion version) {
-    PROTOCOL_VERSION.set(response, format(version));
-  }
-
-  static String format(HttpVersion version) {
-    return version.minorVersion() == 0
-        ? Integer.toString(version.majorVersion())
-        : version.majorVersion() + "." + version.minorVersion();
+  static String format(int majorVersion, int minorVersion) {
+    return minorVersion == 0 ? Integer.toString(majorVersion) : majorVersion + "." + minorVersion;
   }
 
   private HttpProtocolVersion() {}
+
+  private static class VersionAccessor {
+
+    private final Method versionMethod;
+    private final Method majorVersionMethod;
+    private final Method minorVersionMethod;
+
+    VersionAccessor(Method versionMethod, Method majorVersionMethod, Method minorVersionMethod) {
+      this.versionMethod = versionMethod;
+      this.majorVersionMethod = majorVersionMethod;
+      this.minorVersionMethod = minorVersionMethod;
+    }
+
+    @Nullable
+    String getProtocolVersion(Object reactorClientHttpResponse)
+        throws ReflectiveOperationException {
+      Object version = versionMethod.invoke(reactorClientHttpResponse);
+      if (version == null) {
+        return null;
+      }
+      return format(
+          (int) majorVersionMethod.invoke(version), (int) minorVersionMethod.invoke(version));
+    }
+  }
 }
