@@ -173,8 +173,10 @@ public final class RedisServerTarget {
         }
       }
 
-      value = cutAt(value, '#');
-      value = cutAt(value, '?');
+      if (!socket || scheme != null) {
+        value = cutAt(value, '#');
+        value = cutAt(value, '?');
+      }
       if (value.isEmpty()) {
         return null;
       }

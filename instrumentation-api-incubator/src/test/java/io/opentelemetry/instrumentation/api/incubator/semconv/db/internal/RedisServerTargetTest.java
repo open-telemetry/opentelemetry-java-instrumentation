@@ -242,7 +242,10 @@ class RedisServerTargetTest {
     "unix:///var/run/redis.sock, /var/run/redis.sock",
     "redis-socket://user:password@/var/run/redis.sock, /var/run/redis.sock",
     "/var/run/redis.sock, /var/run/redis.sock",
+    "/tmp/redis#1.sock, /tmp/redis#1.sock",
+    "/tmp/redis?1.sock, /tmp/redis?1.sock",
     "redis-socket:///var/run/redis.sock?db=1, /var/run/redis.sock",
+    "redis-socket:///var/run/redis.sock#fragment, /var/run/redis.sock",
   })
   void socketEndpointKeepsPathAndDropsPort(String endpoint, String address) {
     RedisServerTarget target = RedisServerTarget.ofEndpoint(endpoint);
