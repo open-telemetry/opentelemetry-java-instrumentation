@@ -23,12 +23,12 @@ class HbaseServerTargetTest {
   }
 
   @Test
-  void rejectsZooKeeperTargetWhenZooCfgMayOverrideIt() {
+  void fallsBackToHbaseConfigurationWhenZooCfgIsAbsent() {
     Configuration configuration = new Configuration(false);
     configuration.setBoolean("hbase.config.read.zookeeper.config", true);
-    configuration.set("hbase.zookeeper.quorum", "ignored-zk");
+    configuration.set("hbase.zookeeper.quorum", "active-zk");
 
-    assertThat(HbaseServerTarget.from(configuration)).isNull();
+    assertThat(HbaseServerTarget.from(configuration)).isEqualTo("active-zk:2181:/hbase");
   }
 
   @Test
