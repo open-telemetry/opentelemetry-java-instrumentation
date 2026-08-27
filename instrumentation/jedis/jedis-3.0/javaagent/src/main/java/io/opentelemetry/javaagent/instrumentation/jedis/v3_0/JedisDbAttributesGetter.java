@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -49,11 +52,19 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
 
   @Override
   public String getServerAddress(JedisRequest request) {
+    RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
+    if (emitStableDatabaseSemconv() && target != null) {
+      return target.getAddress();
+    }
     return request.getConnection().getHost();
   }
 
   @Override
   public Integer getServerPort(JedisRequest request) {
+    RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
+    if (emitStableDatabaseSemconv() && target != null) {
+      return target.getPort();
+    }
     return request.getConnection().getPort();
   }
 
