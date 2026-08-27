@@ -64,9 +64,11 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         return null;
       }
 
+      // the constructor advice snapshots the configured target, so a missing snapshot means the
+      // client was built before this instrumentation was applied
       ServerInfo serverInfo = ClickHouseClientV2Singletons.serverInfo(client);
       if (serverInfo == null) {
-        return null;
+        serverInfo = ServerInfo.empty();
       }
 
       String database = client.getConfiguration().get("database");

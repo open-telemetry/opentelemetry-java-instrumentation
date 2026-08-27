@@ -52,6 +52,8 @@ public class ClickHouseClientV2Singletons {
 
   public static class ServerInfo {
 
+    private static final ServerInfo EMPTY = new ServerInfo(null, null, null);
+
     @Nullable private final String address;
     @Nullable private final Integer port;
     @Nullable private final String addressGroup;
@@ -63,9 +65,13 @@ public class ClickHouseClientV2Singletons {
       this.addressGroup = addressGroup;
     }
 
+    static ServerInfo empty() {
+      return EMPTY;
+    }
+
     static ServerInfo of(Set<String> endpoints) {
       if (endpoints.isEmpty()) {
-        return new ServerInfo(null, null, null);
+        return EMPTY;
       }
       if (endpoints.size() == 1) {
         String endpoint = sanitizeEndpoint(endpoints.iterator().next());
