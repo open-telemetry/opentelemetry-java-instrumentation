@@ -8,8 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_DATABASE_INDEX;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_TARGET;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_TARGET;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
@@ -24,6 +26,7 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
@@ -93,6 +96,13 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
       ENDPOINT_DATABASE_INDEX.set(endpoint, databaseIndex);
       if (connection != null) {
         CONNECTION_DATABASE_INDEX.set(connection, databaseIndex);
+      }
+
+      // RedisURI is mutable, so the configured target is rendered here and kept immutable
+      RedisServerTarget target = LettuceServerTargets.of(redisUri);
+      ENDPOINT_TARGET.set(endpoint, target);
+      if (connection != null) {
+        CONNECTION_TARGET.set(connection, target);
       }
 
       String host = redisUri.getHost();

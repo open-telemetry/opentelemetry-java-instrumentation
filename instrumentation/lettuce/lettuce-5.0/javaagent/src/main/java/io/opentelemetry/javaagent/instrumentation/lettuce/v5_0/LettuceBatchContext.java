@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_TARGET;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.batchInstrumenter;
 
 import io.lettuce.core.protocol.AsyncCommand;
@@ -17,6 +18,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -70,7 +72,8 @@ public final class LettuceBatchContext {
         state.asyncCommands,
         state.parentContext,
         ENDPOINT_ADDRESS.get(endpoint),
-        ENDPOINT_DATABASE_INDEX.get(endpoint));
+        ENDPOINT_DATABASE_INDEX.get(endpoint),
+        ENDPOINT_TARGET.get(endpoint));
   }
 
   private LettuceBatchContext() {}
@@ -93,9 +96,10 @@ public final class LettuceBatchContext {
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
         @Nullable InetSocketAddress serverAddress,
-        @Nullable Integer databaseIndex) {
+        @Nullable Integer databaseIndex,
+        @Nullable RedisServerTarget serverTarget) {
       LettuceBatchRequest request =
-          LettuceBatchRequest.create(commands, serverAddress, databaseIndex);
+          LettuceBatchRequest.create(commands, serverAddress, databaseIndex, serverTarget);
       Context parentContext =
           capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {
