@@ -103,6 +103,14 @@ class JedisServerTargetsTest {
   }
 
   @Test
+  void ipv6NodeWithoutPortRemainsUnchanged() {
+    RedisServerTarget target = JedisServerTargets.ofNodes(singletonList("2001:db8::1"));
+
+    assertThat(target.getAddress()).isEqualTo("2001:db8::1");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void noNodes() {
     assertThat(JedisServerTargets.ofNodes(null)).isNull();
     assertThat(JedisServerTargets.ofNodes(emptyList())).isNull();
