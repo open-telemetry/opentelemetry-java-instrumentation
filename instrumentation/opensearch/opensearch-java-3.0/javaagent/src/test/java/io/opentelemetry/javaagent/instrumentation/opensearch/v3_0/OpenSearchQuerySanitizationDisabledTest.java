@@ -27,9 +27,9 @@ import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class OpenSearchQuerySanitizationDisabledTest extends AbstractOpenSearchQueryTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void shouldCaptureUnsanitizedSearchQueryBody() throws IOException {
     SearchRequest searchRequest =
