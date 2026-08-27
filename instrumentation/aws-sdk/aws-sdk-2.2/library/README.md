@@ -46,11 +46,13 @@ using the [AWS Trace Header](https://docs.aws.amazon.com/xray/latest/devguide/xr
 This format is the only format recognized by AWS managed services, and populating will allow
 propagating the trace through them.
 
-For SQS batch sends under stable messaging semantic conventions, the instrumentation writes each
-message creation context to that entry's `AWSTraceHeader` message system attribute. This uses the
-AWS-defined per-message carrier and does not consume one of the ten user message attributes. The
-instrumentation falls back to the shared request trace header when the SDK version does not support
-per-entry message system attributes.
+For SQS batch sends under stable messaging semantic conventions, when X-Ray propagation is enabled,
+the instrumentation writes each message creation context to that entry's `AWSTraceHeader` message
+system attribute. This uses the AWS-defined per-message carrier and does not consume one of the ten
+user message attributes. The X-Ray propagation setting also controls the shared request trace header,
+so disabling it disables both carriers. On SDK versions that do not support per-entry message system
+attributes, the configured messaging propagator can still inject each creation context into user
+message attributes when the experimental option is enabled and attribute capacity permits.
 
 Additionally, you can enable an experimental option to use the configured propagator to inject into
 message attributes (see [parent README](../../README.md)). This currently supports the following AWS APIs:
