@@ -46,7 +46,7 @@ class CassandraResponsePeerTest {
   }
 
   @Test
-  void omitsUnresolvedAndNonInetChannelAddresses() throws Exception {
+  void omitsUnresolvedAndNonInetChannelAddresses() {
     ChannelHandlerContext context = mock(ChannelHandlerContext.class);
     Channel channel = mock(Channel.class);
     Frame unresolvedFrame = frame(1);
