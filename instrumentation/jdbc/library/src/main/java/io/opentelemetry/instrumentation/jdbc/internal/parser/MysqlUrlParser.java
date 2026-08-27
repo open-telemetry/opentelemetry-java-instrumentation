@@ -102,21 +102,6 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     return -1;
   }
 
-  private static boolean applyHostGroup(String jdbcUrl, ParseContext ctx) {
-    String authority = extractAuthority("mariadb://" + jdbcUrl);
-    if (authority == null) {
-      authority = extractAuthorityWithQueryAt(jdbcUrl);
-      if (authority == null) {
-        return false;
-      }
-    }
-    String hostList = sanitizeHostList(authority);
-    if (hostList != null) {
-      ctx.serverAddressGroup(hostList);
-    }
-    return true;
-  }
-
   private static void parseNonStandardUrl(String jdbcUrl, ParseContext ctx) {
     int typeEndLoc = jdbcUrl.indexOf(':');
     int sectionEnd = indexOf(jdbcUrl, typeEndLoc + 1, ':', '/', '?');
@@ -233,6 +218,21 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
     // Apply query params (highest precedence)
     ctx.applyCommonParams(jdbcUrl, "?", "&");
+  }
+
+  private static boolean applyHostGroup(String jdbcUrl, ParseContext ctx) {
+    String authority = extractAuthority("mariadb://" + jdbcUrl);
+    if (authority == null) {
+      authority = extractAuthorityWithQueryAt(jdbcUrl);
+      if (authority == null) {
+        return false;
+      }
+    }
+    String hostList = sanitizeHostList(authority);
+    if (hostList != null) {
+      ctx.serverAddressGroup(hostList);
+    }
+    return true;
   }
 
   private static final Pattern HOST_PATTERN =
