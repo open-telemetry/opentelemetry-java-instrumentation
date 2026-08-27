@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -29,10 +30,13 @@ import com.couchbase.client.java.Collection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -92,6 +96,31 @@ class CouchbaseClient32Test {
 
     String networkPeerAddress = networkPeerAddress();
     Long networkPeerPort = networkPeerPort();
+    List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
+    dispatchAttributes.add(equalTo(maybeStable(DB_SYSTEM), "couchbase"));
+    dispatchAttributes.add(equalTo(maybeStable(DB_NAME), "test"));
+    dispatchAttributes.add(equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"));
+    if (emitOldDatabaseSemconv() || EXPERIMENTAL_ATTRIBUTES) {
+      dispatchAttributes.add(equalTo(stringKey("db.couchbase.document_id"), "id"));
+      dispatchAttributes.add(
+          satisfies(stringKey("db.couchbase.local_id"), val -> val.isNotBlank()));
+      dispatchAttributes.add(
+          satisfies(longKey("db.couchbase.operation_id"), val -> val.isNotNegative()));
+      dispatchAttributes.add(equalTo(stringKey("db.couchbase.scope"), "_default"));
+      dispatchAttributes.add(
+          satisfies(longKey("db.couchbase.server_duration"), val -> val.isNotNegative()));
+    }
+    if (emitOldDatabaseSemconv()) {
+      dispatchAttributes.add(satisfies(stringKey("net.host.name"), val -> val.isNotBlank()));
+      dispatchAttributes.add(satisfies(longKey("net.host.port"), val -> val.isPositive()));
+      dispatchAttributes.add(satisfies(stringKey("net.peer.name"), val -> val.isNotBlank()));
+      dispatchAttributes.add(satisfies(longKey("net.peer.port"), val -> val.isPositive()));
+      dispatchAttributes.add(equalTo(stringKey("net.transport"), "IP.TCP"));
+    }
+    if (emitStableDatabaseSemconv()) {
+      dispatchAttributes.add(equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress));
+      dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, networkPeerPort));
+    }
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
@@ -115,9 +144,7 @@ class CouchbaseClient32Test {
                 },
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasAttributesSatisfying(
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
-                            equalTo(NETWORK_PEER_PORT, networkPeerPort))));
+                        .hasAttributesSatisfyingExactly(dispatchAttributes)));
   }
 
   private static String networkPeerAddress() throws UnknownHostException {
