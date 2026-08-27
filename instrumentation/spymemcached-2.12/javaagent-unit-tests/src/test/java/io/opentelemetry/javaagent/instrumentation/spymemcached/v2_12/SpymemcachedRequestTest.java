@@ -163,6 +163,29 @@ class SpymemcachedRequestTest {
   }
 
   @Test
+  void partialBulkRetryHasNoHandlingNode() {
+    MemcachedConnection connection = mock(MemcachedConnection.class);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
+    Operation initialOperation = operation("one.example", 11211, "one", "two");
+    Context context = SpymemcachedRequestHolder.init(Context.root(), request);
+    SpymemcachedRequestHolder.associateOperation(context, initialOperation);
+    SpymemcachedRequestHolder.captureHandlingNode(context, initialOperation);
+
+    SpymemcachedRequestHolder.RetryScope retryScope =
+        SpymemcachedRequestHolder.startRetry(initialOperation);
+    assertThat(retryScope).isNotNull();
+    try {
+      Operation retryOperation = operation("two.example", 11212, "two");
+      SpymemcachedRequestHolder.associateOperation(Context.current(), retryOperation);
+      SpymemcachedRequestHolder.captureHandlingNode(Context.current(), retryOperation);
+    } finally {
+      retryScope.close();
+    }
+
+    assertThat(request.getHandlingNodeAddress()).isNull();
+  }
+
+  @Test
   void retryOntoSeveralNodesHasNoHandlingNode() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");

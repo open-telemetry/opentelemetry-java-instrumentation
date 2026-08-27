@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.IdentityHashMap;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 
 public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
@@ -78,6 +79,10 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
     for (SpymemcachedRequest request : operationAssociations.requests()) {
       if (!holder.retry) {
         request.setHandlingNode(node);
+      } else if (operation instanceof KeyedOperation
+          && holder.associations.hasRequestKeysOutside(
+              request, ((KeyedOperation) operation).getKeys())) {
+        request.clearHandlingNode();
       } else if (!holder.retryNodes.containsKey(request)) {
         holder.retryNodes.put(request, node);
         request.setRetryHandlingNode(node);

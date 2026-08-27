@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -63,6 +64,15 @@ final class SpymemcachedRequestAssociations {
     return requests.values();
   }
 
+  boolean hasRequestKeysOutside(SpymemcachedRequest request, Collection<String> operationKeys) {
+    for (Map.Entry<String, RequestList> entry : requestsByKey.entrySet()) {
+      if (!operationKeys.contains(entry.getKey()) && entry.getValue().contains(request)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private void addRequests(RequestList requests) {
     for (SpymemcachedRequest request : requests.values()) {
       addRequest(request);
@@ -97,6 +107,10 @@ final class SpymemcachedRequestAssociations {
 
     boolean isEmpty() {
       return values.isEmpty();
+    }
+
+    boolean contains(SpymemcachedRequest request) {
+      return seen.containsKey(request);
     }
 
     Iterable<SpymemcachedRequest> values() {
