@@ -32,6 +32,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY;
+import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.TEXT;
 import static net.spy.memcached.FailureMode.Redistribute;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,6 +45,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -70,13 +72,10 @@ import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.internal.CheckedOperationTimeoutException;
 import net.spy.memcached.internal.GetFuture;
-import net.spy.memcached.ops.GetOperation;
 import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationQueueFactory;
-import net.spy.memcached.ops.OperationStatus;
-import net.spy.memcached.protocol.binary.BinaryMemcachedNodeImpl;
-import net.spy.memcached.protocol.binary.MultiGetOperationImpl;
+import net.spy.memcached.protocol.ascii.AsciiMemcachedNodeImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -1283,7 +1282,10 @@ class SpymemcachedTest {
         getMemcached(
             asList(memcachedAddress, retryContainerAddress),
             builder ->
-                builder.setFailureMode(Redistribute).setOpQueueFactory(lockableQueueFactory));
+                builder
+                    .setProtocol(TEXT)
+                    .setFailureMode(Redistribute)
+                    .setOpQueueFactory(lockableQueueFactory));
     MemcachedConnection connection = memcached.getConnection();
     List<MemcachedNode> nodes = new ArrayList<>(connection.getLocator().getAll());
     assertThat(nodes).hasSize(2);
@@ -1302,53 +1304,32 @@ class SpymemcachedTest {
       Collection<Operation> operations = failedNode.destroyInputQueue();
       assertThat(operations).hasSize(2);
 
-      ConnectionFactory optimizerFactory =
-          new ConnectionFactoryBuilder().setProtocol(BINARY).build();
-      BlockingQueue<Operation> readQueue = optimizerFactory.createReadOperationQueue();
+      ConnectionFactory optimizerFactory = new ConnectionFactoryBuilder().setProtocol(TEXT).build();
+      Operation optimizedOperation;
       try (SocketChannel channel = SocketChannel.open()) {
-        BinaryMemcachedNodeImpl optimizer =
-            new BinaryMemcachedNodeImpl(
+        AsciiMemcachedNodeImpl optimizer =
+            new AsciiMemcachedNodeImpl(
                 InetSocketAddress.createUnresolved("optimizer", 11211),
                 channel,
                 optimizerFactory.getReadBufSize(),
-                readQueue,
+                optimizerFactory.createReadOperationQueue(),
                 optimizerFactory.createWriteOperationQueue(),
                 optimizerFactory.createOperationQueue(),
                 optimizerFactory.getOpQueueMaxBlockTime(),
-                false,
                 optimizerFactory.getOperationTimeout(),
                 optimizerFactory.getAuthWaitTime(),
                 optimizerFactory);
-        GetOperation dummyOperation =
-            optimizerFactory
-                .getOperationFactory()
-                .get(
-                    "optimizer",
-                    new GetOperation.Callback() {
-                      @Override
-                      public void gotData(String key, int flags, byte[] data) {}
-
-                      @Override
-                      public void receivedStatus(OperationStatus status) {}
-
-                      @Override
-                      public void complete() {}
-                    });
-        dummyOperation.setHandlingNode(optimizer);
-        dummyOperation.initialize();
-        optimizer.addOp(dummyOperation);
         for (Operation operation : operations) {
           optimizer.addOp(operation);
         }
         optimizer.copyInputQueue();
-        optimizer.fillWriteBuffer(true);
+        Method optimize = AsciiMemcachedNodeImpl.class.getDeclaredMethod("optimize");
+        optimize.setAccessible(true);
+        optimize.invoke(optimizer);
+        optimizedOperation = optimizer.getCurrentWriteOp();
       }
-      assertThat(readQueue).hasSize(2);
-      Operation standaloneOperation = readQueue.remove();
-      Operation optimizedOperation = readQueue.remove();
-      standaloneOperation.cancel();
-      assertThat(((KeyedOperation) optimizedOperation).getKeys()).hasSize(2);
-      ((MultiGetOperationImpl) optimizedOperation).getRetryKeys().addAll(keys);
+      assertThat(((KeyedOperation) optimizedOperation).getKeys())
+          .containsExactlyInAnyOrderElementsOf(keys);
       failedNode.reconnecting();
       connection.redistributeOperation(optimizedOperation);
     } finally {
