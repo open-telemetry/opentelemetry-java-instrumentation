@@ -14,7 +14,7 @@ import java.util.Map;
 import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 
-final class SpymemcachedRequestAssociations {
+class SpymemcachedRequestAssociations {
 
   private final RequestList requests = new RequestList();
   private final Map<String, RequestList> requestsByKey = new HashMap<>();
@@ -28,6 +28,8 @@ final class SpymemcachedRequestAssociations {
     associations.addRequest(request);
     return associations;
   }
+
+  private SpymemcachedRequestAssociations() {}
 
   SpymemcachedRequestAssociations forOperation(Operation operation) {
     SpymemcachedRequestAssociations associations = new SpymemcachedRequestAssociations();
@@ -95,7 +97,7 @@ final class SpymemcachedRequestAssociations {
     requests.add(request);
   }
 
-  private static final class RequestList {
+  private static class RequestList {
     private final List<SpymemcachedRequest> values = new ArrayList<>();
     private final IdentityHashMap<SpymemcachedRequest, Boolean> seen = new IdentityHashMap<>();
 
@@ -117,6 +119,4 @@ final class SpymemcachedRequestAssociations {
       return values;
     }
   }
-
-  private SpymemcachedRequestAssociations() {}
 }
