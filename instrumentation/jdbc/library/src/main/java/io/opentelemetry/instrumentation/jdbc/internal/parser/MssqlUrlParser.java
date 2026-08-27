@@ -105,14 +105,15 @@ public final class MssqlUrlParser implements JdbcUrlParser {
       String host,
       @Nullable String instanceName,
       boolean portConfigured) {
+    if (portConfigured) {
+      UrlParsingUtils.appendHostPort(group, host, ctx.port());
+      return;
+    }
     if (instanceName == null || instanceName.isEmpty()) {
-      UrlParsingUtils.appendHostPort(group, host, portConfigured ? ctx.port() : null);
+      UrlParsingUtils.appendHostPort(group, host, null);
       return;
     }
     appendServerAddress(group, host + "\\" + instanceName);
-    if (portConfigured && ctx.port() != null) {
-      group.append(':').append(ctx.port());
-    }
   }
 
   @Nullable
