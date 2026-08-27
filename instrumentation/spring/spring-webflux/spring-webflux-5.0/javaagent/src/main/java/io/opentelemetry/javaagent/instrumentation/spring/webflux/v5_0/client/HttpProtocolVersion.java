@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
+import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
@@ -65,12 +66,6 @@ public class HttpProtocolVersion {
     }
   }
 
-  static String format(int majorVersion, int minorVersion) {
-    return majorVersion > 1 && minorVersion == 0
-        ? Integer.toString(majorVersion)
-        : majorVersion + "." + minorVersion;
-  }
-
   private HttpProtocolVersion() {}
 
   private static class VersionAccessor {
@@ -92,7 +87,7 @@ public class HttpProtocolVersion {
       if (version == null) {
         return null;
       }
-      return format(
+      return HttpProtocolUtil.formatVersion(
           (int) majorVersionMethod.invoke(version), (int) minorVersionMethod.invoke(version));
     }
   }

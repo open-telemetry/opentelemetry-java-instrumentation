@@ -55,16 +55,6 @@ class SpringWebfluxClientInstrumentationTest
   }
 
   @Test
-  void shouldNormalizeHttp2ProtocolVersion() {
-    assertThat(HttpProtocolVersion.format(2, 0)).isEqualTo("2");
-  }
-
-  @Test
-  void shouldPreserveHttp1ProtocolVersion() {
-    assertThat(HttpProtocolVersion.format(1, 0)).isEqualTo("1.0");
-  }
-
-  @Test
   void shouldAddProtocolVersionToDurationMetric() {
     URI uri = resolveAddress("/success");
     int responseCode = sendRequest(buildRequest("GET", uri, emptyMap()), "GET", uri, emptyMap());

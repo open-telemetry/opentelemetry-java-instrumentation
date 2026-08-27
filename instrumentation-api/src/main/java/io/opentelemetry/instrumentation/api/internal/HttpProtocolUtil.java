@@ -37,5 +37,11 @@ public final class HttpProtocolUtil {
     return version;
   }
 
+  public static String formatVersion(int majorVersion, int minorVersion) {
+    return majorVersion > 1 && minorVersion == 0
+        ? Integer.toString(majorVersion)
+        : majorVersion + "." + minorVersion;
+  }
+
   private HttpProtocolUtil() {}
 }
