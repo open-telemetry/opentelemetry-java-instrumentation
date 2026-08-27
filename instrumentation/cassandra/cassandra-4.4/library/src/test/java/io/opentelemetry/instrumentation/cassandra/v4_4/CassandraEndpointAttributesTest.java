@@ -10,11 +10,9 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.datastax.oss.driver.api.core.metadata.Metadata;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.api.core.session.Session;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
@@ -41,7 +39,6 @@ class CassandraEndpointAttributesTest {
   private static final InetSocketAddress PROXY_ADDRESS =
       InetSocketAddress.createUnresolved("proxy.example.com", 29042);
 
-  @Mock private Metadata metadata;
   @Mock private Node coordinator;
   @Mock private Session session;
 
@@ -87,9 +84,6 @@ class CassandraEndpointAttributesTest {
 
   @Test
   void configuredTargetIsAvailableWithoutExecutionInfo() {
-    if (emitStableDatabaseSemconv()) {
-      stubSessionNode();
-    }
     CassandraRequest request =
         CassandraRequest.create(
             session, target(singletonList("cassandra.example.com:9042")), "SELECT 1");
@@ -112,7 +106,7 @@ class CassandraEndpointAttributesTest {
           .thenReturn(Optional.of(InetSocketAddress.createUnresolved("10.0.0.5", 9042)));
     }
 
-    Attributes attributes = serverAttributes(target(singletonList("proxy.example.com:29042")));
+    Attributes attributes = serverAttributes(null);
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("10.0.0.5");
@@ -131,7 +125,7 @@ class CassandraEndpointAttributesTest {
       when(coordinator.getHostId()).thenReturn(hostId);
     }
 
-    Attributes attributes = serverAttributes(target(singletonList("proxy.example.com:29042")));
+    Attributes attributes = serverAttributes(null);
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isNull();
@@ -150,7 +144,7 @@ class CassandraEndpointAttributesTest {
           .thenReturn(UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31"));
     }
 
-    Attributes attributes = serverAttributes(target(singletonList("proxy.example.com:29042")));
+    Attributes attributes = serverAttributes(null);
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com");
@@ -161,9 +155,6 @@ class CassandraEndpointAttributesTest {
   }
 
   private Attributes serverAttributes(CassandraServerTarget serverTarget) {
-    if (emitStableDatabaseSemconv()) {
-      stubSessionNode();
-    }
     CassandraRequest request = CassandraRequest.create(session, serverTarget, "SELECT 1");
     AttributesBuilder startAttributes = Attributes.builder();
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
@@ -174,11 +165,6 @@ class CassandraEndpointAttributesTest {
         .putAll(startAttributes.build())
         .putAll(endAttributes.build())
         .build();
-  }
-
-  private void stubSessionNode() {
-    when(session.getMetadata()).thenReturn(metadata);
-    when(metadata.getNodes()).thenReturn(singletonMap(UUID.randomUUID(), coordinator));
   }
 
   private static CassandraServerTarget target(List<String> contactPoints) {
