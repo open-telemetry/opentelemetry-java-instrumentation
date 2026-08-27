@@ -21,6 +21,34 @@ dependencies {
   testImplementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("serviceManagerTest") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
+        // a version from the window where redisson routes configuration through ServiceManager
+        implementation("org.redisson:redisson:3.24.3")
+      }
+
+      targets.all {
+        testTask.configure {
+          filter {
+            includeTestsMatching("*RedissonClientTest.configuredServerTarget")
+          }
+          jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -36,7 +64,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 
   if (otelProps.denyUnsafe) {

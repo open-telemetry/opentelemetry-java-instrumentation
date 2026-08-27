@@ -108,7 +108,7 @@ public final class ConfigServerTargetsBefore317 {
     List<String> endpoints = new ArrayList<>(addresses.size());
     for (Object address : addresses) {
       if (address != null) {
-        endpoints.add(address.toString());
+        endpoints.add(addressString(address));
       }
     }
     Collections.sort(endpoints);
@@ -120,13 +120,13 @@ public final class ConfigServerTargetsBefore317 {
       @Nullable Object firstAddress, @Nullable Collection<?> otherAddresses) {
     List<String> endpoints = new ArrayList<>();
     if (firstAddress != null) {
-      endpoints.add(firstAddress.toString());
+      endpoints.add(addressString(firstAddress));
     }
     Set<String> sortedAddresses = new TreeSet<>();
     if (otherAddresses != null) {
       for (Object address : otherAddresses) {
         if (address != null) {
-          sortedAddresses.add(address.toString());
+          sortedAddresses.add(addressString(address));
         }
       }
     }
@@ -143,10 +143,15 @@ public final class ConfigServerTargetsBefore317 {
     List<String> endpoints = new ArrayList<>(addresses.size());
     for (Object address : addresses) {
       if (address != null) {
-        endpoints.add(address.toString());
+        endpoints.add(addressString(address));
       }
     }
     return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, logicalName);
+  }
+
+  private static String addressString(Object address) {
+    String value = address.toString();
+    return value.startsWith("//") ? "redis:" + value : value;
   }
 
   private ConfigServerTargetsBefore317() {}
