@@ -38,8 +38,9 @@ testing {
       }
 
       dependencies {
+        val lettuceVersion = baseVersion("5.1.0.RELEASE").orLatest("5.+")
         implementation("com.google.guava:guava")
-        implementation("io.lettuce:lettuce-core:5.1.0.RELEASE")
+        implementation("io.lettuce:lettuce-core:$lettuceVersion")
         implementation("org.testcontainers:testcontainers")
       }
 
@@ -59,8 +60,9 @@ testing {
       }
 
       dependencies {
+        val lettuceVersion = baseVersion("6.0.0.RELEASE").orLatest("6.4.+")
         implementation("com.google.guava:guava")
-        implementation("io.lettuce:lettuce-core:6.0.0.RELEASE")
+        implementation("io.lettuce:lettuce-core:$lettuceVersion")
         implementation("org.testcontainers:testcontainers")
       }
 
