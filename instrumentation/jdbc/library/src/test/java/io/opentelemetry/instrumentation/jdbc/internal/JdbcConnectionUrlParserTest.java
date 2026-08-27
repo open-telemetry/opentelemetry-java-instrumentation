@@ -88,7 +88,8 @@ class JdbcConnectionUrlParserTest {
         "jdbc:mariadb:failover://user:p,a?ss@h1:3306,h2:3306/db",
         "jdbc:mariadb:failover://user:p,a#ss@h1:3306,h2:3306/db",
         "jdbc:mariadb:failover://user:123,a?x=y@h1:3306,h2:3306/db",
-        "jdbc:mariadb:failover://user:123,a?x=y@address=(host=h1),address=(host=h2)/db"
+        "jdbc:mariadb:failover://user:123,a?x=y@address=(host=h1),address=(host=h2)/db",
+        "jdbc:mariadb:failover://user:123,a#ignored?x=y@/db"
       })
   void ambiguousMariaDbCredentialsDoNotBecomeAConfiguredTarget(String url) {
     DbInfo dbInfo = parse(url, null);
@@ -97,9 +98,14 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getName()).isNull();
   }
 
-  @Test
-  void ambiguousPostgresCredentialsDoNotBecomeAConfiguredTarget() {
-    DbInfo dbInfo = parse("jdbc:postgresql://user:123,a/ss@pg.host:5432", null);
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "jdbc:postgresql://user:123,a/ss@pg.host:5432",
+        "jdbc:postgresql://user:123,a#ignored?x=y@pg.host:5432,pg2:5432/db"
+      })
+  void ambiguousPostgresCredentialsDoNotBecomeAConfiguredTarget(String url) {
+    DbInfo dbInfo = parse(url, null);
     assertThat(dbInfo.getServerAddressGroup()).isNull();
     assertThat(dbInfo.getHost()).isEqualTo("localhost");
     assertThat(dbInfo.getName()).isNull();
