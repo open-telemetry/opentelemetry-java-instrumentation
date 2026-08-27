@@ -111,6 +111,21 @@ class HbaseServerTargetTest {
   }
 
   @Test
+  void rendersMasterRegistryDefaultAddress() {
+    Configuration configuration = new Configuration(false);
+    configuration.set(REGISTRY_KEY, MASTER_REGISTRY);
+    configuration.set("hbase.master.hostname", "master.test");
+    configuration.setInt("hbase.master.port", 17000);
+
+    assertThat(HbaseServerTarget.from(configuration, false, true, true))
+        .isEqualTo("master.test:17000");
+
+    configuration.set("hbase.masters", "");
+    assertThat(HbaseServerTarget.from(configuration, false, true, true))
+        .isEqualTo("master.test:17000");
+  }
+
+  @Test
   void rendersMasterRegistryIpv6Endpoints() {
     Configuration configuration = new Configuration(false);
     configuration.set(REGISTRY_KEY, MASTER_REGISTRY);
