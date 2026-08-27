@@ -27,9 +27,7 @@ object PekkoHttpTestAsyncHandler {
         AbstractHttpServerTest.controller(
           endpoint,
           () => {
-            val resp = HttpResponse(status =
-              endpoint.getStatus
-            ) // .withHeaders(headers.Type)resp.contentType = "text/plain"
+            val resp = HttpResponse(status = endpoint.getStatus)
             endpoint match {
               case SUCCESS => resp.withEntity(endpoint.getBody)
               case INDEXED_CHILD =>
