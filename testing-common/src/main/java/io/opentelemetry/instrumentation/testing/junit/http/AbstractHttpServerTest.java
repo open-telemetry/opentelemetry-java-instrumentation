@@ -241,7 +241,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     String spanId = assertResponseHasCustomizedHeaders(response, SUCCESS, null);
-    assertTheTraces(1, null, null, spanId, method, SUCCESS, "127.0.0.1", "127.0.0.1");
+    assertTheTraces(
+        1,
+        null,
+        null,
+        spanId,
+        method,
+        SUCCESS,
+        span -> assertServerSpan(span, method, SUCCESS, SUCCESS.status, "127.0.0.1", "127.0.0.1"));
   }
 
   @Test
@@ -974,32 +981,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         method,
         endpoint,
         span -> assertServerSpan(span, method, endpoint, endpoint.status));
-  }
-
-  private void assertTheTraces(
-      int size,
-      String traceId,
-      String parentId,
-      String spanId,
-      String method,
-      ServerEndpoint endpoint,
-      String expectedNetworkPeerAddress,
-      String expectedClientAddress) {
-    assertTheTraces(
-        size,
-        traceId,
-        parentId,
-        spanId,
-        method,
-        endpoint,
-        span ->
-            assertServerSpan(
-                span,
-                method,
-                endpoint,
-                endpoint.status,
-                expectedNetworkPeerAddress,
-                expectedClientAddress));
   }
 
   private void assertTheTraces(
