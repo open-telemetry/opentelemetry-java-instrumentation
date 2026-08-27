@@ -8,9 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 
@@ -18,6 +20,8 @@ class SpymemcachedRequestAssociations {
 
   private final RequestList requests = new RequestList();
   private final Map<String, RequestList> requestsByKey = new HashMap<>();
+  private final IdentityHashMap<SpymemcachedRequest, Set<String>> keysByRequest =
+      new IdentityHashMap<>();
 
   static SpymemcachedRequestAssociations create() {
     return new SpymemcachedRequestAssociations();
@@ -67,8 +71,12 @@ class SpymemcachedRequestAssociations {
   }
 
   boolean hasRequestKeysOutside(SpymemcachedRequest request, Collection<String> operationKeys) {
-    for (Map.Entry<String, RequestList> entry : requestsByKey.entrySet()) {
-      if (!operationKeys.contains(entry.getKey()) && entry.getValue().contains(request)) {
+    Set<String> requestKeys = keysByRequest.get(request);
+    if (requestKeys == null) {
+      return false;
+    }
+    for (String key : requestKeys) {
+      if (!operationKeys.contains(key)) {
         return true;
       }
     }
@@ -90,6 +98,12 @@ class SpymemcachedRequestAssociations {
     for (SpymemcachedRequest request : requests.values()) {
       addRequest(request);
       keyedRequests.add(request);
+      Set<String> requestKeys = keysByRequest.get(request);
+      if (requestKeys == null) {
+        requestKeys = new HashSet<>();
+        keysByRequest.put(request, requestKeys);
+      }
+      requestKeys.add(key);
     }
   }
 
@@ -109,10 +123,6 @@ class SpymemcachedRequestAssociations {
 
     boolean isEmpty() {
       return values.isEmpty();
-    }
-
-    boolean contains(SpymemcachedRequest request) {
-      return seen.containsKey(request);
     }
 
     Iterable<SpymemcachedRequest> values() {
