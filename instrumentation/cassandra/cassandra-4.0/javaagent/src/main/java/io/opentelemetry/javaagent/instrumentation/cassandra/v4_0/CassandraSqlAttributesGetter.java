@@ -16,6 +16,7 @@ import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -24,6 +25,9 @@ import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter
     implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo> {
+
+  private static final VirtualField<ExecutionInfo, InetSocketAddress> executionInfoPeer =
+      VirtualField.find(ExecutionInfo.class, InetSocketAddress.class);
 
   @Override
   public String getDbSystemName(CassandraRequest request) {
@@ -74,6 +78,10 @@ final class CassandraSqlAttributesGetter
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     if (executionInfo == null) {
       return null;
+    }
+    InetSocketAddress peer = executionInfoPeer.get(executionInfo);
+    if (peer != null) {
+      return peer;
     }
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {

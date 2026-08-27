@@ -13,6 +13,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -26,6 +27,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -47,9 +49,10 @@ class CassandraEndpointAttributesTest {
   private static final InetSocketAddress PROXY_ADDRESS =
       InetSocketAddress.createUnresolved("127.0.0.1", 29042);
 
+  @Mock private ExecutionInfo executionInfo;
+  @Mock private Metadata metadata;
   @Mock private Node coordinator;
   @Mock private EndPoint customEndPoint;
-  @Mock private ExecutionInfo executionInfo;
   @Mock private SniEndPoint sniEndPoint;
   @Mock private Session session;
 
@@ -207,6 +210,53 @@ class CassandraEndpointAttributesTest {
       assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
       verify(customEndPoint).resolve();
     }
+  }
+
+  @Test
+  void responsePeerIsTheSniProxySocket() throws UnknownHostException {
+    InetSocketAddress responsePeer = resolved(29042);
+    VirtualField.find(ExecutionInfo.class, InetSocketAddress.class)
+        .set(executionInfo, responsePeer);
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    verifyNoInteractions(coordinator);
+  }
+
+  @Test
+  void unresolvedNetworkPeerIsOmittedUnderCustomEndPoint() {
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    when(coordinator.getEndPoint()).thenReturn(customEndPoint);
+    when(customEndPoint.resolve())
+        .thenReturn(InetSocketAddress.createUnresolved("node.example.com", 9042));
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isNull();
+  }
+
+  @Test
+  void networkPeerIsResolvedAddressUnderDefaultEndPoint() throws UnknownHostException {
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+    InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
+
+    assertThat(peer).isNotNull();
+    assertThat(peer.getHostString()).isEqualTo("127.0.0.1");
+    assertThat(peer.getPort()).isEqualTo(9042);
+  }
+
+  @Test
+  void responsePeerPrecedesCustomEndpointData() throws UnknownHostException {
+    InetSocketAddress responsePeer = resolved(19042);
+    VirtualField.find(ExecutionInfo.class, InetSocketAddress.class)
+        .set(executionInfo, responsePeer);
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    verifyNoInteractions(coordinator, customEndPoint);
   }
 
   private Attributes serverAttributes(DbServerTarget serverTarget) {
