@@ -66,7 +66,7 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CouchbaseRequestInfo couchbaseRequest) {
-    // the old conventions never described a server for Couchbase, and they are frozen
+    // in old-semconv mode onEnd() reports the node that answered instead of the configured target
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
