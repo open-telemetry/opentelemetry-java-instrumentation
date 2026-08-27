@@ -13,7 +13,6 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
-import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.net.InetSocketAddress;
@@ -96,11 +95,6 @@ final class CassandraSqlAttributesGetter
   private static CassandraServerTarget getServerTarget(CassandraRequest request) {
     if (!emitStableDatabaseSemconv()) {
       return null;
-    }
-    for (Node node : request.getSession().getMetadata().getNodes().values()) {
-      if (node.getEndPoint() instanceof SniEndPoint) {
-        return null;
-      }
     }
     return request.getServerTarget();
   }
