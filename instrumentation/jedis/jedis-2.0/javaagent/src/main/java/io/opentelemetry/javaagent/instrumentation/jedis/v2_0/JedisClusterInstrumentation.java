@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -23,16 +24,26 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.clients.jedis.JedisSlotBasedConnectionHandler");
+    return namedOneOf(
+        "redis.clients.jedis.JedisClusterConnectionHandler",
+        "redis.clients.jedis.JedisSlotBasedConnectionHandler");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, named("java.util.Set"))),
+        isConstructor()
+            .and(isDeclaredBy(named("redis.clients.jedis.JedisSlotBasedConnectionHandler")))
+            .and(takesArgument(0, named("java.util.Set"))),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("getConnection", "getConnectionFromSlot")
+            .and(isDeclaredBy(named("redis.clients.jedis.JedisSlotBasedConnectionHandler")))
+            .and(returns(named("redis.clients.jedis.Jedis"))),
+        getClass().getName() + "$GetConnectionAdvice");
+    transformer.applyAdviceToMethod(
+        named("getConnectionFromNode")
+            .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
             .and(returns(named("redis.clients.jedis.Jedis"))),
         getClass().getName() + "$GetConnectionAdvice");
   }
