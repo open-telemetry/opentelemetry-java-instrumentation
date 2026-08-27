@@ -128,11 +128,11 @@ tasks {
       filter {
         includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
       }
-      jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=false")
+      jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
       jvmArgs("-Dotel.semconv-stability.opt-in=database")
       systemProperty(
         "metadataConfig",
-        "otel.instrumentation.opensearch.query-sanitization.enabled=false,otel.semconv-stability.opt-in=database",
+        "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.semconv-stability.opt-in=database",
       )
     }
 
