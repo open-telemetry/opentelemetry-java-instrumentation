@@ -16,6 +16,8 @@ import org.apache.hadoop.hbase.HConstants;
 public class HbaseServerTarget {
 
   private static final String REGISTRY_KEY = "hbase.client.registry.impl";
+  private static final String ASYNC_REGISTRY_FACTORY =
+      "org.apache.hadoop.hbase.client.AsyncRegistryFactory";
   private static final String ZK_ASYNC_REGISTRY = "org.apache.hadoop.hbase.client.ZKAsyncRegistry";
   private static final String ZK_REGISTRY = "org.apache.hadoop.hbase.client.ZKConnectionRegistry";
   private static final String MASTER_REGISTRY = "org.apache.hadoop.hbase.client.MasterRegistry";
@@ -38,7 +40,8 @@ public class HbaseServerTarget {
   private static final boolean SUPPORTS_CLIENT_ZK_CONFIG =
       hasHbaseConstant("CLIENT_ZOOKEEPER_QUORUM");
   private static final boolean SUPPORTS_REGISTRY_CONFIG =
-      hasHbaseConstant("CLIENT_CONNECTION_REGISTRY_IMPL_CONF_KEY");
+      hasHbaseConstant("CLIENT_CONNECTION_REGISTRY_IMPL_CONF_KEY")
+          || hasClassField(ASYNC_REGISTRY_FACTORY, "REGISTRY_IMPL_CONF_KEY");
   private static final boolean SUPPORTS_ZK_CONFIG_FILE =
       hasHbaseConstant("HBASE_CONFIG_READ_ZOOKEEPER_CONFIG");
   private static final boolean USES_CONFIGURED_MASTER_PORT = usesConfiguredMasterPort();
@@ -257,6 +260,17 @@ public class HbaseServerTarget {
       Field unused = HConstants.class.getField(fieldName);
       return true;
     } catch (NoSuchFieldException | SecurityException | LinkageError ignored) {
+      return false;
+    }
+  }
+
+  private static boolean hasClassField(String className, String fieldName) {
+    try {
+      Field unused =
+          Class.forName(className, false, HbaseServerTarget.class.getClassLoader())
+              .getDeclaredField(fieldName);
+      return true;
+    } catch (ReflectiveOperationException | SecurityException | LinkageError ignored) {
       return false;
     }
   }
