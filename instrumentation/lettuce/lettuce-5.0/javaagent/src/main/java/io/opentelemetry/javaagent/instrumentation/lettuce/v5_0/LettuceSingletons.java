@@ -258,21 +258,15 @@ public class LettuceSingletons {
 
   @Nullable
   static InetSocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
-    if (Boolean.TRUE.equals(REACTIVE_COMMAND.get(command)) || closesConnection(command)) {
+    // A command that does not expect a response has its span ended synchronously in
+    // DefaultEndpoint.write, while the channel write that records the peer runs later on the netty
+    // event loop, so the peer is not known yet.
+    if (Boolean.TRUE.equals(REACTIVE_COMMAND.get(command))
+        || !LettuceInstrumentationUtil.expectsResponse(command)) {
       return null;
     }
     LettuceCommandPeer peer = findCommandPeer(command);
     return peer == null ? null : peer.getAddress();
-  }
-
-  private static boolean closesConnection(RedisCommand<?, ?, ?> command) {
-    String commandName = LettuceInstrumentationUtil.getCommandName(command);
-    if ("SHUTDOWN".equals(commandName)) {
-      return true;
-    }
-    return "DEBUG".equals(commandName)
-        && command.getArgs() != null
-        && "SEGFAULT".equals(command.getArgs().toCommandString().trim());
   }
 
   public static void markReactiveCommand(RedisCommand<?, ?, ?> command) {
