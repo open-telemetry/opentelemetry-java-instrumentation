@@ -17,7 +17,7 @@ import java.lang.ref.WeakReference;
 import javax.annotation.Nullable;
 import ratpack.http.client.RequestSpec;
 
-final class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapter {
+class RatpackHttpProtocolVersion extends ChannelInboundHandlerAdapter {
 
   private static final String HANDLER_NAME = RatpackHttpProtocolVersion.class.getName();
   private static final String REDIRECT_HANDLER_NAME = "redirect";

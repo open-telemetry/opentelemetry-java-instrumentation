@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
 
-final class RatpackProtocolVersionAttributesExtractor
+class RatpackProtocolVersionAttributesExtractor
     implements AttributesExtractor<RequestSpec, HttpResponse> {
 
   @Override
