@@ -6,8 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_ADDRESS;
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.lambdaworks.redis.ConnectionBuilder;
@@ -35,9 +37,17 @@ class LettuceConnectionInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("build").and(takesArguments(0)), getClass().getName() + "$BuildAdvice");
     transformer.applyAdviceToMethod(
-        named("channelActive"), getClass().getName() + "$ChannelActiveAdvice");
+        named("channelActive")
+            .and(isDeclaredBy(named("com.lambdaworks.redis.protocol.CommandHandler")))
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("io.netty.channel.ChannelHandlerContext"))),
+        getClass().getName() + "$ChannelActiveAdvice");
     transformer.applyAdviceToMethod(
-        named("channelInactive"), getClass().getName() + "$ChannelInactiveAdvice");
+        named("channelInactive")
+            .and(isDeclaredBy(named("com.lambdaworks.redis.protocol.CommandHandler")))
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("io.netty.channel.ChannelHandlerContext"))),
+        getClass().getName() + "$ChannelInactiveAdvice");
   }
 
   @SuppressWarnings("unused")
