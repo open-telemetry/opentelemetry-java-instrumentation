@@ -184,10 +184,7 @@ public abstract class CouchbaseRequestInfo {
     }
 
     @Nullable
-    private static String stripBrackets(@Nullable String host) {
-      if (host == null) {
-        return null;
-      }
+    private static String stripBrackets(String host) {
       String stripped =
           host.startsWith("[") && host.endsWith("]") ? host.substring(1, host.length() - 1) : host;
       return stripped.isEmpty() ? null : stripped;
