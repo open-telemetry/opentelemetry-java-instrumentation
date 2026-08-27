@@ -161,7 +161,7 @@ public class HbaseServerTarget {
       }
       endpoints.add(endpoint);
     }
-    return endpoints.isEmpty() ? null : endpoints;
+    return endpoints;
   }
 
   @Nullable
@@ -212,9 +212,6 @@ public class HbaseServerTarget {
       }
     }
 
-    if (host.isEmpty()) {
-      return null;
-    }
     if (port == null) {
       port = defaultPort;
     }
@@ -223,10 +220,6 @@ public class HbaseServerTarget {
 
   @Nullable
   private static String sanitizeEndpoint(String configuredEndpoint) {
-    if (configuredEndpoint.contains("://")) {
-      return null;
-    }
-
     String endpoint = configuredEndpoint.replaceAll("[\\t\\n\\x0B\\f\\r]", "").trim();
     for (int i = 0; i < endpoint.length(); i++) {
       char c = endpoint.charAt(i);
