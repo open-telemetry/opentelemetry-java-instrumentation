@@ -40,20 +40,22 @@ void configure(OpenTelemetry openTelemetry, UniversalConnectionPool universalCon
   oracleUcpTelemetry.registerMetrics(universalConnectionPool);
 }
 
-void configureWithMetricPoolName(
-    OpenTelemetry openTelemetry, UniversalConnectionPool universalConnectionPool) {
-  oracleUcpTelemetry = OracleUcpTelemetry.create(openTelemetry);
-  oracleUcpTelemetry.registerMetrics(universalConnectionPool, "ordersPool");
-}
-
 void destroy(UniversalConnectionPool universalConnectionPool) {
   oracleUcpTelemetry.unregisterMetrics(universalConnectionPool);
 }
 ```
 
 The single-argument `registerMetrics` method uses `UniversalConnectionPool.getName()` as the
-OpenTelemetry metric pool name. The overload that accepts a pool name changes only the pool name
-metric attribute and does not change the Oracle UCP pool name.
+OpenTelemetry metric pool name. To use an explicit metric pool name instead, without changing the
+Oracle UCP pool name:
+
+```java
+void configureWithMetricPoolName(
+    OpenTelemetry openTelemetry, UniversalConnectionPool universalConnectionPool) {
+  OracleUcpTelemetry telemetry = OracleUcpTelemetry.create(openTelemetry);
+  telemetry.registerMetrics(universalConnectionPool, "ordersPool");
+}
+```
 
 Javaagent instrumentation derives the metric pool name from the `PoolDataSource` connection
 properties and the JDBC URL, when present. Without a JDBC URL, it also uses the standard
