@@ -52,15 +52,19 @@ class CouchbaseAttributesGetterTest {
   }
 
   @Test
-  void reportsTheNodeThatAnsweredAtEndWhenTheConfiguredTargetIsUnavailable() {
+  void reportsTheNodeThatAnsweredAtEndOnlyInLegacyMode() {
     CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", null, getClass(), "get");
     request.setNode(new InetSocketAddress("192.0.2.1", 32768), "node.example:11210");
 
     AttributesBuilder attributes = Attributes.builder();
     new CouchbaseAttributesGetter().onEnd(attributes, Context.root(), request, null, null);
 
-    assertThat(attributes.build().get(SERVER_ADDRESS)).isEqualTo("node.example");
-    assertThat(attributes.build().get(SERVER_PORT)).isEqualTo(11210L);
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.build()).isEqualTo(Attributes.empty());
+    } else {
+      assertThat(attributes.build().get(SERVER_ADDRESS)).isEqualTo("node.example");
+      assertThat(attributes.build().get(SERVER_PORT)).isEqualTo(11210L);
+    }
   }
 
   @Test
