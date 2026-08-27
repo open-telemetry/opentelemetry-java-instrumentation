@@ -10,7 +10,7 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-public final class CassandraChannel {
+public class CassandraChannel {
 
   private static final ClassValue<Method> channelMethods =
       new ClassValue<Method>() {
