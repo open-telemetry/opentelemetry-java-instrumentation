@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Queable;
 import redis.clients.jedis.Transaction;
@@ -18,8 +19,12 @@ public final class JedisPipelineContext {
   private static final ThreadLocal<Queable> currentBatch = new ThreadLocal<>();
   private static final ThreadLocal<Boolean> inTransactionFraming = new ThreadLocal<>();
   private static final ThreadLocal<JedisRequest> currentTransactionRequest = new ThreadLocal<>();
+  private static final ThreadLocal<JedisRequest> currentTransactionFramingRequest =
+      new ThreadLocal<>();
   private static final VirtualField<Queable, List<JedisRequest>> CAPTURED_REQUESTS =
       VirtualField.find(Queable.class, List.class);
+  private static final VirtualField<Queable, JedisRequest> TRANSACTION_FRAMING_REQUEST =
+      VirtualField.find(Queable.class, JedisRequest.class);
 
   public static void enter(Object batch) {
     // Pipeline aggregates at sync() and Transaction at exec(); both capture their queued commands
@@ -43,9 +48,25 @@ public final class JedisPipelineContext {
     currentTransactionRequest.set(request);
   }
 
+  public static void exitTransactionFraming(@Nullable Object transaction) {
+    try {
+      JedisRequest request = currentTransactionFramingRequest.get();
+      if (request != null && transaction instanceof Queable) {
+        TRANSACTION_FRAMING_REQUEST.set((Queable) transaction, request);
+      }
+    } finally {
+      clearTransactionFraming();
+    }
+  }
+
   public static void exitTransactionFraming() {
+    clearTransactionFraming();
+  }
+
+  private static void clearTransactionFraming() {
     inTransactionFraming.remove();
     currentTransactionRequest.remove();
+    currentTransactionFramingRequest.remove();
   }
 
   public static boolean inTransactionFraming() {
@@ -56,7 +77,20 @@ public final class JedisPipelineContext {
     JedisRequest transactionRequest = currentTransactionRequest.get();
     if (transactionRequest != null) {
       transactionRequest.retainCommonPeerAddress(request);
+    } else {
+      currentTransactionFramingRequest.set(request);
     }
+  }
+
+  @Nullable
+  public static JedisRequest getAndClearTransactionFramingRequest(Object transaction) {
+    if (!(transaction instanceof Queable)) {
+      return null;
+    }
+    Queable queable = (Queable) transaction;
+    JedisRequest request = TRANSACTION_FRAMING_REQUEST.get(queable);
+    TRANSACTION_FRAMING_REQUEST.set(queable, null);
+    return request;
   }
 
   public static boolean capture(JedisRequest request) {

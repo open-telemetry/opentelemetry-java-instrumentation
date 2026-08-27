@@ -44,8 +44,11 @@ public abstract class JedisRequest {
     return createBatch(requests, "PIPELINE");
   }
 
-  public static JedisRequest createTransaction(List<JedisRequest> requests) {
-    return createBatch(requests, "MULTI");
+  public static JedisRequest createTransaction(
+      List<JedisRequest> requests, @Nullable JedisRequest multiRequest) {
+    JedisRequest request = createBatch(requests, "MULTI");
+    request.retainCommonPeerAddress(multiRequest);
+    return request;
   }
 
   private static JedisRequest createBatch(List<JedisRequest> requests, String prefix) {
@@ -95,8 +98,8 @@ public abstract class JedisRequest {
     return peerAddress;
   }
 
-  public void retainCommonPeerAddress(JedisRequest request) {
-    if (peerAddress == null || !peerAddress.equals(request.peerAddress)) {
+  public void retainCommonPeerAddress(@Nullable JedisRequest request) {
+    if (request == null || peerAddress == null || !peerAddress.equals(request.peerAddress)) {
       peerAddress = null;
     }
   }

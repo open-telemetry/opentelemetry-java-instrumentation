@@ -50,6 +50,8 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
 
       public static AdviceScope start(Object transaction) {
         List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(transaction);
+        JedisRequest multiRequest =
+            JedisPipelineContext.getAndClearTransactionFramingRequest(transaction);
         // Suppress the EXEC framing command's own span; the transaction is reported as a single
         // batch span here.
         if (requests.isEmpty()) {
@@ -59,7 +61,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
           JedisPipelineContext.enterTransactionFraming();
           return new AdviceScope(null, null, null);
         }
-        JedisRequest request = JedisRequest.createTransaction(requests);
+        JedisRequest request = JedisRequest.createTransaction(requests, multiRequest);
         JedisPipelineContext.enterTransactionFraming(request);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {

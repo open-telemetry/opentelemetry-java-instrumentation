@@ -159,7 +159,10 @@ class JedisNetworkAttributesGetterTest {
     InetSocketAddress queuedPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
     JedisRequest queuedRequest = requestWithPeer(queuedPeer);
     queuedRequest.capturePeerAddress();
-    JedisRequest transactionRequest = JedisRequest.createTransaction(singletonList(queuedRequest));
+    JedisRequest multiRequest = requestWithPeer(queuedPeer);
+    multiRequest.capturePeerAddress();
+    JedisRequest transactionRequest =
+        JedisRequest.createTransaction(singletonList(queuedRequest), multiRequest);
 
     InetSocketAddress execPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380);
     JedisRequest execRequest = requestWithPeer(execPeer);
@@ -182,7 +185,10 @@ class JedisNetworkAttributesGetterTest {
     InetSocketAddress queuedPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
     JedisRequest queuedRequest = requestWithPeer(queuedPeer);
     queuedRequest.capturePeerAddress();
-    JedisRequest transactionRequest = JedisRequest.createTransaction(singletonList(queuedRequest));
+    JedisRequest multiRequest = requestWithPeer(queuedPeer);
+    multiRequest.capturePeerAddress();
+    JedisRequest transactionRequest =
+        JedisRequest.createTransaction(singletonList(queuedRequest), multiRequest);
 
     JedisRequest execRequest = requestWithPeer(queuedPeer);
 
@@ -192,6 +198,24 @@ class JedisNetworkAttributesGetterTest {
     } finally {
       JedisPipelineContext.exitTransactionFraming();
     }
+
+    assertThat(
+            new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(transactionRequest, null))
+        .isNull();
+  }
+
+  @Test
+  void transactionDropsPeerWhenMultiUsesDifferentSocket() {
+    InetSocketAddress queuedPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
+    JedisRequest queuedRequest = requestWithPeer(queuedPeer);
+    queuedRequest.capturePeerAddress();
+
+    InetSocketAddress multiPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380);
+    JedisRequest multiRequest = requestWithPeer(multiPeer);
+    multiRequest.capturePeerAddress();
+
+    JedisRequest transactionRequest =
+        JedisRequest.createTransaction(singletonList(queuedRequest), multiRequest);
 
     assertThat(
             new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(transactionRequest, null))
