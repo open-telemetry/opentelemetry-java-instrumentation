@@ -22,7 +22,7 @@ import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Connection;
 import redis.clients.util.Sharded;
 
-class JedisSingletons {
+public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
@@ -55,7 +55,7 @@ class JedisSingletons {
     return instrumenter;
   }
 
-  static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
+  public static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
     SHARDED_TARGET.set(sharded, target);
   }
 
@@ -64,7 +64,7 @@ class JedisSingletons {
     return SHARDED_TARGET.get(sharded);
   }
 
-  static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
+  public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
     if (!(shard instanceof BinaryJedis)) {
       return;
     }

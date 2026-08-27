@@ -27,7 +27,7 @@ import redis.clients.jedis.Connection;
 import redis.clients.util.Pool;
 import redis.clients.util.Sharded;
 
-class JedisSingletons {
+public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-2.0";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
@@ -80,34 +80,34 @@ class JedisSingletons {
     return instrumenter;
   }
 
-  static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
+  public static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
     SHARDED_TARGET.set(sharded, target);
   }
 
-  static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
+  public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
     POOL_TARGET.set(pool, target);
   }
 
-  static void setClusterTarget(Object handler, @Nullable RedisServerTarget target) {
+  public static void setClusterTarget(Object handler, @Nullable RedisServerTarget target) {
     if (target != null) {
       clusterTargets.put(handler, target);
     }
   }
 
-  static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
+  public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
     attach(SHARDED_TARGET.get(sharded), shard);
   }
 
-  static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
+  public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
     attach(POOL_TARGET.get(pool), resource);
   }
 
-  static void attachClusterTarget(Object handler, @Nullable Object connection) {
+  public static void attachClusterTarget(Object handler, @Nullable Object connection) {
     attach(clusterTargets.get(handler), connection);
   }
 
   @Nullable
-  static Scope openClusterTargetScope(Object handler) {
+  public static Scope openClusterTargetScope(Object handler) {
     RedisServerTarget target = clusterTargets.get(handler);
     return target == null
         ? null
