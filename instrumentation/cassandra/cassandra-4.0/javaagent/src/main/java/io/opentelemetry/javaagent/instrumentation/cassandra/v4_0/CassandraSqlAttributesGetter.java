@@ -6,9 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isSniEndPoint;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
@@ -75,9 +78,12 @@ final class CassandraSqlAttributesGetter
     if (coordinator == null) {
       return null;
     }
-    // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
-    // at least in the only current EndPoint implementation (DefaultEndPoint)
-    SocketAddress address = coordinator.getEndPoint().resolve();
+    EndPoint endPoint = coordinator.getEndPoint();
+    if (emitStableDatabaseSemconv() && isSniEndPoint(endPoint)) {
+      return null;
+    }
+    // DefaultEndPoint.resolve() returns an existing InetSocketAddress without doing a DNS lookup.
+    SocketAddress address = endPoint.resolve();
     return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
   }
 
