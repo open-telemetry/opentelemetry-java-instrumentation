@@ -53,8 +53,16 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  val testExperimental = register<Test>("testExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
+  }
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testExperimental)
   }
 
   if (otelProps.denyUnsafe) {
