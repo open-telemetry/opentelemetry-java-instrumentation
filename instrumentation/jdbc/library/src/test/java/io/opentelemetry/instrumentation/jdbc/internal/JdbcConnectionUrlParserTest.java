@@ -709,6 +709,14 @@ class JdbcConnectionUrlParserTest {
             .setPort(1433)
             .setName("ssdb")
             .build(),
+        arg("jdbc:sqlserver://ss.host1;instanceName=instance1;databaseName=ssdb")
+            .setShortUrl("sqlserver://ss.host1:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setHost("ss.host1")
+            .setPort(1433)
+            .setName("ssdb")
+            .build(),
         arg("jdbc:microsoft:sqlserver://;")
             .setProperties(stdProps())
             .setShortUrl("microsoft:sqlserver://stdServerName:9999")
@@ -2087,8 +2095,6 @@ class JdbcConnectionUrlParserTest {
             .setOldSystem("mssql")
             .setHost("ss.host1")
             .setPort(1433)
-            .setNamespace("instance1")
-            .setName("instance1")
             .setServerAddressGroup("ss.host1\\instance1,ss.host2")
             .build(),
         arg("jdbc:sqlserver://[2001:db8::1]:1433;failoverPartner=2001:db8::2")
