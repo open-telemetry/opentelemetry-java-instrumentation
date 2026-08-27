@@ -275,6 +275,7 @@ public final class UrlParsingUtils {
       return null;
     }
     int queryStart = url.indexOf('?', authorityEnd);
+    int fragmentStart = url.indexOf('#', authorityEnd);
     int credentialsEnd = url.lastIndexOf('@');
     int parameterStart =
         queryStart < 0 ? -1 : Math.max(queryStart, url.lastIndexOf('&', credentialsEnd)) + 1;
@@ -284,6 +285,7 @@ public final class UrlParsingUtils {
     }
     int equals = parameterStart < 0 ? -1 : url.indexOf('=', parameterStart);
     if (queryStart < 0
+        || (fragmentStart >= 0 && fragmentStart < queryStart)
         || credentialsEnd < queryStart
         || equals < parameterStart
         || equals > credentialsEnd) {
@@ -317,7 +319,7 @@ public final class UrlParsingUtils {
     if (queryStart < 0 || queryStart > at) {
       return false;
     }
-    int fragmentStart = url.indexOf('#', queryStart);
+    int fragmentStart = url.indexOf('#', authorityEnd);
     if (fragmentStart >= 0 && fragmentStart < at) {
       return false;
     }
