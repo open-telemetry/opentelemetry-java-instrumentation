@@ -30,7 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource}
 import org.testcontainers.containers.GenericContainer
 import redis.commands.TransactionBuilder
-import redis.{RedisClient, RedisDispatcher}
+import redis.{RedisClient, RedisDispatcher, RedisServer}
 
 import java.lang.{Long => JLong}
 import java.util.function.Consumer
@@ -164,6 +164,62 @@ class RediscalaClientTest {
       SERVER_ADDRESS,
       SERVER_PORT
     )
+  }
+
+  @Test def testReconnectRefreshesServerTarget(): Unit = {
+    val client = createClient(None)
+    try {
+      assertThat(serverTarget(client)._1).isEqualTo(host)
+      assertThat(serverTarget(client)._2)
+        .isEqualTo(Integer.valueOf(port.intValue()))
+
+      client.reconnect("127.0.0.2", 16379)
+
+      assertThat(serverTarget(client)._1).isEqualTo("127.0.0.2")
+      assertThat(serverTarget(client)._2)
+        .isEqualTo(Integer.valueOf(16379))
+    } finally {
+      client.stop()
+    }
+  }
+
+  @Test def testMutablePoolRefreshesServerTarget(): Unit = {
+    val first = RedisServer("127.0.0.2", 7001)
+    val second = RedisServer("127.0.0.1", 7000)
+    val poolClass = Class.forName("redis.RedisClientMutablePool")
+    val constructor =
+      poolClass.getConstructors.find(_.getParameterCount == 4).get
+    val pool = constructor
+      .newInstance(
+        Seq(first),
+        "RedisClientMutablePool",
+        system,
+        RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
+      )
+      .asInstanceOf[Object]
+    try {
+      assertThat(serverTarget(pool)._1).isEqualTo("127.0.0.2")
+      assertThat(serverTarget(pool)._2)
+        .isEqualTo(Integer.valueOf(7001))
+
+      poolClass
+        .getMethod("addServer", classOf[RedisServer])
+        .invoke(pool, second)
+
+      assertThat(serverTarget(pool)._1)
+        .isEqualTo("127.0.0.1:7000,127.0.0.2:7001")
+      assertThat(serverTarget(pool)._2).isNull()
+
+      poolClass
+        .getMethod("removeServer", classOf[RedisServer])
+        .invoke(pool, first)
+
+      assertThat(serverTarget(pool)._1).isEqualTo("127.0.0.1")
+      assertThat(serverTarget(pool)._2)
+        .isEqualTo(Integer.valueOf(7000))
+    } finally {
+      poolClass.getMethod("stop").invoke(pool)
+    }
   }
 
   @Test def testGetCommand(): Unit = {
@@ -476,6 +532,24 @@ class RediscalaClientTest {
 
   private def namespace(databaseIndex: Int): String =
     if (emitStableDatabaseSemconv()) databaseIndex.toString else null
+
+  private def serverTarget(client: Object): (String, Integer) = {
+    val helperClass = Class.forName(
+      "io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaServerTargets",
+      true,
+      client.getClass.getClassLoader
+    )
+    val target =
+      helperClass.getMethod("get", classOf[Object]).invoke(null, client)
+    val address =
+      target.getClass
+        .getMethod("getAddress")
+        .invoke(target)
+        .asInstanceOf[String]
+    val port =
+      target.getClass.getMethod("getPort").invoke(target).asInstanceOf[Integer]
+    (address, port)
+  }
 
   private def transactionScenarios(): Stream[Arguments] =
     Stream.of(

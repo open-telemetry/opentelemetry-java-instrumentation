@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -51,6 +54,10 @@ class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonReq
   @Nullable
   @Override
   public String getServerAddress(RedissonRequest request) {
+    RedisServerTarget target = request.getServerTarget();
+    if (emitStableDatabaseSemconv() && target != null) {
+      return target.getAddress();
+    }
     InetSocketAddress address = request.getAddress();
     return address != null ? address.getHostString() : null;
   }
@@ -58,6 +65,10 @@ class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonReq
   @Nullable
   @Override
   public Integer getServerPort(RedissonRequest request) {
+    RedisServerTarget target = request.getServerTarget();
+    if (emitStableDatabaseSemconv() && target != null) {
+      return target.getPort();
+    }
     InetSocketAddress address = request.getAddress();
     return address != null ? address.getPort() : null;
   }

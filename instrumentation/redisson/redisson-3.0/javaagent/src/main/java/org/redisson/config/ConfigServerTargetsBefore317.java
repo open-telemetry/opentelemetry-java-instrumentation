@@ -1,0 +1,153 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.redisson.config;
+
+import static java.util.logging.Level.FINE;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
+
+public final class ConfigServerTargetsBefore317 {
+
+  private static final Logger logger =
+      Logger.getLogger(ConfigServerTargetsBefore317.class.getName());
+
+  @Nullable
+  private static final Method CONFIG_GET_ELASTICACHE_SERVERS =
+      findConfigMethod("getElasticacheServersConfig");
+
+  @Nullable
+  private static final Method CONFIG_GET_REPLICATED_SERVERS =
+      findConfigMethod("getReplicatedServersConfig");
+
+  @Nullable
+  private static Method findConfigMethod(String methodName) {
+    try {
+      return Config.class.getDeclaredMethod(methodName);
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  @Nullable
+  public static RedisServerTarget of(@Nullable Config config) {
+    if (config == null) {
+      return null;
+    }
+    SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
+    if (sentinelConfig != null) {
+      return ofAddresses(sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
+    }
+    ClusterServersConfig clusterConfig = config.getClusterServersConfig();
+    if (clusterConfig != null) {
+      return ofAddresses(clusterConfig.getNodeAddresses());
+    }
+    RedisServerTarget elasticacheTarget =
+        ofOptionalServerConfig(config, CONFIG_GET_ELASTICACHE_SERVERS);
+    if (elasticacheTarget != null) {
+      return elasticacheTarget;
+    }
+    RedisServerTarget replicatedTarget =
+        ofOptionalServerConfig(config, CONFIG_GET_REPLICATED_SERVERS);
+    if (replicatedTarget != null) {
+      return replicatedTarget;
+    }
+    MasterSlaveServersConfig masterSlaveConfig = config.getMasterSlaveServersConfig();
+    if (masterSlaveConfig != null) {
+      return ofAddresses(
+          getMasterAddress(masterSlaveConfig), masterSlaveConfig.getSlaveAddresses());
+    }
+    return null;
+  }
+
+  @Nullable
+  private static RedisServerTarget ofOptionalServerConfig(
+      Config config, @Nullable Method getServerConfig) {
+    if (getServerConfig == null) {
+      return null;
+    }
+    try {
+      Object serverConfig = getServerConfig.invoke(config);
+      if (serverConfig == null) {
+        return null;
+      }
+      Object addresses = serverConfig.getClass().getMethod("getNodeAddresses").invoke(serverConfig);
+      return addresses instanceof Collection ? ofAddresses((Collection<?>) addresses) : null;
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to read the configured Redisson servers", e);
+      return null;
+    }
+  }
+
+  // Redisson changes the master address return type across supported versions.
+  private static Object getMasterAddress(MasterSlaveServersConfig config) {
+    try {
+      return config.getClass().getMethod("getMasterAddress").invoke(config);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Could not read Redisson master address", e);
+    }
+  }
+
+  // Redisson stores addresses as URI, URL, or String across supported versions.
+  @Nullable
+  private static RedisServerTarget ofAddresses(@Nullable Collection<?> addresses) {
+    if (addresses == null || addresses.isEmpty()) {
+      return null;
+    }
+    List<String> endpoints = new ArrayList<>(addresses.size());
+    for (Object address : addresses) {
+      if (address != null) {
+        endpoints.add(address.toString());
+      }
+    }
+    Collections.sort(endpoints);
+    return RedisServerTarget.ofEndpoints(endpoints);
+  }
+
+  @Nullable
+  private static RedisServerTarget ofAddresses(
+      @Nullable Object firstAddress, @Nullable Collection<?> otherAddresses) {
+    List<String> endpoints = new ArrayList<>();
+    if (firstAddress != null) {
+      endpoints.add(firstAddress.toString());
+    }
+    Set<String> sortedAddresses = new TreeSet<>();
+    if (otherAddresses != null) {
+      for (Object address : otherAddresses) {
+        if (address != null) {
+          sortedAddresses.add(address.toString());
+        }
+      }
+    }
+    endpoints.addAll(sortedAddresses);
+    return RedisServerTarget.ofEndpoints(endpoints);
+  }
+
+  @Nullable
+  private static RedisServerTarget ofAddresses(
+      @Nullable Collection<?> addresses, @Nullable String logicalName) {
+    if (addresses == null || addresses.isEmpty()) {
+      return RedisServerTarget.ofEndpointsAndLogicalName(null, logicalName);
+    }
+    List<String> endpoints = new ArrayList<>(addresses.size());
+    for (Object address : addresses) {
+      if (address != null) {
+        endpoints.add(address.toString());
+      }
+    }
+    return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, logicalName);
+  }
+
+  private ConfigServerTargetsBefore317() {}
+}

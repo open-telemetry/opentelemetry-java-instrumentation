@@ -6,10 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_ENDPOINT;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_TARGET;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -22,7 +24,10 @@ class TransactionBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.RedisClient");
+    return namedOneOf(
+        "redis.RedisClient",
+        "redis.SentinelMonitoredRedisClient",
+        "redis.SentinelMonitoredRedisClientMasterSlaves");
   }
 
   @Override
@@ -38,10 +43,16 @@ class TransactionBuilderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This RedisClientActorLike client,
-        @Advice.Return TransactionBuilder transactionBuilder) {
+        @Advice.This Object client, @Advice.Return TransactionBuilder transactionBuilder) {
       if (transactionBuilder != null) {
-        TRANSACTION_ENDPOINT.set(transactionBuilder, ServerEndpoint.create(client));
+        if (client instanceof RedisClientActorLike) {
+          TRANSACTION_ENDPOINT.set(
+              transactionBuilder, ServerEndpoint.create((RedisClientActorLike) client));
+        }
+        RedisServerTarget serverTarget = RediscalaServerTargets.get(client);
+        if (serverTarget != null) {
+          TRANSACTION_TARGET.set(transactionBuilder, serverTarget);
+        }
       }
     }
   }
