@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -27,6 +29,7 @@ class CouchbaseRequestTracerTest {
 
   @Test
   void capturesPeerForLegacyDispatchSpanName() throws Exception {
+    assumeTrue(emitStableDatabaseSemconv());
     RequestTracer tracer =
         CouchbaseRequestTracer.create(OpenTelemetry.noop().getTracer("test-couchbase"));
     RequestSpan parent = tracer.requestSpan("test", null);

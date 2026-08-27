@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +39,7 @@ class CouchbaseMessageHandlerInstrumentationTest {
   }
 
   private static void capturesRequestPeer(Request<?> request) throws UnknownHostException {
+    assumeTrue(emitStableDatabaseSemconv());
     RequestSpan parent = mock(RequestSpan.class);
     when(request.requestSpan()).thenReturn(parent);
     ChannelHandlerContext context = mock(ChannelHandlerContext.class);
