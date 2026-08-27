@@ -11,6 +11,7 @@ import io.nats.client.Subscription;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetryMessageHandler;
+import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetrySubscription;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -48,6 +49,13 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
       return subscribe(method, args);
     }
 
+    if (args != null) {
+      for (int i = 0; i < args.length; i++) {
+        if (args[i] instanceof Subscription) {
+          args[i] = OpenTelemetrySubscription.unwrap((Subscription) args[i]);
+        }
+      }
+    }
     return invokeMethod(method, delegate, args);
   }
 
@@ -73,7 +81,8 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
               (MessageHandler) args[2], settleInstrumenter, consumerProcessInstrumenter);
     }
 
-    return (Subscription) invokeMethod(method, delegate, args);
+    return OpenTelemetrySubscription.wrap(
+        (Subscription) invokeMethod(method, delegate, args), settleInstrumenter);
   }
 
   Dispatcher getDelegate() {

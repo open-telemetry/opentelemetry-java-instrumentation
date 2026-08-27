@@ -8,8 +8,6 @@ package io.opentelemetry.instrumentation.nats.v2_17;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import io.nats.client.Subscription;
@@ -145,18 +143,11 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
       TraceAssert trace, String subject, String body, String operation, int clientId) {
     boolean stable = emitStableMessagingSemconv();
     return span ->
-        span.hasName(stable ? operation + " $JS.ACK" : subject + " publish")
-            .hasKind(stable ? SpanKind.CLIENT : SpanKind.PRODUCER)
+        span.hasName(stable ? operation + " $JS.ACK" : "$JS.ACK settle")
+            .hasKind(SpanKind.CLIENT)
             .hasParent(trace.getSpan(0))
             .hasAttributesSatisfyingExactly(
-                stable
-                    ? messagingAttributes(
-                        operation,
-                        subject,
-                        clientId,
-                        body.length(),
-                        equalTo(MESSAGING_DESTINATION_TEMPLATE, "$JS.ACK"))
-                    : messagingAttributes("publish", subject, clientId, body.length()));
+                messagingAttributes(operation, subject, clientId, body.length()));
   }
 
   private void assertPublishSpan() {

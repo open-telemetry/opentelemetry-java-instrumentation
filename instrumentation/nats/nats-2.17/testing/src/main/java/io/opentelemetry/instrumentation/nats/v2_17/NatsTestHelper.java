@@ -57,7 +57,9 @@ class NatsTestHelper {
                 ? settlement ? "settle" : send ? "publish" : operation
                 : null));
     assertions.add(
-        equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null));
+        equalTo(
+            MESSAGING_OPERATION_NAME,
+            emitStableMessagingSemconv() || settlement ? operation : null));
     assertions.add(
         equalTo(
             MESSAGING_OPERATION_TYPE,
@@ -65,6 +67,9 @@ class NatsTestHelper {
                 ? send ? "send" : isSettlementOperation(operation) ? "settle" : operation
                 : null));
     assertions.add(equalTo(MESSAGING_SYSTEM, "nats"));
+    if (settlement) {
+      assertions.add(equalTo(MESSAGING_DESTINATION_TEMPLATE, "$JS.ACK"));
+    }
     if (subject.equals("(temporary)") && emitStableMessagingSemconv()) {
       assertions.add(satisfies(MESSAGING_DESTINATION_NAME, val -> val.startsWith("_INBOX.")));
       assertions.add(equalTo(MESSAGING_DESTINATION_TEMPLATE, "_INBOX."));

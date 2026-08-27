@@ -19,10 +19,7 @@ final class NatsSettlementOperationNameExtractor
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, NatsRequest request) {
-    String operationName = request.getJetStreamSettlementOperationName();
-    if (operationName != null) {
-      attributes.put(MESSAGING_OPERATION_NAME, operationName);
-    }
+    attributes.put(MESSAGING_OPERATION_NAME, request.getJetStreamSettlementOperationName());
   }
 
   @Override

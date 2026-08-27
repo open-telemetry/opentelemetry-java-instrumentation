@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import io.nats.client.Connection;
 import io.nats.client.Message;
+import io.nats.client.Subscription;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -34,7 +34,7 @@ final class OpenTelemetryMessage implements InvocationHandler {
         && Proxy.getInvocationHandler(message) instanceof OpenTelemetryMessage) {
       return message;
     }
-    if (!emitStableMessagingSemconv() || !message.isJetStream()) {
+    if (!message.isJetStream()) {
       return message;
     }
     return (Message)
@@ -75,6 +75,12 @@ final class OpenTelemetryMessage implements InvocationHandler {
     }
     if (methodName.equals("term") && method.getParameterCount() == 0) {
       return runSettlement(TERM_BODY, method, args);
+    }
+    if (methodName.equals("getSubscription") && method.getParameterCount() == 0) {
+      Subscription subscription = (Subscription) invokeMethod(method, delegate, args);
+      return subscription == null
+          ? null
+          : OpenTelemetrySubscription.wrap(subscription, settleInstrumenter);
     }
     return invokeMethod(method, delegate, args);
   }

@@ -21,8 +21,11 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.nats.client.Connection;
+import io.nats.client.JetStream;
+import io.nats.client.JetStreamSubscription;
 import io.nats.client.Message;
 import io.nats.client.Options;
+import io.nats.client.Subscription;
 import io.nats.client.api.ServerInfo;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -60,10 +63,6 @@ class OpenTelemetryMessageTest {
     testing.runWithSpan("parent", () -> wrapped.ackSync(Duration.ofSeconds(1)));
 
     assertThat(ackSyncCalled).isTrue();
-    if (!emitStableMessagingSemconv()) {
-      assertThat(wrapped).isSameAs(message);
-      return;
-    }
 
     String subject = "$JS.ACK.stream.consumer.1.2.3.4.5";
     testing.waitAndAssertTraces(
@@ -71,38 +70,37 @@ class OpenTelemetryMessageTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
-                    span.hasName("ack $JS.ACK")
+                    span.hasName(emitStableMessagingSemconv() ? "ack $JS.ACK" : "$JS.ACK settle")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             settlementAttributes(subject).toArray(new AttributeAssertion[0]))));
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.nats-2.17",
-        "messaging.client.operation.duration",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasSumGreaterThan(0)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "ack"),
-                                                equalTo(MESSAGING_SYSTEM, "nats"),
-                                                equalTo(MESSAGING_DESTINATION_TEMPLATE, "$JS.ACK"),
-                                                equalTo(MESSAGING_OPERATION_TYPE, "settle"))))));
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.nats-2.17",
+          "messaging.client.operation.duration",
+          metrics ->
+              metrics.satisfiesExactly(
+                  metric ->
+                      assertThat(metric)
+                          .hasHistogramSatisfying(
+                              histogram ->
+                                  histogram.hasPointsSatisfying(
+                                      point ->
+                                          point
+                                              .hasSumGreaterThan(0)
+                                              .hasAttributesSatisfyingExactly(
+                                                  equalTo(MESSAGING_OPERATION_NAME, "ack"),
+                                                  equalTo(MESSAGING_SYSTEM, "nats"),
+                                                  equalTo(
+                                                      MESSAGING_DESTINATION_TEMPLATE, "$JS.ACK"),
+                                                  equalTo(MESSAGING_OPERATION_TYPE, "settle"))))));
+    }
   }
 
   @Test
   @SuppressWarnings("PreferJavaTimeOverload") // explicitly test the legacy overload
   void nakWithDelayUsesNativeBodyForNonPositiveDelays() throws Exception {
-    if (!emitStableMessagingSemconv()) {
-      return;
-    }
-
     Connection connection = connection();
     Message message = message(connection, new AtomicBoolean());
     Message wrapped =
@@ -135,6 +133,71 @@ class OpenTelemetryMessageTest {
                 settlementSpan(trace, subject, "nak", 22)));
   }
 
+  @Test
+  void nextMessageWrapsJetStreamMessage() throws InterruptedException {
+    Connection connection = connection();
+    Message message = message(connection, new AtomicBoolean());
+    Subscription subscription =
+        (Subscription)
+            Proxy.newProxyInstance(
+                Subscription.class.getClassLoader(),
+                new Class<?>[] {Subscription.class},
+                (proxy, method, args) -> method.getName().equals("nextMessage") ? message : null);
+    Subscription wrapped =
+        OpenTelemetrySubscription.wrap(
+            subscription,
+            NatsInstrumenterFactory.createSettleInstrumenter(
+                testing.getOpenTelemetry(), IncludeExclude.builder().build()));
+
+    Message wrappedMessage = wrapped.nextMessage(Duration.ZERO);
+    assertThat(wrappedMessage).isNotSameAs(message);
+    testing.runWithSpan("parent", wrappedMessage::ack);
+
+    String subject = "$JS.ACK.stream.consumer.1.2.3.4.5";
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                settlementSpan(trace, subject, "ack", 4)));
+  }
+
+  @Test
+  void jetStreamSubscribeWrapsSubscription() throws Exception {
+    Connection connection = connection();
+    Message message = message(connection, new AtomicBoolean());
+    JetStreamSubscription subscription =
+        (JetStreamSubscription)
+            Proxy.newProxyInstance(
+                JetStreamSubscription.class.getClassLoader(),
+                new Class<?>[] {JetStreamSubscription.class},
+                (proxy, method, args) -> method.getName().equals("nextMessage") ? message : null);
+    JetStream jetStream =
+        (JetStream)
+            Proxy.newProxyInstance(
+                JetStream.class.getClassLoader(),
+                new Class<?>[] {JetStream.class},
+                (proxy, method, args) ->
+                    method.getName().equals("subscribe") ? subscription : null);
+    JetStream wrapped =
+        OpenTelemetryJetStream.wrap(
+            jetStream,
+            NatsInstrumenterFactory.createSettleInstrumenter(
+                testing.getOpenTelemetry(), IncludeExclude.builder().build()));
+
+    JetStreamSubscription wrappedSubscription = wrapped.subscribe("stream");
+    assertThat(wrappedSubscription).isNotSameAs(subscription);
+    Message wrappedMessage = wrappedSubscription.nextMessage(Duration.ZERO);
+    assertThat(wrappedMessage).isNotSameAs(message);
+    testing.runWithSpan("parent", wrappedMessage::ack);
+
+    String subject = "$JS.ACK.stream.consumer.1.2.3.4.5";
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                settlementSpan(trace, subject, "ack", 4)));
+  }
+
   private static List<AttributeAssertion> settlementAttributes(String subject) {
     return settlementAttributes(subject, "ack", 4L);
   }
@@ -142,17 +205,17 @@ class OpenTelemetryMessageTest {
   private static List<AttributeAssertion> settlementAttributes(
       String subject, String operation, long messageBodySize) {
     List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.add(equalTo(MESSAGING_OPERATION_NAME, operation));
+    assertions.add(equalTo(MESSAGING_SYSTEM, "nats"));
+    assertions.add(equalTo(MESSAGING_DESTINATION_NAME, subject));
+    assertions.add(equalTo(MESSAGING_DESTINATION_TEMPLATE, "$JS.ACK"));
     if (emitOldMessagingSemconv()) {
       assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
       assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, messageBodySize));
       assertions.add(equalTo(stringKey("messaging.client_id"), "123"));
     }
     if (emitStableMessagingSemconv()) {
-      assertions.add(equalTo(MESSAGING_OPERATION_NAME, operation));
       assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-      assertions.add(equalTo(MESSAGING_SYSTEM, "nats"));
-      assertions.add(equalTo(MESSAGING_DESTINATION_NAME, subject));
-      assertions.add(equalTo(MESSAGING_DESTINATION_TEMPLATE, "$JS.ACK"));
       assertions.add(equalTo(MESSAGING_CLIENT_ID, "123"));
     }
     return assertions;
@@ -161,7 +224,7 @@ class OpenTelemetryMessageTest {
   private static Consumer<SpanDataAssert> settlementSpan(
       TraceAssert trace, String subject, String operation, long messageBodySize) {
     return span ->
-        span.hasName(operation + " $JS.ACK")
+        span.hasName(emitStableMessagingSemconv() ? operation + " $JS.ACK" : "$JS.ACK settle")
             .hasKind(SpanKind.CLIENT)
             .hasParent(trace.getSpan(0))
             .hasAttributesSatisfyingExactly(
