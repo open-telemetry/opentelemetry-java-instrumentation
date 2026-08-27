@@ -46,6 +46,8 @@ public final class CouchbaseRequestTracer implements RequestTracer {
   private static final String COUCHBASE_COLLECTION_NAME = "couchbase.collection.name";
   private static final String DB_COUCHBASE_COLLECTION = "db.couchbase.collection";
   private static final String LEGACY_DISPATCH_SPAN_NAME = "cb.dispatch_to_server";
+  private static final String NET_PEER_NAME = "net.peer.name";
+  private static final String NET_PEER_PORT = "net.peer.port";
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase")
@@ -88,10 +90,12 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     private final CouchbaseSpanName spanName;
     private final RequestSpan delegate;
+    private final boolean hasCapturedPeer;
 
     private TranslatingRequestSpan(String name, RequestSpan delegate, @Nullable Peer peer) {
       spanName = new CouchbaseSpanName(name);
       this.delegate = delegate;
+      this.hasCapturedPeer = peer != null;
       if (emitStableDatabaseSemconv() && peer != null) {
         delegate.attribute(NETWORK_PEER_ADDRESS.getKey(), peer.getAddress());
         delegate.attribute(NETWORK_PEER_PORT.getKey(), (long) peer.getPort());
@@ -190,7 +194,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     }
 
     @SuppressWarnings("deprecation") // using deprecated semconv
-    private static String stableKey(String key) {
+    private String stableKey(String key) {
       if (key.equals(DB_COLLECTION_NAME.getKey())
           || key.equals(DB_NAMESPACE.getKey())
           || key.equals(DB_OPERATION_NAME.getKey())
@@ -215,6 +219,12 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       }
       if (key.equals(DB_SYSTEM.getKey())) {
         return DB_SYSTEM_NAME.getKey();
+      }
+      if (!hasCapturedPeer && key.equals(NET_PEER_NAME)) {
+        return NETWORK_PEER_ADDRESS.getKey();
+      }
+      if (!hasCapturedPeer && key.equals(NET_PEER_PORT)) {
+        return NETWORK_PEER_PORT.getKey();
       }
       return null;
     }
