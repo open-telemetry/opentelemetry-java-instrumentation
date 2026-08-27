@@ -8,12 +8,15 @@ package io.opentelemetry.instrumentation.nats.v2_17;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.time.Duration;
@@ -142,12 +145,20 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
   private static Consumer<SpanDataAssert> settlementSpan(
       TraceAssert trace, String subject, String body, String operation, int clientId) {
     boolean stable = emitStableMessagingSemconv();
+    AttributeAssertion[] attributes =
+        stable
+            ? messagingAttributes(operation, subject, clientId, body.length())
+            : messagingAttributes(
+                "publish",
+                subject,
+                clientId,
+                body.length(),
+                equalTo(MESSAGING_DESTINATION_TEMPLATE, "$JS.ACK"));
     return span ->
-        span.hasName(stable ? operation + " $JS.ACK" : "$JS.ACK settle")
-            .hasKind(SpanKind.CLIENT)
+        span.hasName(stable ? operation + " $JS.ACK" : "$JS.ACK publish")
+            .hasKind(stable ? SpanKind.CLIENT : SpanKind.PRODUCER)
             .hasParent(trace.getSpan(0))
-            .hasAttributesSatisfyingExactly(
-                messagingAttributes(operation, subject, clientId, body.length()));
+            .hasAttributesSatisfyingExactly(attributes);
   }
 
   private void assertPublishSpan() {

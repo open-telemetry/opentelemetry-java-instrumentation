@@ -11,7 +11,6 @@ import io.nats.client.Subscription;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetryMessageHandler;
-import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetrySubscription;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -20,27 +19,21 @@ import java.lang.reflect.Proxy;
 final class OpenTelemetryDispatcher implements InvocationHandler {
 
   private final Dispatcher delegate;
-  private final Instrumenter<NatsRequest, NatsRequest> settleInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   private OpenTelemetryDispatcher(
-      Dispatcher delegate,
-      Instrumenter<NatsRequest, NatsRequest> settleInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
+      Dispatcher delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.delegate = delegate;
-    this.settleInstrumenter = settleInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
   static Dispatcher wrap(
-      Dispatcher delegate,
-      Instrumenter<NatsRequest, NatsRequest> settleInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
+      Dispatcher delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     return (Dispatcher)
         Proxy.newProxyInstance(
             OpenTelemetryDispatcher.class.getClassLoader(),
             new Class<?>[] {Dispatcher.class},
-            new OpenTelemetryDispatcher(delegate, settleInstrumenter, consumerProcessInstrumenter));
+            new OpenTelemetryDispatcher(delegate, consumerProcessInstrumenter));
   }
 
   @Override
@@ -49,13 +42,6 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
       return subscribe(method, args);
     }
 
-    if (args != null) {
-      for (int i = 0; i < args.length; i++) {
-        if (args[i] instanceof Subscription) {
-          args[i] = OpenTelemetrySubscription.unwrap((Subscription) args[i]);
-        }
-      }
-    }
     return invokeMethod(method, delegate, args);
   }
 
@@ -72,17 +58,14 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
   private Subscription subscribe(Method method, Object[] args) throws Throwable {
     if (method.getParameterCount() == 2 && method.getParameterTypes()[1] == MessageHandler.class) {
       args[1] =
-          new OpenTelemetryMessageHandler(
-              (MessageHandler) args[1], settleInstrumenter, consumerProcessInstrumenter);
+          new OpenTelemetryMessageHandler((MessageHandler) args[1], consumerProcessInstrumenter);
     } else if (method.getParameterCount() == 3
         && method.getParameterTypes()[2] == MessageHandler.class) {
       args[2] =
-          new OpenTelemetryMessageHandler(
-              (MessageHandler) args[2], settleInstrumenter, consumerProcessInstrumenter);
+          new OpenTelemetryMessageHandler((MessageHandler) args[2], consumerProcessInstrumenter);
     }
 
-    return OpenTelemetrySubscription.wrap(
-        (Subscription) invokeMethod(method, delegate, args), settleInstrumenter);
+    return (Subscription) invokeMethod(method, delegate, args);
   }
 
   Dispatcher getDelegate() {

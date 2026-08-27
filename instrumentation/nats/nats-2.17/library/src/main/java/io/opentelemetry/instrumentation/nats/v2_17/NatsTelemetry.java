@@ -73,8 +73,7 @@ public final class NatsTelemetry {
     }
 
     return options.dispatcherFactory(
-        new OpenTelemetryDispatcherFactory(
-            factory, settleInstrumenter, consumerProcessInstrumenter));
+        new OpenTelemetryDispatcherFactory(factory, consumerProcessInstrumenter));
   }
 
   /** Returns a {@link Connection} with telemetry instrumentation. */

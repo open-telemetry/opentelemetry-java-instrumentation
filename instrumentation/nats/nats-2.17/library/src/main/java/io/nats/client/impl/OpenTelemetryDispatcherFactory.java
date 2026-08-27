@@ -17,15 +17,11 @@ import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetryMessage
 public final class OpenTelemetryDispatcherFactory extends DispatcherFactory {
 
   private final DispatcherFactory delegate;
-  private final Instrumenter<NatsRequest, NatsRequest> settleInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   public OpenTelemetryDispatcherFactory(
-      DispatcherFactory delegate,
-      Instrumenter<NatsRequest, NatsRequest> settleInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
+      DispatcherFactory delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.delegate = delegate;
-    this.settleInstrumenter = settleInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
@@ -33,7 +29,6 @@ public final class OpenTelemetryDispatcherFactory extends DispatcherFactory {
   NatsDispatcher createDispatcher(NatsConnection natsConnection, MessageHandler messageHandler) {
     return delegate.createDispatcher(
         natsConnection,
-        new OpenTelemetryMessageHandler(
-            messageHandler, settleInstrumenter, consumerProcessInstrumenter));
+        new OpenTelemetryMessageHandler(messageHandler, consumerProcessInstrumenter));
   }
 }

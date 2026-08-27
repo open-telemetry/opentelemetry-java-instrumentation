@@ -5,21 +5,19 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
-import io.nats.client.JetStream;
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
-import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsMessageWritableHeaders;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
-import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetryJetStream;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetryMessageHandler;
-import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetrySubscription;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -85,16 +83,6 @@ final class OpenTelemetryConnection implements InvocationHandler {
     if ("createDispatcher".equals(method.getName())
         && method.getReturnType().equals(Dispatcher.class)) {
       return createDispatcher(method, args);
-    }
-
-    if ("subscribe".equals(method.getName()) && method.getReturnType().equals(Subscription.class)) {
-      return OpenTelemetrySubscription.wrap(
-          (Subscription) invokeMethod(method, delegate, args), settleInstrumenter);
-    }
-
-    if ("jetStream".equals(method.getName()) && method.getReturnType().equals(JetStream.class)) {
-      return OpenTelemetryJetStream.wrap(
-          (JetStream) invokeMethod(method, delegate, args), settleInstrumenter);
     }
 
     if ("closeDispatcher".equals(method.getName())) {
@@ -360,7 +348,9 @@ final class OpenTelemetryConnection implements InvocationHandler {
 
   private Instrumenter<NatsRequest, NatsRequest> instrumenterFor(
       NatsRequest request, Instrumenter<NatsRequest, NatsRequest> defaultInstrumenter) {
-    return request.isJetStreamSettlement() ? settleInstrumenter : defaultInstrumenter;
+    return emitStableMessagingSemconv() && request.isJetStreamSettlement()
+        ? settleInstrumenter
+        : defaultInstrumenter;
   }
 
   // public Dispatcher createDispatcher()
@@ -368,12 +358,11 @@ final class OpenTelemetryConnection implements InvocationHandler {
   private Dispatcher createDispatcher(Method method, Object[] args) throws Throwable {
     if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == MessageHandler.class) {
       args[0] =
-          new OpenTelemetryMessageHandler(
-              (MessageHandler) args[0], settleInstrumenter, consumerProcessInstrumenter);
+          new OpenTelemetryMessageHandler((MessageHandler) args[0], consumerProcessInstrumenter);
     }
 
     Dispatcher wrapped = (Dispatcher) invokeMethod(method, delegate, args);
-    return OpenTelemetryDispatcher.wrap(wrapped, settleInstrumenter, consumerProcessInstrumenter);
+    return OpenTelemetryDispatcher.wrap(wrapped, consumerProcessInstrumenter);
   }
 
   // public void closeDispatcher(Dispatcher dispatcher)

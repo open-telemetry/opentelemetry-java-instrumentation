@@ -46,13 +46,12 @@ public final class NatsInstrumenterFactory {
 
   private static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers, String operationName) {
-    NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(false);
+    NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(true);
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(
-                    getter, MessagingOperationType.SEND, operationName))
+                NatsSpanNameExtractor.create(getter, MessagingOperationType.SEND, operationName))
             .addAttributesExtractor(
                 messagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, operationName, headers))
@@ -66,7 +65,9 @@ public final class NatsInstrumenterFactory {
     NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(true);
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
-                openTelemetry, INSTRUMENTATION_NAME, NatsSpanNameExtractor.create(getter, "settle"))
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                NatsSpanNameExtractor.create(getter, MessagingOperationType.SETTLE, "settle"))
             .addAttributesExtractor(
                 messagingAttributesExtractor(
                     getter, MessagingOperationType.SETTLE, "settle", headers))

@@ -13,26 +13,32 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
 final class NatsSpanNameExtractor implements SpanNameExtractor<NatsRequest> {
-  private static final String LEGACY_SETTLEMENT_SPAN_NAME = "$JS.ACK settle";
+  private static final String LEGACY_SETTLEMENT_SPAN_NAME = "$JS.ACK publish";
 
   private final SpanNameExtractor<NatsRequest> delegate;
+  private final MessagingOperationType operationType;
 
   static SpanNameExtractor<NatsRequest> create(
-      MessagingAttributesGetter<NatsRequest, ?> getter, String operationName) {
+      MessagingAttributesGetter<NatsRequest, ?> getter,
+      MessagingOperationType operationType,
+      String operationName) {
     return new NatsSpanNameExtractor(
-        MessagingSpanNameExtractor.create(getter, MessagingOperationType.SETTLE, operationName));
+        MessagingSpanNameExtractor.create(getter, operationType, operationName), operationType);
   }
 
-  private NatsSpanNameExtractor(SpanNameExtractor<NatsRequest> delegate) {
+  private NatsSpanNameExtractor(
+      SpanNameExtractor<NatsRequest> delegate, MessagingOperationType operationType) {
     this.delegate = delegate;
+    this.operationType = operationType;
   }
 
   @Override
   public String extract(NatsRequest request) {
-    if (NatsSubject.isJetStreamSettlement(request.getSubject())) {
-      if (!emitStableMessagingSemconv()) {
-        return LEGACY_SETTLEMENT_SPAN_NAME;
-      }
+    if (!emitStableMessagingSemconv() && NatsSubject.isJetStreamSettlement(request.getSubject())) {
+      return LEGACY_SETTLEMENT_SPAN_NAME;
+    }
+    if (operationType == MessagingOperationType.SETTLE
+        && NatsSubject.isJetStreamSettlement(request.getSubject())) {
       String operationName = request.getJetStreamSettlementOperationName();
       return (operationName == null ? "settle" : operationName)
           + " "
