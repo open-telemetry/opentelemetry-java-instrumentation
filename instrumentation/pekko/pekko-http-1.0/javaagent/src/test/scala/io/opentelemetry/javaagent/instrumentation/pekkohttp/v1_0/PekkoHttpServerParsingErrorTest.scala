@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.testing.junit.{
 }
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
-import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.{HttpAttributes, UrlAttributes}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.model.{HttpRequest, HttpResponse}
@@ -65,11 +65,121 @@ class PekkoHttpServerParsingErrorTest {
             trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
               override def accept(span: SpanDataAssert): Unit = {
                 span
-                  .hasName("HTTP")
+                  .hasName("GET")
                   .hasKind(SpanKind.SERVER)
                   .hasNoParent()
                   .hasAttributesSatisfyingExactly(
-                    equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "_OTHER"),
+                    equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(UrlAttributes.URL_PATH, "/%%"),
+                    equalTo(
+                      HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+                      java.lang.Long.valueOf(400)
+                    )
+                  )
+                ()
+              }
+            })
+        })
+      } finally Await.result(binding.unbind(), 10.seconds)
+    } finally Await.result(system.terminate(), 10.seconds)
+  }
+
+  /** The parser is reused for every request on a keep alive connection and
+    * never resets the fields the request line is read from, so a request that
+    * fails must not be described with what an earlier one left behind.
+    */
+  @Test def requestLineIsNotCarriedOverFromTheRequestBefore(): Unit = {
+    implicit val system: ActorSystem = ActorSystem(
+      "parsing-error-keep-alive-test"
+    )
+    try {
+      val handler: HttpRequest => HttpResponse = _ => HttpResponse()
+      val binding =
+        Await.result(
+          Http().bindAndHandleSync(handler, "localhost", 0),
+          10.seconds
+        )
+      val port = binding.localAddress.getPort
+
+      try {
+        val host = "Host: localhost:" + port + "\r\n"
+        // the first request parses and is handled, the second fails on its request target
+        send(
+          port,
+          "GET /already/handled HTTP/1.1\r\n" + host + "\r\n" +
+            "POST /%% HTTP/1.1\r\n" + host + "\r\n"
+        )
+
+        testing.waitAndAssertTraces(
+          new Consumer[TraceAssert] {
+            override def accept(trace: TraceAssert): Unit =
+              trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+                override def accept(span: SpanDataAssert): Unit = {
+                  span.hasName("GET").hasKind(SpanKind.SERVER)
+                  ()
+                }
+              })
+          },
+          new Consumer[TraceAssert] {
+            override def accept(trace: TraceAssert): Unit =
+              trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+                override def accept(span: SpanDataAssert): Unit = {
+                  span
+                    .hasName("POST")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                      equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+                      equalTo(UrlAttributes.URL_PATH, "/%%"),
+                      equalTo(
+                        HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+                        java.lang.Long.valueOf(400)
+                      )
+                    )
+                  ()
+                }
+              })
+          }
+        )
+      } finally Await.result(binding.unbind(), 10.seconds)
+    } finally Await.result(system.terminate(), 10.seconds)
+  }
+
+  /** Most parsing failures happen after the request line, in which case the
+    * target reported is the one pekko-http itself parsed and validated.
+    */
+  @Test def failureAfterTheRequestLineReportsTheParsedTarget(): Unit = {
+    implicit val system: ActorSystem = ActorSystem("parsing-error-header-test")
+    try {
+      val handler: HttpRequest => HttpResponse = _ => HttpResponse()
+      val binding =
+        Await.result(
+          Http().bindAndHandleSync(handler, "localhost", 0),
+          10.seconds
+        )
+      val port = binding.localAddress.getPort
+
+      try {
+        // the request line parses cleanly, the failure is in the headers
+        val response = send(
+          port,
+          "GET /valid/path?a=1 HTTP/1.1\r\nHost: localhost:" + port +
+            "\r\nContent-Length: not-a-number\r\n\r\n"
+        )
+        assertThat(response.head).contains("400 Bad Request")
+
+        testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit =
+            trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                span
+                  .hasName("GET")
+                  .hasKind(SpanKind.SERVER)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(
+                    equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(UrlAttributes.URL_PATH, "/valid/path"),
+                    equalTo(UrlAttributes.URL_QUERY, "a=1"),
                     equalTo(
                       HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
                       java.lang.Long.valueOf(400)

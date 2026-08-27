@@ -11,10 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isBridge;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -23,6 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.javadsl.model.HttpResponse;
+import org.apache.pekko.http.scaladsl.model.ErrorInfo;
 
 /**
  * A request that fails to parse, for example because of an illegal request-target, is answered by
@@ -47,8 +47,19 @@ class ParsingErrorHandlerInstrumentation implements TypeInstrumentation {
     // a scala implementation returns the more specific scaladsl HttpResponse and gets a bridge
     // method for the signature declared on ParsingErrorHandler; skipping the bridge leaves exactly
     // one match per implementation, whichever of the two return types it declares
+    //
+    // the parameter types are matched as well as the arity, because the type matcher deliberately
+    // covers user written handlers and one of those may declare an unrelated handle overload that
+    // also takes four arguments
     transformer.applyAdviceToMethod(
-        named("handle").and(not(isAbstract())).and(not(isBridge())).and(takesArguments(4)),
+        named("handle")
+            .and(not(isAbstract()))
+            .and(not(isBridge()))
+            .and(takesArguments(4))
+            .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.StatusCode")))
+            .and(takesArgument(1, named("org.apache.pekko.http.scaladsl.model.ErrorInfo")))
+            .and(takesArgument(2, named("org.apache.pekko.event.LoggingAdapter")))
+            .and(takesArgument(3, named("org.apache.pekko.http.scaladsl.settings.ServerSettings"))),
         getClass().getName() + "$HandleAdvice");
   }
 
@@ -57,13 +68,8 @@ class ParsingErrorHandlerInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object[] onEnter() {
-      Context context = PekkoHttpParsingErrorSingletons.startSpan();
-      if (context == null) {
-        return null;
-      }
-      // the array carries the context and the scope from the enter advice to the exit advice
-      return new Object[] {context, context.makeCurrent()};
+    public static Object[] onEnter(@Advice.Argument(1) ErrorInfo info) {
+      return PekkoHttpParsingErrorSingletons.startSpan(info);
     }
 
     // the return value is written back because the response customizer may have added headers, and
@@ -78,9 +84,7 @@ class ParsingErrorHandlerInstrumentation implements TypeInstrumentation {
       if (enter == null) {
         return response;
       }
-      ((Scope) enter[1]).close();
-      return PekkoHttpParsingErrorSingletons.endSpan(
-          (Context) enter[0], (HttpResponse) response, throwable);
+      return PekkoHttpParsingErrorSingletons.endSpan(enter, (HttpResponse) response, throwable);
     }
   }
 }
