@@ -19,6 +19,8 @@ public final class SofaRpcTelemetry {
 
   private static final String CLIENT_FILTER_NAME = "openTelemetryClient";
 
+  @Nullable private static volatile Filter cachedClientFilter;
+
   private final Instrumenter<SofaRpcRequest, SofaResponse> serverInstrumenter;
   private final Instrumenter<SofaRpcRequest, SofaResponse> clientInstrumenter;
 
@@ -51,13 +53,35 @@ public final class SofaRpcTelemetry {
    */
   public static void completeAsyncResponse(
       SofaRequest request, @Nullable SofaResponse response, @Nullable Throwable exception) {
-    ExtensionLoader<Filter> loader = ExtensionLoaderFactory.getExtensionLoader(Filter.class);
-    if (loader.getExtensionClass(CLIENT_FILTER_NAME) == null) {
+    Filter filter = getClientFilter();
+    if (filter == null) {
       TracingFilter.completeAsyncRequest(request, response, exception);
       return;
     }
-    Filter filter = loader.getExtension(CLIENT_FILTER_NAME);
     filter.onAsyncResponse(null, request, response, exception);
+  }
+
+  @Nullable
+  private static Filter getClientFilter() {
+    Filter cachedFilter = cachedClientFilter;
+    if (cachedFilter != null) {
+      return cachedFilter;
+    }
+
+    synchronized (SofaRpcTelemetry.class) {
+      cachedFilter = cachedClientFilter;
+      if (cachedFilter != null) {
+        return cachedFilter;
+      }
+
+      ExtensionLoader<Filter> loader = ExtensionLoaderFactory.getExtensionLoader(Filter.class);
+      if (loader.getExtensionClass(CLIENT_FILTER_NAME) == null) {
+        return null;
+      }
+      cachedFilter = loader.getExtension(CLIENT_FILTER_NAME);
+      cachedClientFilter = cachedFilter;
+      return cachedFilter;
+    }
   }
 
   /**

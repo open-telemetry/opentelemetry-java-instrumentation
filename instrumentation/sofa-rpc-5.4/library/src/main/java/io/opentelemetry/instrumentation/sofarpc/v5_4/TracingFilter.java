@@ -134,7 +134,7 @@ final class TracingFilter extends Filter {
   // Completes an asynchronous request at most once across transport failures, standard filter
   // callbacks, and custom completion callbacks.
   static void completeAsyncRequest(
-      SofaRequest request, SofaResponse response, Throwable exception) {
+      SofaRequest request, @Nullable SofaResponse response, @Nullable Throwable exception) {
     AsyncState asyncState = ASYNC_STATE_FIELD.get(request);
     if (asyncState == null || !asyncState.tryComplete()) {
       return;
@@ -169,7 +169,8 @@ final class TracingFilter extends Filter {
       return completed.compareAndSet(false, true);
     }
 
-    private void end(SofaRequest request, SofaResponse response, Throwable error) {
+    private void end(
+        SofaRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
       SofaRpcRequest endRequest =
           SofaRpcRequest.create(request, remoteAddress, localAddress, providerInfo);
       instrumenter.end(context, endRequest, response, error);
