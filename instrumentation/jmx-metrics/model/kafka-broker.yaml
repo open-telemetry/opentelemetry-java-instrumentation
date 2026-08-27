@@ -4,31 +4,15 @@ groups:
     brief: Kafka broker attributes.
     attributes:
       - id: kafka.request.type
-        type:
-          members:
-            - id: fetch
-              value: "fetch"
-              brief: Fetch requests, from consumers and followers.
-              stability: development
-            - id: produce
-              value: "produce"
-              brief: Produce requests.
-              stability: development
-            - id: fetchconsumer
-              value: "fetchconsumer"
-              brief: Fetch requests from consumers.
-              stability: development
-            - id: fetchfollower
-              value: "fetchfollower"
-              brief: Fetch requests from follower replicas.
-              stability: development
+        type: string
         stability: development
-        brief: Kafka request type.
+        brief: Kafka request type in lowercase.
         examples:
           - "fetch"
           - "produce"
           - "fetchconsumer"
           - "fetchfollower"
+          - "metadata"
       - id: kafka.topic.name
         type: string
         stability: development
@@ -51,6 +35,13 @@ groups:
         examples:
           - "shrink"
           - "expand"
+
+      - id: kafka.network.processor.id
+        type: string
+        stability: development
+        brief: Identifier of the Kafka network processor.
+        examples:
+          - "0"
 
   - id: metric.kafka.server.messages
     metric_name: kafka.server.messages
@@ -234,3 +225,185 @@ groups:
     unit: "s"
     instrument: gauge
     attributes: []
+
+  - id: metric.kafka.leader.count
+    metric_name: kafka.leader.count
+    type: metric
+    stability: development
+    brief: The number of leaders assigned to the broker.
+    unit: "{leader}"
+    instrument: gauge
+
+  - id: metric.kafka.isr.operation.rate.1m
+    metric_name: kafka.isr.operation.rate.1m
+    type: metric
+    stability: development
+    brief: The one-minute rate of ISR expand and shrink operations.
+    unit: "{operation}/s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.server.isr.operation
+
+  - id: metric.kafka.isr.operation.rate.5m
+    metric_name: kafka.isr.operation.rate.5m
+    type: metric
+    stability: development
+    brief: The five-minute rate of ISR expand and shrink operations.
+    unit: "{operation}/s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.server.isr.operation
+
+  - id: metric.kafka.isr.operation.rate.15m
+    metric_name: kafka.isr.operation.rate.15m
+    type: metric
+    stability: development
+    brief: The fifteen-minute rate of ISR expand and shrink operations.
+    unit: "{operation}/s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.server.isr.operation
+
+  - id: metric.kafka.isr.operation.rate.mean
+    metric_name: kafka.isr.operation.rate.mean
+    type: metric
+    stability: development
+    brief: The mean rate of ISR expand and shrink operations.
+    unit: "{operation}/s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.server.isr.operation
+
+  - id: metric.kafka.network.io.rate.1m
+    metric_name: kafka.network.io.rate.1m
+    type: metric
+    stability: development
+    brief: The one-minute inbound or outbound byte rate.
+    unit: "By/s"
+    instrument: gauge
+    attributes:
+      - ref: network.io.direction
+
+  - id: metric.kafka.network.io.rate.5m
+    metric_name: kafka.network.io.rate.5m
+    type: metric
+    stability: development
+    brief: The five-minute inbound or outbound byte rate.
+    unit: "By/s"
+    instrument: gauge
+    attributes:
+      - ref: network.io.direction
+
+  - id: metric.kafka.network.io.rate.15m
+    metric_name: kafka.network.io.rate.15m
+    type: metric
+    stability: development
+    brief: The fifteen-minute inbound or outbound byte rate.
+    unit: "By/s"
+    instrument: gauge
+    attributes:
+      - ref: network.io.direction
+
+  - id: metric.kafka.network.io.rate.mean
+    metric_name: kafka.network.io.rate.mean
+    type: metric
+    stability: development
+    brief: The mean inbound or outbound byte rate.
+    unit: "By/s"
+    instrument: gauge
+    attributes:
+      - ref: network.io.direction
+
+  - id: metric.kafka.request.total.time.p99
+    metric_name: kafka.request.total.time.p99
+    type: metric
+    stability: development
+    brief: The 99th percentile total request time.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.request.type
+
+  - id: metric.kafka.request.queue.time.p99
+    metric_name: kafka.request.queue.time.p99
+    type: metric
+    stability: development
+    brief: The 99th percentile time requests spend queued before processing.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.request.type
+
+  - id: metric.kafka.request.local.time.p99
+    metric_name: kafka.request.local.time.p99
+    type: metric
+    stability: development
+    brief: The 99th percentile local processing time for requests.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.request.type
+
+  - id: metric.kafka.request.remote.time.p99
+    metric_name: kafka.request.remote.time.p99
+    type: metric
+    stability: development
+    brief: The 99th percentile remote processing time for requests.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.request.type
+
+  - id: metric.kafka.request.response.queue.time.p99
+    metric_name: kafka.request.response.queue.time.p99
+    type: metric
+    stability: development
+    brief: The 99th percentile time responses spend queued before send.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.request.type
+
+  - id: metric.kafka.request.response.send.time.p99
+    metric_name: kafka.request.response.send.time.p99
+    type: metric
+    stability: development
+    brief: The 99th percentile response send time.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.request.type
+
+  - id: metric.kafka.network.processor.idle.average
+    metric_name: kafka.network.processor.idle.average
+    type: metric
+    stability: development
+    brief: The average fraction of time network processors are idle.
+    unit: "1"
+    instrument: gauge
+
+  - id: metric.kafka.request.handler.idle.mean
+    metric_name: kafka.request.handler.idle.mean
+    type: metric
+    stability: development
+    brief: The mean fraction of time request handlers are idle.
+    unit: "1"
+    instrument: gauge
+
+  - id: metric.kafka.request.handler.idle.1m
+    metric_name: kafka.request.handler.idle.1m
+    type: metric
+    stability: development
+    brief: The one-minute fraction of time request handlers are idle.
+    unit: "1"
+    instrument: gauge
+
+  - id: metric.kafka.network.processor.idle.utilization
+    metric_name: kafka.network.processor.idle.utilization
+    type: metric
+    stability: development
+    brief: The idle fraction of an individual network processor.
+    unit: "1"
+    instrument: gauge
+    attributes:
+      - ref: kafka.network.processor.id
