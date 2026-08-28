@@ -55,7 +55,7 @@ groups:
     metric_name: tomcat.db.client.connection.count
     stability: development
     type: metric
-    brief: The number of JDBC connections currently in the state described by `db.client.connection.state`.
+    brief: The number of JDBC connections.
     unit: "{connection}"
     instrument: updowncounter
     attributes:
