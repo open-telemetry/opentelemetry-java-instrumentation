@@ -212,6 +212,36 @@ class DbExecutionTest {
         .isEqualTo("[2001:db8::1]:5432,[2001:db8::2]:5432");
   }
 
+  @Test
+  void dbExecutionSanitizesUserInfoFromMultiHostAddress() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, "user:secret@host1,host2")
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.isServerAddressGroup()).isTrue();
+    assertThat(dbExecution.getServerAddressGroup()).isEqualTo("host1,host2");
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"host1:invalid,host2", "host1,,host2", "host1,host=value", "[2001:db8::1,host2"})
+  void dbExecutionRejectsMalformedMultiHostAddress(String host) {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, host)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.isServerAddressGroup()).isTrue();
+    assertThat(dbExecution.getServerAddressGroup()).isNull();
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"host1", "/var/run/postgresql", "[2001:db8::1]"})
   void dbExecutionTreatsSingleHostAsSingular(String host) {
@@ -225,6 +255,7 @@ class DbExecutionTest {
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
     assertThat(dbExecution.getServerAddress()).isEqualTo(host);
+    assertThat(dbExecution.isServerAddressGroup()).isFalse();
     assertThat(dbExecution.getServerAddressGroup()).isNull();
   }
 

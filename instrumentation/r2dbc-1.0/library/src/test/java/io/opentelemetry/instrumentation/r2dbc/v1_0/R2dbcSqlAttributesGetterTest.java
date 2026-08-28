@@ -129,6 +129,34 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @Test
+  void multiHostOptionsRemoveUserInfoFromTheStableTarget() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, "user:secret@host1,host2")
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? "host1,host2" : "user:secret@host1,host2");
+  }
+
+  @Test
+  void malformedMultiHostOptionsOmitTheStableTarget() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, "host1:invalid,host2")
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "host1:invalid,host2");
+  }
+
+  @Test
   void singleHostKeepsPortInEveryMode() {
     DbExecution dbExecution =
         new DbExecution(

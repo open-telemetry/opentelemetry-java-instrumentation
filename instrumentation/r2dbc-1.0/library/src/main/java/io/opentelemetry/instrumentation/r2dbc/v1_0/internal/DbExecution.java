@@ -70,6 +70,7 @@ public final class DbExecution {
   @Nullable private final String namespace;
   @Nullable private final String serverAddress;
   @Nullable private final Integer serverPort;
+  private final boolean serverAddressGroupCandidate;
   @Nullable private final String serverAddressGroup;
   private final String connectionString;
   private final List<String> rawQueryTexts;
@@ -100,7 +101,9 @@ public final class DbExecution {
         factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
     this.serverPort =
         factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
-    this.serverAddressGroup = serverAddressGroup(serverAddress, serverPort);
+    this.serverAddressGroupCandidate = isServerAddressGroup(serverAddress);
+    this.serverAddressGroup =
+        serverAddressGroupCandidate ? sanitizeServerAddressGroup(serverAddress, serverPort) : null;
     this.connectionString =
         String.format(
             "%s%s:%s%s",
@@ -141,32 +144,87 @@ public final class DbExecution {
     return serverAddressGroup;
   }
 
+  public boolean isServerAddressGroup() {
+    return serverAddressGroupCandidate;
+  }
+
+  private static boolean isServerAddressGroup(@Nullable String serverAddress) {
+    return serverAddress != null
+        && serverAddress.indexOf(',') >= 0
+        && !serverAddress.startsWith("/");
+  }
+
   @Nullable
-  private static String serverAddressGroup(
+  private static String sanitizeServerAddressGroup(
       @Nullable String serverAddress, @Nullable Integer serverPort) {
-    // Unix socket paths may contain commas but still identify one endpoint.
-    if (serverAddress == null || serverAddress.indexOf(',') < 0 || serverAddress.startsWith("/")) {
+    if (serverAddress == null) {
       return null;
     }
-    if (serverPort == null) {
-      return serverAddress;
+
+    String hostList = stripUserInfo(serverAddress);
+    String[] hosts = hostList.split(",", -1);
+    if (hosts.length < 2) {
+      return null;
     }
+
     StringBuilder group = new StringBuilder();
-    for (String host : serverAddress.split(",")) {
+    for (String host : hosts) {
+      String trimmed = host.trim();
+      if (!isValidHostPort(trimmed)) {
+        return null;
+      }
       if (group.length() > 0) {
         group.append(',');
       }
-      String trimmed = host.trim();
-      if (isUnbracketedIpv6(trimmed)) {
+      if (serverPort != null && isUnbracketedIpv6(trimmed)) {
         group.append('[').append(trimmed).append("]:").append(serverPort);
       } else {
         group.append(trimmed);
-        if (!hasPort(trimmed)) {
+        if (serverPort != null && !hasPort(trimmed)) {
           group.append(':').append(serverPort);
         }
       }
     }
     return group.toString();
+  }
+
+  private static String stripUserInfo(String serverAddress) {
+    int at = serverAddress.lastIndexOf('@');
+    return at < 0 ? serverAddress : serverAddress.substring(at + 1);
+  }
+
+  private static boolean isValidHostPort(String value) {
+    if (value.isEmpty()
+        || value.indexOf('=') >= 0
+        || value.indexOf('@') >= 0
+        || value.indexOf('[') > 0) {
+      return false;
+    }
+    if (value.startsWith("[")) {
+      int closingBracket = value.indexOf(']');
+      if (closingBracket < 0 || value.indexOf(']', closingBracket + 1) >= 0) {
+        return false;
+      }
+      String rest = value.substring(closingBracket + 1);
+      return rest.isEmpty() || (rest.startsWith(":") && isPort(rest.substring(1)));
+    }
+    if (value.indexOf(']') >= 0) {
+      return false;
+    }
+    int colon = value.lastIndexOf(':');
+    return colon < 0 || value.indexOf(':') != colon || isPort(value.substring(colon + 1));
+  }
+
+  private static boolean isPort(String value) {
+    if (value.isEmpty()) {
+      return false;
+    }
+    for (int i = 0; i < value.length(); i++) {
+      if (value.charAt(i) < '0' || value.charAt(i) > '9') {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static boolean isUnbracketedIpv6(String host) {
