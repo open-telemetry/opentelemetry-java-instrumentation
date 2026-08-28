@@ -4,6 +4,31 @@
 
 rules:
   - beans:
+    - Catalina:type=DataSource,*
+    - Tomcat:type=DataSource,*
+    prefix: tomcat.db.client.connection.
+    metricAttribute:
+      tomcat.db.client.connection.pool.name: param(name)
+    mapping:
+      initialSize:
+        metric: initial
+        type: gauge
+        unit: "{connection}"
+        desc: The configured initial size of the JDBC connection pool.
+      numActive:
+        metric: count
+        type: updowncounter
+        unit: "{connection}"
+        desc: The number of active JDBC connections.
+        metricAttribute:
+          db.client.connection.state: const(used)
+      maxActive:
+        metric: limit
+        type: gauge
+        unit: "{connection}"
+        desc: The configured maximum size of the JDBC connection pool.
+
+  - beans:
     - Catalina:type=GlobalRequestProcessor,name=*
     - Tomcat:type=GlobalRequestProcessor,name=*
     prefix: tomcat.
@@ -74,6 +99,44 @@ rules:
         unit: "{session}"
         desc: Maximum possible number of active sessions.
 
+      # Additional session metrics
+      sessionMaxAliveTime:
+        metric: session.duration.max
+        type: gauge
+        unit: s
+        desc: The maximum observed session lifetime.
+      sessionCounter:
+        metric: session.created
+        type: counter
+        unit: "{session}"
+        desc: The number of sessions created.
+      sessionAverageAliveTime:
+        metric: session.duration.mean
+        type: gauge
+        unit: s
+        desc: The average observed session lifetime.
+      processingTime:
+        metric: session.processing.duration.sum
+        type: counter
+        sourceUnit: ms
+        unit: s
+        desc: The total time spent processing sessions.
+      maxActive:
+        metric: session.active.max
+        type: gauge
+        unit: "{session}"
+        desc: The maximum number of concurrent active sessions observed.
+      expiredSessions:
+        metric: session.expired
+        type: counter
+        unit: "{session}"
+        desc: The number of expired sessions.
+      rejectedSessions:
+        metric: session.rejected
+        type: counter
+        unit: "{session}"
+        desc: The number of rejected sessions.
+
   - beans:
     - Catalina:type=ThreadPool,name=*
     - Tomcat:type=ThreadPool,name=*
@@ -96,4 +159,3 @@ rules:
       currentThreadsBusy:
         metric: busy.count
         desc: Number of busy threads in the thread pool.
-
