@@ -11,7 +11,11 @@ import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.ma
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
+  assertThat => assertThatSpan,
+  equalTo
+}
+import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION
@@ -24,17 +28,26 @@ import io.opentelemetry.semconv.DbAttributes.{
 }
 import io.opentelemetry.semconv.ServerAttributes.{SERVER_ADDRESS, SERVER_PORT}
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility.await
+import org.awaitility.core.ThrowingRunnable
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.{AfterAll, BeforeAll, Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource}
 import org.testcontainers.containers.GenericContainer
 import redis.commands.TransactionBuilder
-import redis.{RedisClient, RedisDispatcher, RedisServer}
+import redis.{
+  RedisClient,
+  RedisClientPool,
+  RedisDispatcher,
+  RedisServer,
+  SentinelMonitoredRedisClientMasterSlaves
+}
 
 import java.lang.{Long => JLong}
 import java.net.InetAddress
-import java.util.function.Consumer
+import java.util.function.{Consumer, Predicate}
 import java.util.stream.Stream
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -49,10 +62,13 @@ class RediscalaClientTest {
 
   var system: Object = null
   var redisServer: GenericContainer[_] = null
+  var sentinelServer: GenericContainer[_] = null
   var redisClient: RedisClient = null
   var nonDefaultDbClient: RedisClient = null
   var host: String = null
   var port: JLong = null
+  var sentinelHost: String = null
+  var sentinelPort: JLong = null
 
   @BeforeAll
   def setUp(): Unit = {
@@ -62,6 +78,20 @@ class RediscalaClientTest {
 
     host = redisServer.getHost
     port = redisServer.getMappedPort(6379).longValue()
+
+    if (emitStableDatabaseSemconv()) {
+      sentinelServer = new GenericContainer("redis:6.2.3-alpine")
+      sentinelServer.withExposedPorts(26379)
+      sentinelServer.withExtraHost(host, "127.0.0.1")
+      sentinelServer.withCommand(
+        "sh",
+        "-c",
+        s"redis-server --port $port --daemonize yes && printf 'port 26379\\nsentinel resolve-hostnames yes\\nsentinel announce-hostnames yes\\nsentinel monitor mymaster $host $port 1\\n' > /tmp/sentinel.conf && exec redis-server /tmp/sentinel.conf --sentinel"
+      )
+      sentinelServer.start()
+      sentinelHost = sentinelServer.getHost
+      sentinelPort = sentinelServer.getMappedPort(26379).longValue()
+    }
 
     try {
       val clazz = Class.forName("akka.actor.ActorSystem")
@@ -115,6 +145,9 @@ class RediscalaClientTest {
   def tearDown(): Unit = {
     if (system != null) {
       system.getClass.getMethod("terminate").invoke(system)
+    }
+    if (sentinelServer != null) {
+      sentinelServer.stop()
     }
     redisServer.stop()
   }
@@ -189,9 +222,7 @@ class RediscalaClientTest {
     try {
       val transaction = client.multi()
       transaction.set("transaction-refresh", "value")
-      val resolvedHost = InetAddress.getByName(host).getHostAddress
-      val reconnectHost =
-        if (resolvedHost == host) "localhost" else resolvedHost
+      val reconnectHost = alternateHost(host)
       client.reconnect(reconnectHost, port.intValue())
 
       val result = testing.runWithSpan(
@@ -234,6 +265,58 @@ class RediscalaClientTest {
             }
           )
       })
+    } finally {
+      client.stop()
+    }
+  }
+
+  @Test def testImmutablePoolCommandUsesConfiguredTarget(): Unit = {
+    assumeTrue(emitStableDatabaseSemconv())
+    val hosts = Seq(host, alternateHost(host)).sorted
+    val pool = classOf[RedisClientPool].getConstructors
+      .find(_.getParameterCount == 4)
+      .get
+      .newInstance(
+        hosts.map(RedisServer(_, port.intValue())),
+        "RedisClientPool",
+        system,
+        RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
+      )
+      .asInstanceOf[RedisClientPool]
+    try {
+      val result = pool.set("immutable-pool-target", "value")
+      Await.result(result, Duration("3 second"))
+      assertConfiguredTargetSpan(
+        hosts.map(serverHost => s"$serverHost:$port").mkString(",")
+      )
+    } finally {
+      pool.stop()
+    }
+  }
+
+  @Test def testSentinelMasterSlavesCommandUsesConfiguredTarget(): Unit = {
+    assumeTrue(emitStableDatabaseSemconv())
+    val sentinelHosts =
+      Seq(sentinelHost, alternateHost(sentinelHost)).sorted
+    val client =
+      classOf[SentinelMonitoredRedisClientMasterSlaves].getConstructors
+        .find(_.getParameterCount == 4)
+        .get
+        .newInstance(
+          sentinelHosts.map((_, sentinelPort.intValue())),
+          "mymaster",
+          system,
+          RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
+        )
+        .asInstanceOf[SentinelMonitoredRedisClientMasterSlaves]
+    try {
+      val result = client.set("sentinel-target", "value")
+      Await.result(result, Duration("10 second"))
+      assertConfiguredTargetSpan(
+        sentinelHosts
+          .map(serverHost => s"$serverHost:$sentinelPort/mymaster")
+          .mkString(",")
+      )
     } finally {
       client.stop()
     }
@@ -588,6 +671,36 @@ class RediscalaClientTest {
 
   private def namespace(databaseIndex: Int): String =
     if (emitStableDatabaseSemconv()) databaseIndex.toString else null
+
+  private def alternateHost(serverHost: String): String = {
+    val resolvedHost = InetAddress.getByName(serverHost).getHostAddress
+    if (resolvedHost == serverHost) "localhost" else resolvedHost
+  }
+
+  private def assertConfiguredTargetSpan(serverAddress: String): Unit =
+    await().untilAsserted(new ThrowingRunnable {
+      override def run(): Unit = {
+        val span = testing
+          .spans()
+          .stream()
+          .filter(new Predicate[SpanData] {
+            override def test(span: SpanData): Boolean =
+              span.getName == s"SET $serverAddress"
+          })
+          .findFirst()
+          .orElse(null)
+        assertThat(span).isNotNull
+        assertThatSpan(span)
+          .hasName(s"SET $serverAddress")
+          .hasKind(CLIENT)
+          .hasAttributesSatisfyingExactly(
+            equalTo(maybeStable(DB_SYSTEM), REDIS),
+            equalTo(maybeStable(DB_OPERATION), "SET"),
+            equalTo(SERVER_ADDRESS, serverAddress),
+            equalTo(SERVER_PORT, null)
+          )
+      }
+    })
 
   private def serverTarget(client: Object): (String, Integer) = {
     val helperClass = Class.forName(
