@@ -48,6 +48,12 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
             .and(returns(named("io.lettuce.core.cluster.StatefulRedisClusterConnectionImpl"))),
         getClass().getName() + "$AttachConnectionAdvice");
     transformer.applyAdviceToMethod(
+        named("connectClusterPubSubImpl")
+            .and(
+                returns(
+                    named("io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection"))),
+        getClass().getName() + "$AttachConnectionAdvice");
+    transformer.applyAdviceToMethod(
         nameStartsWith("connectStateful")
             .and(takesArgument(1, named("io.lettuce.core.protocol.DefaultEndpoint")))
             .and(takesArgument(2, named("io.lettuce.core.RedisURI"))),
@@ -71,11 +77,10 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This RedisClusterClient client,
-        @Advice.Return @Nullable RedisChannelHandler<?, ?> connection) {
+        @Advice.This RedisClusterClient client, @Advice.Return @Nullable Object connection) {
       RedisServerTarget target = CLUSTER_CLIENT_TARGET.get(client);
-      if (target != null && connection != null) {
-        CONNECTION_TARGET.set(connection, target);
+      if (target != null && connection instanceof RedisChannelHandler) {
+        CONNECTION_TARGET.set((RedisChannelHandler<?, ?>) connection, target);
       }
     }
   }

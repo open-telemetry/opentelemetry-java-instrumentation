@@ -30,6 +30,8 @@ import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
 import io.lettuce.core.cluster.api.reactive.RedisAdvancedClusterReactiveCommands;
 import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands;
+import io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection;
+import io.lettuce.core.cluster.pubsub.api.reactive.RedisClusterPubSubReactiveCommands;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -67,6 +69,7 @@ class LettuceClusterClientTest {
 
   private static TestRedisCluster redisServer;
   private static StatefulRedisClusterConnection<String, String> connection;
+  private static StatefulRedisClusterPubSubConnection<String, String> pubSubConnection;
   private static String configuredTarget;
   private static String host;
   private static int port;
@@ -90,11 +93,13 @@ class LettuceClusterClientTest {
 
     connection = client.connect();
     cleanup.deferAfterAll(connection);
+    pubSubConnection = client.connectPubSub();
+    cleanup.deferAfterAll(pubSubConnection);
     testing.clearData();
   }
 
   @Test
-  void configuredSeedsAreUsedForSyncBatchAndReactiveCommands() throws Exception {
+  void configuredSeedsAreUsedForSyncBatchReactiveAndPubSubCommands() throws Exception {
     RedisAdvancedClusterCommands<String, String> syncCommands = connection.sync();
     assertThat(syncCommands.set("CLUSTER_COMMAND_KEY", "value")).isEqualTo("OK");
 
@@ -109,6 +114,9 @@ class LettuceClusterClientTest {
 
     RedisAdvancedClusterReactiveCommands<String, String> reactiveCommands = connection.reactive();
     assertThat(reactiveCommands.set("CLUSTER_REACTIVE_KEY", "value").block()).isEqualTo("OK");
+
+    RedisClusterPubSubReactiveCommands<String, String> pubSubCommands = pubSubConnection.reactive();
+    assertThat(pubSubCommands.publish("CLUSTER_CHANNEL", "message").block()).isZero();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -166,7 +174,22 @@ class LettuceClusterClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
                             equalTo(maybeStable(DB_STATEMENT), "SET CLUSTER_REACTIVE_KEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "PUBLISH " + configuredTarget : "PUBLISH")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? configuredTarget : null),
+                            equalTo(SERVER_PORT, null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, null),
+                            equalTo(maybeStable(DB_STATEMENT), "PUBLISH CLUSTER_CHANNEL ?"),
+                            equalTo(maybeStable(DB_OPERATION), "PUBLISH"))));
 
     redisServer.assertNoFailure();
   }
@@ -242,8 +265,14 @@ class LettuceClusterClientTest {
                 + getPort()
                 + " myself,master - 0 0 1 connected 0-16383\n";
         write(output, "$" + nodes.getBytes(UTF_8).length + "\r\n" + nodes + "\r\n");
+      } else if ("CLUSTER".equals(name)
+          && command.size() > 1
+          && "MYID".equals(command.get(1).toUpperCase(Locale.ROOT))) {
+        write(output, "$" + NODE_ID.length() + "\r\n" + NODE_ID + "\r\n");
       } else if ("SET".equals(name) || "CLIENT".equals(name)) {
         write(output, "+OK\r\n");
+      } else if ("PUBLISH".equals(name)) {
+        write(output, ":0\r\n");
       } else if ("COMMAND".equals(name)) {
         write(output, "*0\r\n");
       } else if ("PING".equals(name)) {
