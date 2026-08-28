@@ -17,13 +17,13 @@ class Resilience4jCircuitBreakerAttributesExtractor
     implements AttributesExtractor<Resilience4jCircuitBreakerRequest, String> {
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_NAME =
-      stringKey("resilience.policy.name");
+      stringKey("resilience4j.circuit_breaker.name");
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_STATE =
-      stringKey("resilience.circuit_breaker.state");
+      stringKey("resilience4j.circuit_breaker.state");
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_OUTCOME =
-      stringKey("resilience.circuit_breaker.outcome");
+      stringKey("resilience4j.circuit_breaker.outcome");
 
   @Override
   public void onStart(

@@ -10,7 +10,7 @@ failed calls are reported as error spans.
 
 When experimental span attributes are enabled, each CircuitBreaker span records:
 
-- `resilience.policy.name`
-- `resilience.circuit_breaker.state`: Resilience4j `CircuitBreaker.State` lowercased, for
+- `resilience4j.circuit_breaker.name`
+- `resilience4j.circuit_breaker.state`: Resilience4j `CircuitBreaker.State` lowercased, for
   example `closed`, `open`, `half_open`, `disabled`, `forced_open`, or `metrics_only`
-- `resilience.circuit_breaker.outcome`: `success`, `failure`, `rejected`, or `cancelled`
+- `resilience4j.circuit_breaker.outcome`: `success`, `failure`, `rejected`, or `cancelled`

@@ -76,13 +76,13 @@ class Resilience4jCircuitBreakerTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("resilience.policy.name"),
+                                stringKey("resilience4j.circuit_breaker.name"),
                                 experimental("test-circuit-breaker")),
                             equalTo(
-                                stringKey("resilience.circuit_breaker.state"),
+                                stringKey("resilience4j.circuit_breaker.state"),
                                 experimental("closed")),
                             equalTo(
-                                stringKey("resilience.circuit_breaker.outcome"),
+                                stringKey("resilience4j.circuit_breaker.outcome"),
                                 experimental("success"))),
                 span ->
                     span.hasName("protected-operation")
@@ -203,13 +203,13 @@ class Resilience4jCircuitBreakerTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("resilience.policy.name"),
+                                stringKey("resilience4j.circuit_breaker.name"),
                                 experimental("outer-circuit-breaker")),
                             equalTo(
-                                stringKey("resilience.circuit_breaker.state"),
+                                stringKey("resilience4j.circuit_breaker.state"),
                                 experimental("closed")),
                             equalTo(
-                                stringKey("resilience.circuit_breaker.outcome"),
+                                stringKey("resilience4j.circuit_breaker.outcome"),
                                 experimental("success"))),
                 span ->
                     span.hasName("CircuitBreaker inner-circuit-breaker")
@@ -217,13 +217,13 @@ class Resilience4jCircuitBreakerTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("resilience.policy.name"),
+                                stringKey("resilience4j.circuit_breaker.name"),
                                 experimental("inner-circuit-breaker")),
                             equalTo(
-                                stringKey("resilience.circuit_breaker.state"),
+                                stringKey("resilience4j.circuit_breaker.state"),
                                 experimental("closed")),
                             equalTo(
-                                stringKey("resilience.circuit_breaker.outcome"),
+                                stringKey("resilience4j.circuit_breaker.outcome"),
                                 experimental("success")))));
     assertThat(testing.spans())
         .extracting(span -> span.getName())
@@ -598,13 +598,13 @@ class Resilience4jCircuitBreakerTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("resilience.policy.name"),
+                                stringKey("resilience4j.circuit_breaker.name"),
                                 experimental("test-circuit-breaker")),
                             equalTo(
-                                stringKey("resilience.circuit_breaker.state"),
+                                stringKey("resilience4j.circuit_breaker.state"),
                                 experimental("closed")),
                             equalTo(
-                                stringKey("resilience.circuit_breaker.outcome"),
+                                stringKey("resilience4j.circuit_breaker.outcome"),
                                 experimental("success")))));
   }
 
@@ -643,11 +643,12 @@ class Resilience4jCircuitBreakerTest {
         .satisfies(
             span -> {
               assertThat(span.getEvents()).isEmpty();
-              assertThat(span.getAttributes().get(stringKey("resilience.policy.name")))
+              assertThat(span.getAttributes().get(stringKey("resilience4j.circuit_breaker.name")))
                   .isEqualTo(experimental("test-circuit-breaker"));
-              assertThat(span.getAttributes().get(stringKey("resilience.circuit_breaker.state")))
+              assertThat(span.getAttributes().get(stringKey("resilience4j.circuit_breaker.state")))
                   .isEqualTo(experimental("closed"));
-              assertThat(span.getAttributes().get(stringKey("resilience.circuit_breaker.outcome")))
+              assertThat(
+                      span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
                   .isEqualTo(experimental("success"));
             });
     assertThat(testing.spans())
@@ -656,11 +657,12 @@ class Resilience4jCircuitBreakerTest {
         .singleElement()
         .satisfies(
             span -> {
-              assertThat(span.getAttributes().get(stringKey("resilience.policy.name")))
+              assertThat(span.getAttributes().get(stringKey("resilience4j.circuit_breaker.name")))
                   .isEqualTo(experimental("test-circuit-breaker"));
-              assertThat(span.getAttributes().get(stringKey("resilience.circuit_breaker.state")))
+              assertThat(span.getAttributes().get(stringKey("resilience4j.circuit_breaker.state")))
                   .isEqualTo(experimental("closed"));
-              assertThat(span.getAttributes().get(stringKey("resilience.circuit_breaker.outcome")))
+              assertThat(
+                      span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
                   .isEqualTo(experimental("failure"));
               assertThat(span.getEvents())
                   .singleElement()
@@ -1098,13 +1100,13 @@ class Resilience4jCircuitBreakerTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("resilience.policy.name"),
+                                stringKey("resilience4j.circuit_breaker.name"),
                                 experimental("test-circuit-breaker")),
                             equalTo(
-                                stringKey("resilience.circuit_breaker.state"),
+                                stringKey("resilience4j.circuit_breaker.state"),
                                 experimental("closed")),
                             equalTo(
-                                stringKey("resilience.circuit_breaker.outcome"),
+                                stringKey("resilience4j.circuit_breaker.outcome"),
                                 experimental(outcome))),
                 span ->
                     span.hasName("protected-operation")
@@ -1128,12 +1130,12 @@ class Resilience4jCircuitBreakerTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(
-                              stringKey("resilience.policy.name"),
+                              stringKey("resilience4j.circuit_breaker.name"),
                               experimental("test-circuit-breaker")),
                           equalTo(
-                              stringKey("resilience.circuit_breaker.state"), experimental(state)),
+                              stringKey("resilience4j.circuit_breaker.state"), experimental(state)),
                           equalTo(
-                              stringKey("resilience.circuit_breaker.outcome"),
+                              stringKey("resilience4j.circuit_breaker.outcome"),
                               experimental(outcome)));
                   if ("success".equals(outcome) || "cancelled".equals(outcome)) {
                     return;
