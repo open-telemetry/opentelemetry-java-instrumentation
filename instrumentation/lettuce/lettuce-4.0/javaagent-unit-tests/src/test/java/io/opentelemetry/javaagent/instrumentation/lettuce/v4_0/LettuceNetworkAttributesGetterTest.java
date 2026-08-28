@@ -106,6 +106,24 @@ class LettuceNetworkAttributesGetterTest {
     assertThat(LettuceSingletons.CONNECTION_ADDRESS.get(connection)).isEqualTo(configuredAddress);
   }
 
+  @Test
+  void disconnectDropsPeerOfCommandDispatchedBeforeIt() throws UnknownHostException {
+    RedisChannelHandler<?, ?> connection = mock(RedisChannelHandler.class);
+    LettuceSingletons.CONNECTION_PEER.set(
+        connection,
+        new LettucePeerAddress(
+            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT)));
+    RedisCommand<?, ?, ?> command = command();
+    LettuceSingletons.COMMAND_PEER.set(command, LettuceSingletons.CONNECTION_PEER.get(connection));
+
+    LettuceSingletons.clearConnectionPeer(connection);
+
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+  }
+
   private static RedisCommand<?, ?, ?> command() {
     return new Command<>(CommandType.GET, null);
   }
