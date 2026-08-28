@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -261,7 +262,8 @@ public abstract class AbstractOpenSearchRestTest {
                 equalTo(maybeStable(DB_OPERATION), "GET"),
                 equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
                 equalTo(NETWORK_PEER_ADDRESS, peerAddress),
-                equalTo(NETWORK_PEER_PORT, httpHost.getPort())));
+                equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                equalTo(NETWORK_TYPE, peerAddress.contains(":") ? "ipv6" : "ipv4")));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
       assertions.add(equalTo(SERVER_PORT, httpHost.getPort()));

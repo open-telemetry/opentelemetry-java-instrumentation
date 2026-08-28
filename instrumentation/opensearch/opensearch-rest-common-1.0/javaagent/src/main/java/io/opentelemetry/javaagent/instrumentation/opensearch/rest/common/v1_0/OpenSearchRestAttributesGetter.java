@@ -74,17 +74,8 @@ final class OpenSearchRestAttributesGetter
 
   @Override
   @Nullable
-  public String getNetworkPeerAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
-    return peerAddress != null ? peerAddress.getAddress().getHostAddress() : null;
-  }
-
-  @Override
-  @Nullable
-  public Integer getNetworkPeerPort(
-      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
-    return peerAddress != null ? peerAddress.getPort() : null;
+    return request.getPeerState().getPeerAddress();
   }
 }
