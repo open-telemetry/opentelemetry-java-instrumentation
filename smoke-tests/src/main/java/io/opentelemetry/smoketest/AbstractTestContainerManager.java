@@ -33,8 +33,6 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
             // java.util.zip.ZipException: Invalid CEN header (invalid zip64 extra data field size)
             + " -Djdk.util.zip.disableZip64ExtraFieldValidation=true");
 
-    environment.put("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf");
-
     environment.put("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1");
     environment.put("OTEL_BSP_SCHEDULE_DELAY", "10ms");
     environment.put("OTEL_METRIC_EXPORT_INTERVAL", "1000");
