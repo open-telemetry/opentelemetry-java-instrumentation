@@ -10,16 +10,19 @@ rules:
     metricAttribute:
       db.client.connection.pool.name: param(name)
     mapping:
+      # DBCP2 and Tomcat JDBC expose equivalent pool values under different names.
+      # A datasource uses one implementation, so these mappings intentionally converge
+      # on the same metrics.
       initialSize:
         metric: initial
-        type: gauge
+        type: updowncounter
         unit: "{connection}"
         desc: The configured initial size of the JDBC connection pool.
       numActive:
         metric: &metric count
         type: &type updowncounter
         unit: &unit "{connection}"
-        desc: &desc The number of JDBC connections currently in the state described by `db.client.connection.state`.
+        desc: &desc The number of JDBC connections.
         metricAttribute:
           db.client.connection.state: const(used)
       numIdle:
@@ -45,7 +48,7 @@ rules:
           db.client.connection.state: const(idle)
       maxActive:
         metric: &limit_metric limit
-        type: &limit_type gauge
+        type: &limit_type updowncounter
         unit: &limit_unit "{connection}"
         desc: &limit_desc The configured maximum size of the JDBC connection pool.
       maxTotal:
