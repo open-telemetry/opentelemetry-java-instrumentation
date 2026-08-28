@@ -34,6 +34,34 @@ dependencies {
   testImplementation(project(":instrumentation:executors:testing"))
 }
 
+testing {
+  suites {
+    // the agent matches methods of pekko classes by name, some of them are private and scala
+    // mangles their names, run the tests against the scala 3 artifacts to catch a name that only
+    // holds for scala 2
+    register<JvmTestSuite>("scala3Test") {
+      dependencies {
+        implementation("org.scala-lang:scala3-library_3:3.3.6")
+        implementation("org.apache.pekko:pekko-actor_3:${baseVersion("1.0.1").orLatest()}")
+        implementation(project(":instrumentation:executors:testing"))
+      }
+    }
+  }
+}
+
+// the scala 3 suite runs the same tests as the scala 2 suite, against the _3 artifacts
+sourceSets.named("scala3Test") {
+  java.srcDir("src/test/java")
+  resources.srcDir("src/test/resources")
+  extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
+
 if (otelProps.testLatestDeps) {
   configurations {
     // pekko artifact name is different for regular and latest tests

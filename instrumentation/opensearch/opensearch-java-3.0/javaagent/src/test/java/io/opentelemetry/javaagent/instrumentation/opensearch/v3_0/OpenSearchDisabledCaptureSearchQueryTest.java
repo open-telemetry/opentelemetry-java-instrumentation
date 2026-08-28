@@ -29,9 +29,9 @@ import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 
 /**
- * Tests for capture-search-query=false configuration. This test class runs with
- * -Dotel.instrumentation.opensearch.capture-search-query=false and verifies that query bodies are
- * NOT captured in DB_STATEMENT.
+ * Tests compatibility for the deprecated capture-search-query=false configuration. This test class
+ * runs with -Dotel.instrumentation.opensearch.capture-search-query=false and verifies that query
+ * bodies are NOT captured in DB_STATEMENT.
  */
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
