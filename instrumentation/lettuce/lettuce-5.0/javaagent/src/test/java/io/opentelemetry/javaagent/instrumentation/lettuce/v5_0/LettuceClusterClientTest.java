@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -49,11 +50,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-@EnabledIfSystemProperty(named = "otel.semconv-stability.opt-in", matches = ".*database.*")
 @DisabledIfSystemProperty(
     named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
     matches = "true")
@@ -68,22 +67,24 @@ class LettuceClusterClientTest {
   private static TestRedisCluster redisServer;
   private static StatefulRedisClusterConnection<String, String> connection;
   private static String configuredTarget;
+  private static String host;
+  private static int port;
 
   @BeforeAll
   static void setUp() throws Exception {
     redisServer = new TestRedisCluster();
     cleanup.deferAfterAll(redisServer);
 
-    String host = redisServer.getHost();
-    int port = redisServer.getPort();
+    host = redisServer.getHost();
+    port = redisServer.getPort();
 
     int unavailablePort = PortUtils.findOpenPort();
-    configuredTarget = host + ":" + port + "," + host + ":" + unavailablePort;
-    RedisClusterClient client =
-        RedisClusterClient.create(
-            asList(
-                RedisURI.create("redis://" + host + ":" + port),
-                RedisURI.create("redis://" + host + ":" + unavailablePort)));
+    configuredTarget = host + ":" + unavailablePort + "," + host + ":" + port;
+    List<RedisURI> seedUris =
+        asList(
+            RedisURI.create("redis://" + host + ":" + unavailablePort),
+            RedisURI.create("redis://" + host + ":" + port));
+    RedisClusterClient client = RedisClusterClient.create(seedUris);
     cleanup.deferAfterAll(() -> client.shutdown(0, 15, SECONDS));
 
     connection = client.connect();
@@ -109,30 +110,45 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET " + configuredTarget)
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(SERVER_PORT, null),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? configuredTarget : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET CLUSTER_COMMAND_KEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("PIPELINE SET " + configuredTarget)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "PIPELINE SET " + configuredTarget
+                                : "PIPELINE SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(SERVER_PORT, null),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? configuredTarget : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "SET CLUSTER_BATCH_KEY_1 ?; SET CLUSTER_BATCH_KEY_2 ?"),
+                                emitStableDatabaseSemconv()
+                                    ? "SET CLUSTER_BATCH_KEY_1 ?; SET CLUSTER_BATCH_KEY_2 ?"
+                                    : "SET CLUSTER_BATCH_KEY_1 ?;SET CLUSTER_BATCH_KEY_2 ?"),
                             equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
-                            equalTo(DB_OPERATION_BATCH_SIZE, 2))));
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? Long.valueOf(2) : null))));
 
     redisServer.assertNoFailure();
   }
