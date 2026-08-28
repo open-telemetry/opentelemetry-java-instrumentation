@@ -5,15 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -21,16 +26,21 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -51,10 +61,13 @@ public abstract class AbstractOpenSearchRestTest {
   protected OpensearchContainer opensearch;
   protected RestClient client;
   protected URI httpHost;
+  protected String peerAddress;
 
   protected abstract InstrumentationExtension getTesting();
 
-  protected abstract RestClient buildRestClient() throws Exception;
+  protected abstract RestClient buildRestClient(String... hostAddresses) throws Exception;
+
+  protected abstract void resetNodes(RestClient client, String... hostAddresses) throws Exception;
 
   protected abstract int getResponseStatus(Response response);
 
@@ -72,8 +85,9 @@ public abstract class AbstractOpenSearchRestTest {
         "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
+    peerAddress = InetAddress.getByName(httpHost.getHost()).getHostAddress();
 
-    client = buildRestClient();
+    client = buildRestClient(opensearch.getHttpHostAddress());
     cleanup.deferAfterAll(client);
   }
 
@@ -87,12 +101,9 @@ public abstract class AbstractOpenSearchRestTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName(openSearchSpanName())
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
+                            .hasAttributesSatisfyingExactly(openSearchAttributes()),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -157,13 +168,10 @@ public abstract class AbstractOpenSearchRestTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(openSearchSpanName())
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
+                            .hasAttributesSatisfyingExactly(openSearchAttributes()),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -189,6 +197,90 @@ public abstract class AbstractOpenSearchRestTest {
 
     getTesting().waitForTraces(1);
 
-    assertDurationMetric(getTesting(), getInstrumentationName(), DB_OPERATION_NAME, DB_SYSTEM_NAME);
+    assertDurationMetric(
+        getTesting(),
+        getInstrumentationName(),
+        DB_OPERATION_NAME,
+        DB_SYSTEM_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+  }
+
+  @Test
+  void configuredNodeListIsTheWholeTarget() throws Exception {
+    RestClient nodeListClient =
+        buildRestClient(addressOfHostThatIsDown(), opensearch.getHttpHostAddress());
+    cleanup.deferCleanup(nodeListClient);
+
+    nodeListClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget(nodeList());
+  }
+
+  @Test
+  void theTargetDoesNotFollowLaterNodeChanges() throws Exception {
+    RestClient singleNodeClient = buildRestClient(opensearch.getHttpHostAddress());
+    cleanup.deferCleanup(singleNodeClient);
+    // a client is given new nodes when it is sniffed; the configured target must not follow them
+    resetNodes(singleNodeClient, opensearch.getHttpHostAddress(), addressOfHostThatIsDown());
+
+    singleNodeClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget(null);
+  }
+
+  private String addressOfHostThatIsDown() {
+    // nothing listens on this port, so a request is served by the running server after a retry
+    return httpHost.getScheme() + "://" + httpHost.getHost() + ":61";
+  }
+
+  private String nodeList() {
+    return httpHost.getHost() + ":61," + httpHost.getHost() + ":" + httpHost.getPort();
+  }
+
+  private String openSearchSpanName() {
+    // the stable span name falls back to the target, because opensearch has no namespace or
+    // collection to name
+    return emitStableDatabaseSemconv()
+        ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+        : "GET";
+  }
+
+  private List<AttributeAssertion> openSearchAttributes() {
+    return openSearchAttributes(
+        emitStableDatabaseSemconv() ? httpHost.getHost() : null,
+        emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null);
+  }
+
+  private List<AttributeAssertion> openSearchAttributes(
+      @Nullable String serverAddress, @Nullable Long serverPort) {
+    return asList(
+        equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+        equalTo(maybeStable(DB_OPERATION), "GET"),
+        equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
+        equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+        equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+        equalTo(
+            NETWORK_TYPE,
+            emitStableDatabaseSemconv() ? null : (peerAddress.contains(":") ? "ipv6" : "ipv4")),
+        equalTo(SERVER_ADDRESS, serverAddress),
+        equalTo(SERVER_PORT, serverPort));
+  }
+
+  private void assertConfiguredTarget(String nodeList) {
+    String expectedAddress =
+        !emitStableDatabaseSemconv() ? null : (nodeList != null ? nodeList : httpHost.getHost());
+    Long expectedPort =
+        !emitStableDatabaseSemconv() || nodeList != null ? null : Long.valueOf(httpHost.getPort());
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                assertThat(trace.getSpan(0))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        openSearchAttributes(expectedAddress, expectedPort)));
   }
 }
