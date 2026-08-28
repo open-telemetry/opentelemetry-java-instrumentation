@@ -9,3 +9,9 @@ dependencies {
     "org.redisson:redisson:${if (otelProps.testLatestDeps) "3.16.+" else "3.0.0"}",
   )
 }
+
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
+}

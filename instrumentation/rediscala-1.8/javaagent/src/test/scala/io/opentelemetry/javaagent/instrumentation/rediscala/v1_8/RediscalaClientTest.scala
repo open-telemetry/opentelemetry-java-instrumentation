@@ -314,8 +314,8 @@ class RediscalaClientTest {
       Await.result(result, Duration("10 second"))
       assertConfiguredTargetSpan(
         sentinelHosts
-          .map(serverHost => s"$serverHost:$sentinelPort/mymaster")
-          .mkString(",")
+          .map(serverHost => s"$serverHost:$sentinelPort")
+          .mkString(",") + "/mymaster"
       )
     } finally {
       client.stop()
