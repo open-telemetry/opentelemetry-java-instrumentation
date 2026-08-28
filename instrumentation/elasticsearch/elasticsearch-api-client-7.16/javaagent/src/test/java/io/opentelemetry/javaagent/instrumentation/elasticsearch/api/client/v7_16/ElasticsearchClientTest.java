@@ -341,7 +341,8 @@ class ElasticsearchClientTest {
   }
 
   private static HttpHost deadHost() {
-    // nothing listens on this port, so a request is served by the running server after a retry
+    // nothing listens on this port, so it is only ever a configured target, never the host that
+    // answers
     return new HttpHost(httpHost.getHostName(), httpHost.getPort() + 1, httpHost.getSchemeName());
   }
 
