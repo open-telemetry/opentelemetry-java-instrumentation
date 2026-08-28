@@ -209,10 +209,11 @@ class PekkoHttpServerParsingErrorTest {
       val port = binding.localAddress.getPort
 
       try {
-        // an escape character terminates neither the request target nor the request line
+        // an escape character terminates neither the request target nor the request line, and
+        // the two bytes are decoded as one C1 control rather than left as they arrived
         val response = send(
           port,
-          "GET /bad\u001bpath HTTP/1.1\r\nHost: localhost:" + port + "\r\n\r\n"
+          "GET /bad\u001bpath\u00c2\u009b HTTP/1.1\r\nHost: localhost:" + port + "\r\n\r\n"
         )
         assertThat(response.head).contains("400 Bad Request")
 
@@ -226,7 +227,7 @@ class PekkoHttpServerParsingErrorTest {
                   .hasNoParent()
                   .hasAttributesSatisfyingExactly(
                     equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(UrlAttributes.URL_PATH, "/bad%1Bpath"),
+                    equalTo(UrlAttributes.URL_PATH, "/bad%1Bpath%9B"),
                     equalTo(
                       HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
                       java.lang.Long.valueOf(400)
@@ -355,10 +356,12 @@ class PekkoHttpServerParsingErrorTest {
   ): List[String] = {
     val socket = new Socket("localhost", port)
     try {
+      // latin-1 writes every char below 0x100 as the byte with the same value, which is how a
+      // request target carrying raw bytes is put on the wire
       val out =
         new OutputStreamWriter(
           socket.getOutputStream,
-          StandardCharsets.US_ASCII
+          StandardCharsets.ISO_8859_1
         )
       out.write(request)
       out.flush()

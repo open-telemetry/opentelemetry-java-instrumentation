@@ -38,6 +38,9 @@ final class PekkoHttpParsingError {
    * reach here when the target is the thing that failed to parse, and {@code url.path} is not
    * sanitized on the way out the way {@code url.query} is. It is applied to a target that
    * pekko-http did parse as well, rather than depending on how {@code Uri.Path} renders one.
+   *
+   * <p>The C1 characters are encoded along with the C0 ones because the raw target is decoded as
+   * utf-8, which turns a pair of bytes on the wire into one of them.
    */
   @Nullable
   private static String escapeControlCharacters(@Nullable String value) {
@@ -47,7 +50,7 @@ final class PekkoHttpParsingError {
     StringBuilder escaped = null;
     for (int i = 0; i < value.length(); i++) {
       char character = value.charAt(i);
-      if (character > 0x1f && character != 0x7f) {
+      if (character > 0x1f && (character < 0x7f || character > 0x9f)) {
         if (escaped != null) {
           escaped.append(character);
         }
