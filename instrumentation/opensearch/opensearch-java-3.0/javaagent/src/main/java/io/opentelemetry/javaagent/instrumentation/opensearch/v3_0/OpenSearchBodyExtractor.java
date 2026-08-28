@@ -27,14 +27,14 @@ class OpenSearchBodyExtractor {
   private static final JsonFactory JSON_FACTORY = new JsonFactory();
 
   @Nullable
-  public static String extractSanitized(JsonpMapper mapper, Object request) {
+  public static String extract(JsonpMapper mapper, Object request, boolean sanitize) {
     try {
       if (request instanceof NdJsonpSerializable) {
-        return serializeNdJsonSanitized(
-            mapper, (NdJsonpSerializable) request, MAX_QUERY_BODY_LENGTH);
+        return serializeNdJson(
+            mapper, (NdJsonpSerializable) request, sanitize, MAX_QUERY_BODY_LENGTH);
       }
 
-      return serializeSanitized(mapper, request, MAX_QUERY_BODY_LENGTH);
+      return serialize(mapper, request, sanitize, MAX_QUERY_BODY_LENGTH);
     } catch (Exception e) {
       logger.log(FINE, "Failure extracting body", e);
       return null;
@@ -42,24 +42,25 @@ class OpenSearchBodyExtractor {
   }
 
   @Nullable
-  private static String serializeSanitized(JsonpMapper mapper, Object item, int maxLength)
+  private static String serialize(JsonpMapper mapper, Object item, boolean sanitize, int maxLength)
       throws IOException {
     BoundedStringWriter writer = new BoundedStringWriter(maxLength);
 
     try {
       if (mapper instanceof JacksonJsonpMapper) {
-        // Use Jackson-based sanitizing generator for JacksonJsonpMapper
         com.fasterxml.jackson.core.JsonGenerator jacksonGenerator =
-            JSON_FACTORY.createGenerator(writer);
-        com.fasterxml.jackson.core.JsonGenerator sanitizingGenerator =
-            new SanitizingJacksonJsonGenerator(jacksonGenerator);
-        try (JsonGenerator generator = new JacksonJsonpGenerator(sanitizingGenerator)) {
+            sanitize
+                ? new SanitizingJacksonJsonGenerator(JSON_FACTORY.createGenerator(writer))
+                : JSON_FACTORY.createGenerator(writer);
+        try (JsonGenerator generator = new JacksonJsonpGenerator(jacksonGenerator)) {
           mapper.serialize(item, generator);
         }
       } else {
-        // Fallback for other mappers (may not work for all implementations)
-        JsonGenerator rawGenerator = mapper.jsonProvider().createGenerator(writer);
-        try (JsonGenerator generator = new SanitizingJsonGenerator(rawGenerator)) {
+        JsonGenerator generator =
+            sanitize
+                ? new SanitizingJsonGenerator(mapper.jsonProvider().createGenerator(writer))
+                : mapper.jsonProvider().createGenerator(writer);
+        try (generator) {
           mapper.serialize(item, generator);
         }
       }
@@ -74,8 +75,9 @@ class OpenSearchBodyExtractor {
   }
 
   @Nullable
-  private static String serializeNdJsonSanitized(
-      JsonpMapper mapper, NdJsonpSerializable value, int maxLength) throws IOException {
+  private static String serializeNdJson(
+      JsonpMapper mapper, NdJsonpSerializable value, boolean sanitize, int maxLength)
+      throws IOException {
     StringBuilder result = new StringBuilder(Math.min(maxLength, 1024));
     Iterator<?> values = value._serializables();
     boolean first = true;
@@ -86,10 +88,9 @@ class OpenSearchBodyExtractor {
       int remaining = maxLength - result.length();
 
       if (item instanceof NdJsonpSerializable && item != value) {
-        // Recursively handle nested NdJsonpSerializable
-        itemStr = serializeNdJsonSanitized(mapper, (NdJsonpSerializable) item, remaining);
+        itemStr = serializeNdJson(mapper, (NdJsonpSerializable) item, sanitize, remaining);
       } else {
-        itemStr = serializeSanitized(mapper, item, remaining);
+        itemStr = serialize(mapper, item, sanitize, remaining);
       }
 
       if (itemStr != null && !itemStr.isEmpty()) {
