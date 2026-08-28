@@ -304,12 +304,8 @@ public class TargetSystemTest {
   }
 
   protected void verifyMetrics(MetricsVerifier metricsVerifier) {
-    verifyMetrics(metricsVerifier, Duration.ofSeconds(60));
-  }
-
-  protected void verifyMetrics(MetricsVerifier metricsVerifier, Duration timeout) {
     await()
-        .atMost(timeout)
+        .atMost(Duration.ofSeconds(60))
         .pollInterval(Duration.ofSeconds(1))
         .untilAsserted(
             () -> {
