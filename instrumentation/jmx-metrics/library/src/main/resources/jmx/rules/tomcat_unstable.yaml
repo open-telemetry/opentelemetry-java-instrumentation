@@ -19,7 +19,7 @@ rules:
         metric: &metric count
         type: &type updowncounter
         unit: &unit "{connection}"
-        desc: &desc The number of active JDBC connections.
+        desc: &desc The number of JDBC connections currently in the state described by `db.client.connection.state`.
         metricAttribute:
           db.client.connection.state: const(used)
       numIdle:
