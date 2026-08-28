@@ -22,23 +22,44 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import java.io.IOException;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
+import org.apache.hc.core5.http.HttpHost;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.json.jsonb.JsonbJsonpMapper;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.transport.OpenSearchTransport;
+import org.opensearch.client.transport.rest_client.RestClientTransport;
 
 /**
- * Tests compatibility for the deprecated capture-search-query=false configuration. This test class
- * runs with -Dotel.instrumentation.opensearch.capture-search-query=false and verifies that query
- * bodies are NOT captured in DB_STATEMENT.
+ * This test verifies that the non-Jackson mapper path captures query bodies verbatim when query
+ * sanitization is disabled.
  */
-@SuppressWarnings("deprecation") // using deprecated semconv
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
+@SuppressWarnings("deprecation") // using deprecated semconv and RestClientTransport
+class OpenSearchQuerySanitizationDisabledJsonbTest extends AbstractOpenSearchQueryTest {
+
+  @Override
+  protected OpenSearchTransport buildOpenSearchTransport(
+      HttpHost host,
+      PoolingAsyncClientConnectionManager connectionManager,
+      BasicCredentialsProvider credentialsProvider) {
+    RestClient restClient =
+        RestClient.builder(host)
+            .setHttpClientConfigCallback(
+                httpClientBuilder ->
+                    httpClientBuilder
+                        .setDefaultCredentialsProvider(credentialsProvider)
+                        .setConnectionManager(connectionManager))
+            .build();
+
+    return new RestClientTransport(restClient, new JsonbJsonpMapper());
+  }
 
   @Test
-  void shouldNotCaptureSearchQueryBodyWhenDisabled() throws IOException {
+  void shouldCaptureUnsanitizedSearchQueryBodyWithJsonbMapper() throws IOException {
     SearchRequest searchRequest =
         SearchRequest.of(
             s ->
@@ -53,7 +74,6 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
         openSearchClient.search(searchRequest, TestDocument.class);
     assertThat(searchResponse.hits().total().value()).isGreaterThan(0);
 
-    // Verify trace does NOT include query body, only method + operation
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -64,11 +84,9 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
-                                satisfies(
+                                equalTo(
                                     maybeStable(DB_STATEMENT),
-                                    val ->
-                                        val.asString()
-                                            .startsWith("POST /" + INDEX_NAME + "/_search"))),
+                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"test\"}}}}")),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
