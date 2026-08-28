@@ -9,7 +9,10 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 
-@SuppressWarnings("OtelInternalJavadoc")
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class ElasticsearchServerTarget {
 
   private final String address;
