@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 // Driver 3.8.0 added SNI support, along with the EndPoint api it is built on and
 // Host.getBroadcastRpcAddress(). This instrumentation also supports 3.0 to 3.7, where none of those
 // exist, so everything this class needs is reached by reflection. Host.getHostId() is reached the
-// same way because it was added in 3.6.0.
+// same way because it was added in 3.3.1.
 class CassandraEndPoints {
 
   @Nullable
