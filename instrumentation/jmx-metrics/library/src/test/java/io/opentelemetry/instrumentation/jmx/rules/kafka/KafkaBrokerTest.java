@@ -119,7 +119,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDataPointsWithAttributes(
                             requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
             .add(
-                "kafka.request.time.50p",
+                "kafka.request.time.p50",
                 metric ->
                     metric
                         .isGauge()
@@ -129,7 +129,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDataPointsWithAttributes(
                             requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
             .add(
-                "kafka.request.time.99p",
+                "kafka.request.time.p99",
                 metric ->
                     metric
                         .isGauge()
@@ -227,7 +227,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("Log flush count")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.time.50p",
+                "kafka.logs.flush.time.p50",
                 metric ->
                     metric
                         .isGauge()
@@ -235,7 +235,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("Log flush time - 50th percentile")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.time.99p",
+                "kafka.logs.flush.time.p99",
                 metric ->
                     metric
                         .isGauge()
@@ -316,7 +316,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The mean inbound or outbound byte rate.")
                         .hasDataPointsWithAttributes(directionIn, directionOut))
             .add(
-                "kafka.request.total.time.99p",
+                "kafka.request.total.time.p99",
                 metric ->
                     metric
                         .isGauge()
@@ -324,7 +324,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The 99th percentile total request time.")
                         .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
             .add(
-                "kafka.request.queue.time.99p",
+                "kafka.request.queue.time.p99",
                 metric ->
                     metric
                         .isGauge()
@@ -333,7 +333,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                             "The 99th percentile time requests spend queued before processing.")
                         .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
             .add(
-                "kafka.request.local.time.99p",
+                "kafka.request.local.time.p99",
                 metric ->
                     metric
                         .isGauge()
@@ -341,7 +341,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The 99th percentile local processing time for requests.")
                         .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
             .add(
-                "kafka.request.remote.time.99p",
+                "kafka.request.remote.time.p99",
                 metric ->
                     metric
                         .isGauge()
@@ -349,7 +349,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The 99th percentile remote processing time for requests.")
                         .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
             .add(
-                "kafka.request.response.queue.time.99p",
+                "kafka.request.response.queue.time.p99",
                 metric ->
                     metric
                         .isGauge()
@@ -358,7 +358,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                             "The 99th percentile time responses spend queued before send.")
                         .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
             .add(
-                "kafka.request.response.send.time.99p",
+                "kafka.request.response.send.time.p99",
                 metric ->
                     metric
                         .isGauge()

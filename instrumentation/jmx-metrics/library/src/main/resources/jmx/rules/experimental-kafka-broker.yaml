@@ -63,11 +63,11 @@ rules:
         type: counter
         desc: The total time the broker has taken to service requests
       50thPercentile:
-        metric: kafka.request.time.50p
+        metric: kafka.request.time.p50
         type: gauge
         desc: The 50th percentile time the broker has taken to service requests
       99thPercentile:
-        metric: kafka.request.time.99p
+        metric: kafka.request.time.p99
         type: gauge
         desc: The 99th percentile time the broker has taken to service requests
 
@@ -197,10 +197,10 @@ rules:
         type: counter
         desc: Log flush count
       50thPercentile:
-        metric: time.50p
+        metric: time.p50
         desc: Log flush time - 50th percentile
       99thPercentile:
-        metric: time.99p
+        metric: time.p99
         desc: Log flush time - 99th percentile
 
   # Additional broker metrics
@@ -327,7 +327,7 @@ rules:
     prefix: kafka.request.total.time.
     mapping:
       99thPercentile:
-        metric: 99p
+        metric: p99
         type: gauge
         sourceUnit: ms
         unit: s
@@ -339,7 +339,7 @@ rules:
     prefix: kafka.request.queue.time.
     mapping:
       99thPercentile:
-        metric: 99p
+        metric: p99
         type: gauge
         sourceUnit: ms
         unit: s
@@ -351,7 +351,7 @@ rules:
     prefix: kafka.request.local.time.
     mapping:
       99thPercentile:
-        metric: 99p
+        metric: p99
         type: gauge
         sourceUnit: ms
         unit: s
@@ -363,7 +363,7 @@ rules:
     prefix: kafka.request.remote.time.
     mapping:
       99thPercentile:
-        metric: 99p
+        metric: p99
         type: gauge
         sourceUnit: ms
         unit: s
@@ -375,7 +375,7 @@ rules:
     prefix: kafka.request.response.queue.time.
     mapping:
       99thPercentile:
-        metric: 99p
+        metric: p99
         type: gauge
         sourceUnit: ms
         unit: s
@@ -387,7 +387,7 @@ rules:
     prefix: kafka.request.response.send.time.
     mapping:
       99thPercentile:
-        metric: 99p
+        metric: p99
         type: gauge
         sourceUnit: ms
         unit: s

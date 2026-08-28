@@ -9,15 +9,15 @@ Broker metrics:
 | kafka.request.count                      | Counter       | type                       | The number of requests received by the broker                        |
 | kafka.request.failed                     | Counter       | type                       | The number of requests to the broker resulting in a failure          |
 | kafka.request.time.total                 | Counter       | type                       | The total time the broker has taken to service requests              |
-| kafka.request.time.50p                   | Gauge         | type                       | The 50th percentile time the broker has taken to service requests    |
-| kafka.request.time.99p                   | Gauge         | type                       | The 99th percentile time the broker has taken to service requests    |
+| kafka.request.time.p50                   | Gauge         | type                       | The 50th percentile time the broker has taken to service requests    |
+| kafka.request.time.p99                   | Gauge         | type                       | The 99th percentile time the broker has taken to service requests    |
 | kafka.request.queue                      | UpDownCounter |                            | Size of the request queue                                            |
-| kafka.request.total.time.99p             | Gauge         | type                       | The 99th percentile total request time                               |
-| kafka.request.queue.time.99p             | Gauge         | type                       | The 99th percentile time requests spend queued before processing     |
-| kafka.request.local.time.99p             | Gauge         | type                       | The 99th percentile local processing time for requests               |
-| kafka.request.remote.time.99p            | Gauge         | type                       | The 99th percentile remote processing time for requests              |
-| kafka.request.response.queue.time.99p    | Gauge         | type                       | The 99th percentile time responses spend queued before send          |
-| kafka.request.response.send.time.99p     | Gauge         | type                       | The 99th percentile response send time                               |
+| kafka.request.total.time.p99             | Gauge         | type                       | The 99th percentile total request time                               |
+| kafka.request.queue.time.p99             | Gauge         | type                       | The 99th percentile time requests spend queued before processing     |
+| kafka.request.local.time.p99             | Gauge         | type                       | The 99th percentile local processing time for requests               |
+| kafka.request.remote.time.p99            | Gauge         | type                       | The 99th percentile remote processing time for requests              |
+| kafka.request.response.queue.time.p99    | Gauge         | type                       | The 99th percentile time responses spend queued before send          |
+| kafka.request.response.send.time.p99     | Gauge         | type                       | The 99th percentile response send time                               |
 | kafka.request.handler.idle.mean          | Gauge         |                            | The mean fraction of time request handlers are idle                  |
 | kafka.request.handler.idle.1m            | Gauge         |                            | The one-minute fraction of time request handlers are idle            |
 | kafka.network.io                         | Counter       | direction                  | The bytes received or sent by the broker                             |
@@ -48,5 +48,5 @@ Log metrics:
 | Metric Name               | Type    | Attributes | Description                      |
 | ------------------------- | ------- | ---------- | -------------------------------- |
 | kafka.logs.flush.count    | Counter |            | Log flush count                  |
-| kafka.logs.flush.time.50p | Gauge   |            | Log flush time - 50th percentile |
-| kafka.logs.flush.time.99p | Gauge   |            | Log flush time - 99th percentile |
+| kafka.logs.flush.time.p50 | Gauge   |            | Log flush time - 50th percentile |
+| kafka.logs.flush.time.p99 | Gauge   |            | Log flush time - 99th percentile |
