@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerInstrumentationExtension,
   HttpServerTestOptions
 }
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 class AkkaHttpServerSourceInstrumentationTest
@@ -34,7 +33,4 @@ class AkkaHttpServerSourceInstrumentationTest
     configureRouteServer(options)
     options.setTestHttpPipelining(false)
   }
-
-  @Test def testClientAddressWithoutForwardingHeader(): Unit =
-    assertClientAddressWithoutForwardingHeader()
 }

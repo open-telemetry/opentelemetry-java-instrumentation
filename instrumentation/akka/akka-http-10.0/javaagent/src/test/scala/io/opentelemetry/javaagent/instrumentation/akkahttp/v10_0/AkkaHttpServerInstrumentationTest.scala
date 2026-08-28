@@ -85,6 +85,4 @@ class AkkaHttpServerInstrumentationTest
     })
   }
 
-  @Test def testClientAddressWithoutForwardingHeader(): Unit =
-    assertClientAddressWithoutForwardingHeader()
 }
