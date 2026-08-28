@@ -275,9 +275,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void completed(T result) {
-      if (captureSearchPeer) {
-        SearchPeerResponseConsumer.capture(parentContext, httpContext);
-      }
       if (context == null) {
         // this is unexpected
         logger.log(FINE, "context was never set");
