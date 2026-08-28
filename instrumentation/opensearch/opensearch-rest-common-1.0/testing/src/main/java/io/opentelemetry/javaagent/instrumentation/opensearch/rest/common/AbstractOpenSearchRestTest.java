@@ -233,17 +233,11 @@ public abstract class AbstractOpenSearchRestTest {
 
   private String addressOfHostThatIsDown() {
     // nothing listens on this port, so a request is served by the running server after a retry
-    return httpHost.getScheme() + "://" + httpHost.getHost() + ":" + (httpHost.getPort() + 1);
+    return httpHost.getScheme() + "://" + httpHost.getHost() + ":61";
   }
 
   private String nodeList() {
-    return httpHost.getHost()
-        + ":"
-        + (httpHost.getPort() + 1)
-        + ","
-        + httpHost.getHost()
-        + ":"
-        + httpHost.getPort();
+    return httpHost.getHost() + ":61," + httpHost.getHost() + ":" + httpHost.getPort();
   }
 
   private String openSearchSpanName() {
@@ -268,7 +262,9 @@ public abstract class AbstractOpenSearchRestTest {
         equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
         equalTo(NETWORK_PEER_ADDRESS, peerAddress),
         equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
-        equalTo(NETWORK_TYPE, peerAddress.contains(":") ? "ipv6" : "ipv4"),
+        equalTo(
+            NETWORK_TYPE,
+            emitStableDatabaseSemconv() ? null : (peerAddress.contains(":") ? "ipv6" : "ipv4")),
         equalTo(SERVER_ADDRESS, serverAddress),
         equalTo(SERVER_PORT, serverPort));
   }
