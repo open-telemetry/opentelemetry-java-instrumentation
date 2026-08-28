@@ -19,15 +19,13 @@ import com.alipay.sofa.rpc.filter.FilterInvoker;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 final class TracingFilter extends Filter {
 
-  private static final VirtualField<SofaRequest, AsyncState> ASYNC_STATE_FIELD =
-      VirtualField.find(SofaRequest.class, AsyncState.class);
+  private static final String ASYNC_STATE_KEY = "otel.async.state";
 
   private final Instrumenter<SofaRpcRequest, SofaResponse> instrumenter;
   private final boolean isClientSide;
@@ -52,7 +50,8 @@ final class TracingFilter extends Filter {
     Context context = instrumenter.start(parentContext, sofaRpcRequest);
     boolean isAsync = isClientSide && request.isAsync();
     if (isAsync) {
-      ASYNC_STATE_FIELD.set(request, new AsyncState(instrumenter, context, sofaRpcRequest));
+      request.addRequestProp(
+          ASYNC_STATE_KEY, new AsyncState(instrumenter, context, sofaRpcRequest));
     }
 
     SofaResponse response;
@@ -135,11 +134,15 @@ final class TracingFilter extends Filter {
   // callbacks, and custom completion callbacks.
   static void completeAsyncRequest(
       SofaRequest request, @Nullable SofaResponse response, @Nullable Throwable exception) {
-    AsyncState asyncState = ASYNC_STATE_FIELD.get(request);
-    if (asyncState == null || !asyncState.tryComplete()) {
+    Object asyncStateValue = request.getRequestProp(ASYNC_STATE_KEY);
+    if (!(asyncStateValue instanceof AsyncState)) {
       return;
     }
-    ASYNC_STATE_FIELD.set(request, null);
+    AsyncState asyncState = (AsyncState) asyncStateValue;
+    if (!asyncState.tryComplete()) {
+      return;
+    }
+    request.removeRequestProp(ASYNC_STATE_KEY);
 
     Throwable error = exception != null ? exception : extractException(response);
     asyncState.end(request, response, error);

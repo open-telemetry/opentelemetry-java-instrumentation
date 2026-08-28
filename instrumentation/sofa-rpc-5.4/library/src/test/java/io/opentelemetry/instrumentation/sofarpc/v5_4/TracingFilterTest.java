@@ -84,7 +84,7 @@ class TracingFilterTest {
     assertThat(endRequestCaptor.getValue())
         .isNotSameAs(startRequestCaptor.getValue())
         .isEqualTo(startRequestCaptor.getValue());
-    assertThat(request.getRequestProps()).isNull();
+    assertThat(request.getRequestProps()).isEmpty();
   }
 
   @Test
@@ -118,7 +118,7 @@ class TracingFilterTest {
     }
 
     verify(instrumenter, times(1)).end(any(), any(), any(), any());
-    assertThat(request.getRequestProps()).isNull();
+    assertThat(request.getRequestProps()).isEmpty();
   }
 
   @Test
@@ -146,7 +146,7 @@ class TracingFilterTest {
     filter.invoke(new FilterInvoker(callbackBeforeReturnFilter, null, consumerConfig), request);
 
     verify(instrumenter, times(1)).end(any(), any(), same(response), isNull());
-    assertThat(request.getRequestProps()).isNull();
+    assertThat(request.getRequestProps()).isEmpty();
   }
 
   @Test
@@ -170,7 +170,7 @@ class TracingFilterTest {
         .isSameAs(invokeFailure);
 
     verify(instrumenter, times(1)).end(any(), any(), same(response), isNull());
-    assertThat(request.getRequestProps()).isNull();
+    assertThat(request.getRequestProps()).isEmpty();
   }
 
   @Test
@@ -192,11 +192,11 @@ class TracingFilterTest {
     filter.onAsyncResponse(consumerConfig, request, response, null);
 
     verify(instrumenter, times(1)).end(any(), any(), isNull(), same(invokeFailure));
-    assertThat(request.getRequestProps()).isNull();
+    assertThat(request.getRequestProps()).isEmpty();
   }
 
   @Test
-  void asyncStateDoesNotModifyRequestProperties() {
+  void asyncStateIsRemovedFromRequestPropertiesAfterCompletion() {
     request.addRequestProp("existing", "value");
 
     startAsyncRequest();
