@@ -57,9 +57,15 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
   public static class SendAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void injectChannelAttribute(
+    public static void onEnter(
         @Advice.FieldValue("execution") Execution execution, @Advice.Argument(1) Channel channel) {
       RatpackSingletons.propagateContextToChannel(execution, channel);
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.FieldValue("execution") Execution execution, @Advice.Argument(1) Channel channel) {
+      RatpackSingletons.captureProtocolVersion(execution, channel);
     }
   }
 

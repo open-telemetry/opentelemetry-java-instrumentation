@@ -24,14 +24,14 @@ class OpenSearchBodyExtractor {
   private static final String QUERY_SEPARATOR = ";";
 
   @Nullable
-  public static String extractSanitized(JsonpMapper mapper, Object request) {
+  public static String extract(JsonpMapper mapper, Object request, boolean sanitize) {
     try {
       if (request instanceof NdJsonpSerializable) {
-        return serializeNdJsonSanitized(
-            mapper, (NdJsonpSerializable) request, MAX_QUERY_BODY_LENGTH);
+        return serializeNdJson(
+            mapper, (NdJsonpSerializable) request, sanitize, MAX_QUERY_BODY_LENGTH);
       }
 
-      return serializeSanitized(mapper, request, MAX_QUERY_BODY_LENGTH);
+      return serialize(mapper, request, sanitize, MAX_QUERY_BODY_LENGTH);
     } catch (RuntimeException e) {
       logger.log(FINE, "Failure extracting body", e);
       return null;
@@ -39,30 +39,32 @@ class OpenSearchBodyExtractor {
   }
 
   @Nullable
-  private static String serializeSanitized(JsonpMapper mapper, Object item, int maxLength) {
+  private static String serialize(
+      JsonpMapper mapper, Object item, boolean sanitize, int maxLength) {
     BoundedStringWriter writer = new BoundedStringWriter(maxLength);
 
     try {
       if (mapper instanceof JacksonJsonpMapper) {
-        // Use Jackson-based sanitizing generator for JacksonJsonpMapper
         JacksonJsonpGenerator jacksonJsonpGenerator =
             (JacksonJsonpGenerator) mapper.jsonProvider().createGenerator(writer);
         com.fasterxml.jackson.core.JsonGenerator jacksonGenerator =
-            jacksonJsonpGenerator.jacksonGenerator();
-        com.fasterxml.jackson.core.JsonGenerator sanitizingGenerator =
-            new SanitizingJacksonJsonGenerator(jacksonGenerator);
-        try (JsonGenerator generator = new JacksonJsonpGenerator(sanitizingGenerator)) {
+            sanitize
+                ? new SanitizingJacksonJsonGenerator(jacksonJsonpGenerator.jacksonGenerator())
+                : jacksonJsonpGenerator.jacksonGenerator();
+        try (JsonGenerator generator = new JacksonJsonpGenerator(jacksonGenerator)) {
           mapper.serialize(item, generator);
         }
       } else {
-        // Fallback for other mappers (may not work for all implementations)
-        JsonGenerator rawGenerator = mapper.jsonProvider().createGenerator(writer);
-        try (JsonGenerator generator = new SanitizingJsonGenerator(rawGenerator)) {
+        JsonGenerator generator =
+            sanitize
+                ? new SanitizingJsonGenerator(mapper.jsonProvider().createGenerator(writer))
+                : mapper.jsonProvider().createGenerator(writer);
+        try (generator) {
           mapper.serialize(item, generator);
         }
       }
     } catch (RuntimeException e) {
-      if (!causedByQueryBodyLimit(e)) {
+      if (!writer.limitReached()) {
         throw e;
       }
     }
@@ -72,8 +74,8 @@ class OpenSearchBodyExtractor {
   }
 
   @Nullable
-  private static String serializeNdJsonSanitized(
-      JsonpMapper mapper, NdJsonpSerializable value, int maxLength) {
+  private static String serializeNdJson(
+      JsonpMapper mapper, NdJsonpSerializable value, boolean sanitize, int maxLength) {
     StringBuilder result = new StringBuilder(Math.min(maxLength, 1024));
     Iterator<?> values = value._serializables();
     boolean first = true;
@@ -84,10 +86,9 @@ class OpenSearchBodyExtractor {
       int remaining = maxLength - result.length();
 
       if (item instanceof NdJsonpSerializable && item != value) {
-        // Recursively handle nested NdJsonpSerializable
-        itemStr = serializeNdJsonSanitized(mapper, (NdJsonpSerializable) item, remaining);
+        itemStr = serializeNdJson(mapper, (NdJsonpSerializable) item, sanitize, remaining);
       } else {
-        itemStr = serializeSanitized(mapper, item, remaining);
+        itemStr = serialize(mapper, item, sanitize, remaining);
       }
 
       if (itemStr != null && !itemStr.isEmpty()) {
@@ -109,20 +110,11 @@ class OpenSearchBodyExtractor {
     result.append(value, 0, length);
   }
 
-  private static boolean causedByQueryBodyLimit(Throwable t) {
-    while (t != null) {
-      if (t instanceof QueryBodyLimitException) {
-        return true;
-      }
-      t = t.getCause();
-    }
-    return false;
-  }
-
   private static final class BoundedStringWriter extends Writer {
 
     private final StringBuilder result;
     private final int maxLength;
+    private boolean limitReached;
 
     private BoundedStringWriter(int maxLength) {
       this.result = new StringBuilder(Math.min(maxLength, 1024));
@@ -153,8 +145,13 @@ class OpenSearchBodyExtractor {
 
     private void abortIfFull() {
       if (result.length() == maxLength) {
+        limitReached = true;
         throw new QueryBodyLimitException();
       }
+    }
+
+    private boolean limitReached() {
+      return limitReached;
     }
 
     @Override
