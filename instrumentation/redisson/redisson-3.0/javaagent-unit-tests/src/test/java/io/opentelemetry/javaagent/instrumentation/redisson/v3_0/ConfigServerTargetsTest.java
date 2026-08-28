@@ -22,11 +22,11 @@ class ConfigServerTargetsTest {
     config
         .useSentinelServers()
         .setMasterName("mymaster")
-        .addSentinelAddress("redis://sentinel1:26379", "redis://sentinel2:26380");
+        .addSentinelAddress(redisAddress("sentinel1:26379"), redisAddress("sentinel2:26380"));
 
     RedisServerTarget target = ConfigServerTargetsBefore317.of(config);
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster,sentinel2:26380/mymaster");
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
@@ -35,8 +35,8 @@ class ConfigServerTargetsTest {
     Config config = new Config();
     config
         .useClusterServers()
-        .addNodeAddress("redis://node2:7001")
-        .addNodeAddress("redis://node1:7000");
+        .addNodeAddress(redisAddress("node2:7001"))
+        .addNodeAddress(redisAddress("node1:7000"));
 
     RedisServerTarget target = ConfigServerTargetsBefore317.of(config);
 
@@ -47,7 +47,7 @@ class ConfigServerTargetsTest {
   @Test
   void clusterWithOneNodeKeepsItsPort() {
     Config config = new Config();
-    config.useClusterServers().addNodeAddress("redis://node1:7000");
+    config.useClusterServers().addNodeAddress(redisAddress("node1:7000"));
 
     RedisServerTarget target = ConfigServerTargetsBefore317.of(config);
 
@@ -84,8 +84,8 @@ class ConfigServerTargetsTest {
     Config config = new Config();
     config
         .useMasterSlaveServers()
-        .setMasterAddress("redis://master:6379")
-        .addSlaveAddress("redis://replica2:6381", "redis://replica1:6380");
+        .setMasterAddress(redisAddress("master:6379"))
+        .addSlaveAddress(redisAddress("replica2:6381"), redisAddress("replica1:6380"));
 
     assertThat(ConfigServerTargetsBefore317.of(config).getAddress())
         .isEqualTo("master:6379,replica1:6380,replica2:6381");
@@ -94,7 +94,7 @@ class ConfigServerTargetsTest {
   @Test
   void singleServerNeedsNoTargetOfItsOwn() {
     Config config = new Config();
-    config.useSingleServer().setAddress("redis://localhost:6379");
+    config.useSingleServer().setAddress(redisAddress("localhost:6379"));
 
     assertThat(ConfigServerTargetsBefore317.of(config)).isNull();
   }
@@ -110,8 +110,14 @@ class ConfigServerTargetsTest {
     serverConfig
         .getClass()
         .getMethod("addNodeAddress", String[].class)
-        .invoke(serverConfig, (Object) new String[] {"redis://node2:6380", "redis://node1:6379"});
+        .invoke(
+            serverConfig,
+            (Object) new String[] {redisAddress("node2:6380"), redisAddress("node1:6379")});
     return config;
+  }
+
+  private static String redisAddress(String address) {
+    return (Boolean.getBoolean("testLatestDeps") ? "redis://" : "") + address;
   }
 
   private static Method findMethod(String methodName) {

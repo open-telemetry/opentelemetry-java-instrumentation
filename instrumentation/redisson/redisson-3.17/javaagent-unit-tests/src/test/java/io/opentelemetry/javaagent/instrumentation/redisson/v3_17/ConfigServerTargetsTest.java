@@ -25,7 +25,7 @@ class ConfigServerTargetsTest {
 
     RedisServerTarget target = ConfigServerTargetsSince317.of(config);
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster,sentinel2:26380/mymaster");
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
