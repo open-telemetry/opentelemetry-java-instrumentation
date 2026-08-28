@@ -66,7 +66,8 @@ class LettuceNetworkAttributesGetterTest {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(singletonList(command()), null, address, null, null);
+        LettuceBatchRequest.create(
+            singletonList(command()), null, new LettucePeerAddress(address), null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -80,9 +81,32 @@ class LettuceNetworkAttributesGetterTest {
         LettuceBatchRequest.create(
             singletonList(command()),
             null,
-            InetSocketAddress.createUnresolved("redis.example", PORT),
+            new LettucePeerAddress(InetSocketAddress.createUnresolved("redis.example", PORT)),
             null,
             null);
+
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+  }
+
+  @Test
+  void disconnectDropsPeerOfBatchFlushedBeforeIt() throws UnknownHostException {
+    RedisChannelHandler<?, ?> connection = mock(RedisChannelHandler.class);
+    LettuceSingletons.CONNECTION_PEER.set(
+        connection,
+        new LettucePeerAddress(
+            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT)));
+    LettuceBatchRequest request =
+        LettuceBatchRequest.create(
+            singletonList(command()),
+            null,
+            LettuceSingletons.CONNECTION_PEER.get(connection),
+            null,
+            null);
+
+    LettuceSingletons.clearConnectionPeer(connection);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 

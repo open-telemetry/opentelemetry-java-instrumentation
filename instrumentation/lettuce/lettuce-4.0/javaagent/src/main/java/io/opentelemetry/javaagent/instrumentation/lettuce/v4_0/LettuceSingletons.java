@@ -163,13 +163,7 @@ public class LettuceSingletons {
   }
 
   @Nullable
-  static InetSocketAddress peerAddress(StatefulConnection<?, ?> connection) {
-    LettucePeerAddress peer = connectionPeer(connection);
-    return peer != null ? peer.getAddress() : null;
-  }
-
-  @Nullable
-  private static LettucePeerAddress connectionPeer(StatefulConnection<?, ?> connection) {
+  static LettucePeerAddress connectionPeer(StatefulConnection<?, ?> connection) {
     return connection instanceof RedisChannelHandler
         ? CONNECTION_PEER.get((RedisChannelHandler<?, ?>) connection)
         : null;
