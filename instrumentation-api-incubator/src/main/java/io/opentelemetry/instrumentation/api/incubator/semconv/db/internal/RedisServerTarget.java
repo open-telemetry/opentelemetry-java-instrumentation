@@ -92,11 +92,7 @@ public final class RedisServerTarget {
     if (logicalName.isEmpty()) {
       return new RedisServerTarget(String.join(",", rendered), null);
     }
-    List<String> scoped = new ArrayList<>(rendered.size());
-    for (String endpoint : rendered) {
-      scoped.add(endpoint + "/" + logicalName);
-    }
-    return new RedisServerTarget(String.join(",", scoped), null);
+    return new RedisServerTarget(String.join(",", rendered) + "/" + logicalName, null);
   }
 
   public static String endpoint(@Nullable String host, int port) {
