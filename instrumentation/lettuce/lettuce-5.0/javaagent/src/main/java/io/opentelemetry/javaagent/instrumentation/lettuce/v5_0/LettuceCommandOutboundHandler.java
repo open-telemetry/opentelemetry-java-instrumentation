@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
 
-public final class LettuceCommandOutboundHandler extends ChannelOutboundHandlerAdapter {
+public class LettuceCommandOutboundHandler extends ChannelOutboundHandlerAdapter {
   public static final String NAME = LettuceCommandOutboundHandler.class.getName();
 
   @Override

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class LettuceCommandPeer {
+class LettuceCommandPeer {
   @Nullable private InetSocketAddress address;
   private boolean ambiguous;
 
