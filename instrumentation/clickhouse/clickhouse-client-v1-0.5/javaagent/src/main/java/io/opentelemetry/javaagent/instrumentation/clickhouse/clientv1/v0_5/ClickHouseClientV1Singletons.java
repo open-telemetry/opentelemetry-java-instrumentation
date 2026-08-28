@@ -24,6 +24,8 @@ public class ClickHouseClientV1Singletons {
 
   private static final VirtualField<ClickHouseNodes, String> NODES_ADDRESS_GROUP =
       VirtualField.find(ClickHouseNodes.class, String.class);
+  private static final VirtualField<ClickHouseRequest<?>, String> REQUEST_ADDRESS_GROUP =
+      VirtualField.find(ClickHouseRequest.class, String.class);
 
   static {
     instrumenter =
@@ -44,6 +46,10 @@ public class ClickHouseClientV1Singletons {
 
   @Nullable
   public static String serverAddressGroup(ClickHouseRequest<?> request) {
+    String addressGroup = REQUEST_ADDRESS_GROUP.get(request);
+    if (addressGroup != null) {
+      return addressGroup;
+    }
     ClickHouseNodes nodes = ClickHouseRequestAccess.getNodes(request);
     if (nodes == null) {
       return null;
@@ -54,6 +60,11 @@ public class ClickHouseClientV1Singletons {
   public static void captureConfiguredNodes(
       ClickHouseNodes nodes, Collection<ClickHouseNode> configuredNodes) {
     NODES_ADDRESS_GROUP.set(nodes, renderAddressGroup(configuredNodes));
+  }
+
+  public static void captureSealedRequest(
+      ClickHouseRequest<?> request, ClickHouseRequest<?> sealedRequest) {
+    REQUEST_ADDRESS_GROUP.set(sealedRequest, serverAddressGroup(request));
   }
 
   @Nullable

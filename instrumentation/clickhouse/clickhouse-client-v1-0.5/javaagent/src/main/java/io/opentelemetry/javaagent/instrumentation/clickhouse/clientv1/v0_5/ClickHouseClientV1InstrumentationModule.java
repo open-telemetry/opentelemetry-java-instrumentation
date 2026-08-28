@@ -40,6 +40,9 @@ public class ClickHouseClientV1InstrumentationModule extends InstrumentationModu
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new ClickHouseClientV1Instrumentation(), new ClickHouseNodesInstrumentation());
+    return asList(
+        new ClickHouseClientV1Instrumentation(),
+        new ClickHouseNodesInstrumentation(),
+        new ClickHouseRequestInstrumentation());
   }
 }
