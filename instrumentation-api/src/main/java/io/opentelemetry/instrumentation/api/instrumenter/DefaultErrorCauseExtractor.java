@@ -19,7 +19,7 @@ final class DefaultErrorCauseExtractor implements ErrorCauseExtractor {
 
   @Override
   public Throwable extract(Throwable error) {
-    return CauseUnwrapper.unwrapCause(error, DefaultErrorCauseExtractor::isUnwrappableWrapper);
+    return CauseUnwrapper.unwrap(error, DefaultErrorCauseExtractor::isUnwrappableWrapper);
   }
 
   private static boolean isUnwrappableWrapper(Throwable error) {

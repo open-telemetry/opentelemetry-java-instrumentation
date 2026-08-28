@@ -64,15 +64,15 @@ public final class CauseUnwrapper {
    * Equivalent to {@link #unwrap(Throwable, Predicate, Function)}, using {@link
    * Throwable#getCause()} to advance to the next cause.
    */
-  public static Throwable unwrapCause(Throwable error, Predicate<Throwable> shouldUnwrap) {
+  public static Throwable unwrap(Throwable error, Predicate<Throwable> shouldUnwrap) {
     return unwrap(error, shouldUnwrap, Throwable::getCause);
   }
 
   /**
-   * Follows {@link Throwable#getCause()} to the deepest cause in the chain, halting safely if the
+   * Follows {@link Throwable#getCause()} to the root cause in the chain, halting safely if the
    * chain contains a cycle.
    */
-  public static Throwable deepestCause(Throwable error) {
-    return unwrapCause(error, unused -> true);
+  public static Throwable rootCause(Throwable error) {
+    return unwrap(error, unused -> true);
   }
 }

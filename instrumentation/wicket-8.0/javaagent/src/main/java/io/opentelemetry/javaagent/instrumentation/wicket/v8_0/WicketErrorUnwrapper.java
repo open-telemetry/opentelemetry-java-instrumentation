@@ -20,7 +20,7 @@ public final class WicketErrorUnwrapper {
    * methods that the compiler would generate for the predicate below.
    */
   public static Throwable unwrap(Throwable error) {
-    return CauseUnwrapper.unwrapCause(error, WicketErrorUnwrapper::isWrapperException);
+    return CauseUnwrapper.unwrap(error, WicketErrorUnwrapper::isWrapperException);
   }
 
   private static boolean isWrapperException(Throwable error) {

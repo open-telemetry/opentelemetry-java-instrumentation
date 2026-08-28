@@ -14,6 +14,6 @@ final class MyFacesErrorCauseExtractor extends JsfErrorCauseExtractor {
   @Override
   public Throwable extract(Throwable error) {
     Throwable unwrapped = super.extract(error);
-    return CauseUnwrapper.unwrapCause(unwrapped, e -> e instanceof ELException);
+    return CauseUnwrapper.unwrap(unwrapped, e -> e instanceof ELException);
   }
 }

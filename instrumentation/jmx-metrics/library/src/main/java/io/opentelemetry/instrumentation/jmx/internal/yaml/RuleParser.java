@@ -208,7 +208,7 @@ public class RuleParser {
    */
   private static String rootCause(Throwable exception) {
     // Go to the bottom of it
-    Throwable rootCause = CauseUnwrapper.deepestCause(exception);
+    Throwable rootCause = CauseUnwrapper.rootCause(exception);
     String message = rootCause.getMessage();
     return message == null ? rootCause.getClass().getSimpleName() : message;
   }

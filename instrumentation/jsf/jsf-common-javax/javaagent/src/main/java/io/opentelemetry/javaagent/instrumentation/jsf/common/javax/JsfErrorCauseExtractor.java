@@ -13,7 +13,7 @@ public class JsfErrorCauseExtractor implements ErrorCauseExtractor {
 
   @Override
   public Throwable extract(Throwable error) {
-    Throwable unwrapped = CauseUnwrapper.unwrapCause(error, e -> e instanceof FacesException);
+    Throwable unwrapped = CauseUnwrapper.unwrap(error, e -> e instanceof FacesException);
     return ErrorCauseExtractor.getDefault().extract(unwrapped);
   }
 }

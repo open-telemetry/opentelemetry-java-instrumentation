@@ -68,7 +68,7 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
   }
 
   private static Throwable unwrapThrowable(Throwable throwable) {
-    return CauseUnwrapper.unwrapCause(
+    return CauseUnwrapper.unwrap(
         throwable, RoutingContextHandlerWrapper::isUnwrappableWrapper);
   }
 
