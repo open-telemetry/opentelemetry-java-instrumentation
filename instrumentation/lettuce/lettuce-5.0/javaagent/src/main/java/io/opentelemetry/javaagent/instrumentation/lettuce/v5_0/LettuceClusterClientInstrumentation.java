@@ -28,6 +28,7 @@ import java.net.SocketAddress;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -89,19 +90,19 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
   public static class AttachEndpointAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
+    @Advice.AssignReturned.ToArguments(@ToArgument(3))
+    public static Supplier<SocketAddress> onEnter(
         @Advice.This RedisClusterClient client,
         @Advice.Argument(1) DefaultEndpoint endpoint,
         @Advice.Argument(2) RedisURI redisUri,
-        @Advice.Argument(value = 3, readOnly = false)
-            Supplier<SocketAddress> socketAddressSupplier) {
+        @Advice.Argument(3) Supplier<SocketAddress> socketAddressSupplier) {
       ENDPOINT_DATABASE_INDEX.set(endpoint, redisUri.getDatabase());
       RedisServerTarget clusterTarget = CLUSTER_CLIENT_TARGET.get(client);
       ENDPOINT_TARGET.set(
           endpoint, clusterTarget != null ? clusterTarget : LettuceServerTargets.of(redisUri));
-      if (!(socketAddressSupplier instanceof EndpointAddressSupplier)) {
-        socketAddressSupplier = new EndpointAddressSupplier(socketAddressSupplier, endpoint);
-      }
+      return socketAddressSupplier instanceof EndpointAddressSupplier
+          ? socketAddressSupplier
+          : new EndpointAddressSupplier(socketAddressSupplier, endpoint);
     }
   }
 
