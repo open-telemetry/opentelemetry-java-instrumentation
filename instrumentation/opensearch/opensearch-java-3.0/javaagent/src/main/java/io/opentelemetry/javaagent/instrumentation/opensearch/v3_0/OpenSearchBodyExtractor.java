@@ -48,11 +48,12 @@ class OpenSearchBodyExtractor {
       JsonGenerator jsonpGenerator = mapper.jsonProvider().createGenerator(writer);
       if (mapper instanceof JacksonJsonpMapper && jsonpGenerator instanceof JacksonJsonpGenerator) {
         JacksonJsonpGenerator jacksonJsonpGenerator = (JacksonJsonpGenerator) jsonpGenerator;
-        com.fasterxml.jackson.core.JsonGenerator jacksonGenerator =
+        JsonGenerator generator =
             sanitize
-                ? new SanitizingJacksonJsonGenerator(jacksonJsonpGenerator.jacksonGenerator())
-                : jacksonJsonpGenerator.jacksonGenerator();
-        try (JsonGenerator generator = new JacksonJsonpGenerator(jacksonGenerator)) {
+                ? new JacksonJsonpGenerator(
+                    new SanitizingJacksonJsonGenerator(jacksonJsonpGenerator.jacksonGenerator()))
+                : jsonpGenerator;
+        try (generator) {
           mapper.serialize(item, generator);
         }
       } else {
