@@ -93,6 +93,16 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
+  void serverListWithIpv6LiteralIsReportedAsOneTarget()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    PgConnectOptions first = connectOptions().setPort(port);
+    PgConnectOptions second = connectOptions().setHost("2001:db8::1").setPort(5432);
+    Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
+
+    assertServerListTarget(pool, host + ":" + port + ",[2001:db8::1]:5432");
+  }
+
+  @Test
   void clientServerListIsReportedAsOneTarget()
       throws InterruptedException, ExecutionException, TimeoutException {
     PgConnectOptions first = connectOptions().setPort(port);
