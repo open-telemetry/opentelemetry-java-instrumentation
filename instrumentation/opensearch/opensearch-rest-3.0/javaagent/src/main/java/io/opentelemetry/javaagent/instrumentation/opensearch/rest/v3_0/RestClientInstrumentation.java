@@ -15,6 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestRequest;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchServerTargets;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.RestResponseListener;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -25,6 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.opensearch.client.Request;
 import org.opensearch.client.Response;
 import org.opensearch.client.ResponseListener;
+import org.opensearch.client.RestClient;
 
 class RestClientInstrumentation implements TypeInstrumentation {
   @Override
@@ -62,14 +64,18 @@ class RestClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    public static AdviceScope start(Request request) {
+    public static AdviceScope start(RestClient restClient, Request request) {
       Context parentContext = Context.current();
       OpenSearchRestRequest otelRequest =
-          OpenSearchRestRequest.create(request.getMethod(), request.getEndpoint());
+          OpenSearchRestRequest.create(
+              request.getMethod(), request.getEndpoint(), OpenSearchServerTargets.get(restClient));
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return null;
       }
-      Context context = instrumenter().start(parentContext, otelRequest);
+      Context context =
+          otelRequest
+              .getPeerState()
+              .storeInContext(instrumenter().start(parentContext, otelRequest));
       return new AdviceScope(otelRequest, parentContext, context, context.makeCurrent());
     }
 
@@ -103,8 +109,9 @@ class RestClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static AdviceScope onEnter(@Advice.Argument(0) Request request) {
-      return AdviceScope.start(request);
+    public static AdviceScope onEnter(
+        @Advice.This RestClient restClient, @Advice.Argument(0) Request request) {
+      return AdviceScope.start(restClient, request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -124,9 +131,10 @@ class RestClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
+        @Advice.This RestClient restClient,
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) ResponseListener originalResponseListener) {
-      AdviceScope adviceScope = AdviceScope.start(request);
+      AdviceScope adviceScope = AdviceScope.start(restClient, request);
       if (adviceScope == null) {
         return new Object[] {null, originalResponseListener};
       }
