@@ -272,8 +272,7 @@ class ElasticsearchRest7Test {
   }
 
   private static HttpHost deadHost() {
-    // nothing listens on this port, so it is only ever a configured target, never the host that
-    // answers
+    // nothing listens on this port, so it never answers a request
     return new HttpHost(httpHost.getHostName(), httpHost.getPort() + 1, httpHost.getSchemeName());
   }
 
