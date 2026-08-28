@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.protocol.internal.Frame;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -40,13 +39,13 @@ class DefaultExecutionInfoInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This ExecutionInfo executionInfo, @Advice.Argument(6) Frame frame) {
       if (frame == null) {
         return;
       }
-      InetSocketAddress peer = VirtualField.find(Frame.class, InetSocketAddress.class).get(frame);
+      InetSocketAddress peer = VirtualFieldHelper.FRAME_PEER.get(frame);
       if (peer != null) {
         CassandraNetworkPeer.set(executionInfo, peer);
       }
