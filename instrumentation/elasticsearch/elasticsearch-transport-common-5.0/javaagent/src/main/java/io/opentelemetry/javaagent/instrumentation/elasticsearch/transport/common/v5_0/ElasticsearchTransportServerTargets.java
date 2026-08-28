@@ -33,7 +33,9 @@ public class ElasticsearchTransportServerTargets {
         return;
       }
       if (target == null) {
-        SERVER_ADDRESS.set(client, NO_TARGET);
+        if (endpoints == null) {
+          SERVER_ADDRESS.set(client, NO_TARGET);
+        }
         return;
       }
       SERVER_PORT.set(client, target.getPort());

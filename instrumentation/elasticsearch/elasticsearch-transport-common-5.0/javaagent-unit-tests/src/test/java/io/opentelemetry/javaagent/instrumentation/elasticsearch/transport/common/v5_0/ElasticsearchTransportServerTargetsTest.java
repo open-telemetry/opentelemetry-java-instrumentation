@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -23,6 +24,21 @@ class ElasticsearchTransportServerTargetsTest {
         client, singletonList(new Endpoint("10.0.0.1", 9300)));
     ElasticsearchTransportServerTargets.capture(
         client, singletonList(new Endpoint("10.0.0.2", 9301)));
+
+    assertThat(ElasticsearchTransportServerTargets.address(client)).isEqualTo("10.0.0.1");
+    assertThat(ElasticsearchTransportServerTargets.port(client)).isEqualTo(9300);
+  }
+
+  @Test
+  void captureWaitsForConfiguredEndpoint() {
+    AbstractClient client = mock(AbstractClient.class);
+
+    ElasticsearchTransportServerTargets.capture(client, emptyList());
+
+    assertThat(ElasticsearchTransportServerTargets.isCaptured(client)).isFalse();
+
+    ElasticsearchTransportServerTargets.capture(
+        client, singletonList(new Endpoint("10.0.0.1", 9300)));
 
     assertThat(ElasticsearchTransportServerTargets.address(client)).isEqualTo("10.0.0.1");
     assertThat(ElasticsearchTransportServerTargets.port(client)).isEqualTo(9300);
