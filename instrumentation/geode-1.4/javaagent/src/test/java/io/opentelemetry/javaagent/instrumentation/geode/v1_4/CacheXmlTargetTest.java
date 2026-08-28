@@ -82,7 +82,7 @@ class CacheXmlTargetTest {
                               equalTo(
                                   SERVER_ADDRESS,
                                   emitStableDatabaseSemconv()
-                                      ? "192.0.2.1:10334/orders,192.0.2.2:10335/orders"
+                                      ? "192.0.2.1:10334,192.0.2.2:10335/orders"
                                       : null),
                               equalTo(SERVER_PORT, null))));
     }

@@ -78,11 +78,11 @@ class GeodeServerTarget {
       if (serverConfigured) {
         return buildServers();
       }
-      String group = serverGroup == null ? "" : serverGroup.trim();
       if (locatorConfigured) {
+        String group = serverGroup == null ? "" : serverGroup.trim();
         return buildLocators(group);
       }
-      return group.isEmpty() ? null : new GeodeServerTarget(group, null);
+      return null;
     }
 
     @Nullable
@@ -102,17 +102,11 @@ class GeodeServerTarget {
       if (!locatorsComplete || locators.isEmpty()) {
         return null;
       }
-      StringBuilder address = new StringBuilder();
-      for (String locator : locators.keySet()) {
-        if (address.length() > 0) {
-          address.append(',');
-        }
-        address.append(locator);
-        if (!group.isEmpty()) {
-          address.append('/').append(group);
-        }
+      String address = String.join(",", locators.keySet());
+      if (!group.isEmpty()) {
+        address += "/" + group;
       }
-      return new GeodeServerTarget(address.toString(), null);
+      return new GeodeServerTarget(address, null);
     }
 
     private static boolean add(Map<String, Endpoint> endpoints, @Nullable String host, int port) {

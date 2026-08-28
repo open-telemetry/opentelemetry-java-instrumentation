@@ -45,11 +45,11 @@ class GeodeServerTargetTest {
   }
 
   @Test
-  void serverGroupIsTrimmed() {
+  void serverGroupWithoutLocatorsHasNoTarget() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.setServerGroup("  orders  ");
 
-    assertThat(builder.build().getAddress()).isEqualTo("orders");
+    assertThat(builder.build()).isNull();
   }
 
   @Test
@@ -67,17 +67,18 @@ class GeodeServerTargetTest {
   }
 
   @Test
-  void locatorKeepsItsPortInTheAddress() {
+  void locatorsWithoutAGroupAreReportedAsAPlainEndpointList() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
-    builder.addLocator("locator.example", 10334);
+    builder.addLocator("two.example", 10335);
+    builder.addLocator("[2001:db8::1]", 10334);
 
     GeodeServerTarget target = builder.build();
-    assertThat(target.getAddress()).isEqualTo("locator.example:10334");
+    assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:10334,two.example:10335");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void locatorsAreSortedDeduplicatedAndIndependentlyScopedByTheirGroup() {
+  void locatorsAreSortedDeduplicatedAndShareTheirGroupSuffix() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addLocator("two.example", 10335);
     builder.addLocator("one.example", 10334);
@@ -85,7 +86,7 @@ class GeodeServerTargetTest {
     builder.setServerGroup("  orders  ");
 
     GeodeServerTarget target = builder.build();
-    assertThat(target.getAddress()).isEqualTo("one.example:10334/orders,two.example:10335/orders");
+    assertThat(target.getAddress()).isEqualTo("one.example:10334,two.example:10335/orders");
     assertThat(target.getPort()).isNull();
   }
 

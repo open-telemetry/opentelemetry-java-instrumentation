@@ -144,7 +144,7 @@ class ConfiguredTargetTest {
   }
 
   @Test
-  void configuredLocatorsAreIndependentlyScopedByTheirGroup() {
+  void configuredLocatorsShareTheirGroupSuffix() {
     Region<Object, Object> region =
         createRegion(
             "locator-group",
@@ -156,8 +156,7 @@ class ConfiguredTargetTest {
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(
-        operation(region, "127.0.0.1:10334/orders,127.0.0.2:10335/orders", null));
+    testing.waitAndAssertTraces(operation(region, "127.0.0.1:10334,127.0.0.2:10335/orders", null));
   }
 
   @Test
