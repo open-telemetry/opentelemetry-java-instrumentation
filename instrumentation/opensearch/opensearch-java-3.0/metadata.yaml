@@ -10,8 +10,17 @@ configurations:
   - name: otel.instrumentation.opensearch.capture-search-query
     declarative_name: java.opensearch.capture_search_query
     description: >
-      Deprecated and will be removed in 3.0, when sanitized search query bodies are always captured.
+      Deprecated and will be removed in 3.0, when search query bodies are always captured.
       There is no replacement. Until then, set this to false to disable capture. Search queries may
       contain personal or sensitive information.
     type: boolean
     default: true
+  - name: otel.instrumentation.opensearch.query-sanitization.enabled
+    declarative_name: java.opensearch.query_sanitization.enabled
+    description: >
+      Enables sanitization of captured search query bodies. Takes precedence over
+      otel.instrumentation.common.db.query-sanitization.enabled. When disabled, bodies are captured
+      verbatim and may contain personal or sensitive information.
+    type: boolean
+    default: true
+  - ref: common.db.query-sanitization.enabled
