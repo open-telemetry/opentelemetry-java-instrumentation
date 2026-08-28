@@ -375,7 +375,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     // All data points for a given metric must carry the same set of attribute keys, with the
     // exception of messaging.kafka.cluster.id which may be absent on points emitted before
     // onUpdate() fires (lazy metadata fetch on first broker contact).
-    assertThat(metrics)
+    assertThat(metrics.stream().filter(metric -> metric.getName().startsWith("kafka.")))
         .allSatisfy(
             metricData -> {
               Set<String> expectedKeys =

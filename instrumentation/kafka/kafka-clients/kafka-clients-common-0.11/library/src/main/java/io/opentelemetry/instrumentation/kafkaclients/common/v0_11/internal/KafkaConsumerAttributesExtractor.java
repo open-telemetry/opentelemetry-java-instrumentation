@@ -12,7 +12,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -48,10 +47,7 @@ final class KafkaConsumerAttributesExtractor
     if (emitOldMessagingSemconv()) {
       attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
     }
-    Object key = record.key();
-    if (key != null && canSerialize(key.getClass())) {
-      attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, key.toString());
-    }
+    attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, KafkaUtil.serializeKey(record.key()));
     if (record.value() == null) {
       attributes.put(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
@@ -63,12 +59,6 @@ final class KafkaConsumerAttributesExtractor
       attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
     }
     attributes.put(KafkaClusterId.ATTRIBUTE_KEY, request.getClusterId());
-  }
-
-  private static boolean canSerialize(Class<?> keyClass) {
-    // we make a simple assumption here that we can serialize keys by simply calling toString()
-    // and that does not work for byte[] or ByteBuffer
-    return !(keyClass.isArray() || keyClass == ByteBuffer.class);
   }
 
   @Override

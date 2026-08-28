@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.testing;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -31,6 +33,7 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -207,7 +210,6 @@ public abstract class AbstractHbaseTest {
               seedRows();
             });
     testing().waitForTraces(1);
-    testing().clearData();
   }
 
   private void createNamespaceAndTable() throws IOException {
@@ -304,45 +306,66 @@ public abstract class AbstractHbaseTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(GET + " " + TABLE_NAME.getNameAsString())
-                            .hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    maybeStable(DB_SYSTEM),
-                                    maybeStableDbSystemName(DB_SYSTEM_VALUE)),
-                                equalTo(maybeStable(DB_OPERATION), GET),
-                                equalTo(
-                                    maybeStable(DB_NAME),
-                                    emitStableDatabaseSemconv()
-                                        ? TABLE_NAME.getNamespaceAsString()
-                                        : TABLE_NAME.getNameAsString()),
-                                equalTo(
-                                    DB_COLLECTION_NAME,
-                                    emitStableDatabaseSemconv()
-                                        ? TABLE_NAME.getNameAsString()
-                                        : null),
-                                equalTo(SERVER_ADDRESS, hostname),
-                                equalTo(SERVER_PORT, REGION_SERVER_PORT),
-                                equalTo(
-                                    ERROR_TYPE,
-                                    emitStableDatabaseSemconv() ? timeoutSpanExceptionType : null),
-                                satisfies(
-                                    DB_USER,
-                                    emitStableDatabaseSemconv()
-                                        ? AbstractAssert::isNull
-                                        : AbstractAssert::isNotNull))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("exception")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(EXCEPTION_TYPE, timeoutSpanExceptionType),
-                                            satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
-                                            satisfies(
-                                                EXCEPTION_STACKTRACE,
-                                                AbstractAssert::isNotNull)))));
+                    span -> {
+                      span.hasName(
+                              GET
+                                  + " "
+                                  + (emitStableDatabaseSemconv()
+                                      ? TABLE_NAME.getQualifierAsString()
+                                      : TABLE_NAME.getNameAsString()))
+                          .hasKind(SpanKind.CLIENT)
+                          .hasStatus(StatusData.error())
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)),
+                              equalTo(maybeStable(DB_OPERATION), GET),
+                              equalTo(
+                                  maybeStable(DB_NAME),
+                                  emitStableDatabaseSemconv()
+                                      ? TABLE_NAME.getNamespaceAsString()
+                                      : TABLE_NAME.getNameAsString()),
+                              equalTo(
+                                  DB_COLLECTION_NAME,
+                                  emitStableDatabaseSemconv()
+                                      ? TABLE_NAME.getQualifierAsString()
+                                      : null),
+                              equalTo(SERVER_ADDRESS, hostname),
+                              equalTo(SERVER_PORT, REGION_SERVER_PORT),
+                              equalTo(
+                                  ERROR_TYPE,
+                                  emitStableDatabaseSemconv() ? timeoutSpanExceptionType : null),
+                              satisfies(
+                                  DB_USER,
+                                  emitStableDatabaseSemconv()
+                                      ? AbstractAssert::isNull
+                                      : AbstractAssert::isNotNull));
+                      if (emitExceptionAsSpanEvents()) {
+                        span.hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, timeoutSpanExceptionType),
+                                        satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE, AbstractAssert::isNotNull)));
+                      } else {
+                        span.hasEventsSatisfyingExactly();
+                      }
+                    }));
+
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("db.client.operation.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, timeoutSpanExceptionType),
+                          satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
+                          satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull)));
+    }
   }
 
   private Configuration getTimeoutConfig() {
@@ -606,7 +629,12 @@ public abstract class AbstractHbaseTest {
       TableName table, String operation, int port, boolean hasTable, Long batchSize) {
     String spanName;
     if (hasTable) {
-      spanName = operation + " " + table.getNameAsString();
+      spanName =
+          operation
+              + " "
+              + (emitStableDatabaseSemconv()
+                  ? table.getQualifierAsString()
+                  : table.getNameAsString());
     } else if (emitStableDatabaseSemconv()) {
       spanName = operation + " " + hostname + ":" + port;
     } else {
@@ -646,7 +674,7 @@ public abstract class AbstractHbaseTest {
 
   private static String dbCollectionName(TableName table, boolean hasTable) {
     if (hasTable && emitStableDatabaseSemconv()) {
-      return table.getNameAsString();
+      return table.getQualifierAsString();
     }
     return null;
   }

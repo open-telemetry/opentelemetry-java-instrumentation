@@ -62,7 +62,8 @@ class CouchbaseClusterInstrumentation implements TypeInstrumentation {
       }
 
       CouchbaseRequestInfo request = CouchbaseRequestInfo.create(null, declaringClass, methodName);
-      return Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
+      return Observable.create(
+          TracedOnSubscribe.perSubscription(result, instrumenter(), request.copySupplier()));
     }
   }
 }

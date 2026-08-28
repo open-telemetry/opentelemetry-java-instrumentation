@@ -10,11 +10,13 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Header;
 
 final class KafkaReceiveAttributesGetter
     implements MessagingAttributesGetter<KafkaReceiveRequest, Void> {
@@ -93,5 +95,14 @@ final class KafkaReceiveAttributesGetter
         .filter(header -> header.value() != null)
         .map(header -> new String(header.value(), UTF_8))
         .collect(toList());
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(KafkaReceiveRequest request) {
+    return StreamSupport.stream(request.getRecords().spliterator(), false)
+        .flatMap(
+            consumerRecord -> StreamSupport.stream(consumerRecord.headers().spliterator(), false))
+        .map(Header::key)
+        .collect(toSet());
   }
 }

@@ -39,6 +39,8 @@ abstract class AbstractHttpServerInstrumentationTest
       options: HttpServerTestOptions
   ): Unit = {
     options.setTestCaptureHttpHeaders(false)
+    // TODO: client.address is missing socket-peer fallback: https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19841
+    options.setTestClientAddressFromSocketPeer(false)
     options.setHttpAttributes(
       new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
         override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
@@ -60,10 +62,12 @@ abstract class AbstractHttpServerInstrumentationTest
     options.disableTestNonStandardHttpMethod
   }
 
+  protected def protocolPrefix: String = "h1c://"
+
   @Test def testTimeout(): Unit = {
     val request = AggregatedHttpRequest.of(
       HttpMethod.GET,
-      h1Address.resolve(TIMEOUT.rawPath()).toString
+      resolveAddress(TIMEOUT, protocolPrefix)
     )
     val response = client.execute(request).aggregate.join
     assertThat(response.status.code).isEqualTo(TIMEOUT.getStatus)

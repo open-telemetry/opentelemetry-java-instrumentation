@@ -5,11 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
-import static java.util.Collections.emptyList;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -26,12 +23,7 @@ import java.util.List;
 
 public class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
-  private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
-          .getScalarList("capture_request_parameters/development", String.class, emptyList());
-  private static final boolean CAPTURE_EXPERIMENTAL_ATTRIBUTES =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
-          .getBoolean("experimental_span_attributes/development", false);
+  private static final ServletConfig servletConfig = ServletConfig.get();
 
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
@@ -66,8 +58,8 @@ public class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
     ServletInstrumenterBuilder<REQUEST, RESPONSE> builder =
         ServletInstrumenterBuilder.create(
                 instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter, accessor)
-            .setCaptureRequestParameters(CAPTURE_REQUEST_PARAMETERS)
-            .setCaptureExperimentalAttributes(CAPTURE_EXPERIMENTAL_ATTRIBUTES)
+            .setRequestParameters(servletConfig.getRequestParameters())
+            .setCaptureExperimentalAttributes(servletConfig.getCaptureExperimentalAttributes())
             .setCaptureEnduserId(AgentCommonConfig.get().getUserConfig().isNameEnabled());
     for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
         contextCustomizers) {

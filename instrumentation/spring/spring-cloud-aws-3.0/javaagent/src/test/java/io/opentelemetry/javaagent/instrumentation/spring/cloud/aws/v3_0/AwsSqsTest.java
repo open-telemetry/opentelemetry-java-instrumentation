@@ -7,8 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HttpRequestMethodValues.POST;
@@ -17,6 +19,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -186,7 +189,10 @@ class AwsSqsTest {
                 span ->
                     span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(3)),
                 span ->
-                    span.hasName("Sqs.DeleteMessageBatch")
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "delete test-queue"
+                                : "Sqs.DeleteMessageBatch")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
@@ -207,6 +213,65 @@ class AwsSqsTest {
                                 "http://localhost:"
                                     + AwsSqsTestApplication.sqsPort
                                     + "/000000000000/test-queue"),
+                            equalTo(
+                                MESSAGING_SYSTEM, emitStableMessagingSemconv() ? AWS_SQS : null),
+                            equalTo(
+                                MESSAGING_DESTINATION_NAME,
+                                emitStableMessagingSemconv() ? "test-queue" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "delete" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "settle" : null),
+                            equalTo(
+                                MESSAGING_OPERATION,
+                                emitStableMessagingSemconv() && emitOldMessagingSemconv()
+                                    ? "settle"
+                                    : null),
+                            equalTo(
+                                MESSAGING_BATCH_MESSAGE_COUNT,
+                                emitStableMessagingSemconv() ? Long.valueOf(1) : null),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)))));
+    assertConsumedMessages();
+  }
+
+  private static void assertConsumedMessages() {
+    if (!emitStableMessagingSemconv()) {
+      assertThat(testing.metrics())
+          .filteredOn(
+              metric ->
+                  metric
+                          .getInstrumentationScopeInfo()
+                          .getName()
+                          .equals("io.opentelemetry.aws-sdk-2.2")
+                      && metric.getName().startsWith("messaging."))
+          .isEmpty();
+      return;
+    }
+
+    // Receive telemetry is disabled by default, so the process operation owns this counter.
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.aws-sdk-2.2",
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(ERROR_TYPE, null),
+                                                equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(
+                                                    SERVER_PORT,
+                                                    AwsSqsTestApplication.sqsPort))))));
   }
 }

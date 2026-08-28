@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
-import static java.util.Collections.singletonList;
-
 import com.linecorp.armeria.server.ServerBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -23,8 +21,8 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   protected ServerBuilder configureServer(ServerBuilder sb) {
     return sb.decorator(
         ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
             .build()
             .createDecorator());
   }

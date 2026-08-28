@@ -8,6 +8,9 @@ package io.opentelemetry.testing;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -15,6 +18,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
@@ -86,6 +90,15 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                       }
                     },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+    assertProcessMetricsWithConsumedMessages(
+        testing(),
+        "io.opentelemetry.spring-kafka-2.7",
+        "testSingleTopic",
+        "testSingleListener",
+        "0",
+        1,
+        1,
+        null);
   }
 
   @Test
@@ -172,6 +185,22 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
 
               trace.hasSpansSatisfyingExactly(assertions);
             });
+    assertProcessDurationMetrics(
+        testing(),
+        "io.opentelemetry.spring-kafka-2.7",
+        "testSingleTopic",
+        "testSingleListener",
+        "0",
+        2,
+        IllegalArgumentException.class.getName());
+    assertProcessDurationMetrics(
+        testing(),
+        "io.opentelemetry.spring-kafka-2.7",
+        "testSingleTopic",
+        "testSingleListener",
+        "0",
+        1,
+        null);
   }
 
   @Test
@@ -210,13 +239,20 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinksSatisfying(
-                                links(
-                                    producer1.get().getSpanContext(),
-                                    producer2.get().getSpanContext()))
+                            .hasLinksSatisfying(links(producer1.get(), producer2.get()))
                             .hasAttributesSatisfyingExactly(
                                 batchProcessAttributes("testBatchTopic", "testBatchListener", 2)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
+    assertProcessMetricsWithConsumedMessages(
+        testing(),
+        "io.opentelemetry.spring-kafka-2.7",
+        "testBatchTopic",
+        "testBatchListener",
+        "0",
+        1,
+        2,
+        null);
+    assertTotalConsumedMessages(testing(), "io.opentelemetry.spring-kafka-2.7", 2);
   }
 
   @Test
@@ -258,7 +294,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get().getSpanContext()))
+                            .hasLinksSatisfying(links(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
@@ -274,7 +310,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get().getSpanContext()))
+                            .hasLinksSatisfying(links(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
@@ -290,12 +326,31 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get().getSpanContext()))
+                            .hasLinksSatisfying(links(producer.get()))
                             .hasStatus(StatusData.unset())
                             .hasAttributesSatisfyingExactly(processAttributes),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
               }
             });
+    int failureCount = isLibraryInstrumentationTest() && testLatestDeps() ? 1 : 2;
+    assertProcessDurationMetrics(
+        testing(),
+        "io.opentelemetry.spring-kafka-2.7",
+        "testBatchTopic",
+        "testBatchListener",
+        "0",
+        failureCount,
+        IllegalArgumentException.class.getName());
+    if (!isLibraryInstrumentationTest() || !testLatestDeps()) {
+      assertProcessDurationMetrics(
+          testing(),
+          "io.opentelemetry.spring-kafka-2.7",
+          "testBatchTopic",
+          "testBatchListener",
+          "0",
+          1,
+          null);
+    }
   }
 
   private static List<AttributeAssertion> sendAttributes(String topic, String messageKey) {
@@ -333,6 +388,10 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
     assertions.add(
         satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
+    }
     return assertions;
   }
 
@@ -358,8 +417,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
           satisfies(stringKey("messaging.client_id"), val -> val.startsWith(clientIdPrefix)));
     }
     if (emitStableMessagingSemconv()) {
-      assertions.add(
-          satisfies(stringKey("messaging.client.id"), val -> val.startsWith(clientIdPrefix)));
+      assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     }
     return assertions;
   }

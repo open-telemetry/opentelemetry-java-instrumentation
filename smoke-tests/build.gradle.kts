@@ -23,7 +23,7 @@ dependencies {
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:4.35.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.36.0")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
@@ -33,6 +33,12 @@ dependencies {
 }
 
 tasks {
+  // makes the generated declarative configuration example available on the test classpath, so that
+  // DeclarativeConfigurationExampleSmokeTest can verify that the agent starts up with it
+  processTestResources {
+    from(rootProject.file("docs/declarative-configuration-example.yaml"))
+  }
+
   test {
     testLogging.showStandardStreams = true
 

@@ -16,7 +16,6 @@ import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
@@ -69,7 +68,7 @@ class FutureInstrumentation implements TypeInstrumentation {
       "scala.concurrent.forkjoin.ForkJoinTask$AdaptedRunnableAction",
       "scala.concurrent.impl.ExecutionContextImpl$AdaptedForkJoinTask",
     };
-    ALLOWED_FUTURES = Collections.unmodifiableSet(new HashSet<>(asList(allowed)));
+    ALLOWED_FUTURES = new HashSet<>(asList(allowed));
   }
 
   @Override

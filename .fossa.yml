@@ -63,6 +63,12 @@ targets:
       target: ':instrumentation:alibaba-druid-1.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-dbcp-2.0:javaagent'
     - type: gradle
       path: ./
@@ -921,6 +927,15 @@ targets:
       target: ':instrumentation:redisson:redisson-common-3.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:redisson:redisson-metrics-3.18:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:redisson:redisson-metrics-3.26:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:redisson:redisson-metrics-common-3.18:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:restlet:restlet-1.1:javaagent'
     - type: gradle
       path: ./
@@ -1063,6 +1078,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:tomcat:tomcat-common-7.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:tomcat:tomcat-dbcp-8.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:tomcat:tomcat-jdbc-8.5:javaagent'

@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -119,8 +120,6 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                           .hasUnit("{message}")
                           .hasDescription(
                               "Number of messages that were delivered to the application.")
-                          .satisfies(
-                              data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
                           .hasLongSumSatisfying(
                               sum ->
                                   sum.hasPointsSatisfying(
@@ -441,7 +440,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     // the old semantic conventions used "publish" where the stable ones use "send"
     String oldOperation = operationName.equals("send") ? "publish" : operationName;
     return emitStableMessagingSemconv()
-        ? operationName + " " + destination
+        ? operationName + " " + destinationName(destination)
         : destination + " " + oldOperation;
   }
 }

@@ -48,6 +48,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
   private static final Logger logger = Logger.getLogger(MessagingConsumerMetrics.class.getName());
 
   private final boolean supportsStableSemconv;
+  private final boolean clientOperationDurationOnly;
   private final boolean consumedMessagesOnly;
   private final boolean enabled;
   @Nullable private final DoubleHistogram receiveDurationHistogram;
@@ -57,20 +58,26 @@ public final class MessagingConsumerMetrics implements OperationListener {
 
   private MessagingConsumerMetrics(Meter meter, Variant variant) {
     supportsStableSemconv = variant != Variant.LEGACY;
+    clientOperationDurationOnly = variant == Variant.CLIENT_OPERATION_DURATION_ONLY;
     consumedMessagesOnly = variant == Variant.CONSUMED_MESSAGES_ONLY;
     boolean emitOldSemconv =
         variant == Variant.LEGACY
             || (variant == Variant.STABLE_AND_OLD && emitOldMessagingSemconv());
     boolean emitStableSemconv = supportsStableSemconv && emitStableMessagingSemconv();
     receiveDurationHistogram =
-        !consumedMessagesOnly && emitOldSemconv ? buildReceiveDuration(meter) : null;
+        !clientOperationDurationOnly && !consumedMessagesOnly && emitOldSemconv
+            ? buildReceiveDuration(meter)
+            : null;
     receiveMessageCount =
-        !consumedMessagesOnly && emitOldSemconv ? buildReceiveMessages(meter) : null;
+        !clientOperationDurationOnly && !consumedMessagesOnly && emitOldSemconv
+            ? buildReceiveMessages(meter)
+            : null;
     clientOperationDurationHistogram =
         !consumedMessagesOnly && emitStableSemconv
             ? MessagingMetricsAdvice.buildClientOperationDuration(meter)
             : null;
-    consumedMessagesCounter = emitStableSemconv ? buildConsumedMessages(meter) : null;
+    consumedMessagesCounter =
+        !clientOperationDurationOnly && emitStableSemconv ? buildConsumedMessages(meter) : null;
     enabled =
         receiveDurationHistogram != null
             || receiveMessageCount != null
@@ -81,9 +88,13 @@ public final class MessagingConsumerMetrics implements OperationListener {
   /**
    * Returns metrics for extractors configured with {@link MessageOperation}.
    *
-   * @deprecated Use {@link #getForOperationType()}. Will be removed in 3.0.
+   * <p>In 3.0 this method name will be reused for {@link #getForOperationType()}, which emits
+   * different instruments, so callers must migrate rather than rely on this name continuing to
+   * behave the same way.
+   *
+   * @deprecated Use {@link #getForOperationType()}. May be removed in the next minor release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   public static OperationMetrics get() {
     return OperationMetricsUtil.create(
         "messaging consumer", meter -> new MessagingConsumerMetrics(meter, Variant.LEGACY));
@@ -111,6 +122,13 @@ public final class MessagingConsumerMetrics implements OperationListener {
   public static OperationMetrics getForOperationTypeWithOldMetrics() { // to be removed in 3.0
     return OperationMetricsUtil.create(
         "messaging consumer", meter -> new MessagingConsumerMetrics(meter, Variant.STABLE_AND_OLD));
+  }
+
+  /** Returns only the stable client-operation-duration metric. */
+  public static OperationMetrics getClientOperationDuration() {
+    return OperationMetricsUtil.create(
+        "messaging client operation duration",
+        meter -> new MessagingConsumerMetrics(meter, Variant.CLIENT_OPERATION_DURATION_ONLY));
   }
 
   /** Returns only the stable consumed-messages metric for a delivered message. */
@@ -241,6 +259,8 @@ public final class MessagingConsumerMetrics implements OperationListener {
      * deprecated instruments.
      */
     STABLE_AND_OLD,
+    /** Only the stable client-operation-duration histogram. */
+    CLIENT_OPERATION_DURATION_ONLY,
     /** Only the stable consumed-messages counter, for a delivered message. */
     CONSUMED_MESSAGES_ONLY
   }

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
@@ -73,7 +74,7 @@ import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 
 // TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
 // is resolved.
-@SuppressWarnings("OtelDeprecatedApiUsage")
+@SuppressWarnings("deprecation")
 class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
 
   @RegisterExtension

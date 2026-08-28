@@ -20,10 +20,10 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final VirtualField<SqlClientBase<?>, SqlConnectOptions> connectOptionsField =
+  private static final VirtualField<SqlClientBase<?>, SqlConnectOptions> CONNECT_OPTIONS =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
 
-  private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
+  private static final VirtualField<SqlConnectOptions, String> CONNECT_OPTIONS_DB_SYSTEM =
       VirtualField.find(SqlConnectOptions.class, String.class);
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
@@ -32,24 +32,24 @@ public class VertxSqlClientSingletons {
 
   public static void storeConnectOptionsDbSystem(
       SqlConnectOptions connectOptions, String dbSystem) {
-    connectOptionsDbSystem.set(connectOptions, dbSystem);
+    CONNECT_OPTIONS_DB_SYSTEM.set(connectOptions, dbSystem);
   }
 
   @Nullable
   public static String getConnectOptionsDbSystem(SqlConnectOptions connectOptions) {
     // null when db system was not captured at pool creation time; callers should fall back
     // to getDbSystemNameFromClassName() on the connect options instance
-    return connectOptionsDbSystem.get(connectOptions);
+    return CONNECT_OPTIONS_DB_SYSTEM.get(connectOptions);
   }
 
   @Nullable
   public static SqlConnectOptions getSqlConnectOptions(SqlClientBase<?> sqlClientBase) {
-    return connectOptionsField.get(sqlClientBase);
+    return CONNECT_OPTIONS.get(sqlClientBase);
   }
 
   public static void attachConnectOptions(
       SqlClientBase<?> sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
-    connectOptionsField.set(sqlClientBase, connectOptions);
+    CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
   }
 
   public static Future<SqlConnection> attachConnectOptions(
@@ -57,7 +57,7 @@ public class VertxSqlClientSingletons {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {
-            connectOptionsField.set((SqlClientBase<?>) sqlConnection, connectOptions);
+            CONNECT_OPTIONS.set((SqlClientBase<?>) sqlConnection, connectOptions);
           }
           return sqlConnection;
         });

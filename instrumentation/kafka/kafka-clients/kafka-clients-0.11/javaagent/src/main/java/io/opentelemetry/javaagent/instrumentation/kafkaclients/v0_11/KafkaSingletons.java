@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
@@ -34,20 +33,14 @@ public class KafkaSingletons {
   private static final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
 
   static {
-    DeclarativeConfigProperties commonConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
-    Boolean messagingReceiveInstrumentationEnabled =
-        commonConfig.get("messaging").get("receive_telemetry/development").getBoolean("enabled");
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+            .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
             .setCaptureExperimentalSpanAttributes(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
-                    .getBoolean("experimental_span_attributes/development", false));
-    if (messagingReceiveInstrumentationEnabled != null) {
-      instrumenterFactory.setMessagingReceiveTelemetryEnabled(
-          messagingReceiveInstrumentationEnabled);
-    }
+                    .getBoolean("experimental_span_attributes/development", false))
+            .setMessagingReceiveTelemetryEnabled(
+                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
     producerInstrumenter = instrumenterFactory.createProducerInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.createConsumerReceiveInstrumenter();
     consumerProcessInstrumenter = instrumenterFactory.createConsumerProcessInstrumenter();

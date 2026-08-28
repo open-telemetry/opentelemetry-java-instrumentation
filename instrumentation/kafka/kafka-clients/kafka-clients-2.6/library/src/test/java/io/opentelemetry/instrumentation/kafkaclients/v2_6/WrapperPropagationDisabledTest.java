@@ -38,15 +38,6 @@ class WrapperPropagationDisabledTest extends AbstractWrapperTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName("poll " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasLinks()
-                          .hasAttributesSatisfyingExactly(
-                              WrapperTest.receiveAttributes(testHeaders, testExperimental))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
                       span.hasName("process " + SHARED_TOPIC)
                           .hasKind(SpanKind.CONSUMER)
                           .hasNoParent()
