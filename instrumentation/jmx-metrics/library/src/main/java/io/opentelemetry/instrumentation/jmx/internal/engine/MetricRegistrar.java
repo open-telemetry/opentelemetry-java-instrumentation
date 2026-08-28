@@ -6,22 +6,20 @@
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
-import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
-import io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
@@ -41,18 +39,20 @@ class MetricRegistrar implements AutoCloseable {
 
   private final Meter meter;
   private final Collection<AutoCloseable> instruments = ConcurrentHashMap.newKeySet();
+  private final IncludeExclude metrics;
 
   MetricRegistrar(
       OpenTelemetry openTelemetry,
       String instrumentationScope,
       String versionLookupName,
       IncludeExclude metrics) {
+    this.metrics = metrics;
     MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationScope);
     String version = EmbeddedInstrumentationProperties.findVersion(versionLookupName);
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
-    meter = filterByName(meterBuilder.build(), metrics);
+    meter = new FilteringMeter(meterBuilder.build(), metrics);
   }
 
   /**
@@ -77,9 +77,15 @@ class MetricRegistrar implements AutoCloseable {
       return;
     }
 
-    boolean recordDoubleValue = attributeInfo.usesDoubleValues();
     MetricInfo metricInfo = extractor.getInfo();
     String metricName = metricInfo.getMetricName();
+
+    if (!metrics.matches(metricName)) {
+      logger.log(FINE, "Metric {0} is excluded by configuration", metricName);
+      return;
+    }
+
+    boolean recordDoubleValue = attributeInfo.usesDoubleValues();
     MetricInfo.Type instrumentType = metricInfo.getType();
     String description =
         metricInfo.getDescription() != null
@@ -274,51 +280,5 @@ class MetricRegistrar implements AutoCloseable {
       }
     }
     instruments.clear();
-  }
-
-  /**
-   * Wraps a meter to filter on metric name
-   *
-   * @param meter meter to wrap
-   * @param metrics include exclude filter for metrics
-   * @return meter that will filter metric based on include exclude filter
-   */
-  private static Meter filterByName(Meter meter, IncludeExclude metrics) {
-    Meter noop = OpenTelemetry.noop().getMeter("noop");
-    return new Meter() {
-
-      private Meter getMeter(String s) {
-        return (metrics.matches(s) ? meter : noop);
-      }
-
-      @Override
-      public LongCounterBuilder counterBuilder(String s) {
-        return getMeter(s).counterBuilder(s);
-      }
-
-      @Override
-      public LongUpDownCounterBuilder upDownCounterBuilder(String s) {
-        return getMeter(s).upDownCounterBuilder(s);
-      }
-
-      @Override
-      public DoubleHistogramBuilder histogramBuilder(String s) {
-        return getMeter(s).histogramBuilder(s);
-      }
-
-      @Override
-      public DoubleGaugeBuilder gaugeBuilder(String s) {
-        return getMeter(s).gaugeBuilder(s);
-      }
-
-      @Override
-      public BatchCallback batchCallback(
-          Runnable callback,
-          ObservableMeasurement observableMeasurement,
-          ObservableMeasurement... additionalMeasurements) {
-        // delegate to the underlying meter, filtered metrics should be no-op
-        return meter.batchCallback(callback, observableMeasurement, additionalMeasurements);
-      }
-    };
   }
 }

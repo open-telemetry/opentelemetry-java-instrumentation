@@ -113,7 +113,7 @@ public class TargetSystemTest {
    *
    * @param registryFile registry file to include
    */
-  void startWeaverValidation(
+  protected void startWeaverValidation(
       String registryFile, Consumer<WeaverContainer.WeaverValidationResult> weaverMetricsVerify) {
 
     Path registryRoot = Paths.get(System.getProperty("io.opentelemetry.registry.path"));
