@@ -182,6 +182,12 @@ public class LettuceSingletons {
   }
 
   static void clearConnectionPeer(RedisChannelHandler<?, ?> connection) {
+    LettucePeerAddress peer = CONNECTION_PEER.get(connection);
+    if (peer != null) {
+      // commands dispatched on this channel share the holder, and lettuce rewrites the ones still
+      // queued on the next channel, which may reach a different socket
+      peer.invalidate();
+    }
     CONNECTION_PEER.set(connection, null);
   }
 
