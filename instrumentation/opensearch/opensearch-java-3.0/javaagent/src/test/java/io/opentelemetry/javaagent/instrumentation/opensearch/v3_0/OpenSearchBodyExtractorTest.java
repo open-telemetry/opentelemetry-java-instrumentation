@@ -23,7 +23,7 @@ class OpenSearchBodyExtractorTest {
     JacksonJsonpMapper mapper = new JacksonJsonpMapper(new ObjectMapper(jsonFactory));
 
     String result =
-        OpenSearchBodyExtractor.extractSanitized(mapper, singletonMap("m\u00e9ssage", "secret"));
+        OpenSearchBodyExtractor.extract(mapper, singletonMap("m\u00e9ssage", "secret"), true);
 
     assertThat(result).isEqualTo("{\"m\\u00E9ssage\":\"?\"}");
   }
