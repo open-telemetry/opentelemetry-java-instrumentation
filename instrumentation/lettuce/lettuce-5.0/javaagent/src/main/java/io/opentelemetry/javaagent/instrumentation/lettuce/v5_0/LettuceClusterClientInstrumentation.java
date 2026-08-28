@@ -21,6 +21,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -64,16 +66,35 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.This RedisClusterClient client,
         @Advice.Argument(1) DefaultEndpoint endpoint,
-        @Advice.Argument(2) RedisURI redisUri) {
+        @Advice.Argument(2) RedisURI redisUri,
+        @Advice.Argument(value = 3, readOnly = false)
+            Supplier<SocketAddress> socketAddressSupplier) {
       ENDPOINT_DATABASE_INDEX.set(endpoint, redisUri.getDatabase());
       RedisServerTarget clusterTarget = CLUSTER_CLIENT_TARGET.get(client);
       ENDPOINT_TARGET.set(
           endpoint, clusterTarget != null ? clusterTarget : LettuceServerTargets.of(redisUri));
-      String host = redisUri.getHost();
-      if (host != null) {
-        ENDPOINT_ADDRESS.set(
-            endpoint, InetSocketAddress.createUnresolved(host, redisUri.getPort()));
+      if (!(socketAddressSupplier instanceof EndpointAddressSupplier)) {
+        socketAddressSupplier = new EndpointAddressSupplier(socketAddressSupplier, endpoint);
       }
+    }
+  }
+
+  public static final class EndpointAddressSupplier implements Supplier<SocketAddress> {
+    private final Supplier<SocketAddress> delegate;
+    private final DefaultEndpoint endpoint;
+
+    public EndpointAddressSupplier(Supplier<SocketAddress> delegate, DefaultEndpoint endpoint) {
+      this.delegate = delegate;
+      this.endpoint = endpoint;
+    }
+
+    @Override
+    public SocketAddress get() {
+      SocketAddress address = delegate.get();
+      if (address instanceof InetSocketAddress) {
+        ENDPOINT_ADDRESS.set(endpoint, (InetSocketAddress) address);
+      }
+      return address;
     }
   }
 }
