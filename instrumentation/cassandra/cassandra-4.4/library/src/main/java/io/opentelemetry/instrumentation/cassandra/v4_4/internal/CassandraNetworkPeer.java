@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class CassandraNetworkPeer {
+public class CassandraNetworkPeer {
 
   private static final VirtualField<ExecutionInfo, InetSocketAddress> EXECUTION_INFO_PEER =
       VirtualField.find(ExecutionInfo.class, InetSocketAddress.class);
