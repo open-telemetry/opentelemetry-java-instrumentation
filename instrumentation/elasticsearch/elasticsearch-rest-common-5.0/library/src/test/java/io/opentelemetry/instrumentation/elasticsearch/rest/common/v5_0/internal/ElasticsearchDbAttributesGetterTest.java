@@ -10,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -197,6 +199,40 @@ class ElasticsearchDbAttributesGetterTest {
     ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
     HttpEntity entity =
         new InputStreamEntity(new ByteArrayInputStream(SEARCH_BODY.getBytes(UTF_8)));
+
+    assertThat(getter.getDbQueryText(searchRequest(entity))).isNull();
+    assertThat(sanitizer.sanitized).isEmpty();
+  }
+
+  @Test
+  void dropsBodyWhenReadingFails() {
+    RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    HttpEntity entity =
+        new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON) {
+          @Override
+          public InputStream getContent() {
+            return new InputStream() {
+              private boolean firstRead = true;
+
+              @Override
+              public int read() throws IOException {
+                if (firstRead) {
+                  firstRead = false;
+                  return '{';
+                }
+                throw new IOException("test");
+              }
+
+              @Override
+              public int read(byte[] buffer, int offset, int length) throws IOException {
+                int value = read();
+                buffer[offset] = (byte) value;
+                return 1;
+              }
+            };
+          }
+        };
 
     assertThat(getter.getDbQueryText(searchRequest(entity))).isNull();
     assertThat(sanitizer.sanitized).isEmpty();

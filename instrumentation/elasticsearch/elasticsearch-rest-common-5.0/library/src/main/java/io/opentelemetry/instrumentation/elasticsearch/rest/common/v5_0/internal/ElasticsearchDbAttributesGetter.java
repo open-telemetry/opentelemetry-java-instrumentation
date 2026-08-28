@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -125,7 +126,7 @@ final class ElasticsearchDbAttributesGetter
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(httpEntity.getContent(), UTF_8))) {
       return reader.lines().collect(joining());
-    } catch (IOException e) {
+    } catch (IOException | UncheckedIOException e) {
       logger.log(FINE, "Failed reading HTTP body content.", e);
     }
     return null;
