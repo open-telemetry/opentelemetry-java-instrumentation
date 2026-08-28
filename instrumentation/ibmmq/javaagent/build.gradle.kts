@@ -25,9 +25,6 @@ dependencies {
   // javax.jms.MessageListener/Message class literals used by the async listener and receive paths.
   compileOnly("javax.jms:jms-api:1.1-rev-1")
 
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
-
   // compileOnly above does not reach the test classpath. JMS 2.0 is used for tests because
   // Connection/Session only became AutoCloseable in 2.0 (try-with-resources will not compile against
   // jms-api 1.1). Main source still targets 1.1.

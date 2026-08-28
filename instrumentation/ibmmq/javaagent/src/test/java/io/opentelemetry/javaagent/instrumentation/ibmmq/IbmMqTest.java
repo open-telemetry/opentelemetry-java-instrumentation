@@ -52,7 +52,6 @@ class IbmMqTest {
             () -> {
               IbmMqJmsQmid.stampMessagingSpan(new Object());
               IbmMqJmsListenerQmid.associate(new Object(), null);
-              IbmMqJmsListenerQmid.stamp(null);
               IbmMqJmsListenerQmid.stamp(null, null);
               IbmMqJmsListenerQmid.captureFromReceive(new Object(), null);
             })

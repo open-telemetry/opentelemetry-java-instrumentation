@@ -21,9 +21,6 @@ dependencies {
   // paths.
   compileOnly("jakarta.jms:jakarta.jms-api:3.0.0")
 
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
-
   testImplementation("jakarta.jms:jakarta.jms-api:3.0.0")
 
   // This module only enriches spans that the generic JMS instrumentation creates, so that module

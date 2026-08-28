@@ -40,10 +40,6 @@ public final class IbmMqJakartaJmsListenerQmid {
     }
   }
 
-  public static void stamp(@Nullable MessageListener listener) {
-    stamp(listener, null);
-  }
-
   public static void stamp(@Nullable MessageListener listener, @Nullable Message message) {
     if (!IbmMqQmidSupport.enabled() || listener == null) {
       return;
