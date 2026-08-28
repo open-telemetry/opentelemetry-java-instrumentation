@@ -50,7 +50,7 @@ public class LettuceSingletons {
   public static final VirtualField<RedisChannelHandler<?, ?>, InetSocketAddress>
       CONNECTION_ADDRESS = VirtualField.find(RedisChannelHandler.class, InetSocketAddress.class);
 
-  static final VirtualField<RedisChannelHandler<?, ?>, LettucePeerAddress> CONNECTION_PEER =
+  public static final VirtualField<RedisChannelHandler<?, ?>, LettucePeerAddress> CONNECTION_PEER =
       VirtualField.find(RedisChannelHandler.class, LettucePeerAddress.class);
 
   static final VirtualField<RedisCommand<?, ?, ?>, LettucePeerAddress> COMMAND_PEER =
@@ -175,7 +175,7 @@ public class LettuceSingletons {
     return peer != null ? peer.getAddress() : null;
   }
 
-  static void clearConnectionPeer(RedisChannelHandler<?, ?> connection) {
+  public static void clearConnectionPeer(RedisChannelHandler<?, ?> connection) {
     LettucePeerAddress peer = CONNECTION_PEER.get(connection);
     if (peer != null) {
       // commands dispatched on this channel share the holder, and lettuce rewrites the ones still
