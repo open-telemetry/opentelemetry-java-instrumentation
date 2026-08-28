@@ -37,7 +37,6 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -99,7 +98,7 @@ public abstract class AbstractElasticsearchTransportClientTest
   }
 
   protected List<AttributeAssertion> clusterHealthAttributes(
-      @Nullable String serverAddress, @Nullable Long serverPort) {
+      String serverAddress, Long serverPort) {
     List<AttributeAssertion> result =
         new ArrayList<>(
             asList(
