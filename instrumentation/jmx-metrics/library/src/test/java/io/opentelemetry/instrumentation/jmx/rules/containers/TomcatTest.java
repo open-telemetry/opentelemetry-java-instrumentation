@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
 import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
@@ -86,15 +87,25 @@ class TomcatTest extends TargetSystemTest {
                         "tomcat.session.active.limit",
                         "tomcat.error.count",
                         "tomcat.request.duration.max",
-                        "tomcat.thread.limit"),
-                    emptyList())
+                        "tomcat.thread.limit",
+                        "tomcat.session.duration.max",
+                        "tomcat.session.created",
+                        "tomcat.session.duration.mean",
+                        "tomcat.session.processing.duration.sum",
+                        "tomcat.session.active.max",
+                        "tomcat.session.expired",
+                        "tomcat.session.rejected"),
+                    asList(
+                        "tomcat.db.client.connection.initial",
+                        "tomcat.db.client.connection.count",
+                        "tomcat.db.client.connection.limit"))
                 .checkRegisteredAttributes(
                     "tomcat.",
                     asList(
                         "tomcat.request.processor.name",
                         "tomcat.context",
                         "tomcat.thread.pool.name"),
-                    emptyList()));
+                    singletonList("tomcat.db.client.connection.pool.name")));
 
     startTarget(target);
 
@@ -170,6 +181,62 @@ class TomcatTest extends TargetSystemTest {
                     .hasUnit("{session}")
                     .isUpDownCounter()
                     .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(0))
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.duration.max",
+            metric ->
+                metric
+                    .hasDescription("The maximum observed session lifetime.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.created",
+            metric ->
+                metric
+                    .hasDescription("The number of sessions created.")
+                    .hasUnit("{session}")
+                    .isCounter()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.duration.mean",
+            metric ->
+                metric
+                    .hasDescription("The average observed session lifetime.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.processing.duration.sum",
+            metric ->
+                metric
+                    .hasDescription("The total time spent processing sessions.")
+                    .hasUnit("s")
+                    .isCounter()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.active.max",
+            metric ->
+                metric
+                    .hasDescription("The maximum number of concurrent active sessions observed.")
+                    .hasUnit("{session}")
+                    .isGauge()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.expired",
+            metric ->
+                metric
+                    .hasDescription("The number of expired sessions.")
+                    .hasUnit("{session}")
+                    .isCounter()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.rejected",
+            metric ->
+                metric
+                    .hasDescription("The number of rejected sessions.")
+                    .hasUnit("{session}")
+                    .isCounter()
                     .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
         .add(
             "tomcat.thread.count",
