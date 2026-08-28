@@ -54,4 +54,20 @@ class OpenSearchBodyExtractorTest {
 
     assertThat(result).isEqualTo("{\"message\":\"?\"}");
   }
+
+  @Test
+  void shouldSuppressExtractionErrors() {
+    JacksonJsonpMapper mapper =
+        new JacksonJsonpMapper() {
+          @Override
+          public JsonProvider jsonProvider() {
+            throw new NoClassDefFoundError("missing optional dependency");
+          }
+        };
+
+    String result =
+        OpenSearchBodyExtractor.extract(mapper, singletonMap("message", "secret"), true);
+
+    assertThat(result).isNull();
+  }
 }

@@ -33,8 +33,8 @@ class OpenSearchBodyExtractor {
       }
 
       return serialize(mapper, request, sanitize, MAX_QUERY_BODY_LENGTH);
-    } catch (RuntimeException e) {
-      logger.log(FINE, "Failure extracting body", e);
+    } catch (Throwable t) {
+      logger.log(FINE, "Failure extracting body", t);
       return null;
     }
   }
