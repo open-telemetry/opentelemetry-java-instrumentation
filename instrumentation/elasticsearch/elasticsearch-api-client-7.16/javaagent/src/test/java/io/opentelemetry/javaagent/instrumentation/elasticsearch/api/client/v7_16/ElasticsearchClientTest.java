@@ -301,9 +301,13 @@ class ElasticsearchClientTest {
             assertThat(trace.getSpan(0))
                 .hasName(emitStableDatabaseSemconv() ? "info " + hostList : "info")
                 .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
+                    equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                    equalTo(maybeStable(DB_OPERATION), "info"),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
                     equalTo(NETWORK_PEER_ADDRESS, peerAddress),
                     equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                    equalTo(URL_FULL, httpHost.toURI() + "/"),
                     equalTo(
                         SERVER_ADDRESS,
                         emitStableDatabaseSemconv() ? hostList : httpHost.getHostName()),

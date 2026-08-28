@@ -37,6 +37,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -88,25 +89,34 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            addNetworkTypeAttribute(
-                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
-                                equalTo(NETWORK_PEER_PORT, getPort()),
-                                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv()
-                                        ? "cluster:monitor/health"
-                                        : "ClusterHealthAction"),
-                                equalTo(
-                                    stringKey("elasticsearch.action"),
-                                    experimental("ClusterHealthAction")),
-                                equalTo(
-                                    stringKey("elasticsearch.request"),
-                                    experimental("ClusterHealthRequest")))),
+                            clusterHealthAttributes(
+                                emitStableDatabaseSemconv() ? getAddress() : null,
+                                emitStableDatabaseSemconv() ? Long.valueOf(getPort()) : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  protected List<AttributeAssertion> clusterHealthAttributes(
+      @Nullable String serverAddress, @Nullable Long serverPort) {
+    List<AttributeAssertion> result =
+        new ArrayList<>(
+            asList(
+                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                equalTo(NETWORK_PEER_PORT, getPort()),
+                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                equalTo(
+                    maybeStable(DB_OPERATION),
+                    emitStableDatabaseSemconv() ? "cluster:monitor/health" : "ClusterHealthAction"),
+                equalTo(stringKey("elasticsearch.action"), experimental("ClusterHealthAction")),
+                equalTo(stringKey("elasticsearch.request"), experimental("ClusterHealthRequest")),
+                equalTo(SERVER_ADDRESS, serverAddress),
+                equalTo(SERVER_PORT, serverPort)));
+    if (hasNetworkType()) {
+      result.add(satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")));
+    }
+    return result;
   }
 
   private List<AttributeAssertion> addNetworkTypeAttribute(AttributeAssertion... assertions) {

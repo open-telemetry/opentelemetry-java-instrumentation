@@ -261,7 +261,9 @@ class ElasticsearchRest5Test {
             assertThat(trace.getSpan(0))
                 .hasName(emitStableDatabaseSemconv() ? hostList : "GET")
                 .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
+                    equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
                     equalTo(NETWORK_PEER_ADDRESS, peerAddress),
                     equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                     equalTo(
@@ -269,6 +271,7 @@ class ElasticsearchRest5Test {
                         emitStableDatabaseSemconv() ? hostList : httpHost.getHostName()),
                     equalTo(
                         SERVER_PORT,
-                        emitStableDatabaseSemconv() ? null : Long.valueOf(httpHost.getPort()))));
+                        emitStableDatabaseSemconv() ? null : Long.valueOf(httpHost.getPort())),
+                    equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
   }
 }

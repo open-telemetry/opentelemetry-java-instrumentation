@@ -267,9 +267,11 @@ class ElasticsearchRest7Test {
                             : httpHost.getHostName() + ":" + httpHost.getPort())
                         : "GET")
                 .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
+                    equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
                     equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
-                    equalTo(
-                        SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort()))));
+                    equalTo(SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort())),
+                    equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
   }
 }

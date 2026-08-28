@@ -86,7 +86,9 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
 
       getTesting()
           .waitAndAssertTraces(
-              trace -> assertThat(trace.getSpan(0)).hasAttributesSatisfying(withServer()));
+              trace ->
+                  assertThat(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(clusterHealthAttributes()));
     }
   }
 

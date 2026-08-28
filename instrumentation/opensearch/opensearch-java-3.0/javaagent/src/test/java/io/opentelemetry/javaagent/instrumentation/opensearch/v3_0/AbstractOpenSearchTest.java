@@ -106,11 +106,7 @@ abstract class AbstractOpenSearchTest {
                     span ->
                         span.hasName(openSearchSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                withServer(
-                                    equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                    equalTo(maybeStable(DB_OPERATION), "GET"),
-                                    equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"))),
+                            .hasAttributesSatisfyingExactly(clusterHealthAttributes()),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -154,11 +150,7 @@ abstract class AbstractOpenSearchTest {
                         span.hasName(openSearchSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                withServer(
-                                    equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                    equalTo(maybeStable(DB_OPERATION), "GET"),
-                                    equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"))),
+                            .hasAttributesSatisfyingExactly(clusterHealthAttributes()),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -223,6 +215,13 @@ abstract class AbstractOpenSearchTest {
     return result;
   }
 
+  List<AttributeAssertion> clusterHealthAttributes() {
+    return withServer(
+        equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+        equalTo(maybeStable(DB_OPERATION), "GET"),
+        equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"));
+  }
+
   void assertNodeListTarget() {
     String nodeList =
         httpHost.getHost()
@@ -237,7 +236,10 @@ abstract class AbstractOpenSearchTest {
             trace ->
                 assertThat(trace.getSpan(0))
                     .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfying(
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                        equalTo(maybeStable(DB_OPERATION), "GET"),
+                        equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
                         equalTo(NETWORK_PEER_ADDRESS, peerAddress),
                         equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                         equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null),

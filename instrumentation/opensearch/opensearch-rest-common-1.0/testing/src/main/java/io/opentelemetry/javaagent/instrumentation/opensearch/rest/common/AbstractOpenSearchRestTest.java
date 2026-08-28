@@ -37,10 +37,10 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -255,20 +255,22 @@ public abstract class AbstractOpenSearchRestTest {
   }
 
   private List<AttributeAssertion> openSearchAttributes() {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "GET"),
-                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
-                equalTo(NETWORK_PEER_ADDRESS, peerAddress),
-                equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
-                equalTo(NETWORK_TYPE, peerAddress.contains(":") ? "ipv6" : "ipv4")));
-    if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
-      assertions.add(equalTo(SERVER_PORT, httpHost.getPort()));
-    }
-    return assertions;
+    return openSearchAttributes(
+        emitStableDatabaseSemconv() ? httpHost.getHost() : null,
+        emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null);
+  }
+
+  private List<AttributeAssertion> openSearchAttributes(
+      @Nullable String serverAddress, @Nullable Long serverPort) {
+    return asList(
+        equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+        equalTo(maybeStable(DB_OPERATION), "GET"),
+        equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
+        equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+        equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+        equalTo(NETWORK_TYPE, peerAddress.contains(":") ? "ipv6" : "ipv4"),
+        equalTo(SERVER_ADDRESS, serverAddress),
+        equalTo(SERVER_PORT, serverPort));
   }
 
   private void assertConfiguredTarget(String nodeList) {
@@ -282,10 +284,7 @@ public abstract class AbstractOpenSearchRestTest {
             trace ->
                 assertThat(trace.getSpan(0))
                     .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfying(
-                        equalTo(NETWORK_PEER_ADDRESS, peerAddress),
-                        equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
-                        equalTo(SERVER_ADDRESS, expectedAddress),
-                        equalTo(SERVER_PORT, expectedPort)));
+                    .hasAttributesSatisfyingExactly(
+                        openSearchAttributes(expectedAddress, expectedPort)));
   }
 }

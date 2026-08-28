@@ -6,9 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.singletonList;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
@@ -169,14 +166,11 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            equalTo(
-                                SERVER_ADDRESS,
+                        .hasAttributesSatisfyingExactly(
+                            clusterHealthAttributes(
                                 !emitStableDatabaseSemconv()
                                     ? null
-                                    : (stableAddressList ? addressList : getAddress())),
-                            equalTo(
-                                SERVER_PORT,
+                                    : (stableAddressList ? addressList : getAddress()),
                                 !emitStableDatabaseSemconv() || stableAddressList
                                     ? null
                                     : Long.valueOf(getPort())))));
