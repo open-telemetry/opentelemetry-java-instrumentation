@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class OpenSearchRestAttributesGetter
@@ -52,32 +52,30 @@ final class OpenSearchRestAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
-  public String getNetworkType(
-      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (response == null) {
+  @Nullable
+  public String getServerAddress(OpenSearchRestRequest request) {
+    if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    InetAddress address = response.getAddress();
-    if (address instanceof Inet4Address) {
-      return "ipv4";
-    } else if (address instanceof Inet6Address) {
-      return "ipv6";
-    }
-    return null;
+    OpenSearchServerTarget target = request.getServerTarget();
+    return target != null ? target.getAddress() : null;
   }
 
   @Override
   @Nullable
-  public String getNetworkPeerAddress(
-      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (response != null) {
-      InetAddress address = response.getAddress();
-      if (address != null) {
-        return address.getHostAddress();
-      }
+  public Integer getServerPort(OpenSearchRestRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
     }
-    return null;
+    OpenSearchServerTarget target = request.getServerTarget();
+    return target != null ? target.getPort() : null;
+  }
+
+  @Override
+  @Nullable
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
+    return request.getPeerState().getPeerAddress();
   }
 }
