@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
@@ -19,6 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.MountableFile;
 
 class TomcatTest extends TargetSystemTest {
 
@@ -38,7 +40,7 @@ class TomcatTest extends TargetSystemTest {
             .withEnv("CATALINA_OPTS", String.join(" ", jvmArgs))
             .withStartupTimeout(Duration.ofMinutes(2))
             .withExposedPorts(8080)
-            .waitingFor(Wait.forListeningPorts(8080));
+            .waitingFor(Wait.forHttp("/datasource.jsp").forPort(8080).forStatusCode(200));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
@@ -46,6 +48,12 @@ class TomcatTest extends TargetSystemTest {
     // Deploy example web application to the tomcat to enable reporting tomcat.session.active.count
     // metric
     copyTestWebAppToTarget(target, "/usr/local/tomcat/webapps/ROOT.war");
+    target.withCopyFileToContainer(
+        MountableFile.forClasspathResource("tomcat-context.xml"),
+        "/usr/local/tomcat/conf/context.xml");
+    target.withCopyFileToContainer(
+        MountableFile.forClasspathResource("datasource.jsp"),
+        "/usr/local/tomcat/webapps/ROOT/datasource.jsp");
 
     startWeaverValidation(
         "tomcat.yaml",
@@ -71,18 +79,22 @@ class TomcatTest extends TargetSystemTest {
                         "tomcat.session.processing.duration.sum",
                         "tomcat.session.active.max",
                         "tomcat.session.expired",
-                        "tomcat.session.rejected"),
-                    asList(
+                        "tomcat.session.rejected",
                         "tomcat.db.client.connection.initial",
                         "tomcat.db.client.connection.count",
-                        "tomcat.db.client.connection.limit"))
+                        "tomcat.db.client.connection.limit"),
+                    emptyList())
                 .checkRegisteredAttributes(
                     "tomcat.",
                     asList(
                         "tomcat.request.processor.name",
                         "tomcat.context",
                         "tomcat.thread.pool.name"),
-                    singletonList("tomcat.db.client.connection.pool.name")));
+                    emptyList())
+                .checkRegisteredAttributes(
+                    "db.client.",
+                    asList("db.client.connection.pool.name", "db.client.connection.state"),
+                    emptyList()));
 
     startTarget(target);
 
@@ -94,8 +106,38 @@ class TomcatTest extends TargetSystemTest {
         attribute("tomcat.request.processor.name", "\"http-nio-8080\"");
     AttributeMatcher threadPoolNameAttribute =
         attribute("tomcat.thread.pool.name", "\"http-nio-8080\"");
+    AttributeMatcher dataSourcePoolNameAttribute =
+        attribute("db.client.connection.pool.name", "\"jdbc/TestDB\"");
+    AttributeMatcher usedConnectionStateAttribute = attribute("db.client.connection.state", "used");
+    AttributeMatcher idleConnectionStateAttribute = attribute("db.client.connection.state", "idle");
 
     return MetricsVerifier.create()
+        .add(
+            "tomcat.db.client.connection.initial",
+            metric ->
+                metric
+                    .hasDescription("The configured initial size of the JDBC connection pool.")
+                    .hasUnit("{connection}")
+                    .isGauge()
+                    .hasDataPointsWithOneAttribute(dataSourcePoolNameAttribute))
+        .add(
+            "tomcat.db.client.connection.count",
+            metric ->
+                metric
+                    .hasDescription("The number of active JDBC connections.")
+                    .hasUnit("{connection}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(dataSourcePoolNameAttribute, usedConnectionStateAttribute),
+                        attributeGroup(dataSourcePoolNameAttribute, idleConnectionStateAttribute)))
+        .add(
+            "tomcat.db.client.connection.limit",
+            metric ->
+                metric
+                    .hasDescription("The configured maximum size of the JDBC connection pool.")
+                    .hasUnit("{connection}")
+                    .isGauge()
+                    .hasDataPointsWithOneAttribute(dataSourcePoolNameAttribute))
         .add(
             "tomcat.error.count",
             metric ->
