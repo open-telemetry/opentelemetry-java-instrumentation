@@ -140,7 +140,20 @@ class JacksonElasticsearchQuerySanitizerTest {
     assertThat(sanitize(exactLimit)).isEqualTo(exactLimit);
     assertThat(sanitize(overLimit))
         .isEqualTo(overLimit.substring(0, JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH));
-    assertThat(sanitize(overLimit + " trailing")).isNull();
+    assertThat(sanitize(overLimit + " trailing"))
+        .isEqualTo(overLimit.substring(0, JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH));
+  }
+
+  @Test
+  void stopsBeforeOverDepthContentAfterLimit() {
+    String exactLimit =
+        objectWithEmptyArrayField(JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 7);
+
+    assertThat(
+            sanitize(
+                exactLimit
+                    + nestedArray(JacksonElasticsearchQuerySanitizer.MAX_NESTING_DEPTH + 1, "")))
+        .isEqualTo(exactLimit);
   }
 
   @Test

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.StreamReadConstraints;
 import java.io.IOException;
-import java.io.Writer;
+import java.io.StringWriter;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
@@ -49,27 +49,32 @@ final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> 
     TruncatingWriter out = new TruncatingWriter(Math.min(body.length(), MAX_QUERY_LENGTH));
     try (JsonParser parser = jsonFactory.createParser(body)) {
       boolean empty = true;
-      while (parser.nextToken() != null) {
+      while (!out.isFull() && parser.nextToken() != null) {
         if (!empty) {
           out.write(QUERY_SEPARATOR);
+          if (out.isFull()) {
+            break;
+          }
         }
         empty = false;
         try (JsonGenerator generator = jsonFactory.createGenerator(out)) {
-          if (!maskValue(parser, generator)) {
-            return null;
-          }
+          maskValue(parser, generator, out);
+        }
+        if (!out.isFull() && parser.currentToken() == null) {
+          return null;
         }
       }
       if (empty) {
         return null;
       }
     } catch (IOException | RuntimeException ignored) {
-      return null;
+      return out.isFull() ? out.toString() : null;
     }
     return out.toString();
   }
 
-  private static boolean maskValue(JsonParser parser, JsonGenerator generator) throws IOException {
+  private static void maskValue(JsonParser parser, JsonGenerator generator, TruncatingWriter out)
+      throws IOException {
     int depth = 0;
     do {
       switch (parser.currentToken()) {
@@ -97,36 +102,24 @@ final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> 
           break;
       }
       if (depth == 0) {
-        return true;
+        return;
       }
-    } while (parser.nextToken() != null);
-    return false;
+    } while (!out.isFull() && parser.nextToken() != null);
   }
 
-  private static class TruncatingWriter extends Writer {
-    private final StringBuilder output;
-
+  private static class TruncatingWriter extends StringWriter {
     TruncatingWriter(int initialSize) {
-      output = new StringBuilder(initialSize);
+      super(initialSize);
     }
 
-    @Override
-    public void write(char[] buffer, int offset, int length) {
-      int remaining = MAX_QUERY_LENGTH - output.length();
-      if (remaining > 0) {
-        output.append(buffer, offset, Math.min(length, remaining));
-      }
+    private boolean isFull() {
+      return getBuffer().length() >= MAX_QUERY_LENGTH;
     }
-
-    @Override
-    public void flush() {}
-
-    @Override
-    public void close() {}
 
     @Override
     public String toString() {
-      return output.toString();
+      StringBuffer output = getBuffer();
+      return output.substring(0, Math.min(output.length(), MAX_QUERY_LENGTH));
     }
   }
 }
