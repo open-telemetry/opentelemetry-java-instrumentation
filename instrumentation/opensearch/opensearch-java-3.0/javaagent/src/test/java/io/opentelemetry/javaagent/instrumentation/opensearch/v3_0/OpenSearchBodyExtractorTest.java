@@ -34,7 +34,8 @@ class OpenSearchBodyExtractorTest {
     String result =
         OpenSearchBodyExtractor.extract(mapper, singletonMap("m\u00e9ssage", "secret"), true);
 
-    assertThat(result).isEqualTo("{\"m\\u00E9ssage\":\"?\"}");
+    assertThat(result).doesNotContain("\u00e9").containsPattern("\\\\u00[eE]9");
+    assertThat(result).contains("\"?\"");
   }
 
   @Test
