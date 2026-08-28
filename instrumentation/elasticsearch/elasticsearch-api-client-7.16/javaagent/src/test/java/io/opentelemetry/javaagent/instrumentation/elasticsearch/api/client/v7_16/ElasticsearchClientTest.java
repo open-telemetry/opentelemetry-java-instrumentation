@@ -266,31 +266,6 @@ class ElasticsearchClientTest {
                         .hasParent(trace.getSpan(0))));
   }
 
-  private static class AsyncRequest {
-    private volatile InfoResponse response = null;
-
-    InfoResponse getResponse() {
-      return response;
-    }
-
-    void setResponse(InfoResponse response) {
-      this.response = response;
-    }
-  }
-
-  static class Person {
-    private final String name;
-
-    Person(String name) {
-      this.name = name;
-    }
-
-    @SuppressWarnings("unused")
-    public String getName() {
-      return name;
-    }
-  }
-
   @Test
   void configuredNodeListIsTheWholeTarget() throws IOException {
     HttpHost deadHost = deadHost();
@@ -335,5 +310,30 @@ class ElasticsearchClientTest {
                     equalTo(
                         SERVER_PORT,
                         emitStableDatabaseSemconv() ? null : Long.valueOf(httpHost.getPort()))));
+  }
+
+  private static class AsyncRequest {
+    private volatile InfoResponse response = null;
+
+    InfoResponse getResponse() {
+      return response;
+    }
+
+    void setResponse(InfoResponse response) {
+      this.response = response;
+    }
+  }
+
+  static class Person {
+    private final String name;
+
+    Person(String name) {
+      this.name = name;
+    }
+
+    @SuppressWarnings("unused")
+    public String getName() {
+      return name;
+    }
   }
 }
