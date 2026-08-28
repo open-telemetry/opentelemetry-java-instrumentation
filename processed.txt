@@ -597,3 +597,4 @@ redisson-metrics-3.18:javaagent
 redisson-metrics-common-3.18:javaagent
 redisson-metrics-common-3.18:testing
 elasticsearch-rest-common-5.0:bootstrap
+elasticsearch-rest-common-5.0:javaagent-unit-tests
