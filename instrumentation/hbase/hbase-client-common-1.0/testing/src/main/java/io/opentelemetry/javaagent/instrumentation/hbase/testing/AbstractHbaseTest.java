@@ -26,7 +26,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -47,7 +46,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.hadoop.conf.Configuration;
@@ -313,8 +311,7 @@ public abstract class AbstractHbaseTest {
       table.get(new Get(Bytes.toBytes(ROW_1)));
     }
 
-    String expectedServerTarget =
-        String.join(",", new TreeSet<>(asList(quorumHost, resolvedHost))) + ":2181:/hbase";
+    String expectedServerTarget = quorumHost + "," + resolvedHost + ":2181:/hbase";
     List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
     for (int i = 0; i < getMetaScanTraceCount(); i++) {
       traceAssertions.add(
