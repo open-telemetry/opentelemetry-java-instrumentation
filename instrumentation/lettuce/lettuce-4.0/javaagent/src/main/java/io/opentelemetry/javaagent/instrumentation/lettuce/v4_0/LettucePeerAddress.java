@@ -18,10 +18,10 @@ import javax.annotation.Nullable;
  * reach a different socket, so a channel that goes down invalidates its holder and every command
  * that shares it stops reporting a peer.
  */
-class LettucePeerAddress {
+public class LettucePeerAddress {
   @Nullable private volatile InetSocketAddress address;
 
-  LettucePeerAddress(InetSocketAddress address) {
+  public LettucePeerAddress(InetSocketAddress address) {
     this.address = address;
   }
 
