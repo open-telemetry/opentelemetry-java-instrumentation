@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.opensearch.client.json.JsonpMapper;
+import org.opensearch.client.json.JsonpUtils;
 import org.opensearch.client.json.NdJsonpSerializable;
 import org.opensearch.client.json.jackson.JacksonJsonpGenerator;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
@@ -44,9 +45,9 @@ class OpenSearchBodyExtractor {
     BoundedStringWriter writer = new BoundedStringWriter(maxLength);
 
     try {
-      if (mapper instanceof JacksonJsonpMapper) {
-        JacksonJsonpGenerator jacksonJsonpGenerator =
-            (JacksonJsonpGenerator) mapper.jsonProvider().createGenerator(writer);
+      JsonGenerator jsonpGenerator = mapper.jsonProvider().createGenerator(writer);
+      if (mapper instanceof JacksonJsonpMapper && jsonpGenerator instanceof JacksonJsonpGenerator) {
+        JacksonJsonpGenerator jacksonJsonpGenerator = (JacksonJsonpGenerator) jsonpGenerator;
         com.fasterxml.jackson.core.JsonGenerator jacksonGenerator =
             sanitize
                 ? new SanitizingJacksonJsonGenerator(jacksonJsonpGenerator.jacksonGenerator())
@@ -56,11 +57,9 @@ class OpenSearchBodyExtractor {
         }
       } else {
         JsonGenerator generator =
-            sanitize
-                ? new SanitizingJsonGenerator(mapper.jsonProvider().createGenerator(writer))
-                : mapper.jsonProvider().createGenerator(writer);
+            sanitize ? new SanitizingJsonGenerator(jsonpGenerator) : jsonpGenerator;
         try (generator) {
-          mapper.serialize(item, generator);
+          JsonpUtils.serialize(item, generator, null, mapper);
         }
       }
     } catch (RuntimeException e) {
