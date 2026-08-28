@@ -64,7 +64,7 @@ class OpenSearchBodyExtractor {
         }
       }
     } catch (RuntimeException e) {
-      if (!causedByQueryBodyLimit(e)) {
+      if (!writer.limitReached()) {
         throw e;
       }
     }
@@ -111,20 +111,11 @@ class OpenSearchBodyExtractor {
     result.append(value, 0, length);
   }
 
-  private static boolean causedByQueryBodyLimit(Throwable t) {
-    while (t != null) {
-      if (t instanceof QueryBodyLimitException) {
-        return true;
-      }
-      t = t.getCause();
-    }
-    return false;
-  }
-
   private static final class BoundedStringWriter extends Writer {
 
     private final StringBuilder result;
     private final int maxLength;
+    private boolean limitReached;
 
     private BoundedStringWriter(int maxLength) {
       this.result = new StringBuilder(Math.min(maxLength, 1024));
@@ -155,8 +146,13 @@ class OpenSearchBodyExtractor {
 
     private void abortIfFull() {
       if (result.length() == maxLength) {
+        limitReached = true;
         throw new QueryBodyLimitException();
       }
+    }
+
+    private boolean limitReached() {
+      return limitReached;
     }
 
     @Override
