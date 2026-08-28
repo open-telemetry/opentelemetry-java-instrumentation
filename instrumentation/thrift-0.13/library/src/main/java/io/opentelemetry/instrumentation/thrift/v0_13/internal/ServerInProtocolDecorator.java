@@ -20,6 +20,7 @@ import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolDecorator;
 import org.apache.thrift.protocol.TProtocolFactory;
+import org.apache.thrift.protocol.TProtocolUtil;
 import org.apache.thrift.protocol.TStruct;
 import org.apache.thrift.protocol.TType;
 import org.apache.thrift.transport.TTransport;
@@ -87,14 +88,23 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       ThriftRequest request = new ThriftRequest(methodName, serviceName, getSocket(), headers);
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
-        // proceed to the next field
-        return this.readFieldBegin();
+        return readNextField();
       }
       currentRequest = request;
       currentContext = instrumenter.start(parentContext, request);
 
-      // proceed to the next field
-      return this.readFieldBegin();
+      return readNextField();
+    }
+    return field;
+  }
+
+  private TField readNextField() throws TException {
+    TField field = super.readFieldBegin();
+    // skip over context propagation fields
+    while (isContextPropagationField(field)) {
+      TProtocolUtil.skip(this, field.type);
+      super.readFieldEnd();
+      field = super.readFieldBegin();
     }
     return field;
   }
