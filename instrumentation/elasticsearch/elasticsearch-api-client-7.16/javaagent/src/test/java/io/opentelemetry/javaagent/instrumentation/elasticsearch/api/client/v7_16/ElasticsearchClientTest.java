@@ -10,9 +10,12 @@ import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSp
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -42,6 +45,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -70,12 +75,13 @@ class ElasticsearchClientTest {
   static ElasticsearchContainer elasticsearch;
 
   static HttpHost httpHost;
+  static String peerAddress;
 
   static ElasticsearchClient client;
   static ElasticsearchAsyncClient asyncClient;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws UnknownHostException {
     elasticsearch =
         new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.28");
     // limit memory usage
@@ -85,6 +91,7 @@ class ElasticsearchClientTest {
     cleanup.deferAfterAll(elasticsearch::stop);
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
+    peerAddress = InetAddress.getByName(httpHost.getHostName()).getHostAddress();
 
     RestClient restClient =
         RestClient.builder(httpHost)
@@ -111,13 +118,18 @@ class ElasticsearchClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("info")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "info " + httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "info")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "info"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort())),
@@ -148,12 +160,17 @@ class ElasticsearchClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("index")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "index " + httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "index")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "index"),
+                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
@@ -192,6 +209,8 @@ class ElasticsearchClientTest {
         "io.opentelemetry.elasticsearch-rest-7.0",
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -206,7 +225,10 @@ class ElasticsearchClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("search")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "search " + httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "search")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(searchAttributes()),
@@ -230,6 +252,8 @@ class ElasticsearchClientTest {
             asList(
                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                 equalTo(maybeStable(DB_OPERATION), "search"),
+                equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                 equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                 equalTo(SERVER_PORT, httpHost.getPort()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
@@ -269,12 +293,17 @@ class ElasticsearchClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("info")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "info " + httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "info")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "info"),
+                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
@@ -295,6 +324,56 @@ class ElasticsearchClientTest {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void configuredNodeListIsTheWholeTarget() throws IOException {
+    HttpHost deadHost = deadHost();
+    RestClient nodeListRestClient = RestClient.builder(httpHost, deadHost).build();
+    cleanup.deferCleanup(nodeListRestClient);
+    ElasticsearchClient nodeListClient =
+        new ElasticsearchClient(
+            new RestClientTransport(nodeListRestClient, new JacksonJsonpMapper()));
+
+    nodeListClient.info();
+
+    assertConfiguredTarget(hostList(deadHost));
+  }
+
+  private static HttpHost deadHost() {
+    // nothing listens on this port, so a request is served by the running server after a retry
+    return new HttpHost(httpHost.getHostName(), httpHost.getPort() + 1, httpHost.getSchemeName());
+  }
+
+  private static String hostList(HttpHost deadHost) {
+    return httpHost.getHostName()
+        + ":"
+        + httpHost.getPort()
+        + ","
+        + deadHost.getHostName()
+        + ":"
+        + deadHost.getPort();
+  }
+
+  private static void assertConfiguredTarget(String hostList) {
+    testing.waitAndAssertTraces(
+        trace ->
+            assertThat(trace.getSpan(0))
+                .hasName(emitStableDatabaseSemconv() ? "info " + hostList : "info")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                    equalTo(maybeStable(DB_OPERATION), "info"),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                    equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                    equalTo(URL_FULL, httpHost.toURI() + "/"),
+                    equalTo(
+                        SERVER_ADDRESS,
+                        emitStableDatabaseSemconv() ? hostList : httpHost.getHostName()),
+                    equalTo(
+                        SERVER_PORT,
+                        emitStableDatabaseSemconv() ? null : Long.valueOf(httpHost.getPort()))));
   }
 
   private static class AsyncRequest {

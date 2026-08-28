@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -31,6 +35,8 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.apache.http.HttpHost;
@@ -57,11 +63,12 @@ class ElasticsearchRest5Test {
   private static ElasticsearchContainer elasticsearch;
 
   private static HttpHost httpHost;
+  private static String peerAddress;
 
   private static RestClient client;
 
   @BeforeAll
-  static void setup() {
+  static void setup() throws UnknownHostException {
     if (!testLatestDeps()) {
       elasticsearch =
           new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:5.6.16")
@@ -79,6 +86,7 @@ class ElasticsearchRest5Test {
     cleanup.deferAfterAll(elasticsearch::stop);
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
+    peerAddress = InetAddress.getByName(httpHost.getHostName()).getHostAddress();
     client =
         RestClient.builder(httpHost)
             .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
@@ -104,12 +112,17 @@ class ElasticsearchRest5Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
@@ -130,6 +143,8 @@ class ElasticsearchRest5Test {
         testing,
         "io.opentelemetry.elasticsearch-rest-5.0",
         DB_SYSTEM_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -150,7 +165,10 @@ class ElasticsearchRest5Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("POST")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "POST")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -159,6 +177,8 @@ class ElasticsearchRest5Test {
                                 maybeStable(DB_STATEMENT),
                                 v3Preview() ? "{\"query\":{\"match\":{\"title\":\"?\"}}}" : null),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_search")),
@@ -221,12 +241,17 @@ class ElasticsearchRest5Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
@@ -246,5 +271,59 @@ class ElasticsearchRest5Test {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void configuredHostListIsTheWholeTarget() throws IOException {
+    RestClient hostListClient = hostListClient();
+    cleanup.deferCleanup(hostListClient);
+
+    hostListClient.performRequest("GET", "_cluster/health");
+
+    assertConfiguredTarget(hostList());
+  }
+
+  @Test
+  void theTargetDoesNotFollowLaterHostChanges() throws IOException {
+    RestClient hostListClient = hostListClient();
+    cleanup.deferCleanup(hostListClient);
+    // a client is given new hosts when it is sniffed; the configured target must not shrink to the
+    // single host this one is left with
+    hostListClient.setHosts(httpHost);
+
+    hostListClient.performRequest("GET", "_cluster/health");
+
+    assertConfiguredTarget(hostList());
+  }
+
+  private static RestClient hostListClient() {
+    return RestClient.builder(httpHost, httpHost)
+        .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
+        .build();
+  }
+
+  private static String hostList() {
+    String endpoint = httpHost.getHostName() + ":" + httpHost.getPort();
+    return endpoint + "," + endpoint;
+  }
+
+  private static void assertConfiguredTarget(String hostList) {
+    testing.waitAndAssertTraces(
+        trace ->
+            assertThat(trace.getSpan(0))
+                .hasName(emitStableDatabaseSemconv() ? hostList : "GET")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(NETWORK_PEER_ADDRESS, peerAddress),
+                    equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                    equalTo(
+                        SERVER_ADDRESS,
+                        emitStableDatabaseSemconv() ? hostList : httpHost.getHostName()),
+                    equalTo(
+                        SERVER_PORT,
+                        emitStableDatabaseSemconv() ? null : Long.valueOf(httpHost.getPort())),
+                    equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
   }
 }

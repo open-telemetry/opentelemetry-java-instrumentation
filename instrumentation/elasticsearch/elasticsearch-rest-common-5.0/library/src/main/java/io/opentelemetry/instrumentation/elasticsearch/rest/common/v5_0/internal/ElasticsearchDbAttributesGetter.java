@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.joining;
@@ -14,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
+import java.net.InetSocketAddress;
 import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -150,5 +152,42 @@ final class ElasticsearchDbAttributesGetter
       }
     }
     return null;
+  }
+
+  @Override
+  @Nullable
+  public String getNetworkPeerAddress(
+      ElasticsearchRestRequest request, @Nullable Response response) {
+    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+    return peerAddress != null ? peerAddress.getAddress().getHostAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getNetworkPeerPort(ElasticsearchRestRequest request, @Nullable Response response) {
+    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+    return peerAddress != null ? peerAddress.getPort() : null;
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(ElasticsearchRestRequest request) {
+
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    ElasticsearchServerTarget target = request.getServerTarget();
+    return target != null ? target.getAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(ElasticsearchRestRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    ElasticsearchServerTarget target = request.getServerTarget();
+
+    return target != null ? target.getPort() : null;
   }
 }

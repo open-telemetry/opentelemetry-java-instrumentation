@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SearchPeerState;
 import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 
@@ -16,6 +17,8 @@ import org.apache.http.HttpEntity;
 @AutoValue
 public abstract class ElasticsearchRestRequest {
 
+  private final SearchPeerState peerState = new SearchPeerState();
+
   public static ElasticsearchRestRequest create(String method, String endpoint) {
     return create(method, endpoint, null, null);
   }
@@ -25,7 +28,17 @@ public abstract class ElasticsearchRestRequest {
       String endpoint,
       @Nullable ElasticsearchEndpointDefinition endpointDefinition,
       @Nullable HttpEntity httpEntity) {
-    return new AutoValue_ElasticsearchRestRequest(method, endpoint, endpointDefinition, httpEntity);
+    return create(method, endpoint, endpointDefinition, httpEntity, null);
+  }
+
+  public static ElasticsearchRestRequest create(
+      String method,
+      String endpoint,
+      @Nullable ElasticsearchEndpointDefinition endpointDefinition,
+      @Nullable HttpEntity httpEntity,
+      @Nullable ElasticsearchServerTarget serverTarget) {
+    return new AutoValue_ElasticsearchRestRequest(
+        method, endpoint, endpointDefinition, httpEntity, serverTarget);
   }
 
   public abstract String getMethod();
@@ -37,4 +50,11 @@ public abstract class ElasticsearchRestRequest {
 
   @Nullable
   public abstract HttpEntity getHttpEntity();
+
+  @Nullable
+  public abstract ElasticsearchServerTarget getServerTarget();
+
+  public final SearchPeerState getPeerState() {
+    return peerState;
+  }
 }

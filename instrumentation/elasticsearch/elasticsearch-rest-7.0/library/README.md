@@ -43,11 +43,14 @@ OpenTelemetry openTelemetry = ...;
 // Create an ElasticsearchRest7Telemetry instance
 ElasticsearchRest7Telemetry telemetry = ElasticsearchRest7Telemetry.create(openTelemetry);
 
-// Create a RestClient
-RestClient restClient = RestClient.builder(new HttpHost("localhost", 9200, "http")).build();
-
-// Wrap the client
-RestClient tracedClient = telemetry.wrap(restClient);
+// Build and wrap a RestClient so telemetry captures its configured target
+RestClient tracedClient =
+    telemetry.wrap(RestClient.builder(new HttpHost("localhost", 9200, "http")));
 
 // ... use the tracedClient to make requests
 ```
+
+If the client must be built elsewhere, `telemetry.wrap(restClient)` still
+instruments its requests. That overload cannot capture the original configured
+target because a constructed `RestClient` exposes only its current routing
+nodes.

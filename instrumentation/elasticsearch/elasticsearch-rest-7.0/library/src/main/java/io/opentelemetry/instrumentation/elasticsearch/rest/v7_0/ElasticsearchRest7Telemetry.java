@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 
 /** Entrypoint for instrumenting Apache Elasticsearch Rest clients. */
 public final class ElasticsearchRest7Telemetry {
@@ -36,8 +37,23 @@ public final class ElasticsearchRest7Telemetry {
   }
 
   /**
-   * Construct a new tracing-enabled {@link RestClient} using the provided {@link RestClient}
+   * Constructs a new tracing-enabled {@link RestClient} using the provided {@link
+   * RestClientBuilder}.
+   *
+   * <p>This overload captures the configured nodes when it builds the client, before sniffing or
+   * node updates can replace them.
+   */
+  public RestClient wrap(RestClientBuilder restClientBuilder) {
+    return RestClientWrapper.wrap(restClientBuilder, instrumenter);
+  }
+
+  /**
+   * Constructs a new tracing-enabled {@link RestClient} using the provided {@link RestClient}
    * instance.
+   *
+   * <p>This overload cannot capture the original configured nodes because a constructed client
+   * exposes only its current routing nodes. Use {@link #wrap(RestClientBuilder)} to capture the
+   * configured target.
    */
   public RestClient wrap(RestClient restClient) {
     return RestClientWrapper.wrap(restClient, instrumenter);
