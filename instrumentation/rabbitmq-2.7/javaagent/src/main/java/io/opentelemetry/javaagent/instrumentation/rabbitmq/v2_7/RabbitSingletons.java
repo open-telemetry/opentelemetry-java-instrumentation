@@ -97,10 +97,13 @@ public class RabbitSingletons {
     if (messagingOperation && emitStableMessagingSemconv()) {
       builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
     }
-    if (messagingOperation && RabbitConnectionAttributes.enabled()) {
+    if (RabbitConnectionAttributes.enabled()) {
       builder.addAttributesExtractor(
           new RabbitConnectionAttributesExtractor<ChannelAndMethod, Void>(
-              channelAndMethod -> channelAndMethod.getChannel().getConnection()));
+              channelAndMethod ->
+                  channelAndMethod.isPublish() || channelAndMethod.getDeliveryTag() != null
+                      ? channelAndMethod.getChannel().getConnection()
+                      : null));
     }
     return builder;
   }
