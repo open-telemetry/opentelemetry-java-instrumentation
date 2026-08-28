@@ -45,12 +45,12 @@ class HbaseServerTargetTest {
   void rendersCanonicalZooKeeperClusterKey() {
     Configuration configuration = new Configuration(false);
     configuration.set(REGISTRY_KEY, ZK_REGISTRY);
-    configuration.set("hbase.zookeeper.quorum", " zk-b:2222,zk-a,zk-b:2222 ");
+    configuration.set("hbase.zookeeper.quorum", "zk-b:2222,\nzk-a,zk-b:2222");
     configuration.set("hbase.zookeeper.property.clientPort", "3218");
     configuration.set("zookeeper.znode.parent", "/production");
 
     assertThat(HbaseServerTarget.from(configuration, false, true, false))
-        .isEqualTo("zk-a,zk-b:2222:3218:/production");
+        .isEqualTo("zk-b:2222,zk-a,zk-b:2222:3218:/production");
   }
 
   @Test
@@ -171,6 +171,9 @@ class HbaseServerTargetTest {
 
     zkConfiguration.set("hbase.zookeeper.property.clientPort", "2181");
     zkConfiguration.set("hbase.zookeeper.quorum", "user:password@zk-a/path");
+    assertThat(HbaseServerTarget.from(zkConfiguration)).isNull();
+
+    zkConfiguration.set("hbase.zookeeper.quorum", " zk-a,zk-b");
     assertThat(HbaseServerTarget.from(zkConfiguration)).isNull();
 
     masterConfiguration.set("hbase.masters", "master-a");

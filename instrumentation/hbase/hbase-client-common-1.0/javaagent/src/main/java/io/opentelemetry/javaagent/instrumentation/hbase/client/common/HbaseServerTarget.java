@@ -133,8 +133,8 @@ public class HbaseServerTarget {
     } else {
       clientPort = configuration.get(CLIENT_ZK_CLIENT_PORT_KEY);
     }
-    Set<String> hosts = canonicalEndpoints(quorum, null);
-    if (hosts == null) {
+    quorum = sanitizeZkQuorum(quorum);
+    if (quorum == null) {
       return null;
     }
 
@@ -151,7 +151,7 @@ public class HbaseServerTarget {
     if (znodeParent == null) {
       return null;
     }
-    return String.join(",", hosts) + ":" + parsedClientPort + ":" + znodeParent;
+    return quorum + ":" + parsedClientPort + ":" + znodeParent;
   }
 
   private static boolean hasUsableZooCfg(Configuration configuration) {
@@ -241,6 +241,20 @@ public class HbaseServerTarget {
       endpoints.add(endpoint);
     }
     return endpoints;
+  }
+
+  @Nullable
+  private static String sanitizeZkQuorum(@Nullable String configuredQuorum) {
+    if (configuredQuorum == null) {
+      return null;
+    }
+    String quorum = configuredQuorum.replaceAll("[\\t\\n\\x0B\\f\\r]", "");
+    for (String endpoint : quorum.split(",", -1)) {
+      if (!endpoint.equals(canonicalEndpoint(endpoint, null))) {
+        return null;
+      }
+    }
+    return quorum;
   }
 
   @Nullable
