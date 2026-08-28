@@ -28,6 +28,7 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
+import io.lettuce.core.cluster.api.reactive.RedisAdvancedClusterReactiveCommands;
 import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -93,7 +94,7 @@ class LettuceClusterClientTest {
   }
 
   @Test
-  void configuredSeedsAreUsedForCommandsAndBatches() throws Exception {
+  void configuredSeedsAreUsedForSyncBatchAndReactiveCommands() throws Exception {
     RedisAdvancedClusterCommands<String, String> syncCommands = connection.sync();
     assertThat(syncCommands.set("CLUSTER_COMMAND_KEY", "value")).isEqualTo("OK");
 
@@ -105,6 +106,9 @@ class LettuceClusterClientTest {
     connection.setAutoFlushCommands(true);
     assertThat(first.get(10, SECONDS)).isEqualTo("OK");
     assertThat(second.get(10, SECONDS)).isEqualTo("OK");
+
+    RedisAdvancedClusterReactiveCommands<String, String> reactiveCommands = connection.reactive();
+    assertThat(reactiveCommands.set("CLUSTER_REACTIVE_KEY", "value").block()).isEqualTo("OK");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -148,7 +152,21 @@ class LettuceClusterClientTest {
                             equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? Long.valueOf(2) : null))));
+                                emitStableDatabaseSemconv() ? Long.valueOf(2) : null))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? configuredTarget : null),
+                            equalTo(SERVER_PORT, null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, null),
+                            equalTo(maybeStable(DB_STATEMENT), "SET CLUSTER_REACTIVE_KEY ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
 
     redisServer.assertNoFailure();
   }
