@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 
 // Couchbase 2.x moved its connection string type and changed its seed representation three times.
 // Reflection keeps this helper compatible across the full range. Prefer allHosts when available
-// because 2.4-2.6 drop seeds that fail DNS resolution from hosts.
+// because 2.5.7 through 2.7.7 drop seeds that fail DNS resolution from hosts.
 public class CouchbaseConnectionStrings {
 
   @Nullable
