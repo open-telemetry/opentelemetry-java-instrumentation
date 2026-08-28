@@ -15,7 +15,7 @@ final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final Long batchSize;
   @Nullable private final InetSocketAddress serverAddress;
-  @Nullable private final InetSocketAddress peerAddress;
+  @Nullable private final LettucePeerAddress peerAddress;
   @Nullable private final Integer databaseIndex;
   @Nullable private final RedisServerTarget serverTarget;
 
@@ -23,7 +23,7 @@ final class LettuceBatchRequest {
       String operationName,
       @Nullable Long batchSize,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable InetSocketAddress peerAddress,
+      @Nullable LettucePeerAddress peerAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
@@ -37,7 +37,7 @@ final class LettuceBatchRequest {
   static LettuceBatchRequest create(
       List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable InetSocketAddress peerAddress,
+      @Nullable LettucePeerAddress peerAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
     return new LettuceBatchRequest(
@@ -65,7 +65,8 @@ final class LettuceBatchRequest {
 
   @Nullable
   InetSocketAddress getPeerAddress() {
-    return peerAddress;
+    // resolved when the span ends, so a channel that went down since the flush reports no peer
+    return peerAddress != null ? peerAddress.getAddress() : null;
   }
 
   @Nullable
