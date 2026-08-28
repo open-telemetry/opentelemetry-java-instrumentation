@@ -6,14 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CLUSTER_CLIENT_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_TARGET;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_TARGET;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.protocol.DefaultEndpoint;
@@ -41,6 +44,10 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
         isConstructor().and(takesArgument(1, named("java.lang.Iterable"))),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
+        named("connectClusterImpl")
+            .and(returns(named("io.lettuce.core.cluster.StatefulRedisClusterConnectionImpl"))),
+        getClass().getName() + "$AttachConnectionAdvice");
+    transformer.applyAdviceToMethod(
         nameStartsWith("connectStateful")
             .and(takesArgument(1, named("io.lettuce.core.protocol.DefaultEndpoint")))
             .and(takesArgument(2, named("io.lettuce.core.RedisURI"))),
@@ -56,6 +63,20 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) @Nullable Iterable<RedisURI> initialUris) {
       // a RedisURI is mutable, so the seed list is rendered here and kept immutable
       CLUSTER_CLIENT_TARGET.set(client, LettuceServerTargets.ofUris(initialUris));
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AttachConnectionAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This RedisClusterClient client,
+        @Advice.Return @Nullable RedisChannelHandler<?, ?> connection) {
+      RedisServerTarget target = CLUSTER_CLIENT_TARGET.get(client);
+      if (target != null && connection != null) {
+        CONNECTION_TARGET.set(connection, target);
+      }
     }
   }
 
