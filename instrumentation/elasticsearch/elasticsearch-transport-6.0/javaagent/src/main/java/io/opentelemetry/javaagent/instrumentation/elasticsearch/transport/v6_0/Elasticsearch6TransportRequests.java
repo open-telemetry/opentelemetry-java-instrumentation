@@ -38,7 +38,8 @@ class Elasticsearch6TransportRequests {
     List<ElasticsearchTransportServerTarget.Endpoint> endpoints = new ArrayList<>();
     for (TransportAddress address : ((TransportClient) client).transportAddresses()) {
       endpoints.add(
-          new ElasticsearchTransportServerTarget.Endpoint(address.getAddress(), address.getPort()));
+          new ElasticsearchTransportServerTarget.Endpoint(
+              address.address().getHostString(), address.getPort()));
     }
     return endpoints;
   }

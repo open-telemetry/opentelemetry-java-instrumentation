@@ -124,11 +124,11 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     clusterHealth(addressListClient);
 
     assertConfiguredTarget(
-        getAddress()
+        tcpPublishAddress.getHost()
             + ":"
             + getPort()
             + ","
-            + addressThatIsDown().getAddress()
+            + addressThatIsDown().getHost()
             + ":"
             + addressThatIsDown().getPort());
   }

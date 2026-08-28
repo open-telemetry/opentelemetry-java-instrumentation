@@ -38,7 +38,7 @@ class Elasticsearch5TransportRequests {
     List<ElasticsearchTransportServerTarget.Endpoint> endpoints = new ArrayList<>();
     for (TransportAddress address : ((TransportClient) client).transportAddresses()) {
       endpoints.add(
-          new ElasticsearchTransportServerTarget.Endpoint(address.getAddress(), address.getPort()));
+          new ElasticsearchTransportServerTarget.Endpoint(address.getHost(), address.getPort()));
     }
     return endpoints;
   }
