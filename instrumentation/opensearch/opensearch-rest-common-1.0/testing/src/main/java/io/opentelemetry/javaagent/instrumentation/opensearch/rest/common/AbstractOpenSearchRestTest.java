@@ -40,7 +40,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -254,8 +253,7 @@ public abstract class AbstractOpenSearchRestTest {
         emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null);
   }
 
-  private List<AttributeAssertion> openSearchAttributes(
-      @Nullable String serverAddress, @Nullable Long serverPort) {
+  private List<AttributeAssertion> openSearchAttributes(String serverAddress, Long serverPort) {
     return asList(
         equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
         equalTo(maybeStable(DB_OPERATION), "GET"),
