@@ -25,12 +25,14 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // 4.0.0 through 4.4.4, the versions built with the options the client was created with; the
-    // target is only read back on 4.0.0 through 4.0.2, where the connection provider cannot reach
-    // those options on its own
+    // 4.0.0 through 4.4.4, the versions built with the options the client was created with; those
+    // options are mutable, so the target is captured here and read back from the manager on
+    // 4.0.0 through 4.0.2 and through the thread local below on 4.0.3 through 4.4.4
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("io.vertx.redis.client.RedisOptions"))),
         getClass().getName() + "$ConstructorAdvice");
+    // 4.0.3 through 4.4.4 build the connection provider here, out of reach of the manager, so the
+    // thread local carries the captured target to that provider's constructor advice
     transformer.applyAdviceToMethod(
         named("connectionEndpointProvider"),
         getClass().getName() + "$ConnectionEndpointProviderAdvice");
