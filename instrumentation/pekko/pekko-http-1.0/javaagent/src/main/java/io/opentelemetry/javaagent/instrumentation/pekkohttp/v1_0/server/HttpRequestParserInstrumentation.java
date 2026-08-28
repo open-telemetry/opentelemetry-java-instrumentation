@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -19,7 +18,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.impl.engine.parsing.HttpMessageParser;
-import org.apache.pekko.http.impl.engine.parsing.ParserOutput;
 import org.apache.pekko.http.scaladsl.model.HttpMethod;
 import org.apache.pekko.http.scaladsl.model.Uri;
 import org.apache.pekko.util.ByteString;
@@ -56,11 +54,6 @@ class HttpRequestParserInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("parseRequestTarget").and(takesArguments(2)),
         getClass().getName() + "$ParseRequestTargetAdvice");
-    transformer.applyAdviceToMethod(
-        named("emit")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.apache.pekko.http.impl.engine.parsing.ParserOutput"))),
-        getClass().getName() + "$EmitAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -111,22 +104,6 @@ class HttpRequestParserInstrumentation implements TypeInstrumentation {
         PekkoHttpParsingErrorSingletons.captureUnparsedRequestLine(
             parser, method, uriBytes == previousUriBytes ? null : uriBytes);
       }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class EmitAdvice {
-
-    /**
-     * Every parsing failure reaches the rest of the stack as a {@code MessageStartError} passed to
-     * this method, whether it came from the parser giving up on a token or from the connection
-     * ending while a message was still incomplete, which does not go through {@code
-     * failMessageStart}.
-     */
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.This HttpMessageParser<?> parser, @Advice.Argument(0) ParserOutput output) {
-      PekkoHttpParsingErrorSingletons.bindRequestLine(parser, output);
     }
   }
 }

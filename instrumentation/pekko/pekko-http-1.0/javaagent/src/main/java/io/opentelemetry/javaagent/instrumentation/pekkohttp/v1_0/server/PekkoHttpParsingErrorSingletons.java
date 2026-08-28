@@ -81,8 +81,8 @@ public class PekkoHttpParsingErrorSingletons {
    * handler. Nothing is recorded when the failure happened before the request line was read, in
    * which case the span is emitted without a method or a target.
    *
-   * <p>Called for every parser output, so it does as little as possible for the ones that are not a
-   * failure.
+   * <p>Called for every output of every message parser, the one that reads client responses
+   * included, so it does as little as possible for the ones that are not a failure.
    */
   public static void bindRequestLine(HttpMessageParser<?> parser, ParserOutput output) {
     if (!(output instanceof MessageStartError)) {
