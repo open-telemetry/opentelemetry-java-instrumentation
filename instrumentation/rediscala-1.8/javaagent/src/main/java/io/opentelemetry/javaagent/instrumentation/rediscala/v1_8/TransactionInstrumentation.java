@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_ENDPOINT;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.instrumenter;
@@ -56,7 +57,8 @@ class TransactionInstrumentation implements TypeInstrumentation {
         Queue<Operation<?, ?>> operations = transactionBuilder.operations().result();
         ServerEndpoint endpoint = TRANSACTION_ENDPOINT.get(transactionBuilder);
         Object client = TRANSACTION_CLIENT.get(transactionBuilder);
-        RedisServerTarget serverTarget = RediscalaServerTargets.get(client);
+        RedisServerTarget serverTarget =
+            emitStableDatabaseSemconv() ? RediscalaServerTargets.get(client) : null;
         RediscalaRequest request =
             RediscalaRequest.createTransaction(operations, endpoint, serverTarget);
         Context parentContext = Context.current();
