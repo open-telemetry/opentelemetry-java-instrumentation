@@ -63,11 +63,11 @@ rules:
         type: counter
         desc: The total time the broker has taken to service requests
       50thPercentile:
-        metric: kafka.request.time.p50
+        metric: kafka.request.time.50p
         type: gauge
         desc: The 50th percentile time the broker has taken to service requests
       99thPercentile:
-        metric: kafka.request.time.p99
+        metric: kafka.request.time.99p
         type: gauge
         desc: The 99th percentile time the broker has taken to service requests
 
@@ -197,10 +197,10 @@ rules:
         type: counter
         desc: Log flush count
       50thPercentile:
-        metric: time.p50
+        metric: time.50p
         desc: Log flush time - 50th percentile
       99thPercentile:
-        metric: time.p99
+        metric: time.99p
         desc: Log flush time - 99th percentile
 
   # Additional broker metrics

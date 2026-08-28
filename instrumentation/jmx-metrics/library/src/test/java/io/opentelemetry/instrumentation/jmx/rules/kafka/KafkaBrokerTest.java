@@ -119,7 +119,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDataPointsWithAttributes(
                             requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
             .add(
-                "kafka.request.time.p50",
+                "kafka.request.time.50p",
                 metric ->
                     metric
                         .isGauge()
@@ -129,7 +129,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDataPointsWithAttributes(
                             requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
             .add(
-                "kafka.request.time.p99",
+                "kafka.request.time.99p",
                 metric ->
                     metric
                         .isGauge()
@@ -227,7 +227,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("Log flush count")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.time.p50",
+                "kafka.logs.flush.time.50p",
                 metric ->
                     metric
                         .isGauge()
@@ -235,7 +235,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("Log flush time - 50th percentile")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.time.p99",
+                "kafka.logs.flush.time.99p",
                 metric ->
                     metric
                         .isGauge()
