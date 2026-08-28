@@ -12,7 +12,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.json.JsonWriteFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.json.spi.JsonProvider;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.json.JsonpSerializable;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
@@ -20,21 +19,18 @@ import org.opensearch.client.json.jsonb.JsonbJsonpMapper;
 
 class OpenSearchBodyExtractorTest {
 
-  @BeforeAll
-  static void loadInstrumentationHelpers() throws ClassNotFoundException {
-    Class.forName("org.opensearch.client.transport.rest_client.RestClientTransport");
-  }
-
   @Test
   void shouldUseJacksonMapperJsonFactory() {
     JsonFactory jsonFactory =
         JsonFactory.builder().enable(JsonWriteFeature.ESCAPE_NON_ASCII).build();
     JacksonJsonpMapper mapper = new JacksonJsonpMapper(new ObjectMapper(jsonFactory));
+    String accentedCharacter = String.valueOf((char) 0xe9);
 
     String result =
-        OpenSearchBodyExtractor.extract(mapper, singletonMap("m\u00e9ssage", "secret"), true);
+        OpenSearchBodyExtractor.extract(
+            mapper, singletonMap("m" + accentedCharacter + "ssage", "secret"), true);
 
-    assertThat(result).doesNotContain("\u00e9").containsPattern("\\\\u00[eE]9");
+    assertThat(result).doesNotContain(accentedCharacter).containsPattern("\\\\u00[eE]9");
     assertThat(result).contains("\"?\"");
   }
 
