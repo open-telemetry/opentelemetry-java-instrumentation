@@ -27,13 +27,13 @@ class OpenSearchBodyExtractor {
   private static final JsonFactory JSON_FACTORY = new JsonFactory();
 
   @Nullable
-  public static String extractSanitized(JsonpMapper mapper, Object request) {
+  public static String extract(JsonpMapper mapper, Object request, boolean sanitize) {
     try {
       if (request instanceof NdJsonpSerializable) {
-        return serializeNdJsonSanitized(mapper, (NdJsonpSerializable) request);
+        return serializeNdJson(mapper, (NdJsonpSerializable) request, sanitize);
       }
 
-      return serializeSanitized(mapper, request);
+      return serialize(mapper, request, sanitize);
     } catch (Exception e) {
       logger.log(FINE, "Failure extracting body", e);
       return null;
@@ -41,22 +41,24 @@ class OpenSearchBodyExtractor {
   }
 
   @Nullable
-  private static String serializeSanitized(JsonpMapper mapper, Object item) throws IOException {
+  private static String serialize(JsonpMapper mapper, Object item, boolean sanitize)
+      throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
     if (mapper instanceof JacksonJsonpMapper) {
-      // Use Jackson-based sanitizing generator for JacksonJsonpMapper
       com.fasterxml.jackson.core.JsonGenerator jacksonGenerator =
-          JSON_FACTORY.createGenerator(baos);
-      com.fasterxml.jackson.core.JsonGenerator sanitizingGenerator =
-          new SanitizingJacksonJsonGenerator(jacksonGenerator);
-      try (JsonGenerator generator = new JacksonJsonpGenerator(sanitizingGenerator)) {
+          sanitize
+              ? new SanitizingJacksonJsonGenerator(JSON_FACTORY.createGenerator(baos))
+              : JSON_FACTORY.createGenerator(baos);
+      try (JsonGenerator generator = new JacksonJsonpGenerator(jacksonGenerator)) {
         mapper.serialize(item, generator);
       }
     } else {
-      // Fallback for other mappers (may not work for all implementations)
-      JsonGenerator rawGenerator = mapper.jsonProvider().createGenerator(baos);
-      try (JsonGenerator generator = new SanitizingJsonGenerator(rawGenerator)) {
+      JsonGenerator generator =
+          sanitize
+              ? new SanitizingJsonGenerator(mapper.jsonProvider().createGenerator(baos))
+              : mapper.jsonProvider().createGenerator(baos);
+      try (generator) {
         mapper.serialize(item, generator);
       }
     }
@@ -66,8 +68,8 @@ class OpenSearchBodyExtractor {
   }
 
   @Nullable
-  private static String serializeNdJsonSanitized(JsonpMapper mapper, NdJsonpSerializable value)
-      throws IOException {
+  private static String serializeNdJson(
+      JsonpMapper mapper, NdJsonpSerializable value, boolean sanitize) throws IOException {
     StringBuilder result = new StringBuilder();
     Iterator<?> values = value._serializables();
     boolean first = true;
@@ -77,10 +79,9 @@ class OpenSearchBodyExtractor {
       String itemStr;
 
       if (item instanceof NdJsonpSerializable && item != value) {
-        // Recursively handle nested NdJsonpSerializable
-        itemStr = serializeNdJsonSanitized(mapper, (NdJsonpSerializable) item);
+        itemStr = serializeNdJson(mapper, (NdJsonpSerializable) item, sanitize);
       } else {
-        itemStr = serializeSanitized(mapper, item);
+        itemStr = serialize(mapper, item, sanitize);
       }
 
       if (itemStr != null && !itemStr.isEmpty()) {

@@ -23,22 +23,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 
-/**
- * Tests compatibility for the deprecated capture-search-query=false configuration. This test class
- * runs with -Dotel.instrumentation.opensearch.capture-search-query=false and verifies that query
- * bodies are NOT captured in DB_STATEMENT.
- */
-@SuppressWarnings("deprecation") // using deprecated semconv
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
+class OpenSearchQuerySanitizationDisabledTest extends AbstractOpenSearchQueryTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  void shouldNotCaptureSearchQueryBodyWhenDisabled() throws IOException {
+  void shouldCaptureUnsanitizedSearchQueryBody() throws IOException {
     SearchRequest searchRequest =
         SearchRequest.of(
             s ->
@@ -53,7 +46,6 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
         openSearchClient.search(searchRequest, TestDocument.class);
     assertThat(searchResponse.hits().total().value()).isGreaterThan(0);
 
-    // Verify trace does NOT include query body, only method + operation
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -64,11 +56,9 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
-                                satisfies(
+                                equalTo(
                                     maybeStable(DB_STATEMENT),
-                                    val ->
-                                        val.asString()
-                                            .startsWith("POST /" + INDEX_NAME + "/_search"))),
+                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"test\"}}}}")),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
