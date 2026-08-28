@@ -1136,7 +1136,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                   .doesNotContainKey(NETWORK_TRANSPORT)
                   .doesNotContainKey(NETWORK_TYPE)
                   .doesNotContainKey(NETWORK_PROTOCOL_NAME);
-              if (responseReceived && httpClientAttributes.contains(NETWORK_PROTOCOL_VERSION)) {
+              if (responseReceived
+                  ? httpClientAttributes.contains(NETWORK_PROTOCOL_VERSION)
+                  : attrs.get(NETWORK_PROTOCOL_VERSION) != null) {
                 assertThat(attrs)
                     .containsEntry(
                         NETWORK_PROTOCOL_VERSION, options.getHttpProtocolVersion().apply(uri));
