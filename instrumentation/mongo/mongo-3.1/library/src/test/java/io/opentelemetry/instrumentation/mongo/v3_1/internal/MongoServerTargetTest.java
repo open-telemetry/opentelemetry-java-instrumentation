@@ -63,10 +63,10 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void srvHostIsTheWholeTarget() {
+  void srvHostUsesTheNativeDiscoveryIdentity() {
     MongoServerTarget target = MongoServerTarget.srvHost("cluster0.example.com");
 
-    assertThat(target.getAddress()).isEqualTo("cluster0.example.com");
+    assertThat(target.getAddress()).isEqualTo("mongodb+srv://cluster0.example.com");
     assertThat(target.getPort()).isNull();
   }
 

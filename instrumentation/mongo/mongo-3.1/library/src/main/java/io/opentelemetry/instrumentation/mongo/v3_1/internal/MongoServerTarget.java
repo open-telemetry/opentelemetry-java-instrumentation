@@ -15,6 +15,8 @@ import javax.annotation.Nullable;
  */
 public final class MongoServerTarget {
 
+  private static final String SRV_SCHEME = "mongodb+srv://";
+
   // the driver reports its default port for socket paths, but the port is not part of the target
   private static final String UNIX_SOCKET_SUFFIX = ".sock";
 
@@ -26,7 +28,7 @@ public final class MongoServerTarget {
     if (srvHost == null || srvHost.isEmpty()) {
       return null;
     }
-    return new MongoServerTarget(srvHost, null);
+    return new MongoServerTarget(SRV_SCHEME + srvHost, null);
   }
 
   @Nullable

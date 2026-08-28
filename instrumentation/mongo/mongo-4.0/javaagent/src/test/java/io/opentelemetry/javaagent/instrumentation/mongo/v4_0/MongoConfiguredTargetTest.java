@@ -68,7 +68,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
     // closing an SRV client races the resolver thread and can report an uncaught exception
     runCommand(createClient(settings, clusterId));
 
-    assertFindSpan("cluster0.example.invalid", null);
+    assertFindSpan("mongodb+srv://cluster0.example.invalid", null);
   }
 
   @Test

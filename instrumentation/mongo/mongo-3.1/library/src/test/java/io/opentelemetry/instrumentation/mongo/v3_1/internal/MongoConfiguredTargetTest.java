@@ -57,7 +57,8 @@ class MongoConfiguredTargetTest {
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
     assertThat(getter.getServerAddress(event))
-        .isEqualTo(emitStableDatabaseSemconv() ? "cluster0.example.com" : "db2.example");
+        .isEqualTo(
+            emitStableDatabaseSemconv() ? "mongodb+srv://cluster0.example.com" : "db2.example");
     assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
   }
 
