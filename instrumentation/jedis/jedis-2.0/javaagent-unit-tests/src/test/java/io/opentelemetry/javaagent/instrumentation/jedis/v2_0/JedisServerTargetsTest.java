@@ -54,11 +54,11 @@ class JedisServerTargetsTest {
   }
 
   @Test
-  void sentinelsAreScopedByTheirMaster() {
+  void sentinelsShareTheirMasterSuffix() {
     RedisServerTarget target =
-        JedisServerTargets.ofSentinels("mymaster", sentinels("sentinel1:26379"));
+        JedisServerTargets.ofSentinels("mymaster", sentinels("sentinel2:26380", "sentinel1:26379"));
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster");
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 

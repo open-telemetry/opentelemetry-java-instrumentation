@@ -59,13 +59,13 @@ class RedisServerTargetTest {
   }
 
   @Test
-  void discoveryEndpointsAreSortedDeduplicatedAndIndependentlyScoped() {
+  void discoveryEndpointsAreSortedDeduplicatedAndShareLogicalName() {
     RedisServerTarget target =
         RedisServerTarget.ofEndpointsAndLogicalName(
             asList("redis://sentinel2:26380", "redis://sentinel1:26379", "redis://sentinel2:26380"),
             "  mymaster  ");
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster,sentinel2:26380/mymaster");
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
@@ -86,7 +86,7 @@ class RedisServerTargetTest {
             asList("redis://user:password@[::2]:26380/2", "redis://[::1]:26379?timeout=5s"),
             "mymaster");
 
-    assertThat(target.getAddress()).isEqualTo("[::1]:26379/mymaster,[::2]:26380/mymaster");
+    assertThat(target.getAddress()).isEqualTo("[::1]:26379,[::2]:26380/mymaster");
   }
 
   @Test

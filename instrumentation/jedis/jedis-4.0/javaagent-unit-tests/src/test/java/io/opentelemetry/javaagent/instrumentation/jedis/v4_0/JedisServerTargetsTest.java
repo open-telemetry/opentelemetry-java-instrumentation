@@ -48,7 +48,7 @@ class JedisServerTargetsTest {
   }
 
   @Test
-  void sentinelsAreSortedAndScopedByTheirMaster() {
+  void sentinelsAreSortedDeduplicatedAndShareTheirMasterSuffix() {
     RedisServerTarget target =
         JedisServerTargets.ofSentinels(
             "mymaster",
@@ -57,7 +57,7 @@ class JedisServerTargetsTest {
                 new HostAndPort("sentinel1", 26379),
                 new HostAndPort("sentinel2", 26380)));
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster,sentinel2:26380/mymaster");
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
@@ -90,7 +90,7 @@ class JedisServerTargetsTest {
               asList(new HostAndPort("sentinel2", 26380), new HostAndPort("sentinel1", 26379))
             });
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster,sentinel2:26380/mymaster");
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
   }
 
   @Test
