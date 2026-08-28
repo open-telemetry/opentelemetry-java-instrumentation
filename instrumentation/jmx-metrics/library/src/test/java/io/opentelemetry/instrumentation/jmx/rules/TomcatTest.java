@@ -124,7 +124,8 @@ class TomcatTest extends TargetSystemTest {
             "tomcat.db.client.connection.count",
             metric ->
                 metric
-                    .hasDescription("The number of active JDBC connections.")
+                    .hasDescription(
+                        "The number of JDBC connections currently in the state described by `db.client.connection.state`.")
                     .hasUnit("{connection}")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
