@@ -19,6 +19,8 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
@@ -35,6 +37,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -82,40 +85,59 @@ public abstract class AbstractElasticsearchTransportClientTest
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "cluster:monitor/health"
-                                : "ClusterHealthAction")
+                    span.hasName(spanName("ClusterHealthAction", "cluster:monitor/health"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            addNetworkTypeAttribute(
-                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
-                                equalTo(NETWORK_PEER_PORT, getPort()),
-                                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv()
-                                        ? "cluster:monitor/health"
-                                        : "ClusterHealthAction"),
-                                equalTo(
-                                    stringKey("elasticsearch.action"),
-                                    experimental("ClusterHealthAction")),
-                                equalTo(
-                                    stringKey("elasticsearch.request"),
-                                    experimental("ClusterHealthRequest")))),
+                            clusterHealthAttributes(
+                                emitStableDatabaseSemconv() ? getAddress() : null,
+                                emitStableDatabaseSemconv() ? Long.valueOf(getPort()) : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
   }
 
-  private List<AttributeAssertion> addNetworkTypeAttribute(AttributeAssertion... assertions) {
-    List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
+  protected List<AttributeAssertion> clusterHealthAttributes(
+      @Nullable String serverAddress, @Nullable Long serverPort) {
+    List<AttributeAssertion> result =
+        new ArrayList<>(
+            asList(
+                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                equalTo(NETWORK_PEER_PORT, getPort()),
+                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                equalTo(
+                    maybeStable(DB_OPERATION),
+                    emitStableDatabaseSemconv() ? "cluster:monitor/health" : "ClusterHealthAction"),
+                equalTo(stringKey("elasticsearch.action"), experimental("ClusterHealthAction")),
+                equalTo(stringKey("elasticsearch.request"), experimental("ClusterHealthRequest")),
+                equalTo(SERVER_ADDRESS, serverAddress),
+                equalTo(SERVER_PORT, serverPort)));
     if (hasNetworkType()) {
       result.add(satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")));
     }
     return result;
+  }
+
+  private List<AttributeAssertion> addNetworkTypeAttribute(AttributeAssertion... assertions) {
+    List<AttributeAssertion> result = withServer(assertions);
+    if (hasNetworkType()) {
+      result.add(satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")));
+    }
+    return result;
+  }
+
+  private List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
+    List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
+    if (emitStableDatabaseSemconv()) {
+      result.add(equalTo(SERVER_ADDRESS, getAddress()));
+      result.add(equalTo(SERVER_PORT, getPort()));
+    }
+    return result;
+  }
+
+  private String spanName(String action, String wireAction) {
+    return emitStableDatabaseSemconv() ? wireAction + " " + getAddress() + ":" + getPort() : action;
   }
 
   private Stream<Arguments> errorArguments() {
@@ -140,16 +162,14 @@ public abstract class AbstractElasticsearchTransportClientTest
         .hasMessage(expectedException.getMessage());
 
     List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                equalTo(
-                    maybeStable(DB_OPERATION),
-                    emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction"),
-                equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
-                equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
-                equalTo(
-                    stringKey("elasticsearch.request.indices"), experimental("invalid-index"))));
+        withServer(
+            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+            equalTo(
+                maybeStable(DB_OPERATION),
+                emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction"),
+            equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
+            equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
+            equalTo(stringKey("elasticsearch.request.indices"), experimental("invalid-index")));
 
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
@@ -165,8 +185,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasStatus(StatusData.error())
                         .hasException(expectedException),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction")
+                    span.hasName(spanName("GetAction", "indices:data/read/get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
@@ -232,17 +251,15 @@ public abstract class AbstractElasticsearchTransportClientTest
     // PutMappingAction and IndexAction run in separate threads so their order can vary
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
-            emitStableDatabaseSemconv() ? "indices:admin/create" : "CreateIndexAction",
+            spanName("CreateIndexAction", "indices:admin/create"),
+            // the mapping update runs inside the node, on a client that has no remote target
             emitStableDatabaseSemconv() ? getPutMappingWireActionName() : getPutMappingActionName(),
-            emitStableDatabaseSemconv() ? "indices:data/write/index" : "IndexAction",
-            emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction"),
+            spanName("IndexAction", "indices:data/write/index"),
+            spanName("GetAction", "indices:data/read/get")),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "indices:admin/create"
-                                : "CreateIndexAction")
+                    span.hasName(spanName("CreateIndexAction", "indices:admin/create"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -289,10 +306,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "indices:data/write/index"
-                                : "IndexAction")
+                    span.hasName(spanName("IndexAction", "indices:data/write/index"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -334,8 +348,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction")
+                    span.hasName(spanName("GetAction", "indices:data/read/get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -343,8 +356,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction")
+                    span.hasName(spanName("GetAction", "indices:data/read/get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
