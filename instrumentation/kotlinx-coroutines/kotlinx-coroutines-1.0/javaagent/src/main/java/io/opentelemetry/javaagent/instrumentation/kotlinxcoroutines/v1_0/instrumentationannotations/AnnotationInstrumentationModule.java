@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -61,10 +60,8 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<String> exposedClassNames() {
-    // These are called (in-)directly in the instrumented bytecode.
-    return asList(
-        "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationHelper",
-        "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationHelper$ContextContinuation",
-        "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.KotlinResultUtilKt");
+    // AnnotationInstrumentationHelper is called directly in the instrumented bytecode.
+    return singletonList(
+        "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationHelper");
   }
 }
