@@ -143,6 +143,7 @@ class AttributeExtractorTest {
   @BeforeEach
   void reset() {
     test1.negativeValues = false;
+    test1.extremeValues = false;
   }
 
   @Test
