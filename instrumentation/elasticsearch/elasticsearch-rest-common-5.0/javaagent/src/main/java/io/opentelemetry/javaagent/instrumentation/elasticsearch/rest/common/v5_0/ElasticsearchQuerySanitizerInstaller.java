@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.elasticsearch.ElasticsearchQuerySanitizerAccess;
-import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 
 /**
@@ -15,11 +15,11 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
  * the only place jackson-core is visible, and hands the sanitizer to a bootstrap class that the
  * instrumentation can reach from the application class loader.
  */
-@AutoService(AgentListener.class)
-public class ElasticsearchQuerySanitizerInstaller implements AgentListener {
+@AutoService(BeforeAgentListener.class)
+public class ElasticsearchQuerySanitizerInstaller implements BeforeAgentListener {
 
   @Override
-  public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+  public void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
     ElasticsearchQuerySanitizerAccess.internalSetSanitizer(
         new JacksonElasticsearchQuerySanitizer());
   }
