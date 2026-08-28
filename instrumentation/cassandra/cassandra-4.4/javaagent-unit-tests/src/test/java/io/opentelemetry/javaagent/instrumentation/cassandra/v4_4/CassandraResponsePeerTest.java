@@ -103,7 +103,7 @@ class CassandraResponsePeerTest {
 
   private interface InternalChannel extends PublicChannel {}
 
-  private static final class TestContext implements InternalContext {
+  private static class TestContext implements InternalContext {
     private final InternalChannel channel;
 
     private TestContext(InternalChannel channel) {
@@ -116,7 +116,7 @@ class CassandraResponsePeerTest {
     }
   }
 
-  private static final class TestChannel implements InternalChannel {
+  private static class TestChannel implements InternalChannel {
     private final SocketAddress remoteAddress;
 
     private TestChannel(SocketAddress remoteAddress) {
