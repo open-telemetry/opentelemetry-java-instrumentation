@@ -140,14 +140,13 @@ class TomcatTest extends TargetSystemTest {
                 metric
                     .hasDescription("The configured initial size of the JDBC connection pool.")
                     .hasUnit("{connection}")
-                    .isGauge()
+                    .isUpDownCounter()
                     .hasDataPointsWithOneAttribute(dataSourcePoolNameAttribute))
         .add(
             "tomcat.db.client.connection.count",
             metric ->
                 metric
-                    .hasDescription(
-                        "The number of JDBC connections currently in the state described by `db.client.connection.state`.")
+                    .hasDescription("The number of JDBC connections.")
                     .hasUnit("{connection}")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
@@ -159,7 +158,7 @@ class TomcatTest extends TargetSystemTest {
                 metric
                     .hasDescription("The configured maximum size of the JDBC connection pool.")
                     .hasUnit("{connection}")
-                    .isGauge()
+                    .isUpDownCounter()
                     .hasDataPointsWithOneAttribute(dataSourcePoolNameAttribute))
         .add(
             "tomcat.error.count",

@@ -47,7 +47,7 @@ groups:
     type: metric
     brief: The configured initial size of the JDBC connection pool.
     unit: "{connection}"
-    instrument: gauge
+    instrument: updowncounter
     attributes:
       - ref: db.client.connection.pool.name
 
@@ -68,7 +68,7 @@ groups:
     type: metric
     brief: The configured maximum size of the JDBC connection pool.
     unit: "{connection}"
-    instrument: gauge
+    instrument: updowncounter
     attributes:
       - ref: db.client.connection.pool.name
 
