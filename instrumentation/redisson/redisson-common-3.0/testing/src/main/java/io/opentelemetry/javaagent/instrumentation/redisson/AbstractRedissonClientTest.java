@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -281,7 +280,6 @@ public abstract class AbstractRedissonClientTest {
 
   @Test
   void configuredServerTarget() {
-    Assumptions.assumeTrue(emitStableDatabaseSemconv());
     String aliasHost = host.equals(ip) ? "localhost" : ip;
     String configuredTarget = address + "," + aliasHost + ":" + port;
 
@@ -292,33 +290,72 @@ public abstract class AbstractRedissonClientTest {
         .addSlaveAddress(redisAddress(aliasHost));
     RedissonClient configuredClient = Redisson.create(config);
     try {
-      testing.clearData();
-      configuredClient.getBucket("configured-target").set("value");
-
-      await()
-          .untilAsserted(
-              () ->
-                  assertThat(testing.spans())
-                      .filteredOn(spanData -> spanData.getName().startsWith("SET "))
-                      .singleElement()
-                      .satisfies(
-                          spanData ->
-                              assertThat(spanData)
-                                  .hasName("SET " + configuredTarget)
-                                  .hasKind(CLIENT)
-                                  .hasAttributesSatisfyingExactly(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, port),
-                                      equalTo(SERVER_ADDRESS, configuredTarget),
-                                      equalTo(SERVER_PORT, null),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      equalTo(DB_NAMESPACE, dbNamespace()),
-                                      equalTo(DB_OPERATION_NAME, "SET"),
-                                      equalTo(
-                                          maybeStable(DB_STATEMENT), "SET configured-target ?"))));
+      assertConfiguredTarget(
+          configuredClient, "configured-target", configuredTarget, configuredTarget, null, host);
     } finally {
       configuredClient.shutdown();
     }
+  }
+
+  @Test
+  void configuredSingleServerTarget() {
+    String configuredHost = host.equals(ip) ? "localhost" : ip;
+    Config config = new Config();
+    config.useSingleServer().setAddress(redisAddress(configuredHost));
+    RedissonClient configuredClient = Redisson.create(config);
+    try {
+      assertConfiguredTarget(
+          configuredClient,
+          "configured-single-target",
+          configuredHost + ":" + port,
+          configuredHost,
+          port,
+          configuredHost);
+    } finally {
+      configuredClient.shutdown();
+    }
+  }
+
+  private void assertConfiguredTarget(
+      RedissonClient client,
+      String key,
+      String stableSpanTarget,
+      String stableServerAddress,
+      Long stableServerPort,
+      String legacyServerAddress) {
+    testing.clearData();
+    client.getBucket(key).set("value");
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .filteredOn(spanData -> spanData.getName().startsWith("SET"))
+                    .singleElement()
+                    .satisfies(
+                        spanData -> {
+                          assertThat(spanData.getName())
+                              .isEqualTo(
+                                  emitStableDatabaseSemconv() ? "SET " + stableSpanTarget : "SET");
+                          assertThat(spanData.getKind()).isEqualTo(CLIENT);
+                          assertThat(spanData.getAttributes().get(NETWORK_TYPE))
+                              .isEqualTo(emitOldDatabaseSemconv() ? IPV4 : null);
+                          assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
+                              .isEqualTo(ip);
+                          assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
+                              .isEqualTo(port);
+                          assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(
+                                  emitStableDatabaseSemconv()
+                                      ? stableServerAddress
+                                      : legacyServerAddress);
+                          assertThat(spanData.getAttributes().get(SERVER_PORT))
+                              .isEqualTo(emitStableDatabaseSemconv() ? stableServerPort : port);
+                          assertThat(spanData.getAttributes().get(DB_SYSTEM))
+                              .isEqualTo(emitOldDatabaseSemconv() ? REDIS : null);
+                          assertThat(spanData.getAttributes().get(DB_SYSTEM_NAME))
+                              .isEqualTo(emitStableDatabaseSemconv() ? REDIS : null);
+                        }));
   }
 
   @Test

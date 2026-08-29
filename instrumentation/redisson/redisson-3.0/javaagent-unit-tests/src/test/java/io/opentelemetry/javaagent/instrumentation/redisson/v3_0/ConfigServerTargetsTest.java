@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.redisson.config.Config;
 import org.redisson.config.ConfigServerTargetsBefore317;
 
@@ -91,12 +93,20 @@ class ConfigServerTargetsTest {
         .isEqualTo("master:6379,replica1:6380,replica2:6381");
   }
 
-  @Test
-  void singleServerNeedsNoTargetOfItsOwn() {
+  @ParameterizedTest
+  @CsvSource({
+    "localhost:6379, localhost, 6379",
+    "user:password@secure.example:6380/2?timeout=5s, secure.example, 6380"
+  })
+  void singleServerUsesSanitizedConfiguredAddress(
+      String configuredAddress, String expectedAddress, int expectedPort) {
     Config config = new Config();
-    config.useSingleServer().setAddress(redisAddress("localhost:6379"));
+    config.useSingleServer().setAddress(redisAddress(configuredAddress));
 
-    assertThat(ConfigServerTargetsBefore317.of(config)).isNull();
+    RedisServerTarget target = ConfigServerTargetsBefore317.of(config);
+
+    assertThat(target.getAddress()).isEqualTo(expectedAddress);
+    assertThat(target.getPort()).isEqualTo(expectedPort);
   }
 
   @Test

@@ -9,6 +9,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.redisson.config.Config;
 import org.redisson.config.ConfigServerTargetsSince317;
 import org.redisson.connection.ServiceManager;
@@ -55,6 +57,17 @@ class ConfigServerTargetsTest {
   }
 
   @Test
+  void replicatedWithOneNodeKeepsItsPort() {
+    Config config = new Config();
+    config.useReplicatedServers().addNodeAddress("redis://node1:6380");
+
+    RedisServerTarget target = ConfigServerTargetsSince317.of(config);
+
+    assertThat(target.getAddress()).isEqualTo("node1");
+    assertThat(target.getPort()).isEqualTo(6380);
+  }
+
+  @Test
   void replicatedKeepsEveryConfiguredNode() {
     Config config = new Config();
     config
@@ -81,11 +94,31 @@ class ConfigServerTargetsTest {
   }
 
   @Test
-  void singleServerNeedsNoTargetOfItsOwn() {
+  void masterWithoutReplicasKeepsItsPort() {
     Config config = new Config();
-    config.useSingleServer().setAddress("redis://localhost:6379");
+    config.useMasterSlaveServers().setMasterAddress("redis://master:6379");
 
-    assertThat(ConfigServerTargetsSince317.of(config)).isNull();
+    RedisServerTarget target = ConfigServerTargetsSince317.of(config);
+
+    assertThat(target.getAddress()).isEqualTo("master");
+    assertThat(target.getPort()).isEqualTo(6379);
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "redis://localhost:6379, localhost, 6379",
+    "rediss://user:password@secure.example:6380/2?timeout=5s, secure.example, 6380",
+    "redis://[2001:db8::1]:6381, 2001:db8::1, 6381"
+  })
+  void singleServerUsesSanitizedConfiguredAddress(
+      String configuredAddress, String expectedAddress, int expectedPort) {
+    Config config = new Config();
+    config.useSingleServer().setAddress(configuredAddress);
+
+    RedisServerTarget target = ConfigServerTargetsSince317.of(config);
+
+    assertThat(target.getAddress()).isEqualTo(expectedAddress);
+    assertThat(target.getPort()).isEqualTo(expectedPort);
   }
 
   @Test
