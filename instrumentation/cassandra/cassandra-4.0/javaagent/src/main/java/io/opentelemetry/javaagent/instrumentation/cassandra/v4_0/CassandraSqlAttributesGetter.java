@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isSniEndPoint;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
+import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
@@ -84,7 +84,7 @@ final class CassandraSqlAttributesGetter
       return null;
     }
     EndPoint endPoint = coordinator.getEndPoint();
-    if (emitStableDatabaseSemconv() && isSniEndPoint(endPoint)) {
+    if (emitStableDatabaseSemconv() && !(endPoint instanceof DefaultEndPoint)) {
       return null;
     }
     SocketAddress address = endPoint.resolve();

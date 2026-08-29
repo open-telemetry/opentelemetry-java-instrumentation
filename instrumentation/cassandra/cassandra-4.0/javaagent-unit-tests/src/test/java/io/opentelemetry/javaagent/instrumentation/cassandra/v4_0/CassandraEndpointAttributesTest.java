@@ -50,7 +50,6 @@ class CassandraEndpointAttributesTest {
       InetSocketAddress.createUnresolved("127.0.0.1", 29042);
 
   @Mock private ExecutionInfo executionInfo;
-  @Mock private Metadata metadata;
   @Mock private Node coordinator;
   @Mock private EndPoint customEndPoint;
   @Mock private SniEndPoint sniEndPoint;
@@ -225,14 +224,24 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void unresolvedNetworkPeerIsOmittedUnderCustomEndPoint() {
+  void customEndPointIsNotResolvedForStableNetworkPeerFallback() throws UnknownHostException {
+    InetSocketAddress resolvedAddress = resolved(9042);
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
     when(coordinator.getEndPoint()).thenReturn(customEndPoint);
-    when(customEndPoint.resolve())
-        .thenReturn(InetSocketAddress.createUnresolved("node.example.com", 9042));
+    if (!emitStableDatabaseSemconv()) {
+      when(customEndPoint.resolve()).thenReturn(resolvedAddress);
+    }
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isNull();
+    InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(peer).isNull();
+      verify(customEndPoint, never()).resolve();
+    } else {
+      assertThat(peer).isEqualTo(resolvedAddress);
+      verify(customEndPoint).resolve();
+    }
   }
 
   @Test
@@ -269,6 +278,7 @@ class CassandraEndpointAttributesTest {
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
     assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    verify(executionInfo, never()).getCoordinator();
     verifyNoInteractions(coordinator);
   }
 
