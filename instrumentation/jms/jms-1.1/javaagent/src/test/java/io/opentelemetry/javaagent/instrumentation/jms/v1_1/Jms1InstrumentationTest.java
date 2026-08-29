@@ -222,7 +222,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
         (MessageConsumer)
             Proxy.newProxyInstance(
                 getClass().getClassLoader(),
-                new Class<?>[] {TopicSubscriber.class},
+                new Class<?>[] {TestTopicSubscriber.class},
                 (proxy, method, args) -> {
                   if (method.getName().equals("setMessageListener")) {
                     olderRegistrationEntered.countDown();
@@ -235,7 +235,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
         (MessageConsumer)
             Proxy.newProxyInstance(
                 getClass().getClassLoader(),
-                new Class<?>[] {TopicSubscriber.class},
+                new Class<?>[] {TestTopicSubscriber.class},
                 (proxy, method, args) -> {
                   if (method.getName().equals("setMessageListener")) {
                     ((MessageListener) args[0]).onMessage(message);
@@ -246,7 +246,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
         (Session)
             Proxy.newProxyInstance(
                 getClass().getClassLoader(),
-                new Class<?>[] {Session.class},
+                new Class<?>[] {TestSession.class},
                 (proxy, method, args) ->
                     args[1].equals("older-subscription") ? olderConsumer : newerConsumer);
     registrationSession.createDurableSubscriber(topic, "older-subscription");
@@ -265,7 +265,24 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
     }
     failedRegistration.get(10, SECONDS);
 
+    TextMessage messageAfterFailure = session.createTextMessage("another message");
+    messageAfterFailure.setJMSDestination(topic);
+    listener.onMessage(messageAfterFailure);
+
     testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, false),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName("newer-subscription"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -417,4 +434,10 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
   }
+
+  // these interfaces are package private so that the proxy classes above are defined in this
+  // package, instead of in com.sun.proxy, which the agent doesn't instrument
+  interface TestSession extends Session {}
+
+  interface TestTopicSubscriber extends TopicSubscriber {}
 }
