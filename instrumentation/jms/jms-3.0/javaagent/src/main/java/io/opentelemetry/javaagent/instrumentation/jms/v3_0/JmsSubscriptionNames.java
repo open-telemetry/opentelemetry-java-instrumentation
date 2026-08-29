@@ -35,6 +35,8 @@ public class JmsSubscriptionNames {
       VirtualField.find(MessageListener.class, String.class);
   private static final VirtualField<MessageListener, Object[]> LISTENER_REGISTRATION =
       VirtualField.find(MessageListener.class, Object[].class);
+  // an agent owned lock, so that the agent never blocks on a monitor that application code holds
+  private static final Object registrationLock = new Object();
 
   public static void set(MessageConsumer consumer, String subscriptionName) {
     CONSUMER_SUBSCRIPTION_NAME.set(consumer, subscriptionName);
@@ -46,7 +48,7 @@ public class JmsSubscriptionNames {
 
   public static Object beginListenerRegistration(
       MessageConsumer consumer, MessageListener messageListener) {
-    synchronized (messageListener) {
+    synchronized (registrationLock) {
       Object[] registration = {
         CONSUMER_SUBSCRIPTION_NAME.get(consumer),
         currentRegistration(LISTENER_REGISTRATION.get(messageListener)),
@@ -60,7 +62,7 @@ public class JmsSubscriptionNames {
   public static void endListenerRegistration(
       MessageListener messageListener, Object registrationToken, @Nullable Throwable throwable) {
     Object[] registration = (Object[]) registrationToken;
-    synchronized (messageListener) {
+    synchronized (registrationLock) {
       if (throwable == null) {
         registration[PREVIOUS_REGISTRATION] = null;
         return;
