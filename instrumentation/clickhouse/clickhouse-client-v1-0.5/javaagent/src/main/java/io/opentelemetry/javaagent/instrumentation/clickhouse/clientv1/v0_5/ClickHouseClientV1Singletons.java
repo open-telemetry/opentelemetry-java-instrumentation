@@ -22,10 +22,10 @@ public class ClickHouseClientV1Singletons {
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v1-0.5";
   private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
 
-  private static final VirtualField<ClickHouseNodes, String> NODES_ADDRESS_GROUP =
-      VirtualField.find(ClickHouseNodes.class, String.class);
-  private static final VirtualField<ClickHouseRequest<?>, String> REQUEST_ADDRESS_GROUP =
-      VirtualField.find(ClickHouseRequest.class, String.class);
+  private static final VirtualField<ClickHouseNodes, ServerTarget> NODES_SERVER_TARGET =
+      VirtualField.find(ClickHouseNodes.class, ServerTarget.class);
+  private static final VirtualField<ClickHouseRequest<?>, ServerTarget> REQUEST_SERVER_TARGET =
+      VirtualField.find(ClickHouseRequest.class, ServerTarget.class);
 
   static {
     instrumenter =
@@ -46,38 +46,81 @@ public class ClickHouseClientV1Singletons {
 
   @Nullable
   public static String serverAddressGroup(ClickHouseRequest<?> request) {
-    String addressGroup = REQUEST_ADDRESS_GROUP.get(request);
-    if (addressGroup != null) {
-      return addressGroup;
-    }
-    ClickHouseNodes nodes = ClickHouseRequestAccess.getNodes(request);
-    if (nodes == null) {
-      return null;
-    }
-    return NODES_ADDRESS_GROUP.get(nodes);
+    return serverTarget(request).addressGroup;
+  }
+
+  @Nullable
+  public static String serverAddress(ClickHouseRequest<?> request) {
+    return serverTarget(request).address;
+  }
+
+  @Nullable
+  public static Integer serverPort(ClickHouseRequest<?> request) {
+    return serverTarget(request).port;
   }
 
   public static void captureConfiguredNodes(
       ClickHouseNodes nodes, Collection<ClickHouseNode> configuredNodes) {
-    NODES_ADDRESS_GROUP.set(nodes, renderAddressGroup(configuredNodes));
+    NODES_SERVER_TARGET.set(nodes, ServerTarget.create(configuredNodes));
   }
 
   public static void captureSealedRequest(
       ClickHouseRequest<?> request, ClickHouseRequest<?> sealedRequest) {
-    REQUEST_ADDRESS_GROUP.set(sealedRequest, serverAddressGroup(request));
+    REQUEST_SERVER_TARGET.set(sealedRequest, serverTarget(request));
   }
 
-  @Nullable
-  private static String renderAddressGroup(Collection<ClickHouseNode> nodes) {
-    if (nodes.size() < 2) {
-      return null;
+  private static ServerTarget serverTarget(ClickHouseRequest<?> request) {
+    ServerTarget target = REQUEST_SERVER_TARGET.get(request);
+    if (target != null) {
+      return target;
+    }
+    ClickHouseNodes nodes = ClickHouseRequestAccess.getNodes(request);
+    if (nodes != null) {
+      target = NODES_SERVER_TARGET.get(nodes);
+      return target == null ? ServerTarget.UNCONFIGURED : target;
+    }
+    ClickHouseNode node = ClickHouseRequestAccess.getDirectNode(request);
+    return node == null ? ServerTarget.UNCONFIGURED : ServerTarget.create(node);
+  }
+
+  private static class ServerTarget {
+
+    private static final ServerTarget UNCONFIGURED = new ServerTarget(null, null, null);
+
+    @Nullable private final String address;
+    @Nullable private final Integer port;
+    @Nullable private final String addressGroup;
+
+    private ServerTarget(
+        @Nullable String address, @Nullable Integer port, @Nullable String addressGroup) {
+      this.address = address;
+      this.port = port;
+      this.addressGroup = addressGroup;
     }
 
-    StringBuilder addressGroup = new StringBuilder();
-    for (ClickHouseNode node : nodes) {
-      if (addressGroup.length() > 0) {
-        addressGroup.append(',');
+    private static ServerTarget create(Collection<ClickHouseNode> nodes) {
+      if (nodes.isEmpty()) {
+        return UNCONFIGURED;
       }
+      if (nodes.size() == 1) {
+        return create(nodes.iterator().next());
+      }
+
+      StringBuilder addressGroup = new StringBuilder();
+      for (ClickHouseNode node : nodes) {
+        if (addressGroup.length() > 0) {
+          addressGroup.append(',');
+        }
+        appendAddress(addressGroup, node);
+      }
+      return new ServerTarget(null, null, addressGroup.toString());
+    }
+
+    private static ServerTarget create(ClickHouseNode node) {
+      return new ServerTarget(node.getHost(), node.getPort(), null);
+    }
+
+    private static void appendAddress(StringBuilder addressGroup, ClickHouseNode node) {
       String host = node.getHost();
       if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
         addressGroup.append('[').append(host).append(']');
@@ -86,7 +129,6 @@ public class ClickHouseClientV1Singletons {
       }
       addressGroup.append(':').append(node.getPort());
     }
-    return addressGroup.toString();
   }
 
   private ClickHouseClientV1Singletons() {}

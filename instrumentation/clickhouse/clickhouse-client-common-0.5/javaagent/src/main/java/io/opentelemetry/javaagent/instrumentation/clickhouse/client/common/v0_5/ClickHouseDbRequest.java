@@ -14,10 +14,13 @@ public abstract class ClickHouseDbRequest {
   public static ClickHouseDbRequest create(
       @Nullable String host,
       @Nullable Integer port,
+      @Nullable String configuredHost,
+      @Nullable Integer configuredPort,
       @Nullable String serverAddressGroup,
       @Nullable String namespace,
       String sql) {
-    return new AutoValue_ClickHouseDbRequest(host, port, serverAddressGroup, namespace, sql);
+    return new AutoValue_ClickHouseDbRequest(
+        host, port, configuredHost, configuredPort, serverAddressGroup, namespace, sql);
   }
 
   @Nullable
@@ -25,6 +28,12 @@ public abstract class ClickHouseDbRequest {
 
   @Nullable
   public abstract Integer getPort();
+
+  @Nullable
+  public abstract String getConfiguredHost();
+
+  @Nullable
+  public abstract Integer getConfiguredPort();
 
   @Nullable
   public abstract String getServerAddressGroup();

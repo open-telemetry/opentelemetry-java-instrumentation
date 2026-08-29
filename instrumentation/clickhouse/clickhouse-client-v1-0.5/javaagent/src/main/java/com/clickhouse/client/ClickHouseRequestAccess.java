@@ -21,5 +21,12 @@ public class ClickHouseRequestAccess {
         : null;
   }
 
+  @Nullable
+  public static ClickHouseNode getDirectNode(ClickHouseRequest<?> clickHouseRequest) {
+    return clickHouseRequest.server instanceof ClickHouseNode
+        ? (ClickHouseNode) clickHouseRequest.server
+        : null;
+  }
+
   private ClickHouseRequestAccess() {}
 }

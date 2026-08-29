@@ -62,9 +62,12 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   @Nullable
   @Override
   public String getServerAddress(ClickHouseDbRequest request) {
-    String addressGroup = request.getServerAddressGroup();
-    if (emitStableDatabaseSemconv() && addressGroup != null) {
-      return addressGroup;
+    if (emitStableDatabaseSemconv()) {
+      String addressGroup = request.getServerAddressGroup();
+      if (addressGroup != null) {
+        return addressGroup;
+      }
+      return request.getConfiguredHost();
     }
     return request.getHost();
   }
@@ -72,8 +75,8 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   @Nullable
   @Override
   public Integer getServerPort(ClickHouseDbRequest request) {
-    if (emitStableDatabaseSemconv() && request.getServerAddressGroup() != null) {
-      return null;
+    if (emitStableDatabaseSemconv()) {
+      return request.getServerAddressGroup() == null ? request.getConfiguredPort() : null;
     }
     return request.getPort();
   }
