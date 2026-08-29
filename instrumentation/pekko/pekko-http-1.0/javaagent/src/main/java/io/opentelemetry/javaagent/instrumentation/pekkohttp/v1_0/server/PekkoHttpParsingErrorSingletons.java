@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.PekkoHttpUtil;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pekko.http.impl.engine.parsing.HttpMessageParser;
@@ -29,6 +30,8 @@ import org.apache.pekko.http.javadsl.model.HttpResponse;
 import org.apache.pekko.http.scaladsl.model.ErrorInfo;
 import org.apache.pekko.http.scaladsl.model.HttpMethod;
 import org.apache.pekko.http.scaladsl.model.Uri;
+import org.apache.pekko.stream.Attributes;
+import org.apache.pekko.stream.stage.GraphStageLogic;
 import org.apache.pekko.util.ByteString;
 
 /**
@@ -40,12 +43,14 @@ public class PekkoHttpParsingErrorSingletons {
 
   /** Holds what the parser read for the request it is currently working on. */
   @SuppressWarnings("rawtypes")
-  private static final VirtualField<HttpMessageParser, PekkoHttpParsingError> PARSER_REQUEST_LINE =
-      VirtualField.find(HttpMessageParser.class, PekkoHttpParsingError.class);
+  private static final VirtualField<HttpMessageParser, PekkoHttpRequestLine> PARSER_REQUEST_LINE =
+      VirtualField.find(HttpMessageParser.class, PekkoHttpRequestLine.class);
 
   /**
-   * The {@code ErrorInfo} is the one object that pekko-http carries unchanged from the parser to
-   * the parsing error handler, so it is what the recovered request line is bound to.
+   * The {@code ErrorInfo} is the one object that pekko-http carries unchanged from the rejection to
+   * the parsing error handler, so it is what the recovered request is bound to. Being bound at all
+   * is also what marks a rejection as one that happened before the request was delivered, see
+   * {@link #startSpan}.
    */
   private static final VirtualField<ErrorInfo, PekkoHttpParsingError> REQUEST_LINE =
       VirtualField.find(ErrorInfo.class, PekkoHttpParsingError.class);
@@ -54,8 +59,8 @@ public class PekkoHttpParsingErrorSingletons {
       JavaagentHttpServerInstrumenters.create(
           PekkoHttpUtil.instrumentationName(),
           new PekkoHttpParsingErrorAttributesGetter(),
-          NoopTextMapGetter.INSTANCE,
-          builder -> builder.addAttributesExtractor(UnknownMethodExtractor.INSTANCE));
+          new NoopTextMapGetter(),
+          builder -> builder.addAttributesExtractor(new UnknownMethodExtractor()));
 
   /** Discards what an earlier request on the same connection left behind. */
   public static void startRequest(HttpMessageParser<?> parser) {
@@ -66,20 +71,21 @@ public class PekkoHttpParsingErrorSingletons {
   public static void captureParsedRequestLine(
       HttpMessageParser<?> parser, @Nullable HttpMethod method, @Nullable Uri uri) {
     if (uri != null) {
-      PARSER_REQUEST_LINE.set(parser, PekkoHttpParsingError.parsed(method, uri));
+      PARSER_REQUEST_LINE.set(parser, PekkoHttpRequestLine.parsed(method, uri));
     }
   }
 
   /** Records a request line whose target is what failed to parse. */
   public static void captureUnparsedRequestLine(
       HttpMessageParser<?> parser, @Nullable HttpMethod method, @Nullable ByteString uriBytes) {
-    PARSER_REQUEST_LINE.set(parser, PekkoHttpParsingError.unparsed(method, uriBytes));
+    PARSER_REQUEST_LINE.set(parser, PekkoHttpRequestLine.unparsed(method, uriBytes));
   }
 
   /**
-   * Moves the request line onto the {@code ErrorInfo}, which is what reaches the parsing error
-   * handler. Nothing is recorded when the failure happened before the request line was read, in
-   * which case the span is emitted without a method or a target.
+   * Moves what the parser read onto the {@code ErrorInfo}, which is what reaches the parsing error
+   * handler. A failure that happened before the request line was read is bound as unknown, so that
+   * the binding marks every rejection the parser produced, whether or not there is anything to say
+   * about the request.
    *
    * <p>Called for every output of every message parser, the one that reads client responses
    * included, so it does as little as possible for the ones that are not a failure.
@@ -88,22 +94,61 @@ public class PekkoHttpParsingErrorSingletons {
     if (!(output instanceof MessageStartError)) {
       return;
     }
-    PekkoHttpParsingError request = PARSER_REQUEST_LINE.get(parser);
-    if (request != null) {
-      REQUEST_LINE.set(((MessageStartError) output).info(), request);
-    }
+    InetSocketAddress peerAddress = peerAddress(parser);
+    PekkoHttpRequestLine requestLine = PARSER_REQUEST_LINE.get(parser);
+    REQUEST_LINE.set(
+        ((MessageStartError) output).info(),
+        requestLine == null
+            ? PekkoHttpParsingError.unknown(peerAddress)
+            : requestLine.toParsingError(peerAddress));
   }
 
   /**
-   * Starts the span for a rejected request, returning {@code null} when the instrumentation is
-   * suppressed. The span is started before the handler runs so that it covers the work a custom
-   * handler does to build the response.
+   * Marks a rejection that reaches the parsing error handler without having passed through a
+   * parser. The stage that resolves a request to an absolute uri rejects a CONNECT request and an
+   * unusable {@code Host} header this way, and those never reached the user handler either, so they
+   * are traced with nothing known about them.
+   *
+   * <p>What the parser read overwrites this, because a {@code MessageStartError} is built before it
+   * is emitted.
+   */
+  public static void markParsingError(ErrorInfo info) {
+    REQUEST_LINE.set(info, PekkoHttpParsingError.unknown(null));
+  }
+
+  /**
+   * The peer address is not on the parser, it is on the stream attributes of the connection the
+   * parser was materialized for, which {@link HttpPrepareAttributesInstrumentation} put it on.
+   */
+  @Nullable
+  private static InetSocketAddress peerAddress(HttpMessageParser<?> parser) {
+    if (!(parser instanceof GraphStageLogic)) {
+      return null;
+    }
+    Attributes attributes = ((GraphStageLogic) parser).attributes();
+    if (attributes == null) {
+      return null;
+    }
+    return attributes
+        .getAttribute(PekkoHttpServerRemoteAddress.class)
+        .map(PekkoHttpServerRemoteAddress::getAddress)
+        .orElse(null);
+  }
+
+  /**
+   * Starts the span for a rejected request, returning {@code null} when there is no span to start.
+   * The span is started before the handler runs so that it covers the work a custom handler does to
+   * build the response.
+   *
+   * <p>An {@code ErrorInfo} that nothing was bound to is not a rejected request. The same handler
+   * answers a request entity stream that failed and a response stream that failed, and both of
+   * those happen after the request was delivered and already has a span of its own.
    */
   @Nullable
   public static Object[] startSpan(ErrorInfo info) {
     PekkoHttpParsingError request = REQUEST_LINE.get(info);
     if (request == null) {
-      request = PekkoHttpParsingError.UNKNOWN;
+      return null;
     }
 
     Context parentContext = Context.current();
@@ -148,9 +193,8 @@ public class PekkoHttpParsingErrorSingletons {
    * Reports an unparsed method as unknown. The common http extractor drops the attribute when the
    * getter returns null, and semconv requires it to be present.
    */
-  private enum UnknownMethodExtractor
+  private static class UnknownMethodExtractor
       implements AttributesExtractor<PekkoHttpParsingError, HttpResponse> {
-    INSTANCE;
 
     @Override
     public void onStart(
@@ -169,8 +213,7 @@ public class PekkoHttpParsingErrorSingletons {
         @Nullable Throwable error) {}
   }
 
-  private enum NoopTextMapGetter implements TextMapGetter<PekkoHttpParsingError> {
-    INSTANCE;
+  private static class NoopTextMapGetter implements TextMapGetter<PekkoHttpParsingError> {
 
     @Override
     public Iterable<String> keys(PekkoHttpParsingError carrier) {
