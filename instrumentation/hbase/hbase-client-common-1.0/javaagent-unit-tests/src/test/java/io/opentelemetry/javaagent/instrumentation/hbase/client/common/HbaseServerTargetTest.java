@@ -23,12 +23,27 @@ class HbaseServerTargetTest {
   }
 
   @Test
-  void fallsBackToHbaseConfigurationWhenZooCfgIsAbsent() {
+  void usesExternalZooCfgWhenEnabled() {
     Configuration configuration = new Configuration(false);
     configuration.setBoolean("hbase.config.read.zookeeper.config", true);
-    configuration.set("hbase.zookeeper.quorum", "active-zk");
+    configuration.set("test.zk.client.port", "3218");
+    configuration.set("hbase.zookeeper.quorum", "inactive-zk");
+    configuration.set("hbase.zookeeper.property.clientPort", "2182");
+    configuration.set("zookeeper.znode.parent", "/external");
 
-    assertThat(HbaseServerTarget.from(configuration)).isEqualTo("active-zk:2181:/hbase");
+    assertThat(HbaseServerTarget.from(configuration))
+        .isEqualTo("external-zk-a,external-zk-b:3218:/external");
+  }
+
+  @Test
+  void omitsTargetWhenExternalZooCfgClientPortIsUnavailable() {
+    Configuration configuration = new Configuration(false);
+    configuration.setBoolean("hbase.config.read.zookeeper.config", true);
+    configuration.set("test.zk.client.port", "");
+    configuration.set("hbase.zookeeper.quorum", "inactive-zk");
+    configuration.set("hbase.zookeeper.property.clientPort", "2182");
+
+    assertThat(HbaseServerTarget.from(configuration)).isNull();
   }
 
   @Test
