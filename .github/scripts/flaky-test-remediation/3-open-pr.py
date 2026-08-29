@@ -31,11 +31,38 @@ def pr_title_target(selected):
     return f"{class_name}.{method_name}"
 
 
+def failure_scans(selected):
+    recent_scans = selected.get("recent_flaky_scans", [])[:5]
+    sample_url = selected.get("sample_scan_url", "")
+
+    scans = []
+    seen_urls = set()
+    if sample_url:
+        sample_scan = next(
+            (scan for scan in recent_scans
+             if scan.get("scan_url") == sample_url),
+            {
+                "build_id": selected.get("sample_build_id", ""),
+                "scan_url": sample_url,
+                "outcome": "failed",
+                "work_unit": "",
+            },
+        )
+        scans.append(sample_scan)
+        seen_urls.add(sample_url)
+
+    for scan in recent_scans:
+        scan_url = scan.get("scan_url", "")
+        if scan_url and scan_url not in seen_urls:
+            scans.append(scan)
+            seen_urls.add(scan_url)
+    return scans
+
+
 def render(selected):
     fq = selected["fully_qualified"]
     source_file = selected["source_file"]
     window_days = selected["window_days"]
-    sample_url = selected["sample_scan_url"]
     sample_failure = selected["sample_failure"].rstrip()
 
     lines = [
@@ -45,18 +72,20 @@ def render(selected):
         f"- Exact test invocation: **{selected['flaky_count']}** "
         f"flaky executions in last {window_days}d",
     ]
-    if sample_url:
-        lines.append(f"- Primary failed scan: {sample_url}")
     lines.append("")
 
-    scans = selected["recent_flaky_scans"]
+    scans = failure_scans(selected)
     if scans:
-        lines += ["### Recent failed/flaky scans", ""]
-        for s in scans[:5]:
-            bullet = f"- [{s['build_id'][:13]}]({s['scan_url']}) ({s['outcome']}"
-            if s["work_unit"]:
-                bullet += f", `{s['work_unit']}`"
-            bullet += ")"
+        lines += ["### Gradle Build Scans for the flaky failures", ""]
+        for scan in scans:
+            label = scan.get("build_id", "")[:13] or "Build Scan"
+            bullet = f"- [{label}]({scan['scan_url']})"
+            details = [scan.get("outcome", "")]
+            if scan.get("work_unit"):
+                details.append(f"`{scan['work_unit']}`")
+            details = [detail for detail in details if detail]
+            if details:
+                bullet += f" ({', '.join(details)})"
             lines.append(bullet)
         lines.append("")
 

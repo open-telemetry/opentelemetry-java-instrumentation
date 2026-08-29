@@ -32,7 +32,7 @@ centralized in [`_paths.py`](_paths.py).
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `1-select-flaky-test.py` | Hits Develocity dashboard endpoints, picks one flaky test, writes `selected.json`.                                                                                                    |
 | `2-fix-flaky-test.py`    | Renders `prompt.txt` and invokes the Copilot CLI agent to fix the test (writes `copilot-output.jsonl`, `copilot-stderr.log`, and — if Copilot follows the protocol — `diagnosis.md`). |
-| `3-open-pr.py`           | Renders `pr-body.md` (incorporates `diagnosis.md` if Copilot wrote one) and opens the PR via `gh pr create`.                                                                          |
+| `3-open-pr.py`           | Renders `pr-body.md` with the failure's Gradle Build Scan links (and `diagnosis.md` if Copilot wrote one), then opens the PR via `gh pr create`.                                      |
 | `_paths.py`              | Single source of truth for every file under `build/flaky-test-remediation/`.                                                                                                          |
 | `_render.py`             | Tiny formatting helpers shared by the renderers.                                                                                                                                      |
 
