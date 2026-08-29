@@ -42,7 +42,7 @@ class MongoConfiguredTargetTest {
       new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
   @Test
-  void configuredSeedGroupIsNotReportedAsOneStableServer() {
+  void configuredSeedGroupIsReportedAsOneStableLogicalServer() {
     ClusterId clusterId = new ClusterId();
     MongoClusterTargets.register(
         clusterId,
@@ -50,7 +50,8 @@ class MongoConfiguredTargetTest {
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
     assertThat(getter.getServerAddress(event))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "db2.example");
+        .isEqualTo(
+            emitStableDatabaseSemconv() ? "db1.example:27017,db2.example:27018" : "db2.example");
     assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
   }
 
@@ -125,6 +126,33 @@ class MongoConfiguredTargetTest {
   }
 
   @Test
+  void explicitSeedListListenerRegistersTheStableTarget() {
+    ClusterId clusterId = new ClusterId();
+    CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
+    CommandListener listener =
+        MongoTelemetry.create(OpenTelemetry.noop())
+            .createCommandListener(
+                asList(
+                    new ServerAddress("configured1.example", 27017),
+                    new ServerAddress("configured2.example", 27018)));
+
+    listener.commandStarted(event);
+
+    Attributes attributes = extractAttributes(event);
+
+    assertThat(attributes.get(SERVER_ADDRESS))
+        .isEqualTo(
+            emitStableDatabaseSemconv()
+                ? "configured1.example:27017,configured2.example:27018"
+                : "db2.example");
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018L);
+    assertThat(attributes.get(NETWORK_PEER_ADDRESS))
+        .isEqualTo(emitStableDatabaseSemconv() ? "db2.example" : null);
+    assertThat(attributes.get(NETWORK_PEER_PORT))
+        .isEqualTo(emitStableDatabaseSemconv() ? 27018L : null);
+  }
+
+  @Test
   @SuppressWarnings("deprecation") // db.connection_string is part of the old semantic conventions
   void theOldConnectionStringKeepsDescribingTheServerThatAnswered() {
     ClusterId clusterId =
@@ -136,7 +164,7 @@ class MongoConfiguredTargetTest {
   }
 
   @Test
-  void commandWithNoDatabaseDoesNotUseSelectedServerAsStableTarget() {
+  void commandWithNoDatabaseUsesConfiguredSeedsInStableSpanName() {
     ClusterId clusterId = new ClusterId();
     MongoClusterTargets.register(
         clusterId,
@@ -145,7 +173,11 @@ class MongoConfiguredTargetTest {
 
     String spanName = new MongoSpanNameExtractor(getter).extract(event);
 
-    assertThat(spanName).isEqualTo("listDatabases");
+    assertThat(spanName)
+        .isEqualTo(
+            emitStableDatabaseSemconv()
+                ? "listDatabases db1.example:27017,db2.example:27018"
+                : "listDatabases");
   }
 
   private Attributes extractAttributes(CommandStartedEvent event) {

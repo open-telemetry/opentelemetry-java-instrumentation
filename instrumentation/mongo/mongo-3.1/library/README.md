@@ -29,21 +29,20 @@ implementation("io.opentelemetry.instrumentation:instrumentation:opentelemetry-m
 ## Usage
 
 The instrumentation is initialized by passing a command listener from
-`MongoTelemetry` to the `MongoClientSettings` builder. For a client configured
-with exactly one server, pass the same `ServerAddress` to
-`createCommandListener`. Stable telemetry then reports that configured server
-as its logical target.
+`MongoTelemetry` to the `MongoClientSettings` builder. Pass the configured seed
+list to `createCommandListener`. Stable telemetry then reports those seeds as
+the logical server target.
 
 ```java
 OpenTelemetry openTelemetry = ...;
 
 MongoTelemetry mongoTelemetry = MongoTelemetry.builder(openTelemetry).build();
 
-ServerAddress serverAddress = new ServerAddress("localhost", 27017);
+List<ServerAddress> seeds = Collections.singletonList(
+    new ServerAddress("localhost", 27017));
 MongoClientSettings settings = MongoClientSettings.builder()
-    .applyToClusterSettings(
-        cluster -> cluster.hosts(Collections.singletonList(serverAddress)))
-    .addCommandListener(mongoTelemetry.createCommandListener(serverAddress))
+    .applyToClusterSettings(cluster -> cluster.hosts(seeds))
+    .addCommandListener(mongoTelemetry.createCommandListener(seeds))
     .build();
 
 // With Reactive Streams

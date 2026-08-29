@@ -33,10 +33,34 @@ public final class MongoServerTarget {
 
   @Nullable
   public static MongoServerTarget seeds(@Nullable List<ServerAddress> seeds) {
-    if (seeds == null || seeds.size() != 1) {
+    if (seeds == null || seeds.isEmpty()) {
       return null;
     }
-    return single(seeds.get(0));
+    if (seeds.size() == 1) {
+      return single(seeds.get(0));
+    }
+
+    StringBuilder address = new StringBuilder();
+    for (ServerAddress seed : seeds) {
+      String host = host(seed);
+      if (host == null) {
+        return null;
+      }
+      if (address.length() > 0) {
+        address.append(',');
+      }
+      if (isUnixSocket(host)) {
+        address.append(host);
+      } else {
+        if (host.indexOf(':') >= 0) {
+          address.append('[').append(host).append(']');
+        } else {
+          address.append(host);
+        }
+        address.append(':').append(seed.getPort());
+      }
+    }
+    return new MongoServerTarget(address.toString(), null);
   }
 
   private MongoServerTarget(String address, @Nullable Integer port) {
@@ -46,14 +70,23 @@ public final class MongoServerTarget {
 
   @Nullable
   private static MongoServerTarget single(@Nullable ServerAddress seed) {
+    if (seed == null) {
+      return null;
+    }
+    String host = host(seed);
+    if (host == null) {
+      return null;
+    }
+    return new MongoServerTarget(host, isUnixSocket(host) ? null : seed.getPort());
+  }
+
+  @Nullable
+  private static String host(@Nullable ServerAddress seed) {
     if (seed == null || seed.getHost() == null || seed.getHost().isEmpty()) {
       return null;
     }
     String host = stripBrackets(seed.getHost());
-    if (host.isEmpty()) {
-      return null;
-    }
-    return new MongoServerTarget(host, isUnixSocket(host) ? null : seed.getPort());
+    return host.isEmpty() ? null : host;
   }
 
   // server.address uses the host without URI brackets around IPv6 literals

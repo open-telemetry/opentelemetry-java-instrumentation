@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static java.util.Arrays.asList;
 
 import com.mongodb.MongoClientSettings;
@@ -81,7 +82,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan(null, null);
+    assertFindSpan("db1.example:27017,db2.example:27018", null);
     assertDurationMetric(
         testing,
         "io.opentelemetry.mongo-4.0",
@@ -90,7 +91,8 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
         DB_OPERATION_NAME,
         DB_COLLECTION_NAME,
         NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT);
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS);
     if (emitStableDatabaseSemconv()) {
       testing.waitAndAssertMetrics(
           "io.opentelemetry.mongo-4.0",

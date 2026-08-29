@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoServerTarget;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
+import java.util.List;
 
 // TODO this class is used for all Mongo versions. Extract to mongo-common module
 /** Entrypoint to OpenTelemetry instrumentation of the MongoDB client. */
@@ -59,7 +60,17 @@ public final class MongoTelemetry {
    * for each command is reported separately as the network peer.
    */
   public CommandListener createCommandListener(ServerAddress configuredServerAddress) {
+    return createCommandListener(singletonList(configuredServerAddress));
+  }
+
+  /**
+   * Returns a new {@link CommandListener} for a client configured with the given seed list.
+   *
+   * <p>The configured seeds are reported as the stable logical server target. The server selected
+   * for each command is reported separately as the network peer.
+   */
+  public CommandListener createCommandListener(List<ServerAddress> configuredServerAddresses) {
     return new TracingCommandListener(
-        instrumenter, MongoServerTarget.seeds(singletonList(configuredServerAddress)));
+        instrumenter, MongoServerTarget.seeds(configuredServerAddresses));
   }
 }

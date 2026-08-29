@@ -65,7 +65,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void severalSeedsKeepReportingTheSelectedServer() {
+  void severalSeedsAreReportedAsOneStableLogicalServer() {
     try (ConfiguredClient client =
         createClient(
             asList(
@@ -74,7 +74,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan(null, null);
+    assertFindSpan("db1.example:27017,db2.example:27018", null);
   }
 
   @Test
@@ -88,7 +88,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void severalIpv6SeedsKeepReportingTheSelectedServer() {
+  void severalIpv6SeedsUseUnambiguousFormatting() {
     assumeTrue(supportsIpv6Seeds());
 
     try (ConfiguredClient client =
@@ -97,11 +97,11 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan(null, null);
+    assertFindSpan("[::1]:27017,[fe80::1]:27018", null);
   }
 
   @Test
-  void commandWithNoDatabaseIsNamedByTheSelectedServerForASeedGroup() {
+  void commandWithNoDatabaseUsesConfiguredSeedsInStableSpanName() {
     try (ConfiguredClient client =
         createClient(
             asList(
@@ -115,7 +115,12 @@ public abstract class AbstractMongoConfiguredTargetTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("listDatabases").hasKind(CLIENT)));
+                    span ->
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "listDatabases db1.example:27017,db2.example:27018"
+                                    : "listDatabases")
+                            .hasKind(CLIENT)));
   }
 
   protected static void runCommand(ConfiguredClient client) {

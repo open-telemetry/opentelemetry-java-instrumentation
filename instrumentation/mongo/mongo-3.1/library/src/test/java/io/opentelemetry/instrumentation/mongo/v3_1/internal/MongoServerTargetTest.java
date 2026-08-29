@@ -27,13 +27,14 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void severalSeedsAreNotOneServerTarget() {
-    assertThat(
-            MongoServerTarget.seeds(
-                asList(
-                    new ServerAddress("db1.example", 27017),
-                    new ServerAddress("db2.example", 27018))))
-        .isNull();
+  void severalSeedsAreReportedAsOneLogicalTarget() {
+    MongoServerTarget target =
+        MongoServerTarget.seeds(
+            asList(
+                new ServerAddress("db1.example", 27017), new ServerAddress("db2.example", 27018)));
+
+    assertThat(target.getAddress()).isEqualTo("db1.example:27017,db2.example:27018");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -51,6 +52,16 @@ class MongoServerTargetTest {
 
     assertThat(target.getAddress()).isEqualTo("::1");
     assertThat(target.getPort()).isEqualTo(27017);
+  }
+
+  @Test
+  void severalIpv6SeedsAreBracketed() {
+    MongoServerTarget target =
+        MongoServerTarget.seeds(
+            asList(bracketedSeed("::1", 27017), bracketedSeed("fe80::1", 27018)));
+
+    assertThat(target.getAddress()).isEqualTo("[::1]:27017,[fe80::1]:27018");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -79,7 +90,7 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void multiSeedConnectionStringIsNotOneServerTarget() {
+  void multiSeedConnectionStringKeepsItsConfiguredOrder() {
     ClusterSettings settings =
         ClusterSettings.builder()
             .applyConnectionString(
@@ -91,7 +102,8 @@ class MongoServerTargetTest {
     MongoServerTarget target = MongoServerTarget.seeds(settings.getHosts());
 
     assertThat(settings.getRequiredReplicaSetName()).isEqualTo("rs0");
-    assertThat(target).isNull();
+    assertThat(target.getAddress()).isEqualTo("db1.example:27017,db2.example:27018");
+    assertThat(target.getPort()).isNull();
   }
 
   // drivers 3.3 through 3.7 preserve IPv6 brackets; the compile-time driver strips them
