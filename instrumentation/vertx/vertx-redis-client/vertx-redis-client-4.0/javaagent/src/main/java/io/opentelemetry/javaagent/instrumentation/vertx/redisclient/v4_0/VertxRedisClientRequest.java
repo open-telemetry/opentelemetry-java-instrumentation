@@ -127,16 +127,16 @@ class VertxRedisClientRequest {
 
   @Nullable
   String getServerAddress() {
-    if (emitStableDatabaseSemconv() && serverTarget != null) {
-      return serverTarget.getAddress();
+    if (emitStableDatabaseSemconv()) {
+      return serverTarget != null ? serverTarget.getAddress() : null;
     }
     return redisUri == null ? null : redisUri.socketAddress().host();
   }
 
   @Nullable
   Integer getServerPort() {
-    if (emitStableDatabaseSemconv() && serverTarget != null) {
-      return serverTarget.getPort();
+    if (emitStableDatabaseSemconv()) {
+      return serverTarget != null ? serverTarget.getPort() : null;
     }
     if (redisUri == null) {
       return null;
