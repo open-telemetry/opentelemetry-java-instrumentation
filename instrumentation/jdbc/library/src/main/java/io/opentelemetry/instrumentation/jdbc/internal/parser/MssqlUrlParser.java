@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
+
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import java.util.Map;
 import java.util.Properties;
@@ -73,13 +75,18 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     setNamespace(ctx, instanceName);
 
     applyFailoverPartnerGroup(
-        ctx, urlParams, targetInstanceName, hasConfiguredPort(jdbcUrl, urlParams, ctx.props()));
+        ctx,
+        urlParams,
+        targetInstanceName,
+        hasConfiguredServer(jdbcUrl, urlParams, ctx.props()),
+        hasConfiguredPort(jdbcUrl, urlParams, ctx.props()));
   }
 
   private static void applyFailoverPartnerGroup(
       ParseContext ctx,
       Map<String, String> params,
       @Nullable String instanceName,
+      boolean serverConfigured,
       boolean portConfigured) {
     String failoverPartner = null;
     if (ctx.props() != null) {
@@ -88,15 +95,45 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     if (failoverPartner == null || failoverPartner.isEmpty()) {
       failoverPartner = params.get("failoverpartner");
     }
+    if (failoverPartner == null || failoverPartner.isEmpty()) {
+      return;
+    }
+    ctx.multiTarget();
     String host = ctx.host();
-    if (failoverPartner == null || failoverPartner.isEmpty() || host == null) {
+    if (!serverConfigured || host == null) {
       return;
     }
     StringBuilder group = new StringBuilder();
     appendPrimary(group, ctx, host, instanceName, portConfigured);
     group.append(',');
     appendServerAddress(group, failoverPartner);
-    ctx.serverAddressGroup(group.toString());
+    String serverAddressGroup = sanitizeHostList(group.toString());
+    if (serverAddressGroup != null) {
+      ctx.serverAddressGroup(serverAddressGroup);
+    }
+  }
+
+  private static boolean hasConfiguredServer(
+      String jdbcUrl, Map<String, String> params, @Nullable Properties properties) {
+    if (properties != null) {
+      String serverName = properties.getProperty("serverName");
+      if (serverName != null && !serverName.isEmpty()) {
+        return true;
+      }
+    }
+    String serverName = params.get("servername");
+    if (serverName != null && !serverName.isEmpty()) {
+      return true;
+    }
+
+    String urlPart = jdbcUrl.split(";", 2)[0];
+    int hostIndex = urlPart.indexOf("://");
+    if (hostIndex <= 0) {
+      return false;
+    }
+    String urlServerName = urlPart.substring(hostIndex + 3);
+    int pathLoc = urlServerName.indexOf('/');
+    return pathLoc < 0 ? !urlServerName.isEmpty() : pathLoc > 0;
   }
 
   private static void appendPrimary(

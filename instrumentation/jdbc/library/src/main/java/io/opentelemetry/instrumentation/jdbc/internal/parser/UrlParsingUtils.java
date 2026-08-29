@@ -350,6 +350,29 @@ public final class UrlParsingUtils {
     return authority.indexOf('(') < 0;
   }
 
+  public static boolean hasMultipleTargets(String jdbcUrl) {
+    int protocol = jdbcUrl.indexOf("://");
+    if (protocol < 0) {
+      return false;
+    }
+
+    int authorityStart = protocol + 3;
+    int authorityEnd = indexOfAny(jdbcUrl, authorityStart, '/', '?', '#', ';');
+    authorityEnd = authorityEnd < 0 ? jdbcUrl.length() : authorityEnd;
+    String authority = jdbcUrl.substring(authorityStart, authorityEnd);
+    if (splitHostList(stripUserInfo(authority)).size() > 1) {
+      return true;
+    }
+
+    int lastAt = jdbcUrl.lastIndexOf('@');
+    if (lastAt < authorityStart || lastAt < authorityEnd) {
+      return false;
+    }
+    int targetEnd = indexOfAny(jdbcUrl, lastAt + 1, '/', '?', '#', '&', ';');
+    targetEnd = targetEnd < 0 ? jdbcUrl.length() : targetEnd;
+    return splitHostList(jdbcUrl.substring(lastAt + 1, targetEnd)).size() > 1;
+  }
+
   // IPv6 brackets and address=(...) blocks may contain commas.
   private static List<String> splitHostList(String hostList) {
     List<String> entries = new ArrayList<>();
