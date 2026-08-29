@@ -98,6 +98,8 @@ class RenderTest(unittest.TestCase):
             [scan["build_id"] for scan in scans],
             ["build-6", "build-1", "build-2", "build-3", "build-4"],
         )
+        self.assertEqual(scans[0]["outcome"], "flaky")
+        self.assertEqual(scans[0]["work_unit"], "test")
 
 
 if __name__ == "__main__":

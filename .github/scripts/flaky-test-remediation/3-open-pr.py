@@ -32,7 +32,7 @@ def pr_title_target(selected):
 
 
 def failure_scans(selected):
-    recent_scans = selected.get("recent_flaky_scans", [])[:5]
+    recent_scans = selected.get("recent_flaky_scans", [])
     sample_url = selected.get("sample_scan_url", "")
 
     scans = []
