@@ -58,7 +58,7 @@ def failure_scans(selected):
         if scan_url and scan_url not in seen_urls:
             scans.append(scan)
             seen_urls.add(scan_url)
-    return scans
+    return scans[:5]
 
 
 def render(selected):

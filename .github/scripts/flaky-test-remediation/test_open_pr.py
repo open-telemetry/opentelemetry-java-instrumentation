@@ -78,6 +78,27 @@ class RenderTest(unittest.TestCase):
             body,
         )
 
+    def test_limits_scans_when_primary_scan_is_not_recent(self):
+        selected = selected_test()
+        selected["recent_flaky_scans"] = [
+            {
+                "build_id": f"build-{index}",
+                "scan_url": f"https://develocity.example/s/build-{index}",
+                "outcome": "flaky",
+                "work_unit": "test",
+            }
+            for index in range(1, 7)
+        ]
+        selected["sample_build_id"] = "build-6"
+        selected["sample_scan_url"] = "https://develocity.example/s/build-6"
+
+        scans = open_pr.failure_scans(selected)
+
+        self.assertEqual(
+            [scan["build_id"] for scan in scans],
+            ["build-6", "build-1", "build-2", "build-3", "build-4"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
