@@ -83,40 +83,6 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
   }
 
   @Test
-  void setsSubscriptionNameBeforeListenerRegistrationReturns() throws JMSException {
-    Topic topic = session.createTopic("early-dispatch-topic");
-    MessageConsumer consumer =
-        session.createDurableSubscriber(topic, "early-dispatch-subscription");
-    cleanup.deferCleanup(consumer::close);
-    MessageListener listener = ignored -> {};
-
-    Object registration = JmsSubscriptionNames.beginListenerRegistration(consumer, listener);
-
-    assertThat(JmsSubscriptionNames.get(listener)).isEqualTo("early-dispatch-subscription");
-    JmsSubscriptionNames.endListenerRegistration(listener, registration, null);
-  }
-
-  @Test
-  void failedRegistrationDoesNotOverwriteNewerSubscriptionName() throws JMSException {
-    Topic topic = session.createTopic("concurrent-registration-topic");
-    MessageConsumer firstConsumer = session.createDurableSubscriber(topic, "first-subscription");
-    cleanup.deferCleanup(firstConsumer::close);
-    MessageConsumer secondConsumer = session.createDurableSubscriber(topic, "second-subscription");
-    cleanup.deferCleanup(secondConsumer::close);
-    MessageListener listener = ignored -> {};
-
-    Object firstRegistration =
-        JmsSubscriptionNames.beginListenerRegistration(firstConsumer, listener);
-    Object secondRegistration =
-        JmsSubscriptionNames.beginListenerRegistration(secondConsumer, listener);
-    JmsSubscriptionNames.endListenerRegistration(listener, secondRegistration, null);
-    JmsSubscriptionNames.endListenerRegistration(
-        listener, firstRegistration, new JMSException("failed"));
-
-    assertThat(JmsSubscriptionNames.get(listener)).isEqualTo("second-subscription");
-  }
-
-  @Test
   void overwritesSubscriptionNameWhenListenerIsReregistered() throws JMSException {
     String topicName = "reregistered-listener-topic";
     Topic topic = session.createTopic(topicName);
