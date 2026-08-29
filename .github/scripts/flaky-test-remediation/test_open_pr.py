@@ -74,7 +74,7 @@ class RenderTest(unittest.TestCase):
         body = render_without_diagnosis(selected)
 
         self.assertIn(
-            "- [primary-build](https://develocity.example/s/primary-build-id) (failed)",
+            "- [primary-build](https://develocity.example/s/primary-build-id)\n",
             body,
         )
 

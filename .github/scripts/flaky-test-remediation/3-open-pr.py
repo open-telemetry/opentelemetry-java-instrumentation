@@ -41,10 +41,12 @@ def failure_scans(selected):
         sample_scan = next(
             (scan for scan in recent_scans
              if scan.get("scan_url") == sample_url),
+            # selected.json records no outcome or work unit for the sample
+            # scan, so leave both blank instead of guessing.
             {
                 "build_id": selected.get("sample_build_id", ""),
                 "scan_url": sample_url,
-                "outcome": "failed",
+                "outcome": "",
                 "work_unit": "",
             },
         )
