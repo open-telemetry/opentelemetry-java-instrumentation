@@ -13,6 +13,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.api.core.session.Session;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
@@ -25,8 +26,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -39,22 +38,31 @@ class CassandraEndpointAttributesTest {
   private static final InetSocketAddress PROXY_ADDRESS =
       InetSocketAddress.createUnresolved("proxy.example.com", 29042);
 
+  @Mock private ExecutionInfo executionInfo;
   @Mock private Node coordinator;
   @Mock private Session session;
 
   @Test
-  void unconfiguredSessionUsesTheCoordinatorAddress() throws UnknownHostException {
-    when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+  void unconfiguredSessionUsesTheCoordinatorOnlyForLegacySemconv() throws UnknownHostException {
+    if (!emitStableDatabaseSemconv()) {
+      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+    }
 
     Attributes attributes = serverAttributes(null);
 
-    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("127.0.0.1");
-    assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.get(SERVER_ADDRESS)).isNull();
+      assertThat(attributes.get(SERVER_PORT)).isNull();
+    } else {
+      assertCoordinatorIsServer(attributes);
+    }
   }
 
   @Test
   void singleContactPointCarriesItsPort() throws UnknownHostException {
-    when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+    if (!emitStableDatabaseSemconv()) {
+      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+    }
 
     Attributes attributes = serverAttributes(target(singletonList("cassandra.example.com:9042")));
 
@@ -68,7 +76,9 @@ class CassandraEndpointAttributesTest {
 
   @Test
   void severalContactPointsAreOneTargetWithoutAPort() throws UnknownHostException {
-    when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+    if (!emitStableDatabaseSemconv()) {
+      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+    }
 
     Attributes attributes =
         serverAttributes(target(asList("node1.example.com:9042", "node2.example.com:9042")));
@@ -99,30 +109,9 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void sniEndPointIgnoresTheConfiguredTargetAndUsesBroadcastRpcAddress() {
-    when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "host-id"));
-    if (emitStableDatabaseSemconv()) {
-      when(coordinator.getBroadcastRpcAddress())
-          .thenReturn(Optional.of(InetSocketAddress.createUnresolved("10.0.0.5", 9042)));
-    }
-
-    Attributes attributes = serverAttributes(null);
-
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("10.0.0.5");
-      assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
-    } else {
-      assertProxyIsServer(attributes);
-    }
-  }
-
-  @Test
-  void sniEndPointOmitsServerAddressWhenServerNameIsHostId() {
-    UUID hostId = UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31");
-    when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, hostId.toString()));
-    if (emitStableDatabaseSemconv()) {
-      when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
-      when(coordinator.getHostId()).thenReturn(hostId);
+  void sniEndPointIsNotUsedAsAStableServerTarget() {
+    if (!emitStableDatabaseSemconv()) {
+      when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "host-id"));
     }
 
     Attributes attributes = serverAttributes(null);
@@ -136,22 +125,25 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void sniEndPointFallsBackToServerNameWhenItIsNotHostId() {
-    when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "node1.example.com"));
-    if (emitStableDatabaseSemconv()) {
-      when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
-      when(coordinator.getHostId())
-          .thenReturn(UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31"));
-    }
+  void configuredTargetAndCoordinatorAreKeptSeparate() throws UnknownHostException {
+    when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
 
-    Attributes attributes = serverAttributes(null);
+    Attributes attributes = serverAttributes(target(singletonList("configured.example.com:9142")));
+    InetSocketAddress peer =
+        new CassandraSqlAttributesGetter()
+            .getNetworkPeerInetSocketAddress(
+                CassandraRequest.create(session, null, "SELECT 1"), executionInfo);
 
     if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com");
-      assertThat(attributes.get(SERVER_PORT)).isNull();
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("configured.example.com");
+      assertThat(attributes.get(SERVER_PORT)).isEqualTo(9142L);
     } else {
-      assertProxyIsServer(attributes);
+      assertCoordinatorIsServer(attributes);
     }
+    assertThat(peer).isNotNull();
+    assertThat(peer.getHostString()).isEqualTo("127.0.0.1");
+    assertThat(peer.getPort()).isEqualTo(9042);
   }
 
   private Attributes serverAttributes(CassandraServerTarget serverTarget) {
@@ -160,7 +152,7 @@ class CassandraEndpointAttributesTest {
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
         .onStart(startAttributes, Context.root(), request);
     AttributesBuilder endAttributes = Attributes.builder();
-    CassandraAttributesExtractor.updateServerAddressAndPort(endAttributes, request, coordinator);
+    CassandraAttributesExtractor.updateServerAddressAndPort(endAttributes, coordinator);
     return Attributes.builder()
         .putAll(startAttributes.build())
         .putAll(endAttributes.build())
