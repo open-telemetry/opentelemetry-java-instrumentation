@@ -20,6 +20,9 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.util.stream.Stream;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
@@ -115,26 +118,56 @@ class MongoDbAttributesGetterTest {
   }
 
   @Test
-  void networkPeerRequiresAnAgentResolver() {
-    ConnectionDescription connectionDescription =
-        new ConnectionDescription(
-            new ServerId(new ClusterId(), new ServerAddress("configured.example", 27017)));
-    CommandStartedEvent event =
-        new CommandStartedEvent(
-            1,
-            connectionDescription,
-            "test",
-            "find",
-            new BsonDocument("find", new BsonString("collection")));
-    InetSocketAddress peer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 27018);
+  void networkPeerComesOnlyFromTheAgentResolver() {
+    CommandStartedEvent event = commandStartedEvent();
+    InetSocketAddress socketAddress =
+        new InetSocketAddress(InetAddress.getLoopbackAddress(), 27018);
+    MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(socketAddress);
 
     MongoDbAttributesGetter libraryGetter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
     MongoDbAttributesGetter agentGetter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
+    assertThat(libraryGetter.getNetworkPeerAddress(event, null)).isNull();
+    assertThat(libraryGetter.getNetworkPeerPort(event, null)).isNull();
     assertThat(libraryGetter.getNetworkPeerInetSocketAddress(event, null)).isNull();
-    assertThat(agentGetter.getNetworkPeerInetSocketAddress(event, null)).isSameAs(peer);
+    assertThat(agentGetter.getNetworkPeerAddress(event, null))
+        .isEqualTo(InetAddress.getLoopbackAddress().getHostAddress());
+    assertThat(agentGetter.getNetworkPeerPort(event, null)).isEqualTo(27018);
+    assertThat(agentGetter.getNetworkPeerInetSocketAddress(event, null)).isSameAs(socketAddress);
+  }
+
+  @Test
+  void networkPeerNormalizesAnIpv6AddressWithABracketedHostLabel() throws UnknownHostException {
+    byte[] address = new byte[16];
+    address[15] = 1;
+    InetAddress ipv6Address = InetAddress.getByAddress("[::1]", address);
+    MongoNetworkPeer peer =
+        MongoNetworkPeer.fromSocketAddress(new InetSocketAddress(ipv6Address, 27018));
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+
+    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
+        .isEqualTo(ipv6Address.getHostAddress())
+        .doesNotContain("[", "]");
+    assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isEqualTo(27018);
+  }
+
+  @Test
+  void unixNetworkPeerHasNoPort() throws ReflectiveOperationException {
+    String socketPath = Paths.get("/tmp/mongodb-27017.sock").toString();
+    Class<?> unixDomainSocketAddress = Class.forName("java.net.UnixDomainSocketAddress");
+    SocketAddress socketAddress =
+        (SocketAddress)
+            unixDomainSocketAddress.getMethod("of", String.class).invoke(null, socketPath);
+    MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(socketAddress);
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+
+    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null)).isEqualTo(socketPath);
+    assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
+    assertThat(getter.getNetworkPeerInetSocketAddress(commandStartedEvent(), null)).isNull();
   }
 
   private static Stream<Arguments> errorTypes() {
@@ -152,6 +185,18 @@ class MongoDbAttributesGetterTest {
             null),
         argumentSet("non-mongo exception", new IllegalStateException("boom"), null),
         argumentSet("no error", null, null));
+  }
+
+  private static CommandStartedEvent commandStartedEvent() {
+    ConnectionDescription connectionDescription =
+        new ConnectionDescription(
+            new ServerId(new ClusterId(), new ServerAddress("configured.example", 27017)));
+    return new CommandStartedEvent(
+        1,
+        connectionDescription,
+        "test",
+        "find",
+        new BsonDocument("find", new BsonString("collection")));
   }
 
   private static String sanitizeQueryAcrossVersions(

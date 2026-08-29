@@ -284,15 +284,29 @@ public abstract class AbstractMongoClientTest<T> {
                                   + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"));
                     }));
 
-    assertDurationMetric(
-        testing(),
-        scopeName.get(),
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        DB_NAMESPACE,
-        DB_COLLECTION_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+    if (supportsNetworkPeer()) {
+      assertDurationMetric(
+          testing(),
+          scopeName.get(),
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          DB_COLLECTION_NAME,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT,
+          SERVER_ADDRESS,
+          SERVER_PORT);
+    } else {
+      assertDurationMetric(
+          testing(),
+          scopeName.get(),
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          DB_COLLECTION_NAME,
+          SERVER_ADDRESS,
+          SERVER_PORT);
+    }
   }
 
   @Test
@@ -575,16 +589,8 @@ public abstract class AbstractMongoClientTest<T> {
     span.hasAttributesSatisfyingExactly(
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
-        equalTo(
-            NETWORK_PEER_ADDRESS,
-            supportsNetworkPeer()
-                ? networkPeerAddress
-                : (emitStableDatabaseSemconv() ? host : null)),
-        equalTo(
-            NETWORK_PEER_PORT,
-            supportsNetworkPeer()
-                ? Long.valueOf(port)
-                : (emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
+        equalTo(NETWORK_PEER_ADDRESS, supportsNetworkPeer() ? networkPeerAddress : null),
+        equalTo(NETWORK_PEER_PORT, supportsNetworkPeer() ? Long.valueOf(port) : null),
         equalTo(
             NETWORK_TYPE,
             supportsNetworkPeer() && !emitStableDatabaseSemconv()

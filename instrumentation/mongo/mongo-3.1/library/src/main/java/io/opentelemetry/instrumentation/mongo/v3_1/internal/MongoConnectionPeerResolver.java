@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import com.mongodb.connection.ConnectionDescription;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 /**
@@ -17,5 +16,5 @@ import javax.annotation.Nullable;
 public interface MongoConnectionPeerResolver {
 
   @Nullable
-  InetSocketAddress resolve(ConnectionDescription connectionDescription);
+  MongoNetworkPeer resolve(ConnectionDescription connectionDescription);
 }

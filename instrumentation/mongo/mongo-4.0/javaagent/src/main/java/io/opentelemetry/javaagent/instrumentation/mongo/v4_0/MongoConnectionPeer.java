@@ -7,15 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import com.mongodb.connection.ConnectionDescription;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.net.InetSocketAddress;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoNetworkPeer;
 import java.net.Socket;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 public final class MongoConnectionPeer {
 
-  private static final VirtualField<ConnectionDescription, InetSocketAddress> CONNECTION_PEER =
-      VirtualField.find(ConnectionDescription.class, InetSocketAddress.class);
+  private static final VirtualField<ConnectionDescription, MongoNetworkPeer> CONNECTION_PEER =
+      VirtualField.find(ConnectionDescription.class, MongoNetworkPeer.class);
 
   private static final ThreadLocal<OpenState> currentOpen = new ThreadLocal<>();
 
@@ -32,12 +32,8 @@ public final class MongoConnectionPeer {
     }
 
     SocketAddress remoteAddress = socket.getRemoteSocketAddress();
-    if (!(remoteAddress instanceof InetSocketAddress)) {
-      return;
-    }
-
-    InetSocketAddress peer = (InetSocketAddress) remoteAddress;
-    if (!peer.isUnresolved() && peer.getAddress() != null) {
+    MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(remoteAddress);
+    if (peer != null) {
       state.peer = peer;
     }
   }
@@ -60,13 +56,13 @@ public final class MongoConnectionPeer {
   }
 
   @Nullable
-  public static InetSocketAddress resolve(ConnectionDescription connectionDescription) {
+  public static MongoNetworkPeer resolve(ConnectionDescription connectionDescription) {
     return CONNECTION_PEER.get(connectionDescription);
   }
 
   public static final class OpenState {
     @Nullable private final OpenState previous;
-    @Nullable private InetSocketAddress peer;
+    @Nullable private MongoNetworkPeer peer;
 
     private OpenState(@Nullable OpenState previous) {
       this.previous = previous;

@@ -169,29 +169,15 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public String getNetworkPeerAddress(CommandStartedEvent event, @Nullable Void response) {
-    InetSocketAddress peer = getNetworkPeerInetSocketAddress(event, null);
-    if (peer != null && peer.getAddress() != null) {
-      return peer.getAddress().getHostAddress();
-    }
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
-    ServerAddress serverAddress = selectedServerAddress(event);
-    return serverAddress == null ? null : serverAddress.getHost();
+    MongoNetworkPeer peer = getNetworkPeer(event);
+    return peer == null ? null : peer.getAddress();
   }
 
   @Nullable
   @Override
   public Integer getNetworkPeerPort(CommandStartedEvent event, @Nullable Void response) {
-    InetSocketAddress peer = getNetworkPeerInetSocketAddress(event, null);
-    if (peer != null) {
-      return peer.getPort();
-    }
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
-    ServerAddress serverAddress = selectedServerAddress(event);
-    return serverAddress == null ? null : serverAddress.getPort();
+    MongoNetworkPeer peer = getNetworkPeer(event);
+    return peer == null ? null : peer.getPort();
   }
 
   @Nullable
@@ -204,6 +190,12 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       CommandStartedEvent event, @Nullable Void unused) {
+    MongoNetworkPeer peer = getNetworkPeer(event);
+    return peer == null ? null : peer.getInetSocketAddress();
+  }
+
+  @Nullable
+  private MongoNetworkPeer getNetworkPeer(CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription == null || connectionPeerResolver == null) {
       return null;

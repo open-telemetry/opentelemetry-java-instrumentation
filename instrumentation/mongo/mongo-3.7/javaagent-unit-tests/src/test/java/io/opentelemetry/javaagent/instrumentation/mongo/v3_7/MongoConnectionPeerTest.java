@@ -11,11 +11,14 @@ import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoNetworkPeer;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.nio.file.Paths;
 import org.junit.jupiter.api.Test;
 
 class MongoConnectionPeerTest {
@@ -28,8 +31,10 @@ class MongoConnectionPeerTest {
     InetSocketAddress firstPeer = captureConnectedPeer(firstDescription);
     InetSocketAddress secondPeer = captureConnectedPeer(secondDescription);
 
-    assertThat(MongoConnectionPeer.resolve(firstDescription)).isEqualTo(firstPeer);
-    assertThat(MongoConnectionPeer.resolve(secondDescription)).isEqualTo(secondPeer);
+    assertThat(MongoConnectionPeer.resolve(firstDescription).getInetSocketAddress())
+        .isEqualTo(firstPeer);
+    assertThat(MongoConnectionPeer.resolve(secondDescription).getInetSocketAddress())
+        .isEqualTo(secondPeer);
     assertThat(firstPeer).isNotEqualTo(secondPeer);
   }
 
@@ -51,6 +56,26 @@ class MongoConnectionPeerTest {
     assertThat(MongoConnectionPeer.resolve(nextDescription)).isNull();
   }
 
+  @Test
+  void capturesUnixSocketWithoutAPort() throws ReflectiveOperationException {
+    String socketPath = Paths.get("/tmp/mongodb-27017.sock").toString();
+    SocketAddress unixSocketAddress =
+        (SocketAddress)
+            Class.forName("java.net.UnixDomainSocketAddress")
+                .getMethod("of", String.class)
+                .invoke(null, socketPath);
+    Socket socket = socketConnectedTo(unixSocketAddress);
+    ConnectionDescription connectionDescription = connectionDescription(1);
+    MongoConnectionPeer.OpenState state = MongoConnectionPeer.startOpen();
+
+    MongoConnectionPeer.capture(socket);
+    MongoConnectionPeer.endOpen(state, connectionDescription, null);
+
+    MongoNetworkPeer peer = MongoConnectionPeer.resolve(connectionDescription);
+    assertThat(peer.getAddress()).isEqualTo(socketPath);
+    assertThat(peer.getPort()).isNull();
+  }
+
   private static InetSocketAddress captureConnectedPeer(ConnectionDescription connectionDescription)
       throws IOException {
     MongoConnectionPeer.OpenState state = MongoConnectionPeer.startOpen();
@@ -65,6 +90,20 @@ class MongoConnectionPeerTest {
   private static ConnectionDescription connectionDescription(int port) {
     return new ConnectionDescription(
         new ServerId(new ClusterId(), new ServerAddress("configured.example", port)));
+  }
+
+  private static Socket socketConnectedTo(SocketAddress remoteAddress) {
+    return new Socket() {
+      @Override
+      public boolean isConnected() {
+        return true;
+      }
+
+      @Override
+      public SocketAddress getRemoteSocketAddress() {
+        return remoteAddress;
+      }
+    };
   }
 
   private static final class ConnectedSocket implements AutoCloseable {
