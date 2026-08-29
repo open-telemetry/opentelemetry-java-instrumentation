@@ -279,6 +279,7 @@ include(":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded
 include(":instrumentation:couchbase:couchbase-3.2:javaagent")
 include(":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-3.4:javaagent")
+include(":instrumentation:couchbase:couchbase-3.4:javaagent-unit-tests")
 include(":instrumentation:couchbase:couchbase-3.4:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-common-3.1:javaagent")
 include(":instrumentation:couchbase:couchbase-common-3.1:javaagent-unit-tests")
