@@ -13,6 +13,8 @@ import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraTelemetryUtil;
+import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.Set;
 
 /** Entrypoint for instrumenting cassandra sessions. */
@@ -49,6 +51,23 @@ public final class CassandraTelemetry {
    */
   public CqlSession wrap(CqlSession session) {
     return tracingCqlSession.wrapSession(requireNonNull(session, "session"));
+  }
+
+  /**
+   * Constructs a tracing-enabled {@link CqlSession} using the complete collection of contact points
+   * configured for the provided session.
+   *
+   * <p>Use this overload when the session does not expose its original configuration. The contact
+   * points must come from that configuration, not from the session's current topology or selected
+   * coordinator.
+   *
+   * @param session an instance of CqlSession configured as desired
+   * @param contactPoints the complete collection of contact points configured for the session
+   * @return a {@link TracingCqlSession}
+   */
+  public CqlSession wrap(CqlSession session, Collection<InetSocketAddress> contactPoints) {
+    return tracingCqlSession.wrapSession(
+        requireNonNull(session, "session"), requireNonNull(contactPoints, "contactPoints"));
   }
 
   CqlSession wrap(CqlSession session, Set<EndPoint> programmaticContactPoints) {

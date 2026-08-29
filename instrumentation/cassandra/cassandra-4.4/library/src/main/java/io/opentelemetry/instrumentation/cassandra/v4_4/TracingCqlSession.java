@@ -21,7 +21,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -51,6 +53,12 @@ final class TracingCqlSession {
         emitStableDatabaseSemconv()
             ? CassandraServerTarget.of(session, programmaticContactPoints)
             : null;
+    return wrapSession(session, serverTarget);
+  }
+
+  CqlSession wrapSession(CqlSession session, Collection<InetSocketAddress> contactPoints) {
+    CassandraServerTarget serverTarget =
+        emitStableDatabaseSemconv() ? CassandraServerTarget.ofAddresses(contactPoints) : null;
     return wrapSession(session, serverTarget);
   }
 

@@ -21,6 +21,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -110,6 +111,15 @@ final class CassandraServerTarget {
       return null;
     }
     return combine(valid(contactPoints));
+  }
+
+  @Nullable
+  static CassandraServerTarget ofAddresses(Collection<InetSocketAddress> contactPoints) {
+    List<CassandraServerTarget> targets = new ArrayList<>();
+    for (InetSocketAddress contactPoint : contactPoints) {
+      targets.add(new CassandraServerTarget(contactPoint.getHostString(), contactPoint.getPort()));
+    }
+    return combine(targets);
   }
 
   private CassandraServerTarget(String address, @Nullable Integer port) {

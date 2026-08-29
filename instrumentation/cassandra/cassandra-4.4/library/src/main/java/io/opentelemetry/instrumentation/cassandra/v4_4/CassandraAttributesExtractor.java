@@ -25,7 +25,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
-import java.util.UUID;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -82,7 +81,7 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      updateServerAddressAndPort(attributes, request, coordinator);
+      updateServerAddressAndPort(attributes, coordinator);
 
       String datacenter = coordinator.getDatacenter();
       if (emitStableDatabaseSemconv()) {
@@ -156,45 +155,22 @@ final class CassandraAttributesExtractor
     }
   }
 
-  static void updateServerAddressAndPort(
-      AttributesBuilder attributes, CassandraRequest request, Node coordinator) {
-    EndPoint endPoint = coordinator.getEndPoint();
-    if (endPoint instanceof SniEndPoint) {
-      SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
-      if (emitStableDatabaseSemconv()) {
-        updateStableSniServerAddressAndPort(attributes, coordinator, sniEndPoint);
-      } else {
-        // Legacy semconv keeps recording the proxy as the server.
-        updateLegacySniServerAddressAndPort(attributes, sniEndPoint);
-      }
+  static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
+    // Stable server attributes come only from the configured target recorded on span start.
+    // In duplicate mode this also prevents legacy coordinator data from replacing that target.
+    if (emitStableDatabaseSemconv()) {
       return;
     }
-    // Preserve the configured target that stable semconv records on span start.
-    if (emitStableDatabaseSemconv() && request.getServerTarget() != null) {
+    EndPoint endPoint = coordinator.getEndPoint();
+    if (endPoint instanceof SniEndPoint) {
+      // Legacy semconv keeps recording the proxy as the server.
+      updateLegacySniServerAddressAndPort(attributes, (SniEndPoint) endPoint);
       return;
     }
     if (endPoint instanceof DefaultEndPoint) {
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
       attributes.put(SERVER_ADDRESS, address.getHostString());
       attributes.put(SERVER_PORT, address.getPort());
-    }
-  }
-
-  private static void updateStableSniServerAddressAndPort(
-      AttributesBuilder attributes, Node coordinator, SniEndPoint sniEndPoint) {
-    // SniEndPoint.resolve() returns the proxy, performs DNS, and advances the driver's shared
-    // round-robin counter. The broadcast RPC address identifies the server without those effects.
-    InetSocketAddress rpcAddress = coordinator.getBroadcastRpcAddress().orElse(null);
-    if (rpcAddress != null) {
-      attributes.put(SERVER_ADDRESS, rpcAddress.getHostString());
-      attributes.put(SERVER_PORT, rpcAddress.getPort());
-      return;
-    }
-    // Cloud deployments use the host id as the SNI name, not an address.
-    String serverName = sniEndPoint.getServerName();
-    UUID hostId = coordinator.getHostId();
-    if (hostId == null || !hostId.toString().equals(serverName)) {
-      attributes.put(SERVER_ADDRESS, serverName);
     }
   }
 

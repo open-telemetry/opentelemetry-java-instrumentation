@@ -84,6 +84,19 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void explicitContactPointAddressesBecomeTheTarget() {
+    CassandraServerTarget target =
+        CassandraServerTarget.ofAddresses(
+            asList(
+                InetSocketAddress.createUnresolved("node2.example.com", 9142),
+                InetSocketAddress.createUnresolved("node1.example.com", 9042)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("node1.example.com:9042,node2.example.com:9142");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void duplicateContactPointsAreOneTarget() {
     CassandraServerTarget target =
         CassandraServerTarget.of(
