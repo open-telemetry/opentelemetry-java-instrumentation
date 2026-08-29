@@ -236,7 +236,12 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
             Proxy.newProxyInstance(
                 getClass().getClassLoader(),
                 new Class<?>[] {TopicSubscriber.class},
-                (proxy, method, args) -> null);
+                (proxy, method, args) -> {
+                  if (method.getName().equals("setMessageListener")) {
+                    ((MessageListener) args[0]).onMessage(message);
+                  }
+                  return null;
+                });
     Session registrationSession =
         (Session)
             Proxy.newProxyInstance(
@@ -259,8 +264,6 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
       failOlderRegistration.countDown();
     }
     failedRegistration.get(10, SECONDS);
-
-    listener.onMessage(message);
 
     testing.waitAndAssertTraces(
         trace ->
