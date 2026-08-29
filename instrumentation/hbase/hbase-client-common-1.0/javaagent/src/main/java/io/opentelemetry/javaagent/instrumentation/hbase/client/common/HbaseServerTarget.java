@@ -123,7 +123,7 @@ public class HbaseServerTarget {
     if (supportsZkConfigFile
         && configuration.getBoolean(READ_ZK_CONFIG_KEY, false)
         && hasUsableZooCfg(configuration)) {
-      return null;
+      return resolvedZkTarget(configuration);
     }
 
     String quorum = supportsClientZkConfig ? configuration.get(CLIENT_ZK_QUORUM_KEY) : null;
@@ -152,6 +152,46 @@ public class HbaseServerTarget {
       return null;
     }
     return quorum + ":" + parsedClientPort + ":" + znodeParent;
+  }
+
+  @Nullable
+  private static String resolvedZkTarget(Configuration configuration) {
+    String quorumServers;
+    try {
+      quorumServers = ZKConfig.getZKQuorumServersString(configuration);
+    } catch (IndexOutOfBoundsException | SecurityException | LinkageError ignored) {
+      return null;
+    }
+
+    if (quorumServers == null) {
+      return null;
+    }
+
+    Set<String> hosts = new TreeSet<>();
+    Integer clientPort = null;
+    for (String configuredEndpoint : quorumServers.split(",", -1)) {
+      String endpoint = canonicalEndpoint(configuredEndpoint, null);
+      if (endpoint == null) {
+        return null;
+      }
+      int portSeparator = endpoint.lastIndexOf(':');
+      if (portSeparator <= 0) {
+        return null;
+      }
+      Integer endpointPort = parsePort(endpoint.substring(portSeparator + 1));
+      if (endpointPort == null || (clientPort != null && !clientPort.equals(endpointPort))) {
+        return null;
+      }
+      clientPort = endpointPort;
+      hosts.add(endpoint.substring(0, portSeparator));
+    }
+
+    String znodeParent =
+        sanitizeZnodeParent(configuration.get(ZK_ZNODE_PARENT_KEY, DEFAULT_ZK_ZNODE_PARENT));
+    if (hosts.isEmpty() || clientPort == null || znodeParent == null) {
+      return null;
+    }
+    return String.join(",", hosts) + ":" + clientPort + ":" + znodeParent;
   }
 
   private static boolean hasUsableZooCfg(Configuration configuration) {
