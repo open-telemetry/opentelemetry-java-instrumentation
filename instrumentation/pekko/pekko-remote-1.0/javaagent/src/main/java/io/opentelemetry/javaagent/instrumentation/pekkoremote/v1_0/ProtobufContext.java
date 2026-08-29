@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0;
 
 import io.opentelemetry.context.Context;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 
@@ -25,6 +26,8 @@ public final class ProtobufContext {
   private static final int WIRE_TYPE_LENGTH_DELIMITED = 2;
   private static final int WIRE_TYPE_FIXED32 = 5;
   private static final int MAX_SIZE = 4 * 1024;
+  // a varint holds up to 64 bits, seven of them per byte
+  private static final int MAX_VAR_INT_BYTES = 10;
 
   private static final byte[] EMPTY = new byte[0];
 
@@ -49,10 +52,23 @@ public final class ProtobufContext {
     return result;
   }
 
-  /** Reads the context from the message, null when the message does not carry one. */
+  /**
+   * Reads the context from the message, null when the message does not carry one.
+   *
+   * <p>The bytes are whatever arrived, and this runs from advice, so anything that does not parse
+   * is reported as no context rather than thrown at pekko.
+   */
   @Nullable
   public static Context decode(byte[] message) {
-    ByteBuffer buffer = ByteBuffer.wrap(message);
+    try {
+      return read(ByteBuffer.wrap(message));
+    } catch (BufferUnderflowException | IllegalArgumentException | IllegalStateException e) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Context read(ByteBuffer buffer) {
     while (buffer.hasRemaining()) {
       int tag = readVarInt(buffer);
       int fieldNumber = tag >>> 3;
@@ -99,11 +115,17 @@ public final class ProtobufContext {
     buffer.put((byte) value);
   }
 
+  /**
+   * Reads a varint of any width, keeping the low 32 bits of it. A value that is wider than that is
+   * one this only has to step over, and protobuf itself truncates a wide varint read into an int.
+   */
   private static int readVarInt(ByteBuffer buffer) {
     int result = 0;
-    for (int shift = 0; shift < 32; shift += 7) {
+    for (int index = 0; index < MAX_VAR_INT_BYTES; index++) {
       byte current = buffer.get();
-      result |= (current & 0x7F) << shift;
+      if (index < 5) {
+        result |= (current & 0x7F) << (index * 7);
+      }
       if ((current & 0x80) == 0) {
         return result;
       }

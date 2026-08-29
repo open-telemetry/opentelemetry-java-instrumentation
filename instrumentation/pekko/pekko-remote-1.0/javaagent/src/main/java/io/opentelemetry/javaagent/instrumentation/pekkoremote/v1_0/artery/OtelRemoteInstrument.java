@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.ContextMetadata;
 import java.nio.ByteBuffer;
+import javax.annotation.Nullable;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.remote.artery.InboundEnvelope;
 import org.apache.pekko.remote.artery.RemoteInstrument;
@@ -32,7 +33,7 @@ public class OtelRemoteInstrument extends RemoteInstrument {
 
   @Override
   public void remoteWriteMetadata(
-      ActorRef recipient, Object message, ActorRef sender, ByteBuffer buffer) {
+      @Nullable ActorRef recipient, Object message, @Nullable ActorRef sender, ByteBuffer buffer) {
     Context context = RemoteMessageState.contextToWrite();
     if (context != null) {
       ContextMetadata.write(context, buffer);
@@ -41,7 +42,7 @@ public class OtelRemoteInstrument extends RemoteInstrument {
 
   @Override
   public void remoteReadMetadata(
-      ActorRef recipient, Object message, ActorRef sender, ByteBuffer buffer) {
+      @Nullable ActorRef recipient, Object message, @Nullable ActorRef sender, ByteBuffer buffer) {
     InboundEnvelope envelope = RemoteMessageState.envelopeToRead();
     if (envelope == null) {
       return;
@@ -54,9 +55,17 @@ public class OtelRemoteInstrument extends RemoteInstrument {
 
   @Override
   public void remoteMessageSent(
-      ActorRef recipient, Object message, ActorRef sender, int size, long time) {}
+      @Nullable ActorRef recipient,
+      Object message,
+      @Nullable ActorRef sender,
+      int size,
+      long time) {}
 
   @Override
   public void remoteMessageReceived(
-      ActorRef recipient, Object message, ActorRef sender, int size, long time) {}
+      @Nullable ActorRef recipient,
+      Object message,
+      @Nullable ActorRef sender,
+      int size,
+      long time) {}
 }

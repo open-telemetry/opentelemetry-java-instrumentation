@@ -68,19 +68,14 @@ class PekkoClassicRemoteTest extends AbstractPekkoRemoteTest {
           high = size - 1;
         }
       }
-      assertThat(low)
-          .describedAs("no message size was delivered, the limit could not be measured")
-          .isGreaterThan(0);
+      assertThat(low).isGreaterThan(0);
 
       // the same size, this time with a context that the codec would want to append
       int justFits = low;
       AtomicReference<Boolean> delivered = new AtomicReference<>();
       testing.runWithSpan(
           "parent", () -> delivered.set(delivers(sender, path, received, justFits, 30_000)));
-      assertThat(delivered.get())
-          .describedAs(
-              "a message of %s bytes was delivered without a context but not with one", justFits)
-          .isTrue();
+      assertThat(delivered.get()).isTrue();
     } finally {
       sender.terminate();
       receiver.terminate();

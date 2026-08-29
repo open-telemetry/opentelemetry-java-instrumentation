@@ -42,8 +42,8 @@ public final class ContextMetadata {
   // space that is available for the message itself
   private static final int MAX_SIZE = 4 * 1024;
 
-  private static final TextMapSetter<Map<String, String>> SETTER = Map::put;
-  private static final TextMapGetter<Map<String, String>> GETTER =
+  private static final TextMapSetter<Map<String, String>> setter = ContextMetadata::put;
+  private static final TextMapGetter<Map<String, String>> getter =
       new TextMapGetter<Map<String, String>>() {
         @Override
         public Iterable<String> keys(Map<String, String> carrier) {
@@ -57,9 +57,15 @@ public final class ContextMetadata {
         }
       };
 
+  private static void put(@Nullable Map<String, String> carrier, String key, String value) {
+    if (carrier != null) {
+      carrier.put(key, value);
+    }
+  }
+
   public static void write(Context context, ByteBuffer buffer) {
     Map<String, String> fields = new LinkedHashMap<>();
-    GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, fields, SETTER);
+    GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, fields, setter);
     if (fields.isEmpty()) {
       return;
     }
@@ -97,7 +103,7 @@ public final class ContextMetadata {
     }
     return GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
-        .extract(Context.root(), fields, GETTER);
+        .extract(Context.root(), fields, getter);
   }
 
   private static void writeString(ByteBuffer buffer, String value) {

@@ -41,6 +41,37 @@ dependencies {
   latestDepTestLibrary("org.apache.pekko:pekko-remote_2.13:latest.release")
 }
 
+testing {
+  suites {
+    // the agent matches pekko classes and their methods by name, run the tests against the scala 3
+    // artifacts to catch a name that only holds for scala 2
+    register<JvmTestSuite>("scala3Test") {
+      dependencies {
+        implementation("org.scala-lang:scala3-library_3:3.3.6")
+        implementation("org.apache.pekko:pekko-remote_3:${baseVersion("1.0.1").orLatest()}")
+        if (otelProps.testLatestDeps) {
+          implementation("io.netty:netty-transport:4.2.17.Final")
+          implementation("io.netty:netty-handler:4.2.17.Final")
+        } else {
+          implementation("io.netty:netty:3.10.6.Final")
+        }
+      }
+    }
+  }
+}
+
+// the scala 3 suite runs the same tests as the scala 2 suite, against the _3 artifacts
+sourceSets.named("scala3Test") {
+  java.srcDir("src/test/java")
+  resources.srcDir("src/test/resources")
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
+
 if (otelProps.testLatestDeps) {
   configurations {
     // pekko artifact name is different for regular and latest tests
