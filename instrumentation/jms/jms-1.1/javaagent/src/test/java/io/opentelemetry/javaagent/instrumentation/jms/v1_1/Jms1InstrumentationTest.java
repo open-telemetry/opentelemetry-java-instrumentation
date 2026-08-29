@@ -19,17 +19,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
+import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
+import javax.jms.TopicSubscriber;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -201,6 +205,77 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                             operationType("process"),
                             messagingTempDestination(false),
                             subscriptionName("registered-subscription"))));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs
+  @Test
+  void failedRegistrationDoesNotOverwriteNewerSubscriptionName() throws Exception {
+    String topicName = "concurrent-registration-topic";
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+    CountDownLatch olderRegistrationEntered = new CountDownLatch(1);
+    CountDownLatch failOlderRegistration = new CountDownLatch(1);
+
+    MessageConsumer olderConsumer =
+        (MessageConsumer)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {TopicSubscriber.class},
+                (proxy, method, args) -> {
+                  if (method.getName().equals("setMessageListener")) {
+                    olderRegistrationEntered.countDown();
+                    assertThat(failOlderRegistration.await(10, SECONDS)).isTrue();
+                    throw new JMSException("failed");
+                  }
+                  return null;
+                });
+    MessageConsumer newerConsumer =
+        (MessageConsumer)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {TopicSubscriber.class},
+                (proxy, method, args) -> null);
+    Session registrationSession =
+        (Session)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {Session.class},
+                (proxy, method, args) ->
+                    args[1].equals("older-subscription") ? olderConsumer : newerConsumer);
+    registrationSession.createDurableSubscriber(topic, "older-subscription");
+    registrationSession.createDurableSubscriber(topic, "newer-subscription");
+
+    CompletableFuture<Void> failedRegistration =
+        CompletableFuture.runAsync(
+            () ->
+                assertThatThrownBy(() -> olderConsumer.setMessageListener(listener))
+                    .isInstanceOf(JMSException.class));
+    try {
+      assertThat(olderRegistrationEntered.await(10, SECONDS)).isTrue();
+      newerConsumer.setMessageListener(listener);
+    } finally {
+      failOlderRegistration.countDown();
+    }
+    failedRegistration.get(10, SECONDS);
+
+    listener.onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, false),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName("newer-subscription"))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs

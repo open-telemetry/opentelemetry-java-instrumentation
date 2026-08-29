@@ -28,9 +28,11 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import jakarta.jms.Topic;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
@@ -205,6 +207,77 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                             operationType("process"),
                             messagingTempDestination(false),
                             subscriptionName("registered-subscription"))));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @Test
+  void failedRegistrationDoesNotOverwriteNewerSubscriptionName() throws Exception {
+    String topicName = "concurrent-registration-topic";
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("hello there");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+    CountDownLatch olderRegistrationEntered = new CountDownLatch(1);
+    CountDownLatch failOlderRegistration = new CountDownLatch(1);
+
+    MessageConsumer olderConsumer =
+        (MessageConsumer)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {MessageConsumer.class},
+                (proxy, method, args) -> {
+                  if (method.getName().equals("setMessageListener")) {
+                    olderRegistrationEntered.countDown();
+                    assertThat(failOlderRegistration.await(10, SECONDS)).isTrue();
+                    throw new JMSException("failed");
+                  }
+                  return null;
+                });
+    MessageConsumer newerConsumer =
+        (MessageConsumer)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {MessageConsumer.class},
+                (proxy, method, args) -> null);
+    Session registrationSession =
+        (Session)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {Session.class},
+                (proxy, method, args) ->
+                    args[1].equals("older-subscription") ? olderConsumer : newerConsumer);
+    registrationSession.createDurableConsumer(topic, "older-subscription");
+    registrationSession.createDurableConsumer(topic, "newer-subscription");
+
+    CompletableFuture<Void> failedRegistration =
+        CompletableFuture.runAsync(
+            () ->
+                assertThatThrownBy(() -> olderConsumer.setMessageListener(listener))
+                    .isInstanceOf(JMSException.class));
+    try {
+      assertThat(olderRegistrationEntered.await(10, SECONDS)).isTrue();
+      newerConsumer.setMessageListener(listener);
+    } finally {
+      failOlderRegistration.countDown();
+    }
+    failedRegistration.get(10, SECONDS);
+
+    listener.onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, topicName),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName("newer-subscription"))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
