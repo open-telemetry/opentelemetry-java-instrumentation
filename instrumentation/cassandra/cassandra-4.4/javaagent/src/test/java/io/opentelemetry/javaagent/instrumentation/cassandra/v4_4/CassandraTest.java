@@ -57,8 +57,8 @@ class CassandraTest extends AbstractCassandra44Test {
               assertThat(peerAddress).isIn("127.0.0.1", "0:0:0:0:0:0:0:1", "::1");
               assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo(cassandraPort);
               if (emitStableDatabaseSemconv()) {
-                assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo("0.0.0.0");
-                assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(9042L);
+                assertThat(span.getAttributes().get(SERVER_ADDRESS)).isNull();
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
               }
             });
   }
