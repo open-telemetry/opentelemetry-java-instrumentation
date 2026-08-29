@@ -289,6 +289,75 @@ class Resilience4jCircuitBreakerTest {
 
   @Test
   @SuppressWarnings("unchecked")
+  void decoratedCompletionStageAsyncCallbackPrefersNestedRawAcquisitionForSameBreaker()
+      throws Exception {
+    Method recordResultPredicate = recordResultPredicateMethod();
+    Method decorateCompletionStage = decorateCompletionStageMethod();
+    IllegalStateException exception = new IllegalStateException("boom");
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    CircuitBreaker[] circuitBreakerHolder = new CircuitBreaker[1];
+    AtomicReference<Thread> callbackThread = new AtomicReference<>();
+    recordResultPredicate.invoke(
+        builder,
+        (Predicate<Object>)
+            result -> {
+              callbackThread.set(Thread.currentThread());
+              circuitBreakerHolder[0].acquirePermission();
+              invokeOnErrorUnchecked(circuitBreakerHolder[0], exception);
+              return false;
+            });
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    circuitBreakerHolder[0] = circuitBreaker;
+    CompletableFuture<String> future = new CompletableFuture<>();
+    Supplier<CompletionStage<String>> supplier = () -> future;
+    Supplier<CompletionStage<String>> decoratedSupplier =
+        (Supplier<CompletionStage<String>>)
+            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    Thread callingThread = Thread.currentThread();
+    try {
+      CompletionStage<String> stage = testing.runWithSpan("parent", decoratedSupplier::get);
+      executor.submit(() -> future.complete("ok")).get();
+
+      assertThat(stage.toCompletableFuture().get()).isEqualTo("ok");
+      assertThat(callbackThread.get()).isNotSameAs(callingThread);
+    } finally {
+      executor.shutdownNow();
+    }
+
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
+        .filteredOn(span -> span.getStatus().equals(StatusData.unset()))
+        .singleElement()
+        .satisfies(
+            span ->
+                assertThat(
+                        span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
+                    .isEqualTo(experimental("success")));
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
+        .filteredOn(span -> span.getStatus().equals(StatusData.error()))
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(
+                      span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
+                  .isEqualTo(experimental("failure"));
+              assertThat(span.getEvents())
+                  .singleElement()
+                  .satisfies(
+                      event -> {
+                        assertThat(event.getAttributes().get(stringKey("exception.type")))
+                            .isEqualTo(IllegalStateException.class.getName());
+                        assertThat(event.getAttributes().get(stringKey("exception.message")))
+                            .isEqualTo("boom");
+                      });
+            });
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
   void createsFailureSpanWhenDecoratedCompletionStageCompletesWithCompletionException()
       throws Exception {
     Method decorateCompletionStage = decorateCompletionStageMethod();
@@ -544,6 +613,54 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void rawRecentAcquisitionsAreTrackedPerCircuitBreaker() throws Exception {
+    CircuitBreaker circuitBreakerA = CircuitBreaker.ofDefaults("a-circuit-breaker");
+    CircuitBreaker circuitBreakerB = CircuitBreaker.ofDefaults("b-circuit-breaker");
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          circuitBreakerA.acquirePermission();
+          circuitBreakerB.acquirePermission();
+          invokeOnSuccess(circuitBreakerB);
+          invokeOnSuccess(circuitBreakerA);
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("CircuitBreaker a-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.name"),
+                                experimental("a-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.outcome"),
+                                experimental("success"))),
+                span ->
+                    span.hasName("CircuitBreaker b-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.name"),
+                                experimental("b-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.outcome"),
+                                experimental("success")))));
+  }
+
+  @Test
   void createsFailureSpanWhenOnErrorCallbackThrows() throws Exception {
     Method recordException = recordExceptionMethod();
     IllegalArgumentException originalException = new IllegalArgumentException("original");
@@ -572,16 +689,16 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void rawOutOfOrderCallbacksOnlyRecordMostRecentAttempt() throws Exception {
+  void rawOutOfOrderCallbacksRecordRecentSameThreadAttempts() throws Exception {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     IllegalStateException exception = new IllegalStateException("boom");
 
     testing.runWithSpan(
         "parent",
         () -> {
-          // Raw callbacks have no attempt identity. We keep only the most recent same-thread
-          // acquisition instead of pretending that arbitrary out-of-order callbacks are safely
-          // correlated.
+          // Raw callbacks have no attempt identity. Same-thread correlation keeps a recent stack,
+          // which avoids drops but still cannot prove application-level identity for overlapping
+          // raw attempts on the same breaker.
           circuitBreaker.acquirePermission();
           circuitBreaker.acquirePermission();
           invokeOnSuccess(circuitBreaker);
@@ -595,17 +712,39 @@ class Resilience4jCircuitBreakerTest {
                 span ->
                     span.hasName("CircuitBreaker test-circuit-breaker")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("resilience4j.circuit_breaker.name"),
-                                experimental("test-circuit-breaker")),
-                            equalTo(
-                                stringKey("resilience4j.circuit_breaker.state"),
-                                experimental("closed")),
-                            equalTo(
-                                stringKey("resilience4j.circuit_breaker.outcome"),
-                                experimental("success")))));
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
+        .filteredOn(span -> span.getStatus().equals(StatusData.unset()))
+        .singleElement()
+        .satisfies(
+            span ->
+                assertThat(
+                        span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
+                    .isEqualTo(experimental("success")));
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
+        .filteredOn(span -> span.getStatus().equals(StatusData.error()))
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(
+                      span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
+                  .isEqualTo(experimental("failure"));
+              assertThat(span.getEvents())
+                  .singleElement()
+                  .satisfies(
+                      event -> {
+                        assertThat(event.getAttributes().get(stringKey("exception.type")))
+                            .isEqualTo(IllegalStateException.class.getName());
+                        assertThat(event.getAttributes().get(stringKey("exception.message")))
+                            .isEqualTo("boom");
+                      });
+            });
   }
 
   @Test

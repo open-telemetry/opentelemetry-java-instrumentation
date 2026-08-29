@@ -200,7 +200,9 @@ public class Resilience4jCircuitBreakerDecorators {
           return result;
         }
         try {
-          return wrapCompletionStage(result, pendingSpan);
+          CompletionStage<T> wrapped = wrapCompletionStage(result, pendingSpan);
+          pendingSpan.closeOperationScope();
+          return wrapped;
         } catch (Throwable t) {
           pendingSpan.end("failure", t);
           throw t;

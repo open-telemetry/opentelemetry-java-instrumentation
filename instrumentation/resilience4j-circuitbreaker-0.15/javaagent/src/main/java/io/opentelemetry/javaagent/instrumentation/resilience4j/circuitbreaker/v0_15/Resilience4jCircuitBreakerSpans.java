@@ -26,7 +26,7 @@ public class Resilience4jCircuitBreakerSpans {
   private static final ThreadLocal<Deque<AttachedPendingSpan>> attachedPendingSpans =
       new ThreadLocal<>();
   private static final ThreadLocal<Deque<AttemptToken>> currentAcquisitions = new ThreadLocal<>();
-  private static final ThreadLocal<AttemptToken> recentAcquisition = new ThreadLocal<>();
+  private static final ThreadLocal<Deque<AttemptToken>> recentAcquisitions = new ThreadLocal<>();
   private static final ThreadLocal<Deque<Capture>> captures = new ThreadLocal<>();
   private static final ThreadLocal<Deque<CircuitBreaker>> circuitBreakerCallbacks =
       new ThreadLocal<>();
@@ -40,7 +40,6 @@ public class Resilience4jCircuitBreakerSpans {
       currentAcquisitions.set(tokens);
     }
     tokens.push(token);
-    recentAcquisition.remove();
     return token;
   }
 
@@ -61,9 +60,9 @@ public class Resilience4jCircuitBreakerSpans {
       }
     }
     if (token.pendingSpan != null && !token.claimed) {
-      recentAcquisition.set(token);
-    } else if (recentAcquisition.get() == token) {
-      recentAcquisition.remove();
+      addRecentAcquisition(token);
+    } else {
+      removeRecentAcquisition(token);
     }
     Deque<Capture> captureStack = captures.get();
     if (captureStack != null && !captureStack.isEmpty()) {
@@ -103,12 +102,42 @@ public class Resilience4jCircuitBreakerSpans {
 
   @Nullable
   public static PendingSpan claimRecentAcquisition(CircuitBreaker circuitBreaker) {
-    AttemptToken token = recentAcquisition.get();
-    if (token == null || token.circuitBreaker != circuitBreaker) {
+    return claim(peekRecentAcquisition(circuitBreaker));
+  }
+
+  @Nullable
+  private static AttemptToken peekRecentAcquisition(CircuitBreaker circuitBreaker) {
+    Deque<AttemptToken> tokens = recentAcquisitions.get();
+    if (tokens == null) {
       return null;
     }
-    recentAcquisition.remove();
-    return claim(token);
+    for (AttemptToken token : tokens) {
+      if (!token.claimed && token.pendingSpan != null && token.circuitBreaker == circuitBreaker) {
+        return token;
+      }
+    }
+    return null;
+  }
+
+  private static void addRecentAcquisition(AttemptToken token) {
+    Deque<AttemptToken> tokens = recentAcquisitions.get();
+    if (tokens == null) {
+      tokens = new ArrayDeque<>();
+      recentAcquisitions.set(tokens);
+    }
+    tokens.remove(token);
+    tokens.push(token);
+  }
+
+  private static void removeRecentAcquisition(AttemptToken token) {
+    Deque<AttemptToken> tokens = recentAcquisitions.get();
+    if (tokens == null) {
+      return;
+    }
+    tokens.remove(token);
+    if (tokens.isEmpty()) {
+      recentAcquisitions.remove();
+    }
   }
 
   @Nullable
@@ -117,17 +146,19 @@ public class Resilience4jCircuitBreakerSpans {
       return null;
     }
     token.claimed = true;
-    if (recentAcquisition.get() == token) {
-      recentAcquisition.remove();
-    }
+    removeRecentAcquisition(token);
     detachPendingSpan(token.pendingSpan);
     return token.pendingSpan;
   }
 
   private static void clearRecentAcquisition(PendingSpan pendingSpan) {
-    AttemptToken token = recentAcquisition.get();
-    if (token != null && token.pendingSpan == pendingSpan) {
-      recentAcquisition.remove();
+    Deque<AttemptToken> tokens = recentAcquisitions.get();
+    if (tokens == null) {
+      return;
+    }
+    tokens.removeIf(token -> token.pendingSpan == pendingSpan);
+    if (tokens.isEmpty()) {
+      recentAcquisitions.remove();
     }
   }
 
@@ -236,16 +267,16 @@ public class Resilience4jCircuitBreakerSpans {
   public static void end(
       CircuitBreaker circuitBreaker, String outcome, @Nullable Throwable throwable) {
     AttemptToken captureToken = activeCaptureToken(circuitBreaker);
-    AttemptToken recentToken = recentAcquisition.get();
-    PendingSpan pendingSpan = claimAttachedPendingSpan(circuitBreaker);
+    AttemptToken recentToken = peekRecentAcquisition(circuitBreaker);
+    PendingSpan pendingSpan = null;
     // If user code performs a nested raw acquisition inside a decorated call and records that
-    // result before the decorated call completes, prefer the newer raw acquisition. Otherwise, use
-    // the active capture token owned by the decorator.
-    if (pendingSpan == null
-        && recentToken != null
-        && recentToken.circuitBreaker == circuitBreaker
-        && recentToken != captureToken) {
+    // result before the outer operation completes, prefer the newer raw acquisition. Otherwise,
+    // use the active capture or attached span owned by the decorator.
+    if (recentToken != null && recentToken != captureToken) {
       pendingSpan = claim(recentToken);
+    }
+    if (pendingSpan == null) {
+      pendingSpan = claimAttachedPendingSpan(circuitBreaker);
     }
     if (pendingSpan == null) {
       pendingSpan = claim(captureToken);
