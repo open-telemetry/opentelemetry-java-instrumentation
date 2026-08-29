@@ -57,7 +57,9 @@ class CouchbaseClient31Test {
   private static final Logger logger = LoggerFactory.getLogger("couchbase-container");
 
   private static CouchbaseContainer couchbase;
-  private static String connectionString;
+  private static String seedAddress;
+  private static int kvPort;
+  private static int clusterManagerPort;
   private static Cluster cluster;
   private static Collection collection;
 
@@ -73,7 +75,6 @@ class CouchbaseClient31Test {
             .withStartupTimeout(Duration.ofMinutes(2));
     couchbase.start();
     cleanup.deferAfterAll(couchbase::stop);
-    connectionString = couchbase.getConnectionString();
 
     ClusterEnvironment environment =
         ClusterEnvironment.builder()
@@ -81,15 +82,16 @@ class CouchbaseClient31Test {
             .build();
     cleanup.deferAfterAll(environment::shutdown);
 
+    String connectionString = couchbase.getConnectionString();
     String seed = connectionString.substring(connectionString.indexOf("://") + 3);
     int portSeparator = seed.lastIndexOf(':');
+    seedAddress = seed.substring(0, portSeparator);
+    kvPort = Integer.parseInt(seed.substring(portSeparator + 1));
+    clusterManagerPort = couchbase.getMappedPort(8091);
     cluster =
         Cluster.connect(
             singleton(
-                SeedNode.create(
-                    seed.substring(0, portSeparator),
-                    Optional.of(Integer.valueOf(seed.substring(portSeparator + 1))),
-                    Optional.empty())),
+                SeedNode.create(seedAddress, Optional.of(kvPort), Optional.of(clusterManagerPort))),
             ClusterOptions.clusterOptions(couchbase.getUsername(), couchbase.getPassword())
                 .environment(environment));
     cleanup.deferAfterAll(cluster::disconnect);
@@ -125,7 +127,7 @@ class CouchbaseClient31Test {
                           equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
                           equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")),
                           equalTo(SERVER_ADDRESS, serverAddress()),
-                          equalTo(SERVER_PORT, serverPort()));
+                          equalTo(SERVER_PORT, null));
                 },
                 span -> span.hasName("dispatch_to_server")));
   }
@@ -134,15 +136,7 @@ class CouchbaseClient31Test {
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    String seed = connectionString.substring(connectionString.indexOf("://") + 3);
-    return seed.substring(0, seed.lastIndexOf(':'));
-  }
-
-  private static Long serverPort() {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
-    return Long.valueOf(connectionString.substring(connectionString.lastIndexOf(':') + 1));
+    return seedAddress + ":" + kvPort + "," + seedAddress + ":" + clusterManagerPort;
   }
 
   private static <T> T oldOrExperimental(T value) {

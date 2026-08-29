@@ -9,6 +9,10 @@ import com.couchbase.client.core.Core;
 import com.couchbase.client.core.env.SeedNode;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -43,13 +47,31 @@ public class CouchbaseServerTargets {
   @Nullable
   static CouchbaseServerTarget target(Set<SeedNode> seedNodes) {
     CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder();
-    for (SeedNode seedNode : seedNodes) {
+    // Direct seed sets have no configured order, so normalize them before rendering the target.
+    List<SeedNode> orderedSeedNodes = new ArrayList<>(seedNodes);
+    orderedSeedNodes.sort(
+        Comparator.nullsFirst(
+            Comparator.comparing(SeedNode::address)
+                .thenComparing(seedNode -> seedNode.kvPort().isPresent())
+                .thenComparing(seedNode -> seedNode.kvPort().orElse(0))
+                .thenComparing(seedNode -> seedNode.clusterManagerPort().isPresent())
+                .thenComparing(seedNode -> seedNode.clusterManagerPort().orElse(0))));
+    for (SeedNode seedNode : orderedSeedNodes) {
       if (seedNode == null) {
         target.addSeed(null, 0);
       } else {
-        target.addSeed(
-            seedNode.address(),
-            seedNode.kvPort().orElseGet(() -> seedNode.clusterManagerPort().orElse(0)));
+        Optional<Integer> kvPort = seedNode.kvPort();
+        Optional<Integer> clusterManagerPort = seedNode.clusterManagerPort();
+        if (!kvPort.isPresent() && !clusterManagerPort.isPresent()) {
+          target.addSeed(seedNode.address(), 0);
+        } else {
+          if (kvPort.isPresent()) {
+            target.addSeed(seedNode.address(), kvPort.get());
+          }
+          if (clusterManagerPort.isPresent() && !clusterManagerPort.equals(kvPort)) {
+            target.addSeed(seedNode.address(), clusterManagerPort.get());
+          }
+        }
       }
     }
     return target.build();
