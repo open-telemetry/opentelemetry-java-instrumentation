@@ -323,7 +323,7 @@ def main():
         # narrowed to each day-bucket that had a flaky execution. Busy
         # tests can still return only passed rows for an entire day, so
         # recursively split those windows until the flaky rows are visible.
-        if not sample_failure or not recent_scans:
+        if not sample_failure or len(recent_scans) < 5:
             def fetch_history_window(since_ms, until_ms):
                 return fetch_test_history(
                     base, container=cname, test_name=chosen["name"],

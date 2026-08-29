@@ -181,6 +181,7 @@ jobs:
           ARTIFACT_URL: ${{ steps.upload-fix-diagnostics.outputs.artifact-url }}
           PR_HEAD: ${{ steps.branch.outputs.name }}
           PR_BASE: main
+          PR_DRAFT: "true"
         run: python .github/scripts/flaky-test-remediation/3-open-pr.py
 
       - name: Check out progress branch
