@@ -169,7 +169,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public String getNetworkPeerAddress(CommandStartedEvent event, @Nullable Void response) {
-    InetSocketAddress peer = getNetworkPeerInetSocketAddress(event, response);
+    InetSocketAddress peer = getNetworkPeerInetSocketAddress(event, null);
     if (peer != null && peer.getAddress() != null) {
       return peer.getAddress().getHostAddress();
     }
@@ -183,7 +183,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public Integer getNetworkPeerPort(CommandStartedEvent event, @Nullable Void response) {
-    InetSocketAddress peer = getNetworkPeerInetSocketAddress(event, response);
+    InetSocketAddress peer = getNetworkPeerInetSocketAddress(event, null);
     if (peer != null) {
       return peer.getPort();
     }
