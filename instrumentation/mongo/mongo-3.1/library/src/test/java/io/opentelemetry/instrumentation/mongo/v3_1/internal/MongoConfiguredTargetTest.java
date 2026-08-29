@@ -5,8 +5,14 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,7 +21,15 @@ import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
+import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.junit.jupiter.api.Test;
@@ -28,15 +42,16 @@ class MongoConfiguredTargetTest {
       new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
   @Test
-  void configuredSeedGroupKeepsReportingTheSelectedServer() {
+  void configuredSeedGroupIsNotReportedAsOneStableServer() {
     ClusterId clusterId = new ClusterId();
     MongoClusterTargets.register(
         clusterId,
         MongoServerTarget.seeds(asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
-    assertThat(getter.getServerAddress(event)).isEqualTo("db2.example");
-    assertThat(getter.getServerPort(event)).isEqualTo(27018);
+    assertThat(getter.getServerAddress(event))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "db2.example");
+    assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
   }
 
   @Test
@@ -49,6 +64,10 @@ class MongoConfiguredTargetTest {
     assertThat(getter.getServerAddress(event))
         .isEqualTo(emitStableDatabaseSemconv() ? "db1.example" : "db2.example");
     assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? 27017 : 27018);
+    assertThat(getter.getNetworkPeerAddress(event, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "db2.example" : null);
+    assertThat(getter.getNetworkPeerPort(event, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? 27018 : null);
   }
 
   @Test
@@ -63,11 +82,46 @@ class MongoConfiguredTargetTest {
   }
 
   @Test
-  void clientWithNoConfiguredTargetKeepsReportingTheServerThatAnswered() {
+  void existingNoArgListenerDoesNotInferAStableTarget() {
     CommandStartedEvent event = commandStartedEvent(new ClusterId(), "test_db", "find");
+    CommandListener listener = MongoTelemetry.create(OpenTelemetry.noop()).createCommandListener();
 
-    assertThat(getter.getServerAddress(event)).isEqualTo("db2.example");
-    assertThat(getter.getServerPort(event)).isEqualTo(27018);
+    listener.commandStarted(event);
+
+    Attributes attributes = extractAttributes(event);
+
+    assertThat(attributes.get(SERVER_ADDRESS))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "db2.example");
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018L);
+    assertThat(attributes.get(NETWORK_PEER_ADDRESS))
+        .isEqualTo(emitStableDatabaseSemconv() ? "db2.example" : null);
+    assertThat(attributes.get(NETWORK_PEER_PORT))
+        .isEqualTo(emitStableDatabaseSemconv() ? 27018L : null);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // db.connection_string is part of the old semantic conventions
+  void explicitSingleServerListenerRegistersTheStableTarget() {
+    ClusterId clusterId = new ClusterId();
+    CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
+    CommandListener listener =
+        MongoTelemetry.create(OpenTelemetry.noop())
+            .createCommandListener(new ServerAddress("configured.example", 27017));
+
+    listener.commandStarted(event);
+
+    Attributes attributes = extractAttributes(event);
+
+    assertThat(attributes.get(SERVER_ADDRESS))
+        .isEqualTo(emitStableDatabaseSemconv() ? "configured.example" : "db2.example");
+    assertThat(attributes.get(SERVER_PORT))
+        .isEqualTo(emitStableDatabaseSemconv() ? 27017L : 27018L);
+    assertThat(attributes.get(NETWORK_PEER_ADDRESS))
+        .isEqualTo(emitStableDatabaseSemconv() ? "db2.example" : null);
+    assertThat(attributes.get(NETWORK_PEER_PORT))
+        .isEqualTo(emitStableDatabaseSemconv() ? 27018L : null);
+    assertThat(attributes.get(DB_CONNECTION_STRING))
+        .isEqualTo(emitOldDatabaseSemconv() ? "mongodb://db2.example:27018" : null);
   }
 
   @Test
@@ -82,7 +136,7 @@ class MongoConfiguredTargetTest {
   }
 
   @Test
-  void commandWithNoDatabaseIsNamedByTheSelectedServerForASeedGroup() {
+  void commandWithNoDatabaseDoesNotUseSelectedServerAsStableTarget() {
     ClusterId clusterId = new ClusterId();
     MongoClusterTargets.register(
         clusterId,
@@ -91,9 +145,16 @@ class MongoConfiguredTargetTest {
 
     String spanName = new MongoSpanNameExtractor(getter).extract(event);
 
-    assertThat(spanName)
-        .isEqualTo(
-            emitStableDatabaseSemconv() ? "listDatabases db2.example:27018" : "listDatabases");
+    assertThat(spanName).isEqualTo("listDatabases");
+  }
+
+  private Attributes extractAttributes(CommandStartedEvent event) {
+    AttributesBuilder attributes = Attributes.builder();
+    AttributesExtractor<CommandStartedEvent, Void> extractor =
+        DbClientAttributesExtractor.create(getter);
+    extractor.onStart(attributes, Context.root(), event);
+    extractor.onEnd(attributes, Context.root(), event, null, null);
+    return attributes.build();
   }
 
   private static ClusterId configuredCluster(MongoServerTarget target) {

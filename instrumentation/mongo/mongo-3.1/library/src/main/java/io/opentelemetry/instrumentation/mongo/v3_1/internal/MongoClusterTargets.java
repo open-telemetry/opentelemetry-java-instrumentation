@@ -28,8 +28,22 @@ public final class MongoClusterTargets {
     }
   }
 
+  public static void register(
+      CommandStartedEvent event, @Nullable MongoServerTarget configuredTarget) {
+    ClusterId clusterId = clusterId(event);
+    if (clusterId != null) {
+      register(clusterId, configuredTarget);
+    }
+  }
+
   @Nullable
   public static MongoServerTarget get(CommandStartedEvent event) {
+    ClusterId clusterId = clusterId(event);
+    return clusterId == null ? null : targets.get(clusterId);
+  }
+
+  @Nullable
+  private static ClusterId clusterId(CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription == null) {
       return null;
@@ -42,7 +56,7 @@ public final class MongoClusterTargets {
     if (serverId == null) {
       return null;
     }
-    return targets.get(serverId.getClusterId());
+    return serverId.getClusterId();
   }
 
   private MongoClusterTargets() {}

@@ -10,6 +10,8 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -72,7 +74,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("selected.example", 27099L);
+    assertFindSpan(null, null);
   }
 
   @Test
@@ -95,7 +97,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("selected.example", 27099L);
+    assertFindSpan(null, null);
   }
 
   @Test
@@ -113,12 +115,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "listDatabases selected.example:27099"
-                                    : "listDatabases")
-                            .hasKind(CLIENT)));
+                    span -> span.hasName("listDatabases").hasKind(CLIENT)));
   }
 
   protected static void runCommand(ConfiguredClient client) {
@@ -162,6 +159,14 @@ public abstract class AbstractMongoConfiguredTargetTest {
                                     emitStableDatabaseSemconv()
                                         ? configuredPort
                                         : Long.valueOf(SELECTED_SERVER.getPort())),
+                                equalTo(
+                                    NETWORK_PEER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? SELECTED_SERVER.getHost() : null),
+                                equalTo(
+                                    NETWORK_PEER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(SELECTED_SERVER.getPort())
+                                        : null),
                                 satisfies(
                                     maybeStable(DB_STATEMENT),
                                     val ->

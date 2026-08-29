@@ -15,6 +15,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -276,6 +278,8 @@ public abstract class AbstractMongoClientTest<T> {
         DB_OPERATION_NAME,
         DB_NAMESPACE,
         DB_COLLECTION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -557,6 +561,8 @@ public abstract class AbstractMongoClientTest<T> {
     span.hasAttributesSatisfyingExactly(
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
+        equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+        equalTo(NETWORK_PEER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
         satisfies(
             maybeStable(DB_STATEMENT),
             val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", "")))),

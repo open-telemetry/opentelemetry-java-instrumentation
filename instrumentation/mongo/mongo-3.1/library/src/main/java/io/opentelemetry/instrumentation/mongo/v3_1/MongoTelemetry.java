@@ -5,11 +5,15 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
+import static java.util.Collections.singletonList;
+
+import com.mongodb.ServerAddress;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoServerTarget;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
 
 // TODO this class is used for all Mongo versions. Extract to mongo-common module
@@ -45,5 +49,17 @@ public final class MongoTelemetry {
    */
   public CommandListener createCommandListener() {
     return new TracingCommandListener(instrumenter);
+  }
+
+  /**
+   * Returns a new {@link CommandListener} for a client configured with exactly the given server
+   * address.
+   *
+   * <p>The configured address is reported as the stable logical server target. The server selected
+   * for each command is reported separately as the network peer.
+   */
+  public CommandListener createCommandListener(ServerAddress configuredServerAddress) {
+    return new TracingCommandListener(
+        instrumenter, MongoServerTarget.seeds(singletonList(configuredServerAddress)));
   }
 }

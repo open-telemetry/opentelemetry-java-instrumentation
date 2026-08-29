@@ -137,13 +137,9 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public String getServerAddress(CommandStartedEvent event) {
-    // Prefer a known configured target whenever stable database conventions are emitted, including
-    // duplicate emission; old-only mode reports the selected server.
     if (emitStableDatabaseSemconv()) {
       MongoServerTarget target = MongoClusterTargets.get(event);
-      if (target != null) {
-        return target.getAddress();
-      }
+      return target == null ? null : target.getAddress();
     }
     ServerAddress serverAddress = selectedServerAddress(event);
     return serverAddress == null ? null : serverAddress.getHost();
@@ -154,9 +150,27 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   public Integer getServerPort(CommandStartedEvent event) {
     if (emitStableDatabaseSemconv()) {
       MongoServerTarget target = MongoClusterTargets.get(event);
-      if (target != null) {
-        return target.getPort();
-      }
+      return target == null ? null : target.getPort();
+    }
+    ServerAddress serverAddress = selectedServerAddress(event);
+    return serverAddress == null ? null : serverAddress.getPort();
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(CommandStartedEvent event, @Nullable Void response) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    ServerAddress serverAddress = selectedServerAddress(event);
+    return serverAddress == null ? null : serverAddress.getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(CommandStartedEvent event, @Nullable Void response) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
     }
     ServerAddress serverAddress = selectedServerAddress(event);
     return serverAddress == null ? null : serverAddress.getPort();
