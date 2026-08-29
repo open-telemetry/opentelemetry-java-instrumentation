@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pekko.http.javadsl.model.HttpResponse;
@@ -62,5 +63,12 @@ class PekkoHttpParsingErrorAttributesGetter
   @Override
   public String getUrlQuery(PekkoHttpParsingError request) {
     return request.query();
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      PekkoHttpParsingError request, @Nullable HttpResponse response) {
+    return request.peerAddress();
   }
 }
