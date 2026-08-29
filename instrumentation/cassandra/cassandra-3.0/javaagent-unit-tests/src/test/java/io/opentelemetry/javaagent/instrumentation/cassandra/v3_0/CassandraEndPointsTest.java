@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.exceptions.UnavailableException;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -60,29 +59,6 @@ class CassandraEndPointsTest {
             plainEndPoint(address(LOOPBACK_IP, 9042)), ConsistencyLevel.ONE, 1, 0);
 
     assertThat(CassandraEndPoints.isSniEndPoint(exception)).isFalse();
-  }
-
-  @Test
-  void readsBroadcastRpcAddress() throws UnknownHostException {
-    InetSocketAddress broadcastRpcAddress = address(new byte[] {10, 0, 0, 5}, 9042);
-    when(coordinator.getBroadcastRpcAddress()).thenReturn(broadcastRpcAddress);
-
-    assertThat(CassandraEndPoints.getBroadcastRpcAddress(coordinator))
-        .isEqualTo(broadcastRpcAddress);
-  }
-
-  @Test
-  void readsSniServerName() {
-    when(coordinator.getEndPoint()).thenReturn(sniEndPoint("node1.example.com"));
-
-    assertThat(CassandraEndPoints.getSniServerName(coordinator)).isEqualTo("node1.example.com");
-  }
-
-  @Test
-  void readsNoSniServerNameFromPlainEndPoint() throws UnknownHostException {
-    when(coordinator.getEndPoint()).thenReturn(plainEndPoint(address(LOOPBACK_IP, 9042)));
-
-    assertThat(CassandraEndPoints.getSniServerName(coordinator)).isNull();
   }
 
   @Test

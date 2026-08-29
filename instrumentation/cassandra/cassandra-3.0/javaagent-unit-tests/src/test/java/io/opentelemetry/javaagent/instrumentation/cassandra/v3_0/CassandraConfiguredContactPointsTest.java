@@ -5,49 +5,69 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static java.util.Locale.ROOT;
-import static java.util.stream.Collectors.toList;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.EndPoint;
-import com.datastax.driver.core.Session;
-import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 
-// Driver 3.x does not expose the original contact points after construction, so stable telemetry
-// must continue reporting the coordinator.
 class CassandraConfiguredContactPointsTest {
 
   @Test
-  void builtClientTellsNobodyWhatItWasConfiguredWith() {
-    assertThat(contactPointAccessors(Cluster.class)).isEmpty();
-    assertThat(contactPointAccessors(Session.class)).isEmpty();
+  void createsSingleHostTargetWithoutResolvingIt() {
+    CassandraConfiguredTarget target =
+        CassandraConfiguredTarget.create(new String[] {"db.example"}, 9042);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("db.example");
+    assertThat(target.getPort()).isEqualTo(9042);
   }
 
   @Test
-  void configuredHostNamesAreResolvedBeforeTheClientExists() {
-    List<EndPoint> contactPoints =
-        Cluster.builder().addContactPoint("localhost").getContactPoints();
+  void createsOrderedMultiHostTarget() throws UnknownHostException {
+    InetAddress address = InetAddress.getByAddress(new byte[] {10, 0, 0, 1});
+    CassandraConfiguredTarget target =
+        CassandraConfiguredTarget.create(
+            asList(
+                "db.example", address, InetSocketAddress.createUnresolved("other.example", 9142)),
+            9042);
 
-    assertThat(contactPoints).isNotEmpty();
-    assertThat(contactPoints)
-        .allSatisfy(endPoint -> assertThat(endPoint.resolve().isUnresolved()).isFalse());
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("db.example:9042,10.0.0.1:9042,other.example:9142");
+    assertThat(target.getPort()).isNull();
   }
 
-  private static List<Method> contactPointAccessors(Class<?> type) {
-    return Arrays.stream(type.getMethods())
-        .filter(method -> method.getParameterCount() == 0)
-        .filter(
-            method ->
-                Collection.class.isAssignableFrom(method.getReturnType())
-                    || EndPoint.class.isAssignableFrom(method.getReturnType())
-                    || InetSocketAddress.class.isAssignableFrom(method.getReturnType()))
-        .filter(method -> method.getName().toLowerCase(ROOT).contains("contact"))
-        .collect(toList());
+  @Test
+  void preservesUnresolvedSocketAddress() {
+    CassandraConfiguredTarget target =
+        CassandraConfiguredTarget.create(
+            InetSocketAddress.createUnresolved("unresolved.example", 9042), 9142);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("unresolved.example");
+    assertThat(target.getPort()).isEqualTo(9042);
+  }
+
+  @Test
+  void formatsIpv6InMultiHostTarget() throws UnknownHostException {
+    InetAddress address =
+        InetAddress.getByAddress(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1});
+    CassandraConfiguredTarget target =
+        CassandraConfiguredTarget.create(asList(address, "db.example"), 9042);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("[0:0:0:0:0:0:0:1]:9042,db.example:9042");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void ignoresInvalidContactPointData() {
+    CassandraConfiguredTarget target =
+        CassandraConfiguredTarget.create(new Object[] {null, "", new Object()}, 9042);
+
+    assertThat(target).isNull();
+    assertThat(CassandraConfiguredTarget.create("db.example", 0)).isNull();
   }
 }

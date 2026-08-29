@@ -1,0 +1,163 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
+
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
+import com.datastax.driver.core.Cluster;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.lang.reflect.Array;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Nullable;
+
+public class CassandraConfiguredTarget {
+
+  private final String address;
+  @Nullable private final Integer port;
+
+  private CassandraConfiguredTarget(String address, @Nullable Integer port) {
+    this.address = address;
+    this.port = port;
+  }
+
+  public static void capture(Cluster.Builder builder, Object[] arguments) {
+    ContactPoints contactPoints = VirtualFields.BUILDER_CONTACT_POINTS.get(builder);
+    if (contactPoints == null) {
+      contactPoints = new ContactPoints();
+      VirtualFields.BUILDER_CONTACT_POINTS.set(builder, contactPoints);
+    }
+    contactPoints.add(arguments);
+  }
+
+  public static void store(Cluster.Builder builder, Cluster cluster, int defaultPort) {
+    CassandraConfiguredTarget target =
+        create(VirtualFields.BUILDER_CONTACT_POINTS.get(builder), defaultPort);
+    if (target != null) {
+      VirtualFields.CLUSTER_TARGET.set(cluster, target);
+    }
+  }
+
+  @Nullable
+  static CassandraConfiguredTarget get(Cluster cluster) {
+    return VirtualFields.CLUSTER_TARGET.get(cluster);
+  }
+
+  @Nullable
+  static CassandraConfiguredTarget create(Object contactPoints, int defaultPort) {
+    ContactPoints captured = new ContactPoints();
+    captured.add(contactPoints);
+    return create(captured, defaultPort);
+  }
+
+  @Nullable
+  private static CassandraConfiguredTarget create(
+      @Nullable ContactPoints contactPoints, int defaultPort) {
+    if (contactPoints == null || defaultPort <= 0 || defaultPort > 65535) {
+      return null;
+    }
+    List<ContactPoint> points = contactPoints.points;
+    if (points.isEmpty()) {
+      return null;
+    }
+    if (points.size() == 1) {
+      ContactPoint point = points.get(0);
+      int port = point.port == null ? defaultPort : point.port;
+      return validPort(port) ? new CassandraConfiguredTarget(point.host, port) : null;
+    }
+
+    StringBuilder address = new StringBuilder();
+    for (ContactPoint point : points) {
+      int port = point.port == null ? defaultPort : point.port;
+      if (!validPort(port)) {
+        return null;
+      }
+      if (address.length() > 0) {
+        address.append(',');
+      }
+      address.append(formatHost(point.host)).append(':').append(port);
+    }
+    return new CassandraConfiguredTarget(address.toString(), null);
+  }
+
+  private static boolean validPort(int port) {
+    return port > 0 && port <= 65535;
+  }
+
+  private static String formatHost(String host) {
+    return host.indexOf(':') >= 0 && !host.startsWith("[") ? '[' + host + ']' : host;
+  }
+
+  void put(AttributesBuilder attributes) {
+    attributes.put(SERVER_ADDRESS, address);
+    if (port != null) {
+      attributes.put(SERVER_PORT, port);
+    }
+  }
+
+  String getAddress() {
+    return address;
+  }
+
+  @Nullable
+  Integer getPort() {
+    return port;
+  }
+
+  private static class ContactPoints {
+    private final List<ContactPoint> points = new ArrayList<>();
+
+    private void add(@Nullable Object value) {
+      if (value == null) {
+        return;
+      }
+      if (value instanceof String) {
+        String host = (String) value;
+        if (!host.isEmpty()) {
+          points.add(new ContactPoint(host, null));
+        }
+      } else if (value instanceof InetSocketAddress) {
+        InetSocketAddress address = (InetSocketAddress) value;
+        String host = address.getHostString();
+        if (!host.isEmpty()) {
+          points.add(new ContactPoint(host, address.getPort()));
+        }
+      } else if (value instanceof InetAddress) {
+        points.add(new ContactPoint(((InetAddress) value).getHostAddress(), null));
+      } else if (value instanceof Iterable) {
+        for (Object element : (Iterable<?>) value) {
+          add(element);
+        }
+      } else if (value.getClass().isArray()) {
+        int length = Array.getLength(value);
+        for (int i = 0; i < length; i++) {
+          add(Array.get(value, i));
+        }
+      }
+    }
+  }
+
+  private static class ContactPoint {
+    private final String host;
+    @Nullable private final Integer port;
+
+    private ContactPoint(String host, @Nullable Integer port) {
+      this.host = host;
+      this.port = port;
+    }
+  }
+
+  private static class VirtualFields {
+    private static final VirtualField<Cluster.Builder, ContactPoints> BUILDER_CONTACT_POINTS =
+        VirtualField.find(Cluster.Builder.class, ContactPoints.class);
+    private static final VirtualField<Cluster, CassandraConfiguredTarget> CLUSTER_TARGET =
+        VirtualField.find(Cluster.class, CassandraConfiguredTarget.class);
+  }
+}

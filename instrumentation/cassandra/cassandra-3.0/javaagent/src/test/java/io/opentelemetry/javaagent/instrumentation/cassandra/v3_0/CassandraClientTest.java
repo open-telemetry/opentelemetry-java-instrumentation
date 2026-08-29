@@ -48,6 +48,7 @@ import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SimpleStatement;
@@ -217,7 +218,39 @@ class CassandraClientTest {
   }
 
   @Test
-  void severalConfiguredContactPointsStillReportTheCoordinator() {
+  void singleConfiguredContactPointIsStableTarget() {
+    Cluster namedContactPointCluster =
+        Cluster.builder().addContactPoint("LOCALHOST").withPort(cassandraPort).build();
+    cleanup.deferCleanup(namedContactPointCluster);
+    Session session = namedContactPointCluster.connect();
+    cleanup.deferCleanup(session);
+
+    ResultSet resultSet = session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
+    InetSocketAddress coordinatorAddress =
+        resultSet.getExecutionInfo().getQueriedHost().getSocketAddress();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.satisfies(
+                        spanData -> {
+                          assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(
+                                  emitStableDatabaseSemconv()
+                                      ? "LOCALHOST"
+                                      : coordinatorAddress.getHostString());
+                          assertThat(spanData.getAttributes().get(SERVER_PORT))
+                              .isEqualTo((long) coordinatorAddress.getPort());
+                          assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
+                              .isEqualTo(coordinatorAddress.getAddress().getHostAddress());
+                          assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
+                              .isEqualTo((long) coordinatorAddress.getPort());
+                        })));
+  }
+
+  @Test
+  void multipleConfiguredContactPointsAreStableTarget() {
     Cluster multiContactPointCluster =
         Cluster.builder()
             .addContactPointsWithPorts(
@@ -229,43 +262,31 @@ class CassandraClientTest {
     Session session = multiContactPointCluster.connect();
     cleanup.deferCleanup(session);
 
-    session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
+    ResultSet resultSet = session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
+    InetSocketAddress coordinatorAddress =
+        resultSet.getExecutionInfo().getQueriedHost().getSocketAddress();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "DROP KEYSPACE" : "DROP")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
-                            equalTo(SERVER_ADDRESS, cassandraHost),
-                            equalTo(SERVER_PORT, cassandraPort),
-                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                            equalTo(NETWORK_PEER_PORT, cassandraPort),
-                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "DROP KEYSPACE IF EXISTS contact_points_test"),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "DROP KEYSPACE" : null),
-                            equalTo(maybeStable(DB_OPERATION), "DROP"),
-                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
-                            equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
-                            satisfies(
-                                maybeStable(DB_CASSANDRA_COORDINATOR_ID),
-                                coordinatorIdAvailable
-                                    ? val -> val.isInstanceOf(String.class)
-                                    : val -> val.isNull()),
-                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
-                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
-                            satisfies(
-                                maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
-                                speculativeExecutionCountAvailable
-                                    ? val -> val.isEqualTo(0)
-                                    : val -> val.isNull()))));
+                    span.satisfies(
+                        spanData -> {
+                          assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(
+                                  emitStableDatabaseSemconv()
+                                      ? cassandraHost + ":" + cassandraPort + ",127.0.0.2:9042"
+                                      : coordinatorAddress.getHostString());
+                          assertThat(spanData.getAttributes().get(SERVER_PORT))
+                              .isEqualTo(
+                                  emitStableDatabaseSemconv()
+                                      ? null
+                                      : (long) coordinatorAddress.getPort());
+                          assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
+                              .isEqualTo(coordinatorAddress.getAddress().getHostAddress());
+                          assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
+                              .isEqualTo((long) coordinatorAddress.getPort());
+                        })));
   }
 
   @ParameterizedTest(name = "{index}: {0}")

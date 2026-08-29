@@ -42,6 +42,10 @@ class CassandraAttributesExtractor
   @Override
   public void onStart(AttributesBuilder attributes, Context context, CassandraRequest request) {
     if (emitStableDatabaseSemconv()) {
+      CassandraConfiguredTarget configuredTarget = request.getConfiguredTarget();
+      if (configuredTarget != null) {
+        configuredTarget.put(attributes);
+      }
       attributes.put(CASSANDRA_CONSISTENCY_LEVEL, request.getConsistencyLevel());
       attributes.put(CASSANDRA_PAGE_SIZE, request.getPageSize());
       attributes.put(CASSANDRA_QUERY_IDEMPOTENT, request.isIdempotent());
@@ -64,12 +68,12 @@ class CassandraAttributesExtractor
       return;
     }
 
-    InetSocketAddress serverAddress = response.getServerAddress();
-    if (serverAddress != null) {
-      attributes.put(SERVER_ADDRESS, serverAddress.getHostString());
-      attributes.put(SERVER_PORT, serverAddress.getPort());
-    } else {
-      attributes.put(SERVER_ADDRESS, response.getServerName());
+    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
+      InetSocketAddress coordinatorAddress = response.getPeerAddress();
+      if (coordinatorAddress != null) {
+        attributes.put(SERVER_ADDRESS, coordinatorAddress.getHostString());
+        attributes.put(SERVER_PORT, coordinatorAddress.getPort());
+      }
     }
 
     ExecutionInfo executionInfo = response.getExecutionInfo();
