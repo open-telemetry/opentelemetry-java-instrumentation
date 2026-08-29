@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isSniEndPoint;
 import static java.util.Collections.singleton;
 
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
@@ -14,7 +13,6 @@ import com.datastax.oss.driver.api.core.cql.BatchableStatement;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.cql.Statement;
-import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.api.core.session.Session;
 import com.google.auto.value.AutoValue;
 import java.util.ArrayList;
@@ -95,25 +93,11 @@ abstract class CassandraRequest {
       @Nullable Long batchSize) {
     return new AutoValue_CassandraRequest(
         session,
-        effectiveServerTarget(session, serverTarget),
+        emitStableDatabaseSemconv() ? serverTarget : null,
         queryTexts,
         allQueriesParameterized,
         mixedParameterizedQueries,
         batchSize);
-  }
-
-  @Nullable
-  private static CassandraServerTarget effectiveServerTarget(
-      Session session, @Nullable CassandraServerTarget serverTarget) {
-    if (!emitStableDatabaseSemconv() || serverTarget == null) {
-      return null;
-    }
-    for (Node node : session.getMetadata().getNodes().values()) {
-      if (isSniEndPoint(node.getEndPoint())) {
-        return null;
-      }
-    }
-    return serverTarget;
   }
 
   private static String getQuery(Statement<?> statement) {
