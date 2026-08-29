@@ -47,7 +47,7 @@ class SpymemcachedRequestTest {
   }
 
   @Test
-  void connectionTheInstrumentationDidNotSeeBeingCreatedFallsBackToHandlingNode() {
+  void uncapturedTargetReportsHandlingNodeOnlyForLegacyTelemetry() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
     request.setHandlingNode(memcachedNode("selected.example", 11212));
@@ -56,9 +56,13 @@ class SpymemcachedRequestTest {
     new SpymemcachedServerAttributesExtractor()
         .onEnd(attributes, Context.root(), request, null, null);
 
-    Attributes result = attributes.build();
-    assertThat(result.get(SERVER_ADDRESS)).isEqualTo("selected.example");
-    assertThat(result.get(SERVER_PORT)).isEqualTo(11212);
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.build().asMap()).isEmpty();
+    } else {
+      Attributes result = attributes.build();
+      assertThat(result.get(SERVER_ADDRESS)).isEqualTo("selected.example");
+      assertThat(result.get(SERVER_PORT)).isEqualTo(11212);
+    }
   }
 
   @Test
