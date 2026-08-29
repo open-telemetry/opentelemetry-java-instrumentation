@@ -15,13 +15,17 @@ import javax.annotation.Nullable;
  * Remembers the subscription name that a durable or shared consumer was created with, so that it
  * can be reported on the spans for the messages that the consumer delivers.
  *
- * <p>The name is copied from the consumer to the message listener once the listener has been
- * registered, because providers dispatch messages to the listener without exposing the consumer
+ * <p>The name is copied from the consumer to the message listener before registering the listener,
+ * because providers may dispatch messages before registration returns without exposing the consumer
  * they came from. Registering the same listener instance on several consumers reports the name of
  * the most recently registered consumer, and closing a consumer doesn't restore the name of an
  * earlier one, because the listener is shared and there is no owner to hand it back to.
  */
 public class JmsSubscriptionNames {
+
+  private static final int SUBSCRIPTION_NAME = 0;
+  private static final int PREVIOUS_REGISTRATION = 1;
+  private static final int FAILED = 2;
 
   private static final VirtualField<MessageConsumer, String> CONSUMER_SUBSCRIPTION_NAME =
       VirtualField.find(MessageConsumer.class, String.class);
@@ -29,6 +33,8 @@ public class JmsSubscriptionNames {
       VirtualField.find(Message.class, String.class);
   private static final VirtualField<MessageListener, String> LISTENER_SUBSCRIPTION_NAME =
       VirtualField.find(MessageListener.class, String.class);
+  private static final VirtualField<MessageListener, Object[]> LISTENER_REGISTRATION =
+      VirtualField.find(MessageListener.class, Object[].class);
 
   public static void set(MessageConsumer consumer, String subscriptionName) {
     CONSUMER_SUBSCRIPTION_NAME.set(consumer, subscriptionName);
@@ -38,12 +44,33 @@ public class JmsSubscriptionNames {
     MESSAGE_SUBSCRIPTION_NAME.set(message, subscriptionName);
   }
 
-  public static void copyToListener(
-      MessageConsumer consumer, @Nullable MessageListener messageListener) {
-    if (messageListener == null) {
-      return;
+  public static Object beginListenerRegistration(
+      MessageConsumer consumer, MessageListener messageListener) {
+    synchronized (messageListener) {
+      Object[] registration = {
+        CONSUMER_SUBSCRIPTION_NAME.get(consumer),
+        currentRegistration(LISTENER_REGISTRATION.get(messageListener)),
+        false
+      };
+      setCurrentRegistration(messageListener, registration);
+      return registration;
     }
-    LISTENER_SUBSCRIPTION_NAME.set(messageListener, CONSUMER_SUBSCRIPTION_NAME.get(consumer));
+  }
+
+  public static void endListenerRegistration(
+      MessageListener messageListener, Object registrationToken, @Nullable Throwable throwable) {
+    Object[] registration = (Object[]) registrationToken;
+    synchronized (messageListener) {
+      if (throwable == null) {
+        registration[PREVIOUS_REGISTRATION] = null;
+        return;
+      }
+      registration[FAILED] = true;
+      if (LISTENER_REGISTRATION.get(messageListener) == registration) {
+        setCurrentRegistration(
+            messageListener, currentRegistration((Object[]) registration[PREVIOUS_REGISTRATION]));
+      }
+    }
   }
 
   @Nullable
@@ -59,6 +86,21 @@ public class JmsSubscriptionNames {
   @Nullable
   public static String get(MessageListener messageListener) {
     return LISTENER_SUBSCRIPTION_NAME.get(messageListener);
+  }
+
+  @Nullable
+  private static Object[] currentRegistration(@Nullable Object[] registration) {
+    while (registration != null && Boolean.TRUE.equals(registration[FAILED])) {
+      registration = (Object[]) registration[PREVIOUS_REGISTRATION];
+    }
+    return registration;
+  }
+
+  private static void setCurrentRegistration(
+      MessageListener messageListener, @Nullable Object[] registration) {
+    LISTENER_REGISTRATION.set(messageListener, registration);
+    LISTENER_SUBSCRIPTION_NAME.set(
+        messageListener, registration == null ? null : (String) registration[SUBSCRIPTION_NAME]);
   }
 
   private JmsSubscriptionNames() {}
