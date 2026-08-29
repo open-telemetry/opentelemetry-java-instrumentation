@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 import io.vertx.sqlclient.SqlConnectOptions;
 import javax.annotation.Nullable;
 
-public class VertxSqlClientData {
+public class VertxSqlClientData implements VertxSqlClientDataProvider {
   @Nullable private final SqlConnectOptions connectOptions;
   @Nullable private final String dbSystem;
   @Nullable private final VertxSqlAddressGroup addressGroup;
@@ -35,5 +35,10 @@ public class VertxSqlClientData {
   @Nullable
   public VertxSqlAddressGroup getAddressGroup() {
     return addressGroup;
+  }
+
+  @Override
+  public VertxSqlClientData get() {
+    return this;
   }
 }

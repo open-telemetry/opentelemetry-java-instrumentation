@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setAddressGroup;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
@@ -23,6 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -74,7 +76,7 @@ class PoolInstrumentation implements TypeInstrumentation {
 
       // set connection options to ThreadLocal, they will be read in SqlClientBase constructor
       setSqlConnectOptions(sqlConnectOptions);
-      setAddressGroup(null);
+      setAddressGroup(VertxSqlAddressGroup.of(sqlConnectOptions));
       return callDepth;
     }
 
@@ -89,9 +91,11 @@ class PoolInstrumentation implements TypeInstrumentation {
 
       if (pool != null) {
         setPoolConnectOptions(pool, sqlConnectOptions);
+        setPoolAddressGroup(pool, VertxSqlAddressGroup.of(sqlConnectOptions));
         VertxSqlClientSingletons.resolveAndStoreDbSystem(pool, sqlConnectOptions);
       }
       setSqlConnectOptions(null);
+      setAddressGroup(null);
     }
   }
 
@@ -103,7 +107,10 @@ class PoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
       return wrapContext(
           VertxSqlClientSingletons.attachClientState(
-              future, getPoolSqlConnectOptions(pool), getPoolAddressGroup(pool)));
+              future,
+              getPoolSqlConnectOptions(pool),
+              getPoolAddressGroup(pool),
+              VertxSqlClientSingletons.getPoolDataCapture(pool)));
     }
   }
 }

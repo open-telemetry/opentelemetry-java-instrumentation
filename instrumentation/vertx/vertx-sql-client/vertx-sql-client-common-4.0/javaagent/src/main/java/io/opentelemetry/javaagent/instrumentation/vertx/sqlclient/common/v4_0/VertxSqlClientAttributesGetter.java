@@ -57,9 +57,8 @@ class VertxSqlClientAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(VertxSqlClientRequest request) {
-    String addressGroup = request.getServerAddressGroup();
-    if (emitStableDatabaseSemconv() && addressGroup != null) {
-      return addressGroup;
+    if (emitStableDatabaseSemconv()) {
+      return request.getConfiguredServerAddress();
     }
     return request.getHost();
   }
@@ -67,8 +66,8 @@ class VertxSqlClientAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(VertxSqlClientRequest request) {
-    if (emitStableDatabaseSemconv() && request.getServerAddressGroup() != null) {
-      return null;
+    if (emitStableDatabaseSemconv()) {
+      return request.getConfiguredServerPort();
     }
     return request.getPort();
   }

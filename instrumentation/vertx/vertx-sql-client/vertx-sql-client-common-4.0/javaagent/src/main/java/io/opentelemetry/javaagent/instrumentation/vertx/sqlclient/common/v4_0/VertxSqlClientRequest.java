@@ -57,8 +57,13 @@ public class VertxSqlClientRequest {
   }
 
   @Nullable
-  public String getServerAddressGroup() {
+  public String getConfiguredServerAddress() {
     return addressGroup != null ? addressGroup.getAddress() : null;
+  }
+
+  @Nullable
+  public Integer getConfiguredServerPort() {
+    return addressGroup != null ? addressGroup.getPort() : null;
   }
 
   public boolean isParameterizedQuery() {

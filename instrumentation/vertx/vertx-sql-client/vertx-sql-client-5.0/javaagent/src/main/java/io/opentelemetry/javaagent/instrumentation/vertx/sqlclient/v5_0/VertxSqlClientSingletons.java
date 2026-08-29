@@ -9,7 +9,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.vertx.core.Future;
@@ -20,6 +23,7 @@ import io.vertx.sqlclient.impl.ClientBuilderBase;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {
@@ -39,8 +43,19 @@ public class VertxSqlClientSingletons {
   private static final VirtualField<SqlClientBase, VertxSqlAddressGroup> ADDRESS_GROUP =
       VirtualField.find(SqlClientBase.class, VertxSqlAddressGroup.class);
 
+  private static final VirtualField<SqlClientBase, VertxSqlClientDataCapture> DATA_CAPTURE =
+      VirtualField.find(SqlClientBase.class, VertxSqlClientDataCapture.class);
+
+  private static final VirtualField<Pool, VertxSqlClientDataCapture> POOL_DATA_CAPTURE =
+      VirtualField.find(Pool.class, VertxSqlClientDataCapture.class);
+
   private static final VirtualField<ClientBuilderBase<?>, List<SqlConnectOptions>>
       BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
+
+  private static final ThreadLocal<VertxSqlClientDataCapture> buildingDataCapture =
+      new ThreadLocal<>();
+  private static final ThreadLocal<VertxSqlClientDataCapture.Listener> captureListener =
+      new ThreadLocal<>();
 
   @Nullable
   private static final VirtualField<Object, Context> COMMAND_CONTEXT =
@@ -114,22 +129,91 @@ public class VertxSqlClientSingletons {
   public static void attachClientState(
       SqlClientBase sqlClientBase,
       @Nullable SqlConnectOptions connectOptions,
-      @Nullable VertxSqlAddressGroup addressGroup) {
+      @Nullable VertxSqlAddressGroup addressGroup,
+      @Nullable VertxSqlClientDataCapture dataCapture) {
     CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
     ADDRESS_GROUP.set(sqlClientBase, addressGroup);
+    DATA_CAPTURE.set(sqlClientBase, dataCapture);
   }
 
   public static Future<SqlConnection> attachClientState(
       Future<SqlConnection> future,
       @Nullable SqlConnectOptions connectOptions,
-      @Nullable VertxSqlAddressGroup addressGroup) {
+      @Nullable VertxSqlAddressGroup addressGroup,
+      @Nullable VertxSqlClientDataCapture dataCapture) {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {
-            attachClientState((SqlClientBase) sqlConnection, connectOptions, addressGroup);
+            attachClientState(
+                (SqlClientBase) sqlConnection, connectOptions, addressGroup, dataCapture);
           }
           return sqlConnection;
         });
+  }
+
+  @Nullable
+  public static VertxSqlClientDataCapture getDataCapture(SqlClientBase sqlClientBase) {
+    return DATA_CAPTURE.get(sqlClientBase);
+  }
+
+  public static void setPoolDataCapture(
+      Pool pool, @Nullable VertxSqlClientDataCapture dataCapture) {
+    POOL_DATA_CAPTURE.set(pool, dataCapture);
+  }
+
+  @Nullable
+  public static VertxSqlClientDataCapture getPoolDataCapture(Pool pool) {
+    return POOL_DATA_CAPTURE.get(pool);
+  }
+
+  public static void setBuildingDataCapture(@Nullable VertxSqlClientDataCapture dataCapture) {
+    if (dataCapture == null) {
+      buildingDataCapture.remove();
+    } else {
+      buildingDataCapture.set(dataCapture);
+    }
+  }
+
+  @Nullable
+  public static VertxSqlClientDataCapture getBuildingDataCapture() {
+    return buildingDataCapture.get();
+  }
+
+  public static void setCaptureListener(@Nullable VertxSqlClientDataCapture.Listener listener) {
+    if (listener == null) {
+      captureListener.remove();
+    } else {
+      captureListener.set(listener);
+    }
+  }
+
+  @Nullable
+  public static VertxSqlClientDataCapture.Listener getCaptureListener() {
+    return captureListener.get();
+  }
+
+  public static Supplier<Future<SqlConnectOptions>> capture(
+      Supplier<Future<SqlConnectOptions>> supplier, VertxSqlClientDataCapture dataCapture) {
+    return () -> {
+      VertxSqlClientDataCapture.Listener listener = getCaptureListener();
+      Future<SqlConnectOptions> future = supplier.get();
+      if (future == null) {
+        return null;
+      }
+      return future.map(
+          connectOptions -> {
+            dataCapture.capture(
+                connectOptions,
+                connectOptions != null
+                    ? VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions)
+                    : null);
+            VertxSqlClientData data = dataCapture.get();
+            if (data != null && listener != null) {
+              listener.onCapture(data);
+            }
+            return connectOptions;
+          });
+    };
   }
 
   public static void storeBuilderDatabases(

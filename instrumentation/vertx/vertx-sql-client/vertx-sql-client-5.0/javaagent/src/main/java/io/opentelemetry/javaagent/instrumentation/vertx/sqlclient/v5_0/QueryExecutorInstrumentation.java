@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientDataProvider;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
@@ -18,6 +19,8 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataProvider;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.core.internal.PromiseInternal;
@@ -49,32 +52,48 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
-      // copy client data from ThreadLocal to VirtualField
-      VertxSqlClientUtil.setQueryExecutorData(
-          queryExecutor,
-          new VertxSqlClientData(
-              getSqlConnectOptions(), getDbSystem(), VertxSqlClientUtil.getAddressGroup()));
+      VertxSqlClientDataProvider dataProvider = getClientDataProvider();
+      if (dataProvider == null) {
+        dataProvider =
+            new VertxSqlClientData(
+                getSqlConnectOptions(), getDbSystem(), VertxSqlClientUtil.getAddressGroup());
+      }
+      VertxSqlClientUtil.setQueryExecutorData(queryExecutor, dataProvider);
     }
   }
 
   @SuppressWarnings("unused")
   public static class QueryAdvice {
-    public static class AdviceScope {
+    public static class AdviceScope implements VertxSqlClientDataCapture.Listener {
       private final CallDepth callDepth;
-      @Nullable private final VertxSqlClientRequest otelRequest;
-      @Nullable private final Context context;
-      @Nullable private final Scope scope;
+      @Nullable private final String sql;
+      private final boolean parameterizedQuery;
+      @Nullable private final PromiseInternal<?> promiseInternal;
+      @Nullable private final Long batchSize;
+      @Nullable private final Context parentContext;
+      @Nullable private VertxSqlClientRequest otelRequest;
+      @Nullable private Context context;
+      @Nullable private Scope scope;
+      private boolean exited;
+      private boolean cancelled;
 
       private AdviceScope(CallDepth callDepth) {
-        this(callDepth, null, null, null);
+        this(callDepth, null, false, null, null, null);
       }
 
       private AdviceScope(
-          CallDepth callDepth, VertxSqlClientRequest otelRequest, Context context, Scope scope) {
+          CallDepth callDepth,
+          String sql,
+          boolean parameterizedQuery,
+          PromiseInternal<?> promiseInternal,
+          @Nullable Long batchSize,
+          Context parentContext) {
         this.callDepth = callDepth;
-        this.otelRequest = otelRequest;
-        this.context = context;
-        this.scope = scope;
+        this.sql = sql;
+        this.parameterizedQuery = parameterizedQuery;
+        this.promiseInternal = promiseInternal;
+        this.batchSize = batchSize;
+        this.parentContext = parentContext;
       }
 
       public static AdviceScope start(Object queryExecutor, String methodName, Object[] arguments) {
@@ -110,16 +129,36 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
 
-        VertxSqlClientData data = VertxSqlClientUtil.getQueryExecutorData(queryExecutor);
-        if (data == null) {
+        VertxSqlClientDataProvider dataProvider =
+            VertxSqlClientUtil.getQueryExecutorDataProvider(queryExecutor);
+        if (dataProvider == null) {
           return new AdviceScope(callDepth);
         }
+        AdviceScope adviceScope =
+            new AdviceScope(
+                callDepth, sql, parameterizedQuery, promiseInternal, batchSize, Context.current());
+        VertxSqlClientData data = dataProvider.get();
+        if (data == null) {
+          if (dataProvider instanceof VertxSqlClientDataCapture) {
+            VertxSqlClientSingletons.setCaptureListener(adviceScope);
+          }
+          return adviceScope;
+        }
+        adviceScope.startSpan(data);
+        return adviceScope;
+      }
+
+      private synchronized void startSpan(VertxSqlClientData data) {
+        if (cancelled
+            || context != null
+            || sql == null
+            || promiseInternal == null
+            || parentContext == null) {
+          return;
+        }
         SqlConnectOptions connectOptions = data.getConnectOptions();
-        // connectOptions is null when the pool was created via JDBCPool which bypasses the
-        // Pool.pool() factory, in that case we skip vertx-sql-client span creation and let JDBC
-        // instrumentation handle it
         if (connectOptions == null) {
-          return new AdviceScope(callDepth);
+          return;
         }
         String dbSystem = data.getDbSystem();
         if (dbSystem == null) {
@@ -136,27 +175,38 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
                 dbSystem,
                 batchSize,
                 data.getAddressGroup());
-        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-          return new AdviceScope(callDepth);
+          cancelled = true;
+          return;
         }
 
-        Context context = instrumenter().start(parentContext, otelRequest);
+        this.otelRequest = otelRequest;
+        context = instrumenter().start(parentContext, otelRequest);
         VertxSqlClientUtil.attachRequest(promiseInternal, otelRequest, context, parentContext);
-        return new AdviceScope(callDepth, otelRequest, context, context.makeCurrent());
+        if (!exited) {
+          scope = context.makeCurrent();
+        }
       }
 
-      public void end(@Nullable Throwable throwable) {
+      @Override
+      public void onCapture(VertxSqlClientData data) {
+        startSpan(data);
+      }
+
+      public synchronized void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
-        if (scope == null || context == null || otelRequest == null) {
-          return;
+        VertxSqlClientSingletons.setCaptureListener(null);
+        exited = true;
+        if (scope != null) {
+          scope.close();
         }
-
-        scope.close();
         if (throwable != null) {
-          instrumenter().end(context, otelRequest, null, throwable);
+          cancelled = true;
+          if (context != null && otelRequest != null) {
+            instrumenter().end(context, otelRequest, null, throwable);
+          }
         }
         // span will be ended in QueryResultBuilderInstrumentation
       }

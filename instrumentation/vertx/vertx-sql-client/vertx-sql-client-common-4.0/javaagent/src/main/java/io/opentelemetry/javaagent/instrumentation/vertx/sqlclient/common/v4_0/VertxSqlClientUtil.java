@@ -33,6 +33,8 @@ public class VertxSqlClientUtil {
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
   private static final ThreadLocal<String> dbSystem = new ThreadLocal<>();
   private static final ThreadLocal<VertxSqlAddressGroup> addressGroup = new ThreadLocal<>();
+  private static final ThreadLocal<VertxSqlClientDataProvider> clientDataProvider =
+      new ThreadLocal<>();
   private static final VirtualField<Pool, SqlConnectOptions> POOL_CONNECT_OPTIONS =
       VirtualField.find(Pool.class, SqlConnectOptions.class);
   private static final VirtualField<Pool, VertxSqlAddressGroup> POOL_ADDRESS_GROUP =
@@ -88,6 +90,19 @@ public class VertxSqlClientUtil {
     return addressGroup.get();
   }
 
+  public static void setClientDataProvider(@Nullable VertxSqlClientDataProvider value) {
+    if (value == null) {
+      clientDataProvider.remove();
+    } else {
+      clientDataProvider.set(value);
+    }
+  }
+
+  @Nullable
+  public static VertxSqlClientDataProvider getClientDataProvider() {
+    return clientDataProvider.get();
+  }
+
   public static void setPoolConnectOptions(Pool pool, SqlConnectOptions sqlConnectOptions) {
     POOL_CONNECT_OPTIONS.set(pool, sqlConnectOptions);
   }
@@ -106,13 +121,20 @@ public class VertxSqlClientUtil {
     return POOL_ADDRESS_GROUP.get(pool);
   }
 
-  public static void setQueryExecutorData(Object queryExecutor, VertxSqlClientData data) {
-    QueryExecutorUtil.setData(queryExecutor, data);
+  public static void setQueryExecutorData(
+      Object queryExecutor, VertxSqlClientDataProvider dataProvider) {
+    QueryExecutorUtil.setData(queryExecutor, dataProvider);
+  }
+
+  @Nullable
+  public static VertxSqlClientDataProvider getQueryExecutorDataProvider(Object queryExecutor) {
+    return (VertxSqlClientDataProvider) QueryExecutorUtil.getData(queryExecutor);
   }
 
   @Nullable
   public static VertxSqlClientData getQueryExecutorData(Object queryExecutor) {
-    return (VertxSqlClientData) QueryExecutorUtil.getData(queryExecutor);
+    VertxSqlClientDataProvider dataProvider = getQueryExecutorDataProvider(queryExecutor);
+    return dataProvider != null ? dataProvider.get() : null;
   }
 
   public static Future<PreparedStatement> attachPreparedStatementData(

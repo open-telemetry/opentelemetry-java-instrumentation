@@ -92,7 +92,7 @@ class PoolInstrumentation implements TypeInstrumentation {
 
       // set connection options to ThreadLocal, they will be read in SqlClientBase constructor
       setSqlConnectOptions(sqlConnectOptions);
-      setAddressGroup(null);
+      setAddressGroup(VertxSqlAddressGroup.of(sqlConnectOptions));
       return callDepth;
     }
 
@@ -107,12 +107,14 @@ class PoolInstrumentation implements TypeInstrumentation {
 
       if (pool != null) {
         setPoolConnectOptions(pool, sqlConnectOptions);
+        setPoolAddressGroup(pool, VertxSqlAddressGroup.of(sqlConnectOptions));
         // Detect db system from pool implementation class (e.g. PgPool -> postgresql).
         // This handles cases where connect options is a generic SqlConnectOptions
         // but the pool is database-specific (e.g. Hibernate Reactive).
         storeConnectOptionsDbSystem(sqlConnectOptions, getDbSystemNameFromClassName(pool));
       }
       setSqlConnectOptions(null);
+      setAddressGroup(null);
     }
   }
 

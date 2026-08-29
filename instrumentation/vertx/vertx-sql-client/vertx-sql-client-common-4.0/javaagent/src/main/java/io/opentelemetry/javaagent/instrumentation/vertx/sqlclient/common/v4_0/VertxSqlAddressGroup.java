@@ -12,11 +12,23 @@ import javax.annotation.Nullable;
 public class VertxSqlAddressGroup {
 
   private final String address;
+  @Nullable private final Integer port;
+
+  @Nullable
+  public static VertxSqlAddressGroup of(@Nullable SqlConnectOptions database) {
+    if (database == null || database.getHost() == null) {
+      return null;
+    }
+    return new VertxSqlAddressGroup(database.getHost(), database.getPort());
+  }
 
   @Nullable
   public static VertxSqlAddressGroup of(@Nullable List<? extends SqlConnectOptions> databases) {
-    if (databases == null || databases.size() < 2) {
+    if (databases == null || databases.isEmpty()) {
       return null;
+    }
+    if (databases.size() == 1) {
+      return of(databases.get(0));
     }
     StringBuilder address = new StringBuilder();
     for (SqlConnectOptions database : databases) {
@@ -32,15 +44,21 @@ public class VertxSqlAddressGroup {
       }
       appendHostPort(address, host, database.getPort());
     }
-    return new VertxSqlAddressGroup(address.toString());
+    return new VertxSqlAddressGroup(address.toString(), null);
   }
 
-  private VertxSqlAddressGroup(String address) {
+  private VertxSqlAddressGroup(String address, @Nullable Integer port) {
     this.address = address;
+    this.port = port;
   }
 
   public String getAddress() {
     return address;
+  }
+
+  @Nullable
+  public Integer getPort() {
+    return port;
   }
 
   private static void appendHostPort(StringBuilder address, String host, int port) {

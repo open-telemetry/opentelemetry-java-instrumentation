@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -34,12 +35,15 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.counting;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.core.Future;
@@ -52,6 +56,7 @@ import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.PreparedQuery;
 import io.vertx.sqlclient.PreparedStatement;
+import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -62,8 +67,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -147,6 +154,88 @@ class VertxSqlClientTest {
     select(listPool);
 
     testing.waitAndAssertTraces(trace -> assertServerGroup(trace, port + 1));
+  }
+
+  @Test
+  void testConnectingToSupplierCapturesTheSuppliedOptions() throws Exception {
+    AtomicInteger calls = new AtomicInteger();
+    PgConnectOptions suppliedOptions = connectOptions();
+    Pool supplierPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(
+                () -> {
+                  calls.incrementAndGet();
+                  return Future.succeededFuture(suppliedOptions);
+                })
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    select(supplierPool);
+
+    assertThat(calls).hasValue(1);
+    testing.waitAndAssertTraces(VertxSqlClientTest::assertSupplierTarget);
+  }
+
+  @Test
+  void testSupplierCaptureTracksChangingOptionsWithoutRetainingThem() {
+    AtomicInteger calls = new AtomicInteger();
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second = new PgConnectOptions(first).setHost("second.example");
+    VertxSqlClientDataCapture dataCapture = new VertxSqlClientDataCapture();
+    Supplier<Future<SqlConnectOptions>> supplier =
+        VertxSqlClientSingletons.capture(
+            () -> Future.succeededFuture(calls.getAndIncrement() == 0 ? first : second),
+            dataCapture);
+
+    assertThat(supplier.get().result()).isSameAs(first);
+    assertThat(dataCapture.get().getConnectOptions().getHost()).isEqualTo(host);
+    first.setHost("mutated.example");
+    assertThat(dataCapture.get().getConnectOptions().getHost()).isEqualTo(host);
+
+    assertThat(supplier.get().result()).isSameAs(second);
+    assertThat(dataCapture.get().getConnectOptions().getHost()).isEqualTo("second.example");
+    assertThat(calls).hasValue(2);
+  }
+
+  @Test
+  void testSupplierCapturePreservesExceptions() {
+    RuntimeException thrown = new RuntimeException("supplier failed");
+    VertxSqlClientDataCapture dataCapture = new VertxSqlClientDataCapture();
+    Supplier<Future<SqlConnectOptions>> throwingSupplier =
+        VertxSqlClientSingletons.capture(
+            () -> {
+              throw thrown;
+            },
+            dataCapture);
+
+    assertThatThrownBy(throwingSupplier::get).isSameAs(thrown);
+    assertThat(dataCapture.get()).isNull();
+
+    RuntimeException failed = new RuntimeException("future failed");
+    Supplier<Future<SqlConnectOptions>> failingSupplier =
+        VertxSqlClientSingletons.capture(() -> Future.failedFuture(failed), dataCapture);
+    assertThat(failingSupplier.get().cause()).isSameAs(failed);
+    assertThat(dataCapture.get()).isNull();
+  }
+
+  @Test
+  void testConfiguredTargetSnapshotsDirectOptionsAndLists() {
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
+
+    VertxSqlAddressGroup singleTarget = VertxSqlAddressGroup.of(first);
+    VertxSqlAddressGroup groupTarget = VertxSqlAddressGroup.of(asList(first, second));
+    first.setHost("mutated.example").setPort(1);
+
+    assertThat(singleTarget.getAddress()).isEqualTo(host);
+    assertThat(singleTarget.getPort()).isEqualTo(port);
+    assertThat(groupTarget.getAddress())
+        .isEqualTo(host + ":" + port + "," + host + ":" + (port + 1));
+    assertThat(groupTarget.getPort()).isNull();
+    assertThat(VertxSqlAddressGroup.of(emptyList())).isNull();
+    assertThat(VertxSqlAddressGroup.of((SqlConnectOptions) null)).isNull();
   }
 
   @Test
@@ -255,6 +344,43 @@ class VertxSqlClientTest {
                         emitStableDatabaseSemconv()
                             ? host + ":" + port + "," + host + ":" + secondPort
                             : host),
+                    equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port))));
+  }
+
+  private static void assertSupplierTarget(TraceAssert trace) {
+    if (emitOldDatabaseSemconv() && emitStableDatabaseSemconv()) {
+      trace.hasSpansSatisfyingExactly(
+          span ->
+              span.hasKind(SpanKind.CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(maybeStable(DB_SYSTEM), POSTGRESQL),
+                      equalTo(maybeStable(DB_NAME), DB),
+                      equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                      equalTo(DB_QUERY_SUMMARY, "select test"),
+                      equalTo(DB_NAME, DB),
+                      equalTo(DB_USER, USER_DB),
+                      equalTo(DB_STATEMENT, "select * from test"),
+                      equalTo(DB_OPERATION, "SELECT"),
+                      equalTo(DB_SQL_TABLE, "test")));
+      return;
+    }
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                    equalTo(maybeStable(DB_NAME), DB),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                    equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                    equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
+                    equalTo(
+                        maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                    equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
+                    equalTo(
+                        maybeStablePeerService(),
+                        emitStableDatabaseSemconv() ? null : "test-peer-service"),
+                    equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                     equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port))));
   }
 

@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -62,19 +63,28 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
         return future;
       }
 
+      VertxSqlClientDataCapture dataCapture =
+          VertxSqlClientSingletons.getDataCapture(sqlClientBase);
+      VertxSqlClientData data = dataCapture != null ? dataCapture.get() : null;
       SqlConnectOptions connectOptions =
-          VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
+          data != null
+              ? data.getConnectOptions()
+              : VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
       String dbSystem =
-          connectOptions != null
-              ? VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions)
-              : null;
+          data != null
+              ? data.getDbSystem()
+              : connectOptions != null
+                  ? VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions)
+                  : null;
       return wrapContext(
           attachPreparedStatementData(
               future,
-              new VertxSqlClientData(
-                  connectOptions,
-                  dbSystem,
-                  VertxSqlClientSingletons.getAddressGroup(sqlClientBase))));
+              data != null
+                  ? data
+                  : new VertxSqlClientData(
+                      connectOptions,
+                      dbSystem,
+                      VertxSqlClientSingletons.getAddressGroup(sqlClientBase))));
     }
   }
 }
