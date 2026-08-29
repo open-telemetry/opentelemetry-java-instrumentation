@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -48,6 +49,13 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("java.lang.String"))),
         getClass().getName() + "$SentineledConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("initializeSlotsCache", "initialize")
+            .and(takesArgument(0, namedOneOf("java.util.Set", "java.util.List"))),
+        getClass().getName() + "$InitializeAdvice");
+    transformer.applyAdviceToMethod(
+        named("initSentinels").and(takesArgument(0, named("java.util.Set"))),
+        getClass().getName() + "$InitializeSentinelsAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf(
                 "getConnection",
@@ -88,6 +96,41 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         @Advice.AllArguments Object[] arguments) {
       JedisSingletons.setProviderTarget(
           provider, JedisServerTargets.ofSentinelsFromArguments(masterName, arguments));
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializeAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.Argument(0) @Nullable Collection<HostAndPort> nodes) {
+      return JedisSingletons.openConfiguredTargetScope(JedisServerTargets.ofNodes(nodes));
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializeSentinelsAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(
+        @Advice.FieldValue("masterName") @Nullable String masterName,
+        @Advice.Argument(0) @Nullable Set<HostAndPort> sentinels) {
+      return JedisSingletons.openConfiguredTargetScope(
+          JedisServerTargets.ofSentinels(masterName, sentinels));
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 

@@ -35,16 +35,23 @@ public class JedisSingletons {
 
   private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
       VirtualField.find(Connection.class, RedisServerTarget.class);
+  private static final VirtualField<Connection, Boolean> CONNECTION_TARGET_SUPPRESSED =
+      VirtualField.find(Connection.class, Boolean.class);
 
   private static final VirtualField<Pool<?>, RedisServerTarget> POOL_TARGET =
       VirtualField.find(Pool.class, RedisServerTarget.class);
+  private static final VirtualField<Pool<?>, Boolean> POOL_TARGET_CONFIGURED =
+      VirtualField.find(Pool.class, Boolean.class);
 
   // the connection provider interface was renamed between jedis 4.0.0-beta1 and 4.0.0, so it has no
   // type that spans this module's whole version range and cannot carry a virtual field
   private static final Cache<Object, RedisServerTarget> providerTargets = Cache.weak();
+  private static final Cache<Object, Boolean> configuredProviders = Cache.weak();
 
-  private static final ContextKey<RedisServerTarget> CURRENT_PROVIDER_TARGET =
-      ContextKey.named("opentelemetry-jedis-provider-target");
+  private static final ContextKey<RedisServerTarget> CURRENT_CONFIGURED_TARGET =
+      ContextKey.named("opentelemetry-jedis-configured-target");
+  private static final ContextKey<Boolean> SUPPRESS_SINGLETON_TARGET =
+      ContextKey.named("opentelemetry-jedis-suppress-singleton-target");
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -82,49 +89,94 @@ public class JedisSingletons {
 
   public static void setConnectionInfo(
       Connection connection, JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
-    CONNECTION_INFO.set(connection, JedisConnectionInfo.create(socketFactory, clientConfig));
+    JedisConnectionInfo connectionInfo = JedisConnectionInfo.create(socketFactory, clientConfig);
+    CONNECTION_INFO.set(connection, connectionInfo);
+    setConnectionTarget(connection, connectionInfo.getServerTarget());
   }
 
   public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
     POOL_TARGET.set(pool, target);
+    POOL_TARGET_CONFIGURED.set(pool, true);
   }
 
   public static void setProviderTarget(Object provider, @Nullable RedisServerTarget target) {
+    configuredProviders.put(provider, true);
     if (target != null) {
       providerTargets.put(provider, target);
     }
   }
 
   public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
-    RedisServerTarget target = POOL_TARGET.get(pool);
-    if (target != null && resource instanceof Jedis) {
-      setConnectionTarget(((Jedis) resource).getConnection(), target);
+    if (Boolean.TRUE.equals(POOL_TARGET_CONFIGURED.get(pool)) && resource instanceof Jedis) {
+      setAggregateConnectionTarget(((Jedis) resource).getConnection(), POOL_TARGET.get(pool));
     }
   }
 
   public static void attachProviderTarget(Object provider, @Nullable Connection connection) {
-    setConnectionTarget(connection, providerTargets.get(provider));
+    if (Boolean.TRUE.equals(configuredProviders.get(provider))) {
+      setAggregateConnectionTarget(connection, providerTargets.get(provider));
+    }
   }
 
   @Nullable
   public static Scope openProviderTargetScope(Object provider) {
-    RedisServerTarget target = providerTargets.get(provider);
-    return target == null
-        ? null
-        : Context.current().with(CURRENT_PROVIDER_TARGET, target).makeCurrent();
+    return Boolean.TRUE.equals(configuredProviders.get(provider))
+        ? openConfiguredTargetScope(providerTargets.get(provider))
+        : null;
+  }
+
+  @Nullable
+  public static Scope openPoolTargetScope(Pool<?> pool) {
+    return Boolean.TRUE.equals(POOL_TARGET_CONFIGURED.get(pool))
+        ? openConfiguredTargetScope(POOL_TARGET.get(pool))
+        : null;
+  }
+
+  public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
+    Context context = Context.current().with(SUPPRESS_SINGLETON_TARGET, true);
+    if (target != null) {
+      context = context.with(CURRENT_CONFIGURED_TARGET, target);
+    }
+    return context.makeCurrent();
   }
 
   private static void setConnectionTarget(
       @Nullable Connection connection, @Nullable RedisServerTarget target) {
-    if (connection != null && target != null) {
+    if (connection == null) {
+      return;
+    }
+    if (target != null) {
       CONNECTION_TARGET.set(connection, target);
+      CONNECTION_TARGET_SUPPRESSED.set(connection, null);
+    } else {
+      CONNECTION_TARGET_SUPPRESSED.set(connection, true);
+    }
+  }
+
+  private static void setAggregateConnectionTarget(
+      @Nullable Connection connection, @Nullable RedisServerTarget target) {
+    if (connection == null) {
+      return;
+    }
+    if (target != null) {
+      CONNECTION_TARGET.set(connection, target);
+      CONNECTION_TARGET_SUPPRESSED.set(connection, null);
+    } else {
+      CONNECTION_TARGET_SUPPRESSED.set(connection, true);
     }
   }
 
   @Nullable
   static RedisServerTarget connectionTarget(Connection connection) {
-    RedisServerTarget target = CONNECTION_TARGET.get(connection);
-    return target != null ? target : Context.current().get(CURRENT_PROVIDER_TARGET);
+    Context context = Context.current();
+    RedisServerTarget target = context.get(CURRENT_CONFIGURED_TARGET);
+    if (target != null || Boolean.TRUE.equals(context.get(SUPPRESS_SINGLETON_TARGET))) {
+      return target;
+    }
+    if (Boolean.TRUE.equals(CONNECTION_TARGET_SUPPRESSED.get(connection))) {
+      return null;
+    }
+    return CONNECTION_TARGET.get(connection);
   }
 
   private JedisSingletons() {}

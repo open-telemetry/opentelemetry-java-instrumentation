@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -32,9 +33,24 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetResourceAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Pool<?> pool, @Advice.Return @Nullable Object resource) {
-      JedisSingletons.attachPoolTarget(pool, resource);
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.This Pool<?> pool) {
+      return JedisSingletons.openPoolTargetScope(pool);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Pool<?> pool,
+        @Advice.Return @Nullable Object resource,
+        @Advice.Enter @Nullable Scope scope) {
+      try {
+        JedisSingletons.attachPoolTarget(pool, resource);
+      } finally {
+        if (scope != null) {
+          scope.close();
+        }
+      }
     }
   }
 }

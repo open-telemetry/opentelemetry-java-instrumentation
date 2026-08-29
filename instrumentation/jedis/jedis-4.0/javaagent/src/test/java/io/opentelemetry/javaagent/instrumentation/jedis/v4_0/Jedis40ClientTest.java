@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -99,7 +100,7 @@ class Jedis40ClientTest {
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
+                        .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
@@ -120,6 +121,41 @@ class Jedis40ClientTest {
         SERVER_PORT,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT);
+  }
+
+  @Test
+  void pooledCommand() throws Exception {
+    Class<?> poolClass;
+    try {
+      poolClass = Class.forName("redis.clients.jedis.JedisPool");
+    } catch (ClassNotFoundException exception) {
+      assumeTrue(false, "JedisPool was reintroduced after 4.0.0-beta1");
+      return;
+    }
+
+    Object pool = poolClass.getConstructor(String.class, int.class).newInstance(host, port);
+    cleanup.deferAfterAll((AutoCloseable) pool);
+    try (Jedis pooled = (Jedis) poolClass.getMethod("getResource").invoke(pool)) {
+      testing.clearData();
+      pooled.set("pooled", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfying(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET pooled ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test

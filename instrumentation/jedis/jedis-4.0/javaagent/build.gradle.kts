@@ -40,7 +40,18 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  val testDupSemconv = register<Test>("testDupSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*Jedis40ClientTest.setCommand")
+      includeTestsMatching("*Jedis40ClientTest.pooledCommand")
+    }
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
+  }
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testDupSemconv, testStableSemconv)
   }
 }

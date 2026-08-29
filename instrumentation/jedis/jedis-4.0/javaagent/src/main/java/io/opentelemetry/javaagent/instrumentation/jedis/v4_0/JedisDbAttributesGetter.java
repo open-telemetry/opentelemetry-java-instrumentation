@@ -54,8 +54,8 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   @Nullable
   public String getServerAddress(JedisRequest request) {
     RedisServerTarget target = request.getServerTarget();
-    if (emitStableDatabaseSemconv() && target != null) {
-      return target.getAddress();
+    if (emitStableDatabaseSemconv()) {
+      return target != null ? target.getAddress() : null;
     }
     return request.getServerAddress();
   }
@@ -64,8 +64,8 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   @Nullable
   public Integer getServerPort(JedisRequest request) {
     RedisServerTarget target = request.getServerTarget();
-    if (emitStableDatabaseSemconv() && target != null) {
-      return target.getPort();
+    if (emitStableDatabaseSemconv()) {
+      return target != null ? target.getPort() : null;
     }
     return request.getServerPort();
   }
