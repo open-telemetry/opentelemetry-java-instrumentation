@@ -38,6 +38,9 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("java.util.Set"))),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
+        named("initializeSlotsCache").and(takesArgument(0, named("java.util.Set"))),
+        getClass().getName() + "$InitializeAdvice");
+    transformer.applyAdviceToMethod(
         namedOneOf("getConnection", "getConnectionFromSlot")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisSlotBasedConnectionHandler")))
             .and(returns(named("redis.clients.jedis.Jedis"))),
@@ -56,6 +59,22 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This Object handler, @Advice.Argument(0) @Nullable Set<?> nodes) {
       JedisSingletons.setClusterTarget(handler, JedisServerTargets.ofNodes(nodes));
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializeAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.Argument(0) @Nullable Set<?> nodes) {
+      return JedisSingletons.openConfiguredTargetScope(JedisServerTargets.ofNodes(nodes));
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 

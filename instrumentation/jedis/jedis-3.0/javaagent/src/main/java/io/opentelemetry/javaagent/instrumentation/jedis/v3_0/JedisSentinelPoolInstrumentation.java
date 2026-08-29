@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Set;
@@ -32,6 +33,11 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("java.lang.String")))
             .and(takesArgument(1, named("java.util.Set"))),
         getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        named("initSentinels")
+            .and(takesArgument(0, named("java.util.Set")))
+            .and(takesArgument(1, named("java.lang.String"))),
+        getClass().getName() + "$InitializeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -43,6 +49,25 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) @Nullable String masterName,
         @Advice.Argument(1) @Nullable Set<?> sentinels) {
       JedisSingletons.setPoolTarget(pool, JedisServerTargets.ofSentinels(masterName, sentinels));
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializeAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(
+        @Advice.Argument(0) @Nullable Set<?> sentinels,
+        @Advice.Argument(1) @Nullable String masterName) {
+      return JedisSingletons.openConfiguredTargetScope(
+          JedisServerTargets.ofSentinels(masterName, sentinels));
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }

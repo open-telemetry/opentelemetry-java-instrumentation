@@ -34,19 +34,30 @@ public class JedisSingletons {
 
   private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
       VirtualField.find(Connection.class, RedisServerTarget.class);
+  private static final VirtualField<Connection, Boolean> CONNECTION_TARGET_SUPPRESSED =
+      VirtualField.find(Connection.class, Boolean.class);
 
   private static final VirtualField<Sharded<?, ?>, RedisServerTarget> SHARDED_TARGET =
       VirtualField.find(Sharded.class, RedisServerTarget.class);
+  private static final VirtualField<Sharded<?, ?>, Boolean> SHARDED_TARGET_CONFIGURED =
+      VirtualField.find(Sharded.class, Boolean.class);
 
   private static final VirtualField<Pool<?>, RedisServerTarget> POOL_TARGET =
       VirtualField.find(Pool.class, RedisServerTarget.class);
+  private static final VirtualField<Pool<?>, Boolean> POOL_TARGET_CONFIGURED =
+      VirtualField.find(Pool.class, Boolean.class);
 
   private static final VirtualField<JedisClusterConnectionHandler, RedisServerTarget>
       CLUSTER_TARGET =
           VirtualField.find(JedisClusterConnectionHandler.class, RedisServerTarget.class);
+  private static final VirtualField<JedisClusterConnectionHandler, Boolean>
+      CLUSTER_TARGET_CONFIGURED =
+          VirtualField.find(JedisClusterConnectionHandler.class, Boolean.class);
 
-  private static final ContextKey<RedisServerTarget> CURRENT_CLUSTER_TARGET =
-      ContextKey.named("opentelemetry-jedis-cluster-target");
+  private static final ContextKey<RedisServerTarget> CURRENT_CONFIGURED_TARGET =
+      ContextKey.named("opentelemetry-jedis-configured-target");
+  private static final ContextKey<Boolean> SUPPRESS_SINGLETON_TARGET =
+      ContextKey.named("opentelemetry-jedis-suppress-singleton-target");
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -82,52 +93,106 @@ public class JedisSingletons {
 
   public static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
     SHARDED_TARGET.set(sharded, target);
+    SHARDED_TARGET_CONFIGURED.set(sharded, true);
   }
 
   public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
     POOL_TARGET.set(pool, target);
+    POOL_TARGET_CONFIGURED.set(pool, true);
   }
 
   public static void setClusterTarget(
       JedisClusterConnectionHandler handler, @Nullable RedisServerTarget target) {
     CLUSTER_TARGET.set(handler, target);
+    CLUSTER_TARGET_CONFIGURED.set(handler, true);
   }
 
   public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
-    attach(SHARDED_TARGET.get(sharded), shard);
+    if (Boolean.TRUE.equals(SHARDED_TARGET_CONFIGURED.get(sharded))) {
+      attach(SHARDED_TARGET.get(sharded), shard);
+    }
   }
 
   public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
-    attach(POOL_TARGET.get(pool), resource);
+    if (Boolean.TRUE.equals(POOL_TARGET_CONFIGURED.get(pool))) {
+      attach(POOL_TARGET.get(pool), resource);
+    }
   }
 
   public static void attachClusterTarget(
       JedisClusterConnectionHandler handler, @Nullable Object connection) {
-    attach(CLUSTER_TARGET.get(handler), connection);
+    if (Boolean.TRUE.equals(CLUSTER_TARGET_CONFIGURED.get(handler))) {
+      attach(CLUSTER_TARGET.get(handler), connection);
+    }
   }
 
   @Nullable
   public static Scope openClusterTargetScope(JedisClusterConnectionHandler handler) {
-    RedisServerTarget target = CLUSTER_TARGET.get(handler);
-    return target == null
-        ? null
-        : Context.current().with(CURRENT_CLUSTER_TARGET, target).makeCurrent();
+    return Boolean.TRUE.equals(CLUSTER_TARGET_CONFIGURED.get(handler))
+        ? openConfiguredTargetScope(CLUSTER_TARGET.get(handler))
+        : null;
+  }
+
+  @Nullable
+  public static Scope openPoolTargetScope(Pool<?> pool) {
+    return Boolean.TRUE.equals(POOL_TARGET_CONFIGURED.get(pool))
+        ? openConfiguredTargetScope(POOL_TARGET.get(pool))
+        : null;
+  }
+
+  public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
+    Context context = Context.current().with(SUPPRESS_SINGLETON_TARGET, true);
+    if (target != null) {
+      context = context.with(CURRENT_CONFIGURED_TARGET, target);
+    }
+    return context.makeCurrent();
   }
 
   private static void attach(@Nullable RedisServerTarget target, @Nullable Object jedis) {
-    if (target == null || !(jedis instanceof BinaryJedis)) {
+    if (!(jedis instanceof BinaryJedis)) {
       return;
     }
     Connection connection = ((BinaryJedis) jedis).getClient();
-    if (connection != null) {
+    setAggregateConnectionTarget(connection, target);
+  }
+
+  public static void setConnectionTarget(
+      @Nullable Connection connection, @Nullable RedisServerTarget target) {
+    if (connection == null) {
+      return;
+    }
+    if (target != null) {
       CONNECTION_TARGET.set(connection, target);
+      CONNECTION_TARGET_SUPPRESSED.set(connection, null);
+    } else {
+      CONNECTION_TARGET_SUPPRESSED.set(connection, true);
+    }
+  }
+
+  private static void setAggregateConnectionTarget(
+      @Nullable Connection connection, @Nullable RedisServerTarget target) {
+    if (connection == null) {
+      return;
+    }
+    if (target != null) {
+      CONNECTION_TARGET.set(connection, target);
+      CONNECTION_TARGET_SUPPRESSED.set(connection, null);
+    } else {
+      CONNECTION_TARGET_SUPPRESSED.set(connection, true);
     }
   }
 
   @Nullable
   static RedisServerTarget connectionTarget(Connection connection) {
-    RedisServerTarget target = CONNECTION_TARGET.get(connection);
-    return target != null ? target : Context.current().get(CURRENT_CLUSTER_TARGET);
+    Context context = Context.current();
+    RedisServerTarget target = context.get(CURRENT_CONFIGURED_TARGET);
+    if (target != null || Boolean.TRUE.equals(context.get(SUPPRESS_SINGLETON_TARGET))) {
+      return target;
+    }
+    if (Boolean.TRUE.equals(CONNECTION_TARGET_SUPPRESSED.get(connection))) {
+      return null;
+    }
+    return CONNECTION_TARGET.get(connection);
   }
 
   private JedisSingletons() {}

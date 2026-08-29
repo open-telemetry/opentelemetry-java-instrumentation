@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import javax.annotation.Nullable;
 import redis.clients.jedis.DefaultJedisSocketFactoryUtil;
 import redis.clients.jedis.HostAndPort;
@@ -50,5 +51,12 @@ class JedisConnectionInfo {
   @Nullable
   Long getDatabaseIndex() {
     return databaseIndex;
+  }
+
+  @Nullable
+  RedisServerTarget getServerTarget() {
+    return serverAddress == null || serverPort == null
+        ? null
+        : RedisServerTarget.ofHostAndPort(serverAddress, serverPort);
   }
 }
