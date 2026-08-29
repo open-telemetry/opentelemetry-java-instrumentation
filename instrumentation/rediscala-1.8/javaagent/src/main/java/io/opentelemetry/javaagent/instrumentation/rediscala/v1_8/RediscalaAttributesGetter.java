@@ -63,8 +63,8 @@ class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaReq
   @Override
   public String getServerAddress(RediscalaRequest request) {
     RedisServerTarget serverTarget = request.getServerTarget();
-    if (emitStableDatabaseSemconv() && serverTarget != null) {
-      return serverTarget.getAddress();
+    if (emitStableDatabaseSemconv()) {
+      return serverTarget != null ? serverTarget.getAddress() : null;
     }
     return request.getHost();
   }
@@ -73,8 +73,8 @@ class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaReq
   @Override
   public Integer getServerPort(RediscalaRequest request) {
     RedisServerTarget serverTarget = request.getServerTarget();
-    if (emitStableDatabaseSemconv() && serverTarget != null) {
-      return serverTarget.getPort();
+    if (emitStableDatabaseSemconv()) {
+      return serverTarget != null ? serverTarget.getPort() : null;
     }
     return request.getPort();
   }
