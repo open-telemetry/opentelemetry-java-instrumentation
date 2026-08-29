@@ -39,7 +39,6 @@ class CollectFlakyScansByTimeTest(unittest.TestCase):
             (500000, 999999): history(2, "scan-4", "scan-5"),
             (0, 499999): history(3, "scan-2"),
             (250000, 499999): history(1, "scan-3"),
-            (0, 249999): history(2, "scan-1", "scan-2"),
         }
         requested_windows = []
 
