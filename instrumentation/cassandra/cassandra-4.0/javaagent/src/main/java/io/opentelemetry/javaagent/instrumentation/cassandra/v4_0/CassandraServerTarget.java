@@ -49,7 +49,7 @@ class CassandraServerTarget {
       }
       return combine(contactPoints);
     } catch (RuntimeException ignored) {
-      // a session that cannot describe its own configuration keeps reporting its coordinator
+      // A session that cannot describe its configuration has no stable server target.
       return null;
     }
   }

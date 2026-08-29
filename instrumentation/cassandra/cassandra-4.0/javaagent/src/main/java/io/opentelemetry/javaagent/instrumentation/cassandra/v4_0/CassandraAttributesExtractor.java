@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.getSniServerName;
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isSniEndPoint;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL;
@@ -28,7 +26,6 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.Statement;
-import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -59,7 +56,7 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      updateServerAddressAndPort(attributes, request, coordinator);
+      updateServerAddressAndPort(attributes, coordinator);
       String coordinatorDc = coordinator.getDatacenter();
       if (emitStableDatabaseSemconv()) {
         attributes.put(CASSANDRA_COORDINATOR_DC, coordinatorDc);
@@ -132,40 +129,14 @@ final class CassandraAttributesExtractor
     }
   }
 
-  static void updateServerAddressAndPort(
-      AttributesBuilder attributes, CassandraRequest request, Node coordinator) {
-    EndPoint endPoint = coordinator.getEndPoint();
-    if (emitStableDatabaseSemconv() && isSniEndPoint(endPoint)) {
-      updateStableSniServerAddressAndPort(attributes, coordinator, endPoint);
+  static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
+    if (emitStableDatabaseSemconv()) {
       return;
     }
-    // Preserve the configured target that stable semconv records on span start.
-    if (emitStableDatabaseSemconv() && request.getServerTarget() != null) {
-      return;
-    }
-    // Legacy semconv still records the proxy under SNI. Custom endpoints may be direct connections.
-    SocketAddress address = endPoint.resolve();
+    SocketAddress address = coordinator.getEndPoint().resolve();
     if (address instanceof InetSocketAddress) {
       attributes.put(SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
       attributes.put(SERVER_PORT, ((InetSocketAddress) address).getPort());
-    }
-  }
-
-  private static void updateStableSniServerAddressAndPort(
-      AttributesBuilder attributes, Node coordinator, EndPoint endPoint) {
-    // SniEndPoint.resolve() returns the proxy, performs DNS, and advances the driver's shared
-    // round-robin counter. The broadcast RPC address identifies the server without those effects.
-    InetSocketAddress rpcAddress = coordinator.getBroadcastRpcAddress().orElse(null);
-    if (rpcAddress != null) {
-      attributes.put(SERVER_ADDRESS, rpcAddress.getHostString());
-      attributes.put(SERVER_PORT, rpcAddress.getPort());
-      return;
-    }
-    // Cloud deployments use the host id as the SNI name, not an address.
-    String serverName = getSniServerName(endPoint);
-    UUID hostId = coordinator.getHostId();
-    if (hostId == null || !hostId.toString().equals(serverName)) {
-      attributes.put(SERVER_ADDRESS, serverName);
     }
   }
 }
