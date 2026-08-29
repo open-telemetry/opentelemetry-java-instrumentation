@@ -98,8 +98,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) Supplier<SocketAddress> socketAddressSupplier) {
       ENDPOINT_DATABASE_INDEX.set(endpoint, redisUri.getDatabase());
       RedisServerTarget clusterTarget = CLUSTER_CLIENT_TARGET.get(client);
-      ENDPOINT_TARGET.set(
-          endpoint, clusterTarget != null ? clusterTarget : LettuceServerTargets.of(redisUri));
+      ENDPOINT_TARGET.set(endpoint, clusterTarget);
       return socketAddressSupplier instanceof EndpointAddressSupplier
           ? socketAddressSupplier
           : new EndpointAddressSupplier(socketAddressSupplier, endpoint);

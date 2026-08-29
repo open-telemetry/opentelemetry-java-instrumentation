@@ -68,9 +68,9 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Nullable
   @Override
   public String getServerAddress(RedisCommand<?, ?, ?> request) {
-    RedisServerTarget target = LettuceSingletons.COMMAND_TARGET.get(request);
-    if (emitStableDatabaseSemconv() && target != null) {
-      return target.getAddress();
+    if (emitStableDatabaseSemconv()) {
+      RedisServerTarget target = LettuceSingletons.COMMAND_TARGET.get(request);
+      return target != null ? target.getAddress() : null;
     }
     InetSocketAddress serverAddress = LettuceSingletons.COMMAND_ADDRESS.get(request);
     return serverAddress != null ? serverAddress.getHostString() : null;
@@ -79,9 +79,9 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Nullable
   @Override
   public Integer getServerPort(RedisCommand<?, ?, ?> request) {
-    RedisServerTarget target = LettuceSingletons.COMMAND_TARGET.get(request);
-    if (emitStableDatabaseSemconv() && target != null) {
-      return target.getPort();
+    if (emitStableDatabaseSemconv()) {
+      RedisServerTarget target = LettuceSingletons.COMMAND_TARGET.get(request);
+      return target != null ? target.getPort() : null;
     }
     InetSocketAddress serverAddress = LettuceSingletons.COMMAND_ADDRESS.get(request);
     return serverAddress != null ? serverAddress.getPort() : null;
