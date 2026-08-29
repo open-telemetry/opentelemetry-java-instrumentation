@@ -45,6 +45,10 @@ public final class ConfigServerTargetsBefore317 {
     if (config == null) {
       return null;
     }
+    SingleServerConfig singleServerConfig = config.getSingleServerConfig();
+    if (singleServerConfig != null) {
+      return ofAddress(getAddress(singleServerConfig));
+    }
     SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
     if (sentinelConfig != null) {
       return ofAddresses(sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
@@ -69,6 +73,20 @@ public final class ConfigServerTargetsBefore317 {
           getMasterAddress(masterSlaveConfig), masterSlaveConfig.getSlaveAddresses());
     }
     return null;
+  }
+
+  @Nullable
+  private static RedisServerTarget ofAddress(@Nullable Object address) {
+    return address == null ? null : RedisServerTarget.ofEndpoint(addressString(address));
+  }
+
+  // Redisson changes the single server address return type across supported versions.
+  private static Object getAddress(SingleServerConfig config) {
+    try {
+      return config.getClass().getMethod("getAddress").invoke(config);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Could not read Redisson server address", e);
+    }
   }
 
   @Nullable
