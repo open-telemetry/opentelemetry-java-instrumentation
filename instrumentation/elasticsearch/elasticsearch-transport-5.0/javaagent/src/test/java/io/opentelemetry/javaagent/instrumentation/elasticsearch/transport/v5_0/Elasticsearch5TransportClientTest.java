@@ -7,10 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.AbstractElasticsearchTransportClientTest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTargets;
 import java.io.File;
 import java.net.InetAddress;
 import java.util.UUID;
@@ -107,7 +109,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   }
 
   @Test
-  void configuredAddressListIsTheWholeTarget() {
+  void configuredAddressChangesBeforeFirstRequestAreSnapshotted() {
     TransportClient addressListClient = newClient();
     testing.runWithSpan(
         "setup",
@@ -115,6 +117,16 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           addressListClient.addTransportAddress(tcpPublishAddress);
           // nothing listens on this address; the configured target names it all the same
           addressListClient.addTransportAddress(addressThatIsDown());
+          assertThat(ElasticsearchTransportServerTargets.address(addressListClient))
+              .isEqualTo(
+                  tcpPublishAddress.getHost()
+                      + ":"
+                      + getPort()
+                      + ","
+                      + addressThatIsDown().getHost()
+                      + ":"
+                      + addressThatIsDown().getPort());
+          assertThat(ElasticsearchTransportServerTargets.port(addressListClient)).isNull();
           // adding an address makes the client reach out to it, which reports telemetry of its own
           clusterHealth(addressListClient);
         });
@@ -134,24 +146,43 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   }
 
   @Test
-  void theTargetDoesNotFollowLaterAddressChanges() {
+  void explicitAddressChangesUpdateTheTarget() {
     TransportClient singleAddressClient = newClient();
     testing.runWithSpan(
         "setup",
         () -> {
           singleAddressClient.addTransportAddress(tcpPublishAddress);
-          // the target is read here, while the client names a single address
-          clusterHealth(singleAddressClient);
-          // a client can be given more addresses at any time; the target it already reported must
-          // not change underneath the telemetry that was emitted with it
-          singleAddressClient.addTransportAddress(addressThatIsDown());
           clusterHealth(singleAddressClient);
         });
     testing.waitForTraces(1);
     testing.clearData();
 
     clusterHealth(singleAddressClient);
+    assertConfiguredTarget(null);
+    testing.clearData();
 
+    testing.runWithSpan(
+        "setup", () -> singleAddressClient.addTransportAddress(addressThatIsDown()));
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    clusterHealth(singleAddressClient);
+    assertConfiguredTarget(
+        tcpPublishAddress.getHost()
+            + ":"
+            + getPort()
+            + ","
+            + addressThatIsDown().getHost()
+            + ":"
+            + addressThatIsDown().getPort());
+    testing.clearData();
+
+    testing.runWithSpan(
+        "setup", () -> singleAddressClient.removeTransportAddress(addressThatIsDown()));
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    clusterHealth(singleAddressClient);
     assertConfiguredTarget(null);
   }
 

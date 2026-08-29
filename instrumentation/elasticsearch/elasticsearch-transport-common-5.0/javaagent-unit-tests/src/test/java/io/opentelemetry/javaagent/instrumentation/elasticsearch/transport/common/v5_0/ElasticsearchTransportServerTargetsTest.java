@@ -17,30 +17,27 @@ import org.junit.jupiter.api.Test;
 class ElasticsearchTransportServerTargetsTest {
 
   @Test
-  void captureIsIdempotent() {
+  void updateReplacesTarget() {
     AbstractClient client = mock(AbstractClient.class);
 
-    ElasticsearchTransportServerTargets.capture(
+    ElasticsearchTransportServerTargets.update(
         client, singletonList(new Endpoint("10.0.0.1", 9300)));
-    ElasticsearchTransportServerTargets.capture(
+    ElasticsearchTransportServerTargets.update(
         client, singletonList(new Endpoint("10.0.0.2", 9301)));
 
-    assertThat(ElasticsearchTransportServerTargets.address(client)).isEqualTo("10.0.0.1");
-    assertThat(ElasticsearchTransportServerTargets.port(client)).isEqualTo(9300);
+    assertThat(ElasticsearchTransportServerTargets.address(client)).isEqualTo("10.0.0.2");
+    assertThat(ElasticsearchTransportServerTargets.port(client)).isEqualTo(9301);
   }
 
   @Test
-  void captureWaitsForConfiguredEndpoint() {
+  void updateClearsTarget() {
     AbstractClient client = mock(AbstractClient.class);
 
-    ElasticsearchTransportServerTargets.capture(client, emptyList());
-
-    assertThat(ElasticsearchTransportServerTargets.isCaptured(client)).isFalse();
-
-    ElasticsearchTransportServerTargets.capture(
+    ElasticsearchTransportServerTargets.update(
         client, singletonList(new Endpoint("10.0.0.1", 9300)));
+    ElasticsearchTransportServerTargets.update(client, emptyList());
 
-    assertThat(ElasticsearchTransportServerTargets.address(client)).isEqualTo("10.0.0.1");
-    assertThat(ElasticsearchTransportServerTargets.port(client)).isEqualTo(9300);
+    assertThat(ElasticsearchTransportServerTargets.address(client)).isNull();
+    assertThat(ElasticsearchTransportServerTargets.port(client)).isNull();
   }
 }
