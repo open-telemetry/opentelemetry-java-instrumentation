@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.v7_0;
 
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.context.Context;
@@ -218,7 +219,7 @@ class RestClientWrapper {
       Instrumenter<ElasticsearchRestRequest, Response> instrumenter) {
     RestClient restClient = restClientBuilder.build();
     try {
-      return wrap(restClient, instrumenter, serverTarget(restClient));
+      return wrapWithTarget(restClient, instrumenter, serverTarget(restClient));
     } catch (RuntimeException | Error e) {
       try {
         restClient.close();
@@ -231,10 +232,18 @@ class RestClientWrapper {
 
   static RestClient wrap(
       RestClient restClient, Instrumenter<ElasticsearchRestRequest, Response> instrumenter) {
-    return wrap(restClient, instrumenter, null);
+    return wrapWithTarget(restClient, instrumenter, null);
   }
 
-  private static RestClient wrap(
+  static RestClient wrap(
+      RestClient restClient,
+      Instrumenter<ElasticsearchRestRequest, Response> instrumenter,
+      HttpHost... configuredHosts) {
+    return wrapWithTarget(
+        restClient, instrumenter, ElasticsearchServerTarget.of(asList(configuredHosts)));
+  }
+
+  private static RestClient wrapWithTarget(
       RestClient restClient,
       Instrumenter<ElasticsearchRestRequest, Response> instrumenter,
       @Nullable ElasticsearchServerTarget serverTarget) {

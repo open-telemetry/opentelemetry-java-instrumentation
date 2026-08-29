@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.v7_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -100,7 +102,9 @@ class ElasticsearchRest7Test {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(
+                                DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -126,10 +130,19 @@ class ElasticsearchRest7Test {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
                             equalTo(
-                                maybeStable(DB_STATEMENT),
-                                v3Preview() ? "{\"query\":{\"match\":{\"title\":\"?\"}}}" : null),
+                                DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(
+                                DB_STATEMENT,
+                                emitOldDatabaseSemconv() && v3Preview()
+                                    ? "{\"query\":{\"match\":{\"title\":\"?\"}}}"
+                                    : null),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && v3Preview()
+                                    ? "{\"query\":{\"match\":{\"title\":\"?\"}}}"
+                                    : null),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -188,7 +201,9 @@ class ElasticsearchRest7Test {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(
+                                DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -237,15 +252,23 @@ class ElasticsearchRest7Test {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(
+                                DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? null : httpHost.getHostName()),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(httpHost.getPort())),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"))));
   }
 
   @Test
-  void configuredNodeListIsTheWholeTarget() throws IOException {
+  void builderCapturesMultipleConfiguredTargets() throws IOException {
     HttpHost deadHost = deadHost();
     RestClient nodeListClient =
         ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
@@ -254,11 +277,11 @@ class ElasticsearchRest7Test {
 
     nodeListClient.performRequest(new Request("GET", "_cluster/health"));
 
-    assertConfiguredTarget(hostList(deadHost));
+    assertConfiguredTarget(hostList(deadHost), null);
   }
 
   @Test
-  void theTargetDoesNotFollowLaterNodeChanges() throws IOException {
+  void builderTargetDoesNotFollowLaterNodeChanges() throws IOException {
     RestClient singleNodeClient =
         ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
             .wrap(RestClient.builder(httpHost));
@@ -268,7 +291,50 @@ class ElasticsearchRest7Test {
 
     singleNodeClient.performRequest(new Request("GET", "_cluster/health"));
 
-    assertConfiguredTarget(null);
+    assertConfiguredTarget(httpHost.getHostName(), httpHost.getPort());
+  }
+
+  @Test
+  void explicitSingleConfiguredTargetIsUsedForExistingClient() throws IOException {
+    HttpHost configuredHost = new HttpHost("configured.example", 9300, "https");
+    RestClient wrappedClient =
+        ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
+            .wrap(RestClient.builder(httpHost).build(), configuredHost);
+    cleanup.deferCleanup(wrappedClient);
+
+    wrappedClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget(configuredHost.getHostName(), configuredHost.getPort());
+  }
+
+  @Test
+  void explicitMultipleConfiguredTargetsAreUsedForExistingClient() throws IOException {
+    HttpHost secondConfiguredHost = new HttpHost("second.example", 9301, "https");
+    RestClient wrappedClient =
+        ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
+            .wrap(
+                RestClient.builder(httpHost).build(),
+                new HttpHost("first.example", 9300, "https"),
+                secondConfiguredHost);
+    cleanup.deferCleanup(wrappedClient);
+
+    wrappedClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget("first.example:9300,second.example:9301", null);
+  }
+
+  @Test
+  void explicitTargetDoesNotFollowLaterNodeChanges() throws IOException {
+    HttpHost configuredHost = new HttpHost("configured.example", 9300, "https");
+    RestClient wrappedClient =
+        ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
+            .wrap(RestClient.builder(deadHost()).build(), configuredHost);
+    cleanup.deferCleanup(wrappedClient);
+    wrappedClient.setNodes(asList(new Node(httpHost)));
+
+    wrappedClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget(configuredHost.getHostName(), configuredHost.getPort());
   }
 
   private static HttpHost deadHost() {
@@ -286,23 +352,26 @@ class ElasticsearchRest7Test {
         + deadHost.getPort();
   }
 
-  private static void assertConfiguredTarget(String hostList) {
-    boolean stableHostList = emitStableDatabaseSemconv() && hostList != null;
+  private static void assertConfiguredTarget(String address, Integer port) {
+    boolean stableTarget = emitStableDatabaseSemconv();
     testing.waitAndAssertTraces(
         trace ->
             assertThat(trace.getSpan(0))
                 .hasName(
                     emitStableDatabaseSemconv()
-                        ? (hostList != null
-                            ? hostList
-                            : httpHost.getHostName() + ":" + httpHost.getPort())
+                        ? (port != null ? address + ":" + port : address)
                         : "GET")
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                    equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
+                    equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                     equalTo(HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
-                    equalTo(SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort())),
+                    equalTo(SERVER_ADDRESS, stableTarget ? address : httpHost.getHostName()),
+                    equalTo(
+                        SERVER_PORT,
+                        stableTarget
+                            ? (port != null ? Long.valueOf(port) : null)
+                            : Long.valueOf(httpHost.getPort())),
                     equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
   }
 }

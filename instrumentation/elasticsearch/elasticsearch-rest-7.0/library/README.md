@@ -53,4 +53,11 @@ RestClient tracedClient =
 If the client must be built elsewhere, `telemetry.wrap(restClient)` still
 instruments its requests. That overload cannot capture the original configured
 target because a constructed `RestClient` exposes only its current routing
-nodes.
+nodes. Pass the original hosts explicitly when they are still available:
+
+```java
+RestClient tracedClient = telemetry.wrap(restClient, configuredHosts);
+```
+
+The explicit hosts are captured when the client is wrapped and do not follow
+later runtime node updates.
