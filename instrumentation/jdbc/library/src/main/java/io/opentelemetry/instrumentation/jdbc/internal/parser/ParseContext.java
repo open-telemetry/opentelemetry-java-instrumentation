@@ -30,6 +30,7 @@ public final class ParseContext {
   @Nullable private String host;
   @Nullable private Integer port;
   @Nullable private String serverAddressGroup;
+  private boolean multiTarget;
   @Nullable private String user;
   @Nullable private String databaseName;
   @Nullable private String namespace;
@@ -116,6 +117,9 @@ public final class ParseContext {
 
   public void serverAddressGroup(@Nullable String serverAddressGroup) {
     this.serverAddressGroup = serverAddressGroup;
+    if (serverAddressGroup != null) {
+      multiTarget = true;
+    }
   }
 
   public void opaqueServerAddressGroup(String target) {
@@ -123,6 +127,11 @@ public final class ParseContext {
     appendTypePrefix(groupAddress, type, subtype);
     groupAddress.append(target);
     serverAddressGroup = groupAddress.toString();
+    multiTarget = true;
+  }
+
+  public void multiTarget() {
+    multiTarget = true;
   }
 
   /** The user value accumulated so far. */
@@ -328,7 +337,8 @@ public final class ParseContext {
   public DbInfo toDbInfo() {
     // oldSemconvSystem falls back to system when not explicitly set (i.e., when both are the same)
     String oldSystem = oldSemconvSystem != null ? oldSemconvSystem : system;
-    DbInfo.Builder builder = DbInfo.builder().dbSystemName(system).dbSystem(oldSystem);
+    DbInfo.Builder builder =
+        DbInfo.builder().dbSystemName(system).dbSystem(oldSystem).multiTarget(multiTarget);
     if (host != null) {
       builder.serverAddress(host);
     }

@@ -111,6 +111,50 @@ class JdbcAttributesGetterTest {
     }
   }
 
+  @ParameterizedTest
+  @MethodSource("incompleteMultiTargets")
+  void incompleteMultiTargetOmitsHostAndPortOnlyInStableSemconv(
+      String url, String legacyHost, int legacyPort) {
+    DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, null);
+    DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
+
+    assertThat(dbInfo.isMultiTarget()).isTrue();
+    assertThat(dbInfo.getServerAddressGroup()).isNull();
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributesGetter.getServerAddress(request)).isNull();
+      assertThat(attributesGetter.getServerPort(request)).isNull();
+    } else {
+      assertThat(attributesGetter.getServerAddress(request)).isEqualTo(legacyHost);
+      assertThat(attributesGetter.getServerPort(request)).isEqualTo(legacyPort);
+    }
+  }
+
+  private static Stream<Arguments> incompleteMultiTargets() {
+    return Stream.of(
+        argumentSet(
+            "malformed PostgreSQL host list",
+            "jdbc:postgresql://h1:5432,unexpected=value/db",
+            "localhost",
+            5432),
+        argumentSet("unsupported H2 host list", "jdbc:h2:tcp://h1:8082,h2:8083/db", "h1", 8082),
+        argumentSet(
+            "SQL Server failover without primary",
+            "jdbc:sqlserver://;failoverPartner=h2",
+            "localhost",
+            1433),
+        argumentSet(
+            "malformed SQL Server failover target",
+            "jdbc:sqlserver://h1;failoverPartner=unexpected=value",
+            "h1",
+            1433),
+        argumentSet(
+            "malformed Oracle address list",
+            "jdbc:oracle:thin:@(description=(address=(host=h1)(port=1521))"
+                + "(address=(host=h2)(port=1522)",
+            "h1",
+            1521));
+  }
+
   @Test
   void singularTargetKeepsHostAndPortInEveryMode() {
     DbInfo dbInfo =

@@ -145,6 +145,15 @@ public final class OracleUrlParser implements JdbcUrlParser {
   }
 
   private static void applyAddressListGroup(String description, ParseContext ctx) {
+    Matcher targetMatcher = ADDRESS_PATTERN.matcher(description);
+    if (!targetMatcher.find()) {
+      return;
+    }
+    if (!targetMatcher.find()) {
+      return;
+    }
+    ctx.multiTarget();
+
     // A DESCRIPTION_LIST contains independent targets, not one failover/load-balancing group.
     if (DESCRIPTION_LIST_PATTERN.matcher(description).find()) {
       return;
@@ -161,10 +170,6 @@ public final class OracleUrlParser implements JdbcUrlParser {
       addresses.add(renderAddress(description.substring(addressMatcher.start(), end + 1)));
       searchFrom = end + 1;
     }
-    if (addresses.size() < 2) {
-      return;
-    }
-
     StringBuilder group = new StringBuilder("@(description=");
     boolean addressList = ADDRESS_LIST_PATTERN.matcher(description).find();
     if (addressList) {

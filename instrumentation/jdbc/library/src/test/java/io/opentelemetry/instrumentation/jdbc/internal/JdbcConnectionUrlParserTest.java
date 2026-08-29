@@ -81,6 +81,45 @@ class JdbcConnectionUrlParserTest {
             .build());
   }
 
+  @Test
+  void singletonUrlIsNotMarkedAsMultiTarget() {
+    DbInfo dbInfo = parse("jdbc:postgresql://pg.host:5432/db", null);
+
+    assertThat(dbInfo.isMultiTarget()).isFalse();
+    assertThat(dbInfo.getServerAddress()).isEqualTo("pg.host");
+    assertThat(dbInfo.getServerPort()).isEqualTo(5432);
+  }
+
+  @Test
+  void commasOutsideAuthorityDoNotMarkSingletonAsMultiTarget() {
+    DbInfo dbInfo =
+        parse(
+            "jdbc:postgresql://pg.host:5432/db"
+                + "?user=admin@corp.com&options=search_path=test,public",
+            null);
+
+    assertThat(dbInfo.isMultiTarget()).isFalse();
+    assertThat(dbInfo.getServerAddress()).isEqualTo("pg.host");
+    assertThat(dbInfo.getServerPort()).isEqualTo(5432);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "jdbc:postgresql://h1:5432,unexpected=value/db",
+        "jdbc:h2:tcp://h1:8082,h2:8083/db",
+        "jdbc:sqlserver://;failoverPartner=h2",
+        "jdbc:sqlserver://h1;failoverPartner=unexpected=value",
+        "jdbc:oracle:thin:@(description=(address=(host=h1)(port=1521))"
+            + "(address=(host=h2)(port=1522)"
+      })
+  void incompleteMultiTargetIsMarkedWithoutAConfiguredTarget(String url) {
+    DbInfo dbInfo = parse(url, null);
+
+    assertThat(dbInfo.isMultiTarget()).isTrue();
+    assertThat(dbInfo.getServerAddressGroup()).isNull();
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {
@@ -2062,6 +2101,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(5432)
             .setName("pgdb")
+            .setMultiTarget()
             .build(),
         // https://dev.mysql.com/doc/connector-j/en/connector-j-multi-host-connections.html
         arg("jdbc:mysql://mysql.host1:3306,mysql.host2:3307/mydb")
@@ -2151,6 +2191,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("orcl.host1")
             .setPort(1521)
             .setName("orclsn")
+            .setMultiTarget()
             .build(),
         arg("jdbc:mariadb:failover://mdb.host:3306/mdbdb")
             .setShortUrl("mariadb:failover://mdb.host:3306")
@@ -2212,6 +2253,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(info.getServerAddress()).isEqualTo(expected.getServerAddress());
     assertThat(info.getServerPort()).isEqualTo(expected.getServerPort());
     assertThat(info.getServerAddressGroup()).isEqualTo(expected.getServerAddressGroup());
+    assertThat(info.isMultiTarget()).isEqualTo(expected.isMultiTarget());
     assertThat(info.getDbUser()).isEqualTo(expected.getDbUser());
     assertThat(info.getDbNamespace()).isEqualTo(expected.getDbNamespace());
     assertThat(info.getDbName()).isEqualTo(expected.getDbName());
@@ -2242,6 +2284,7 @@ class JdbcConnectionUrlParserTest {
               .serverAddress(builder.host)
               .serverPort(builder.port)
               .serverAddressGroup(builder.serverAddressGroup)
+              .multiTarget(builder.multiTarget || builder.serverAddressGroup != null)
               .build();
     }
 
@@ -2263,6 +2306,7 @@ class JdbcConnectionUrlParserTest {
     String namespace;
     String name;
     String serverAddressGroup;
+    boolean multiTarget;
 
     ParseTestArgumentBuilder(String url) {
       this.url = url;
@@ -2323,6 +2367,11 @@ class JdbcConnectionUrlParserTest {
 
     ParseTestArgumentBuilder setServerAddressGroup(String serverAddressGroup) {
       this.serverAddressGroup = serverAddressGroup;
+      return this;
+    }
+
+    ParseTestArgumentBuilder setMultiTarget() {
+      this.multiTarget = true;
       return this;
     }
 
