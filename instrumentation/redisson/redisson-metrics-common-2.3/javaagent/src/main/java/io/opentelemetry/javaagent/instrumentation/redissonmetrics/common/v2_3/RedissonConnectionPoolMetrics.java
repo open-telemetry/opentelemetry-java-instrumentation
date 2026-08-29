@@ -85,7 +85,7 @@ public class RedissonConnectionPoolMetrics {
           if (pendingRequestsSupplier != null && pending != null) {
             Integer pendingRequests = pendingRequestsSupplier.get();
             if (pendingRequests != null) {
-              pending.record(pendingRequests, attributes);
+              pending.record(Math.max(0, pendingRequests), attributes);
             }
           }
         };
