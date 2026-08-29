@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -219,7 +218,7 @@ class RestClientWrapper {
       Instrumenter<ElasticsearchRestRequest, Response> instrumenter) {
     RestClient restClient = restClientBuilder.build();
     try {
-      return wrapWithTarget(restClient, instrumenter, serverTarget(restClient));
+      return wrapWithTarget(restClient, instrumenter, null);
     } catch (RuntimeException | Error e) {
       try {
         restClient.close();
@@ -259,15 +258,6 @@ class RestClientWrapper {
     } catch (Exception e) {
       throw new IllegalStateException("Failed to construct proxy instance", e);
     }
-  }
-
-  @Nullable
-  private static ElasticsearchServerTarget serverTarget(RestClient restClient) {
-    List<HttpHost> hosts = new ArrayList<>();
-    for (Node node : restClient.getNodes()) {
-      hosts.add(node.getHost());
-    }
-    return ElasticsearchServerTarget.of(hosts);
   }
 
   private RestClientWrapper() {}

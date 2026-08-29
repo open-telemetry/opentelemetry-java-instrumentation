@@ -41,8 +41,8 @@ public final class ElasticsearchRest7Telemetry {
    * Constructs a new tracing-enabled {@link RestClient} using the provided {@link
    * RestClientBuilder}.
    *
-   * <p>This overload captures the configured nodes when it builds the client, before sniffing or
-   * node updates can replace them.
+   * <p>This overload cannot capture the configured nodes because {@link RestClientBuilder} does not
+   * expose them. Stable server address and port attributes are omitted.
    */
   public RestClient wrap(RestClientBuilder restClientBuilder) {
     return RestClientWrapper.wrap(restClientBuilder, instrumenter);

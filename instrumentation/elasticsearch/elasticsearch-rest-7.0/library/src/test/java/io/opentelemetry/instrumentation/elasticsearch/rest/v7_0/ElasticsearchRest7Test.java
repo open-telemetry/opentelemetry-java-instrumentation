@@ -95,10 +95,7 @@ class ElasticsearchRest7Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? httpHost.getHostName() + ":" + httpHost.getPort()
-                                : "GET")
+                    span.hasName(emitStableDatabaseSemconv() ? ELASTICSEARCH : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -106,8 +103,14 @@ class ElasticsearchRest7Test {
                             equalTo(
                                 DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? null : httpHost.getHostName()),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(httpHost.getPort())),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"))));
   }
 
@@ -123,10 +126,7 @@ class ElasticsearchRest7Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? httpHost.getHostName() + ":" + httpHost.getPort()
-                                : "POST")
+                    span.hasName(emitStableDatabaseSemconv() ? ELASTICSEARCH : "POST")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -144,8 +144,14 @@ class ElasticsearchRest7Test {
                                     ? "{\"query\":{\"match\":{\"title\":\"?\"}}}"
                                     : null),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? null : httpHost.getHostName()),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(httpHost.getPort())),
                             equalTo(URL_FULL, httpHost.toURI() + "/_search"))));
   }
 
@@ -194,10 +200,7 @@ class ElasticsearchRest7Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? httpHost.getHostName() + ":" + httpHost.getPort()
-                                : "GET")
+                    span.hasName(emitStableDatabaseSemconv() ? ELASTICSEARCH : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -205,8 +208,14 @@ class ElasticsearchRest7Test {
                             equalTo(
                                 DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? null : httpHost.getHostName()),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(httpHost.getPort())),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
                 span ->
                     span.hasName("callback")
@@ -244,54 +253,20 @@ class ElasticsearchRest7Test {
 
     wrappedClient.performRequest(new Request("GET", "_cluster/health"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? ELASTICSEARCH : "GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
-                            equalTo(
-                                DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? null : httpHost.getHostName()),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : Long.valueOf(httpHost.getPort())),
-                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"))));
+    assertNoConfiguredTarget();
   }
 
   @Test
-  void builderCapturesMultipleConfiguredTargets() throws IOException {
-    HttpHost deadHost = deadHost();
-    RestClient nodeListClient =
+  void builderDoesNotUseRoutingNodesAsConfiguredTarget() throws IOException {
+    RestClient wrappedClient =
         ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
-            .wrap(RestClient.builder(httpHost, deadHost));
-    cleanup.deferCleanup(nodeListClient);
+            .wrap(RestClient.builder(deadHost()));
+    cleanup.deferCleanup(wrappedClient);
+    wrappedClient.setNodes(asList(new Node(httpHost)));
 
-    nodeListClient.performRequest(new Request("GET", "_cluster/health"));
+    wrappedClient.performRequest(new Request("GET", "_cluster/health"));
 
-    assertConfiguredTarget(hostList(deadHost), null);
-  }
-
-  @Test
-  void builderTargetDoesNotFollowLaterNodeChanges() throws IOException {
-    RestClient singleNodeClient =
-        ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
-            .wrap(RestClient.builder(httpHost));
-    cleanup.deferCleanup(singleNodeClient);
-    // a client is given new nodes when it is sniffed; the configured target must not follow them
-    singleNodeClient.setNodes(asList(new Node(httpHost), new Node(deadHost())));
-
-    singleNodeClient.performRequest(new Request("GET", "_cluster/health"));
-
-    assertConfiguredTarget(httpHost.getHostName(), httpHost.getPort());
+    assertNoConfiguredTarget();
   }
 
   @Test
@@ -342,14 +317,28 @@ class ElasticsearchRest7Test {
     return new HttpHost(httpHost.getHostName(), httpHost.getPort() + 1, httpHost.getSchemeName());
   }
 
-  private static String hostList(HttpHost deadHost) {
-    return httpHost.getHostName()
-        + ":"
-        + httpHost.getPort()
-        + ","
-        + deadHost.getHostName()
-        + ":"
-        + deadHost.getPort();
+  private static void assertNoConfiguredTarget() {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? ELASTICSEARCH : "GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(
+                                DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? null : httpHost.getHostName()),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(httpHost.getPort())),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"))));
   }
 
   private static void assertConfiguredTarget(String address, Integer port) {
