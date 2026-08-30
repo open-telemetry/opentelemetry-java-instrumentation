@@ -71,6 +71,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       JedisRequest request, @Nullable Void unused) {
-    return request.getPeerAddress();
+    return emitStableDatabaseSemconv() ? request.getPeerAddress() : null;
   }
 }

@@ -131,8 +131,6 @@ class ShardedJedisClientTest {
       String operation, String queryText, Jedis selectedShard) {
     String selectedHost = selectedShard.getClient().getHost();
     int selectedPort = selectedShard.getClient().getPort();
-    InetSocketAddress peerAddress =
-        (InetSocketAddress) selectedShard.getClient().getSocket().getRemoteSocketAddress();
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -140,21 +138,26 @@ class ShardedJedisClientTest {
                 equalTo(maybeStable(DB_STATEMENT), queryText),
                 equalTo(maybeStable(DB_OPERATION), operation),
                 equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null)));
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
+      assertions.add(equalTo(DB_SYSTEM, REDIS));
+      assertions.add(equalTo(DB_STATEMENT, queryText));
+      assertions.add(equalTo(DB_OPERATION, operation));
+    }
     if (emitStableDatabaseSemconv()) {
+      InetSocketAddress peerAddress =
+          (InetSocketAddress) selectedShard.getClient().getSocket().getRemoteSocketAddress();
       assertions.add(equalTo(SERVER_ADDRESS, configuredTarget));
+      assertions.add(equalTo(NETWORK_PEER_ADDRESS, peerAddress.getAddress().getHostAddress()));
+      assertions.add(equalTo(NETWORK_PEER_PORT, peerAddress.getPort()));
+      if (emitOldDatabaseSemconv()) {
+        assertions.add(
+            equalTo(NETWORK_TYPE, peerAddress.getAddress() instanceof Inet4Address ? IPV4 : IPV6));
+      }
     } else {
       assertions.add(equalTo(maybeStablePeerService(), "test-peer-service"));
       assertions.add(equalTo(SERVER_ADDRESS, selectedHost));
       assertions.add(equalTo(SERVER_PORT, selectedPort));
     }
-    assertions.add(equalTo(NETWORK_PEER_ADDRESS, peerAddress.getAddress().getHostAddress()));
-    assertions.add(equalTo(NETWORK_PEER_PORT, peerAddress.getPort()));
-    assertions.add(
-        equalTo(
-            NETWORK_TYPE,
-            emitOldDatabaseSemconv()
-                ? (peerAddress.getAddress() instanceof Inet4Address ? IPV4 : IPV6)
-                : null));
     return assertions;
   }
 }

@@ -44,7 +44,12 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
+      includeTestsMatching("*JedisClientTest.setCommand")
       includeTestsMatching("*JedisClientTest.pooledCommand")
+      includeTestsMatching("*JedisClientTest.reconnectUsesNewlyConnectedSocket")
+      includeTestsMatching("*JedisClientTest.pipelineCommand*")
+      includeTestsMatching("*JedisClientTest.transactionCommand*")
+      includeTestsMatching("*ShardedJedisClientTest.*")
     }
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,service.peer")
