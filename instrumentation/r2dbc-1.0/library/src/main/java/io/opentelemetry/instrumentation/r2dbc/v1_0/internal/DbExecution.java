@@ -205,7 +205,7 @@ public final class DbExecution {
     }
     if (value.startsWith("[")) {
       int closingBracket = value.indexOf(']');
-      if (closingBracket < 0 || value.indexOf(']', closingBracket + 1) >= 0) {
+      if (closingBracket <= 1 || value.indexOf(']', closingBracket + 1) >= 0) {
         return false;
       }
       String rest = value.substring(closingBracket + 1);
@@ -215,7 +215,8 @@ public final class DbExecution {
       return false;
     }
     int colon = value.lastIndexOf(':');
-    return colon < 0 || value.indexOf(':') != colon || isPort(value.substring(colon + 1));
+    return colon < 0
+        || (colon > 0 && (value.indexOf(':') != colon || isPort(value.substring(colon + 1))));
   }
 
   private static boolean isPort(String value) {

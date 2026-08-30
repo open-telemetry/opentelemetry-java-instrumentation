@@ -235,7 +235,9 @@ class DbExecutionTest {
         "[2001:db8::1,host2",
         "host1/path,host2",
         "host1?email=user@example.com,host2",
-        "host1#fragment,host2"
+        "host1#fragment,host2",
+        "[]:5432,host2",
+        ":5432,host2"
       })
   void dbExecutionRejectsMalformedMultiHostAddress(String host) {
     ConnectionFactoryOptions factoryOptions =
