@@ -47,6 +47,7 @@ import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.Ve
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgBuilder;
 import io.vertx.pgclient.PgConnectOptions;
@@ -176,6 +177,35 @@ class VertxSqlClientTest {
 
     assertThat(calls).hasValue(1);
     testing.waitAndAssertTraces(VertxSqlClientTest::assertSupplierTarget);
+  }
+
+  @Test
+  void testQueuedQueriesCaptureTheSuppliedOptions() throws Exception {
+    AtomicInteger calls = new AtomicInteger();
+    Promise<SqlConnectOptions> suppliedOptions = Promise.promise();
+    Pool supplierPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(
+                () -> {
+                  calls.incrementAndGet();
+                  return suppliedOptions.future();
+                })
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    Future<?> firstResult = supplierPool.query("select * from test").execute();
+    Future<?> secondResult = supplierPool.query("select * from test").execute();
+    suppliedOptions.complete(connectOptions());
+    Future.all(firstResult, secondResult)
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    assertThat(calls).hasValue(1);
+    testing.waitAndAssertTraces(
+        VertxSqlClientTest::assertSupplierTarget, VertxSqlClientTest::assertSupplierTarget);
   }
 
   @Test

@@ -9,7 +9,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
@@ -53,8 +52,6 @@ public class VertxSqlClientSingletons {
       BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
 
   private static final ThreadLocal<VertxSqlClientDataCapture> buildingDataCapture =
-      new ThreadLocal<>();
-  private static final ThreadLocal<VertxSqlClientDataCapture.Listener> captureListener =
       new ThreadLocal<>();
 
   @Nullable
@@ -179,23 +176,9 @@ public class VertxSqlClientSingletons {
     return buildingDataCapture.get();
   }
 
-  public static void setCaptureListener(@Nullable VertxSqlClientDataCapture.Listener listener) {
-    if (listener == null) {
-      captureListener.remove();
-    } else {
-      captureListener.set(listener);
-    }
-  }
-
-  @Nullable
-  public static VertxSqlClientDataCapture.Listener getCaptureListener() {
-    return captureListener.get();
-  }
-
   public static Supplier<Future<SqlConnectOptions>> capture(
       Supplier<Future<SqlConnectOptions>> supplier, VertxSqlClientDataCapture dataCapture) {
     return () -> {
-      VertxSqlClientDataCapture.Listener listener = getCaptureListener();
       Future<SqlConnectOptions> future = supplier.get();
       if (future == null) {
         return null;
@@ -207,10 +190,6 @@ public class VertxSqlClientSingletons {
                 connectOptions != null
                     ? VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions)
                     : null);
-            VertxSqlClientData data = dataCapture.get();
-            if (data != null && listener != null) {
-              listener.onCapture(data);
-            }
             return connectOptions;
           });
     };

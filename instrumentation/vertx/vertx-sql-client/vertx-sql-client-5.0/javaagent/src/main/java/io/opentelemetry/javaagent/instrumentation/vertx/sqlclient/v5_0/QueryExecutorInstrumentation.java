@@ -71,6 +71,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
       @Nullable private final PromiseInternal<?> promiseInternal;
       @Nullable private final Long batchSize;
       @Nullable private final Context parentContext;
+      @Nullable private final VertxSqlClientDataCapture dataCapture;
+      private final Thread entryThread;
       @Nullable private VertxSqlClientRequest otelRequest;
       @Nullable private Context context;
       @Nullable private Scope scope;
@@ -78,22 +80,25 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
       private boolean cancelled;
 
       private AdviceScope(CallDepth callDepth) {
-        this(callDepth, null, false, null, null, null);
+        this(callDepth, null, false, null, null, null, null);
       }
 
       private AdviceScope(
           CallDepth callDepth,
-          String sql,
+          @Nullable String sql,
           boolean parameterizedQuery,
-          PromiseInternal<?> promiseInternal,
+          @Nullable PromiseInternal<?> promiseInternal,
           @Nullable Long batchSize,
-          Context parentContext) {
+          @Nullable Context parentContext,
+          @Nullable VertxSqlClientDataCapture dataCapture) {
         this.callDepth = callDepth;
         this.sql = sql;
         this.parameterizedQuery = parameterizedQuery;
         this.promiseInternal = promiseInternal;
         this.batchSize = batchSize;
         this.parentContext = parentContext;
+        this.dataCapture = dataCapture;
+        this.entryThread = Thread.currentThread();
       }
 
       public static AdviceScope start(Object queryExecutor, String methodName, Object[] arguments) {
@@ -134,13 +139,24 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         if (dataProvider == null) {
           return new AdviceScope(callDepth);
         }
+        VertxSqlClientDataCapture dataCapture =
+            dataProvider instanceof VertxSqlClientDataCapture
+                ? (VertxSqlClientDataCapture) dataProvider
+                : null;
         AdviceScope adviceScope =
             new AdviceScope(
-                callDepth, sql, parameterizedQuery, promiseInternal, batchSize, Context.current());
-        VertxSqlClientData data = dataProvider.get();
+                callDepth,
+                sql,
+                parameterizedQuery,
+                promiseInternal,
+                batchSize,
+                Context.current(),
+                dataCapture);
+        VertxSqlClientData data =
+            dataCapture != null ? dataCapture.addListener(adviceScope) : dataProvider.get();
         if (data == null) {
-          if (dataProvider instanceof VertxSqlClientDataCapture) {
-            VertxSqlClientSingletons.setCaptureListener(adviceScope);
+          if (dataCapture != null) {
+            promiseInternal.future().onFailure(ignored -> adviceScope.cancelCapture());
           }
           return adviceScope;
         }
@@ -183,8 +199,17 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         this.otelRequest = otelRequest;
         context = instrumenter().start(parentContext, otelRequest);
         VertxSqlClientUtil.attachRequest(promiseInternal, otelRequest, context, parentContext);
-        if (!exited) {
+        if (!exited && Thread.currentThread() == entryThread) {
           scope = context.makeCurrent();
+        }
+      }
+
+      private synchronized void cancelCapture() {
+        if (context == null) {
+          cancelled = true;
+          if (dataCapture != null) {
+            dataCapture.removeListener(this);
+          }
         }
       }
 
@@ -197,13 +222,12 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
-        VertxSqlClientSingletons.setCaptureListener(null);
         exited = true;
         if (scope != null) {
           scope.close();
         }
         if (throwable != null) {
-          cancelled = true;
+          cancelCapture();
           if (context != null && otelRequest != null) {
             instrumenter().end(context, otelRequest, null, throwable);
           }
