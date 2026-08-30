@@ -710,13 +710,19 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testSealedMutationPreservesConfiguredTarget() throws ClickHouseException {
+  void testCopiedSealedMutationPreservesConfiguredTarget() throws ClickHouseException {
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
     String addressGroup = host + ":" + port + "," + host + ":" + (port + 1);
     ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
 
     ClickHouseRequest<?> request =
-        client.read(nodes).write().query("insert into " + TABLE_NAME + " values('4')").seal();
+        client
+            .read(nodes)
+            .seal()
+            .copy()
+            .write()
+            .query("insert into " + TABLE_NAME + " values('4')")
+            .seal();
 
     ClickHouseResponse response = client.executeAndWait(request);
     response.close();

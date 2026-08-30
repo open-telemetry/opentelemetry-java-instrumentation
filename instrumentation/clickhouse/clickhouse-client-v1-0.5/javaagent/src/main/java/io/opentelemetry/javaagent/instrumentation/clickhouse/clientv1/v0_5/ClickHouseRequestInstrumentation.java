@@ -27,7 +27,7 @@ class ClickHouseRequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("copy", "seal").and(takesNoArguments()),
+        namedOneOf("copy", "seal", "write").and(takesNoArguments()),
         getClass().getName() + "$CopyTargetAdvice");
   }
 
