@@ -94,25 +94,19 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static String onEnter(
+    public static Object onEnter(
         @Advice.This MessageConsumer consumer,
         @Advice.Argument(0) @Nullable MessageListener messageListener) {
-      if (messageListener == null) {
-        return null;
-      }
-      String previousSubscriptionName = JmsSubscriptionNames.get(messageListener);
-      JmsSubscriptionNames.copyToListener(consumer, messageListener);
-      return previousSubscriptionName;
+      return JmsSubscriptionNames.beginListenerRegistration(consumer, messageListener);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) @Nullable MessageListener messageListener,
-        @Advice.Enter @Nullable String previousSubscriptionName,
+        @Advice.Enter @Nullable Object registration,
         @Advice.Thrown @Nullable Throwable throwable) {
-      if (throwable != null && messageListener != null) {
-        JmsSubscriptionNames.set(messageListener, previousSubscriptionName);
-      }
+      JmsSubscriptionNames.endListenerRegistration(
+          messageListener, registration, throwable == null);
     }
   }
 }
