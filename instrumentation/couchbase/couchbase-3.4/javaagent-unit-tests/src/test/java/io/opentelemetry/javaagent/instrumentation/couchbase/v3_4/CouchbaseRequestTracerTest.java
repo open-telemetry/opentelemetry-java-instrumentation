@@ -15,7 +15,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.couchbase.client.core.cnc.RequestSpan;
@@ -40,19 +40,24 @@ class CouchbaseRequestTracerTest {
     Scope scope = CouchbaseRequestPeers.open(parent, remoteAddress);
 
     assertThat(scope).isNotNull();
+    RequestSpan span;
     try {
-      tracer(delegateSpan).requestSpan(TracingIdentifiers.SPAN_DISPATCH, parent);
+      span = tracer(delegateSpan).requestSpan(TracingIdentifiers.SPAN_DISPATCH, parent);
     } finally {
       scope.close();
     }
 
+    span.attribute(TracingIdentifiers.ATTR_REMOTE_HOSTNAME, "configured.example");
+    span.attribute(TracingIdentifiers.ATTR_REMOTE_PORT, 12345);
+
     verify(delegateSpan)
         .attribute(NETWORK_PEER_ADDRESS.getKey(), remoteAddress.getAddress().getHostAddress());
     verify(delegateSpan).attribute(NETWORK_PEER_PORT.getKey(), 11210);
+    verifyNoMoreInteractions(delegateSpan);
   }
 
   @Test
-  void omitsSdkPeerWithoutSocketPeerInStableMode() throws ReflectiveOperationException {
+  void preservesSdkPeerWithoutSocketPeerInStableMode() throws ReflectiveOperationException {
     assumeTrue(emitStableDatabaseSemconv());
     RequestSpan delegateSpan = mock(RequestSpan.class);
     RequestSpan span = tracer(delegateSpan).requestSpan(TracingIdentifiers.SPAN_DISPATCH, null);
@@ -60,7 +65,8 @@ class CouchbaseRequestTracerTest {
     span.attribute(TracingIdentifiers.ATTR_REMOTE_HOSTNAME, "db.example");
     span.attribute(TracingIdentifiers.ATTR_REMOTE_PORT, 11210);
 
-    verifyNoInteractions(delegateSpan);
+    verify(delegateSpan).attribute(NETWORK_PEER_ADDRESS.getKey(), "db.example");
+    verify(delegateSpan).attribute(NETWORK_PEER_PORT.getKey(), 11210);
   }
 
   @Test
