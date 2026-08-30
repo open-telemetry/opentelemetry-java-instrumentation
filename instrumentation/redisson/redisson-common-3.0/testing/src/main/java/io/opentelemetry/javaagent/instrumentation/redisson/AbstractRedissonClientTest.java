@@ -14,11 +14,13 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -333,29 +335,37 @@ public abstract class AbstractRedissonClientTest {
                     .filteredOn(spanData -> spanData.getName().startsWith("SET"))
                     .singleElement()
                     .satisfies(
-                        spanData -> {
-                          assertThat(spanData.getName())
-                              .isEqualTo(
-                                  emitStableDatabaseSemconv() ? "SET " + stableSpanTarget : "SET");
-                          assertThat(spanData.getKind()).isEqualTo(CLIENT);
-                          assertThat(spanData.getAttributes().get(NETWORK_TYPE))
-                              .isEqualTo(emitOldDatabaseSemconv() ? IPV4 : null);
-                          assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
-                              .isEqualTo(ip);
-                          assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
-                              .isEqualTo(port);
-                          assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(
-                                  emitStableDatabaseSemconv()
-                                      ? stableServerAddress
-                                      : legacyServerAddress);
-                          assertThat(spanData.getAttributes().get(SERVER_PORT))
-                              .isEqualTo(emitStableDatabaseSemconv() ? stableServerPort : port);
-                          assertThat(spanData.getAttributes().get(DB_SYSTEM))
-                              .isEqualTo(emitOldDatabaseSemconv() ? REDIS : null);
-                          assertThat(spanData.getAttributes().get(DB_SYSTEM_NAME))
-                              .isEqualTo(emitStableDatabaseSemconv() ? REDIS : null);
-                        }));
+                        spanData ->
+                            assertThat(spanData)
+                                .hasName(
+                                    emitStableDatabaseSemconv() ? "SET " + stableSpanTarget : "SET")
+                                .hasKind(CLIENT)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(
+                                        SERVER_ADDRESS,
+                                        emitStableDatabaseSemconv()
+                                            ? stableServerAddress
+                                            : legacyServerAddress),
+                                    equalTo(
+                                        SERVER_PORT,
+                                        emitStableDatabaseSemconv() ? stableServerPort : port),
+                                    equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
+                                    equalTo(
+                                        DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? REDIS : null),
+                                    equalTo(DB_NAMESPACE, dbNamespace()),
+                                    equalTo(
+                                        DB_STATEMENT,
+                                        emitOldDatabaseSemconv() ? "SET " + key + " ?" : null),
+                                    equalTo(
+                                        DB_QUERY_TEXT,
+                                        emitStableDatabaseSemconv() ? "SET " + key + " ?" : null),
+                                    equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "SET" : null),
+                                    equalTo(
+                                        DB_OPERATION_NAME,
+                                        emitStableDatabaseSemconv() ? "SET" : null))));
   }
 
   @Test
