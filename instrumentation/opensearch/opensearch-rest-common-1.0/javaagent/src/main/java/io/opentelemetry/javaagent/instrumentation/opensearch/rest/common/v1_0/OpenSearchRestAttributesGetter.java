@@ -9,6 +9,9 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
@@ -72,10 +75,45 @@ final class OpenSearchRestAttributesGetter
     return target != null ? target.getPort() : null;
   }
 
+  @Nullable
+  @Override
+  public String getNetworkType(
+      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
+    InetAddress address = getNetworkPeerInetAddress(request, response);
+    if (address instanceof Inet4Address) {
+      return "ipv4";
+    } else if (address instanceof Inet6Address) {
+      return "ipv6";
+    }
+    return null;
+  }
+
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public String getNetworkPeerAddress(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    return request.getPeerState().getPeerAddress();
+    InetAddress address = getNetworkPeerInetAddress(request, response);
+    return address != null ? address.getHostAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getNetworkPeerPort(
+      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+    return peerAddress != null ? peerAddress.getPort() : null;
+  }
+
+  @Nullable
+  private static InetAddress getNetworkPeerInetAddress(
+      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
+    if (emitStableDatabaseSemconv()) {
+      InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+      return peerAddress != null ? peerAddress.getAddress() : null;
+    }
+    return response != null ? response.getAddress() : null;
   }
 }

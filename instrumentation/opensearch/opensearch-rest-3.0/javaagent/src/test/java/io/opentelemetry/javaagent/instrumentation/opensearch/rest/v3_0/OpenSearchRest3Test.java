@@ -90,6 +90,13 @@ class OpenSearchRest3Test extends AbstractOpenSearchRestTest {
   }
 
   @Override
+  protected String getResponseAddress(Response response) {
+    return response.getHost().getAddress() != null
+        ? response.getHost().getAddress().getHostAddress()
+        : null;
+  }
+
+  @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.opensearch-rest-3.0";
   }
