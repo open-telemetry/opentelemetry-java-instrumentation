@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.impl.VertxInternal;
@@ -21,6 +22,10 @@ import io.vertx.redis.client.impl.RedisURI;
 import org.junit.jupiter.api.Test;
 
 class VertxRedisServerTargetsTest {
+
+  private static final VirtualField<RedisStandaloneConnection, RedisServerTarget>
+      CONNECTION_TARGET_FIELD =
+          VirtualField.find(RedisStandaloneConnection.class, RedisServerTarget.class);
 
   @Test
   void standalone() {
@@ -192,11 +197,10 @@ class VertxRedisServerTargetsTest {
       VertxRedisServerTargets.setEndpoint(secondRedisUri, "redis://second:6380");
       VertxRedisServerTargets.setConnectionTarget(secondConnection, secondRedisUri);
 
-      RedisServerTarget firstTarget = VertxRedisServerTargets.getConnectionTarget(firstConnection);
+      RedisServerTarget firstTarget = CONNECTION_TARGET_FIELD.get(firstConnection);
       assertThat(firstTarget.getAddress()).isEqualTo("first");
       assertThat(firstTarget.getPort()).isEqualTo(6379);
-      RedisServerTarget secondTarget =
-          VertxRedisServerTargets.getConnectionTarget(secondConnection);
+      RedisServerTarget secondTarget = CONNECTION_TARGET_FIELD.get(secondConnection);
       assertThat(secondTarget.getAddress()).isEqualTo("second");
       assertThat(secondTarget.getPort()).isEqualTo(6380);
     } finally {

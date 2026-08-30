@@ -74,10 +74,5 @@ public final class VertxRedisServerTargets {
     }
   }
 
-  @Nullable
-  public static RedisServerTarget getConnectionTarget(RedisStandaloneConnection connection) {
-    return CONNECTION_TARGET_FIELD.get(connection);
-  }
-
   private VertxRedisServerTargets() {}
 }
