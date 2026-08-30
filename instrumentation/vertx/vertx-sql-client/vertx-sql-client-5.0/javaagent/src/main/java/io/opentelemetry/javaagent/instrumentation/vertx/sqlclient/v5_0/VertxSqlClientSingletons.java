@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.Ve
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
@@ -185,6 +186,22 @@ public class VertxSqlClientSingletons {
           }
           return sqlConnection;
         });
+  }
+
+  @Nullable
+  public static Handler<SqlConnection> wrapConnectHandler(
+      @Nullable Handler<SqlConnection> handler,
+      SqlConnectOptions connectOptions,
+      VertxSqlAddressGroup addressGroup) {
+    if (handler == null) {
+      return null;
+    }
+    return connection -> {
+      if (connection instanceof SqlClientBase) {
+        attachClientState((SqlClientBase) connection, connectOptions, addressGroup, null);
+      }
+      handler.handle(connection);
+    };
   }
 
   public static <T> Future<T> attachConnectionData(

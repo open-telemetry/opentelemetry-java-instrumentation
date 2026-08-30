@@ -19,12 +19,15 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
+import io.vertx.core.Handler;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
+import io.vertx.sqlclient.SqlConnection;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToFields.ToField;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -88,52 +91,72 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
+    // The returned array contains the handler to install at index 0 and the exit state at index 1.
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static BuildState onEnter(@Advice.This Object clientBuilder) {
+    @Advice.AssignReturned.ToFields(@ToField(value = "connectHandler", index = 0))
+    public static Object[] onEnter(
+        @Advice.This Object clientBuilder,
+        @Advice.FieldValue("connectHandler") @Nullable Handler<SqlConnection> connectHandler) {
       List<SqlConnectOptions> databases =
           VertxSqlClientSingletons.getBuilderDatabases(clientBuilder);
       if (databases != null && !databases.isEmpty()) {
         databases = new ArrayList<>(databases);
-        setSqlConnectOptions(databases.get(0));
-        setAddressGroup(VertxSqlAddressGroup.of(databases));
-        return new BuildState(databases, null);
+        SqlConnectOptions firstDatabase = databases.get(0);
+        VertxSqlAddressGroup addressGroup = VertxSqlAddressGroup.of(databases);
+        setSqlConnectOptions(firstDatabase);
+        setAddressGroup(addressGroup);
+        return new Object[] {
+          VertxSqlClientSingletons.wrapConnectHandler(connectHandler, firstDatabase, addressGroup),
+          new BuildState(databases, null, connectHandler)
+        };
       }
 
       VertxSqlClientDataCapture dataCapture = new VertxSqlClientDataCapture();
       VertxSqlClientSingletons.setBuildingDataCapture(dataCapture);
-      return new BuildState(null, dataCapture);
+      return new Object[] {connectHandler, new BuildState(null, dataCapture, connectHandler)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Return @Nullable Object client, @Advice.Enter @Nullable BuildState state) {
+    @Advice.AssignReturned.ToFields(@ToField(value = "connectHandler", index = 0))
+    public static Object[] onExit(
+        @Advice.Return @Nullable Object client,
+        @Advice.FieldValue("connectHandler") @Nullable Handler<SqlConnection> connectHandler,
+        @Advice.Enter @Nullable Object[] enterState) {
       setSqlConnectOptions(null);
       setAddressGroup(null);
       VertxSqlClientSingletons.setBuildingDataCapture(null);
 
-      if (state == null || !(client instanceof Pool)) {
-        return;
+      if (enterState == null) {
+        return new Object[] {connectHandler};
       }
-      Pool pool = (Pool) client;
-      if (state.databases != null) {
-        SqlConnectOptions firstDatabase = state.databases.get(0);
-        setPoolConnectOptions(pool, firstDatabase);
-        setPoolAddressGroup(pool, VertxSqlAddressGroup.of(state.databases));
-        VertxSqlClientSingletons.resolveAndStoreDbSystem(pool, firstDatabase);
-      } else {
-        VertxSqlClientSingletons.setPoolDataCapture(pool, state.dataCapture);
+
+      BuildState state = (BuildState) enterState[1];
+      if (client instanceof Pool) {
+        Pool pool = (Pool) client;
+        if (state.databases != null) {
+          SqlConnectOptions firstDatabase = state.databases.get(0);
+          setPoolConnectOptions(pool, firstDatabase);
+          setPoolAddressGroup(pool, VertxSqlAddressGroup.of(state.databases));
+          VertxSqlClientSingletons.resolveAndStoreDbSystem(pool, firstDatabase);
+        } else {
+          VertxSqlClientSingletons.setPoolDataCapture(pool, state.dataCapture);
+        }
       }
+      return new Object[] {state.connectHandler};
     }
 
     public static class BuildState {
       @Nullable public final List<SqlConnectOptions> databases;
       @Nullable public final VertxSqlClientDataCapture dataCapture;
+      @Nullable public final Handler<SqlConnection> connectHandler;
 
       public BuildState(
           @Nullable List<SqlConnectOptions> databases,
-          @Nullable VertxSqlClientDataCapture dataCapture) {
+          @Nullable VertxSqlClientDataCapture dataCapture,
+          @Nullable Handler<SqlConnection> connectHandler) {
         this.databases = databases;
         this.dataCapture = dataCapture;
+        this.connectHandler = connectHandler;
       }
     }
   }

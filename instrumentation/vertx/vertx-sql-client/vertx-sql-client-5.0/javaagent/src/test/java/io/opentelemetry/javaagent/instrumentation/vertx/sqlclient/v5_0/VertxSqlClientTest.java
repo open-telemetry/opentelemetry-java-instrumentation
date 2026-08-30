@@ -158,6 +158,35 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testConnectHandlerReportsTheWholeConfiguredTarget() throws Exception {
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
+    CompletableFuture<Void> handlerInvoked = new CompletableFuture<>();
+    Pool listPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(asList(first, second))
+            .withConnectHandler(
+                connection -> {
+                  connection
+                      .query("select * from test")
+                      .execute()
+                      .onComplete(ignored -> connection.close());
+                  handlerInvoked.complete(null);
+                })
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(listPool::close);
+
+    SqlConnection connection =
+        listPool.getConnection().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    cleanup.deferCleanup(connection::close);
+    handlerInvoked.get(30, SECONDS);
+
+    testing.waitAndAssertTraces(trace -> assertServerGroup(trace, port + 1));
+  }
+
+  @Test
   void testConnectingToSupplierCapturesTheSuppliedOptions() throws Exception {
     AtomicInteger calls = new AtomicInteger();
     PgConnectOptions suppliedOptions = connectOptions();
