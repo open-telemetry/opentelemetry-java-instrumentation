@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import com.clickhouse.client.ClickHouseRequest;
@@ -19,7 +20,9 @@ class ClickHouseRequestInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.clickhouse.client.ClickHouseRequest");
+    return namedOneOf(
+        "com.clickhouse.client.ClickHouseRequest",
+        "com.clickhouse.client.ClickHouseRequest$Mutation");
   }
 
   @Override

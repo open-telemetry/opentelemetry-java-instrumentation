@@ -712,6 +712,18 @@ class ClickHouseClientV1Test {
   }
 
   @Test
+  void testSealedMutationPreservesConfiguredTarget() {
+    String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
+    String addressGroup = host + ":" + port + "," + host + ":" + (port + 1);
+    ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
+
+    ClickHouseRequest<?> request =
+        client.read(nodes).write().table(DATABASE_NAME, TABLE_NAME).seal();
+
+    assertThat(ClickHouseClientV1Singletons.serverAddressGroup(request)).isEqualTo(addressGroup);
+  }
+
+  @Test
   void testFaultyNodeStaysInTheConfiguredTarget() throws ClickHouseException {
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 2);
     String addressGroup = host + ":" + port + "," + host + ":" + (port + 2);
