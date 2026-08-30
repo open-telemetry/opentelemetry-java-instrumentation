@@ -63,7 +63,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
   @Override
   public RequestSpan requestSpan(String name, RequestSpan parent) {
     Peer peer =
-        TracingIdentifiers.SPAN_DISPATCH.equals(name) || LEGACY_DISPATCH_SPAN_NAME.equals(name)
+        name.equals(TracingIdentifiers.SPAN_DISPATCH) || name.equals(LEGACY_DISPATCH_SPAN_NAME)
             ? CouchbaseRequestPeers.consume(parent)
             : null;
     RequestSpan unwrappedParent = parent;
