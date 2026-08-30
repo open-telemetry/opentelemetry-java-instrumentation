@@ -188,8 +188,11 @@ public final class DbExecution {
       if (group.length() > 0) {
         group.append(',');
       }
-      if (serverPort != null && isUnbracketedIpv6(trimmed)) {
-        group.append('[').append(trimmed).append("]:").append(serverPort);
+      if (isUnbracketedIpv6(trimmed)) {
+        group.append('[').append(trimmed).append(']');
+        if (serverPort != null) {
+          group.append(':').append(serverPort);
+        }
       } else {
         group.append(trimmed);
         if (serverPort != null && !hasPort(trimmed)) {

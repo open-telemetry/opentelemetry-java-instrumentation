@@ -215,6 +215,20 @@ class DbExecutionTest {
   }
 
   @Test
+  void dbExecutionBracketsUnbracketedIpv6HostsThatHaveNoPort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, "2001:db8::1,2001:db8::2")
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("[2001:db8::1],[2001:db8::2]");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @Test
   void dbExecutionSanitizesUserInfoFromMultiHostAddress() {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
