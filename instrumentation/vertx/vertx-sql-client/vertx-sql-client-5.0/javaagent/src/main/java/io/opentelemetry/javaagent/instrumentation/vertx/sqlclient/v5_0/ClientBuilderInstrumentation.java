@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.Ve
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -97,6 +98,7 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
       List<SqlConnectOptions> databases =
           VertxSqlClientSingletons.getBuilderDatabases(clientBuilder);
       if (databases != null && !databases.isEmpty()) {
+        databases = new ArrayList<>(databases);
         setSqlConnectOptions(databases.get(0));
         setAddressGroup(VertxSqlAddressGroup.of(databases));
         return new BuildState(databases, supplier, null);

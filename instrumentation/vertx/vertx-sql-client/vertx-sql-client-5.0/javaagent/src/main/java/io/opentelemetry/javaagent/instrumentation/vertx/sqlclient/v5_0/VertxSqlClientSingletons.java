@@ -20,7 +20,6 @@ import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.ClientBuilderBase;
 import io.vertx.sqlclient.internal.SqlClientBase;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -201,10 +200,7 @@ public class VertxSqlClientSingletons {
   public static void storeBuilderDatabases(
       Object clientBuilder, @Nullable List<SqlConnectOptions> databases) {
     if (clientBuilder instanceof ClientBuilderBase) {
-      // The list belongs to the caller and may be mutated or reused.
-      BUILDER_DATABASES.set(
-          (ClientBuilderBase<?>) clientBuilder,
-          databases == null ? null : new ArrayList<>(databases));
+      BUILDER_DATABASES.set((ClientBuilderBase<?>) clientBuilder, databases);
     }
   }
 

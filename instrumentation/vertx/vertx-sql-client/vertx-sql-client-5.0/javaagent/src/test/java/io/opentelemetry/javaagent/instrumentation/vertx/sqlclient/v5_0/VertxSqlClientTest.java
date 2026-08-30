@@ -327,6 +327,27 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testMutableServerListIsSnapshottedForEachBuild() throws Exception {
+    PgConnectOptions first = connectOptions();
+    List<SqlConnectOptions> databases =
+        new ArrayList<>(asList(first, new PgConnectOptions(first).setPort(port + 1)));
+    ClientBuilder<Pool> builder =
+        PgBuilder.pool().using(vertx).connectingTo(databases).with(new PoolOptions().setMaxSize(1));
+
+    Pool firstPool = builder.build();
+    cleanup.deferCleanup(firstPool::close);
+    databases.set(1, new PgConnectOptions(first).setPort(port + 2));
+    Pool secondPool = builder.build();
+    cleanup.deferCleanup(secondPool::close);
+
+    select(firstPool);
+    select(secondPool);
+
+    testing.waitAndAssertTraces(
+        trace -> assertServerGroup(trace, port + 1), trace -> assertServerGroup(trace, port + 2));
+  }
+
+  @Test
   void testSwitchingTheBuilderToOneServerDropsTheServerList() throws Exception {
     PgConnectOptions first = connectOptions();
     ClientBuilder<Pool> builder =
