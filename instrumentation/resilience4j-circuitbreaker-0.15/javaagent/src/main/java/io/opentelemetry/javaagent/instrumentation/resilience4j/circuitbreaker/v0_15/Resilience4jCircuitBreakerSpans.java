@@ -74,7 +74,14 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   public static Capture beginCapture(CircuitBreaker circuitBreaker) {
+    return beginCapture(circuitBreaker, false);
+  }
+
+  private static Capture beginCapture(CircuitBreaker circuitBreaker, boolean captureRecent) {
     Capture capture = new Capture(circuitBreaker);
+    if (captureRecent) {
+      capture.token = peekRecentAcquisition(circuitBreaker);
+    }
     Deque<Capture> captureStack = captures.get();
     if (captureStack == null) {
       captureStack = new ArrayDeque<>();
@@ -84,8 +91,21 @@ public class Resilience4jCircuitBreakerSpans {
     return capture;
   }
 
+  public static Capture beginCaptureAfterAcquisition(CircuitBreaker circuitBreaker) {
+    return beginCapture(circuitBreaker, true);
+  }
+
   @Nullable
   public static PendingSpan endCapture(Capture capture) {
+    removeCapture(capture);
+    return claim(capture.token);
+  }
+
+  public static void cancelCapture(Capture capture) {
+    removeCapture(capture);
+  }
+
+  private static void removeCapture(Capture capture) {
     Deque<Capture> captureStack = captures.get();
     if (captureStack != null) {
       if (captureStack.peek() == capture) {
@@ -97,7 +117,6 @@ public class Resilience4jCircuitBreakerSpans {
         captures.remove();
       }
     }
-    return claim(capture.token);
   }
 
   @Nullable

@@ -13,6 +13,7 @@ muzzle {
 
 dependencies {
   library("io.github.resilience4j:resilience4j-circuitbreaker:0.15.0")
+  latestDepTestLibrary("io.github.resilience4j:resilience4j-circuitbreaker:latest.release")
 }
 
 tasks {

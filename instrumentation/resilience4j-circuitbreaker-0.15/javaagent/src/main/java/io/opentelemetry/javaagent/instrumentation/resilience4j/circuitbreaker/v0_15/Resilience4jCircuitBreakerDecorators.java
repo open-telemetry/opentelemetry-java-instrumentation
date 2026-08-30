@@ -43,6 +43,11 @@ public class Resilience4jCircuitBreakerDecorators {
     return new CompletionStageSupplierWrapper<>(circuitBreaker, delegate);
   }
 
+  public static <T> Supplier<CompletionStage<T>> wrapCompletionStageDecoratedSupplier(
+      CircuitBreaker circuitBreaker, Supplier<CompletionStage<T>> delegate) {
+    return new CompletionStageDecoratedSupplierWrapper<>(circuitBreaker, delegate);
+  }
+
   public static <T> Supplier<Future<T>> wrapFutureSupplier(
       CircuitBreaker circuitBreaker, Supplier<Future<T>> delegate) {
     return new FutureSupplierWrapper<>(circuitBreaker, delegate);
@@ -58,11 +63,20 @@ public class Resilience4jCircuitBreakerDecorators {
   }
 
   public static Object wrapChecked(CircuitBreaker circuitBreaker, Object delegate) {
+    return wrapChecked(circuitBreaker, delegate, false);
+  }
+
+  private static Object wrapChecked(
+      CircuitBreaker circuitBreaker, Object delegate, boolean captureRecentAcquisition) {
     Class<?> delegateClass = delegate.getClass();
     return Proxy.newProxyInstance(
         delegateClass.getClassLoader(),
         delegateClass.getInterfaces(),
-        new CheckedInvocationHandler(circuitBreaker, delegate));
+        new CheckedInvocationHandler(circuitBreaker, delegate, captureRecentAcquisition));
+  }
+
+  public static Object wrapCheckedDelegate(CircuitBreaker circuitBreaker, Object delegate) {
+    return wrapChecked(circuitBreaker, delegate, true);
   }
 
   private static final class SupplierWrapper<T> implements Supplier<T> {
@@ -159,6 +173,40 @@ public class Resilience4jCircuitBreakerDecorators {
         if (pendingSpan != null) {
           pendingSpan.end("success", null);
         }
+      } catch (Throwable t) {
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", t);
+        }
+        throw t;
+      }
+    }
+  }
+
+  private static final class CompletionStageDecoratedSupplierWrapper<T>
+      implements Supplier<CompletionStage<T>> {
+
+    private final CircuitBreaker circuitBreaker;
+    private final Supplier<CompletionStage<T>> delegate;
+
+    private CompletionStageDecoratedSupplierWrapper(
+        CircuitBreaker circuitBreaker, Supplier<CompletionStage<T>> delegate) {
+      this.circuitBreaker = circuitBreaker;
+      this.delegate = delegate;
+    }
+
+    @Override
+    public CompletionStage<T> get() {
+      Resilience4jCircuitBreakerSpans.Capture capture =
+          Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
+      try {
+        CompletionStage<T> result = delegate.get();
+        // The inner CompletionStageSupplierWrapper owns normal async completion. This outer
+        // capture only covers failures after permission acquisition but before that inner wrapper
+        // runs, for example a throwing timestamp function.
+        Resilience4jCircuitBreakerSpans.cancelCapture(capture);
+        return result;
       } catch (Throwable t) {
         Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
             Resilience4jCircuitBreakerSpans.endCapture(capture);
@@ -406,10 +454,13 @@ public class Resilience4jCircuitBreakerDecorators {
 
     private final CircuitBreaker circuitBreaker;
     private final Object delegate;
+    private final boolean captureRecentAcquisition;
 
-    private CheckedInvocationHandler(CircuitBreaker circuitBreaker, Object delegate) {
+    private CheckedInvocationHandler(
+        CircuitBreaker circuitBreaker, Object delegate, boolean captureRecentAcquisition) {
       this.circuitBreaker = circuitBreaker;
       this.delegate = delegate;
+      this.captureRecentAcquisition = captureRecentAcquisition;
     }
 
     @Override
@@ -424,7 +475,9 @@ public class Resilience4jCircuitBreakerDecorators {
         return method.invoke(delegate, args);
       }
       Resilience4jCircuitBreakerSpans.Capture capture =
-          Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
+          captureRecentAcquisition
+              ? Resilience4jCircuitBreakerSpans.beginCaptureAfterAcquisition(circuitBreaker)
+              : Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         Object result = method.invoke(delegate, args);
         Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =

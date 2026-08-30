@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -26,11 +25,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("io.github.resilience4j.circuitbreaker.CircuitBreaker");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -115,6 +109,15 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
       return Resilience4jCircuitBreakerDecorators.wrapCompletionStageSupplier(
           circuitBreaker, supplier);
     }
+
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static <T> Supplier<CompletionStage<T>> onExit(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker,
+        @Advice.Return Supplier<CompletionStage<T>> result) {
+      return Resilience4jCircuitBreakerDecorators.wrapCompletionStageDecoratedSupplier(
+          circuitBreaker, result);
+    }
   }
 
   @SuppressWarnings("unused")
@@ -153,6 +156,13 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CheckedDecoratorAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @AssignReturned.ToArguments(@ToArgument(1))
+    public static Object onEnter(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Argument(1) Object delegate) {
+      return Resilience4jCircuitBreakerDecorators.wrapCheckedDelegate(circuitBreaker, delegate);
+    }
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)

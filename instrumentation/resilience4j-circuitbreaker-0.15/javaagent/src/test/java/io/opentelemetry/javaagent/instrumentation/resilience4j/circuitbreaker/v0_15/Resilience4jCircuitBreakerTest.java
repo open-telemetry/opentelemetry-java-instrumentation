@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -24,6 +25,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.time.Clock;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -228,6 +230,40 @@ class Resilience4jCircuitBreakerTest {
     assertThat(testing.spans())
         .extracting(span -> span.getName())
         .contains("CircuitBreaker inner-circuit-breaker", "CircuitBreaker outer-circuit-breaker");
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void createsFailureSpanWhenDecoratedCompletionStageTimestampFunctionThrows() throws Exception {
+    Method currentTimestampFunction;
+    try {
+      currentTimestampFunction =
+          CircuitBreakerConfig.Builder.class.getMethod(
+              "currentTimestampFunction", Function.class, TimeUnit.class);
+    } catch (NoSuchMethodException e) {
+      assumeTrue(false, "currentTimestampFunction is not available in this Resilience4j version");
+      throw e;
+    }
+    Method decorateCompletionStage = decorateCompletionStageMethod();
+    IllegalStateException exception = new IllegalStateException("boom");
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    currentTimestampFunction.invoke(
+        builder,
+        (Function<Clock, Long>)
+            clock -> {
+              throw exception;
+            },
+        NANOSECONDS);
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    Supplier<CompletionStage<String>> supplier = () -> CompletableFuture.completedFuture("ok");
+    Supplier<CompletionStage<String>> decoratedSupplier =
+        (Supplier<CompletionStage<String>>)
+            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+
+    Throwable thrown = catchThrowable(() -> testing.runWithSpan("parent", decoratedSupplier::get));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
   }
 
   @Test
@@ -894,6 +930,30 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(result).isEqualTo("recovered");
     assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsFailureSpanWhenVavrFunctionAdapterRecoversError() throws Exception {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    AssertionError error = new AssertionError("boom");
+    Object checkedFunction =
+        decorateVavrCheckedFunction(
+            circuitBreaker,
+            value -> {
+              throw error;
+            });
+
+    Object recovered =
+        checkedFunction
+            .getClass()
+            .getMethod("recover", Function.class)
+            .invoke(
+                checkedFunction,
+                (Function<Throwable, Function<String, String>>) throwable -> value -> "recovered");
+    String result = testing.runWithSpan("parent", () -> invokeFunction1(recovered, "ok"));
+
+    assertThat(result).isEqualTo("recovered");
+    assertCircuitBreakerSpan("closed", "failure", error);
   }
 
   @Test
