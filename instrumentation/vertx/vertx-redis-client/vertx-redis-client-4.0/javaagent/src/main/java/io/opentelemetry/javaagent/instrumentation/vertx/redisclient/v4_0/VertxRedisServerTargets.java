@@ -31,15 +31,15 @@ public final class VertxRedisServerTargets {
     }
     if (options.getType() == RedisClientType.SENTINEL) {
       return RedisServerTarget.ofEndpointsAndLogicalName(
-          sentinelEndpoints(options.getEndpoints()), options.getMasterName());
+          effectiveEndpoints(options.getEndpoints()), options.getMasterName());
     }
     if (options.getType() == RedisClientType.STANDALONE) {
       return RedisServerTarget.ofEndpoint(effectiveEndpoint(options.getEndpoint()));
     }
-    return RedisServerTarget.ofEndpoints(options.getEndpoints());
+    return RedisServerTarget.ofEndpoints(effectiveEndpoints(options.getEndpoints()));
   }
 
-  private static List<String> sentinelEndpoints(List<String> connectionStrings) {
+  private static List<String> effectiveEndpoints(List<String> connectionStrings) {
     List<String> endpoints = new ArrayList<>(connectionStrings.size());
     for (String connectionString : connectionStrings) {
       endpoints.add(effectiveEndpoint(connectionString));

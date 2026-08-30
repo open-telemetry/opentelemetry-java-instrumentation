@@ -32,16 +32,16 @@ public final class VertxRedisServerTargets {
     }
     if (options instanceof RedisSentinelConnectOptions) {
       return RedisServerTarget.ofEndpointsAndLogicalName(
-          sentinelEndpoints(options.getEndpoints()),
+          effectiveEndpoints(options.getEndpoints()),
           ((RedisSentinelConnectOptions) options).getMasterName());
     }
     if (options instanceof RedisStandaloneConnectOptions) {
       return RedisServerTarget.ofEndpoint(effectiveEndpoint(options.getEndpoint()));
     }
-    return RedisServerTarget.ofEndpoints(options.getEndpoints());
+    return RedisServerTarget.ofEndpoints(effectiveEndpoints(options.getEndpoints()));
   }
 
-  private static List<String> sentinelEndpoints(List<String> connectionStrings) {
+  private static List<String> effectiveEndpoints(List<String> connectionStrings) {
     List<String> endpoints = new ArrayList<>(connectionStrings.size());
     for (String connectionString : connectionStrings) {
       endpoints.add(effectiveEndpoint(connectionString));
