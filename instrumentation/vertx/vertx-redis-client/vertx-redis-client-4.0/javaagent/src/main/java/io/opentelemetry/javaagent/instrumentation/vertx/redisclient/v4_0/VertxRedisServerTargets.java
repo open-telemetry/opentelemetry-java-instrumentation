@@ -62,7 +62,7 @@ public final class VertxRedisServerTargets {
   }
 
   @Nullable
-  public static RedisServerTarget get(@Nullable RedisURI redisUri) {
+  private static RedisServerTarget get(@Nullable RedisURI redisUri) {
     return redisUri == null ? null : TARGET_FIELD.get(redisUri);
   }
 
