@@ -67,13 +67,18 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
-  void resolvedHandlingNodeIsTheNetworkPeer() throws UnknownHostException {
+  void resolvedHandlingNodeIsTheStableNetworkPeer() throws UnknownHostException {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
     InetSocketAddress peer =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 11211);
     request.setHandlingNode(memcachedNode(peer));
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isSameAs(peer);
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? peer : null);
+    assertThat(getter.getNetworkPeerAddress(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "10.20.30.40" : null);
+    assertThat(getter.getNetworkPeerPort(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? 11211 : null);
   }
 
   @Test
