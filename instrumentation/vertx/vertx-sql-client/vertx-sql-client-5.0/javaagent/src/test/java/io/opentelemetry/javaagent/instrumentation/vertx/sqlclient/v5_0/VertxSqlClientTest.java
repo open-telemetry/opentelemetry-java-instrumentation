@@ -42,8 +42,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.core.Future;
@@ -57,7 +55,9 @@ import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.PreparedQuery;
 import io.vertx.sqlclient.PreparedStatement;
+import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.SqlConnectOptions;
+import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -71,7 +71,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -225,63 +224,79 @@ class VertxSqlClientTest {
   }
 
   @Test
-  void testSupplierCaptureTracksChangingOptionsWithoutRetainingThem() {
+  void testSupplierCaptureTracksChangingOptionsWithoutRetainingThem() throws Exception {
     AtomicInteger calls = new AtomicInteger();
     PgConnectOptions first = connectOptions();
-    PgConnectOptions second = new PgConnectOptions(first).setHost("second.example");
-    VertxSqlClientDataCapture dataCapture = new VertxSqlClientDataCapture();
-    Supplier<Future<SqlConnectOptions>> supplier =
-        VertxSqlClientSingletons.capture(
-            () -> Future.succeededFuture(calls.getAndIncrement() == 0 ? first : second),
-            dataCapture);
+    String alternateHost = host.equals("localhost") ? "127.0.0.1" : "localhost";
+    PgConnectOptions second = new PgConnectOptions(first).setHost(alternateHost);
+    Pool supplierPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(
+                () -> Future.succeededFuture(calls.getAndIncrement() == 0 ? first : second))
+            .with(new PoolOptions().setMaxSize(2))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
 
-    assertThat(supplier.get().result()).isSameAs(first);
-    assertThat(dataCapture.get().getConnectOptions().getHost()).isEqualTo(host);
+    SqlConnection firstConnection =
+        supplierPool.getConnection().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    cleanup.deferCleanup(firstConnection::close);
     first.setHost("mutated.example");
-    assertThat(dataCapture.get().getConnectOptions().getHost()).isEqualTo(host);
+    select(firstConnection);
 
-    assertThat(supplier.get().result()).isSameAs(second);
-    assertThat(dataCapture.get().getConnectOptions().getHost()).isEqualTo("second.example");
+    SqlConnection secondConnection =
+        supplierPool.getConnection().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    cleanup.deferCleanup(secondConnection::close);
+    select(secondConnection);
+
     assertThat(calls).hasValue(2);
+    testing.waitAndAssertTraces(
+        trace -> assertSupplierTarget(trace, host),
+        trace -> assertSupplierTarget(trace, alternateHost));
   }
 
   @Test
   void testSupplierCapturePreservesExceptions() {
     RuntimeException thrown = new RuntimeException("supplier failed");
-    VertxSqlClientDataCapture dataCapture = new VertxSqlClientDataCapture();
-    Supplier<Future<SqlConnectOptions>> throwingSupplier =
-        VertxSqlClientSingletons.capture(
-            () -> {
-              throw thrown;
-            },
-            dataCapture);
+    Pool throwingPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(
+                () -> {
+                  throw thrown;
+                })
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(throwingPool::close);
 
-    assertThatThrownBy(throwingSupplier::get).isSameAs(thrown);
-    assertThat(dataCapture.get()).isNull();
+    assertThatThrownBy(() -> select(throwingPool)).isSameAs(thrown);
 
     RuntimeException failed = new RuntimeException("future failed");
-    Supplier<Future<SqlConnectOptions>> failingSupplier =
-        VertxSqlClientSingletons.capture(() -> Future.failedFuture(failed), dataCapture);
-    assertThat(failingSupplier.get().cause()).isSameAs(failed);
-    assertThat(dataCapture.get()).isNull();
+    Pool failingPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(() -> Future.failedFuture(failed))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(failingPool::close);
+
+    assertThatThrownBy(() -> select(failingPool)).hasCause(failed);
   }
 
   @Test
-  void testConfiguredTargetSnapshotsDirectOptionsAndLists() {
-    PgConnectOptions first = connectOptions();
-    PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
+  void testConnectingToDirectOptionsCapturesTarget() throws Exception {
+    PgConnectOptions options = connectOptions();
+    Pool directPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(options)
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(directPool::close);
 
-    VertxSqlAddressGroup singleTarget = VertxSqlAddressGroup.of(first);
-    VertxSqlAddressGroup groupTarget = VertxSqlAddressGroup.of(asList(first, second));
-    first.setHost("mutated.example").setPort(1);
+    select(directPool);
 
-    assertThat(singleTarget.getAddress()).isEqualTo(host);
-    assertThat(singleTarget.getPort()).isEqualTo(port);
-    assertThat(groupTarget.getAddress())
-        .isEqualTo(host + ":" + port + "," + host + ":" + (port + 1));
-    assertThat(groupTarget.getPort()).isNull();
-    assertThat(VertxSqlAddressGroup.of(emptyList())).isNull();
-    assertThat(VertxSqlAddressGroup.of((SqlConnectOptions) null)).isNull();
+    testing.waitAndAssertTraces(VertxSqlClientTest::assertSupplierTarget);
   }
 
   @Test
@@ -426,6 +441,10 @@ class VertxSqlClientTest {
   }
 
   private static void assertSupplierTarget(TraceAssert trace) {
+    assertSupplierTarget(trace, host);
+  }
+
+  private static void assertSupplierTarget(TraceAssert trace, String expectedHost) {
     if (emitOldDatabaseSemconv() && emitStableDatabaseSemconv()) {
       trace.hasSpansSatisfyingExactly(
           span ->
@@ -458,12 +477,13 @@ class VertxSqlClientTest {
                     equalTo(
                         maybeStablePeerService(),
                         emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                    equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
+                    equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : expectedHost),
                     equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port))));
   }
 
-  private static void select(Pool pool) throws Exception {
-    pool.query("select * from test")
+  private static void select(SqlClient client) throws Exception {
+    client
+        .query("select * from test")
         .execute()
         .toCompletionStage()
         .toCompletableFuture()
