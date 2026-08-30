@@ -5,18 +5,29 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseClientTest;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +41,7 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
 
   @Override
   protected boolean includesNetworkAttributes() {
-    return true;
+    return emitStableDatabaseSemconv();
   }
 
   @Override
@@ -51,8 +62,9 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
     return false;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  void hasDurationMetric() {
+  void hasExpectedSpanAndDurationMetric() {
     CouchbaseCluster cluster = getCluster(bucketCouchbase);
     ClusterManager manager = cluster.clusterManager(USERNAME, PASSWORD);
 
@@ -61,6 +73,30 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
 
     boolean hasBucket = manager.hasBucket(bucketCouchbase.name());
     assertThat(hasBucket).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(spanName("ClusterManager.hasBucket"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? COUCHBASE : null),
+                            equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? COUCHBASE : null),
+                            equalTo(
+                                DB_OPERATION,
+                                emitOldDatabaseSemconv() ? "ClusterManager.hasBucket" : null),
+                            equalTo(
+                                DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() ? "ClusterManager.hasBucket" : null),
+                            equalTo(NETWORK_TYPE, networkType()),
+                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
+                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            satisfies(SERVER_ADDRESS, operationServerAddress()),
+                            satisfies(SERVER_PORT, operationServerPort()),
+                            satisfies(
+                                stringKey("couchbase.local.address"), localAddressAttribute()))));
 
     assertDurationMetric(
         testing,

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.springdata;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.opentelemetry.instrumentation.couchbase.springdata.AbstractCouchbaseSpringRepositoryTest;
@@ -22,7 +24,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseSpringRepositoryTes
 
   @Override
   protected boolean includesNetworkAttributes() {
-    return true;
+    return emitStableDatabaseSemconv();
   }
 
   @Override
