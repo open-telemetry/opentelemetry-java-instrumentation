@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.vertx.core.net.NetSocket;
@@ -54,11 +55,15 @@ class VertxRedisClientRequestTest {
     RedisURI redisUri = new RedisURI("redis://" + SELECTED_HOST + ":" + SELECTED_PORT);
     VertxRedisServerTargets.set(redisUri, target);
 
-    NetSocket netSocket = mock(NetSocket.class);
+    NetSocket netSocket = mock(NetSocket.class, withSettings().withoutAnnotations());
     when(netSocket.remoteAddress())
         .thenReturn(SocketAddress.inetSocketAddress(PEER_PORT, PEER_HOST));
 
     return new VertxRedisClientRequest(
-        "GET", emptyList(), redisUri, mock(RedisStandaloneConnection.class), netSocket);
+        "GET",
+        emptyList(),
+        redisUri,
+        mock(RedisStandaloneConnection.class, withSettings().withoutAnnotations()),
+        netSocket);
   }
 }
