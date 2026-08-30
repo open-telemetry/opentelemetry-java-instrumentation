@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -127,7 +128,7 @@ class ConfigServerTargetsTest {
   }
 
   private static String redisAddress(String address) {
-    return (Boolean.getBoolean("testLatestDeps") ? "redis://" : "") + address;
+    return (testLatestDeps() ? "redis://" : "") + address;
   }
 
   private static Method findMethod(String methodName) {
