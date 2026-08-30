@@ -11,8 +11,9 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -26,6 +27,13 @@ public class AwsLambdaFunctionInstrumenter {
 
   private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
   private static final String GET_XRAY_TRACE_ID_METHOD = "getXrayTraceId";
+  private static final ClassValue<MethodHandleHolder> GET_XRAY_TRACE_ID =
+      new ClassValue<MethodHandleHolder>() {
+        @Override
+        protected MethodHandleHolder computeValue(Class<?> type) {
+          return new MethodHandleHolder(findGetXrayTraceId(type));
+        }
+      };
   private static final MapGetter mapGetter = new MapGetter();
 
   private final OpenTelemetry openTelemetry;
@@ -85,20 +93,54 @@ public class AwsLambdaFunctionInstrumenter {
     if (awsContext == null) {
       return null;
     }
+    MethodHandle getXrayTraceId = GET_XRAY_TRACE_ID.get(awsContext.getClass()).methodHandle;
+    if (getXrayTraceId == null) {
+      return null;
+    }
     try {
-      Method getXrayTraceId = awsContext.getClass().getMethod(GET_XRAY_TRACE_ID_METHOD);
-      getXrayTraceId.setAccessible(true);
       Object traceId = getXrayTraceId.invoke(awsContext);
       return traceId instanceof String ? (String) traceId : null;
-    } catch (NoSuchMethodException ignored) {
+    } catch (Throwable ignored) {
       return null;
-    } catch (IllegalAccessException | InvocationTargetException | SecurityException ignored) {
+    }
+  }
+
+  @Nullable
+  private static MethodHandle findGetXrayTraceId(Class<?> type) {
+    MethodHandle methodHandle = findPublicGetXrayTraceId(type);
+    if (methodHandle != null) {
+      return methodHandle;
+    }
+    for (Class<?> interfaceType : type.getInterfaces()) {
+      methodHandle = findGetXrayTraceId(interfaceType);
+      if (methodHandle != null) {
+        return methodHandle;
+      }
+    }
+    Class<?> superClass = type.getSuperclass();
+    return superClass == null ? null : findGetXrayTraceId(superClass);
+  }
+
+  @Nullable
+  private static MethodHandle findPublicGetXrayTraceId(Class<?> type) {
+    try {
+      return MethodHandles.publicLookup()
+          .findVirtual(type, GET_XRAY_TRACE_ID_METHOD, MethodType.methodType(String.class));
+    } catch (NoSuchMethodException | IllegalAccessException | SecurityException e) {
       return null;
     }
   }
 
   private static boolean isEmptyOrNull(@Nullable String value) {
     return value == null || value.isEmpty();
+  }
+
+  private static class MethodHandleHolder {
+    @Nullable final MethodHandle methodHandle;
+
+    private MethodHandleHolder(@Nullable MethodHandle methodHandle) {
+      this.methodHandle = methodHandle;
+    }
   }
 
   private static class MapGetter implements TextMapGetter<Map<String, String>> {

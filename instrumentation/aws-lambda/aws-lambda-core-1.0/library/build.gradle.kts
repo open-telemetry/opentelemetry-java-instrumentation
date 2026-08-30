@@ -17,8 +17,8 @@ dependencies {
   // it here.
   implementation("com.fasterxml.jackson.core:jackson-core")
 
-  // allows to get the function ARN and X-Ray trace ID
-  testLibrary("com.amazonaws:aws-lambda-java-core:1.4.0")
+  // allows to get the function ARN
+  testLibrary("com.amazonaws:aws-lambda-java-core:1.2.1")
 
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")

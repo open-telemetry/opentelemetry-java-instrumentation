@@ -95,7 +95,7 @@ class InstrumenterExtractionTest {
   }
 
   private static final class ContextWithXrayTraceId
-      implements com.amazonaws.services.lambda.runtime.Context {
+      implements com.amazonaws.services.lambda.runtime.Context, XrayTraceIdContext {
     private final String xrayTraceId;
 
     private ContextWithXrayTraceId(String xrayTraceId) {
@@ -103,6 +103,7 @@ class InstrumenterExtractionTest {
     }
 
     @Override
+    @SuppressWarnings("EffectivelyPrivate")
     public String getXrayTraceId() {
       return xrayTraceId;
     }
