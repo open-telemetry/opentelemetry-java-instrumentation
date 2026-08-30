@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.abort;
 
+import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClient;
@@ -46,9 +48,26 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   private MongoClient client;
 
   @BeforeAll
-  void setup() {
-    client = MongoClients.create("mongodb://" + host + ":" + port);
+  void setup() throws ReflectiveOperationException {
+    MongoClientSettings.Builder settings =
+        MongoClientSettings.builder()
+            .applyConnectionString(new ConnectionString("mongodb://" + host + ":" + port));
+    if (testLatestDeps()) {
+      applyNettyTransport(settings);
+    }
+    client = MongoClients.create(settings.build());
     cleanup.deferAfterAll(client);
+  }
+
+  private static void applyNettyTransport(MongoClientSettings.Builder settings)
+      throws ReflectiveOperationException {
+    Class<?> transportSettingsClass = Class.forName("com.mongodb.connection.TransportSettings");
+    Object nettySettingsBuilder = transportSettingsClass.getMethod("nettyBuilder").invoke(null);
+    Object nettySettings =
+        nettySettingsBuilder.getClass().getMethod("build").invoke(nettySettingsBuilder);
+    MongoClientSettings.Builder.class
+        .getMethod("transportSettings", transportSettingsClass)
+        .invoke(settings, nettySettings);
   }
 
   @Override

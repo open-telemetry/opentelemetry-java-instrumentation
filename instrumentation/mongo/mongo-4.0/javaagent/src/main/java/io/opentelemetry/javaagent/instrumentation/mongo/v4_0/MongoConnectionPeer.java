@@ -30,8 +30,18 @@ public final class MongoConnectionPeer {
     if (state == null || !socket.isConnected()) {
       return;
     }
+    capture(state, socket.getRemoteSocketAddress());
+  }
 
-    SocketAddress remoteAddress = socket.getRemoteSocketAddress();
+  public static void capture(@Nullable SocketAddress remoteAddress) {
+    OpenState state = currentOpen.get();
+    if (state == null) {
+      return;
+    }
+    capture(state, remoteAddress);
+  }
+
+  private static void capture(OpenState state, @Nullable SocketAddress remoteAddress) {
     MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(remoteAddress);
     if (peer != null) {
       state.peer = peer;

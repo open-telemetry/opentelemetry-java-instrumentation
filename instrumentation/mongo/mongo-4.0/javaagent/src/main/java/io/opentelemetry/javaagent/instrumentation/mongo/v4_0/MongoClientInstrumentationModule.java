@@ -33,6 +33,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
         new MongoClientSettingsBuilderInstrumentation(),
         new ClusterSettingsBuilderInstrumentation(),
         new SocketStreamInstrumentation(),
+        new NettyStreamInstrumentation(),
         new InternalStreamConnectionInstrumentation(),
         new BaseClusterInstrumentation(),
         new ClusterInstrumentation(),
