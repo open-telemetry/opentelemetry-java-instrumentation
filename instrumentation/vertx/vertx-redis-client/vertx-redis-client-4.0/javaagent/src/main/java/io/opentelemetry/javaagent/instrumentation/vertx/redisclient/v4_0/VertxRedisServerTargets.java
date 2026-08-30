@@ -62,15 +62,15 @@ public final class VertxRedisServerTargets {
   }
 
   @Nullable
-  private static RedisServerTarget get(@Nullable RedisURI redisUri) {
-    return redisUri == null ? null : TARGET_FIELD.get(redisUri);
-  }
-
-  @Nullable
   public static RedisServerTarget get(
       RedisStandaloneConnection connection, @Nullable RedisURI redisUri) {
     RedisServerTarget target = CONNECTION_TARGET_FIELD.get(connection);
     return target != null ? target : get(redisUri);
+  }
+
+  @Nullable
+  private static RedisServerTarget get(@Nullable RedisURI redisUri) {
+    return redisUri == null ? null : TARGET_FIELD.get(redisUri);
   }
 
   private VertxRedisServerTargets() {}
