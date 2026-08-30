@@ -29,16 +29,17 @@ class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
     // supplier of them instead, so its constructor does not match here
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(4, named("io.vertx.redis.client.RedisConnectOptions"))),
-        getClass().getName() + "$ConstructorAdvice");
-    // 5.0.0 and later, where the connect options are resolved per connection; earlier versions take
-    // a NetSocket in this position, so their init does not match here
+        getClass().getName() + "$ConstructorWithOptionsAdvice");
+    // 5.0.0 and later pass the endpoint selected by the first options supplier invocation here
     transformer.applyAdviceToMethod(
-        named("init").and(takesArgument(1, named("io.vertx.redis.client.RedisConnectOptions"))),
-        getClass().getName() + "$InitAdvice");
+        isConstructor()
+            .and(takesArgument(4, named("java.util.function.Supplier")))
+            .and(takesArgument(6, String.class)),
+        getClass().getName() + "$ConstructorWithEndpointAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ConstructorAdvice {
+  public static class ConstructorWithOptionsAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(4) RedisConnectOptions options,
@@ -48,15 +49,12 @@ class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class InitAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(1) RedisConnectOptions options) {
-      VertxRedisServerTargets.setCurrent(VertxRedisServerTargets.of(options));
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      VertxRedisServerTargets.clearCurrent();
+  public static class ConstructorWithEndpointAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Argument(6) String connectionString,
+        @Advice.FieldValue("redisURI") RedisURI redisUri) {
+      VertxRedisServerTargets.setEndpoint(redisUri, connectionString);
     }
   }
 }

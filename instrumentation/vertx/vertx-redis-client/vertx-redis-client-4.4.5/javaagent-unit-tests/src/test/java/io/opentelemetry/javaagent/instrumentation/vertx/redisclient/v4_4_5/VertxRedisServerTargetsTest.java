@@ -157,21 +157,24 @@ class VertxRedisServerTargetsTest {
     try {
       VertxInternal vertxInternal = (VertxInternal) vertx;
       ContextInternal context = vertxInternal.getOrCreateContext();
-      RedisURI redisUri = new RedisURI("redis://host:6379");
-      RedisServerTarget firstTarget = RedisServerTarget.ofEndpoint("redis://first:6379");
-      RedisServerTarget secondTarget = RedisServerTarget.ofEndpoint("redis://second:6380");
-      RedisStandaloneConnection firstConnection = connection(vertxInternal, context, redisUri);
-      RedisStandaloneConnection secondConnection = connection(vertxInternal, context, redisUri);
+      RedisURI firstRedisUri = new RedisURI("redis://first:6379");
+      RedisURI secondRedisUri = new RedisURI("redis://second:6380");
+      RedisStandaloneConnection firstConnection = connection(vertxInternal, context, firstRedisUri);
+      RedisStandaloneConnection secondConnection =
+          connection(vertxInternal, context, secondRedisUri);
 
-      VertxRedisServerTargets.set(redisUri, firstTarget);
-      VertxRedisServerTargets.setConnectionTarget(firstConnection, redisUri);
-      VertxRedisServerTargets.set(redisUri, secondTarget);
-      VertxRedisServerTargets.setConnectionTarget(secondConnection, redisUri);
+      VertxRedisServerTargets.setEndpoint(firstRedisUri, "redis://first:6379");
+      VertxRedisServerTargets.setConnectionTarget(firstConnection, firstRedisUri);
+      VertxRedisServerTargets.setEndpoint(secondRedisUri, "redis://second:6380");
+      VertxRedisServerTargets.setConnectionTarget(secondConnection, secondRedisUri);
 
-      assertThat(VertxRedisServerTargets.getConnectionTarget(firstConnection))
-          .isSameAs(firstTarget);
-      assertThat(VertxRedisServerTargets.getConnectionTarget(secondConnection))
-          .isSameAs(secondTarget);
+      RedisServerTarget firstTarget = VertxRedisServerTargets.getConnectionTarget(firstConnection);
+      assertThat(firstTarget.getAddress()).isEqualTo("first");
+      assertThat(firstTarget.getPort()).isEqualTo(6379);
+      RedisServerTarget secondTarget =
+          VertxRedisServerTargets.getConnectionTarget(secondConnection);
+      assertThat(secondTarget.getAddress()).isEqualTo("second");
+      assertThat(secondTarget.getPort()).isEqualTo(6380);
     } finally {
       vertx.close();
     }
