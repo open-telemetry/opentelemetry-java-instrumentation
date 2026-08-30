@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,8 +45,17 @@ class JedisNetworkAttributesGetterTest {
     JedisRequest request = JedisRequest.create(connection, Protocol.Command.GET);
     request.capturePeerAddress();
 
+    assertThat(request.getPeerAddress()).isEqualTo(peerAddress);
+  }
+
+  @Test
+  void emitsConnectedSocketAddressOnlyForStableSemconv() {
+    InetSocketAddress peerAddress = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
+    JedisRequest request = requestWithPeer(peerAddress);
+    request.capturePeerAddress();
+
     assertThat(new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(request, null))
-        .isEqualTo(peerAddress);
+        .isEqualTo(emitStableDatabaseSemconv() ? peerAddress : null);
   }
 
   @Test
@@ -53,8 +63,7 @@ class JedisNetworkAttributesGetterTest {
     JedisRequest request = JedisRequest.create(new Connection(), Protocol.Command.GET);
     request.capturePeerAddress();
 
-    assertThat(new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(request, null))
-        .isNull();
+    assertThat(request.getPeerAddress()).isNull();
   }
 
   @Test
@@ -82,9 +91,7 @@ class JedisNetworkAttributesGetterTest {
     JedisRequest request = JedisRequest.create(connection, Protocol.Command.GET);
     request.capturePeerAddress();
 
-    JedisDbAttributesGetter getter = new JedisDbAttributesGetter();
-    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+    assertThat(request.getPeerAddress()).isNull();
   }
 
   @Test
@@ -117,8 +124,7 @@ class JedisNetworkAttributesGetterTest {
     JedisRequest request = JedisRequest.create(connection, Protocol.Command.GET);
     request.capturePeerAddress();
 
-    assertThat(new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(request, null))
-        .isNull();
+    assertThat(request.getPeerAddress()).isNull();
   }
 
   @Test
@@ -151,8 +157,7 @@ class JedisNetworkAttributesGetterTest {
     JedisRequest request = JedisRequest.create(connection, Protocol.Command.GET);
     request.capturePeerAddress();
 
-    assertThat(new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(request, null))
-        .isEqualTo(first);
+    assertThat(request.getPeerAddress()).isEqualTo(first);
   }
 
   @Test
@@ -189,9 +194,7 @@ class JedisNetworkAttributesGetterTest {
       JedisPipelineContext.exitTransactionFraming();
     }
 
-    assertThat(
-            new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(transactionRequest, null))
-        .isNull();
+    assertThat(transactionRequest.getPeerAddress()).isNull();
   }
 
   @Test
@@ -213,9 +216,7 @@ class JedisNetworkAttributesGetterTest {
       JedisPipelineContext.exitTransactionFraming();
     }
 
-    assertThat(
-            new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(transactionRequest, null))
-        .isNull();
+    assertThat(transactionRequest.getPeerAddress()).isNull();
   }
 
   @Test
@@ -231,9 +232,7 @@ class JedisNetworkAttributesGetterTest {
     JedisRequest transactionRequest =
         JedisRequest.createTransaction(singletonList(queuedRequest), multiRequest);
 
-    assertThat(
-            new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(transactionRequest, null))
-        .isNull();
+    assertThat(transactionRequest.getPeerAddress()).isNull();
   }
 
   private static JedisRequest requestWithPeer(InetSocketAddress peerAddress) {

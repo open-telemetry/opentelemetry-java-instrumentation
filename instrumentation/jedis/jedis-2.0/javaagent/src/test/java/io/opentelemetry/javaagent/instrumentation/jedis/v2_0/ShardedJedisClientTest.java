@@ -32,6 +32,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -128,24 +129,35 @@ class ShardedJedisClientTest {
 
   private static List<AttributeAssertion> attributes(
       String operation, String queryText, Jedis selectedShard) {
-    String selectedHost = selectedShard.getClient().getHost();
-    int selectedPort = selectedShard.getClient().getPort();
-    InetSocketAddress peerAddress =
-        (InetSocketAddress) selectedShard.getClient().getSocket().getRemoteSocketAddress();
-    return asList(
-        equalTo(maybeStable(DB_SYSTEM), REDIS),
-        equalTo(maybeStable(DB_STATEMENT), queryText),
-        equalTo(maybeStable(DB_OPERATION), operation),
-        equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-        equalTo(maybeStablePeerService(), emitStableDatabaseSemconv() ? null : "test-peer-service"),
-        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? configuredTarget : selectedHost),
-        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) selectedPort),
-        equalTo(NETWORK_PEER_ADDRESS, peerAddress.getAddress().getHostAddress()),
-        equalTo(NETWORK_PEER_PORT, (long) peerAddress.getPort()),
-        equalTo(
-            NETWORK_TYPE,
-            emitOldDatabaseSemconv()
-                ? (peerAddress.getAddress() instanceof Inet4Address ? IPV4 : IPV6)
-                : null));
+    String serverAddress = selectedShard.getClient().getHost();
+    int serverPort = selectedShard.getClient().getPort();
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(maybeStable(DB_SYSTEM), REDIS),
+                equalTo(maybeStable(DB_STATEMENT), queryText),
+                equalTo(maybeStable(DB_OPERATION), operation),
+                equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null)));
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
+      assertions.add(equalTo(DB_SYSTEM, REDIS));
+      assertions.add(equalTo(DB_STATEMENT, queryText));
+      assertions.add(equalTo(DB_OPERATION, operation));
+    }
+    if (emitStableDatabaseSemconv()) {
+      InetSocketAddress peerAddress =
+          (InetSocketAddress) selectedShard.getClient().getSocket().getRemoteSocketAddress();
+      assertions.add(equalTo(SERVER_ADDRESS, configuredTarget));
+      assertions.add(equalTo(NETWORK_PEER_ADDRESS, peerAddress.getAddress().getHostAddress()));
+      assertions.add(equalTo(NETWORK_PEER_PORT, peerAddress.getPort()));
+      if (emitOldDatabaseSemconv()) {
+        assertions.add(
+            equalTo(NETWORK_TYPE, peerAddress.getAddress() instanceof Inet4Address ? IPV4 : IPV6));
+      }
+    } else {
+      assertions.add(equalTo(maybeStablePeerService(), "test-peer-service"));
+      assertions.add(equalTo(SERVER_ADDRESS, serverAddress));
+      assertions.add(equalTo(SERVER_PORT, serverPort));
+    }
+    return assertions;
   }
 }
