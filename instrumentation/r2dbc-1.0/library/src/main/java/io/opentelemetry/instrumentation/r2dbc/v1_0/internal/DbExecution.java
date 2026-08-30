@@ -18,9 +18,6 @@ import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -239,15 +236,46 @@ public final class DbExecution {
     return firstColon > 0 && isPort(value.substring(firstColon + 1));
   }
 
+  // Checks the syntax rather than resolving the value: InetAddress hands anything it cannot parse
+  // as a literal to the platform name service, and that lookup blocks until the resolver answers.
   private static boolean isIpv6Literal(String value) {
-    if (value.indexOf(':') < 0) {
+    String address = value;
+    int zone = value.indexOf('%');
+    if (zone >= 0) {
+      // a link-local address may carry a zone identifier, which is not part of the address
+      if (zone == 0 || zone == value.length() - 1) {
+        return false;
+      }
+      address = value.substring(0, zone);
+    }
+
+    int colons = 0;
+    boolean embeddedIpv4 = false;
+    for (int i = 0; i < address.length(); i++) {
+      char c = address.charAt(i);
+      if (c == ':') {
+        colons++;
+      } else if (c == '.') {
+        embeddedIpv4 = true;
+      } else if (!isHexDigit(c)) {
+        return false;
+      }
+    }
+    if (colons < 2 || colons > 7) {
       return false;
     }
-    try {
-      return InetAddress.getByName(value) instanceof Inet6Address;
-    } catch (UnknownHostException ignored) {
-      return false;
+
+    int compression = address.indexOf("::");
+    if (compression >= 0) {
+      // "::" stands for the omitted groups, so it may appear at most once
+      return compression == address.lastIndexOf("::");
     }
+    // an embedded IPv4 address spells out the last two groups
+    return colons == (embeddedIpv4 ? 6 : 7);
+  }
+
+  private static boolean isHexDigit(char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
   }
 
   private static boolean isPort(String value) {
