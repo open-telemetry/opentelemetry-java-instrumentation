@@ -142,7 +142,7 @@ class MongoDbAttributesGetterTest {
   }
 
   @Test
-  void networkPeerNormalizesAnIpv6AddressWithABracketedHostLabel() throws UnknownHostException {
+  void networkPeerUsesTheNumericIpv6AddressInsteadOfTheHostLabel() throws UnknownHostException {
     byte[] address = new byte[16];
     address[15] = 1;
     InetAddress ipv6Address = InetAddress.getByAddress("[::1]", address);
@@ -152,8 +152,7 @@ class MongoDbAttributesGetterTest {
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
     assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
-        .isEqualTo(ipv6Address.getHostAddress())
-        .doesNotContain("[", "]");
+        .isEqualTo("0:0:0:0:0:0:0:1");
     assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isEqualTo(27018);
   }
 

@@ -29,7 +29,7 @@ public final class MongoNetworkPeer {
         return null;
       }
       return new MongoNetworkPeer(
-          stripBrackets(inetSocketAddress.getAddress().getHostAddress()),
+          inetSocketAddress.getAddress().getHostAddress(),
           inetSocketAddress.getPort(),
           inetSocketAddress);
     }
@@ -57,13 +57,6 @@ public final class MongoNetworkPeer {
   @Nullable
   public InetSocketAddress getInetSocketAddress() {
     return inetSocketAddress;
-  }
-
-  private static String stripBrackets(String address) {
-    if (address.startsWith("[") && address.endsWith("]")) {
-      return address.substring(1, address.length() - 1);
-    }
-    return address;
   }
 
   @Nullable
