@@ -65,20 +65,22 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
       }
 
       // the constructor advice is the only writer of this snapshot; fall back when it is missing
-      ServerInfo serverInfo = ClickHouseClientV2Singletons.serverInfo(client);
-      if (serverInfo == null) {
-        serverInfo = ServerInfo.empty();
+      ServerInfo configuredServerInfo = ClickHouseClientV2Singletons.serverInfo(client);
+      ServerInfo currentServerInfo = configuredServerInfo;
+      if (configuredServerInfo == null) {
+        configuredServerInfo = ServerInfo.empty();
+        currentServerInfo = ServerInfo.ofCurrentEndpoint(client.getEndpoints());
       }
 
       String database = client.getConfiguration().get("database");
       Context parentContext = currentContext();
       ClickHouseDbRequest request =
           ClickHouseDbRequest.create(
-              serverInfo.getAddress(),
-              serverInfo.getPort(),
-              serverInfo.getAddress(),
-              serverInfo.getPort(),
-              serverInfo.getAddressGroup(),
+              currentServerInfo.getAddress(),
+              currentServerInfo.getPort(),
+              configuredServerInfo.getAddress(),
+              configuredServerInfo.getPort(),
+              configuredServerInfo.getAddressGroup(),
               database,
               sqlQuery);
 

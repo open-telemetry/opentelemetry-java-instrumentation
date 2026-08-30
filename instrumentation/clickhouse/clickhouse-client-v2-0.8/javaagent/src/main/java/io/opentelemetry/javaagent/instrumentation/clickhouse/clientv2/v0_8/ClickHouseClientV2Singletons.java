@@ -45,6 +45,10 @@ public class ClickHouseClientV2Singletons {
     SERVER_INFO_FIELD.set(client, ServerInfo.of(client.getEndpoints()));
   }
 
+  static void clearServerInfo(Client client) {
+    SERVER_INFO_FIELD.set(client, null);
+  }
+
   @Nullable
   public static ServerInfo serverInfo(Client client) {
     return SERVER_INFO_FIELD.get(client);
@@ -65,7 +69,7 @@ public class ClickHouseClientV2Singletons {
       this.addressGroup = addressGroup;
     }
 
-    static ServerInfo empty() {
+    public static ServerInfo empty() {
       return EMPTY;
     }
 
@@ -74,8 +78,7 @@ public class ClickHouseClientV2Singletons {
         return EMPTY;
       }
       if (endpoints.size() == 1) {
-        String endpoint = sanitizeEndpoint(endpoints.iterator().next());
-        return new ServerInfo(endpointAddress(endpoint), endpointPort(endpoint), null);
+        return ofCurrentEndpoint(endpoints);
       }
 
       String first = sanitizeEndpoint(endpoints.iterator().next());
@@ -95,6 +98,14 @@ public class ClickHouseClientV2Singletons {
         addressGroup.append(endpoint);
       }
       return new ServerInfo(endpointAddress(first), endpointPort(first), addressGroup.toString());
+    }
+
+    public static ServerInfo ofCurrentEndpoint(Set<String> endpoints) {
+      if (endpoints.isEmpty()) {
+        return EMPTY;
+      }
+      String endpoint = sanitizeEndpoint(endpoints.iterator().next());
+      return new ServerInfo(endpointAddress(endpoint), endpointPort(endpoint), null);
     }
 
     private static String endpointAddress(String endpoint) {

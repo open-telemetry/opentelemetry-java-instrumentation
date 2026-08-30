@@ -568,6 +568,44 @@ class ClickHouseClientV2Test {
   }
 
   @Test
+  void testMissingSnapshotRetainsOnlyLegacyEndpoint() throws Exception {
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint(Protocol.HTTP, host, port, false)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false")
+            .build();
+    cleanup.deferCleanup(testClient);
+    ClickHouseClientV2Singletons.clearServerInfo(testClient);
+    assertThat(ClickHouseClientV2Singletons.serverInfo(testClient)).isNull();
+
+    QueryResponse response = testClient.query("select * from " + TABLE_NAME).join();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
   void testMultipleEndpointsExcludeCredentialsAndUrlComponents() {
     List<String> endpoints =
         new ArrayList<>(
