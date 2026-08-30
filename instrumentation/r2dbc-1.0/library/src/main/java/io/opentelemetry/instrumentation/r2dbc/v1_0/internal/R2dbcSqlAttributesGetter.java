@@ -99,19 +99,17 @@ public final class R2dbcSqlAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(DbExecution request) {
-    if (emitStableDatabaseSemconv() && request.isServerAddressGroup()) {
-      return request.getServerAddressGroup();
-    }
-    return request.getServerAddress();
+    return emitStableDatabaseSemconv()
+        ? request.getConfiguredServerAddress()
+        : request.getServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(DbExecution request) {
-    if (emitStableDatabaseSemconv() && request.isServerAddressGroup()) {
-      return null;
-    }
-    return request.getServerPort();
+    return emitStableDatabaseSemconv()
+        ? request.getConfiguredServerPort()
+        : request.getServerPort();
   }
 
   @Override

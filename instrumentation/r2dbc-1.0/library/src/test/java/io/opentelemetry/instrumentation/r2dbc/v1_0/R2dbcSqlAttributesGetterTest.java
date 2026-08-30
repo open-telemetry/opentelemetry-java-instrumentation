@@ -157,6 +157,39 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @Test
+  void singleHostOptionsRemoveUserInfoFromTheStableTarget() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, "user:secret@host1")
+                .option(ConnectionFactoryOptions.PORT, 5432)
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? "host1" : "user:secret@host1");
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(5432);
+  }
+
+  @Test
+  void malformedSingleHostOptionsOmitTheStableTarget() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, "host1:invalid")
+                .option(ConnectionFactoryOptions.PORT, 5432)
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "host1:invalid");
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+  }
+
+  @Test
   void singleHostKeepsPortInEveryMode() {
     DbExecution dbExecution =
         new DbExecution(

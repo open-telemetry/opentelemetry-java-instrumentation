@@ -72,6 +72,8 @@ public final class DbExecution {
   @Nullable private final Integer serverPort;
   private final boolean serverAddressGroupCandidate;
   @Nullable private final String serverAddressGroup;
+  @Nullable private final String configuredServerAddress;
+  @Nullable private final Integer configuredServerPort;
   private final String connectionString;
   private final List<String> rawQueryTexts;
   @Nullable private final Long batchSize;
@@ -101,9 +103,15 @@ public final class DbExecution {
         factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
     this.serverPort =
         factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
-    this.serverAddressGroupCandidate = isServerAddressGroup(serverAddress);
+    this.serverAddressGroupCandidate = isServerAddressGroupCandidate(serverAddress);
     this.serverAddressGroup =
         serverAddressGroupCandidate ? sanitizeServerAddressGroup(serverAddress, serverPort) : null;
+    ServerTarget configuredServerTarget =
+        serverAddressGroupCandidate
+            ? new ServerTarget(serverAddressGroup, null)
+            : sanitizeServerTarget(serverAddress, serverPort);
+    this.configuredServerAddress = configuredServerTarget.address;
+    this.configuredServerPort = configuredServerTarget.port;
     this.connectionString =
         String.format(
             "%s%s:%s%s",
@@ -148,7 +156,17 @@ public final class DbExecution {
     return serverAddressGroupCandidate;
   }
 
-  private static boolean isServerAddressGroup(@Nullable String serverAddress) {
+  @Nullable
+  public String getConfiguredServerAddress() {
+    return configuredServerAddress;
+  }
+
+  @Nullable
+  public Integer getConfiguredServerPort() {
+    return configuredServerPort;
+  }
+
+  private static boolean isServerAddressGroupCandidate(@Nullable String serverAddress) {
     return serverAddress != null
         && serverAddress.indexOf(',') >= 0
         && !serverAddress.startsWith("/");
@@ -199,6 +217,43 @@ public final class DbExecution {
   private static String stripUserInfo(String serverAddress) {
     int at = serverAddress.lastIndexOf('@');
     return at < 0 ? serverAddress : serverAddress.substring(at + 1);
+  }
+
+  private static ServerTarget sanitizeServerTarget(
+      @Nullable String serverAddress, @Nullable Integer serverPort) {
+    if (serverAddress == null
+        || serverAddress.indexOf('/') >= 0
+        || serverAddress.indexOf('?') >= 0
+        || serverAddress.indexOf('#') >= 0
+        || (serverPort != null && !isPort(serverPort))) {
+      return ServerTarget.EMPTY;
+    }
+
+    int userInfoEnd = serverAddress.indexOf('@');
+    if (userInfoEnd >= 0 && userInfoEnd != serverAddress.lastIndexOf('@')) {
+      return ServerTarget.EMPTY;
+    }
+
+    String host = stripUserInfo(serverAddress).trim();
+    if (!isValidHostPort(host)) {
+      return ServerTarget.EMPTY;
+    }
+
+    if (host.startsWith("[")) {
+      int closingBracket = host.indexOf(']');
+      String port = host.substring(closingBracket + 1);
+      return new ServerTarget(
+          host.substring(1, closingBracket),
+          port.isEmpty() ? serverPort : Integer.valueOf(port.substring(1)));
+    }
+
+    int firstColon = host.indexOf(':');
+    int lastColon = host.lastIndexOf(':');
+    if (firstColon >= 0 && firstColon == lastColon) {
+      return new ServerTarget(
+          host.substring(0, firstColon), Integer.valueOf(host.substring(firstColon + 1)));
+    }
+    return new ServerTarget(host, serverPort);
   }
 
   private static boolean isValidHostPort(String value) {
@@ -405,5 +460,17 @@ public final class DbExecution {
     // otherwise use DRIVER directly.
     String rawDriver = "pool".equals(driver) && protocol != null ? protocol : driver;
     return rawDriver != null ? DRIVER_TO_SYSTEM_NAME.getOrDefault(rawDriver, OTHER_SQL) : OTHER_SQL;
+  }
+
+  private static class ServerTarget {
+    private static final ServerTarget EMPTY = new ServerTarget(null, null);
+
+    @Nullable private final String address;
+    @Nullable private final Integer port;
+
+    private ServerTarget(@Nullable String address, @Nullable Integer port) {
+      this.address = address;
+      this.port = port;
+    }
   }
 }
