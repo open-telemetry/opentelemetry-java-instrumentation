@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToFields.ToField;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -90,41 +91,44 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
+    // the returned array holds the supplier to install in the "database" field at index 0 and the
+    // BuildState that onExit reads at index 1
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static BuildState onEnter(
+    @Advice.AssignReturned.ToFields(@ToField(value = "database", index = 0))
+    public static Object[] onEnter(
         @Advice.This Object clientBuilder,
-        @Advice.FieldValue(value = "database", readOnly = false)
-            Supplier<Future<SqlConnectOptions>> supplier) {
+        @Advice.FieldValue("database") Supplier<Future<SqlConnectOptions>> supplier) {
       List<SqlConnectOptions> databases =
           VertxSqlClientSingletons.getBuilderDatabases(clientBuilder);
       if (databases != null && !databases.isEmpty()) {
         databases = new ArrayList<>(databases);
         setSqlConnectOptions(databases.get(0));
         setAddressGroup(VertxSqlAddressGroup.of(databases));
-        return new BuildState(databases, supplier, null);
+        return new Object[] {supplier, new BuildState(databases, supplier, null)};
       }
 
       VertxSqlClientDataCapture dataCapture = new VertxSqlClientDataCapture();
       VertxSqlClientSingletons.setBuildingDataCapture(dataCapture);
-      Supplier<Future<SqlConnectOptions>> originalSupplier = supplier;
-      supplier = VertxSqlClientSingletons.capture(supplier, dataCapture);
-      return new BuildState(null, originalSupplier, dataCapture);
+      return new Object[] {
+        VertxSqlClientSingletons.capture(supplier, dataCapture),
+        new BuildState(null, supplier, dataCapture)
+      };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
+    @Advice.AssignReturned.ToFields(@ToField(value = "database", index = 0))
+    public static Object[] onExit(
         @Advice.Return @Nullable Object client,
-        @Advice.FieldValue(value = "database", readOnly = false)
-            Supplier<Future<SqlConnectOptions>> supplier,
-        @Advice.Enter @Nullable BuildState state) {
+        @Advice.FieldValue("database") Supplier<Future<SqlConnectOptions>> supplier,
+        @Advice.Enter @Nullable Object[] enterState) {
       setSqlConnectOptions(null);
       setAddressGroup(null);
       VertxSqlClientSingletons.setBuildingDataCapture(null);
 
-      if (state == null) {
-        return;
+      if (enterState == null) {
+        return new Object[] {supplier};
       }
-      supplier = state.originalSupplier;
+      BuildState state = (BuildState) enterState[1];
 
       if (client instanceof Pool) {
         Pool pool = (Pool) client;
@@ -137,6 +141,7 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
           VertxSqlClientSingletons.setPoolDataCapture(pool, state.dataCapture);
         }
       }
+      return new Object[] {state.originalSupplier};
     }
 
     public static class BuildState {
