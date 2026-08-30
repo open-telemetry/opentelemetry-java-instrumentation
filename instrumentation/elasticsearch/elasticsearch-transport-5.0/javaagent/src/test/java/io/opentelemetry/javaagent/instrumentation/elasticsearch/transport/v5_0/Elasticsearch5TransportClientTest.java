@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
@@ -19,6 +18,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.util.UUID;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.FilterClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -152,9 +152,9 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   }
 
   @Test
-  void filteredClientTracksExplicitAddressChanges() {
+  void threeArgumentFilterClientTracksExplicitAddressChanges() {
     TransportClient singleAddressClient = newClient();
-    Client filteredClient = singleAddressClient.filterWithHeader(emptyMap());
+    Client filteredClient = new TestFilterClient(singleAddressClient);
     testing.runWithSpan(
         "setup",
         () -> {
@@ -217,6 +217,13 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   private static TransportAddress addressThatIsDown() {
     return new InetSocketTransportAddress(
         InetAddress.getLoopbackAddress(), tcpPublishAddress.getPort() + 1);
+  }
+
+  private static class TestFilterClient extends FilterClient {
+
+    TestFilterClient(TransportClient delegate) {
+      super(Settings.EMPTY, delegate.threadPool(), delegate);
+    }
   }
 
   private static TransportClient newClient() {

@@ -27,15 +27,28 @@ public class FilterClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("org.elasticsearch.client.Client"))),
-        getClass().getName() + "$ConstructorAdvice");
+        getClass().getName() + "$OneArgumentConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(2, named("org.elasticsearch.client.Client"))),
+        getClass().getName() + "$ThreeArgumentConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ConstructorAdvice {
+  public static class OneArgumentConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This AbstractClient client, @Advice.Argument(0) Object delegate) {
+      ElasticsearchTransportServerTargets.setDelegate(client, delegate);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ThreeArgumentConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This AbstractClient client, @Advice.Argument(2) Object delegate) {
       ElasticsearchTransportServerTargets.setDelegate(client, delegate);
     }
   }
