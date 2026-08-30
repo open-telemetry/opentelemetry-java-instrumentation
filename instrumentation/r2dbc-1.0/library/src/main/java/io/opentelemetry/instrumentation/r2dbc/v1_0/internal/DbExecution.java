@@ -174,9 +174,6 @@ public final class DbExecution {
 
     String hostList = stripUserInfo(serverAddress);
     String[] hosts = hostList.split(",", -1);
-    if (hosts.length < 2) {
-      return null;
-    }
 
     StringBuilder group = new StringBuilder();
     for (String host : hosts) {
