@@ -73,11 +73,11 @@ dependencies {
   // When updating, also update dependencyManagement/build.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.12")
   // Generates OSGi bundle metadata for published library artifacts (see otel.osgi-conventions)
-  implementation("biz.aQute.bnd:biz.aQute.bnd.gradle:7.3.0")
+  implementation("biz.aQute.bnd:biz.aQute.bnd.gradle:7.4.0")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
-  implementation("net.ltgt.gradle:gradle-errorprone-plugin:5.1.0")
-  implementation("net.ltgt.gradle:gradle-nullaway-plugin:3.1.0")
+  implementation("net.ltgt.gradle:gradle-errorprone-plugin:5.1.1")
+  implementation("net.ltgt.gradle:gradle-nullaway-plugin:3.2.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
   // Used by otel.spring-native-test-conventions for typed access to the metadata repository
   // extension. Provided at runtime by smoke-test modules that apply this plugin via settings.

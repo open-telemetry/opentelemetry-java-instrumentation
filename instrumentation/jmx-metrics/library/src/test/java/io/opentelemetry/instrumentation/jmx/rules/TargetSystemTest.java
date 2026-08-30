@@ -113,7 +113,7 @@ public class TargetSystemTest {
    *
    * @param registryFile registry file to include
    */
-  void startWeaverValidation(
+  protected void startWeaverValidation(
       String registryFile, Consumer<WeaverContainer.WeaverValidationResult> weaverMetricsVerify) {
 
     Path registryRoot = Paths.get(System.getProperty("io.opentelemetry.registry.path"));
@@ -304,8 +304,12 @@ public class TargetSystemTest {
   }
 
   protected void verifyMetrics(MetricsVerifier metricsVerifier) {
+    verifyMetrics(metricsVerifier, Duration.ofSeconds(60));
+  }
+
+  protected void verifyMetrics(MetricsVerifier metricsVerifier, Duration timeout) {
     await()
-        .atMost(Duration.ofSeconds(60))
+        .atMost(timeout)
         .pollInterval(Duration.ofSeconds(1))
         .untilAsserted(
             () -> {

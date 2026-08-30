@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jmx.rules.kafka;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -30,13 +32,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.images.builder.Transferable;
 
 class KafkaConnectTest extends TargetSystemTest {
@@ -132,20 +130,78 @@ class KafkaConnectTest extends TargetSystemTest {
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
 
-    Set<String> expectedCreatedMetrics = loadKafkaConnectMetricNames(false);
-    Set<String> registeredMetrics = ConcurrentHashMap.newKeySet();
-
     GenericContainer<?> kafka = KafkaContainer.create(KAFKA_IMAGE);
 
     GenericContainer<?> kafkaConnect =
         KafkaContainer.create(KAFKA_IMAGE)
             .withKafkaConnect()
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
-            .withCopyToContainer(Transferable.of("first\nsecond\nthird\n"), SOURCE_FILE_PATH)
-            .withLogConsumer(frame -> recordMetricRegistrations(frame, registeredMetrics));
+            .withCopyToContainer(Transferable.of("first\nsecond\nthird\n"), SOURCE_FILE_PATH);
 
     copyAgentToTarget(kafkaConnect);
     copyYamlFilesToTarget(kafkaConnect, yamlFiles);
+
+    startWeaverValidation(
+        "kafka-connect.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("kafka.connect.")
+                .checkRegisteredMetrics(
+                    "kafka.connect.",
+                    asList(
+                        "kafka.connect.worker.connector.count",
+                        "kafka.connect.worker.connector.startup.count",
+                        "kafka.connect.worker.task.count",
+                        "kafka.connect.worker.task.startup.count",
+                        "kafka.connect.worker.connector.task.count",
+                        "kafka.connect.worker.rebalance.completed.count",
+                        "kafka.connect.worker.rebalance.protocol",
+                        "kafka.connect.worker.rebalance.epoch",
+                        "kafka.connect.worker.rebalance.time.average",
+                        "kafka.connect.worker.rebalance.time.max",
+                        "kafka.connect.worker.rebalance.active",
+                        "kafka.connect.connector.status",
+                        "kafka.connect.task.batch.size.average",
+                        "kafka.connect.task.batch.size.max",
+                        "kafka.connect.task.offset.commit.failure.ratio",
+                        "kafka.connect.task.running.ratio",
+                        "kafka.connect.task.status",
+                        "kafka.connect.sink.offset.commit.completed.count",
+                        "kafka.connect.sink.offset.commit.seq",
+                        "kafka.connect.sink.offset.commit.skipped.count",
+                        "kafka.connect.sink.partition.count",
+                        "kafka.connect.sink.put.batch.time.average",
+                        "kafka.connect.sink.put.batch.time.max",
+                        "kafka.connect.sink.record.active.count",
+                        "kafka.connect.sink.record.read.count",
+                        "kafka.connect.sink.record.send.count",
+                        "kafka.connect.source.poll.batch.time.average",
+                        "kafka.connect.source.poll.batch.time.max",
+                        "kafka.connect.source.record.active.count",
+                        "kafka.connect.source.record.poll.count",
+                        "kafka.connect.source.record.write.count",
+                        "kafka.connect.task.error.deadletterqueue.produce.failure.count",
+                        "kafka.connect.task.error.deadletterqueue.produce.request.count",
+                        "kafka.connect.task.error.last.error.timestamp",
+                        "kafka.connect.task.error.logged.count",
+                        "kafka.connect.task.error.record.error.count",
+                        "kafka.connect.task.error.record.failure.count",
+                        "kafka.connect.task.error.record.skipped.count",
+                        "kafka.connect.task.error.retry.count"),
+                    OPTIONAL_APACHE_METRICS)
+                .checkRegisteredAttributes(
+                    "kafka.connect.",
+                    asList(
+                        "kafka.connect.connector",
+                        "kafka.connect.task.id",
+                        "kafka.connect.worker.connector.startup.result",
+                        "kafka.connect.worker.task.startup.result",
+                        "kafka.connect.worker.connector.task.state",
+                        "kafka.connect.protocol.state",
+                        "kafka.connect.worker.rebalance.state",
+                        "kafka.connect.connector.state",
+                        "kafka.connect.task.state"),
+                    emptyList()));
 
     startTarget(kafkaConnect, singletonList(kafka));
 
@@ -158,8 +214,7 @@ class KafkaConnectTest extends TargetSystemTest {
 
     kafkaConnect.execInContainer("sh", "-c", "printf 'fourth\\n' >> " + SOURCE_FILE_PATH);
 
-    awaitMetricRegistrations(expectedCreatedMetrics, registeredMetrics);
-    verifyMetrics(createKafkaConnectMetricsVerifier());
+    verifyMetrics(createKafkaConnectMetricsVerifier(), Duration.ofMinutes(5));
   }
 
   private JmxConfig loadKafkaConnectConfig() throws Exception {
@@ -169,57 +224,6 @@ class KafkaConnectTest extends TargetSystemTest {
             .getResourceAsStream("jmx/rules/experimental-kafka-connect.yaml")) {
       assertThat(input).isNotNull();
       return RuleParser.get().loadConfig(input);
-    }
-  }
-
-  private Set<String> loadKafkaConnectMetricNames(boolean includeOptional) throws Exception {
-    JmxConfig config = loadKafkaConnectConfig();
-    Set<String> metricNames = new TreeSet<>();
-    for (JmxRule rule : config.getRules()) {
-      String prefix = rule.getPrefix();
-      for (Map.Entry<String, Metric> entry : rule.getMapping().entrySet()) {
-        Metric metric = entry.getValue();
-        String baseName =
-            metric == null || metric.getMetric() == null ? entry.getKey() : metric.getMetric();
-        metricNames.add(prefix == null ? baseName : prefix + baseName);
-      }
-    }
-    if (!includeOptional) {
-      metricNames.removeAll(OPTIONAL_APACHE_METRICS);
-    }
-    return metricNames;
-  }
-
-  private static void awaitMetricRegistrations(
-      Set<String> expectedMetrics, Set<String> registeredMetrics) {
-    await()
-        .atMost(Duration.ofMinutes(2))
-        .pollInterval(Duration.ofSeconds(1))
-        .untilAsserted(() -> assertThat(registeredMetrics).containsAll(expectedMetrics));
-  }
-
-  private static void recordMetricRegistrations(OutputFrame frame, Set<String> registeredMetrics) {
-    if (frame == null) {
-      return;
-    }
-    String payload = frame.getUtf8String();
-    if (payload == null || payload.isEmpty()) {
-      return;
-    }
-    String[] lines = payload.split("\\r?\\n");
-    for (String line : lines) {
-      int markerIndex = line.indexOf("MetricRegistrar - Created");
-      if (markerIndex < 0) {
-        continue;
-      }
-      int forIndex = line.indexOf(" for ", markerIndex);
-      if (forIndex < 0) {
-        continue;
-      }
-      String metricName = line.substring(forIndex + 5).trim();
-      if (!metricName.isEmpty()) {
-        registeredMetrics.add(metricName);
-      }
     }
   }
 
@@ -330,8 +334,7 @@ class KafkaConnectTest extends TargetSystemTest {
             "kafka.connect.connector.status",
             metric ->
                 metric
-                    .hasDescription(
-                        "Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.")
+                    .hasDescription("Connector lifecycle state indicator.")
                     .hasUnit("1")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
@@ -391,8 +394,7 @@ class KafkaConnectTest extends TargetSystemTest {
             "kafka.connect.task.status",
             metric ->
                 metric
-                    .hasDescription(
-                        "The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values.")
+                    .hasDescription("The status of the connector task.")
                     .hasUnit("1")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
