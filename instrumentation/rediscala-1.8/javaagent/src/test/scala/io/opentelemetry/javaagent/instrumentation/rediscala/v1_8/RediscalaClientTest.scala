@@ -39,6 +39,7 @@ import org.testcontainers.containers.GenericContainer
 import redis.commands.TransactionBuilder
 import redis.{
   RedisClient,
+  RedisClientMutablePool,
   RedisClientPool,
   RedisDispatcher,
   RedisServer,
@@ -203,15 +204,19 @@ class RediscalaClientTest {
   @Test def testReconnectRefreshesServerTarget(): Unit = {
     val client = createClient(None)
     try {
-      assertThat(serverTarget(client)._1).isEqualTo(host)
-      assertThat(serverTarget(client)._2)
-        .isEqualTo(Integer.valueOf(port.intValue()))
+      val reconnectHost = alternateHost(host)
+      client.reconnect(reconnectHost, port.intValue())
 
-      client.reconnect("127.0.0.2", 16379)
+      val result = testing.runWithSpan(
+        "parent",
+        new ThrowingSupplier[Future[_], Exception] {
+          override def get(): Future[_] =
+            client.set("reconnect-refresh", "value")
+        }
+      )
 
-      assertThat(serverTarget(client)._1).isEqualTo("127.0.0.2")
-      assertThat(serverTarget(client)._2)
-        .isEqualTo(Integer.valueOf(16379))
+      Await.result(result, Duration("3 second"))
+      assertCommandSpan("SET", reconnectHost, port)
     } finally {
       client.stop()
     }
@@ -323,8 +328,9 @@ class RediscalaClientTest {
   }
 
   @Test def testMutablePoolRefreshesServerTarget(): Unit = {
-    val first = RedisServer("127.0.0.2", 7001)
-    val second = RedisServer("127.0.0.1", 7000)
+    assumeTrue(emitStableDatabaseSemconv())
+    val first = RedisServer(host, port.intValue())
+    val second = RedisServer(alternateHost(host), port.intValue())
     val poolClass = Class.forName("redis.RedisClientMutablePool")
     val constructor =
       poolClass.getConstructors.find(_.getParameterCount == 4).get
@@ -335,29 +341,36 @@ class RediscalaClientTest {
         system,
         RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
       )
-      .asInstanceOf[Object]
+      .asInstanceOf[RedisClientMutablePool]
     try {
-      assertThat(serverTarget(pool)._1).isEqualTo("127.0.0.2")
-      assertThat(serverTarget(pool)._2)
-        .isEqualTo(Integer.valueOf(7001))
+      Await.result(
+        pool.set("mutable-pool-initial-target", "value"),
+        Duration("3 second")
+      )
+      assertConfiguredTargetSpan(first.host, JLong.valueOf(first.port))
 
-      poolClass
-        .getMethod("addServer", classOf[RedisServer])
-        .invoke(pool, second)
+      pool.addServer(second)
 
-      assertThat(serverTarget(pool)._1)
-        .isEqualTo("127.0.0.1:7000,127.0.0.2:7001")
-      assertThat(serverTarget(pool)._2).isNull()
+      Await.result(
+        pool.set("mutable-pool-multiple-targets", "value"),
+        Duration("3 second")
+      )
+      assertConfiguredTargetSpan(
+        Seq(first, second)
+          .map(server => s"${server.host}:${server.port}")
+          .sorted
+          .mkString(",")
+      )
 
-      poolClass
-        .getMethod("removeServer", classOf[RedisServer])
-        .invoke(pool, first)
+      pool.removeServer(first)
 
-      assertThat(serverTarget(pool)._1).isEqualTo("127.0.0.1")
-      assertThat(serverTarget(pool)._2)
-        .isEqualTo(Integer.valueOf(7000))
+      Await.result(
+        pool.set("mutable-pool-final-target", "value"),
+        Duration("3 second")
+      )
+      assertConfiguredTargetSpan(second.host, JLong.valueOf(second.port))
     } finally {
-      poolClass.getMethod("stop").invoke(pool)
+      pool.stop()
     }
   }
 
@@ -488,6 +501,13 @@ class RediscalaClientTest {
   }
 
   private def assertCommandSpan(operationName: String): Unit =
+    assertCommandSpan(operationName, host, port)
+
+  private def assertCommandSpan(
+      operationName: String,
+      serverAddress: String,
+      serverPort: JLong
+  ): Unit =
     testing.waitAndAssertTraces(new Consumer[TraceAssert] {
       override def accept(trace: TraceAssert): Unit =
         trace.hasSpansSatisfyingExactly(
@@ -499,15 +519,19 @@ class RediscalaClientTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName(spanName(operationName))
+                .hasName(
+                  if (emitStableDatabaseSemconv())
+                    s"$operationName $serverAddress:$serverPort"
+                  else operationName
+                )
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), operationName),
                   equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
-                  equalTo(SERVER_ADDRESS, host),
-                  equalTo(SERVER_PORT, port)
+                  equalTo(SERVER_ADDRESS, serverAddress),
+                  equalTo(SERVER_PORT, serverPort)
                 )
             }
           }
@@ -677,48 +701,36 @@ class RediscalaClientTest {
     if (resolvedHost == serverHost) "localhost" else resolvedHost
   }
 
-  private def assertConfiguredTargetSpan(serverAddress: String): Unit =
+  private def assertConfiguredTargetSpan(
+      serverAddress: String,
+      serverPort: JLong = null
+  ): Unit =
     await().untilAsserted(new ThrowingRunnable {
       override def run(): Unit = {
+        val serverSuffix =
+          if (serverPort == null) serverAddress
+          else s"$serverAddress:$serverPort"
         val span = testing
           .spans()
           .stream()
           .filter(new Predicate[SpanData] {
             override def test(span: SpanData): Boolean =
-              span.getName == s"SET $serverAddress"
+              span.getName == s"SET $serverSuffix"
           })
           .findFirst()
           .orElse(null)
         assertThat(span).isNotNull
         assertThatSpan(span)
-          .hasName(s"SET $serverAddress")
+          .hasName(s"SET $serverSuffix")
           .hasKind(CLIENT)
           .hasAttributesSatisfyingExactly(
             equalTo(maybeStable(DB_SYSTEM), REDIS),
             equalTo(maybeStable(DB_OPERATION), "SET"),
             equalTo(SERVER_ADDRESS, serverAddress),
-            equalTo(SERVER_PORT, null)
+            equalTo(SERVER_PORT, serverPort)
           )
       }
     })
-
-  private def serverTarget(client: Object): (String, Integer) = {
-    val helperClass = Class.forName(
-      "io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaServerTargets",
-      true,
-      client.getClass.getClassLoader
-    )
-    val target =
-      helperClass.getMethod("get", classOf[Object]).invoke(null, client)
-    val address =
-      target.getClass
-        .getMethod("getAddress")
-        .invoke(target)
-        .asInstanceOf[String]
-    val port =
-      target.getClass.getMethod("getPort").invoke(target).asInstanceOf[Integer]
-    (address, port)
-  }
 
   private def transactionScenarios(): Stream[Arguments] =
     Stream.of(
