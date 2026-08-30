@@ -296,7 +296,7 @@ class VertxSqlClientTest {
 
     select(directPool);
 
-    testing.waitAndAssertTraces(VertxSqlClientTest::assertSupplierTarget);
+    testing.waitAndAssertTraces(VertxSqlClientTest::assertDirectTarget);
   }
 
   @Test
@@ -438,6 +438,25 @@ class VertxSqlClientTest {
                             ? host + ":" + port + "," + secondHost + ":" + secondPort
                             : host),
                     equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port))));
+  }
+
+  private static void assertDirectTarget(TraceAssert trace) {
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                    equalTo(maybeStable(DB_NAME), DB),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                    equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                    equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
+                    equalTo(
+                        maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                    equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
+                    equalTo(maybeStablePeerService(), "test-peer-service"),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, Long.valueOf(port))));
   }
 
   private static void assertSupplierTarget(TraceAssert trace) {
