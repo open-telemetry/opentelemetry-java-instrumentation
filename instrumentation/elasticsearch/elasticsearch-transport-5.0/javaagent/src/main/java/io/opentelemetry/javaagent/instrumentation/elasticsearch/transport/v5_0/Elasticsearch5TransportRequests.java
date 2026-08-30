@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
 
 public class Elasticsearch5TransportRequests {
@@ -31,10 +32,18 @@ public class Elasticsearch5TransportRequests {
       List<ElasticsearchTransportServerTarget.Endpoint> endpoints = new ArrayList<>();
       for (TransportAddress address : client.transportAddresses()) {
         endpoints.add(
-            new ElasticsearchTransportServerTarget.Endpoint(address.getHost(), address.getPort()));
+            new ElasticsearchTransportServerTarget.Endpoint(host(address), address.getPort()));
       }
       ElasticsearchTransportServerTargets.update(client, endpoints);
     }
+  }
+
+  private static String host(TransportAddress address) {
+    // TransportAddress.getHost() formats the resolved IP address before Elasticsearch 5.1, so read
+    // the configured host string from the wrapped socket address instead
+    return address instanceof InetSocketTransportAddress
+        ? ((InetSocketTransportAddress) address).address().getHostString()
+        : address.getHost();
   }
 
   private Elasticsearch5TransportRequests() {}

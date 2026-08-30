@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTargets;
 import java.io.File;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.UUID;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.FilterClient;
@@ -40,12 +41,14 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
       LoggerFactory.getLogger(Elasticsearch5TransportClientTest.class);
 
   private static final String clusterName = UUID.randomUUID().toString();
+  private static final String DOWN_HOST = "es.example.com";
   private static Node testNode;
   private static TransportAddress tcpPublishAddress;
+  private static TransportAddress addressThatIsDown;
   private static TransportClient client;
 
   @BeforeAll
-  static void setUp(@TempDir File esWorkingDir) {
+  static void setUp(@TempDir File esWorkingDir) throws UnknownHostException {
     logger.info("ES work dir: {}", esWorkingDir);
 
     Settings settings =
@@ -64,6 +67,12 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
     tcpPublishAddress =
         testNode.injector().getInstance(TransportService.class).boundAddress().publishAddress();
+    // a configured endpoint that names a host nothing listens on, reachable only through the
+    // loopback bytes it carries
+    addressThatIsDown =
+        new InetSocketTransportAddress(
+            InetAddress.getByAddress(DOWN_HOST, InetAddress.getLoopbackAddress().getAddress()),
+            tcpPublishAddress.getPort() + 1);
 
     client =
         new PreBuiltTransportClient(
@@ -119,19 +128,11 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
         () -> {
           addressListClient.addTransportAddress(tcpPublishAddress);
           // nothing listens on this address; the configured target names it all the same
-          addressListClient.addTransportAddress(addressThatIsDown());
+          addressListClient.addTransportAddress(addressThatIsDown);
           ElasticsearchTransportServerTarget target =
               ElasticsearchTransportServerTargets.get(addressListClient);
           assertThat(target).isNotNull();
-          assertThat(target.getAddress())
-              .isEqualTo(
-                  tcpPublishAddress.getHost()
-                      + ":"
-                      + getPort()
-                      + ","
-                      + addressThatIsDown().getHost()
-                      + ":"
-                      + addressThatIsDown().getPort());
+          assertThat(target.getAddress()).isEqualTo(configuredAddressList());
           assertThat(target.getPort()).isNull();
           // adding an address makes the client reach out to it, which reports telemetry of its own
           clusterHealth(addressListClient);
@@ -141,14 +142,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
     clusterHealth(addressListClient);
 
-    assertConfiguredTarget(
-        tcpPublishAddress.getHost()
-            + ":"
-            + getPort()
-            + ","
-            + addressThatIsDown().getHost()
-            + ":"
-            + addressThatIsDown().getPort());
+    assertConfiguredTarget(configuredAddressList());
   }
 
   @Test
@@ -168,24 +162,16 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     assertConfiguredTarget(null);
     testing.clearData();
 
-    testing.runWithSpan(
-        "setup", () -> singleAddressClient.addTransportAddress(addressThatIsDown()));
+    testing.runWithSpan("setup", () -> singleAddressClient.addTransportAddress(addressThatIsDown));
     testing.waitForTraces(1);
     testing.clearData();
 
     clusterHealth(filteredClient);
-    assertConfiguredTarget(
-        tcpPublishAddress.getHost()
-            + ":"
-            + getPort()
-            + ","
-            + addressThatIsDown().getHost()
-            + ":"
-            + addressThatIsDown().getPort());
+    assertConfiguredTarget(configuredAddressList());
     testing.clearData();
 
     testing.runWithSpan(
-        "setup", () -> singleAddressClient.removeTransportAddress(addressThatIsDown()));
+        "setup", () -> singleAddressClient.removeTransportAddress(addressThatIsDown));
     testing.waitForTraces(1);
     testing.clearData();
 
@@ -214,9 +200,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
                                     : Long.valueOf(getPort())))));
   }
 
-  private static TransportAddress addressThatIsDown() {
-    return new InetSocketTransportAddress(
-        InetAddress.getLoopbackAddress(), tcpPublishAddress.getPort() + 1);
+  private String configuredAddressList() {
+    return getAddress() + ":" + getPort() + "," + DOWN_HOST + ":" + addressThatIsDown.getPort();
   }
 
   private static class TestFilterClient extends FilterClient {
