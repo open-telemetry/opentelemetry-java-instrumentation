@@ -89,7 +89,6 @@ class TrinoTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier() {
     return MetricsVerifier.create()
-        .disableStrictMode()
         .add(
             "trino.node.active.count",
             metric ->
@@ -151,7 +150,9 @@ class TrinoTest extends TargetSystemTest {
                     .hasDataPointsWithAttributes(
                         attributeGroup(attribute("trino.query.failure.type", "internal")),
                         attributeGroup(attribute("trino.query.failure.type", "external")),
-                        attributeGroup(attribute("trino.query.failure.type", "user_error"))))
+                        attributeGroup(attribute("trino.query.failure.type", "user_error")),
+                        attributeGroup(
+                            attribute("trino.query.failure.type", "insufficient_resources"))))
         .add(
             "trino.query.execution.duration.p50",
             metric ->

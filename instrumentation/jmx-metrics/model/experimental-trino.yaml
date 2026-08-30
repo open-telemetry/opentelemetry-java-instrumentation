@@ -19,6 +19,7 @@ groups:
           - "internal"
           - "external"
           - "user_error"
+          - "insufficient_resources"
 
   - id: metric.trino.node.active.count
     metric_name: trino.node.active.count

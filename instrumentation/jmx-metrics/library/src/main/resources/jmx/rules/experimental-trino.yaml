@@ -77,6 +77,14 @@ rules:
         desc: *failure_desc
         metricAttribute:
           trino.query.failure.type: const(user_error)
+      # trino.query.failure.count
+      InsufficientResourcesFailures\.FiveMinute\.Count:
+        metric: *failure_metric
+        type: *failure_type
+        unit: *failure_unit
+        desc: *failure_desc
+        metricAttribute:
+          trino.query.failure.type: const(insufficient_resources)
       # trino.query.execution.duration.p50
       ExecutionTime\.FiveMinutes\.P50:
         metric: execution.duration.p50
