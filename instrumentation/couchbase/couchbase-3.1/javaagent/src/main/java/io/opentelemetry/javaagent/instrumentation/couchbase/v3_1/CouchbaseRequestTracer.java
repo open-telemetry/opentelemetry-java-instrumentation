@@ -88,10 +88,12 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     private final CouchbaseSpanName spanName;
     private final RequestSpan delegate;
+    private final boolean hasCapturedPeer;
 
     private TranslatingRequestSpan(String name, RequestSpan delegate, @Nullable Peer peer) {
       spanName = new CouchbaseSpanName(name);
       this.delegate = delegate;
+      this.hasCapturedPeer = peer != null;
       if (emitStableDatabaseSemconv() && peer != null) {
         delegate.setAttribute(NETWORK_PEER_ADDRESS.getKey(), peer.getAddress());
         // RequestSpan does not expose long attributes throughout the supported range, while the
@@ -193,7 +195,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     }
 
     @SuppressWarnings("deprecation") // using deprecated semconv
-    private static String stableKey(String key) {
+    private String stableKey(String key) {
       if (key.equals(DB_COLLECTION_NAME.getKey())
           || key.equals(DB_NAMESPACE.getKey())
           || key.equals(DB_OPERATION_NAME.getKey())
@@ -218,6 +220,12 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       }
       if (key.equals(DB_SYSTEM.getKey())) {
         return DB_SYSTEM_NAME.getKey();
+      }
+      if (!hasCapturedPeer && key.equals(TracingIdentifiers.ATTR_REMOTE_HOSTNAME)) {
+        return NETWORK_PEER_ADDRESS.getKey();
+      }
+      if (!hasCapturedPeer && key.equals(TracingIdentifiers.ATTR_REMOTE_PORT)) {
+        return NETWORK_PEER_PORT.getKey();
       }
       return null;
     }
