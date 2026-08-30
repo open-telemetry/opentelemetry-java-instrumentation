@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataProvider;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -63,9 +63,9 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
         return future;
       }
 
-      VertxSqlClientDataCapture dataCapture =
-          VertxSqlClientSingletons.getDataCapture(sqlClientBase);
-      VertxSqlClientData data = dataCapture != null ? dataCapture.get() : null;
+      VertxSqlClientDataProvider dataProvider =
+          VertxSqlClientSingletons.getDataProvider(sqlClientBase);
+      VertxSqlClientData data = dataProvider != null ? dataProvider.get() : null;
       SqlConnectOptions connectOptions =
           data != null
               ? data.getConnectOptions()

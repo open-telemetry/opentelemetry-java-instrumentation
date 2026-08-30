@@ -17,7 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataProvider;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import net.bytebuddy.asm.Advice;
@@ -59,10 +59,10 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
 
-      VertxSqlClientDataCapture dataCapture =
-          VertxSqlClientSingletons.getDataCapture(sqlClientBase);
-      if (dataCapture != null) {
-        setClientDataProvider(dataCapture);
+      VertxSqlClientDataProvider dataProvider =
+          VertxSqlClientSingletons.getDataProvider(sqlClientBase);
+      if (dataProvider != null) {
+        setClientDataProvider(dataProvider);
       } else {
         SqlConnectOptions sqlConnectOptions =
             VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);

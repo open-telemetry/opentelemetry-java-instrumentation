@@ -9,7 +9,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataProvider;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
@@ -41,8 +43,8 @@ public class VertxSqlClientSingletons {
   private static final VirtualField<SqlClientBase, VertxSqlAddressGroup> ADDRESS_GROUP =
       VirtualField.find(SqlClientBase.class, VertxSqlAddressGroup.class);
 
-  private static final VirtualField<SqlClientBase, VertxSqlClientDataCapture> DATA_CAPTURE =
-      VirtualField.find(SqlClientBase.class, VertxSqlClientDataCapture.class);
+  private static final VirtualField<SqlClientBase, VertxSqlClientDataProvider> DATA_PROVIDER =
+      VirtualField.find(SqlClientBase.class, VertxSqlClientDataProvider.class);
 
   private static final VirtualField<Pool, VertxSqlClientDataCapture> POOL_DATA_CAPTURE =
       VirtualField.find(Pool.class, VertxSqlClientDataCapture.class);
@@ -126,10 +128,10 @@ public class VertxSqlClientSingletons {
       SqlClientBase sqlClientBase,
       @Nullable SqlConnectOptions connectOptions,
       @Nullable VertxSqlAddressGroup addressGroup,
-      @Nullable VertxSqlClientDataCapture dataCapture) {
+      @Nullable VertxSqlClientDataProvider dataProvider) {
     CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
     ADDRESS_GROUP.set(sqlClientBase, addressGroup);
-    DATA_CAPTURE.set(sqlClientBase, dataCapture);
+    DATA_PROVIDER.set(sqlClientBase, dataProvider);
   }
 
   public static Future<SqlConnection> attachClientState(
@@ -140,16 +142,24 @@ public class VertxSqlClientSingletons {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {
-            attachClientState(
-                (SqlClientBase) sqlConnection, connectOptions, addressGroup, dataCapture);
+            VertxSqlClientData data = dataCapture != null ? dataCapture.get() : null;
+            if (data != null) {
+              attachClientState(
+                  (SqlClientBase) sqlConnection,
+                  data.getConnectOptions(),
+                  data.getAddressGroup(),
+                  data);
+            } else {
+              attachClientState((SqlClientBase) sqlConnection, connectOptions, addressGroup, null);
+            }
           }
           return sqlConnection;
         });
   }
 
   @Nullable
-  public static VertxSqlClientDataCapture getDataCapture(SqlClientBase sqlClientBase) {
-    return DATA_CAPTURE.get(sqlClientBase);
+  public static VertxSqlClientDataProvider getDataProvider(SqlClientBase sqlClientBase) {
+    return DATA_PROVIDER.get(sqlClientBase);
   }
 
   public static void setPoolDataCapture(

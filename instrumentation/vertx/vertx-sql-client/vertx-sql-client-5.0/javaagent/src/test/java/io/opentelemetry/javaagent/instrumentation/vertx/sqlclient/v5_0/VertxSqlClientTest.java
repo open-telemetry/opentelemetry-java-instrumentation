@@ -248,11 +248,13 @@ class VertxSqlClientTest {
         supplierPool.getConnection().toCompletionStage().toCompletableFuture().get(30, SECONDS);
     cleanup.deferCleanup(secondConnection::close);
     select(secondConnection);
+    select(firstConnection);
 
     assertThat(calls).hasValue(2);
     testing.waitAndAssertTraces(
         trace -> assertSupplierTarget(trace, host),
-        trace -> assertSupplierTarget(trace, alternateHost));
+        trace -> assertSupplierTarget(trace, alternateHost),
+        trace -> assertSupplierTarget(trace, host));
   }
 
   @Test
