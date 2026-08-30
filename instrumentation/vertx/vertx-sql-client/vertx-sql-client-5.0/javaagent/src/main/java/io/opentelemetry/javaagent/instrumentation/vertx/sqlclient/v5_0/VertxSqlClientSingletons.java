@@ -14,7 +14,6 @@ import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.Ve
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataProvider;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.vertx.core.Future;
@@ -24,7 +23,6 @@ import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.ClientBuilderBase;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import java.util.List;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {
@@ -227,9 +225,6 @@ public class VertxSqlClientSingletons {
 
   public static void setPoolDataCapture(
       Pool pool, @Nullable VertxSqlClientDataCapture dataCapture) {
-    if (dataCapture != null) {
-      dataCapture.setDbSystem(POOL_DB_SYSTEM.get(pool));
-    }
     POOL_DATA_CAPTURE.set(pool, dataCapture);
   }
 
@@ -249,25 +244,6 @@ public class VertxSqlClientSingletons {
   @Nullable
   public static VertxSqlClientDataCapture getBuildingDataCapture() {
     return buildingDataCapture.get();
-  }
-
-  public static Supplier<Future<SqlConnectOptions>> capture(
-      Supplier<Future<SqlConnectOptions>> supplier, VertxSqlClientDataCapture dataCapture) {
-    return () -> {
-      Future<SqlConnectOptions> future = supplier.get();
-      if (future == null) {
-        return null;
-      }
-      return future.map(
-          connectOptions -> {
-            dataCapture.capture(
-                connectOptions,
-                connectOptions != null
-                    ? VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions)
-                    : null);
-            return connectOptions;
-          });
-    };
   }
 
   public static void storeBuilderDatabases(

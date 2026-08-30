@@ -5,30 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
-import io.vertx.sqlclient.SqlConnectOptions;
 import javax.annotation.Nullable;
 
+/**
+ * Marks a client whose target is only known once a connection is established, because its connect
+ * options come from a supplier that runs per connection attempt. Such a client never has client
+ * wide data, so {@link #get()} always returns {@code null} and callers wait for the data attached
+ * to the connection instead.
+ */
 public class VertxSqlClientDataCapture implements VertxSqlClientDataProvider {
-
-  @Nullable private volatile String dbSystem;
-  @Nullable private volatile VertxSqlClientData data;
-
-  public void setDbSystem(@Nullable String dbSystem) {
-    this.dbSystem = dbSystem;
-  }
-
-  public void capture(@Nullable SqlConnectOptions connectOptions, @Nullable String dbSystem) {
-    String capturedDbSystem = this.dbSystem != null ? this.dbSystem : dbSystem;
-    VertxSqlClientData capturedData =
-        connectOptions == null
-            ? null
-            : VertxSqlClientData.fromConnectOptions(connectOptions, capturedDbSystem);
-    data = capturedData;
-  }
 
   @Override
   @Nullable
   public VertxSqlClientData get() {
-    return data;
+    return null;
   }
 }
