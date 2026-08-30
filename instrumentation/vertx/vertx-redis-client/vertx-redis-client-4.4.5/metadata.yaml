@@ -1,6 +1,7 @@
 display_name: Vert.x Redis Client
 description: >
   This instrumentation records the target a Vert.x Redis client was configured with for the versions
-  that build their connections from Redis connect options. Spans and metrics themselves come from the
-  Vert.x Redis Client 4.0 instrumentation.
+  that build their connections from Redis connect options. On 5.0.0 and later, which build each
+  connection from a supplier of those options instead, it records the endpoint the client selected.
+  Spans and metrics themselves come from the Vert.x Redis Client 4.0 instrumentation.
 library_link: https://vertx.io/docs/vertx-redis-client/java/
