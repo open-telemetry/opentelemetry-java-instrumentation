@@ -628,9 +628,9 @@ class ClickHouseClientV2Test {
     }
     Client testClient = builder.build();
     cleanup.deferCleanup(testClient);
-    boolean ipv6First = testClient.getEndpoints().iterator().next().contains("[2001:db8::1]");
-    String legacyAddress = ipv6First ? "2001:db8::1" : "host.example";
-    long legacyPort = ipv6First ? 8443 : 8123;
+    String currentEndpoint = testClient.getEndpoints().iterator().next();
+    String legacyAddress = UrlParser.getHost(currentEndpoint);
+    Integer legacyPort = UrlParser.getPort(currentEndpoint);
 
     Throwable thrown = catchThrowable(() -> testClient.query("select 1").join());
     assertThat(thrown).isNotNull();
@@ -648,7 +648,11 @@ class ClickHouseClientV2Test {
                                 emitStableDatabaseSemconv()
                                     ? "[2001:db8::1]:8443,host.example:8123"
                                     : legacyAddress),
-                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : legacyPort),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() || legacyPort == null
+                                    ? null
+                                    : legacyPort.longValue()),
                             equalTo(maybeStable(DB_STATEMENT), "select ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
@@ -685,8 +689,10 @@ class ClickHouseClientV2Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, "2001:db8::1"),
-                            equalTo(SERVER_PORT, 8443),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? "2001:db8::1" : "[2001"),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? 8443L : null),
                             equalTo(maybeStable(DB_STATEMENT), "select ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
