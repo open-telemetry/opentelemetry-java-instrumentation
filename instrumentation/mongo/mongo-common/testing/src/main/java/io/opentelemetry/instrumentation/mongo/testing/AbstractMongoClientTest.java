@@ -6,14 +6,15 @@
 package io.opentelemetry.instrumentation.mongo.testing;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -34,11 +35,13 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -284,7 +287,7 @@ public abstract class AbstractMongoClientTest<T> {
                                   + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"));
                     }));
 
-    if (supportsNetworkPeer()) {
+    if (supportsNetworkPeer() && emitStableDatabaseSemconv()) {
       assertDurationMetric(
           testing(),
           scopeName.get(),
@@ -586,25 +589,44 @@ public abstract class AbstractMongoClientTest<T> {
       span.hasParent(parentSpan);
     }
 
-    span.hasAttributesSatisfyingExactly(
-        equalTo(SERVER_ADDRESS, host),
-        equalTo(SERVER_PORT, port),
-        equalTo(NETWORK_PEER_ADDRESS, supportsNetworkPeer() ? networkPeerAddress : null),
-        equalTo(NETWORK_PEER_PORT, supportsNetworkPeer() ? Long.valueOf(port) : null),
+    List<AttributeAssertion> attributes = new ArrayList<>();
+    attributes.add(equalTo(SERVER_ADDRESS, host));
+    attributes.add(equalTo(SERVER_PORT, port));
+    attributes.add(
+        equalTo(
+            NETWORK_PEER_ADDRESS,
+            supportsNetworkPeer() && emitStableDatabaseSemconv() ? networkPeerAddress : null));
+    attributes.add(
+        equalTo(
+            NETWORK_PEER_PORT,
+            supportsNetworkPeer() && emitStableDatabaseSemconv() ? Long.valueOf(port) : null));
+    attributes.add(
         equalTo(
             NETWORK_TYPE,
-            supportsNetworkPeer() && !emitStableDatabaseSemconv()
+            supportsNetworkPeer() && emitOldDatabaseSemconv() && emitStableDatabaseSemconv()
                 ? (networkPeerAddress.contains(":") ? "ipv6" : "ipv4")
-                : null),
-        satisfies(
-            maybeStable(DB_STATEMENT),
-            val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", "")))),
-        equalTo(maybeStable(DB_SYSTEM), MONGODB),
-        equalTo(
-            DB_CONNECTION_STRING,
-            emitStableDatabaseSemconv() ? null : "mongodb://localhost:" + port),
-        equalTo(maybeStable(DB_NAME), dbName),
-        equalTo(maybeStable(DB_OPERATION), operation),
-        equalTo(maybeStable(DB_MONGODB_COLLECTION), collection));
+                : null));
+    if (emitOldDatabaseSemconv()) {
+      attributes.add(
+          satisfies(
+              DB_STATEMENT,
+              val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", "")))));
+      attributes.add(equalTo(DB_SYSTEM, MONGODB));
+      attributes.add(equalTo(DB_CONNECTION_STRING, "mongodb://localhost:" + port));
+      attributes.add(equalTo(DB_NAME, dbName));
+      attributes.add(equalTo(DB_OPERATION, operation));
+      attributes.add(equalTo(DB_MONGODB_COLLECTION, collection));
+    }
+    if (emitStableDatabaseSemconv()) {
+      attributes.add(
+          satisfies(
+              DB_QUERY_TEXT,
+              val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", "")))));
+      attributes.add(equalTo(DB_SYSTEM_NAME, MONGODB));
+      attributes.add(equalTo(DB_NAMESPACE, dbName));
+      attributes.add(equalTo(DB_OPERATION_NAME, operation));
+      attributes.add(equalTo(DB_COLLECTION_NAME, collection));
+    }
+    span.hasAttributesSatisfyingExactly(attributes);
   }
 }

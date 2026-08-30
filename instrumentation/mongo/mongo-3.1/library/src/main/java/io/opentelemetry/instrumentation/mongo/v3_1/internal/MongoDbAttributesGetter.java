@@ -196,6 +196,9 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Nullable
   private MongoNetworkPeer getNetworkPeer(CommandStartedEvent event) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription == null || connectionPeerResolver == null) {
       return null;

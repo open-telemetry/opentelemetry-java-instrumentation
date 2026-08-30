@@ -6,10 +6,15 @@
 package io.opentelemetry.instrumentation.mongo.testing;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -37,6 +42,8 @@ import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.bson.BsonDocument;
@@ -255,6 +262,51 @@ public abstract class AbstractMongoConfiguredTargetTest {
   @SuppressWarnings("deprecation")
   // TODO DB_CONNECTION_STRING deprecation
   protected void assertFindSpan(String configuredAddress, Long configuredPort) {
+    List<AttributeAssertion> attributes = new ArrayList<>();
+    attributes.add(
+        equalTo(
+            SERVER_ADDRESS,
+            emitStableDatabaseSemconv() ? configuredAddress : SELECTED_SERVER.getHost()));
+    attributes.add(
+        equalTo(
+            SERVER_PORT,
+            emitStableDatabaseSemconv()
+                ? configuredPort
+                : Long.valueOf(SELECTED_SERVER.getPort())));
+    attributes.add(equalTo(NETWORK_PEER_ADDRESS, null));
+    attributes.add(equalTo(NETWORK_PEER_PORT, null));
+    if (emitOldDatabaseSemconv()) {
+      attributes.add(
+          satisfies(
+              DB_STATEMENT,
+              val ->
+                  val.satisfies(
+                      v ->
+                          assertThat(v.replaceAll(" ", ""))
+                              .isEqualTo("{\"find\":\"" + COLLECTION_NAME + "\"}"))));
+      attributes.add(equalTo(DB_SYSTEM, MONGODB));
+      attributes.add(
+          equalTo(
+              DB_CONNECTION_STRING,
+              "mongodb://" + SELECTED_SERVER.getHost() + ":" + SELECTED_SERVER.getPort()));
+      attributes.add(equalTo(DB_NAME, DATABASE_NAME));
+      attributes.add(equalTo(DB_OPERATION, "find"));
+      attributes.add(equalTo(DB_MONGODB_COLLECTION, COLLECTION_NAME));
+    }
+    if (emitStableDatabaseSemconv()) {
+      attributes.add(
+          satisfies(
+              DB_QUERY_TEXT,
+              val ->
+                  val.satisfies(
+                      v ->
+                          assertThat(v.replaceAll(" ", ""))
+                              .isEqualTo("{\"find\":\"" + COLLECTION_NAME + "\"}"))));
+      attributes.add(equalTo(DB_SYSTEM_NAME, MONGODB));
+      attributes.add(equalTo(DB_NAMESPACE, DATABASE_NAME));
+      attributes.add(equalTo(DB_OPERATION_NAME, "find"));
+      attributes.add(equalTo(DB_COLLECTION_NAME, COLLECTION_NAME));
+    }
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -265,39 +317,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
                                     ? "find " + COLLECTION_NAME
                                     : "find " + DATABASE_NAME + "." + COLLECTION_NAME)
                             .hasKind(CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    SERVER_ADDRESS,
-                                    emitStableDatabaseSemconv()
-                                        ? configuredAddress
-                                        : SELECTED_SERVER.getHost()),
-                                equalTo(
-                                    SERVER_PORT,
-                                    emitStableDatabaseSemconv()
-                                        ? configuredPort
-                                        : Long.valueOf(SELECTED_SERVER.getPort())),
-                                equalTo(NETWORK_PEER_ADDRESS, null),
-                                equalTo(NETWORK_PEER_PORT, null),
-                                satisfies(
-                                    maybeStable(DB_STATEMENT),
-                                    val ->
-                                        val.satisfies(
-                                            v ->
-                                                assertThat(v.replaceAll(" ", ""))
-                                                    .isEqualTo(
-                                                        "{\"find\":\"" + COLLECTION_NAME + "\"}"))),
-                                equalTo(maybeStable(DB_SYSTEM), MONGODB),
-                                equalTo(
-                                    DB_CONNECTION_STRING,
-                                    emitStableDatabaseSemconv()
-                                        ? null
-                                        : "mongodb://"
-                                            + SELECTED_SERVER.getHost()
-                                            + ":"
-                                            + SELECTED_SERVER.getPort()),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME),
-                                equalTo(maybeStable(DB_OPERATION), "find"),
-                                equalTo(maybeStable(DB_MONGODB_COLLECTION), COLLECTION_NAME))));
+                            .hasAttributesSatisfyingExactly(attributes)));
   }
 
   private static CommandStartedEvent commandStartedEvent(
