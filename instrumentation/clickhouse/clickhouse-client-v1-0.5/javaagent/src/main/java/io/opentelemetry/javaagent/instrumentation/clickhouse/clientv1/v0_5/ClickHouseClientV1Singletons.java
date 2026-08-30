@@ -64,9 +64,9 @@ public class ClickHouseClientV1Singletons {
     NODES_SERVER_TARGET.set(nodes, ServerTarget.create(configuredNodes));
   }
 
-  public static void captureSealedRequest(
-      ClickHouseRequest<?> request, ClickHouseRequest<?> sealedRequest) {
-    REQUEST_SERVER_TARGET.set(sealedRequest, serverTarget(request));
+  public static void copyServerTarget(
+      ClickHouseRequest<?> request, ClickHouseRequest<?> copiedRequest) {
+    REQUEST_SERVER_TARGET.set(copiedRequest, serverTarget(request));
   }
 
   private static ServerTarget serverTarget(ClickHouseRequest<?> request) {

@@ -675,7 +675,7 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testSealedNodeListReportsTheWholeConfiguredTarget() throws ClickHouseException {
+  void testCopiedSealedNodeListReportsTheWholeConfiguredTarget() throws ClickHouseException {
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
     String addressGroup = host + ":" + port + "," + host + ":" + (port + 1);
     ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
@@ -684,7 +684,8 @@ class ClickHouseClientV1Test {
             .read(nodes)
             .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
             .query("select * from " + TABLE_NAME)
-            .seal();
+            .seal()
+            .copy();
 
     ClickHouseResponse response = client.executeAndWait(request);
     response.close();

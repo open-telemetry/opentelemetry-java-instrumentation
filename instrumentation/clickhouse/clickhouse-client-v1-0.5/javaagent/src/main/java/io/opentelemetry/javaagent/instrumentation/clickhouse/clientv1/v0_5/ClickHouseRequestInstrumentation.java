@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
@@ -28,16 +27,17 @@ class ClickHouseRequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("seal").and(takesNoArguments()), getClass().getName() + "$SealAdvice");
+        namedOneOf("copy", "seal").and(takesNoArguments()),
+        getClass().getName() + "$CopyTargetAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class SealAdvice {
+  public static class CopyTargetAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This ClickHouseRequest<?> request,
-        @Advice.Return ClickHouseRequest<?> sealedRequest) {
-      ClickHouseClientV1Singletons.captureSealedRequest(request, sealedRequest);
+        @Advice.Return ClickHouseRequest<?> copiedRequest) {
+      ClickHouseClientV1Singletons.copyServerTarget(request, copiedRequest);
     }
   }
 }
