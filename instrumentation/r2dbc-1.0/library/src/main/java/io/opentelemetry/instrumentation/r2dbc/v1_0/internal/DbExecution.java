@@ -168,6 +168,13 @@ public final class DbExecution {
       return null;
     }
 
+    int firstComma = serverAddress.indexOf(',');
+    int userInfoEnd = serverAddress.indexOf('@');
+    if (userInfoEnd > firstComma
+        || (userInfoEnd >= 0 && userInfoEnd != serverAddress.lastIndexOf('@'))) {
+      return null;
+    }
+
     String hostList = stripUserInfo(serverAddress);
     String[] hosts = hostList.split(",", -1);
     if (hosts.length < 2) {
