@@ -75,16 +75,34 @@ final class CassandraSqlAttributesGetter
     if (executionInfo == null) {
       return null;
     }
+    if (!emitStableDatabaseSemconv()) {
+      return getLegacyNetworkPeer(executionInfo);
+    }
     InetSocketAddress peer = CassandraResponsePeers.getExecutionInfoPeer(executionInfo);
     if (peer != null) {
       return peer;
     }
+    return getStableNetworkPeerFallback(executionInfo);
+  }
+
+  @Nullable
+  private static InetSocketAddress getLegacyNetworkPeer(ExecutionInfo executionInfo) {
+    Node coordinator = executionInfo.getCoordinator();
+    if (coordinator == null) {
+      return null;
+    }
+    SocketAddress address = coordinator.getEndPoint().resolve();
+    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+  }
+
+  @Nullable
+  private static InetSocketAddress getStableNetworkPeerFallback(ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
       return null;
     }
     EndPoint endPoint = coordinator.getEndPoint();
-    if (emitStableDatabaseSemconv() && !(endPoint instanceof DefaultEndPoint)) {
+    if (!(endPoint instanceof DefaultEndPoint)) {
       return null;
     }
     SocketAddress address = endPoint.resolve();
