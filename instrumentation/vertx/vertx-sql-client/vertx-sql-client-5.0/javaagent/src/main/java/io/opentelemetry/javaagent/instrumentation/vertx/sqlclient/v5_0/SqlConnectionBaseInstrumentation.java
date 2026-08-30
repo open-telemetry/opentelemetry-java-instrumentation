@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.attachPreparedStatementData;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -35,9 +36,24 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("prepare").and(returns(named("io.vertx.core.Future"))),
         getClass().getName() + "$PrepareAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This SqlClientBase sqlClientBase, @Advice.Argument(2) Object connection) {
+      VertxSqlClientData data = VertxSqlClientSingletons.getConnectionData(connection);
+      if (data != null) {
+        VertxSqlClientSingletons.attachClientState(
+            sqlClientBase, data.getConnectOptions(), data.getAddressGroup(), data);
+      }
+    }
   }
 
   @SuppressWarnings("unused")

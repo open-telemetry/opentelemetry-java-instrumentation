@@ -258,6 +258,43 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testConcurrentSupplierConnectionsKeepTheirOptions() throws Exception {
+    AtomicInteger calls = new AtomicInteger();
+    Promise<SqlConnectOptions> firstOptions = Promise.promise();
+    Promise<SqlConnectOptions> secondOptions = Promise.promise();
+    PgConnectOptions first = connectOptions();
+    String alternateHost = host.equals("localhost") ? "127.0.0.1" : "localhost";
+    PgConnectOptions second = new PgConnectOptions(first).setHost(alternateHost);
+    Pool supplierPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(
+                () -> calls.getAndIncrement() == 0 ? firstOptions.future() : secondOptions.future())
+            .with(new PoolOptions().setMaxSize(2))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    Future<SqlConnection> firstConnectionFuture = supplierPool.getConnection();
+    Future<SqlConnection> secondConnectionFuture = supplierPool.getConnection();
+    firstOptions.complete(first);
+    secondOptions.complete(second);
+    SqlConnection firstConnection =
+        firstConnectionFuture.toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    cleanup.deferCleanup(firstConnection::close);
+    SqlConnection secondConnection =
+        secondConnectionFuture.toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    cleanup.deferCleanup(secondConnection::close);
+
+    select(firstConnection);
+    select(secondConnection);
+
+    assertThat(calls).hasValue(2);
+    testing.waitAndAssertTraces(
+        trace -> assertSupplierTarget(trace, host),
+        trace -> assertSupplierTarget(trace, alternateHost));
+  }
+
+  @Test
   void testSupplierCapturePreservesExceptions() {
     RuntimeException thrown = new RuntimeException("supplier failed");
     Pool throwingPool =

@@ -47,6 +47,7 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
     return asList(
         new ClientBuilderInstrumentation(),
         new CommandSchedulerInstrumentation(),
+        new ConnectionFactoryBaseInstrumentation(),
         new DriverInstrumentation(),
         new PoolInstrumentation(),
         new SqlClientBaseInstrumentation(),
