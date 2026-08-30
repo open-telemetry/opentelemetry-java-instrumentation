@@ -65,10 +65,8 @@ class MongoConfiguredTargetTest {
     assertThat(getter.getServerAddress(event))
         .isEqualTo(emitStableDatabaseSemconv() ? "db1.example" : "db2.example");
     assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? 27017 : 27018);
-    assertThat(getter.getNetworkPeerAddress(event, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "db2.example" : null);
-    assertThat(getter.getNetworkPeerPort(event, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? 27018 : null);
+    assertThat(getter.getNetworkPeerAddress(event, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(event, null)).isNull();
   }
 
   @Test
@@ -94,10 +92,8 @@ class MongoConfiguredTargetTest {
     assertThat(attributes.get(SERVER_ADDRESS))
         .isEqualTo(emitStableDatabaseSemconv() ? null : "db2.example");
     assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018L);
-    assertThat(attributes.get(NETWORK_PEER_ADDRESS))
-        .isEqualTo(emitStableDatabaseSemconv() ? "db2.example" : null);
-    assertThat(attributes.get(NETWORK_PEER_PORT))
-        .isEqualTo(emitStableDatabaseSemconv() ? 27018L : null);
+    assertThat(attributes.get(NETWORK_PEER_ADDRESS)).isNull();
+    assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
   }
 
   @Test
@@ -117,10 +113,8 @@ class MongoConfiguredTargetTest {
         .isEqualTo(emitStableDatabaseSemconv() ? "configured.example" : "db2.example");
     assertThat(attributes.get(SERVER_PORT))
         .isEqualTo(emitStableDatabaseSemconv() ? 27017L : 27018L);
-    assertThat(attributes.get(NETWORK_PEER_ADDRESS))
-        .isEqualTo(emitStableDatabaseSemconv() ? "db2.example" : null);
-    assertThat(attributes.get(NETWORK_PEER_PORT))
-        .isEqualTo(emitStableDatabaseSemconv() ? 27018L : null);
+    assertThat(attributes.get(NETWORK_PEER_ADDRESS)).isNull();
+    assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
     assertThat(attributes.get(DB_CONNECTION_STRING))
         .isEqualTo(emitOldDatabaseSemconv() ? "mongodb://db2.example:27018" : null);
   }
@@ -146,10 +140,8 @@ class MongoConfiguredTargetTest {
                 ? "configured1.example:27017,configured2.example:27018"
                 : "db2.example");
     assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018L);
-    assertThat(attributes.get(NETWORK_PEER_ADDRESS))
-        .isEqualTo(emitStableDatabaseSemconv() ? "db2.example" : null);
-    assertThat(attributes.get(NETWORK_PEER_PORT))
-        .isEqualTo(emitStableDatabaseSemconv() ? 27018L : null);
+    assertThat(attributes.get(NETWORK_PEER_ADDRESS)).isNull();
+    assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
   }
 
   @Test

@@ -157,26 +157,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Nullable
-  @Override
-  public String getNetworkPeerAddress(CommandStartedEvent event, @Nullable Void response) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
-    ServerAddress serverAddress = selectedServerAddress(event);
-    return serverAddress == null ? null : serverAddress.getHost();
-  }
-
-  @Nullable
-  @Override
-  public Integer getNetworkPeerPort(CommandStartedEvent event, @Nullable Void response) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
-    ServerAddress serverAddress = selectedServerAddress(event);
-    return serverAddress == null ? null : serverAddress.getPort();
-  }
-
-  @Nullable
   private static ServerAddress selectedServerAddress(CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     return connectionDescription == null ? null : connectionDescription.getServerAddress();

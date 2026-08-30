@@ -11,8 +11,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static java.util.Arrays.asList;
 
@@ -73,7 +71,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void theSelectedServerIsTheOperationDurationNetworkPeerForSeveralSeeds() {
+  void severalSeedsAreTheOperationDurationLogicalServer() {
     try (ConfiguredClient client =
         createClient(
             asList(
@@ -90,8 +88,6 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
         DB_NAMESPACE,
         DB_OPERATION_NAME,
         DB_COLLECTION_NAME,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT,
         SERVER_ADDRESS);
     if (emitStableDatabaseSemconv()) {
       testing.waitAndAssertMetrics(
@@ -103,9 +99,8 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
                       histogram ->
                           histogram.hasPointsSatisfying(
                               point ->
-                                  point
-                                      .hasAttribute(NETWORK_PEER_ADDRESS, "selected.example")
-                                      .hasAttribute(NETWORK_PEER_PORT, 27099L))));
+                                  point.hasAttribute(
+                                      SERVER_ADDRESS, "db1.example:27017,db2.example:27018"))));
     }
   }
 }
