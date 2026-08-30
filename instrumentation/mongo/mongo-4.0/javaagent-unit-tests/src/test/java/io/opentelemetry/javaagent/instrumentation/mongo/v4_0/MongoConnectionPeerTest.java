@@ -20,6 +20,8 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.nio.file.Paths;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 class MongoConnectionPeerTest {
 
@@ -57,6 +59,7 @@ class MongoConnectionPeerTest {
   }
 
   @Test
+  @EnabledForJreRange(min = JRE.JAVA_16)
   void capturesUnixSocketWithoutAPort() throws ReflectiveOperationException {
     String socketPath = Paths.get("/tmp/mongodb-27017.sock").toString();
     SocketAddress unixSocketAddress =

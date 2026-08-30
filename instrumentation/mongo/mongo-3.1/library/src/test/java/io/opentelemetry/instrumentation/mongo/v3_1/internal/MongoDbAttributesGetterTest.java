@@ -31,6 +31,8 @@ import org.bson.BsonInt32;
 import org.bson.BsonString;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -156,6 +158,7 @@ class MongoDbAttributesGetterTest {
   }
 
   @Test
+  @EnabledForJreRange(min = JRE.JAVA_16)
   void unixNetworkPeerHasNoPort() throws ReflectiveOperationException {
     String socketPath = Paths.get("/tmp/mongodb-27017.sock").toString();
     Class<?> unixDomainSocketAddress = Class.forName("java.net.UnixDomainSocketAddress");
