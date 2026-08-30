@@ -59,9 +59,6 @@ public class LettuceSingletons {
       VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
   private static final Object commandPeerLock = new Object();
 
-  private static final VirtualField<RedisCommand<?, ?, ?>, Boolean> REACTIVE_COMMAND =
-      VirtualField.find(RedisCommand.class, Boolean.class);
-
   public static final VirtualField<DefaultEndpoint, Integer> ENDPOINT_DATABASE_INDEX =
       VirtualField.find(DefaultEndpoint.class, Integer.class);
 
@@ -261,16 +258,11 @@ public class LettuceSingletons {
     // A command that does not expect a response has its span ended synchronously in
     // DefaultEndpoint.write, while the channel write that records the peer runs later on the netty
     // event loop, so the peer is not known yet.
-    if (Boolean.TRUE.equals(REACTIVE_COMMAND.get(command))
-        || !LettuceInstrumentationUtil.expectsResponse(command)) {
+    if (!LettuceInstrumentationUtil.expectsResponse(command)) {
       return null;
     }
     LettuceCommandPeer peer = findCommandPeer(command);
     return peer == null ? null : peer.getAddress();
-  }
-
-  public static void markReactiveCommand(RedisCommand<?, ?, ?> command) {
-    REACTIVE_COMMAND.set(command, true);
   }
 
   private LettuceSingletons() {}
