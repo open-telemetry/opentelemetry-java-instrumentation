@@ -53,6 +53,17 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("*CouchbaseClientTest.hasExpectedSpanAndDurationMetric")
+    }
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database/dup")
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -62,7 +73,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testStableSemconv, testBothSemconv, testExperimental)
   }
 
   if (otelProps.denyUnsafe) {
