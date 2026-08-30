@@ -119,16 +119,18 @@ public class VertxSqlClientSingletons {
     }
   }
 
-  public static void notifyConnectionDataListener(Object command, Object connection) {
+  @Nullable
+  public static Context notifyConnectionDataListener(Object command, Object connection) {
     ConnectionDataListener listener = commandDataListenerCache.get(command);
     if (listener == null) {
-      return;
+      return null;
     }
     VertxSqlClientData data = getConnectionData(connection);
-    if (data != null) {
-      commandDataListenerCache.remove(command);
-      listener.onConnectionData(data);
+    if (data == null) {
+      return null;
     }
+    commandDataListenerCache.remove(command);
+    return listener.onConnectionData(data);
   }
 
   public static void storePoolDbSystem(Pool pool, String dbSystem) {
@@ -278,7 +280,12 @@ public class VertxSqlClientSingletons {
   }
 
   public interface ConnectionDataListener {
-    void onConnectionData(VertxSqlClientData data);
+
+    /**
+     * Returns the context of the span this listener started, or {@code null} if it started none.
+     */
+    @Nullable
+    Context onConnectionData(VertxSqlClientData data);
   }
 
   private VertxSqlClientSingletons() {}

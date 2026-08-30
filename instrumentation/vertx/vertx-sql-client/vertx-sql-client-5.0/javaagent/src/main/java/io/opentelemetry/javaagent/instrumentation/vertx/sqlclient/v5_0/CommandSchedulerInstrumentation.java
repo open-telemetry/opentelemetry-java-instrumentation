@@ -81,9 +81,15 @@ class CommandSchedulerInstrumentation implements TypeInstrumentation {
         return null;
       }
       // Subsequent schedule call (pool → connection).
-      // Restore the stored context so that executeBlocking dispatches with
-      // the correct parent for downstream instrumentation (e.g. JDBC).
-      VertxSqlClientSingletons.notifyConnectionDataListener(command, commandScheduler);
+      // A client whose target is known only per connection starts its span here; dispatch with
+      // that span's context. Otherwise restore the stored context so that executeBlocking
+      // dispatches with the correct parent for downstream instrumentation (e.g. JDBC).
+      Context started =
+          VertxSqlClientSingletons.notifyConnectionDataListener(command, commandScheduler);
+      if (started != null) {
+        VertxSqlClientSingletons.setCommandContext(command, started);
+        return started.makeCurrent();
+      }
       return stored.makeCurrent();
     }
 

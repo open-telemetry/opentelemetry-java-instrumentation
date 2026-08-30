@@ -164,17 +164,18 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         return adviceScope;
       }
 
-      private synchronized void startSpan(VertxSqlClientData data) {
+      @Nullable
+      private synchronized Context startSpan(VertxSqlClientData data) {
         if (cancelled
             || context != null
             || sql == null
             || promiseInternal == null
             || parentContext == null) {
-          return;
+          return null;
         }
         SqlConnectOptions connectOptions = data.getConnectOptions();
         if (connectOptions == null) {
-          return;
+          return null;
         }
         String dbSystem = data.getDbSystem();
         if (dbSystem == null) {
@@ -193,7 +194,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
                 data.getAddressGroup());
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           cancelled = true;
-          return;
+          return null;
         }
 
         this.otelRequest = otelRequest;
@@ -202,6 +203,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         if (!exited && Thread.currentThread() == entryThread) {
           scope = context.makeCurrent();
         }
+        return context;
       }
 
       private synchronized void cancelCapture() {
@@ -211,8 +213,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
       }
 
       @Override
-      public void onConnectionData(VertxSqlClientData data) {
-        startSpan(data);
+      @Nullable
+      public Context onConnectionData(VertxSqlClientData data) {
+        return startSpan(data);
       }
 
       public synchronized void end(@Nullable Throwable throwable) {
