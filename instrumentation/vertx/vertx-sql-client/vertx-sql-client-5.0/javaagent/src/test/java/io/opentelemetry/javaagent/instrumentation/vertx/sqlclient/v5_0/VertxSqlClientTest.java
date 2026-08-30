@@ -181,7 +181,7 @@ class VertxSqlClientTest {
 
   @Test
   void testConnectingToGenericSupplierUsesDriverDbSystem() throws Exception {
-    SqlConnectOptions suppliedOptions = new SqlConnectOptions(connectOptions());
+    SqlConnectOptions suppliedOptions = new PgConnectOptions(connectOptions()) {};
     Pool supplierPool =
         PgBuilder.pool()
             .using(vertx)
@@ -329,14 +329,15 @@ class VertxSqlClientTest {
   @Test
   void testMutableServerListIsSnapshottedForEachBuild() throws Exception {
     PgConnectOptions first = connectOptions();
+    String alternateHost = host.equals("localhost") ? "127.0.0.1" : "localhost";
     List<SqlConnectOptions> databases =
-        new ArrayList<>(asList(first, new PgConnectOptions(first).setPort(port + 1)));
+        new ArrayList<>(asList(first, new PgConnectOptions(first).setHost(alternateHost)));
     ClientBuilder<Pool> builder =
         PgBuilder.pool().using(vertx).connectingTo(databases).with(new PoolOptions().setMaxSize(1));
 
     Pool firstPool = builder.build();
     cleanup.deferCleanup(firstPool::close);
-    databases.set(1, new PgConnectOptions(first).setPort(port + 2));
+    databases.set(1, new PgConnectOptions(first));
     Pool secondPool = builder.build();
     cleanup.deferCleanup(secondPool::close);
 
@@ -344,7 +345,8 @@ class VertxSqlClientTest {
     select(secondPool);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, port + 1), trace -> assertServerGroup(trace, port + 2));
+        trace -> assertServerGroup(trace, alternateHost, port),
+        trace -> assertServerGroup(trace, host, port));
   }
 
   @Test
@@ -386,10 +388,19 @@ class VertxSqlClientTest {
   }
 
   private static void assertServerGroup(TraceAssert trace, int secondPort) {
-    assertServerGroup(trace, secondPort, "select * from test");
+    assertServerGroup(trace, host, secondPort, "select * from test");
   }
 
   private static void assertServerGroup(TraceAssert trace, int secondPort, String statement) {
+    assertServerGroup(trace, host, secondPort, statement);
+  }
+
+  private static void assertServerGroup(TraceAssert trace, String secondHost, int secondPort) {
+    assertServerGroup(trace, secondHost, secondPort, "select * from test");
+  }
+
+  private static void assertServerGroup(
+      TraceAssert trace, String secondHost, int secondPort, String statement) {
     trace.hasSpansSatisfyingExactly(
         span ->
             span.hasKind(SpanKind.CLIENT)
@@ -409,7 +420,7 @@ class VertxSqlClientTest {
                     equalTo(
                         SERVER_ADDRESS,
                         emitStableDatabaseSemconv()
-                            ? host + ":" + port + "," + host + ":" + secondPort
+                            ? host + ":" + port + "," + secondHost + ":" + secondPort
                             : host),
                     equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port))));
   }
