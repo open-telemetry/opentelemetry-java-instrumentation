@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -311,6 +312,16 @@ class VertxRedisClientTest {
     }
   }
 
+  private static boolean isVertx5() {
+    try {
+      return Redis.class.getMethod(
+              "createSentinelClient", Vertx.class, RedisOptions.class, Supplier.class)
+          != null;
+    } catch (ReflectiveOperationException ignored) {
+      return false;
+    }
+  }
+
   @Test
   void sentinelClientIsScopedByItsEndpointsAndMaster() {
     Redis sentinelClient =
@@ -338,11 +349,13 @@ class VertxRedisClientTest {
                       .collect(toList());
               assertThat(spans).isNotEmpty();
               for (SpanData span : spans) {
+                // Vert.x 5 builds the connection from the endpoint it selected, so it records that
+                // endpoint rather than the sentinel group the client was configured with
+                boolean expectLogicalTarget = emitStableDatabaseSemconv() && !isVertx5();
                 assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                    .isEqualTo(
-                        emitStableDatabaseSemconv() ? host + ":" + port + "/themaster" : host);
+                    .isEqualTo(expectLogicalTarget ? host + ":" + port + "/themaster" : host);
                 assertThat(span.getAttributes().get(SERVER_PORT))
-                    .isEqualTo(emitStableDatabaseSemconv() ? null : Long.valueOf(port));
+                    .isEqualTo(expectLogicalTarget ? null : Long.valueOf(port));
                 assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
                 assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
                     .isEqualTo(Long.valueOf(port));
