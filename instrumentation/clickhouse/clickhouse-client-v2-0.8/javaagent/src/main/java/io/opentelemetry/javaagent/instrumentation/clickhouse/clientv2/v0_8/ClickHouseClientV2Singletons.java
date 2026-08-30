@@ -95,8 +95,6 @@ public class ClickHouseClientV2Singletons {
         return new ServerInfo(endpointAddress(endpoint), endpointPort(endpoint), null);
       }
 
-      String first = sanitizeEndpoint(endpoints.iterator().next());
-
       // Endpoint iteration order is unspecified, so canonicalize the configured target.
       List<String> sanitized = new ArrayList<>(endpoints.size());
       for (String endpoint : endpoints) {
@@ -111,7 +109,7 @@ public class ClickHouseClientV2Singletons {
         }
         addressGroup.append(endpoint);
       }
-      return new ServerInfo(endpointAddress(first), endpointPort(first), addressGroup.toString());
+      return new ServerInfo(null, null, addressGroup.toString());
     }
 
     public static ServerInfo ofCurrentEndpoint(Set<String> endpoints) {
