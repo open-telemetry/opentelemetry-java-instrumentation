@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -42,9 +42,9 @@ class LettuceNetworkAttributesGetterTest {
 
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
     assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitOldDatabaseSemconv() ? "10.1.2.3" : null);
+        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
     assertThat(getter.getNetworkPeerPort(command, null))
-        .isEqualTo(emitOldDatabaseSemconv() ? PORT : null);
+        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
   }
 
   @Test
@@ -113,9 +113,9 @@ class LettuceNetworkAttributesGetterTest {
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
     assertThat(LettuceSingletons.commandPeerAddress(wrapper)).isEqualTo(address);
     assertThat(getter.getNetworkPeerAddress(wrapper, null))
-        .isEqualTo(emitOldDatabaseSemconv() ? "10.1.2.3" : null);
+        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
     assertThat(getter.getNetworkPeerPort(wrapper, null))
-        .isEqualTo(emitOldDatabaseSemconv() ? PORT : null);
+        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
   }
 
   @Test

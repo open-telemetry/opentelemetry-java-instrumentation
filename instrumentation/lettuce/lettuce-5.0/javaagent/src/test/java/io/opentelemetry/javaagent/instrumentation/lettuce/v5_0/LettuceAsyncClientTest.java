@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
@@ -245,10 +244,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
@@ -274,10 +273,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                           .hasAttributesSatisfyingExactly(
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, port),
-                              equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                              equalTo(
+                                  NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                               equalTo(
                                   NETWORK_PEER_PORT,
-                                  emitOldDatabaseSemconv() ? Long.valueOf(port) : null),
+                                  emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                               equalTo(maybeStable(DB_SYSTEM), REDIS),
                               equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                               equalTo(maybeStable(DB_STATEMENT), "SELECT 1"),
@@ -290,10 +290,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                           .hasAttributesSatisfyingExactly(
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, port),
-                              equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                              equalTo(
+                                  NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                               equalTo(
                                   NETWORK_PEER_PORT,
-                                  emitOldDatabaseSemconv() ? Long.valueOf(port) : null),
+                                  emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                               equalTo(maybeStable(DB_SYSTEM), REDIS),
                               equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                               equalTo(maybeStable(DB_STATEMENT), "SET SELECT_TEST_KEY ?"),
@@ -334,10 +335,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
@@ -398,10 +399,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
@@ -451,10 +452,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
@@ -505,10 +506,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
@@ -526,10 +527,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM"),
@@ -705,10 +706,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SET NONDEFAULTKEY ?"),
@@ -785,9 +786,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                   .hasAttributesSatisfyingExactly(
                       equalTo(SERVER_ADDRESS, host),
                       equalTo(SERVER_PORT, port),
-                      equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                      equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                       equalTo(
-                          NETWORK_PEER_PORT, emitOldDatabaseSemconv() ? Long.valueOf(port) : null),
+                          NETWORK_PEER_PORT,
+                          emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                       equalTo(maybeStable(DB_SYSTEM), REDIS),
                       equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
                       equalTo(maybeStable(DB_STATEMENT), "SELECT " + NON_DEFAULT_DB_INDEX),
