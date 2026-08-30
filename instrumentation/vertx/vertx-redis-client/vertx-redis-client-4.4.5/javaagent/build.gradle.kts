@@ -14,4 +14,6 @@ muzzle {
 dependencies {
   library("io.vertx:vertx-redis-client:4.4.5")
   compileOnly("io.vertx:vertx-codegen:4.4.5")
+
+  testInstrumentation(project(":instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.0:javaagent"))
 }
