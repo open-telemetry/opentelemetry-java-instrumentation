@@ -19,7 +19,8 @@ public class VertxSqlAddressGroup {
     if (database == null || database.getHost() == null) {
       return null;
     }
-    return new VertxSqlAddressGroup(database.getHost(), database.getPort());
+    String host = database.getHost();
+    return new VertxSqlAddressGroup(host, host.startsWith("/") ? null : database.getPort());
   }
 
   @Nullable
@@ -62,8 +63,11 @@ public class VertxSqlAddressGroup {
   }
 
   private static void appendHostPort(StringBuilder address, String host, int port) {
-    // Bracket IPv6 literals; leave Unix socket paths unchanged.
-    if (host.indexOf(':') >= 0 && !host.startsWith("[") && !host.startsWith("/")) {
+    if (host.startsWith("/")) {
+      address.append(host);
+      return;
+    }
+    if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
       address.append('[').append(host).append(']');
     } else {
       address.append(host);

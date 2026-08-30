@@ -89,7 +89,7 @@ class VertxSqlClientServerListTest {
     PgConnectOptions second = connectOptions().setHost("/var/run/postgres:primary").setPort(5432);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
 
-    assertServerListTarget(pool, host + ":" + port + ",/var/run/postgres:primary:5432");
+    assertServerListTarget(pool, host + ":" + port + ",/var/run/postgres:primary");
   }
 
   @Test
