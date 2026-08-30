@@ -240,35 +240,85 @@ public final class DbExecution {
     int zone = value.indexOf('%');
     if (zone >= 0) {
       // a link-local address may carry a zone identifier, which is not part of the address
-      if (zone == 0 || zone == value.length() - 1) {
+      if (zone == 0 || zone == value.length() - 1 || value.indexOf('%', zone + 1) >= 0) {
         return false;
       }
       address = value.substring(0, zone);
     }
 
-    int colons = 0;
-    boolean embeddedIpv4 = false;
-    for (int i = 0; i < address.length(); i++) {
-      char c = address.charAt(i);
-      if (c == ':') {
-        colons++;
-      } else if (c == '.') {
-        embeddedIpv4 = true;
-      } else if (!isHexDigit(c)) {
+    int firstDot = address.indexOf('.');
+    if (firstDot >= 0) {
+      int ipv4Start = address.lastIndexOf(':') + 1;
+      if (firstDot < ipv4Start || !isIpv4Literal(address.substring(ipv4Start))) {
         return false;
       }
-    }
-    if (colons < 2 || colons > 7) {
-      return false;
+      // An embedded IPv4 address occupies the final two IPv6 groups.
+      address = address.substring(0, ipv4Start) + "0:0";
     }
 
     int compression = address.indexOf("::");
     if (compression >= 0) {
       // "::" stands for the omitted groups, so it may appear at most once
-      return compression == address.lastIndexOf("::");
+      if (compression != address.lastIndexOf("::")) {
+        return false;
+      }
+      int leftGroups = countIpv6Groups(address.substring(0, compression));
+      int rightGroups = countIpv6Groups(address.substring(compression + 2));
+      return leftGroups >= 0 && rightGroups >= 0 && leftGroups + rightGroups < 8;
     }
-    // an embedded IPv4 address spells out the last two groups
-    return colons == (embeddedIpv4 ? 6 : 7);
+    return countIpv6Groups(address) == 8;
+  }
+
+  private static int countIpv6Groups(String value) {
+    if (value.isEmpty()) {
+      return 0;
+    }
+
+    int groups = 0;
+    int groupStart = 0;
+    for (int i = 0; i <= value.length(); i++) {
+      if (i == value.length() || value.charAt(i) == ':') {
+        int length = i - groupStart;
+        if (length == 0 || length > 4) {
+          return -1;
+        }
+        for (int j = groupStart; j < i; j++) {
+          if (!isHexDigit(value.charAt(j))) {
+            return -1;
+          }
+        }
+        groups++;
+        groupStart = i + 1;
+      }
+    }
+    return groups;
+  }
+
+  private static boolean isIpv4Literal(String value) {
+    int octets = 0;
+    int octetStart = 0;
+    for (int i = 0; i <= value.length(); i++) {
+      if (i == value.length() || value.charAt(i) == '.') {
+        int length = i - octetStart;
+        if (length == 0 || length > 3) {
+          return false;
+        }
+        int octet = 0;
+        for (int j = octetStart; j < i; j++) {
+          char c = value.charAt(j);
+          if (c < '0' || c > '9') {
+            return false;
+          }
+          octet = octet * 10 + c - '0';
+        }
+        if (octet > 255) {
+          return false;
+        }
+        octets++;
+        octetStart = i + 1;
+      }
+    }
+    return octets == 4;
   }
 
   private static boolean isHexDigit(char c) {

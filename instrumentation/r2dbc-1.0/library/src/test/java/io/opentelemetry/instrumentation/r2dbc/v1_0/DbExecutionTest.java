@@ -240,6 +240,8 @@ class DbExecutionTest {
         ":5432,host2",
         "host1,not:an:ipv6",
         "host1,[not:an:ipv6]",
+        "host1,12345::1",
+        "host1,1::999.999.999.999",
         "host1:65536,host2",
         "host1,user:secret@host2,host3"
       })
