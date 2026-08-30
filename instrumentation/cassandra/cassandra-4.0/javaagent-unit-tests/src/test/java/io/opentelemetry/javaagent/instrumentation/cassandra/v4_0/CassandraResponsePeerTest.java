@@ -40,10 +40,9 @@ class CassandraResponsePeerTest {
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(secondExecutionInfo, secondFrame);
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(firstExecutionInfo, firstFrame);
 
-    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, firstExecutionInfo))
+    assertThat(CassandraResponsePeers.getExecutionInfoPeer(firstExecutionInfo))
         .isEqualTo(firstPeer);
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, secondExecutionInfo))
+    assertThat(CassandraResponsePeers.getExecutionInfoPeer(secondExecutionInfo))
         .isEqualTo(secondPeer);
   }
 
@@ -68,9 +67,8 @@ class CassandraResponsePeerTest {
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(
         nonInetExecutionInfo, nonInetFrame);
 
-    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, unresolvedExecutionInfo)).isNull();
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, nonInetExecutionInfo)).isNull();
+    assertThat(CassandraResponsePeers.getExecutionInfoPeer(unresolvedExecutionInfo)).isNull();
+    assertThat(CassandraResponsePeers.getExecutionInfoPeer(nonInetExecutionInfo)).isNull();
   }
 
   @Test
@@ -83,9 +81,35 @@ class CassandraResponsePeerTest {
         new TestContext(new TestChannel(peer)), responseFrame);
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(executionInfo, responseFrame);
 
-    assertThat(
-            new CassandraSqlAttributesGetter().getNetworkPeerInetSocketAddress(null, executionInfo))
-        .isEqualTo(peer);
+    assertThat(CassandraResponsePeers.getExecutionInfoPeer(executionInfo)).isEqualTo(peer);
+  }
+
+  @Test
+  void finalRetryResponseKeepsItsChannelPeer() throws Exception {
+    ChannelHandlerContext firstContext = mock(ChannelHandlerContext.class);
+    ChannelHandlerContext retryContext = mock(ChannelHandlerContext.class);
+    Channel firstChannel = mock(Channel.class);
+    Channel retryChannel = mock(Channel.class);
+    Frame firstResponse = frame(1);
+    Frame retryResponse = frame(1);
+    ExecutionInfo firstExecutionInfo = mock(ExecutionInfo.class);
+    ExecutionInfo retryExecutionInfo = mock(ExecutionInfo.class);
+    InetSocketAddress firstPeer = resolved(19042);
+    InetSocketAddress retryPeer = resolved(29042);
+    when(firstContext.channel()).thenReturn(firstChannel);
+    when(retryContext.channel()).thenReturn(retryChannel);
+    when(firstChannel.remoteAddress()).thenReturn(firstPeer);
+    when(retryChannel.remoteAddress()).thenReturn(retryPeer);
+
+    InFlightHandlerInstrumentation.ChannelReadAdvice.onEnter(firstContext, firstResponse);
+    InFlightHandlerInstrumentation.ChannelReadAdvice.onEnter(retryContext, retryResponse);
+    DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(firstExecutionInfo, firstResponse);
+    DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(retryExecutionInfo, retryResponse);
+
+    assertThat(CassandraResponsePeers.getExecutionInfoPeer(firstExecutionInfo))
+        .isEqualTo(firstPeer);
+    assertThat(CassandraResponsePeers.getExecutionInfoPeer(retryExecutionInfo))
+        .isEqualTo(retryPeer);
   }
 
   private static InetSocketAddress resolved(int port) throws Exception {
