@@ -24,7 +24,6 @@ public final class VertxRedisServerTargets {
   private static final VirtualField<RedisStandaloneConnection, RedisServerTarget>
       CONNECTION_TARGET_FIELD =
           VirtualField.find(RedisStandaloneConnection.class, RedisServerTarget.class);
-  private static final ThreadLocal<RedisServerTarget> currentTarget = new ThreadLocal<>();
 
   @Nullable
   public static RedisServerTarget of(@Nullable RedisConnectOptions options) {
@@ -58,25 +57,18 @@ public final class VertxRedisServerTargets {
         : connectionString;
   }
 
+  public static void setEndpoint(RedisURI redisUri, String connectionString) {
+    set(redisUri, RedisServerTarget.ofEndpoint(effectiveEndpoint(connectionString)));
+  }
+
   public static void set(RedisURI redisUri, @Nullable RedisServerTarget target) {
     if (target != null) {
       TARGET_FIELD.set(redisUri, target);
     }
   }
 
-  public static void setCurrent(@Nullable RedisServerTarget target) {
-    currentTarget.set(target);
-  }
-
-  public static void clearCurrent() {
-    currentTarget.remove();
-  }
-
   public static void setConnectionTarget(RedisStandaloneConnection connection, RedisURI redisUri) {
-    RedisServerTarget target = currentTarget.get();
-    if (target == null) {
-      target = TARGET_FIELD.get(redisUri);
-    }
+    RedisServerTarget target = TARGET_FIELD.get(redisUri);
     if (target != null) {
       CONNECTION_TARGET_FIELD.set(connection, target);
     }
