@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -20,7 +21,9 @@ final class SocketStreamInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.mongodb.internal.connection.SocketStream");
+    return namedOneOf(
+        "com.mongodb.internal.connection.SocketStream",
+        "com.mongodb.internal.connection.UnixSocketChannelStream");
   }
 
   @Override
