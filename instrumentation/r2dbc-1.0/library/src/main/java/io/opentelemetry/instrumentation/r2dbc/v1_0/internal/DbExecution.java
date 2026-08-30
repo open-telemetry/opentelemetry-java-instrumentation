@@ -157,7 +157,10 @@ public final class DbExecution {
   @Nullable
   private static String sanitizeServerAddressGroup(
       @Nullable String serverAddress, @Nullable Integer serverPort) {
-    if (serverAddress == null) {
+    if (serverAddress == null
+        || serverAddress.indexOf('/') >= 0
+        || serverAddress.indexOf('?') >= 0
+        || serverAddress.indexOf('#') >= 0) {
       return null;
     }
 

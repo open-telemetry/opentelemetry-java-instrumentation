@@ -228,7 +228,15 @@ class DbExecutionTest {
 
   @ParameterizedTest
   @ValueSource(
-      strings = {"host1:invalid,host2", "host1,,host2", "host1,host=value", "[2001:db8::1,host2"})
+      strings = {
+        "host1:invalid,host2",
+        "host1,,host2",
+        "host1,host=value",
+        "[2001:db8::1,host2",
+        "host1/path,host2",
+        "host1?email=user@example.com,host2",
+        "host1#fragment,host2"
+      })
   void dbExecutionRejectsMalformedMultiHostAddress(String host) {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
