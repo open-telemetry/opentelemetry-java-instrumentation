@@ -39,6 +39,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -529,20 +531,19 @@ class ClickHouseClientV2Test {
   }
 
   @Test
-  void testBuilderReuseDoesNotChangeAnExistingClientTarget() throws Exception {
-    Client.Builder builder =
+  void testConfiguredAndCurrentEndpointsAreCapturedSeparately() throws Exception {
+    Client testClient =
         new Client.Builder()
             .addEndpoint(Protocol.HTTP, host, port, false)
             .setDefaultDatabase(DATABASE_NAME)
             .setUsername(USERNAME)
             .setPassword(PASSWORD)
-            .setOption("compress", "false");
-    Client firstClient = builder.build();
-    cleanup.deferCleanup(firstClient);
-    Client secondClient = builder.addEndpoint("http://unused.invalid:8123").build();
-    cleanup.deferCleanup(secondClient);
+            .setOption("compress", "false")
+            .build();
+    cleanup.deferCleanup(testClient);
+    replaceEndpoints(testClient, "http://current.example:8123");
 
-    QueryResponse response = firstClient.query("select * from " + TABLE_NAME).join();
+    QueryResponse response = testClient.query("select * from " + TABLE_NAME).join();
     response.close();
 
     testing.waitAndAssertTraces(
@@ -558,8 +559,10 @@ class ClickHouseClientV2Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? host : "current.example"),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? port : 8123),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -695,6 +698,15 @@ class ClickHouseClientV2Test {
                                 emitStableDatabaseSemconv()
                                     ? thrown.getClass().getName()
                                     : null))));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static void replaceEndpoints(Client client, String endpoint) throws Exception {
+    Field endpointsField = Client.class.getDeclaredField("endpoints");
+    endpointsField.setAccessible(true);
+    Set<String> endpoints = (Set<String>) endpointsField.get(client);
+    endpoints.clear();
+    endpoints.add(endpoint);
   }
 
   private static Object clearServerInfo(Client client) throws Exception {

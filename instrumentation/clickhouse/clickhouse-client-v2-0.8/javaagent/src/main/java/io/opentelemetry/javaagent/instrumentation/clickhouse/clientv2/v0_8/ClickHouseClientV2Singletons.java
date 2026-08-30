@@ -23,6 +23,8 @@ public class ClickHouseClientV2Singletons {
   private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
   private static final VirtualField<Client, ServerInfo> SERVER_INFO_FIELD =
       VirtualField.find(Client.class, ServerInfo.class);
+  private static final VirtualField<Client, CurrentServerInfo> CURRENT_SERVER_INFO_FIELD =
+      VirtualField.find(Client.class, CurrentServerInfo.class);
 
   static {
     instrumenter =
@@ -52,6 +54,16 @@ public class ClickHouseClientV2Singletons {
   @Nullable
   public static ServerInfo serverInfo(Client client) {
     return SERVER_INFO_FIELD.get(client);
+  }
+
+  public static ServerInfo currentServerInfo(Client client) {
+    CurrentServerInfo currentServerInfo = CURRENT_SERVER_INFO_FIELD.get(client);
+    if (currentServerInfo == null) {
+      currentServerInfo =
+          new CurrentServerInfo(ServerInfo.ofCurrentEndpoint(client.getEndpoints()));
+      CURRENT_SERVER_INFO_FIELD.set(client, currentServerInfo);
+    }
+    return currentServerInfo.serverInfo;
   }
 
   public static class ServerInfo {
@@ -175,6 +187,14 @@ public class ClickHouseClientV2Singletons {
     @Nullable
     public String getAddressGroup() {
       return addressGroup;
+    }
+  }
+
+  private static class CurrentServerInfo {
+    private final ServerInfo serverInfo;
+
+    private CurrentServerInfo(ServerInfo serverInfo) {
+      this.serverInfo = serverInfo;
     }
   }
 

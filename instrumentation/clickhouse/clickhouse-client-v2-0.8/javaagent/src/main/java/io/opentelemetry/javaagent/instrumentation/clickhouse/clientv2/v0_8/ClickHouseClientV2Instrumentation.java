@@ -64,13 +64,11 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         return null;
       }
 
-      // the constructor advice is the only writer of this snapshot; fall back when it is missing
       ServerInfo configuredServerInfo = ClickHouseClientV2Singletons.serverInfo(client);
-      ServerInfo currentServerInfo = configuredServerInfo;
       if (configuredServerInfo == null) {
         configuredServerInfo = ServerInfo.empty();
-        currentServerInfo = ServerInfo.ofCurrentEndpoint(client.getEndpoints());
       }
+      ServerInfo currentServerInfo = ClickHouseClientV2Singletons.currentServerInfo(client);
 
       String database = client.getConfiguration().get("database");
       Context parentContext = currentContext();
