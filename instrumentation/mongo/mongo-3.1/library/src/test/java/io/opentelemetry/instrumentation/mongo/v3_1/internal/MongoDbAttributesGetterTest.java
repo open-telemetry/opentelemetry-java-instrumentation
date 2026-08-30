@@ -24,6 +24,7 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
+import jnr.unixsocket.UnixSocketAddress;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
@@ -162,6 +163,18 @@ class MongoDbAttributesGetterTest {
         (SocketAddress)
             unixDomainSocketAddress.getMethod("of", String.class).invoke(null, socketPath);
     MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(socketAddress);
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+
+    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null)).isEqualTo(socketPath);
+    assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
+    assertThat(getter.getNetworkPeerInetSocketAddress(commandStartedEvent(), null)).isNull();
+  }
+
+  @Test
+  void jnrUnixNetworkPeerHasNoPort() {
+    String socketPath = Paths.get("/tmp/mongodb-27017.sock").toString();
+    MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(new UnixSocketAddress(socketPath));
     MongoDbAttributesGetter getter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
