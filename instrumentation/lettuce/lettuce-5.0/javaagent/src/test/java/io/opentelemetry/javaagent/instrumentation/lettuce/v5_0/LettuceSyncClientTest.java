@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -188,19 +189,32 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port))));
+                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
 
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.lettuce-5.0",
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        DB_NAMESPACE,
-        SERVER_ADDRESS,
-        SERVER_PORT,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT);
+    if (emitOldDatabaseSemconv()) {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.lettuce-5.0",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          SERVER_ADDRESS,
+          SERVER_PORT,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT);
+    } else {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.lettuce-5.0",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          SERVER_ADDRESS,
+          SERVER_PORT);
+    }
   }
 
   @Test
@@ -295,8 +309,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET URI_MUTATION_TEST_KEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port))));
+                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -317,8 +333,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port))));
+                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -339,8 +357,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port))));
+                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -364,8 +384,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port))));
+                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -387,8 +409,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "LPUSH TESTLIST ?"),
                             equalTo(maybeStable(DB_OPERATION), "LPUSH"),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port))));
+                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -412,8 +436,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                                 maybeStable(DB_STATEMENT),
                                 "HMSET user firstname ? lastname ? age ?"),
                             equalTo(maybeStable(DB_OPERATION), "HMSET"),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port))));
+                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -437,8 +463,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM"),
                             equalTo(maybeStable(DB_OPERATION), "HGETALL"),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port))));
+                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
