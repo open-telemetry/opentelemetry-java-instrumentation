@@ -46,38 +46,22 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
-  }
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .associate { suite ->
+      suite.name to register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-  val test403StableSemconv = register<Test>("test403StableSemconv") {
-    val test403 = sourceSets.named("test403")
-    testClassesDirs = files(test403.map { it.output.classesDirs })
-    classpath = files(test403.map { it.runtimeClasspath })
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
-  }
-
-  val test445StableSemconv = register<Test>("test445StableSemconv") {
-    val test445 = sourceSets.named("test445")
-    testClassesDirs = files(test445.map { it.output.classesDirs })
-    classpath = files(test445.map { it.runtimeClasspath })
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
-  }
+        jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+      }
+    }
 
   check {
-    dependsOn(testStableSemconv)
-    if (!otelProps.testLatestDeps) {
-      dependsOn(
-        testing.suites.named("test403"),
-        test403StableSemconv,
-        testing.suites.named("test445"),
-        test445StableSemconv,
-      )
+    if (otelProps.testLatestDeps) {
+      dependsOn(stableSemconvSuites.getValue("test"))
+    } else {
+      dependsOn(testing.suites, stableSemconvSuites.values)
     }
   }
 }
