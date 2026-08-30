@@ -104,6 +104,32 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
+  void clusterUsesTheEffectiveDefaultPort() {
+    RedisServerTarget target =
+        VertxRedisServerTargets.of(
+            new RedisOptions()
+                .setType(RedisClientType.CLUSTER)
+                .addConnectionString("redis://node1")
+                .addConnectionString("redis://node2:7001"));
+
+    assertThat(target.getAddress()).isEqualTo("node1:6379,node2:7001");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void clusterCollapsesTheEndpointsThatNameTheSameServer() {
+    RedisServerTarget target =
+        VertxRedisServerTargets.of(
+            new RedisOptions()
+                .setType(RedisClientType.CLUSTER)
+                .addConnectionString("redis://node1")
+                .addConnectionString("redis://node1:6379"));
+
+    assertThat(target.getAddress()).isEqualTo("node1");
+    assertThat(target.getPort()).isEqualTo(6379);
+  }
+
+  @Test
   void sentinelsAreScopedByTheirMaster() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
