@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -255,10 +256,15 @@ class ElasticsearchDbAttributesGetterTest {
     Context context = request.getPeerState().storeInContext(Context.root());
     SearchPeerState.capture(context, new InetSocketAddress(InetAddress.getLoopbackAddress(), 9200));
 
-    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("127.0.0.1");
-    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(9200);
+    assertThat(getter.getNetworkPeerAddress(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "127.0.0.1" : null);
+    assertThat(getter.getNetworkPeerPort(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? 9200 : null);
     assertThat(extractAttributes(request))
-        .isEqualTo(Attributes.of(NETWORK_PEER_ADDRESS, "127.0.0.1", NETWORK_PEER_PORT, 9200L));
+        .isEqualTo(
+            emitStableDatabaseSemconv()
+                ? Attributes.of(NETWORK_PEER_ADDRESS, "127.0.0.1", NETWORK_PEER_PORT, 9200L)
+                : Attributes.empty());
   }
 
   @Test

@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -125,11 +126,20 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "info"),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(
+                                DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "info" : null),
+                            equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "info" : null),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
-                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? peerAddress : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(httpHost.getPort())
+                                    : null),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort())),
@@ -167,10 +177,20 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "index"),
-                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
-                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(
+                                DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "index" : null),
+                            equalTo(
+                                DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "index" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? peerAddress : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(httpHost.getPort())
+                                    : null),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
@@ -179,10 +199,10 @@ class ElasticsearchClientTest {
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(
                                 DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("index"),
-                                emitStableDatabaseSemconv() ? null : "test-index"),
+                                emitOldDatabaseSemconv() ? "test-index" : null),
                             equalTo(
                                 DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("id"),
-                                emitStableDatabaseSemconv() ? null : "test-id"),
+                                emitOldDatabaseSemconv() ? "test-id" : null),
                             equalTo(
                                 DB_OPERATION_PARAMETER.getAttributeKey("index"),
                                 emitStableDatabaseSemconv() ? "test-index" : null),
@@ -250,10 +270,14 @@ class ElasticsearchClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "search"),
-                equalTo(NETWORK_PEER_ADDRESS, peerAddress),
-                equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
+                equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
+                equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "search" : null),
+                equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "search" : null),
+                equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? peerAddress : null),
+                equalTo(
+                    NETWORK_PEER_PORT,
+                    emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null),
                 equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                 equalTo(SERVER_PORT, httpHost.getPort()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
@@ -261,7 +285,16 @@ class ElasticsearchClientTest {
     if (V3_PREVIEW) {
       assertions.add(
           equalTo(
-              maybeStable(DB_STATEMENT), "{\"query\":{\"match\":{\"name\":{\"query\":\"?\"}}}}"));
+              DB_STATEMENT,
+              emitOldDatabaseSemconv()
+                  ? "{\"query\":{\"match\":{\"name\":{\"query\":\"?\"}}}}"
+                  : null));
+      assertions.add(
+          equalTo(
+              DB_QUERY_TEXT,
+              emitStableDatabaseSemconv()
+                  ? "{\"query\":{\"match\":{\"name\":{\"query\":\"?\"}}}}"
+                  : null));
     }
     return assertions;
   }
@@ -300,10 +333,19 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "info"),
-                            equalTo(NETWORK_PEER_ADDRESS, peerAddress),
-                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(
+                                DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
+                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "info" : null),
+                            equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "info" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? peerAddress : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(httpHost.getPort())
+                                    : null),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
@@ -363,11 +405,15 @@ class ElasticsearchClientTest {
                 .hasName(emitStableDatabaseSemconv() ? "info " + hostList : "info")
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                    equalTo(maybeStable(DB_OPERATION), "info"),
+                    equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
+                    equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
+                    equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "info" : null),
+                    equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "info" : null),
                     equalTo(HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(NETWORK_PEER_ADDRESS, peerAddress),
-                    equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                    equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? peerAddress : null),
+                    equalTo(
+                        NETWORK_PEER_PORT,
+                        emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null),
                     equalTo(URL_FULL, httpHost.toURI() + "/"),
                     equalTo(
                         SERVER_ADDRESS,

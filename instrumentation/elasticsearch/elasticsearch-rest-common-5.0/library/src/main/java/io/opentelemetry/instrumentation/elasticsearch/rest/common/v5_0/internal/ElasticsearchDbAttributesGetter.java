@@ -158,6 +158,9 @@ final class ElasticsearchDbAttributesGetter
   @Nullable
   public String getNetworkPeerAddress(
       ElasticsearchRestRequest request, @Nullable Response response) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
     InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
     return peerAddress != null ? peerAddress.getAddress().getHostAddress() : null;
   }
@@ -165,6 +168,9 @@ final class ElasticsearchDbAttributesGetter
   @Override
   @Nullable
   public Integer getNetworkPeerPort(ElasticsearchRestRequest request, @Nullable Response response) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
     InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
     return peerAddress != null ? peerAddress.getPort() : null;
   }
