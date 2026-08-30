@@ -516,7 +516,10 @@ class VertxSqlClientTest {
                       equalTo(DB_USER, USER_DB),
                       equalTo(DB_STATEMENT, "select * from test"),
                       equalTo(DB_OPERATION, "SELECT"),
-                      equalTo(DB_SQL_TABLE, "test")));
+                      equalTo(DB_SQL_TABLE, "test"),
+                      equalTo(maybeStablePeerService(), "test-peer-service"),
+                      equalTo(SERVER_ADDRESS, expectedHost),
+                      equalTo(SERVER_PORT, Long.valueOf(port))));
       return;
     }
     trace.hasSpansSatisfyingExactly(
@@ -532,11 +535,9 @@ class VertxSqlClientTest {
                     equalTo(
                         maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
                     equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
-                    equalTo(
-                        maybeStablePeerService(),
-                        emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                    equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : expectedHost),
-                    equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port))));
+                    equalTo(maybeStablePeerService(), "test-peer-service"),
+                    equalTo(SERVER_ADDRESS, expectedHost),
+                    equalTo(SERVER_PORT, Long.valueOf(port))));
   }
 
   private static void select(SqlClient client) throws Exception {

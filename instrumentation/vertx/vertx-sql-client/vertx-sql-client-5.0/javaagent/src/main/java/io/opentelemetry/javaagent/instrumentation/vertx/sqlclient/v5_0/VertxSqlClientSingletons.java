@@ -160,8 +160,7 @@ public class VertxSqlClientSingletons {
 
   public static <T> Future<T> attachConnectionData(
       Future<T> future, SqlConnectOptions connectOptions, String dbSystem) {
-    VertxSqlClientData data =
-        new VertxSqlClientData(new SqlConnectOptions(connectOptions), dbSystem, null);
+    VertxSqlClientData data = VertxSqlClientData.fromConnectOptions(connectOptions, dbSystem);
     return future.map(
         connection -> {
           connectionDataCache.put(connection, data);

@@ -25,7 +25,7 @@ public class VertxSqlClientDataCapture implements VertxSqlClientDataProvider {
     VertxSqlClientData capturedData =
         connectOptions == null
             ? null
-            : new VertxSqlClientData(new SqlConnectOptions(connectOptions), capturedDbSystem, null);
+            : VertxSqlClientData.fromConnectOptions(connectOptions, capturedDbSystem);
     List<Listener> listenersToNotify;
     synchronized (this) {
       data = capturedData;
