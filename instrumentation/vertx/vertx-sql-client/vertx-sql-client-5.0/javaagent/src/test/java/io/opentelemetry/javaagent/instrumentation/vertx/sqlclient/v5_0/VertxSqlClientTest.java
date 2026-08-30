@@ -180,6 +180,22 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testConnectingToGenericSupplierUsesDriverDbSystem() throws Exception {
+    SqlConnectOptions suppliedOptions = new SqlConnectOptions(connectOptions());
+    Pool supplierPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(() -> Future.succeededFuture(suppliedOptions))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    select(supplierPool);
+
+    testing.waitAndAssertTraces(VertxSqlClientTest::assertSupplierTarget);
+  }
+
+  @Test
   void testQueuedQueriesCaptureTheSuppliedOptions() throws Exception {
     AtomicInteger calls = new AtomicInteger();
     Promise<SqlConnectOptions> suppliedOptions = Promise.promise();

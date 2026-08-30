@@ -13,13 +13,19 @@ import javax.annotation.Nullable;
 public class VertxSqlClientDataCapture implements VertxSqlClientDataProvider {
 
   private final List<Listener> listeners = new ArrayList<>();
+  @Nullable private volatile String dbSystem;
   @Nullable private volatile VertxSqlClientData data;
 
+  public void setDbSystem(@Nullable String dbSystem) {
+    this.dbSystem = dbSystem;
+  }
+
   public void capture(@Nullable SqlConnectOptions connectOptions, @Nullable String dbSystem) {
+    String capturedDbSystem = this.dbSystem != null ? this.dbSystem : dbSystem;
     VertxSqlClientData capturedData =
         connectOptions == null
             ? null
-            : new VertxSqlClientData(new SqlConnectOptions(connectOptions), dbSystem, null);
+            : new VertxSqlClientData(new SqlConnectOptions(connectOptions), capturedDbSystem, null);
     List<Listener> listenersToNotify;
     synchronized (this) {
       data = capturedData;

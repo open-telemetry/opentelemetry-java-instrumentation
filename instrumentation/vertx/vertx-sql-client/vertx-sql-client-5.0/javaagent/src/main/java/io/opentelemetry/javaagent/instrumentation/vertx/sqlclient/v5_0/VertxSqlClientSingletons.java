@@ -155,6 +155,9 @@ public class VertxSqlClientSingletons {
 
   public static void setPoolDataCapture(
       Pool pool, @Nullable VertxSqlClientDataCapture dataCapture) {
+    if (dataCapture != null) {
+      dataCapture.setDbSystem(POOL_DB_SYSTEM.get(pool));
+    }
     POOL_DATA_CAPTURE.set(pool, dataCapture);
   }
 
