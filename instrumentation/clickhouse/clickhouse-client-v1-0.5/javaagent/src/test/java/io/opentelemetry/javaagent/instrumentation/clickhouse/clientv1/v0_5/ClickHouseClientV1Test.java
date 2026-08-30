@@ -33,6 +33,7 @@ import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.client.ClickHouseResponseSummary;
 import com.clickhouse.data.ClickHouseFormat;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -40,7 +41,9 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -672,6 +675,44 @@ class ClickHouseClientV1Test {
   }
 
   @Test
+  void testConfiguredNodeHostsRemoveCredentials() throws Exception {
+    ClickHouseNode credentialNode =
+        ClickHouseNode.builder(server).host("user:secret@configured.example").build();
+    ClickHouseNodes nodes = createNodes(ImmutableList.of(server, credentialNode));
+    nodes.update(credentialNode, ClickHouseNode.Status.FAULTY);
+    String addressGroup = host + ":" + port + ",configured.example:" + port;
+
+    ClickHouseResponse response =
+        client
+            .read(nodes)
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + TABLE_NAME)
+            .executeAndWait();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
   void testCopiedSealedNodeListReportsTheWholeConfiguredTarget() throws ClickHouseException {
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
     String addressGroup = host + ":" + port + "," + host + ":" + (port + 1);
@@ -792,5 +833,12 @@ class ClickHouseClientV1Test {
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  private static ClickHouseNodes createNodes(Collection<ClickHouseNode> nodes) throws Exception {
+    Constructor<ClickHouseNodes> constructor =
+        ClickHouseNodes.class.getDeclaredConstructor(Collection.class);
+    constructor.setAccessible(true);
+    return constructor.newInstance(nodes);
   }
 }
