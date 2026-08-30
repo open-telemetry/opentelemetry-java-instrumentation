@@ -60,7 +60,7 @@ public abstract class AbstractOpenSearchRestTest {
   protected OpensearchContainer opensearch;
   protected RestClient client;
   protected URI httpHost;
-  protected String peerAddress;
+  private String peerAddress;
 
   protected abstract InstrumentationExtension getTesting();
 
