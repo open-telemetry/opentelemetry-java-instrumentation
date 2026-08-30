@@ -23,8 +23,7 @@ public class ElasticsearchTransportServerTarget {
       if (endpoint.host == null) {
         return null;
       }
-      return new ElasticsearchTransportServerTarget(
-          endpoint.host, endpoint.port >= 0 ? endpoint.port : null);
+      return new ElasticsearchTransportServerTarget(endpoint.host, endpoint.port);
     }
 
     StringBuilder group = new StringBuilder();
@@ -41,9 +40,7 @@ public class ElasticsearchTransportServerTarget {
       } else {
         group.append(endpoint.host);
       }
-      if (endpoint.port >= 0) {
-        group.append(':').append(endpoint.port);
-      }
+      group.append(':').append(endpoint.port);
     }
     return new ElasticsearchTransportServerTarget(group.toString(), null);
   }
