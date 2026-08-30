@@ -175,14 +175,14 @@ public final class RediscalaServerTargets {
   private static RedisServerTarget ofSentinel(
       Object client, @Nullable Method sentinelsMethod, String master) {
     if (sentinelsMethod == null) {
-      return RedisServerTarget.ofLogicalName(master);
+      return null;
     }
     Object sentinels;
     try {
       sentinels = sentinelsMethod.invoke(client);
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured rediscala Sentinel servers", e);
-      return RedisServerTarget.ofLogicalName(master);
+      return null;
     }
     return ofSentinelEndpoints(sentinels, master);
   }
@@ -190,7 +190,7 @@ public final class RediscalaServerTargets {
   @Nullable
   private static RedisServerTarget ofSentinelEndpoints(Object sentinels, String master) {
     if (!(sentinels instanceof Iterable)) {
-      return RedisServerTarget.ofLogicalName(master);
+      return null;
     }
     List<String> endpoints = new ArrayList<>();
     Iterator<?> iterator = ((Iterable<?>) sentinels).iterator();
