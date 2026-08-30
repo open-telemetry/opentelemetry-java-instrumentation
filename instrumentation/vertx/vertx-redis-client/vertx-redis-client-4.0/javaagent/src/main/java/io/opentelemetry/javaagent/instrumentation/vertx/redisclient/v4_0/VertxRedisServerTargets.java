@@ -34,7 +34,7 @@ public final class VertxRedisServerTargets {
           sentinelEndpoints(options.getEndpoints()), options.getMasterName());
     }
     if (options.getType() == RedisClientType.STANDALONE) {
-      return RedisServerTarget.ofEndpoint(options.getEndpoint());
+      return RedisServerTarget.ofEndpoint(effectiveEndpoint(options.getEndpoint()));
     }
     return RedisServerTarget.ofEndpoints(options.getEndpoints());
   }
@@ -42,14 +42,17 @@ public final class VertxRedisServerTargets {
   private static List<String> sentinelEndpoints(List<String> connectionStrings) {
     List<String> endpoints = new ArrayList<>(connectionStrings.size());
     for (String connectionString : connectionStrings) {
-      RedisURI redisUri = new RedisURI(connectionString);
-      SocketAddress address = redisUri.socketAddress();
-      endpoints.add(
-          address.isInetSocket()
-              ? RedisServerTarget.endpoint(address.host(), address.port())
-              : connectionString);
+      endpoints.add(effectiveEndpoint(connectionString));
     }
     return endpoints;
+  }
+
+  private static String effectiveEndpoint(String connectionString) {
+    RedisURI redisUri = new RedisURI(connectionString);
+    SocketAddress address = redisUri.socketAddress();
+    return address.isInetSocket()
+        ? RedisServerTarget.endpoint(address.host(), address.port())
+        : connectionString;
   }
 
   public static void set(RedisURI redisUri, @Nullable RedisServerTarget target) {

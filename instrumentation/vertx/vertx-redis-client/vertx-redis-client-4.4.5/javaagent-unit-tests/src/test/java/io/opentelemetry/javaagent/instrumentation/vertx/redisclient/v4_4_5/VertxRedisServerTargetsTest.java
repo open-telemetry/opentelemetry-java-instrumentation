@@ -33,6 +33,16 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
+  void standaloneUsesTheEffectiveDefaultPort() {
+    RedisServerTarget target =
+        VertxRedisServerTargets.of(
+            new RedisStandaloneConnectOptions().setConnectionString("redis://host"));
+
+    assertThat(target.getAddress()).isEqualTo("host");
+    assertThat(target.getPort()).isEqualTo(6379);
+  }
+
+  @Test
   void standaloneDropsCredentialsDatabaseAndQuery() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
