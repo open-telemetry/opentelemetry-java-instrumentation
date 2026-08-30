@@ -27,13 +27,15 @@ public class Elasticsearch6TransportRequests {
   }
 
   public static void updateServerTarget(TransportClient client) {
-    List<ElasticsearchTransportServerTarget.Endpoint> endpoints = new ArrayList<>();
-    for (TransportAddress address : client.transportAddresses()) {
-      endpoints.add(
-          new ElasticsearchTransportServerTarget.Endpoint(
-              address.address().getHostString(), address.getPort()));
+    synchronized (client) {
+      List<ElasticsearchTransportServerTarget.Endpoint> endpoints = new ArrayList<>();
+      for (TransportAddress address : client.transportAddresses()) {
+        endpoints.add(
+            new ElasticsearchTransportServerTarget.Endpoint(
+                address.address().getHostString(), address.getPort()));
+      }
+      ElasticsearchTransportServerTargets.update(client, endpoints);
     }
-    ElasticsearchTransportServerTargets.update(client, endpoints);
   }
 
   private Elasticsearch6TransportRequests() {}
