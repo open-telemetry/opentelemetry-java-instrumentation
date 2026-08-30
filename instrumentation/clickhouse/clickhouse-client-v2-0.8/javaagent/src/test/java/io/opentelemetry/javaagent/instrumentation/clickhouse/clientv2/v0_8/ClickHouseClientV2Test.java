@@ -47,7 +47,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -706,13 +705,12 @@ class ClickHouseClientV2Test {
                                     : null))));
   }
 
-  @SuppressWarnings("unchecked")
   private static void replaceEndpoints(Client client, String endpoint) throws Exception {
     Field endpointsField = Client.class.getDeclaredField("endpoints");
     endpointsField.setAccessible(true);
-    Set<String> endpoints = (Set<String>) endpointsField.get(client);
-    endpoints.clear();
-    endpoints.add(endpoint);
+    try (Client replacementClient = new Client.Builder().addEndpoint(endpoint).build()) {
+      endpointsField.set(client, endpointsField.get(replacementClient));
+    }
   }
 
   private static Object clearServerInfo(Client client) throws Exception {
