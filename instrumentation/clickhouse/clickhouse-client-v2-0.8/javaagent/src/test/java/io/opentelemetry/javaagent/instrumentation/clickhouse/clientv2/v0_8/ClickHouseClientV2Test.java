@@ -37,7 +37,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlPa
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -578,8 +580,7 @@ class ClickHouseClientV2Test {
             .setOption("compress", "false")
             .build();
     cleanup.deferCleanup(testClient);
-    ClickHouseClientV2Singletons.clearServerInfo(testClient);
-    assertThat(ClickHouseClientV2Singletons.serverInfo(testClient)).isNull();
+    assertThat(clearServerInfo(testClient)).isNull();
 
     QueryResponse response = testClient.query("select * from " + TABLE_NAME).join();
     response.close();
@@ -694,5 +695,35 @@ class ClickHouseClientV2Test {
                                 emitStableDatabaseSemconv()
                                     ? thrown.getClass().getName()
                                     : null))));
+  }
+
+  private static Object clearServerInfo(Client client) throws Exception {
+    String singletonsName =
+        "io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8."
+            + "ClickHouseClientV2Singletons";
+    ClassLoader clientClassLoader = client.getClass().getClassLoader();
+    Class<?> singletons;
+    try {
+      singletons = Class.forName(singletonsName, true, clientClassLoader);
+    } catch (ClassNotFoundException ignored) {
+      Class<?> registry =
+          AgentClassLoaderAccess.loadClass(
+              "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+      Method getInstrumentationClassLoader =
+          registry.getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class);
+      ClassLoader instrumentationClassLoader =
+          (ClassLoader)
+              getInstrumentationClassLoader.invoke(
+                  null,
+                  "io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8."
+                      + "ClickHouseClientV2InstrumentationModule",
+                  clientClassLoader);
+      singletons = Class.forName(singletonsName, true, instrumentationClassLoader);
+    }
+
+    Method clearServerInfo = singletons.getDeclaredMethod("clearServerInfo", Client.class);
+    clearServerInfo.setAccessible(true);
+    clearServerInfo.invoke(null, client);
+    return singletons.getMethod("serverInfo", Client.class).invoke(null, client);
   }
 }

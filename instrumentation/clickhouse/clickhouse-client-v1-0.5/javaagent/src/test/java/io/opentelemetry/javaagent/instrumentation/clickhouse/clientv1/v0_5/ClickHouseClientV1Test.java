@@ -614,9 +614,6 @@ class ClickHouseClientV1Test {
             .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
             .query("select * from " + TABLE_NAME);
 
-    assertThat(ClickHouseClientV1Singletons.serverAddress(request)).isEqualTo(host);
-    assertThat(ClickHouseClientV1Singletons.serverPort(request)).isEqualTo(port);
-
     ClickHouseResponse response = client.executeAndWait(request);
     response.close();
 
@@ -713,15 +710,39 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testSealedMutationPreservesConfiguredTarget() {
+  void testSealedMutationPreservesConfiguredTarget() throws ClickHouseException {
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
     String addressGroup = host + ":" + port + "," + host + ":" + (port + 1);
     ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
 
     ClickHouseRequest<?> request =
-        client.read(nodes).write().table(DATABASE_NAME, TABLE_NAME).seal();
+        client.read(nodes).write().query("insert into " + TABLE_NAME + " values('4')").seal();
 
-    assertThat(ClickHouseClientV1Singletons.serverAddressGroup(request)).isEqualTo(addressGroup);
+    ClickHouseResponse response = client.executeAndWait(request);
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "insert into " + TABLE_NAME + " values(?)"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "insert test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "INSERT"))));
   }
 
   @Test
