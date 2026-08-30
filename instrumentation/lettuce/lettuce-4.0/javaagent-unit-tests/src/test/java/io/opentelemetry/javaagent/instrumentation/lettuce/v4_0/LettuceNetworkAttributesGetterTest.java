@@ -13,6 +13,7 @@ import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.protocol.Command;
 import com.lambdaworks.redis.protocol.CommandType;
 import com.lambdaworks.redis.protocol.RedisCommand;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -52,6 +53,8 @@ class LettuceNetworkAttributesGetterTest {
     RedisCommand<?, ?, ?> command = command();
     LettuceSingletons.COMMAND_ADDRESS.set(
         command, InetSocketAddress.createUnresolved("redis.example", PORT));
+    LettuceSingletons.COMMAND_TARGET.set(
+        command, RedisServerTarget.ofHostAndPort("redis.example", PORT));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
