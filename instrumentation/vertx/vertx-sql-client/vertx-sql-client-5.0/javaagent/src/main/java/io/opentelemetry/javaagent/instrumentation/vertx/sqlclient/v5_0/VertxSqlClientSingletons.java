@@ -48,6 +48,8 @@ public class VertxSqlClientSingletons {
       VirtualField.find(SqlClientBase.class, VertxSqlClientDataProvider.class);
 
   private static final Cache<Object, VertxSqlClientData> connectionDataCache = Cache.weak();
+  private static final Cache<Object, ConnectionDataListener> commandDataListenerCache =
+      Cache.weak();
 
   private static final VirtualField<Pool, VertxSqlClientDataCapture> POOL_DATA_CAPTURE =
       VirtualField.find(Pool.class, VertxSqlClientDataCapture.class);
@@ -56,6 +58,8 @@ public class VertxSqlClientSingletons {
       BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
 
   private static final ThreadLocal<VertxSqlClientDataCapture> buildingDataCapture =
+      new ThreadLocal<>();
+  private static final ThreadLocal<ConnectionDataListener> pendingConnectionDataListener =
       new ThreadLocal<>();
 
   @Nullable
@@ -98,6 +102,33 @@ public class VertxSqlClientSingletons {
   public static void setCommandContext(Object command, Context context) {
     if (COMMAND_CONTEXT != null) {
       COMMAND_CONTEXT.set(command, context);
+    }
+  }
+
+  public static void setPendingConnectionDataListener(@Nullable ConnectionDataListener listener) {
+    if (listener == null) {
+      pendingConnectionDataListener.remove();
+    } else {
+      pendingConnectionDataListener.set(listener);
+    }
+  }
+
+  public static void capturePendingConnectionDataListener(Object command) {
+    ConnectionDataListener listener = pendingConnectionDataListener.get();
+    if (listener != null) {
+      commandDataListenerCache.put(command, listener);
+    }
+  }
+
+  public static void notifyConnectionDataListener(Object command, Object connection) {
+    ConnectionDataListener listener = commandDataListenerCache.get(command);
+    if (listener == null) {
+      return;
+    }
+    VertxSqlClientData data = getConnectionData(connection);
+    if (data != null) {
+      commandDataListenerCache.remove(command);
+      listener.onConnectionData(data);
     }
   }
 
@@ -251,6 +282,10 @@ public class VertxSqlClientSingletons {
     return clientBuilder instanceof ClientBuilderBase
         ? BUILDER_DATABASES.get((ClientBuilderBase<?>) clientBuilder)
         : null;
+  }
+
+  public interface ConnectionDataListener {
+    void onConnectionData(VertxSqlClientData data);
   }
 
   private VertxSqlClientSingletons() {}

@@ -64,7 +64,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class QueryAdvice {
-    public static class AdviceScope implements VertxSqlClientDataCapture.Listener {
+    public static class AdviceScope implements VertxSqlClientSingletons.ConnectionDataListener {
       private final CallDepth callDepth;
       @Nullable private final String sql;
       private final boolean parameterizedQuery;
@@ -152,10 +152,10 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
                 batchSize,
                 Context.current(),
                 dataCapture);
-        VertxSqlClientData data =
-            dataCapture != null ? dataCapture.addListener(adviceScope) : dataProvider.get();
+        VertxSqlClientData data = dataCapture != null ? null : dataProvider.get();
         if (data == null) {
           if (dataCapture != null) {
+            VertxSqlClientSingletons.setPendingConnectionDataListener(adviceScope);
             promiseInternal.future().onFailure(ignored -> adviceScope.cancelCapture());
           }
           return adviceScope;
@@ -207,18 +207,18 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
       private synchronized void cancelCapture() {
         if (context == null) {
           cancelled = true;
-          if (dataCapture != null) {
-            dataCapture.removeListener(this);
-          }
         }
       }
 
       @Override
-      public void onCapture(VertxSqlClientData data) {
+      public void onConnectionData(VertxSqlClientData data) {
         startSpan(data);
       }
 
       public synchronized void end(@Nullable Throwable throwable) {
+        if (dataCapture != null) {
+          VertxSqlClientSingletons.setPendingConnectionDataListener(null);
+        }
         if (callDepth.decrementAndGet() > 0) {
           return;
         }

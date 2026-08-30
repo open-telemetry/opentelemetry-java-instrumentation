@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -292,6 +293,41 @@ class VertxSqlClientTest {
     testing.waitAndAssertTraces(
         trace -> assertSupplierTarget(trace, host),
         trace -> assertSupplierTarget(trace, alternateHost));
+  }
+
+  @Test
+  void testConcurrentSupplierPoolQueriesKeepTheirOptions() throws Exception {
+    AtomicInteger calls = new AtomicInteger();
+    Promise<SqlConnectOptions> firstOptions = Promise.promise();
+    Promise<SqlConnectOptions> secondOptions = Promise.promise();
+    PgConnectOptions first = connectOptions();
+    String alternateHost = host.equals("localhost") ? "127.0.0.1" : "localhost";
+    PgConnectOptions second = new PgConnectOptions(first).setHost(alternateHost);
+    Pool supplierPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(
+                () -> calls.getAndIncrement() == 0 ? firstOptions.future() : secondOptions.future())
+            .with(new PoolOptions().setMaxSize(2))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    Future<?> firstResult = supplierPool.query("select * from test").execute();
+    Future<?> secondResult = supplierPool.query("select * from test").execute();
+    firstOptions.complete(first);
+    secondOptions.complete(second);
+    Future.all(firstResult, secondResult)
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    assertThat(calls).hasValue(2);
+    List<String> expectedHosts = asList(host, alternateHost);
+    Collections.sort(expectedHosts);
+    testing.waitAndAssertSortedTraces(
+        comparingRootSpanAttribute(SERVER_ADDRESS),
+        trace -> assertSupplierTarget(trace, expectedHosts.get(0)),
+        trace -> assertSupplierTarget(trace, expectedHosts.get(1)));
   }
 
   @Test
