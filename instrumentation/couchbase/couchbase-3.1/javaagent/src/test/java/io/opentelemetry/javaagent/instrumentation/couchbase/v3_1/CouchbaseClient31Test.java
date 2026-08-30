@@ -143,7 +143,7 @@ class CouchbaseClient31Test {
       dispatchAttributes.add(
           equalTo(
               NETWORK_PEER_ADDRESS, InetAddress.getByName(couchbase.getHost()).getHostAddress()));
-      dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, serverPort()));
+      dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, kvPort));
     }
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
