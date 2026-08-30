@@ -163,7 +163,8 @@ public final class DbExecution {
     if (serverAddress == null
         || serverAddress.indexOf('/') >= 0
         || serverAddress.indexOf('?') >= 0
-        || serverAddress.indexOf('#') >= 0) {
+        || serverAddress.indexOf('#') >= 0
+        || (serverPort != null && !isPort(serverPort))) {
       return null;
     }
 
@@ -246,12 +247,22 @@ public final class DbExecution {
     if (value.isEmpty()) {
       return false;
     }
+    int port = 0;
     for (int i = 0; i < value.length(); i++) {
-      if (value.charAt(i) < '0' || value.charAt(i) > '9') {
+      char c = value.charAt(i);
+      if (c < '0' || c > '9') {
+        return false;
+      }
+      port = port * 10 + c - '0';
+      if (!isPort(port)) {
         return false;
       }
     }
     return true;
+  }
+
+  private static boolean isPort(int value) {
+    return value >= 0 && value <= 65535;
   }
 
   private static boolean isUnbracketedIpv6(String host) {

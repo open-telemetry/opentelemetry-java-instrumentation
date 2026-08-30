@@ -239,13 +239,30 @@ class DbExecutionTest {
         "[]:5432,host2",
         ":5432,host2",
         "host1,not:an:ipv6",
-        "host1,[not:an:ipv6]"
+        "host1,[not:an:ipv6]",
+        "host1:65536,host2"
       })
   void dbExecutionRejectsMalformedMultiHostAddress(String host) {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
             .option(ConnectionFactoryOptions.DRIVER, "postgresql")
             .option(ConnectionFactoryOptions.HOST, host)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.isServerAddressGroup()).isTrue();
+    assertThat(dbExecution.getServerAddressGroup()).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, 65536, 70000})
+  void dbExecutionRejectsOutOfRangeSharedPort(int port) {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, "host1,host2")
+            .option(ConnectionFactoryOptions.PORT, port)
             .build();
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
