@@ -69,13 +69,13 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
   @Nullable
   @Override
   public String getNetworkPeerAddress(HbaseRequest request, @Nullable Void unused) {
-    return request.getNetworkPeerAddress();
+    return emitStableDatabaseSemconv() ? request.getNetworkPeerAddress() : null;
   }
 
   @Nullable
   @Override
   public Integer getNetworkPeerPort(HbaseRequest request, @Nullable Void unused) {
-    return request.getNetworkPeerPort();
+    return emitStableDatabaseSemconv() ? request.getNetworkPeerPort() : null;
   }
 
   @Nullable
