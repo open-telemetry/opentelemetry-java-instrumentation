@@ -660,7 +660,21 @@ public abstract class AbstractHbaseTest {
     try (Table table = connection.getTable(TABLE_NAME)) {
       table.get(new Get(Bytes.toBytes(ROW_1)));
     }
-    testing().waitForTraces(1);
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.satisfies(
+                            spanData -> {
+                              assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
+                                  .isEqualTo(networkPeerAddress);
+                              assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
+                                  .isEqualTo(
+                                      networkPeerAddress == null
+                                          ? null
+                                          : Long.valueOf(REGION_SERVER_PORT));
+                            })));
     if (reportsNetworkPeerAddress()) {
       assertDurationMetric(
           testing(),
