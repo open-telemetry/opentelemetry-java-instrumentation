@@ -18,6 +18,9 @@ import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -208,15 +211,35 @@ public final class DbExecution {
       if (closingBracket <= 1 || value.indexOf(']', closingBracket + 1) >= 0) {
         return false;
       }
+      if (!isIpv6Literal(value.substring(1, closingBracket))) {
+        return false;
+      }
       String rest = value.substring(closingBracket + 1);
       return rest.isEmpty() || (rest.startsWith(":") && isPort(rest.substring(1)));
     }
     if (value.indexOf(']') >= 0) {
       return false;
     }
-    int colon = value.lastIndexOf(':');
-    return colon < 0
-        || (colon > 0 && (value.indexOf(':') != colon || isPort(value.substring(colon + 1))));
+    int firstColon = value.indexOf(':');
+    if (firstColon < 0) {
+      return true;
+    }
+    int lastColon = value.lastIndexOf(':');
+    if (firstColon != lastColon) {
+      return isIpv6Literal(value);
+    }
+    return firstColon > 0 && isPort(value.substring(firstColon + 1));
+  }
+
+  private static boolean isIpv6Literal(String value) {
+    if (value.indexOf(':') < 0) {
+      return false;
+    }
+    try {
+      return InetAddress.getByName(value) instanceof Inet6Address;
+    } catch (UnknownHostException ignored) {
+      return false;
+    }
   }
 
   private static boolean isPort(String value) {
