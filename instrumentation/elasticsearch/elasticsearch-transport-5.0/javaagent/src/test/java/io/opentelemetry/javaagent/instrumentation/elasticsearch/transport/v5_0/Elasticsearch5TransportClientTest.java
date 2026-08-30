@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
@@ -17,6 +18,7 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common
 import java.io.File;
 import java.net.InetAddress;
 import java.util.UUID;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -150,18 +152,19 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   }
 
   @Test
-  void explicitAddressChangesUpdateTheTarget() {
+  void filteredClientTracksExplicitAddressChanges() {
     TransportClient singleAddressClient = newClient();
+    Client filteredClient = singleAddressClient.filterWithHeader(emptyMap());
     testing.runWithSpan(
         "setup",
         () -> {
           singleAddressClient.addTransportAddress(tcpPublishAddress);
-          clusterHealth(singleAddressClient);
+          clusterHealth(filteredClient);
         });
     testing.waitForTraces(1);
     testing.clearData();
 
-    clusterHealth(singleAddressClient);
+    clusterHealth(filteredClient);
     assertConfiguredTarget(null);
     testing.clearData();
 
@@ -170,7 +173,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     testing.waitForTraces(1);
     testing.clearData();
 
-    clusterHealth(singleAddressClient);
+    clusterHealth(filteredClient);
     assertConfiguredTarget(
         tcpPublishAddress.getHost()
             + ":"
@@ -186,11 +189,11 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     testing.waitForTraces(1);
     testing.clearData();
 
-    clusterHealth(singleAddressClient);
+    clusterHealth(filteredClient);
     assertConfiguredTarget(null);
   }
 
-  private static void clusterHealth(TransportClient client) {
+  private static void clusterHealth(Client client) {
     client.admin().cluster().prepareHealth().execute().actionGet(TIMEOUT);
   }
 

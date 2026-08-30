@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.FilterClientInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -29,6 +30,9 @@ public class Elasticsearch53TransportClientInstrumentationModule extends Instrum
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new AbstractClientInstrumentation(), new TransportClientInstrumentation());
+    return asList(
+        new AbstractClientInstrumentation(),
+        new FilterClientInstrumentation(),
+        new TransportClientInstrumentation());
   }
 }
