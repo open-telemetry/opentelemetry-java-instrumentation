@@ -102,9 +102,11 @@ public final class DbExecution {
     this.serverPort =
         factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
     ServerTarget configuredServerTarget =
-        isServerAddressGroupCandidate(serverAddress)
-            ? new ServerTarget(sanitizeServerAddressGroup(serverAddress, serverPort), null)
-            : sanitizeServerTarget(serverAddress, serverPort);
+        isUnixDomainSocket(serverAddress)
+            ? sanitizeUnixDomainSocket(serverAddress)
+            : isServerAddressGroupCandidate(serverAddress)
+                ? new ServerTarget(sanitizeServerAddressGroup(serverAddress, serverPort), null)
+                : sanitizeServerTarget(serverAddress, serverPort);
     this.configuredServerAddress = configuredServerTarget.address;
     this.configuredServerPort = configuredServerTarget.port;
     this.connectionString =
@@ -150,6 +152,23 @@ public final class DbExecution {
   @Nullable
   public Integer getConfiguredServerPort() {
     return configuredServerPort;
+  }
+
+  private static boolean isUnixDomainSocket(@Nullable String serverAddress) {
+    return serverAddress != null && serverAddress.startsWith("/");
+  }
+
+  private static ServerTarget sanitizeUnixDomainSocket(@Nullable String serverAddress) {
+    if (serverAddress == null
+        || serverAddress.length() == 1
+        || serverAddress.indexOf(',') >= 0
+        || serverAddress.indexOf('=') >= 0
+        || serverAddress.indexOf('@') >= 0
+        || serverAddress.indexOf('?') >= 0
+        || serverAddress.indexOf('#') >= 0) {
+      return ServerTarget.EMPTY;
+    }
+    return new ServerTarget(serverAddress, null);
   }
 
   private static boolean isServerAddressGroupCandidate(@Nullable String serverAddress) {

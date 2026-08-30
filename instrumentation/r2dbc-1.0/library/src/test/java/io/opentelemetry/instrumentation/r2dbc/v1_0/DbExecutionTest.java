@@ -289,8 +289,47 @@ class DbExecutionTest {
     assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
+  @Test
+  void dbExecutionPreservesUnixDomainSocketWithoutPort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, "/var/run/postgresql/.s.PGSQL.5432")
+            .option(ConnectionFactoryOptions.PORT, 5432)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress())
+        .isEqualTo("/var/run/postgresql/.s.PGSQL.5432");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
   @ParameterizedTest
-  @CsvSource({"host1,host1,5432", "/var/run/postgresql,,", "[2001:db8::1],2001:db8::1,5432"})
+  @ValueSource(
+      strings = {
+        "/",
+        "/var/run/postgresql,host2",
+        "/var/run/postgresql=secret",
+        "/var/run/user:secret@postgresql",
+        "/var/run/postgresql?password=secret",
+        "/var/run/postgresql#fragment"
+      })
+  void dbExecutionRejectsMalformedOrSensitiveUnixDomainSocket(String host) {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, host)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isNull();
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @ParameterizedTest
+  @CsvSource({"host1,host1,5432", "[2001:db8::1],2001:db8::1,5432"})
   void dbExecutionTreatsSingleHostAsSingular(
       String host, String configuredAddress, Integer configuredPort) {
     ConnectionFactoryOptions factoryOptions =

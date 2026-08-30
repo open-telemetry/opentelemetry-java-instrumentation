@@ -200,6 +200,22 @@ class R2dbcSqlAttributesGetterTest {
     assertThat(getter.getServerPort(dbExecution)).isEqualTo(5432);
   }
 
+  @Test
+  void unixDomainSocketOmitsPortFromStableTarget() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, "/var/run/postgresql/.s.PGSQL.5432")
+                .option(ConnectionFactoryOptions.PORT, 5432)
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("/var/run/postgresql/.s.PGSQL.5432");
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+  }
+
   private static QueryExecutionInfo queryExecutionInfo() {
     return MockQueryExecutionInfo.builder()
         .queryInfo(new QueryInfo("SELECT 1"))
