@@ -162,7 +162,8 @@ class DbExecutionTest {
 
     assertThat(dbExecution.getServerAddress()).isEqualTo("host1:3306,host2:3307");
     assertThat(dbExecution.getServerPort()).isNull();
-    assertThat(dbExecution.getServerAddressGroup()).isEqualTo("host1:3306,host2:3307");
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1:3306,host2:3307");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
   @Test
@@ -178,7 +179,8 @@ class DbExecutionTest {
 
     assertThat(dbExecution.getServerAddress()).isEqualTo("host1,host2");
     assertThat(dbExecution.getServerPort()).isEqualTo(3306);
-    assertThat(dbExecution.getServerAddressGroup()).isEqualTo("host1:3306,host2:3306");
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1:3306,host2:3306");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
   @Test
@@ -193,7 +195,7 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.getServerAddressGroup())
+    assertThat(dbExecution.getConfiguredServerAddress())
         .isEqualTo("host1:3307,[2001:db8::1]:3308,host3:3306,[2001:db8::2]:3306");
   }
 
@@ -208,7 +210,7 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.getServerAddressGroup())
+    assertThat(dbExecution.getConfiguredServerAddress())
         .isEqualTo("[2001:db8::1]:5432,[2001:db8::2]:5432");
   }
 
@@ -222,8 +224,7 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.isServerAddressGroup()).isTrue();
-    assertThat(dbExecution.getServerAddressGroup()).isEqualTo("host1,host2");
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1,host2");
   }
 
   @ParameterizedTest
@@ -254,8 +255,8 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.isServerAddressGroup()).isTrue();
-    assertThat(dbExecution.getServerAddressGroup()).isNull();
+    assertThat(dbExecution.getConfiguredServerAddress()).isNull();
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
   @ParameterizedTest
@@ -270,13 +271,14 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.isServerAddressGroup()).isTrue();
-    assertThat(dbExecution.getServerAddressGroup()).isNull();
+    assertThat(dbExecution.getConfiguredServerAddress()).isNull();
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"host1", "/var/run/postgresql", "[2001:db8::1]"})
-  void dbExecutionTreatsSingleHostAsSingular(String host) {
+  @CsvSource({"host1,host1,5432", "/var/run/postgresql,,", "[2001:db8::1],2001:db8::1,5432"})
+  void dbExecutionTreatsSingleHostAsSingular(
+      String host, String configuredAddress, Integer configuredPort) {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
             .option(ConnectionFactoryOptions.DRIVER, "postgresql")
@@ -287,8 +289,8 @@ class DbExecutionTest {
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
     assertThat(dbExecution.getServerAddress()).isEqualTo(host);
-    assertThat(dbExecution.isServerAddressGroup()).isFalse();
-    assertThat(dbExecution.getServerAddressGroup()).isNull();
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo(configuredAddress);
+    assertThat(dbExecution.getConfiguredServerPort()).isEqualTo(configuredPort);
   }
 
   private static QueryExecutionInfo queryExecutionInfo() {

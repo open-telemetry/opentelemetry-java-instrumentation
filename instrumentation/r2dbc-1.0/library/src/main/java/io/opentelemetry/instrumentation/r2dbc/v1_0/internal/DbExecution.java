@@ -70,8 +70,6 @@ public final class DbExecution {
   @Nullable private final String namespace;
   @Nullable private final String serverAddress;
   @Nullable private final Integer serverPort;
-  private final boolean serverAddressGroupCandidate;
-  @Nullable private final String serverAddressGroup;
   @Nullable private final String configuredServerAddress;
   @Nullable private final Integer configuredServerPort;
   private final String connectionString;
@@ -103,12 +101,9 @@ public final class DbExecution {
         factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
     this.serverPort =
         factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
-    this.serverAddressGroupCandidate = isServerAddressGroupCandidate(serverAddress);
-    this.serverAddressGroup =
-        serverAddressGroupCandidate ? sanitizeServerAddressGroup(serverAddress, serverPort) : null;
     ServerTarget configuredServerTarget =
-        serverAddressGroupCandidate
-            ? new ServerTarget(serverAddressGroup, null)
+        isServerAddressGroupCandidate(serverAddress)
+            ? new ServerTarget(sanitizeServerAddressGroup(serverAddress, serverPort), null)
             : sanitizeServerTarget(serverAddress, serverPort);
     this.configuredServerAddress = configuredServerTarget.address;
     this.configuredServerPort = configuredServerTarget.port;
@@ -145,15 +140,6 @@ public final class DbExecution {
   @Nullable
   public Integer getServerPort() {
     return serverPort;
-  }
-
-  @Nullable
-  public String getServerAddressGroup() {
-    return serverAddressGroup;
-  }
-
-  public boolean isServerAddressGroup() {
-    return serverAddressGroupCandidate;
   }
 
   @Nullable
