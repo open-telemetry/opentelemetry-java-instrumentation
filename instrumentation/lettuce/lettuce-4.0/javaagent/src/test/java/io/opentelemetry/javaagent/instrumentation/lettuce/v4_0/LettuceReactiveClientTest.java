@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -141,10 +140,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null)),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -179,10 +178,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -224,10 +223,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null)),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -257,10 +256,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -286,10 +285,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -319,10 +318,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -356,10 +355,11 @@ class LettuceReactiveClientTest {
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, port),
                                   equalTo(
-                                      NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                                      NETWORK_PEER_ADDRESS,
+                                      emitStableDatabaseSemconv() ? ip : null),
                                   equalTo(
                                       NETWORK_PEER_PORT,
-                                      emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
+                                      emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
         });
   }
 
@@ -389,10 +389,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null)),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
@@ -403,10 +403,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -440,10 +440,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null)),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
@@ -454,10 +454,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -493,10 +493,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null)),
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
@@ -507,10 +507,10 @@ class LettuceReactiveClientTest {
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitOldDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitOldDatabaseSemconv() ? Long.valueOf(port) : null))));
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   private static void withIsolatedContainer(

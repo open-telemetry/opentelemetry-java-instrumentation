@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
@@ -78,7 +77,7 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   @Nullable
   @Override
   public String getNetworkPeerAddress(LettuceBatchRequest request, @Nullable Void unused) {
-    if (!emitOldDatabaseSemconv()) {
+    if (!emitStableDatabaseSemconv()) {
       return null;
     }
     InetSocketAddress peerAddress = request.getPeerAddress();
@@ -90,7 +89,7 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   @Nullable
   @Override
   public Integer getNetworkPeerPort(LettuceBatchRequest request, @Nullable Void unused) {
-    if (!emitOldDatabaseSemconv()) {
+    if (!emitStableDatabaseSemconv()) {
       return null;
     }
     InetSocketAddress peerAddress = request.getPeerAddress();
