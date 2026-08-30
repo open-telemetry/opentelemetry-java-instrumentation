@@ -18,11 +18,12 @@ public class Elasticsearch53TransportRequests {
 
   static ElasticTransportRequest request(
       AbstractClient client, Object action, Object actionRequest) {
+    ElasticsearchTransportServerTarget target = ElasticsearchTransportServerTargets.get(client);
     return ElasticTransportRequest.create(
         action,
         actionRequest,
-        ElasticsearchTransportServerTargets.address(client),
-        ElasticsearchTransportServerTargets.port(client));
+        target == null ? null : target.getAddress(),
+        target == null ? null : target.getPort());
   }
 
   public static void updateServerTarget(TransportClient client) {

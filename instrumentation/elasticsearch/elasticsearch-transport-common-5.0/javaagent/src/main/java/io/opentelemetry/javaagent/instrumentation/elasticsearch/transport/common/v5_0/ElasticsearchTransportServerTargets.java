@@ -22,15 +22,8 @@ public class ElasticsearchTransportServerTargets {
   }
 
   @Nullable
-  public static String address(AbstractClient client) {
-    ElasticsearchTransportServerTarget target = SERVER_TARGET.get(client);
-    return target == null ? null : target.getAddress();
-  }
-
-  @Nullable
-  public static Integer port(AbstractClient client) {
-    ElasticsearchTransportServerTarget target = SERVER_TARGET.get(client);
-    return target == null ? null : target.getPort();
+  public static ElasticsearchTransportServerTarget get(AbstractClient client) {
+    return SERVER_TARGET.get(client);
   }
 
   private ElasticsearchTransportServerTargets() {}

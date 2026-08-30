@@ -12,6 +12,7 @@ import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.AbstractElasticsearchTransportClientTest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTarget;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTargets;
 import java.io.File;
 import java.net.InetAddress;
@@ -117,7 +118,10 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           addressListClient.addTransportAddress(tcpPublishAddress);
           // nothing listens on this address; the configured target names it all the same
           addressListClient.addTransportAddress(addressThatIsDown());
-          assertThat(ElasticsearchTransportServerTargets.address(addressListClient))
+          ElasticsearchTransportServerTarget target =
+              ElasticsearchTransportServerTargets.get(addressListClient);
+          assertThat(target).isNotNull();
+          assertThat(target.getAddress())
               .isEqualTo(
                   tcpPublishAddress.getHost()
                       + ":"
@@ -126,7 +130,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
                       + addressThatIsDown().getHost()
                       + ":"
                       + addressThatIsDown().getPort());
-          assertThat(ElasticsearchTransportServerTargets.port(addressListClient)).isNull();
+          assertThat(target.getPort()).isNull();
           // adding an address makes the client reach out to it, which reports telemetry of its own
           clusterHealth(addressListClient);
         });

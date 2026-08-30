@@ -25,8 +25,10 @@ class ElasticsearchTransportServerTargetsTest {
     ElasticsearchTransportServerTargets.update(
         client, singletonList(new Endpoint("10.0.0.2", 9301)));
 
-    assertThat(ElasticsearchTransportServerTargets.address(client)).isEqualTo("10.0.0.2");
-    assertThat(ElasticsearchTransportServerTargets.port(client)).isEqualTo(9301);
+    ElasticsearchTransportServerTarget target = ElasticsearchTransportServerTargets.get(client);
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("10.0.0.2");
+    assertThat(target.getPort()).isEqualTo(9301);
   }
 
   @Test
@@ -37,7 +39,6 @@ class ElasticsearchTransportServerTargetsTest {
         client, singletonList(new Endpoint("10.0.0.1", 9300)));
     ElasticsearchTransportServerTargets.update(client, emptyList());
 
-    assertThat(ElasticsearchTransportServerTargets.address(client)).isNull();
-    assertThat(ElasticsearchTransportServerTargets.port(client)).isNull();
+    assertThat(ElasticsearchTransportServerTargets.get(client)).isNull();
   }
 }
