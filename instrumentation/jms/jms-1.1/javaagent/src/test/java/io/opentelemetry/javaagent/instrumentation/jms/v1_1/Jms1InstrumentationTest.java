@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.CompletableFuture;
@@ -28,8 +29,10 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
+import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
+import javax.jms.TopicSubscriber;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -80,6 +83,52 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false),
                             subscriptionName("durable-subscription"))));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs
+  @Test
+  void capturesDurableSubscriberNameBeforeListenerRegistrationReturns() throws JMSException {
+    String topicName = "early-listener-topic";
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+
+    TopicSubscriber consumer =
+        (TopicSubscriber)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {TestTopicSubscriber.class},
+                (proxy, method, args) -> {
+                  if (method.getName().equals("setMessageListener")) {
+                    ((MessageListener) args[0]).onMessage(message);
+                  }
+                  return null;
+                });
+    Session registrationSession =
+        (Session)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {TestSession.class},
+                (proxy, method, args) -> consumer);
+
+    registrationSession.createDurableSubscriber(topic, "early-listener-subscription");
+    consumer.setMessageListener(listener);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, false),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName("early-listener-subscription"))));
   }
 
   @Test
@@ -339,4 +388,9 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
   }
+
+  // These interfaces are package-private so that the agent instruments the generated proxy classes.
+  interface TestSession extends Session {}
+
+  interface TestTopicSubscriber extends TopicSubscriber {}
 }

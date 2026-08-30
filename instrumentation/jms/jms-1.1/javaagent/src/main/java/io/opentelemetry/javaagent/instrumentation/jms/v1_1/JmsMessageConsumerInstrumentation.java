@@ -92,19 +92,26 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SetMessageListenerAdvice {
 
-    // the name is recorded after registration rather than before, so that a setMessageListener
-    // call that throws leaves the listener's previous subscription name in place; that is what
-    // makes tracking and rolling back in-flight registrations unnecessary
-    //
-    // the trade-off is that a message the provider dispatches before setMessageListener returns
-    // reports no subscription name instead of the wrong one
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static String onEnter(
+        @Advice.This MessageConsumer consumer,
+        @Advice.Argument(0) @Nullable MessageListener messageListener) {
+      if (messageListener == null) {
+        return null;
+      }
+      String previousSubscriptionName = JmsSubscriptionNames.get(messageListener);
+      JmsSubscriptionNames.copyToListener(consumer, messageListener);
+      return previousSubscriptionName;
+    }
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This MessageConsumer consumer,
         @Advice.Argument(0) @Nullable MessageListener messageListener,
+        @Advice.Enter @Nullable String previousSubscriptionName,
         @Advice.Thrown @Nullable Throwable throwable) {
-      if (throwable == null) {
-        JmsSubscriptionNames.copyToListener(consumer, messageListener);
+      if (throwable != null && messageListener != null) {
+        JmsSubscriptionNames.set(messageListener, previousSubscriptionName);
       }
     }
   }
