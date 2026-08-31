@@ -25,6 +25,7 @@ class TransactionBuilderInstrumentation implements TypeInstrumentation {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
         "redis.RedisClient",
+        "redis.RedisClientMasterSlaves",
         "redis.SentinelMonitoredRedisClient",
         "redis.SentinelMonitoredRedisClientMasterSlaves");
   }
