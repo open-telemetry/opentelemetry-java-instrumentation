@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -34,6 +36,7 @@ class GeodeServerTarget {
 
   static class Builder {
 
+    private static final int DEFAULT_SERVER_PORT = 40404;
     private static final int MAX_PORT = 65535;
 
     private final List<Endpoint> servers = new ArrayList<>();
@@ -78,8 +81,7 @@ class GeodeServerTarget {
         return buildServers();
       }
       if (locatorConfigured) {
-        String group = serverGroup == null ? "" : serverGroup.trim();
-        return buildLocators(group);
+        return buildLocators(cleanGroup(serverGroup));
       }
       return null;
     }
@@ -89,27 +91,37 @@ class GeodeServerTarget {
       if (!serversComplete || servers.isEmpty()) {
         return null;
       }
-      if (servers.size() == 1) {
-        Endpoint only = servers.get(0);
-        return new GeodeServerTarget(only.host, only.port);
+
+      int commonPort = servers.get(0).port;
+      boolean portsMatch = true;
+      for (int i = 1; i < servers.size(); i++) {
+        if (servers.get(i).port != commonPort) {
+          portsMatch = false;
+          break;
+        }
       }
-      return new GeodeServerTarget(render(servers), null);
+
+      if (portsMatch) {
+        Integer port = commonPort == DEFAULT_SERVER_PORT ? null : commonPort;
+        return new GeodeServerTarget(render(servers, false), port);
+      }
+      return new GeodeServerTarget(render(servers, true), null);
     }
 
     @Nullable
-    private GeodeServerTarget buildLocators(String group) {
+    private GeodeServerTarget buildLocators(@Nullable String group) {
       if (!locatorsComplete || locators.isEmpty()) {
         return null;
       }
-      String address = render(locators);
-      if (!group.isEmpty()) {
+      String address = render(locators, true);
+      if (group != null) {
         address += "/" + group;
       }
       return new GeodeServerTarget(address, null);
     }
 
     private static boolean add(List<Endpoint> endpoints, @Nullable String host, int port) {
-      String cleaned = clean(host);
+      String cleaned = cleanHost(host);
       if (cleaned == null || port <= 0 || port > MAX_PORT) {
         return false;
       }
@@ -117,10 +129,10 @@ class GeodeServerTarget {
       return true;
     }
 
-    private static String render(List<Endpoint> endpoints) {
+    private static String render(List<Endpoint> endpoints, boolean includePort) {
       List<String> rendered = new ArrayList<>(endpoints.size());
       for (Endpoint endpoint : endpoints) {
-        rendered.add(endpoint.render());
+        rendered.add(endpoint.render(includePort));
       }
       rendered.sort(String::compareTo);
       return String.join(",", rendered);
@@ -139,15 +151,123 @@ class GeodeServerTarget {
     }
 
     @Nullable
-    private static String clean(@Nullable String host) {
+    private static String cleanHost(@Nullable String host) {
       if (host == null) {
         return null;
       }
       String cleaned = host.trim();
-      if (cleaned.startsWith("[") && cleaned.endsWith("]")) {
+      boolean startsWithBracket = cleaned.startsWith("[");
+      boolean endsWithBracket = cleaned.endsWith("]");
+      if (startsWithBracket || endsWithBracket) {
+        if (!startsWithBracket || !endsWithBracket || cleaned.length() <= 2) {
+          return null;
+        }
         cleaned = cleaned.substring(1, cleaned.length() - 1).trim();
       }
-      return cleaned.isEmpty() ? null : cleaned;
+      if (cleaned.isEmpty() || cleaned.indexOf('[') >= 0 || cleaned.indexOf(']') >= 0) {
+        return null;
+      }
+      if (cleaned.indexOf(':') >= 0) {
+        return isIpv6Address(cleaned) ? cleaned : null;
+      }
+      if (looksLikeIpv4Address(cleaned)) {
+        return isIpv4Address(cleaned) ? cleaned : null;
+      }
+      return isHostname(cleaned) ? cleaned : null;
+    }
+
+    private static boolean isIpv6Address(String host) {
+      for (int i = 0; i < host.length(); i++) {
+        char c = host.charAt(i);
+        if (c != ':' && c != '.' && !isAsciiHexDigit(c)) {
+          return false;
+        }
+      }
+      try {
+        InetAddress.getByName(host);
+        return true;
+      } catch (UnknownHostException ignored) {
+        return false;
+      }
+    }
+
+    private static boolean isAsciiHexDigit(char c) {
+      return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || (c >= '0' && c <= '9');
+    }
+
+    private static boolean looksLikeIpv4Address(String host) {
+      for (int i = 0; i < host.length(); i++) {
+        char c = host.charAt(i);
+        if (c != '.' && (c < '0' || c > '9')) {
+          return false;
+        }
+      }
+      return host.indexOf('.') >= 0;
+    }
+
+    private static boolean isIpv4Address(String host) {
+      String[] parts = host.split("\\.", -1);
+      if (parts.length != 4) {
+        return false;
+      }
+      for (String part : parts) {
+        if (part.isEmpty() || part.length() > 3) {
+          return false;
+        }
+        int value = 0;
+        for (int i = 0; i < part.length(); i++) {
+          value = value * 10 + part.charAt(i) - '0';
+        }
+        if (value > 255) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    private static boolean isHostname(String host) {
+      int length = host.endsWith(".") ? host.length() - 1 : host.length();
+      if (length <= 0 || length > 253) {
+        return false;
+      }
+      String[] labels = host.substring(0, length).split("\\.", -1);
+      for (String label : labels) {
+        if (label.isEmpty()
+            || label.length() > 63
+            || !isAsciiLetterOrDigit(label.charAt(0))
+            || !isAsciiLetterOrDigit(label.charAt(label.length() - 1))) {
+          return false;
+        }
+        for (int i = 1; i < label.length() - 1; i++) {
+          char c = label.charAt(i);
+          if (c != '-' && !isAsciiLetterOrDigit(c)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    private static boolean isAsciiLetterOrDigit(char c) {
+      return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+    }
+
+    @Nullable
+    private static String cleanGroup(@Nullable String group) {
+      if (group == null) {
+        return null;
+      }
+      String cleaned = group.trim();
+      if (cleaned.isEmpty() || cleaned.equals(".") || cleaned.equals("..")) {
+        return null;
+      }
+      for (int i = 0; i < cleaned.length(); i++) {
+        char c = cleaned.charAt(i);
+        if (c != '-' && c != '.' && c != '_' && c != '~' && !isAsciiLetterOrDigit(c)) {
+          return null;
+        }
+      }
+      return cleaned;
     }
   }
 
@@ -161,8 +281,8 @@ class GeodeServerTarget {
       this.port = port;
     }
 
-    private String render() {
-      return Builder.render(host, port);
+    private String render(boolean includePort) {
+      return includePort ? Builder.render(host, port) : host;
     }
   }
 }

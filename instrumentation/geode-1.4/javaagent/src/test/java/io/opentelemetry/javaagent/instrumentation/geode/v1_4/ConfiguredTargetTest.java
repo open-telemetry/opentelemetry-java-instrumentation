@@ -65,7 +65,44 @@ class ConfiguredTargetTest {
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, "localhost", 40404L));
+    testing.waitAndAssertTraces(operation(region, "localhost", null));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.geode-1.4",
+        DB_SYSTEM_NAME,
+        DB_COLLECTION_NAME,
+        DB_OPERATION_NAME,
+        SERVER_ADDRESS);
+  }
+
+  @Test
+  void configuredServersUsingTheDefaultPortOmitPorts() {
+    Region<Object, Object> region =
+        createRegion(
+            "default-port-servers",
+            poolFactory -> {
+              poolFactory.addServer("127.0.0.1", 40404);
+              poolFactory.addServer("127.0.0.2", 40404);
+            });
+
+    region.putAll(emptyMap());
+
+    testing.waitAndAssertTraces(operation(region, "127.0.0.1,127.0.0.2", null));
+  }
+
+  @Test
+  void configuredServersUsingACommonNonDefaultPortUseServerPort() {
+    Region<Object, Object> region =
+        createRegion(
+            "shared-port-servers",
+            poolFactory -> {
+              poolFactory.addServer("127.0.0.1", 40405);
+              poolFactory.addServer("127.0.0.2", 40405);
+            });
+
+    region.putAll(emptyMap());
+
+    testing.waitAndAssertTraces(operation(region, "127.0.0.1,127.0.0.2", 40405L));
     assertDurationMetric(
         testing,
         "io.opentelemetry.geode-1.4",
@@ -77,10 +114,10 @@ class ConfiguredTargetTest {
   }
 
   @Test
-  void severalConfiguredServersAreReportedTogether() {
+  void configuredServersUsingDifferentPortsEmbedEveryPort() {
     Region<Object, Object> region =
         createRegion(
-            "several-servers",
+            "mixed-port-servers",
             poolFactory -> {
               poolFactory.addServer("127.0.0.1", 40404);
               poolFactory.addServer("127.0.0.2", 40405);
@@ -123,7 +160,7 @@ class ConfiguredTargetTest {
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, "localhost", 40404L));
+    testing.waitAndAssertTraces(operation(region, "localhost", null));
   }
 
   @Test
@@ -160,6 +197,32 @@ class ConfiguredTargetTest {
   }
 
   @Test
+  void unsafeLocatorGroupIsOmittedWithoutDroppingTheDiscoveryTarget() {
+    Region<Object, Object> region =
+        createRegion(
+            "unsafe-locator-group",
+            poolFactory -> {
+              poolFactory.addLocator("127.0.0.1", 10334);
+              poolFactory.setServerGroup("orders/secret");
+            });
+
+    region.putAll(emptyMap());
+
+    testing.waitAndAssertTraces(operation(region, "127.0.0.1:10334", null));
+  }
+
+  @Test
+  void unsafeConfiguredServerIsOmittedOnlyFromStableTelemetry() {
+    Region<Object, Object> region =
+        createRegion(
+            "unsafe-server", poolFactory -> poolFactory.addServer("user:secret@localhost", 40404));
+
+    region.putAll(emptyMap());
+
+    testing.waitAndAssertTraces(operation(region, null, null));
+  }
+
+  @Test
   void ipv6ServersKeepTheirAddress() {
     Region<Object, Object> single =
         createRegion("ipv6-single", poolFactory -> poolFactory.addServer("::1", 40404));
@@ -175,7 +238,7 @@ class ConfiguredTargetTest {
     several.putAll(emptyMap());
 
     testing.waitAndAssertTraces(
-        operation(single, "::1", 40404L),
+        operation(single, "::1", null),
         operation(several, "127.0.0.2:40405,[2001:db8::1]:40404", null));
   }
 
@@ -192,7 +255,7 @@ class ConfiguredTargetTest {
     second.putAll(emptyMap());
 
     testing.waitAndAssertTraces(
-        operation(first, "127.0.0.1", 40404L),
+        operation(first, "127.0.0.1", null),
         operation(second, "127.0.0.1:40404,127.0.0.2:40405", null));
   }
 

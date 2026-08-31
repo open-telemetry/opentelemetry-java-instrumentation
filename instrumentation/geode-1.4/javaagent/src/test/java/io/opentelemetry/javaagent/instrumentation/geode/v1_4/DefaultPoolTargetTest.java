@@ -80,6 +80,6 @@ class DefaultPoolTargetTest {
                                 emitStableDatabaseSemconv() ? null : "default-pool-region"),
                             equalTo(maybeStable(DB_OPERATION), "putAll"),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, 40404L))));
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : 40404L))));
   }
 }

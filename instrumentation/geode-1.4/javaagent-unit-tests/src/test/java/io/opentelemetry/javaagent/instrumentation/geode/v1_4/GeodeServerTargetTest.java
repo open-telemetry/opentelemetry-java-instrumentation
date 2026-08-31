@@ -6,38 +6,77 @@
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class GeodeServerTargetTest {
 
   @Test
-  void singleServerKeepsItsHostAndPort() {
+  void singleServerOnTheDefaultPortOmitsThePort() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addServer("cache.example", 40404);
 
     GeodeServerTarget target = builder.build();
     assertThat(target.getAddress()).isEqualTo("cache.example");
-    assertThat(target.getPort()).isEqualTo(40404);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void serverPermutationsAreSortedAndKeepDuplicates() {
+  void singleServerOnANonDefaultPortUsesServerPort() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addServer("cache.example", 40405);
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("cache.example");
+    assertThat(target.getPort()).isEqualTo(40405);
+  }
+
+  @Test
+  void serversOnTheDefaultPortOmitPorts() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addServer("two.example", 40404);
+    builder.addServer("2001:db8::1", 40404);
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("2001:db8::1,two.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void serversOnACommonNonDefaultPortUseServerPortAndKeepDuplicates() {
     GeodeServerTarget.Builder first = GeodeServerTarget.builder();
     first.addServer("two.example", 40405);
-    first.addServer("one.example", 40404);
+    first.addServer("one.example", 40405);
     first.addServer("two.example", 40405);
 
     GeodeServerTarget.Builder second = GeodeServerTarget.builder();
     second.addServer("two.example", 40405);
     second.addServer("two.example", 40405);
-    second.addServer("one.example", 40404);
+    second.addServer("one.example", 40405);
 
     assertThat(first.build().getAddress())
-        .isEqualTo("one.example:40404,two.example:40405,two.example:40405")
+        .isEqualTo("one.example,two.example,two.example")
         .isEqualTo(second.build().getAddress());
-    assertThat(first.build().getPort()).isNull();
-    assertThat(second.build().getPort()).isNull();
+    assertThat(first.build().getPort()).isEqualTo(40405);
+    assertThat(second.build().getPort()).isEqualTo(40405);
+  }
+
+  @Test
+  void serversOnDifferentPortsEmbedEveryPort() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addServer("two.example", 40405);
+    builder.addServer("2001:db8::1", 40404);
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:40404,two.example:40405");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -48,7 +87,7 @@ class GeodeServerTargetTest {
 
     GeodeServerTarget target = builder.build();
     assertThat(target.getAddress()).isEqualTo("cache.example");
-    assertThat(target.getPort()).isEqualTo(40404);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -114,7 +153,7 @@ class GeodeServerTargetTest {
 
     GeodeServerTarget target = builder.build();
     assertThat(target.getAddress()).isEqualTo("cache.example");
-    assertThat(target.getPort()).isEqualTo(40404);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -141,28 +180,88 @@ class GeodeServerTargetTest {
     assertThat(builder.build()).isNull();
   }
 
-  @Test
-  void ipv6ServersKeepTheirAddress() {
-    GeodeServerTarget.Builder single = GeodeServerTarget.builder();
-    single.addServer("2001:db8::1", 40404);
+  @ParameterizedTest
+  @MethodSource("safeHosts")
+  void safeHostsAreAccepted(String host, String expected) {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addServer(host, 40404);
 
-    assertThat(single.build().getAddress()).isEqualTo("2001:db8::1");
-    assertThat(single.build().getPort()).isEqualTo(40404);
+    assertThat(builder.build().getAddress()).isEqualTo(expected);
+  }
 
-    GeodeServerTarget.Builder several = GeodeServerTarget.builder();
-    several.addServer("2001:db8::1", 40404);
-    several.addServer("two.example", 40405);
+  private static Stream<Arguments> safeHosts() {
+    return Stream.of(
+        argumentSet("hostname", "  cache.example  ", "cache.example"),
+        argumentSet("absolute hostname", "cache.example.", "cache.example."),
+        argumentSet("IPv4", "192.0.2.1", "192.0.2.1"),
+        argumentSet("IPv6", "2001:db8::1", "2001:db8::1"),
+        argumentSet("bracketed IPv6", "[2001:db8::1]", "2001:db8::1"),
+        argumentSet("IPv4-embedded IPv6", "::ffff:192.0.2.1", "::ffff:192.0.2.1"));
+  }
 
-    assertThat(several.build().getAddress()).isEqualTo("[2001:db8::1]:40404,two.example:40405");
-    assertThat(several.build().getPort()).isNull();
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(
+      strings = {
+        "",
+        " ",
+        "[",
+        "]",
+        "[]",
+        "user:secret@cache.example",
+        "https://cache.example",
+        "cache.example/path",
+        "cache.example?token=secret",
+        "cache.example#fragment",
+        "cache.example:40404",
+        "cache.example,other.example",
+        "[2001:db8::1]:40404",
+        "2001:db8::zz",
+        "256.0.0.1",
+        "-cache.example",
+        "cache..example",
+        "cache_example"
+      })
+  void unsafeHostDropsTheEntireEndpointList(String host) {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addServer("safe.example", 40404);
+    builder.addServer(host, 40404);
+
+    assertThat(builder.build()).isNull();
   }
 
   @Test
-  void hostsAreCleaned() {
+  void safeServerGroupIsAppendedAsOnePathSegment() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
-    builder.addServer("  cache.example  ", 40404);
+    builder.addLocator("locator.example", 10334);
+    builder.setServerGroup("  orders-v1_2~blue  ");
 
-    assertThat(builder.build().getAddress()).isEqualTo("cache.example");
+    assertThat(builder.build().getAddress()).isEqualTo("locator.example:10334/orders-v1_2~blue");
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "",
+        " ",
+        ".",
+        "..",
+        "orders/eu",
+        "orders\\eu",
+        "orders?token=secret",
+        "orders#blue",
+        "orders%2Feu",
+        "order group",
+        "user@domain"
+      })
+  void unsafeServerGroupIsOmittedWithoutDroppingTheLocator(String group) {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addLocator("locator.example", 10334);
+    builder.setServerGroup(group);
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("locator.example:10334");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -177,6 +276,7 @@ class GeodeServerTargetTest {
 
     builder.addServer("two.example", 40405);
     assertThat(builder.build().getAddress()).isEqualTo("two.example");
+    assertThat(builder.build().getPort()).isEqualTo(40405);
   }
 
   @Test
@@ -190,7 +290,7 @@ class GeodeServerTargetTest {
     builder.setServerGroup("orders");
 
     assertThat(target.getAddress()).isEqualTo("one.example");
-    assertThat(target.getPort()).isEqualTo(40404);
+    assertThat(target.getPort()).isNull();
     assertThat(builder.build().getAddress()).isEqualTo("one.example:40404,two.example:40405");
   }
 }
