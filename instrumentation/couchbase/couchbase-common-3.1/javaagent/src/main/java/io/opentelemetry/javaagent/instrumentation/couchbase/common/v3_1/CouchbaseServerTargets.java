@@ -9,6 +9,9 @@ import com.couchbase.client.core.Core;
 import com.couchbase.client.core.env.SeedNode;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -48,25 +51,45 @@ public class CouchbaseServerTargets {
   @Nullable
   static CouchbaseServerTarget target(Set<SeedNode> seedNodes) {
     CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder();
+    Map<String, Set<Integer>> portsByAddress = new HashMap<>();
     for (SeedNode seedNode : seedNodes) {
       if (seedNode == null) {
-        target.addSeed(null, 0);
+        addSeed(target, portsByAddress, null, 0);
       } else {
         Optional<Integer> kvPort = seedNode.kvPort();
         Optional<Integer> clusterManagerPort = seedNode.clusterManagerPort();
         if (!kvPort.isPresent() && !clusterManagerPort.isPresent()) {
-          target.addSeed(seedNode.address(), 0);
+          addSeed(target, portsByAddress, seedNode.address(), 0);
         } else {
           if (kvPort.isPresent()) {
-            target.addSeed(seedNode.address(), kvPort.get());
+            addSeed(target, portsByAddress, seedNode.address(), kvPort.get());
           }
           if (clusterManagerPort.isPresent() && !clusterManagerPort.equals(kvPort)) {
-            target.addSeed(seedNode.address(), clusterManagerPort.get());
+            addSeed(target, portsByAddress, seedNode.address(), clusterManagerPort.get());
           }
         }
       }
     }
     return target.build();
+  }
+
+  private static void addSeed(
+      CouchbaseServerTarget.Builder target,
+      Map<String, Set<Integer>> portsByAddress,
+      @Nullable String address,
+      int port) {
+    if (address == null) {
+      target.addSeed(null, port);
+      return;
+    }
+    Set<Integer> ports = portsByAddress.get(address);
+    if (ports == null) {
+      ports = new HashSet<>();
+      portsByAddress.put(address, ports);
+    }
+    if (ports.add(port)) {
+      target.addSeed(address, port);
+    }
   }
 
   @Nullable

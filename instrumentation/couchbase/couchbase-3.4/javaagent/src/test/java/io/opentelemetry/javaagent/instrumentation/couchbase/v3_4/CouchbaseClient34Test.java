@@ -126,7 +126,8 @@ class CouchbaseClient34Test {
         new LinkedHashSet<>(
             asList(
                 SeedNode.create("two.example", Optional.of(11211), Optional.empty()),
-                SeedNode.create("one.example", Optional.of(11210), Optional.of(8091))));
+                SeedNode.create("one.example", Optional.of(11210), Optional.of(8091)),
+                SeedNode.create("one.example", Optional.of(11210), Optional.of(8092))));
     Core core =
         Core.create(
             cluster.environment(),
@@ -136,7 +137,7 @@ class CouchbaseClient34Test {
 
     CouchbaseServerTarget target = CouchbaseServerTargets.get(core);
     assertThat(target.getAddress())
-        .isEqualTo("one.example:11210,one.example:8091,two.example:11211");
+        .isEqualTo("one.example:11210,one.example:8091,one.example:8092,two.example:11211");
     assertThat(target.getPort()).isNull();
   }
 

@@ -52,19 +52,23 @@ class CouchbaseServerTargetsTest {
 
   @ParameterizedTest
   @MethodSource("directSeedSets")
-  void directSeedEndpointsHaveDeterministicOrder(SeedNode first, SeedNode second) {
+  void directSeedEndpointsAreDistinctAndHaveDeterministicOrder(
+      SeedNode first, SeedNode second, SeedNode third) {
     CouchbaseServerTarget target =
-        CouchbaseServerTargets.target(new LinkedHashSet<>(asList(first, second)));
+        CouchbaseServerTargets.target(new LinkedHashSet<>(asList(first, second, third)));
 
     assertThat(target.getAddress())
-        .isEqualTo("one.example:11210,one.example:8091,two.example:11211");
+        .isEqualTo("one.example:11210,one.example:8091,one.example:8092,two.example:11211");
     assertThat(target.getPort()).isNull();
   }
 
   private static Stream<Arguments> directSeedSets() {
     SeedNode one = SeedNode.create("one.example", Optional.of(11210), Optional.of(8091));
+    SeedNode oneWithAnotherManagerPort =
+        SeedNode.create("one.example", Optional.of(11210), Optional.of(8092));
     SeedNode two = SeedNode.create("two.example", Optional.of(11211), Optional.empty());
     return Stream.of(
-        argumentSet("forward insertion", one, two), argumentSet("reverse insertion", two, one));
+        argumentSet("forward insertion", one, oneWithAnotherManagerPort, two),
+        argumentSet("reverse insertion", two, oneWithAnotherManagerPort, one));
   }
 }
