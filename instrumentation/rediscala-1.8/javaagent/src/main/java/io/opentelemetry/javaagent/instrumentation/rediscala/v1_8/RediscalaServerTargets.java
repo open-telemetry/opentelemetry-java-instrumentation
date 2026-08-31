@@ -19,6 +19,7 @@ import redis.ActorRequest;
 import redis.RedisClientActorLike;
 import redis.RedisClientMasterSlaves;
 import redis.RedisClientPool;
+import redis.RedisClientPoolLike;
 import redis.RedisServer;
 import redis.RoundRobinPoolRequest;
 import redis.SentinelMonitoredRedisBlockingClient;
@@ -88,6 +89,9 @@ public final class RediscalaServerTargets {
   private static final VirtualField<RoundRobinPoolRequest, RedisServerTarget> POOL_REQUEST_TARGET =
       VirtualField.find(RoundRobinPoolRequest.class, RedisServerTarget.class);
 
+  private static final VirtualField<RedisClientPoolLike, RedisServerTarget> CLUSTER_TARGET =
+      VirtualField.find(RedisClientPoolLike.class, RedisServerTarget.class);
+
   @Nullable
   private static Method findRedisServers(Class<?> poolClass) {
     try {
@@ -131,6 +135,9 @@ public final class RediscalaServerTargets {
     }
     if (client instanceof RoundRobinPoolRequest) {
       return get(POOL_REQUEST_TARGET, (RoundRobinPoolRequest) client);
+    }
+    if (CLUSTER_CLASS != null && CLUSTER_CLASS.isInstance(client)) {
+      return get(CLUSTER_TARGET, (RedisClientPoolLike) client);
     }
     return of(client);
   }
