@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -100,7 +99,7 @@ public class ClickHouseClientV2Singletons {
       for (String endpoint : endpoints) {
         sanitized.add(sanitizeEndpoint(endpoint));
       }
-      Collections.sort(sanitized);
+      sanitized.sort(String::compareTo);
 
       StringBuilder addressGroup = new StringBuilder();
       for (String endpoint : sanitized) {

@@ -229,6 +229,21 @@ class DbExecutionTest {
   }
 
   @Test
+  void dbExecutionPreservesConfiguredHostOrderAndDuplicates() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, "host2,2001:db8::2,host1,host2")
+            .option(ConnectionFactoryOptions.PORT, 5432)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress())
+        .isEqualTo("host2:5432,[2001:db8::2]:5432,host1:5432,host2:5432");
+  }
+
+  @Test
   void dbExecutionSanitizesUserInfoFromMultiHostAddress() {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()

@@ -608,6 +608,48 @@ class ClickHouseClientV1Test {
   }
 
   @Test
+  void testConfiguredNodeOrderIsCanonicalAndKeepsDuplicates() throws Exception {
+    ClickHouseNode ipv6Node = ClickHouseNode.builder(server).host("2001:db8::2").build();
+    ClickHouseNodes nodes = createNodes(ImmutableList.of(server, ipv6Node, ipv6Node));
+    nodes.update(ipv6Node, ClickHouseNode.Status.FAULTY);
+    String ipv6Address = "[2001:db8::2]:" + port;
+    String hostAddress = host + ":" + port;
+    String addressGroup =
+        hostAddress.compareTo(ipv6Address) < 0
+            ? hostAddress + "," + ipv6Address + "," + ipv6Address
+            : ipv6Address + "," + ipv6Address + "," + hostAddress;
+
+    ClickHouseResponse response =
+        client
+            .read(nodes)
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + TABLE_NAME)
+            .executeAndWait();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
   void testSingleNodeListRetainsConfiguredTarget() throws ClickHouseException {
     ClickHouseNodes nodes =
         ClickHouseNodes.of("single-node", "http://" + host + ":" + port, ImmutableMap.of());

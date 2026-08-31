@@ -43,7 +43,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -483,7 +482,7 @@ class ClickHouseClientV2Test {
   }
 
   @Test
-  void testMultipleEndpointsReportTheWholeConfiguredTarget() throws Exception {
+  void testMultipleEndpointsReportCanonicalConfiguredTarget() throws Exception {
     String secondEndpoint = "http://127.0.0.1:" + port;
     Client client =
         new Client.Builder()
@@ -497,7 +496,7 @@ class ClickHouseClientV2Test {
     cleanup.deferCleanup(client);
 
     List<String> endpoints = new ArrayList<>(asList(host + ":" + port, "127.0.0.1:" + port));
-    Collections.sort(endpoints);
+    endpoints.sort(String::compareTo);
     String addressGroup = String.join(",", endpoints);
     String firstEndpoint = client.getEndpoints().iterator().next();
     String legacyAddress = UrlParser.getHost(firstEndpoint);
@@ -708,7 +707,12 @@ class ClickHouseClientV2Test {
   private static void replaceEndpoints(Client client, String endpoint) throws Exception {
     Field endpointsField = Client.class.getDeclaredField("endpoints");
     endpointsField.setAccessible(true);
-    try (Client replacementClient = new Client.Builder().addEndpoint(endpoint).build()) {
+    try (Client replacementClient =
+        new Client.Builder()
+            .addEndpoint(endpoint)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .build()) {
       endpointsField.set(client, endpointsField.get(replacementClient));
     }
   }

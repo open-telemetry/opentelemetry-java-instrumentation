@@ -16,7 +16,9 @@ import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import javax.annotation.Nullable;
 
 public class ClickHouseClientV1Singletons {
@@ -108,18 +110,18 @@ public class ClickHouseClientV1Singletons {
         return create(nodes.iterator().next());
       }
 
-      StringBuilder addressGroup = new StringBuilder();
+      List<String> addresses = new ArrayList<>(nodes.size());
       for (ClickHouseNode node : nodes) {
-        if (addressGroup.length() > 0) {
-          addressGroup.append(',');
-        }
         String host = sanitizeHost(node.getHost());
         if (host == null) {
           return UNCONFIGURED;
         }
-        appendAddress(addressGroup, host, node.getPort());
+        StringBuilder address = new StringBuilder();
+        appendAddress(address, host, node.getPort());
+        addresses.add(address.toString());
       }
-      return new ServerTarget(null, null, addressGroup.toString());
+      addresses.sort(String::compareTo);
+      return new ServerTarget(null, null, String.join(",", addresses));
     }
 
     private static ServerTarget create(ClickHouseNode node) {
