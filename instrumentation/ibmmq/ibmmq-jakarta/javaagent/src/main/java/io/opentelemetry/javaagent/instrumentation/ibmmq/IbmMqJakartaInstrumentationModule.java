@@ -16,7 +16,7 @@ import java.util.List;
 public class IbmMqJakartaInstrumentationModule extends InstrumentationModule {
 
   public IbmMqJakartaInstrumentationModule() {
-    super("ibmmq", "ibmmq-jakarta", "ibm-mq-jakarta");
+    super("ibmmq-jakarta", "ibmmq", "ibm-mq-jakarta");
   }
 
   @Override
