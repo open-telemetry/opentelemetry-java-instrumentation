@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSin
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -38,7 +37,7 @@ public class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(isStatic())
-            .and(namedOneOf("connect", "connectAsync"))
+            .and(named("connect"))
             .and(takesArguments(3))
             .and(
                 takesArgument(2, named("com.lambdaworks.redis.RedisURI"))
