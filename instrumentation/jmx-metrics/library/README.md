@@ -41,7 +41,7 @@ import java.time.Duration;
 OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
 
 JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
-  // Configure loading embedded metric definitions (optional)
+    // Configure loading embedded metric definitions (optional)
   .addStableMetrics(IncludeExclude.builder().build()) // this will add all available stable metrics
   .addUnstableMetrics(IncludeExclude.builder().setIncluded("kafka-*").build()) // this will opt-in for unstable metrics for "kafka-*" systems
   // Load metrics from classpath resource (optional)
@@ -51,7 +51,7 @@ JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
   // delay bean discovery by 5 seconds
   .beanDiscoveryDelay(Duration.ofSeconds(5))
   // filter captured metrics by their name (optional), will affect all loaded metric definitions
-  .setMetrics(IncludeExclude.builder().setIncluded("kafka.*", "jvm.*").setExcluded("kafka.connect.*").build())
+  .setMetrics(IncludeExclude.builder().setIncluded("tomcat.*", "jvm.*", "kafka.*").setExcluded("kafka.connect.*").build())
   .build();
 
 jmxTelemetry.start();
