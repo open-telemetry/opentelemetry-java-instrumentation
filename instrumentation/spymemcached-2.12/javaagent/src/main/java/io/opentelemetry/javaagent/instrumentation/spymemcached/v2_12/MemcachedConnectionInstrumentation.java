@@ -46,6 +46,12 @@ class MemcachedConnectionInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.Argument(1) Operation operation) {
       SpymemcachedRequestHolder.associateOperation(Java8BytecodeBridge.currentContext(), operation);
     }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Argument(1) Operation operation) {
+      SpymemcachedRequestHolder.captureHandlingNode(
+          Java8BytecodeBridge.currentContext(), operation);
+    }
   }
 
   @SuppressWarnings("unused")
