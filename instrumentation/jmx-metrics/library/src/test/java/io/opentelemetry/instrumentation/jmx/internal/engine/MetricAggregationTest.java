@@ -243,6 +243,9 @@ class MetricAggregationTest {
 
     metricConfiguration.addMetricDef(metricDef);
     metricInsight.start(
-        metricConfiguration, () -> MBeanServerFactory.findMBeanServer(null), new HandlerRegistry(), IncludeExclude.builder().build());
+        metricConfiguration,
+        () -> MBeanServerFactory.findMBeanServer(null),
+        new HandlerRegistry(),
+        IncludeExclude.builder().build());
   }
 }
