@@ -44,6 +44,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.core.Future;
@@ -76,6 +77,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -158,6 +160,28 @@ class VertxSqlClientTest {
     select(listPool);
 
     testing.waitAndAssertTraces(trace -> assertServerGroup(trace, port + 1));
+  }
+
+  @Test
+  void testConnectingToServerListFailureReportsTheWholeConfiguredTarget() {
+    PgConnectOptions first = new PgConnectOptions(connectOptions()).setHost("127.0.0.1").setPort(1);
+    PgConnectOptions second = new PgConnectOptions(first).setPort(2);
+    Pool listPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(asList(first, second))
+            .with(new PoolOptions().setMaxSize(1).setConnectionTimeout(5))
+            .build();
+    cleanup.deferCleanup(listPool::close);
+
+    Throwable thrown = catchThrowable(() -> select(listPool));
+
+    assertThat(thrown).isInstanceOf(ExecutionException.class);
+    Throwable error = thrown.getCause();
+    assertThat(error).isNotNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            assertServerGroup(trace, "127.0.0.1", 1, "127.0.0.1", 2, "select * from test", error));
   }
 
   @Test
@@ -552,9 +576,20 @@ class VertxSqlClientTest {
 
   private static void assertServerGroup(
       TraceAssert trace, String secondHost, int secondPort, String statement) {
-    List<String> addresses = asList(host + ":" + port, secondHost + ":" + secondPort);
+    assertServerGroup(trace, host, port, secondHost, secondPort, statement, null);
+  }
+
+  private static void assertServerGroup(
+      TraceAssert trace,
+      String firstHost,
+      int firstPort,
+      String secondHost,
+      int secondPort,
+      String statement,
+      @Nullable Throwable error) {
+    List<String> addresses = asList(firstHost + ":" + firstPort, secondHost + ":" + secondPort);
     Collections.sort(addresses);
-    trace.hasSpansSatisfyingExactly(
+    Consumer<SpanDataAssert> operationSpan =
         span ->
             span.hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
@@ -572,8 +607,20 @@ class VertxSqlClientTest {
                         emitStableDatabaseSemconv() ? null : "test-peer-service"),
                     equalTo(
                         SERVER_ADDRESS,
-                        emitStableDatabaseSemconv() ? String.join(",", addresses) : host),
-                    equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port))));
+                        emitStableDatabaseSemconv() ? String.join(",", addresses) : firstHost),
+                    equalTo(
+                        SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(firstPort)),
+                    equalTo(
+                        ERROR_TYPE,
+                        emitStableDatabaseSemconv() && error != null
+                            ? error.getClass().getName()
+                            : null));
+    if (error == null) {
+      trace.hasSpansSatisfyingExactly(operationSpan);
+    } else {
+      trace.hasSpansSatisfyingExactly(
+          operationSpan, span -> span.hasName("CONNECT").hasParent(trace.getSpan(0)));
+    }
   }
 
   private static void assertDirectTarget(TraceAssert trace) {

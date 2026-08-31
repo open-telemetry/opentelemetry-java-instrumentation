@@ -33,10 +33,14 @@ public class VertxSqlClientRequest {
     this.addressGroup = addressGroup;
   }
 
-  public void setConnectionData(VertxSqlClientData data) {
+  public boolean setConnectionData(VertxSqlClientData data) {
+    if (addressGroup != null) {
+      return false;
+    }
     sqlConnectOptions = data.getConnectOptions();
     addressGroup = data.getAddressGroup();
     connectionDataUpdated = true;
+    return true;
   }
 
   public boolean isConnectionDataUpdated() {

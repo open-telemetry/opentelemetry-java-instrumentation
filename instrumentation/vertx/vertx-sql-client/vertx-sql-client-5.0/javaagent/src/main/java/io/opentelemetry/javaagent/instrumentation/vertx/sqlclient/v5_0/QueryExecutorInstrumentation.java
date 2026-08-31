@@ -254,8 +254,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         if (request == null) {
           return null;
         }
-        request.setConnectionData(data);
-        updateSpanName(context, request);
+        if (request.setConnectionData(data)) {
+          updateSpanName(context, request);
+        }
         return context;
       }
 

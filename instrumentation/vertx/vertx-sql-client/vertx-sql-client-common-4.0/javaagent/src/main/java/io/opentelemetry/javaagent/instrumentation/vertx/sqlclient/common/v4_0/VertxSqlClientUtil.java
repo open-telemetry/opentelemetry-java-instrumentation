@@ -190,8 +190,9 @@ public class VertxSqlClientUtil {
       if (requestData == null) {
         return;
       }
-      requestData.request.setConnectionData(data);
-      VertxSqlInstrumenterFactory.updateSpanName(requestData.context, requestData.request);
+      if (requestData.request.setConnectionData(data)) {
+        VertxSqlInstrumenterFactory.updateSpanName(requestData.context, requestData.request);
+      }
     }
   }
 
