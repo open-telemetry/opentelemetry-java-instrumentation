@@ -31,6 +31,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -136,7 +137,10 @@ class CouchbaseClient31Test {
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    return seedAddress + ":" + kvPort + "," + seedAddress + ":" + clusterManagerPort;
+    // the instrumentation sorts the endpoints of a multi-endpoint target
+    String[] endpoints = {seedAddress + ":" + kvPort, seedAddress + ":" + clusterManagerPort};
+    Arrays.sort(endpoints);
+    return String.join(",", endpoints);
   }
 
   private static <T> T oldOrExperimental(T value) {
