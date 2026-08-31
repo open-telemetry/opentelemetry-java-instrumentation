@@ -136,7 +136,7 @@ class Jedis30ClientTest {
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET pooled ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
