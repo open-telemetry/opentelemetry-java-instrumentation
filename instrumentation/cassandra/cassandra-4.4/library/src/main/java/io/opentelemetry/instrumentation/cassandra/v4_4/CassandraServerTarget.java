@@ -23,9 +23,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import javax.annotation.Nullable;
 
 final class CassandraServerTarget {
@@ -143,15 +141,16 @@ final class CassandraServerTarget {
     if (contactPoints.isEmpty()) {
       return null;
     }
-    Map<String, CassandraServerTarget> uniqueContactPoints = new TreeMap<>();
+    if (contactPoints.size() == 1) {
+      return contactPoints.get(0);
+    }
+    List<String> normalizedContactPoints = new ArrayList<>(contactPoints.size());
     for (CassandraServerTarget contactPoint : contactPoints) {
-      uniqueContactPoints.put(contactPoint.asContactPoint(), contactPoint);
+      normalizedContactPoints.add(contactPoint.asContactPoint());
     }
-    if (uniqueContactPoints.size() == 1) {
-      return uniqueContactPoints.values().iterator().next();
-    }
+    normalizedContactPoints.sort(String::compareTo);
     StringBuilder group = new StringBuilder();
-    for (String contactPoint : uniqueContactPoints.keySet()) {
+    for (String contactPoint : normalizedContactPoints) {
       if (group.length() > 0) {
         group.append(',');
       }
