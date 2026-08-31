@@ -49,6 +49,9 @@ public class JedisSingletons {
   private static final Cache<Object, RedisServerTarget> providerTargets = Cache.weak();
   private static final Cache<Object, Boolean> configuredProviders = Cache.weak();
 
+  private static final Cache<Object, RedisServerTarget> topologyTargets = Cache.weak();
+  private static final Cache<Object, Boolean> configuredTopologyOwners = Cache.weak();
+
   private static final ContextKey<RedisServerTarget> CURRENT_CONFIGURED_TARGET =
       ContextKey.named("opentelemetry-jedis-configured-target");
   private static final ContextKey<Boolean> SUPPRESS_SINGLETON_TARGET =
@@ -107,6 +110,17 @@ public class JedisSingletons {
     }
   }
 
+  public static void setTopologyTarget(
+      @Nullable Object topologyOwner, @Nullable RedisServerTarget target) {
+    if (topologyOwner == null) {
+      return;
+    }
+    configuredTopologyOwners.put(topologyOwner, true);
+    if (target != null) {
+      topologyTargets.put(topologyOwner, target);
+    }
+  }
+
   public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
     if (!Boolean.TRUE.equals(POOL_TARGET_CONFIGURED.get(pool))) {
       return;
@@ -143,6 +157,13 @@ public class JedisSingletons {
   public static Scope openProviderTargetScope(Object provider) {
     return Boolean.TRUE.equals(configuredProviders.get(provider))
         ? openConfiguredTargetScope(providerTargets.get(provider))
+        : null;
+  }
+
+  @Nullable
+  public static Scope openTopologyTargetScope(Object topologyOwner) {
+    return Boolean.TRUE.equals(configuredTopologyOwners.get(topologyOwner))
+        ? openConfiguredTargetScope(topologyTargets.get(topologyOwner))
         : null;
   }
 

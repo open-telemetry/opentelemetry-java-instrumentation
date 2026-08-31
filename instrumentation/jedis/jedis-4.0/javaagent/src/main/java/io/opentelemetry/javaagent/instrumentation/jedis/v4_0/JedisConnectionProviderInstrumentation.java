@@ -6,15 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +39,8 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         "redis.clients.jedis.providers.ShardedConnectionProvider",
         // 4.4 and later
         "redis.clients.jedis.providers.SentineledConnectionProvider",
-        "redis.clients.jedis.providers.SentineledConnectionProvider$SentinelListener");
+        "redis.clients.jedis.providers.SentineledConnectionProvider$SentinelListener",
+        "redis.clients.jedis.JedisClusterInfoCache$TopologyRefreshTask");
   }
 
   @Override
@@ -53,13 +55,27 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         isConstructor().and(takesArgument(0, named("java.lang.String"))),
         getClass().getName() + "$SentineledConstructorAdvice");
     transformer.applyAdviceToMethod(
-        namedOneOf("initializeSlotsCache", "initialize")
-            .and(takesArgument(0, namedOneOf("java.util.Set", "java.util.List"))),
-        getClass().getName() + "$InitializeAdvice");
+        named("initializeSlotsCache").and(takesArgument(0, named("java.util.Set"))),
+        getClass().getName() + "$InitializeClusterAdvice");
+    transformer.applyAdviceToMethod(
+        named("initialize").and(takesArgument(0, named("java.util.List"))),
+        getClass().getName() + "$InitializeShardsAdvice");
     transformer.applyAdviceToMethod(
         named("initSentinels").and(takesArgument(0, named("java.util.Set"))),
         getClass().getName() + "$InitializeSentinelsAdvice");
-    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$SentinelListenerAdvice");
+    transformer.applyAdviceToMethod(
+        named("run")
+            .and(
+                isDeclaredBy(
+                    named(
+                        "redis.clients.jedis.providers.SentineledConnectionProvider$SentinelListener"))),
+        getClass().getName() + "$SentinelListenerAdvice");
+    transformer.applyAdviceToMethod(
+        named("run")
+            .and(
+                isDeclaredBy(
+                    named("redis.clients.jedis.JedisClusterInfoCache$TopologyRefreshTask"))),
+        getClass().getName() + "$TopologyRefreshAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf(
                 "getConnection",
@@ -108,11 +124,34 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class InitializeAdvice {
+  public static class InitializeClusterAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(
+        @Advice.This Object provider,
+        @Advice.FieldValue("cache") @Nullable Object cache,
+        @Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
+      RedisServerTarget target = JedisServerTargets.ofNodes(nodes);
+      JedisSingletons.setProviderTarget(provider, target);
+      JedisSingletons.setTopologyTarget(cache, target);
+      return JedisSingletons.openProviderTargetScope(provider);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializeShardsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.Argument(0) @Nullable Collection<HostAndPort> nodes) {
-      return JedisSingletons.openConfiguredTargetScope(JedisServerTargets.ofNodes(nodes));
+    public static Scope onEnter(@Advice.Argument(0) @Nullable List<HostAndPort> shards) {
+      return JedisSingletons.openConfiguredTargetScope(JedisServerTargets.ofNodes(shards));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -152,6 +191,23 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("this$0") Object provider) {
       return JedisSingletons.openProviderTargetScope(provider);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class TopologyRefreshAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.FieldValue("this$0") Object cache) {
+      return JedisSingletons.openTopologyTargetScope(cache);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
