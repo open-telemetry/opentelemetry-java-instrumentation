@@ -76,9 +76,11 @@ final class CassandraSqlAttributesGetter
     if (executionInfo == null) {
       return null;
     }
-    InetSocketAddress peer = get(executionInfo);
-    if (peer != null) {
-      return peer;
+    if (emitStableDatabaseSemconv()) {
+      InetSocketAddress peer = get(executionInfo);
+      if (peer != null) {
+        return peer;
+      }
     }
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
@@ -86,8 +88,12 @@ final class CassandraSqlAttributesGetter
     }
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
+      // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
       InetSocketAddress coordinatorAddress = (InetSocketAddress) endPoint.resolve();
-      return coordinatorAddress.isUnresolved() ? null : coordinatorAddress;
+      if (emitStableDatabaseSemconv() && coordinatorAddress.isUnresolved()) {
+        return null;
+      }
+      return coordinatorAddress;
     }
     return null;
   }
