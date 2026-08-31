@@ -31,9 +31,15 @@ public final class RediscalaServerTargets {
 
   private static final Logger logger = Logger.getLogger(RediscalaServerTargets.class.getName());
 
+  private static final String CLUSTER_CLASS_NAME = "redis.RedisCluster";
   private static final String MUTABLE_POOL_CLASS_NAME = "redis.RedisClientMutablePool";
   private static final String SENTINEL_MASTER_SLAVES_CLASS_NAME =
       "redis.SentinelMonitoredRedisClientMasterSlaves";
+
+  @Nullable private static final Class<?> CLUSTER_CLASS = findClass(CLUSTER_CLASS_NAME);
+
+  @Nullable
+  private static final Method CLUSTER_REDIS_SERVERS = findMethod(CLUSTER_CLASS, "redisServers");
 
   // Scala collection return types differ between the Scala 2.12 and 2.13 builds, so
   // collection-returning methods are resolved reflectively rather than called directly.
@@ -156,6 +162,9 @@ public final class RediscalaServerTargets {
     }
     if (client instanceof RedisClientMasterSlaves) {
       return ofMasterSlaves((RedisClientMasterSlaves) client);
+    }
+    if (CLUSTER_CLASS != null && CLUSTER_CLASS.isInstance(client)) {
+      return ofPool(client, CLUSTER_REDIS_SERVERS);
     }
     if (client instanceof RedisClientPool) {
       return ofPool(client, POOL_REDIS_SERVERS);

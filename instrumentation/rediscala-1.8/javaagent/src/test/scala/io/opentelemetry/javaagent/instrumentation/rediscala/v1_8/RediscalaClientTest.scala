@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStable
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric
+import io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
   assertThat => assertThatSpan,
@@ -42,6 +43,7 @@ import redis.{
   RedisClientMasterSlaves,
   RedisClientMutablePool,
   RedisClientPool,
+  RedisCluster,
   RedisDispatcher,
   RedisServer,
   SentinelMonitoredRedisClientMasterSlaves
@@ -297,6 +299,58 @@ class RediscalaClientTest {
       )
     } finally {
       pool.stop()
+    }
+  }
+
+  @Test def testClusterCommandUsesConfiguredTarget(): Unit = {
+    assumeTrue(emitStableDatabaseSemconv())
+    assumeTrue(testLatestDeps())
+    val clusterServer: GenericContainer[_] =
+      new GenericContainer("redis:7.2-alpine")
+    clusterServer.withExposedPorts(6379)
+    clusterServer.withCommand(
+      "redis-server",
+      "--cluster-enabled",
+      "yes",
+      "--cluster-config-file",
+      "nodes.conf"
+    )
+    clusterServer.start()
+    try {
+      val clusterHost = clusterServer.getHost
+      val clusterAddress = InetAddress.getByName(clusterHost).getHostAddress
+      val clusterPort = clusterServer.getMappedPort(6379)
+      val setup = clusterServer.execInContainer(
+        "sh",
+        "-c",
+        s"redis-cli CONFIG SET cluster-announce-ip $clusterAddress && redis-cli CONFIG SET cluster-announce-port $clusterPort && redis-cli CONFIG SET cluster-allow-reads-when-down yes && redis-cli CLUSTER ADDSLOTS $$(seq 0 16383)"
+      )
+      assertThat(setup.getExitCode).isZero
+      val hosts = Seq(alternateHost(clusterHost), clusterHost)
+      val cluster = classOf[RedisCluster].getConstructors
+        .find(_.getParameterCount == 4)
+        .get
+        .newInstance(
+          hosts.map(RedisServer(_, clusterPort)),
+          "RedisCluster",
+          system,
+          RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
+        )
+        .asInstanceOf[RedisCluster]
+      try {
+        val result = cluster.get[String]("cluster-target")
+        assertThat(Await.result(result, Duration("3 second")).isEmpty).isTrue
+        assertConfiguredTargetSpan(
+          hosts.sorted
+            .map(serverHost => s"$serverHost:$clusterPort")
+            .mkString(","),
+          operationName = "GET"
+        )
+      } finally {
+        cluster.stop()
+      }
+    } finally {
+      clusterServer.stop()
     }
   }
 
