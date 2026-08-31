@@ -136,14 +136,12 @@ class CouchbaseAttributesGetterTest {
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
     request.setNode(firstPeer, "2001:db8::1:11210");
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? firstPeer : null);
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(firstPeer);
     assertThat(request.getNode().getBackendAddress()).isEqualTo("2001:db8::1");
     assertThat(request.getNode().getBackendPort()).isEqualTo(11210);
 
     request.setNode(secondPeer, "[2001:db8::2]:11211");
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? secondPeer : null);
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(secondPeer);
     assertThat(request.getNode().getBackendAddress()).isEqualTo("2001:db8::2");
     assertThat(request.getNode().getBackendPort()).isEqualTo(11211);
   }
@@ -164,11 +162,9 @@ class CouchbaseAttributesGetterTest {
     copy.setNode(firstPeer, "first.example:11210");
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? secondPeer : null);
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(secondPeer);
     assertThat(request.getNode().getBackendAddress()).isEqualTo("second.example");
-    assertThat(getter.getNetworkPeerInetSocketAddress(copy, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? firstPeer : null);
+    assertThat(getter.getNetworkPeerInetSocketAddress(copy, null)).isEqualTo(firstPeer);
     assertThat(copy.getNode().getBackendAddress()).isEqualTo("first.example");
   }
 
