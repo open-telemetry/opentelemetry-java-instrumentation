@@ -11,11 +11,13 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import redis.ActorRequest;
 import redis.RedisClientActorLike;
+import redis.RedisClientMasterSlaves;
 import redis.RedisClientPool;
 import redis.RedisServer;
 import redis.RoundRobinPoolRequest;
@@ -37,6 +39,16 @@ public final class RediscalaServerTargets {
   // collection-returning methods are resolved reflectively rather than called directly.
   @Nullable
   private static final Method POOL_REDIS_SERVERS = findRedisServers(RedisClientPool.class);
+
+  // Some rediscala forks drop the master and slaves accessors from RedisClientMasterSlaves, so both
+  // are resolved reflectively and the client is skipped when either one is missing.
+  @Nullable
+  private static final Method MASTER_SLAVES_MASTER =
+      findMethod(RedisClientMasterSlaves.class, "master");
+
+  @Nullable
+  private static final Method MASTER_SLAVES_SLAVES =
+      findMethod(RedisClientMasterSlaves.class, "slaves");
 
   @Nullable private static final Class<?> MUTABLE_POOL_CLASS = findClass(MUTABLE_POOL_CLASS_NAME);
 
@@ -142,6 +154,9 @@ public final class RediscalaServerTargets {
     if (SENTINEL_MASTER_SLAVES_CLASS != null && SENTINEL_MASTER_SLAVES_CLASS.isInstance(client)) {
       return ofSentinelMasterSlaves(client);
     }
+    if (client instanceof RedisClientMasterSlaves) {
+      return ofMasterSlaves((RedisClientMasterSlaves) client);
+    }
     if (client instanceof RedisClientPool) {
       return ofPool(client, POOL_REDIS_SERVERS);
     }
@@ -168,6 +183,41 @@ public final class RediscalaServerTargets {
       return null;
     }
     return ofSentinel(client, SENTINEL_MASTER_SLAVES_SENTINELS, (String) master);
+  }
+
+  @Nullable
+  private static RedisServerTarget ofMasterSlaves(RedisClientMasterSlaves client) {
+    if (MASTER_SLAVES_MASTER == null || MASTER_SLAVES_SLAVES == null) {
+      return null;
+    }
+    Object master;
+    Object slaves;
+    try {
+      master = MASTER_SLAVES_MASTER.invoke(client);
+      slaves = MASTER_SLAVES_SLAVES.invoke(client);
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to read the configured rediscala master-slaves servers", e);
+      return null;
+    }
+    if (!(master instanceof RedisServer) || !(slaves instanceof Iterable)) {
+      return null;
+    }
+    List<String> slaveEndpoints = new ArrayList<>();
+    Iterator<?> iterator = ((Iterable<?>) slaves).iterator();
+    while (iterator.hasNext()) {
+      Object slave = iterator.next();
+      if (slave instanceof RedisServer) {
+        RedisServer redisServer = (RedisServer) slave;
+        slaveEndpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
+      }
+    }
+    // the master always leads, the replicas behind it carry no meaningful order
+    Collections.sort(slaveEndpoints);
+    RedisServer masterServer = (RedisServer) master;
+    List<String> endpoints = new ArrayList<>();
+    endpoints.add(RedisServerTarget.endpoint(masterServer.host(), masterServer.port()));
+    endpoints.addAll(slaveEndpoints);
+    return RedisServerTarget.ofEndpoints(endpoints);
   }
 
   @Nullable
