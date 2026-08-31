@@ -11,13 +11,20 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.couchbase.client.core.Core;
+import com.couchbase.client.core.env.PasswordAuthenticator;
+import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -25,8 +32,13 @@ import com.couchbase.client.java.Collection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -104,6 +116,28 @@ class CouchbaseClient34Test {
                           equalTo(SERVER_PORT, serverPort()));
                 },
                 span -> span.hasName("dispatch_to_server")));
+  }
+
+  @Test
+  void directSeedSetHasDeterministicServerAddress() {
+    assumeTrue(testLatestDeps());
+
+    Set<SeedNode> seedNodes =
+        new LinkedHashSet<>(
+            asList(
+                SeedNode.create("two.example", Optional.of(11211), Optional.empty()),
+                SeedNode.create("one.example", Optional.of(11210), Optional.of(8091))));
+    Core core =
+        Core.create(
+            cluster.environment(),
+            PasswordAuthenticator.create(couchbase.getUsername(), couchbase.getPassword()),
+            seedNodes);
+    cleanup.deferCleanup(() -> core.shutdown().block());
+
+    CouchbaseServerTarget target = CouchbaseServerTargets.get(core);
+    assertThat(target.getAddress())
+        .isEqualTo("one.example:11210,one.example:8091,two.example:11211");
+    assertThat(target.getPort()).isNull();
   }
 
   private static String serverAddress() {

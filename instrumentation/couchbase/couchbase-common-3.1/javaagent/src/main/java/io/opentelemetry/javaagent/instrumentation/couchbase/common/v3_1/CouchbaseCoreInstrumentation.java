@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -21,7 +22,8 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // Core constructors receive seed nodes through 3.2, connection string text in 3.3-3.5, and a parsed
-// connection string from 3.6. Capturing each shape here keeps the target tied to the client core.
+// connection string from 3.6. Current clients convert direct seed sets to connection strings before
+// construction, so their factory restores the deterministic direct-seed target afterward.
 public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
   @Override
@@ -31,6 +33,9 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isStatic().and(named("create")).and(takesArguments(3)).and(takesArgument(2, Set.class)),
+        getClass().getName() + "$SeedNodesFactoryAdvice");
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArguments(3)).and(takesArgument(2, Set.class)),
         getClass().getName() + "$SeedNodesConstructorAdvice");
@@ -42,6 +47,16 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
             .and(takesArguments(3))
             .and(takesArgument(2, named("com.couchbase.client.core.util.ConnectionString"))),
         getClass().getName() + "$ParsedConstructorAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class SeedNodesFactoryAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void captureConfiguredTarget(
+        @Advice.Return Core core, @Advice.Argument(2) Set<SeedNode> seedNodes) {
+      CouchbaseServerTargets.registerDirectSeedNodes(core, seedNodes);
+    }
   }
 
   @SuppressWarnings("unused")
