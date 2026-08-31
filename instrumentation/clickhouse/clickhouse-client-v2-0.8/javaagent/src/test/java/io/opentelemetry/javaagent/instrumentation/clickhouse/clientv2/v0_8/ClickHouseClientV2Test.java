@@ -483,7 +483,10 @@ class ClickHouseClientV2Test {
 
   @Test
   void testMultipleEndpointsReportCanonicalConfiguredTarget() throws Exception {
-    String secondEndpoint = "http://127.0.0.1:" + port;
+    // the two endpoints have to stay distinct, and the container host is 127.0.0.1 on some Docker
+    // configurations
+    String secondHost = "127.0.0.1".equals(host) ? "localhost" : "127.0.0.1";
+    String secondEndpoint = "http://" + secondHost + ":" + port;
     Client client =
         new Client.Builder()
             .addEndpoint(Protocol.HTTP, host, port, false)
@@ -495,7 +498,7 @@ class ClickHouseClientV2Test {
             .build();
     cleanup.deferCleanup(client);
 
-    List<String> endpoints = new ArrayList<>(asList(host + ":" + port, "127.0.0.1:" + port));
+    List<String> endpoints = new ArrayList<>(asList(host + ":" + port, secondHost + ":" + port));
     endpoints.sort(String::compareTo);
     String addressGroup = String.join(",", endpoints);
     String firstEndpoint = client.getEndpoints().iterator().next();
