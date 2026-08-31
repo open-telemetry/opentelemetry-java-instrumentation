@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -171,6 +172,20 @@ class JedisNetworkAttributesGetterTest {
     JedisPipelineContext.exitTransactionFraming(transaction);
 
     assertThat(JedisPipelineContext.getAndClearTransactionFramingRequest(transaction)).isNull();
+  }
+
+  @Test
+  void pipelineDropsPeerWhenCommandsUseDifferentPeerAddresses() {
+    JedisRequest first =
+        requestWithPeer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379));
+    first.capturePeerAddress();
+    JedisRequest second =
+        requestWithPeer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380));
+    second.capturePeerAddress();
+
+    JedisRequest pipelineRequest = JedisRequest.createPipeline(asList(first, second));
+
+    assertThat(pipelineRequest.getPeerAddress()).isNull();
   }
 
   @Test
