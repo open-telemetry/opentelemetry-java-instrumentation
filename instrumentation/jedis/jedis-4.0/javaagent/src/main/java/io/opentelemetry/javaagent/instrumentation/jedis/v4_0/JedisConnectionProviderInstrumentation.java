@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
@@ -88,6 +89,9 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         namedOneOf("getConnectionMap", "getPrimaryNodesConnectionMap")
             .and(returns(named("java.util.Map"))),
         getClass().getName() + "$GetConnectionMapAdvice");
+    transformer.applyAdviceToMethod(
+        named("renewSlotCache").and(takesArguments(0)),
+        getClass().getName() + "$RenewSlotCacheAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -250,6 +254,23 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         @Advice.This Object provider,
         @Advice.Return @Nullable Map<?, ? extends Pool<?>> connectionPools) {
       JedisSingletons.attachProviderTargetToPools(provider, connectionPools);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class RenewSlotCacheAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.This Object provider) {
+      return JedisSingletons.openProviderTargetScope(provider);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }
