@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -23,6 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.util.Pool;
 
 class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
@@ -64,6 +66,10 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
                 "getReplicaConnectionFromSlot")
             .and(returns(named("redis.clients.jedis.Connection"))),
         getClass().getName() + "$GetConnectionAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("getConnectionMap", "getPrimaryNodesConnectionMap")
+            .and(returns(named("java.util.Map"))),
+        getClass().getName() + "$GetConnectionMapAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -155,6 +161,17 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
           scope.close();
         }
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class GetConnectionMapAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Object provider,
+        @Advice.Return @Nullable Map<?, ? extends Pool<?>> connectionPools) {
+      JedisSingletons.attachProviderTargetToPools(provider, connectionPools);
     }
   }
 }

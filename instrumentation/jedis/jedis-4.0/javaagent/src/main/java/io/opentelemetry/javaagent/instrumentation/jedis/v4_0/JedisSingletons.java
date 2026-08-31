@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.Map;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
@@ -107,14 +108,34 @@ public class JedisSingletons {
   }
 
   public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
-    if (Boolean.TRUE.equals(POOL_TARGET_CONFIGURED.get(pool)) && resource instanceof Jedis) {
-      setAggregateConnectionTarget(((Jedis) resource).getConnection(), POOL_TARGET.get(pool));
+    if (!Boolean.TRUE.equals(POOL_TARGET_CONFIGURED.get(pool))) {
+      return;
     }
+    Connection connection;
+    if (resource instanceof Jedis) {
+      connection = ((Jedis) resource).getConnection();
+    } else if (resource instanceof Connection) {
+      connection = (Connection) resource;
+    } else {
+      return;
+    }
+    setAggregateConnectionTarget(connection, POOL_TARGET.get(pool));
   }
 
   public static void attachProviderTarget(Object provider, @Nullable Connection connection) {
     if (Boolean.TRUE.equals(configuredProviders.get(provider))) {
       setAggregateConnectionTarget(connection, providerTargets.get(provider));
+    }
+  }
+
+  public static void attachProviderTargetToPools(
+      Object provider, @Nullable Map<?, ? extends Pool<?>> pools) {
+    if (!Boolean.TRUE.equals(configuredProviders.get(provider)) || pools == null) {
+      return;
+    }
+    RedisServerTarget target = providerTargets.get(provider);
+    for (Pool<?> pool : pools.values()) {
+      setPoolTarget(pool, target);
     }
   }
 
