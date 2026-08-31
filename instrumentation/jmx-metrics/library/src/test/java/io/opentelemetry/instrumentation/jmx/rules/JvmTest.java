@@ -34,8 +34,6 @@ class JvmTest extends TargetSystemTest {
   void testJvmMetrics(String image) {
     List<String> yamlFiles = singletonList("jvm.yaml");
 
-    yamlFiles.forEach(this::validateYamlSyntax);
-
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));

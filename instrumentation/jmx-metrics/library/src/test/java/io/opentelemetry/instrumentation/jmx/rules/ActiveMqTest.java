@@ -29,8 +29,6 @@ class ActiveMqTest extends TargetSystemTest {
   void activemqTest() {
     List<String> yamlFiles = singletonList("activemq.yaml");
 
-    yamlFiles.forEach(this::validateYamlSyntax);
-
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));

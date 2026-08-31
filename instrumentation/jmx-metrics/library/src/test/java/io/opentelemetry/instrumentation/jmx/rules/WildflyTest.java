@@ -37,8 +37,6 @@ class WildflyTest extends TargetSystemTest {
   void testWildflyMetrics(String dockerImage) {
     List<String> yamlFiles = singletonList("wildfly.yaml");
 
-    yamlFiles.forEach(this::validateYamlSyntax);
-
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));

@@ -28,8 +28,6 @@ class TomcatTest extends TargetSystemTest {
   void testCollectedMetrics(String dockerImageName) {
     List<String> yamlFiles = singletonList("tomcat.yaml");
 
-    yamlFiles.forEach(this::validateYamlSyntax);
-
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));

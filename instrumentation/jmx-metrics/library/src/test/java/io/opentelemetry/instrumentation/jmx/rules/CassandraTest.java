@@ -41,8 +41,6 @@ class CassandraTest extends TargetSystemTest {
   void testCassandraMetrics() {
     List<String> yamlFiles = singletonList("experimental-cassandra.yaml");
 
-    yamlFiles.forEach(this::validateYamlSyntax);
-
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));

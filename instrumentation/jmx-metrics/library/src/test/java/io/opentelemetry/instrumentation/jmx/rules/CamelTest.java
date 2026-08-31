@@ -26,8 +26,6 @@ class CamelTest extends TargetSystemTest {
   void testCollectedMetrics() {
     List<String> yamlFiles = singletonList("camel.yaml");
 
-    yamlFiles.forEach(this::validateYamlSyntax);
-
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));

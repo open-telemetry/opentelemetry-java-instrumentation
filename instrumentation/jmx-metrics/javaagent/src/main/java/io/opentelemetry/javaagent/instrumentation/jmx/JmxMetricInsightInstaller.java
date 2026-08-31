@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jmx;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -17,6 +18,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.nio.file.Path;
@@ -48,29 +50,49 @@ public class JmxMetricInsightInstaller implements AgentListener {
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
 
-      List<String> systemsConfig =
-          config.get("target").getScalarList("system", String.class, emptyList());
+      if (AgentCommonConfig.get().isV3Preview()) {
+        // excluding stable jvm metrics as they overlap runtime-telemetry
+        jmx.addStableMetrics(IncludeExclude.builder().setExcluded("jvm").build());
 
-      // warn users when using any unsupported system value, with mapping for legacy values
-      systemsConfig.stream()
-          .map(
-              s ->
-                  s.startsWith(EXPERIMENTAL_PREFIX) ? s.substring(EXPERIMENTAL_PREFIX.length()) : s)
-          .forEach(
-              system -> {
-                if (!InternalMetricsDefinitions.getSupportedSystems().contains(system)) {
-                  logger.log(
-                      WARNING,
-                      "JMX target system "
-                          + system
-                          + " is not supported. Supported systems are: "
-                          + InternalMetricsDefinitions.getSupportedSystems());
-                }
-              });
+        // TODO: find a better name than 'otel.jmx.experimental.unstable'
+        List<String> unstableInclude =
+            config.get("experimental").getScalarList("unstable", String.class, emptyList());
+        // we need to also exclude stable jvm metrics as they overlap runtime-telemetry
+        jmx.addUnstableMetrics(
+            IncludeExclude.builder().setIncluded(unstableInclude).setExcluded("jvm").build());
 
-      IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
+      } else {
+        // pre-v3 compatibility
+        List<String> systemsConfig =
+            config.get("target").getScalarList("system", String.class, emptyList());
 
-      jmx.addStableMetrics(systems).addUnstableMetrics(systems);
+        // warn users when using any unsupported system value, with mapping for legacy values
+        systemsConfig =
+            systemsConfig.stream()
+                .map(
+                    s ->
+                        s.startsWith(EXPERIMENTAL_PREFIX)
+                            ? s.substring(EXPERIMENTAL_PREFIX.length())
+                            : s)
+                .collect(toList());
+        systemsConfig.forEach(
+            system -> {
+              if (!InternalMetricsDefinitions.getSupportedSystems().contains(system)) {
+                logger.log(
+                    WARNING,
+                    "JMX target system "
+                        + system
+                        + " is not supported. Supported systems are: "
+                        + InternalMetricsDefinitions.getSupportedSystems());
+              }
+            });
+
+        // Using the same filter to include both the stable and unstable metrics allow to load
+        // embedded
+        // metrics definitions per system.
+        IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
+        jmx.addStableMetrics(systems).addUnstableMetrics(systems);
+      }
 
       jmx.build().start();
     }

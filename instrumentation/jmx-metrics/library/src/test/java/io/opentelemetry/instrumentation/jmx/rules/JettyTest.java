@@ -31,8 +31,6 @@ class JettyTest extends TargetSystemTest {
 
     List<String> yamlFiles = singletonList("jetty.yaml");
 
-    yamlFiles.forEach(this::validateYamlSyntax);
-
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));

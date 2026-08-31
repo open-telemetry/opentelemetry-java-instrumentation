@@ -7,8 +7,13 @@ package io.opentelemetry.instrumentation.jmx.internal;
 
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
+import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,6 +21,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class InternalMetricsDefinitionsTest {
   private static final ClassLoader CLASS_LOADER =
@@ -47,6 +54,7 @@ class InternalMetricsDefinitionsTest {
       allRules.addAll(rulesForSystem);
     }
 
+    assertThat(getYamlFilesFromFileSystem()).isNotEmpty();
     assertThat(allRules).containsExactlyInAnyOrderElementsOf(getYamlFilesFromFileSystem());
   }
 
@@ -55,8 +63,36 @@ class InternalMetricsDefinitionsTest {
     try (Stream<Path> stream = Files.walk(rulesRoot)) {
       return stream
           .filter(Files::isRegularFile)
+          .filter(path -> path.getFileName().toString().endsWith(".yaml"))
           .map(path -> "jmx/rules/" + rulesRoot.relativize(path))
           .collect(toSet());
+    }
+  }
+
+  @ParameterizedTest
+  @MethodSource("getYamlFilesFromFileSystem")
+  void validateYamlSyntax(String path) {
+    try (InputStream input =
+        InternalMetricsDefinitionsTest.class.getClassLoader().getResourceAsStream(path)) {
+      JmxConfig config;
+      // try-catch to provide a slightly better error
+      try {
+        config = RuleParser.get().loadConfig(input);
+      } catch (RuntimeException e) {
+        fail("Failed to parse yaml file " + path, e);
+        throw e;
+      }
+
+      // make sure all the rules in that file are valid
+      for (JmxRule rule : config.getRules()) {
+        try {
+          rule.buildMetricDef();
+        } catch (Exception e) {
+          fail("Failed to build metric definition " + rule.getBeans(), e);
+        }
+      }
+    } catch (IOException e) {
+      fail("Failed to read yaml file " + path, e);
     }
   }
 

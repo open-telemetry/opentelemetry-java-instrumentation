@@ -36,8 +36,6 @@ class KafkaBrokerTest extends TargetSystemTest {
   private void doTest(String image, String zookeeperImage) {
     List<String> yamlFiles = singletonList("experimental-kafka-broker.yaml");
 
-    yamlFiles.forEach(this::validateYamlSyntax);
-
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));

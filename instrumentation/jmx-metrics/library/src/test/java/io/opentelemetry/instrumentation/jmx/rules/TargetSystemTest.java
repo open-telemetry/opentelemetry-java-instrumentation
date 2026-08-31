@@ -11,7 +11,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
 
 import com.linecorp.armeria.server.ServerBuilder;
@@ -20,16 +19,11 @@ import com.linecorp.armeria.testing.junit5.server.ServerExtension;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
-import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
-import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse;
 import io.opentelemetry.proto.collector.metrics.v1.MetricsServiceGrpc;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -271,36 +265,6 @@ public class TargetSystemTest {
 
   private static String containerYamlPath(String yaml) {
     return "/" + yaml;
-  }
-
-  /**
-   * Validates YAML definition by parsing it to check for syntax errors
-   *
-   * @param yaml path to YAML resource (in classpath)
-   */
-  protected void validateYamlSyntax(String yaml) {
-    String path = yamlResourcePath(yaml);
-    try (InputStream input = TargetSystemTest.class.getClassLoader().getResourceAsStream(path)) {
-      JmxConfig config;
-      // try-catch to provide a slightly better error
-      try {
-        config = RuleParser.get().loadConfig(input);
-      } catch (RuntimeException e) {
-        fail("Failed to parse yaml file " + path, e);
-        throw e;
-      }
-
-      // make sure all the rules in that file are valid
-      for (JmxRule rule : config.getRules()) {
-        try {
-          rule.buildMetricDef();
-        } catch (Exception e) {
-          fail("Failed to build metric definition " + rule.getBeans(), e);
-        }
-      }
-    } catch (IOException e) {
-      fail("Failed to read yaml file " + path, e);
-    }
   }
 
   protected void verifyMetrics(MetricsVerifier metricsVerifier) {
