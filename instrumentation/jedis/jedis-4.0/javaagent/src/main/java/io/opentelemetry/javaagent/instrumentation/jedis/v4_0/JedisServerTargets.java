@@ -16,6 +16,16 @@ public final class JedisServerTargets {
 
   @Nullable
   public static RedisServerTarget ofNodes(@Nullable Collection<HostAndPort> nodes) {
+    return RedisServerTarget.ofUnorderedEndpoints(endpointStrings(nodes));
+  }
+
+  @Nullable
+  public static RedisServerTarget ofShards(@Nullable List<HostAndPort> shards) {
+    return RedisServerTarget.ofEndpoints(endpointStrings(shards));
+  }
+
+  @Nullable
+  private static List<String> endpointStrings(@Nullable Collection<HostAndPort> nodes) {
     if (nodes == null || nodes.isEmpty()) {
       return null;
     }
@@ -25,7 +35,7 @@ public final class JedisServerTargets {
         endpoints.add(RedisServerTarget.endpoint(node.getHost(), node.getPort()));
       }
     }
-    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
+    return endpoints;
   }
 
   @Nullable
