@@ -94,11 +94,10 @@ final class CouchbaseAttributesGetter
       return null;
     }
     SocketAddress address = node.getPeerAddress();
-    if (!(address instanceof InetSocketAddress)) {
-      return null;
+    if (address instanceof InetSocketAddress) {
+      return (InetSocketAddress) address;
     }
-    InetSocketAddress socketAddress = (InetSocketAddress) address;
-    return socketAddress.isUnresolved() ? null : socketAddress;
+    return null;
   }
 
   @Override
