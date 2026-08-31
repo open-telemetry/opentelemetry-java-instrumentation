@@ -214,6 +214,9 @@ public final class RedisServerTarget {
           return null;
         }
         String host = authority.substring(1, hostEnd);
+        if (!isIpv6Literal(host)) {
+          return null;
+        }
         String rest = authority.substring(hostEnd + 1);
         if (rest.isEmpty()) {
           return new Endpoint(host, null, false);
