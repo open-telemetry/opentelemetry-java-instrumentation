@@ -109,16 +109,16 @@ public final class RedisServerTarget {
       return "";
     }
     StringBuilder builder = new StringBuilder();
-    appendHost(builder, host);
+    appendHost(builder, host, port >= 0);
     if (port >= 0) {
       builder.append(':').append(port);
     }
     return builder.toString();
   }
 
-  private static void appendHost(StringBuilder builder, String host) {
+  private static void appendHost(StringBuilder builder, String host, boolean hasPort) {
     // a literal IPv6 address is bracketed so that the port stays unambiguous
-    if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
+    if (hasPort && host.indexOf(':') >= 0 && !host.startsWith("[")) {
       builder.append('[').append(host).append(']');
     } else {
       builder.append(host);
@@ -284,7 +284,7 @@ public final class RedisServerTarget {
         builder.append(host);
         return builder.toString();
       }
-      appendHost(builder, host);
+      appendHost(builder, host, port != null);
       if (port != null) {
         builder.append(':').append(port);
       }

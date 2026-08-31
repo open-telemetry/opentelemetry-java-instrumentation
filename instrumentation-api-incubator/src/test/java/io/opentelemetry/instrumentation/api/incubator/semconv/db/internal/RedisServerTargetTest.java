@@ -202,6 +202,14 @@ class RedisServerTargetTest {
   }
 
   @Test
+  void portlessIpv6EndpointsStayUnbracketed() {
+    RedisServerTarget target = RedisServerTarget.ofEndpoints(asList("::1", "::2"));
+
+    assertThat(target.getAddress()).isEqualTo("::1,::2");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void unusableEndpointsAreSkipped() {
     RedisServerTarget target =
         RedisServerTarget.ofEndpoints(asList("", "node1:6379", "   ", "node2:6380"));
@@ -352,6 +360,7 @@ class RedisServerTargetTest {
     assertThat(RedisServerTarget.endpoint("localhost", 6379)).isEqualTo("localhost:6379");
     assertThat(RedisServerTarget.endpoint("localhost", -1)).isEqualTo("localhost");
     assertThat(RedisServerTarget.endpoint("::1", 6379)).isEqualTo("[::1]:6379");
+    assertThat(RedisServerTarget.endpoint("::1", -1)).isEqualTo("::1");
     assertThat(RedisServerTarget.endpoint("[::1]", 6379)).isEqualTo("[::1]:6379");
     assertThat(RedisServerTarget.endpoint(null, 6379)).isEmpty();
   }
