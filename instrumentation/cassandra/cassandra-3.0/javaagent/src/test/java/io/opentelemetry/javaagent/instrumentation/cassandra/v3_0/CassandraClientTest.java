@@ -36,6 +36,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
+import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -275,7 +276,10 @@ class CassandraClientTest {
                           assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
                               .isEqualTo(
                                   emitStableDatabaseSemconv()
-                                      ? cassandraHost + ":" + cassandraPort + ",127.0.0.2:9042"
+                                      ? Stream.of(
+                                              cassandraHost + ":" + cassandraPort, "127.0.0.2:9042")
+                                          .sorted(String::compareTo)
+                                          .collect(joining(","))
                                       : coordinatorAddress.getHostString());
                           assertThat(spanData.getAttributes().get(SERVER_PORT))
                               .isEqualTo(

@@ -73,18 +73,16 @@ public class CassandraConfiguredTarget {
       return validPort(port) ? new CassandraConfiguredTarget(point.host, port) : null;
     }
 
-    StringBuilder address = new StringBuilder();
+    List<String> endpointTokens = new ArrayList<>(points.size());
     for (ContactPoint point : points) {
       int port = point.port == null ? defaultPort : point.port;
       if (!validPort(port)) {
         return null;
       }
-      if (address.length() > 0) {
-        address.append(',');
-      }
-      address.append(formatHost(point.host)).append(':').append(port);
+      endpointTokens.add(formatHost(point.host) + ':' + port);
     }
-    return new CassandraConfiguredTarget(address.toString(), null);
+    endpointTokens.sort(String::compareTo);
+    return new CassandraConfiguredTarget(String.join(",", endpointTokens), null);
   }
 
   private static boolean validPort(int port) {
