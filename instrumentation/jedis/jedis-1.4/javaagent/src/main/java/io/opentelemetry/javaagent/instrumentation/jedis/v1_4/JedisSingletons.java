@@ -40,10 +40,8 @@ public class JedisSingletons {
   private static final VirtualField<Connection, Boolean> CONNECTION_TARGET_SUPPRESSED =
       VirtualField.find(Connection.class, Boolean.class);
 
-  private static final ContextKey<RedisServerTarget> CURRENT_CONFIGURED_TARGET =
+  private static final ContextKey<ConfiguredTarget> CURRENT_CONFIGURED_TARGET =
       ContextKey.named("opentelemetry-jedis-configured-target");
-  private static final ContextKey<Boolean> SUPPRESS_SINGLETON_TARGET =
-      ContextKey.named("opentelemetry-jedis-suppress-singleton-target");
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -112,19 +110,16 @@ public class JedisSingletons {
   }
 
   public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
-    Context context = Context.current().with(SUPPRESS_SINGLETON_TARGET, true);
-    if (target != null) {
-      context = context.with(CURRENT_CONFIGURED_TARGET, target);
-    }
-    return context.makeCurrent();
+    return Context.current()
+        .with(CURRENT_CONFIGURED_TARGET, new ConfiguredTarget(target))
+        .makeCurrent();
   }
 
   @Nullable
   static RedisServerTarget connectionTarget(Connection connection) {
-    Context context = Context.current();
-    RedisServerTarget target = context.get(CURRENT_CONFIGURED_TARGET);
-    if (target != null || Boolean.TRUE.equals(context.get(SUPPRESS_SINGLETON_TARGET))) {
-      return target;
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    if (configuredTarget != null) {
+      return configuredTarget.target;
     }
     if (Boolean.TRUE.equals(CONNECTION_TARGET_SUPPRESSED.get(connection))) {
       return null;
@@ -133,4 +128,12 @@ public class JedisSingletons {
   }
 
   private JedisSingletons() {}
+
+  private static final class ConfiguredTarget {
+    @Nullable private final RedisServerTarget target;
+
+    private ConfiguredTarget(@Nullable RedisServerTarget target) {
+      this.target = target;
+    }
+  }
 }
