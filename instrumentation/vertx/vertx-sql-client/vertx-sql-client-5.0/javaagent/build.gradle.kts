@@ -29,6 +29,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent"))
 
   testLibrary("io.vertx:vertx-pg-client:$version")
+  testLibrary("io.vertx:vertx-oracle-client:$version")
   testLibrary("io.vertx:vertx-jdbc-client:$version")
   testImplementation("io.agroal:agroal-pool:2.5")
   testImplementation("org.hsqldb:hsqldb:2.3.4")
@@ -55,6 +56,9 @@ tasks {
     filter {
       includeTestsMatching(
         "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testConnectingToSupplierCapturesTheSuppliedOptions",
+      )
+      includeTestsMatching(
+        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testOracleSupplierConnectFailureCapturesSuppliedOptions",
       )
     }
   }

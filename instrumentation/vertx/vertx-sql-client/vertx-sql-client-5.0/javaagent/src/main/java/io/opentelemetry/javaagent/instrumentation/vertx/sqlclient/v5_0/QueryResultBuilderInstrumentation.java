@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.endQuerySpan;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.updateConnectionFailureData;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Scope;
@@ -37,6 +38,7 @@ class QueryResultBuilderInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.Argument(1) @Nullable Throwable throwable,
         @Advice.FieldValue("handler") Promise<?> promise) {
+      updateConnectionFailureData(promise, throwable);
       return endQuerySpan(instrumenter(), promise, throwable);
     }
 

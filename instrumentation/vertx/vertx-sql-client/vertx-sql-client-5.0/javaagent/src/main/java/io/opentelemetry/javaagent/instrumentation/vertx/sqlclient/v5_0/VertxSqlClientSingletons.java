@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
@@ -14,10 +16,13 @@ import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.Ve
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataProvider;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
@@ -47,6 +52,8 @@ public class VertxSqlClientSingletons {
       VirtualField.find(SqlClientBase.class, VertxSqlClientDataProvider.class);
 
   private static final Cache<Object, VertxSqlClientData> connectionDataCache = Cache.weak();
+  private static final Cache<Throwable, VertxSqlClientData> connectionFailureDataCache =
+      Cache.weak();
   private static final Cache<Object, ConnectionDataListener> commandDataListenerCache =
       Cache.weak();
 
@@ -210,14 +217,50 @@ public class VertxSqlClientSingletons {
     };
   }
 
-  public static <T> Future<T> attachConnectionData(
-      Future<T> future, SqlConnectOptions connectOptions, String dbSystem) {
-    VertxSqlClientData data = VertxSqlClientData.fromConnectOptions(connectOptions, dbSystem);
-    return future.map(
-        connection -> {
-          connectionDataCache.put(connection, data);
-          return connection;
+  public static ConnectionAttempt createConnectionAttempt(Object connectionFactory) {
+    return new ConnectionAttempt(getDbSystemNameFromClassName(connectionFactory));
+  }
+
+  public static Future<SqlConnectOptions> captureConnectionAttempt(
+      Future<SqlConnectOptions> connectOptionsFuture, ConnectionAttempt connectionAttempt) {
+    return connectOptionsFuture.map(
+        connectOptions -> {
+          connectionAttempt.capture(connectOptions);
+          return connectOptions;
         });
+  }
+
+  public static <T> Future<T> attachConnectionData(
+      Future<T> future, @Nullable ConnectionAttempt connectionAttempt) {
+    if (connectionAttempt == null) {
+      return future;
+    }
+    return future.transform(
+        result -> {
+          VertxSqlClientData data = connectionAttempt.data;
+          if (data != null) {
+            if (result.succeeded()) {
+              cacheConnectionData(result.result(), data);
+            } else {
+              connectionFailureDataCache.put(result.cause(), data);
+            }
+          }
+          return copyResult(result);
+        });
+  }
+
+  private static <T> Future<T> copyResult(AsyncResult<T> result) {
+    return result.succeeded()
+        ? Future.succeededFuture(result.result())
+        : Future.failedFuture(result.cause());
+  }
+
+  private static void cacheConnectionData(Object connection, VertxSqlClientData data) {
+    Object candidate = connection;
+    while (candidate != null) {
+      connectionDataCache.put(candidate, data);
+      candidate = unwrap(candidate);
+    }
   }
 
   @Nullable
@@ -228,17 +271,36 @@ public class VertxSqlClientSingletons {
       if (data != null) {
         return data;
       }
-      try {
-        Object unwrapped = candidate.getClass().getMethod("unwrap").invoke(candidate);
-        if (unwrapped == candidate) {
-          return null;
-        }
-        candidate = unwrapped;
-      } catch (ReflectiveOperationException ignored) {
-        return null;
-      }
+      candidate = unwrap(candidate);
     }
     return null;
+  }
+
+  @Nullable
+  public static VertxSqlClientData getConnectionFailureData(Throwable throwable) {
+    return connectionFailureDataCache.get(throwable);
+  }
+
+  public static void updateConnectionFailureData(
+      Promise<?> promise, @Nullable Throwable throwable) {
+    if (throwable == null) {
+      return;
+    }
+    VertxSqlClientData data = getConnectionFailureData(throwable);
+    if (data == null) {
+      return;
+    }
+    VertxSqlClientUtil.setQueryConnectionData(promise, data);
+  }
+
+  @Nullable
+  private static Object unwrap(Object candidate) {
+    try {
+      Object unwrapped = candidate.getClass().getMethod("unwrap").invoke(candidate);
+      return unwrapped != candidate ? unwrapped : null;
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
   }
 
   @Nullable
@@ -293,6 +355,19 @@ public class VertxSqlClientSingletons {
      */
     @Nullable
     Context onConnectionData(VertxSqlClientData data);
+  }
+
+  public static class ConnectionAttempt {
+    private final String dbSystem;
+    @Nullable private volatile VertxSqlClientData data;
+
+    private ConnectionAttempt(String dbSystem) {
+      this.dbSystem = dbSystem;
+    }
+
+    private void capture(SqlConnectOptions connectOptions) {
+      data = VertxSqlClientData.fromConnectOptions(connectOptions, dbSystem);
+    }
   }
 
   private VertxSqlClientSingletons() {}

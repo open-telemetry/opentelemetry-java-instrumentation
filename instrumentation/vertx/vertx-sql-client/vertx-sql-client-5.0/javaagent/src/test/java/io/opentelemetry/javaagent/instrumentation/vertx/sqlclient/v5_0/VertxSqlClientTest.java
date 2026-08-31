@@ -37,6 +37,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.counting;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -48,6 +49,8 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.oracleclient.OracleBuilder;
+import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.pgclient.PgBuilder;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgException;
@@ -392,6 +395,31 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testOracleSupplierConnectFailureCapturesSuppliedOptions() {
+    OracleConnectOptions options =
+        new OracleConnectOptions()
+            .setHost("127.0.0.1")
+            .setPort(1)
+            .setDatabase("testdb")
+            .setUser("testuser")
+            .setPassword("testpassword");
+    Pool oraclePool =
+        OracleBuilder.pool()
+            .using(vertx)
+            .connectingTo(() -> Future.succeededFuture(options))
+            .with(new PoolOptions().setMaxSize(1).setConnectionTimeout(5))
+            .build();
+    cleanup.deferCleanup(oraclePool::close);
+
+    Throwable thrown = catchThrowable(() -> select(oraclePool));
+
+    assertThat(thrown).isInstanceOf(ExecutionException.class);
+    Throwable error = thrown.getCause();
+    assertThat(error).isNotNull();
+    testing.waitAndAssertTraces(trace -> assertOracleConnectFailure(trace, error));
+  }
+
+  @Test
   void testConnectingToDirectOptionsCapturesTarget() throws Exception {
     PgConnectOptions options = connectOptions();
     Pool directPool =
@@ -637,6 +665,68 @@ class VertxSqlClientTest {
                     equalTo(
                         ERROR_TYPE,
                         emitStableDatabaseSemconv() ? error.getClass().getName() : null)));
+  }
+
+  private static void assertOracleConnectFailure(TraceAssert trace, Throwable error) {
+    if (emitOldDatabaseSemconv() && emitStableDatabaseSemconv()) {
+      trace.hasSpansSatisfyingExactly(
+          span ->
+              span.hasName("select test")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasStatus(StatusData.error())
+                  .hasEventsSatisfyingExactly(
+                      event ->
+                          event
+                              .hasName("exception")
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                                  satisfies(EXCEPTION_MESSAGE, val -> val.isNotBlank()),
+                                  satisfies(
+                                      EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(maybeStable(DB_SYSTEM), "oracle.db"),
+                      equalTo(maybeStable(DB_NAME), "testdb"),
+                      equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                      equalTo(DB_QUERY_SUMMARY, "select test"),
+                      equalTo(DB_NAME, "testdb"),
+                      equalTo(DB_USER, "testuser"),
+                      equalTo(DB_STATEMENT, "select * from test"),
+                      equalTo(DB_OPERATION, "SELECT"),
+                      equalTo(DB_SQL_TABLE, "test"),
+                      equalTo(maybeStablePeerService(), "test-peer-service"),
+                      equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                      equalTo(SERVER_PORT, 1),
+                      equalTo(ERROR_TYPE, "66000")));
+      return;
+    }
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT testdb.test")
+                .hasKind(SpanKind.CLIENT)
+                .hasStatus(StatusData.error())
+                .hasEventsSatisfyingExactly(
+                    event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                                satisfies(EXCEPTION_MESSAGE, val -> val.isNotBlank()),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? "oracle.db" : null),
+                    equalTo(maybeStable(DB_NAME), "testdb"),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "testuser"),
+                    equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                    equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
+                    equalTo(
+                        maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                    equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
+                    equalTo(maybeStablePeerService(), "test-peer-service"),
+                    equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                    equalTo(SERVER_PORT, 1),
+                    equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "66000" : null)));
   }
 
   private static void select(SqlClient client) throws Exception {

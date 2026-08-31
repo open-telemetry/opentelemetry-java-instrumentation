@@ -226,10 +226,11 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         return context;
       }
 
-      private void endSpan(Throwable throwable) {
+      private synchronized void endSpan(Throwable throwable) {
         if (promiseInternal == null) {
           return;
         }
+        VertxSqlClientSingletons.updateConnectionFailureData(promiseInternal, throwable);
         Scope parentScope =
             VertxSqlClientUtil.endQuerySpan(instrumenter(), promiseInternal, throwable);
         if (parentScope != null) {

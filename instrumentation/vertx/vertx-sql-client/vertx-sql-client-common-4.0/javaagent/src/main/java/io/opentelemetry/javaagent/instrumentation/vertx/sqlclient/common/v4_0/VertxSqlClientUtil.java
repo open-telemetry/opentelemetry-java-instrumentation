@@ -184,6 +184,17 @@ public class VertxSqlClientUtil {
     REQUEST_DATA.set(promise, new RequestData(request, context, parentContext));
   }
 
+  public static void setQueryConnectionData(Promise<?> promise, VertxSqlClientData data) {
+    synchronized (promise) {
+      RequestData requestData = REQUEST_DATA.get(promise);
+      if (requestData == null) {
+        return;
+      }
+      requestData.request.setConnectionData(data);
+      VertxSqlInstrumenterFactory.updateSpanName(requestData.context, requestData.request);
+    }
+  }
+
   @Nullable
   public static Scope endQuerySpan(
       Instrumenter<VertxSqlClientRequest, Void> instrumenter,
