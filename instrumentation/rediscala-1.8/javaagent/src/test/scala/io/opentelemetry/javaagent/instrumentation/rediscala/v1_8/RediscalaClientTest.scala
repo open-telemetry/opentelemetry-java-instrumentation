@@ -331,6 +331,39 @@ class RediscalaClientTest {
     }
   }
 
+  @Test def testMasterSlavesTransactionUsesConfiguredTarget(): Unit = {
+    assumeTrue(emitStableDatabaseSemconv())
+    val master = RedisServer(host, port.intValue())
+    val slaves = Seq(
+      RedisServer(host, port.intValue()),
+      RedisServer(alternateHost(host), port.intValue())
+    )
+    val client = classOf[RedisClientMasterSlaves].getConstructors
+      .find(_.getParameterCount == 4)
+      .get
+      .newInstance(
+        master,
+        slaves,
+        system,
+        RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
+      )
+      .asInstanceOf[RedisClientMasterSlaves]
+    try {
+      val transaction = client.multi()
+      transaction.set("master-slaves-transaction-target", "value")
+      Await.result(transaction.exec(), Duration("3 second"))
+      assertConfiguredTargetSpan(
+        (s"${master.host}:${master.port}" +: slaves
+          .map(server => s"${server.host}:${server.port}")
+          .sorted).mkString(","),
+        operationName = "MULTI SET"
+      )
+    } finally {
+      client.masterClient.stop()
+      client.slavesClients.stop()
+    }
+  }
+
   @Test def testSentinelMasterSlavesCommandUsesConfiguredTarget(): Unit = {
     assumeTrue(emitStableDatabaseSemconv())
     val sentinelHosts = Seq(alternateHost(sentinelHost), sentinelHost)
@@ -734,7 +767,8 @@ class RediscalaClientTest {
 
   private def assertConfiguredTargetSpan(
       serverAddress: String,
-      serverPort: JLong = null
+      serverPort: JLong = null,
+      operationName: String = "SET"
   ): Unit =
     await().untilAsserted(new ThrowingRunnable {
       override def run(): Unit = {
@@ -746,17 +780,17 @@ class RediscalaClientTest {
           .stream()
           .filter(new Predicate[SpanData] {
             override def test(span: SpanData): Boolean =
-              span.getName == s"SET $serverSuffix"
+              span.getName == s"$operationName $serverSuffix"
           })
           .findFirst()
           .orElse(null)
         assertThat(span).isNotNull
         assertThatSpan(span)
-          .hasName(s"SET $serverSuffix")
+          .hasName(s"$operationName $serverSuffix")
           .hasKind(CLIENT)
           .hasAttributesSatisfyingExactly(
             equalTo(maybeStable(DB_SYSTEM), REDIS),
-            equalTo(maybeStable(DB_OPERATION), "SET"),
+            equalTo(maybeStable(DB_OPERATION), operationName),
             equalTo(SERVER_ADDRESS, serverAddress),
             equalTo(SERVER_PORT, serverPort)
           )
