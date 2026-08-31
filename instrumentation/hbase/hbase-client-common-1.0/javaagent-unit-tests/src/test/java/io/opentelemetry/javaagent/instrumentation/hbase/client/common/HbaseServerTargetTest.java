@@ -23,7 +23,7 @@ class HbaseServerTargetTest {
   }
 
   @Test
-  void usesExternalZooCfgWhenEnabled() {
+  void sortsAndPreservesDuplicateExternalZooCfgEndpoints() {
     Configuration configuration = new Configuration(false);
     configuration.setBoolean("hbase.config.read.zookeeper.config", true);
     configuration.set("test.zk.client.port", "3218");
@@ -32,7 +32,7 @@ class HbaseServerTargetTest {
     configuration.set("zookeeper.znode.parent", "/external");
 
     assertThat(HbaseServerTarget.from(configuration))
-        .isEqualTo("external-zk-a,external-zk-b:3218:/external");
+        .isEqualTo("external-zk-a,external-zk-b,external-zk-b:3218:/external");
   }
 
   @Test
@@ -69,6 +69,15 @@ class HbaseServerTargetTest {
   }
 
   @Test
+  void preservesZooKeeperIpv6OrderAndDuplicates() {
+    Configuration configuration = new Configuration(false);
+    configuration.set("hbase.zookeeper.quorum", "2001:db8::2,[2001:db8::1],2001:db8::2");
+
+    assertThat(HbaseServerTarget.from(configuration))
+        .isEqualTo("[2001:db8::2],[2001:db8::1],[2001:db8::2]:2181:/hbase");
+  }
+
+  @Test
   void recognizesTheEarlierZooKeeperRegistryClass() {
     Configuration configuration = new Configuration(false);
     configuration.set(REGISTRY_KEY, ZK_ASYNC_REGISTRY);
@@ -102,16 +111,23 @@ class HbaseServerTargetTest {
   }
 
   @Test
-  void rendersCanonicalMasterRegistryEndpoints() {
-    Configuration configuration = new Configuration(false);
-    configuration.set(REGISTRY_KEY, MASTER_REGISTRY);
-    configuration.set("hbase.masters", "master-b:16001,master-a,master-b:16001,master-c:16002");
-    configuration.set("hbase.master.port", "17000");
+  void rendersMasterRegistryEndpointsIndependentOfSourceOrder() {
+    Configuration firstConfiguration = new Configuration(false);
+    firstConfiguration.set(REGISTRY_KEY, MASTER_REGISTRY);
+    firstConfiguration.set("hbase.masters", "master-b:16001,master-a,master-b:16001,master-c");
+    firstConfiguration.set("hbase.master.port", "17000");
 
-    assertThat(HbaseServerTarget.from(configuration, false, true, true))
-        .isEqualTo("master-a:17000,master-b:16001,master-c:16002");
-    assertThat(HbaseServerTarget.from(configuration, false, true, false))
-        .isEqualTo("master-a:16000,master-b:16001,master-c:16002");
+    Configuration secondConfiguration = new Configuration(false);
+    secondConfiguration.set(REGISTRY_KEY, MASTER_REGISTRY);
+    secondConfiguration.set("hbase.masters", "master-c,master-b:16001,master-a,master-b:16001");
+    secondConfiguration.set("hbase.master.port", "17000");
+
+    assertThat(HbaseServerTarget.from(firstConfiguration, false, true, true))
+        .isEqualTo("master-a:17000,master-b:16001,master-b:16001,master-c:17000");
+    assertThat(HbaseServerTarget.from(secondConfiguration, false, true, true))
+        .isEqualTo("master-a:17000,master-b:16001,master-b:16001,master-c:17000");
+    assertThat(HbaseServerTarget.from(firstConfiguration, false, true, false))
+        .isEqualTo("master-a:16000,master-b:16001,master-b:16001,master-c:16000");
   }
 
   @Test
@@ -144,10 +160,10 @@ class HbaseServerTargetTest {
   void rendersMasterRegistryIpv6Endpoints() {
     Configuration configuration = new Configuration(false);
     configuration.set(REGISTRY_KEY, MASTER_REGISTRY);
-    configuration.set("hbase.masters", "2001:db8::2,[2001:db8::1]:16001");
+    configuration.set("hbase.masters", "2001:db8::2,[2001:db8::1]:16001,[2001:db8::3]");
 
     assertThat(HbaseServerTarget.from(configuration, false, true, true))
-        .isEqualTo("[2001:db8::1]:16001,[2001:db8::2]:16000");
+        .isEqualTo("[2001:db8::1]:16001,[2001:db8::2]:16000,[2001:db8::3]:16000");
   }
 
   @Test
@@ -189,6 +205,9 @@ class HbaseServerTargetTest {
     assertThat(HbaseServerTarget.from(zkConfiguration)).isNull();
 
     zkConfiguration.set("hbase.zookeeper.quorum", " zk-a,zk-b");
+    assertThat(HbaseServerTarget.from(zkConfiguration)).isNull();
+
+    zkConfiguration.set("hbase.zookeeper.quorum", "not:an:ipv6-address");
     assertThat(HbaseServerTarget.from(zkConfiguration)).isNull();
 
     masterConfiguration.set("hbase.masters", "master-a");
