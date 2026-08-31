@@ -86,7 +86,7 @@ public final class RediscalaServerTargets {
   private static Method findRedisServers(Class<?> poolClass) {
     try {
       return poolClass.getMethod("redisServers");
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }
@@ -95,7 +95,7 @@ public final class RediscalaServerTargets {
   private static Class<?> findClass(String className) {
     try {
       return Class.forName(className, false, RediscalaServerTargets.class.getClassLoader());
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }
@@ -107,7 +107,7 @@ public final class RediscalaServerTargets {
     }
     try {
       return declaringClass.getMethod(methodName);
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }
