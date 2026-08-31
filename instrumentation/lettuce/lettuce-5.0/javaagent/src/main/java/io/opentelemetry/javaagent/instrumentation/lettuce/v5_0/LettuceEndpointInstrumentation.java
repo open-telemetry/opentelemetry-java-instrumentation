@@ -24,6 +24,7 @@ import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -66,11 +67,17 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       AsyncCommand<?, ?, ?> asyncCommand = asAsyncCommand(command);
       COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get(endpoint));
       COMMAND_DATABASE_INDEX.set(command, ENDPOINT_DATABASE_INDEX.get(endpoint));
-      COMMAND_TARGET.set(command, ENDPOINT_TARGET.get(endpoint));
+      RedisServerTarget commandTarget = commandTarget(command);
+      if (commandTarget != null) {
+        COMMAND_TARGET.set(command, commandTarget);
+      }
 
       if (LettuceBatchContext.isBatching(endpoint)) {
         LettuceBatchContext.capture(endpoint, command, asyncCommand);
         return;
+      }
+      if (commandTarget == null) {
+        COMMAND_TARGET.set(command, ENDPOINT_TARGET.get(endpoint));
       }
 
       // Reactive commands are not backed by an AsyncCommand future and are traced by
@@ -94,6 +101,25 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       } else {
         instrumenter().end(context, command, null, null);
       }
+    }
+
+    @Nullable
+    public static RedisServerTarget commandTarget(RedisCommand<?, ?, ?> command) {
+      RedisCommand<?, ?, ?> current = command;
+      while (current != null) {
+        RedisServerTarget target = COMMAND_TARGET.get(current);
+        if (target != null) {
+          return target;
+        }
+        if (current instanceof AsyncCommand) {
+          current = ((AsyncCommand<?, ?, ?>) current).getDelegate();
+        } else if (current instanceof CommandWrapper) {
+          current = ((CommandWrapper<?, ?, ?>) current).getDelegate();
+        } else {
+          break;
+        }
+      }
+      return null;
     }
 
     @Nullable

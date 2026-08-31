@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_TARGET;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
@@ -73,7 +74,7 @@ public final class LettuceBatchContext {
         state.parentContext,
         ENDPOINT_ADDRESS.get(endpoint),
         ENDPOINT_DATABASE_INDEX.get(endpoint),
-        ENDPOINT_TARGET.get(endpoint));
+        state.getServerTarget(ENDPOINT_TARGET.get(endpoint)));
   }
 
   private LettuceBatchContext() {}
@@ -145,9 +146,20 @@ public final class LettuceBatchContext {
     private final List<RedisCommand<?, ?, ?>> commands = new ArrayList<>();
     private final List<AsyncCommand<?, ?, ?>> asyncCommands = new ArrayList<>();
     @Nullable private Context parentContext;
+    @Nullable private RedisServerTarget serverTarget;
+    private boolean serverTargetsDisagree;
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
+      RedisServerTarget commandTarget = COMMAND_TARGET.get(command);
+      if (commandTarget != null && !serverTargetsDisagree) {
+        if (serverTarget == null) {
+          serverTarget = commandTarget;
+        } else if (!sameServerTarget(serverTarget, commandTarget)) {
+          serverTarget = null;
+          serverTargetsDisagree = true;
+        }
+      }
       if (parentContext == null && asyncCommand != null) {
         parentContext = CONTEXT.get(asyncCommand);
       }
@@ -158,6 +170,21 @@ public final class LettuceBatchContext {
 
     private boolean isEmpty() {
       return commands.isEmpty();
+    }
+
+    @Nullable
+    private RedisServerTarget getServerTarget(@Nullable RedisServerTarget fallback) {
+      if (serverTargetsDisagree) {
+        return null;
+      }
+      return serverTarget != null ? serverTarget : fallback;
+    }
+
+    private static boolean sameServerTarget(RedisServerTarget first, RedisServerTarget second) {
+      Integer firstPort = first.getPort();
+      Integer secondPort = second.getPort();
+      return first.getAddress().equals(second.getAddress())
+          && (firstPort == null ? secondPort == null : firstPort.equals(secondPort));
     }
   }
 }
