@@ -1,0 +1,51 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
+
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pekko.http.scaladsl.model.HttpRequest;
+import org.apache.pekko.stream.Attributes;
+import scala.Function1;
+
+/**
+ * Instruments the request parsing of the http/2 server stack, which builds a parsing function from
+ * the stream attributes of the connection.
+ */
+class Http2RequestParsingInstrumentation implements TypeInstrumentation {
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("org.apache.pekko.http.impl.engine.http2.RequestParsing$");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        named("parseRequest")
+            .and(takesArgument(2, named("org.apache.pekko.stream.Attributes")))
+            .and(returns(named("scala.Function1"))),
+        getClass().getName() + "$ParseRequestAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ParseRequestAdvice {
+
+    @Advice.AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static Function1<Object, HttpRequest> onExit(
+        @Advice.Argument(2) Attributes attributes,
+        @Advice.Return Function1<Object, HttpRequest> parseRequest) {
+      return PekkoHttp2RequestParsingWrapper.wrap(parseRequest, attributes);
+    }
+  }
+}

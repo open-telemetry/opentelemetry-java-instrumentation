@@ -1075,7 +1075,7 @@ definitions:
       name: otel.instrumentation.opensearch.capture-search-query
       declarative_name: java.opensearch.capture_search_query
       description: |
-        Enable the capture of sanitized search query bodies. Search queries may contain personal or sensitive information.
+        Deprecated and will be removed in 3.0, when sanitized search query bodies are always captured. There is no replacement. Until then, set this to false to disable capture. Search queries may contain personal or sensitive information.
       type: boolean
       default: true
     otel.instrumentation.opentelemetry-annotations.exclude-methods:
@@ -1738,6 +1738,27 @@ definitions:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-6dc4ed81:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -13089,7 +13110,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-bfd9d23c
+    - db.client.operation.duration-6dc4ed81
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15474,7 +15495,7 @@ libraries:
         type: STRING
   - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15487,6 +15508,8 @@ libraries:
       - name: http.response.status_code
         type: LONG
       - name: http.route
+        type: STRING
+      - name: network.protocol.version
         type: STRING
       - name: peer.service
         type: STRING
@@ -15498,7 +15521,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=service.peer
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15511,6 +15534,8 @@ libraries:
       - name: http.response.status_code
         type: LONG
       - name: http.route
+        type: STRING
+      - name: network.protocol.version
         type: STRING
       - name: server.address
         type: STRING
@@ -15611,7 +15636,7 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.semconv-stability.preview=messaging
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.process.duration-5301bc21
     spans:
