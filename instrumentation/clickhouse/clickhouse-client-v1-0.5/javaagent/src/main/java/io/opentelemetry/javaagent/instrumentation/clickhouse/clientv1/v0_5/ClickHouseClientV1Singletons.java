@@ -159,7 +159,7 @@ public class ClickHouseClientV1Singletons {
       }
 
       if (host.startsWith("[")) {
-        if (!host.endsWith("]")) {
+        if (!host.endsWith("]") || host.indexOf(':') < 0) {
           return null;
         }
         host = host.substring(1, host.length() - 1);

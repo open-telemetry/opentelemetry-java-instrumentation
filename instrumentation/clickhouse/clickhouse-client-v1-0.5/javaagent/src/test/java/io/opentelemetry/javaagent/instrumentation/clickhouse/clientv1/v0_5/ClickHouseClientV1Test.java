@@ -754,7 +754,7 @@ class ClickHouseClientV1Test {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"host1,host2", "host?email=user@example.com"})
+  @ValueSource(strings = {"host1,host2", "host?email=user@example.com", "[configured.example]"})
   void testConfiguredNodeHostsRejectMalformedValues(String configuredHost) throws Exception {
     ClickHouseNode malformedNode = ClickHouseNode.builder(server).host(configuredHost).build();
     ClickHouseNodes nodes = createNodes(ImmutableList.of(server, malformedNode));
