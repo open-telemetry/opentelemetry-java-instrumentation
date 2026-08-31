@@ -12,7 +12,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-public final class MongoConnectionPeer {
+public class MongoConnectionPeer {
 
   private static final VirtualField<ConnectionDescription, MongoNetworkPeer> CONNECTION_PEER =
       VirtualField.find(ConnectionDescription.class, MongoNetworkPeer.class);
@@ -70,7 +70,7 @@ public final class MongoConnectionPeer {
     return CONNECTION_PEER.get(connectionDescription);
   }
 
-  public static final class OpenState {
+  public static class OpenState {
     @Nullable private final OpenState previous;
     @Nullable private MongoNetworkPeer peer;
 

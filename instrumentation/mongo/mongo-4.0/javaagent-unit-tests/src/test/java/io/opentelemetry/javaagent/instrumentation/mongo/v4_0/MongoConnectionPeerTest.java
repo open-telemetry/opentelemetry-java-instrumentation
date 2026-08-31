@@ -109,7 +109,7 @@ class MongoConnectionPeerTest {
     };
   }
 
-  private static final class ConnectedSocket implements AutoCloseable {
+  private static class ConnectedSocket implements AutoCloseable {
     private final ServerSocket server;
     private final Socket client;
     private final Socket accepted;

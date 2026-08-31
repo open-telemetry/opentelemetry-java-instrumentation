@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class MongoNetworkPeer {
+public class MongoNetworkPeer {
 
   private final String address;
   @Nullable private final Integer port;
