@@ -214,6 +214,8 @@ public class ClickHouseClientV2Singletons {
     }
   }
 
+  // VirtualField keys its storage by the owner class and the field type, so this wrapper is what
+  // keeps CURRENT_SERVER_INFO_FIELD separate from SERVER_INFO_FIELD.
   private static class CurrentServerInfo {
     private final ServerInfo serverInfo;
 
