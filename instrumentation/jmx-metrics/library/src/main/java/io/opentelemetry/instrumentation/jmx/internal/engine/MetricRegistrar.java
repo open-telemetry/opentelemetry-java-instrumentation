@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -116,7 +115,7 @@ class MetricRegistrar implements AutoCloseable {
           } else {
             register(builder.buildWithCallback(longTypeCallback(extractor)));
           }
-          logger.log(INFO, "Created Counter for {0}", metricName);
+          logger.log(FINE, "Created Counter for {0}", metricName);
         }
         break;
 
@@ -136,7 +135,7 @@ class MetricRegistrar implements AutoCloseable {
           } else {
             register(builder.buildWithCallback(longTypeCallback(extractor)));
           }
-          logger.log(INFO, "Created UpDownCounter for {0}", metricName);
+          logger.log(FINE, "Created UpDownCounter for {0}", metricName);
         }
         break;
 
@@ -153,7 +152,7 @@ class MetricRegistrar implements AutoCloseable {
           } else {
             register(builder.ofLongs().buildWithCallback(longTypeCallback(extractor)));
           }
-          logger.log(INFO, "Created Gauge for {0}", metricName);
+          logger.log(FINE, "Created Gauge for {0}", metricName);
         }
         break;
       // CHECKSTYLE:OFF
