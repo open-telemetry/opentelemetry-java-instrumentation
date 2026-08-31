@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.Map;
 import javax.annotation.Nullable;
 import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Connection;
@@ -121,6 +122,18 @@ public class JedisSingletons {
   public static void attachClusterTarget(Object handler, @Nullable Object connection) {
     if (Boolean.TRUE.equals(configuredClusterHandlers.get(handler))) {
       attach(clusterTargets.get(handler), connection);
+    }
+  }
+
+  public static void attachClusterTargetToPools(Object handler, @Nullable Map<?, ?> pools) {
+    if (!Boolean.TRUE.equals(configuredClusterHandlers.get(handler)) || pools == null) {
+      return;
+    }
+    RedisServerTarget target = clusterTargets.get(handler);
+    for (Object pool : pools.values()) {
+      if (pool instanceof Pool<?>) {
+        setPoolTarget((Pool<?>) pool, target);
+      }
     }
   }
 
