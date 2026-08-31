@@ -128,7 +128,7 @@ class Jedis40ClientTest {
     Class<?> poolClass;
     try {
       poolClass = Class.forName("redis.clients.jedis.JedisPool");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       assumeTrue(false, "JedisPool was reintroduced after 4.0.0-beta1");
       return;
     }
