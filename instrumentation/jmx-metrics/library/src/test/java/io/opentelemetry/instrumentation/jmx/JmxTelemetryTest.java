@@ -46,28 +46,31 @@ class JmxTelemetryTest {
   @Test
   void knownValidYaml() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    builder.addRules(classpathRules("jmx/rules/jvm.yaml"));
-    builder.setMetrics(IncludeExclude.builder().setExcluded("excluded.metric").build());
+    builder.addRules(classpathRules("jmx/rules/jvm-test.yaml"));
+    builder.setMetrics(IncludeExclude.builder().setExcluded("jvm.thread.count").build());
     JmxTelemetry telemetry = builder.build();
     assertThat(telemetry).isNotNull();
 
     // by default include should contain all registered metrics, and the provided excluded should
     // be preserved as-is
     IncludeExclude includeExclude = telemetry.getMetrics();
-    assertThat(includeExclude.getIncluded()).isNotEmpty();
-    assertThat(includeExclude.getIncluded()).allMatch(m -> m.startsWith("jvm."));
-    assertThat(includeExclude.getExcluded()).contains("excluded.metric");
+    assertThat(includeExclude.getIncluded())
+        .containsExactlyInAnyOrder("jvm.memory.committed", "jvm.memory.used", "jvm.thread.count");
+    assertThat(includeExclude.getExcluded()).containsExactlyInAnyOrder("jvm.thread.count");
+    // when both included and excluded are provided, the excluded should take precedence
+    assertThat(includeExclude.matches("jvm.thread.count")).isFalse();
   }
 
   @Test
   void metricsExplicitInclude() {
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop())
-        .addRules(classpathRules("jmx/rules/jvm.yaml"))
-        .setMetrics(
-            IncludeExclude.builder()
-                .setIncluded("jvm.memory.used")
-                .setExcluded("missing.metric")
-                .build());
+    JmxTelemetryBuilder builder =
+        JmxTelemetry.builder(OpenTelemetry.noop())
+            .addRules(classpathRules("jmx/rules/jvm-test.yaml"))
+            .setMetrics(
+                IncludeExclude.builder()
+                    .setIncluded("jvm.memory.used")
+                    .setExcluded("missing.metric")
+                    .build());
     JmxTelemetry telemetry = builder.build();
     assertThat(telemetry).isNotNull();
 
@@ -76,12 +79,13 @@ class JmxTelemetryTest {
   }
 
   @Test
-  void includeStableAndUnstableBySystem(){
+  void includeStableAndUnstableBySystem() {
     // allows to provide a fallback to include embedded metrics per-system
-    IncludeExclude includeInclude = IncludeExclude.builder().setIncluded("jvm").build();
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop())
-        .addStableMetrics(includeInclude)
-        .addUnstableMetrics(includeInclude);
+    IncludeExclude includeInclude = IncludeExclude.builder().setIncluded("jvm-test").build();
+    JmxTelemetryBuilder builder =
+        JmxTelemetry.builder(OpenTelemetry.noop())
+            .addStableMetrics(includeInclude)
+            .addUnstableMetrics(includeInclude);
     JmxTelemetry telemetry = builder.build();
     assertThat(telemetry).isNotNull();
 

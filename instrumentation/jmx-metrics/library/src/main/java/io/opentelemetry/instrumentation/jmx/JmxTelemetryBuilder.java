@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 
@@ -23,7 +24,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,17 +37,17 @@ public final class JmxTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final MetricConfiguration metricConfiguration;
   private long discoveryDelayMs;
-  private ComponentLoader componentLoader =
-      ComponentLoader.forClassLoader(JmxTelemetryBuilder.class.getClassLoader());
+  private ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
+  private ComponentLoader componentLoader = ComponentLoader.forClassLoader(classLoader);
   private final Set<String> registeredMetrics = new HashSet<>();
   private final Set<String> registeredHandlers = new HashSet<>();
   private IncludeExclude metrics = IncludeExclude.builder().build();
 
   // include no metrics by default
-  private IncludeExclude stableMetricsSystemFilter = IncludeExclude.builder().setIncluded(
-      Collections.emptyList()).build();
-  private IncludeExclude unstableMetricsSystemFilter = IncludeExclude.builder().setIncluded(
-      Collections.emptyList()).build();
+  private IncludeExclude stableMetricsSystemFilter =
+      IncludeExclude.builder().setIncluded(emptyList()).build();
+  private IncludeExclude unstableMetricsSystemFilter =
+      IncludeExclude.builder().setIncluded(emptyList()).build();
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -143,24 +143,31 @@ public final class JmxTelemetryBuilder {
   public JmxTelemetryBuilder setServiceClassLoader(ClassLoader serviceClassLoader) {
     requireNonNull(serviceClassLoader, "serviceClassLoader");
     this.componentLoader = ComponentLoader.forClassLoader(serviceClassLoader);
+    this.classLoader = serviceClassLoader;
     return this;
   }
 
   public JmxTelemetry build() {
 
-    InternalMetricsDefinitions internalMetrics = new InternalMetricsDefinitions();
-    internalMetrics.getSupportedSystems().forEach(system -> {
-      Set<String> rules = internalMetrics.getRulesForSystem(system,
-          stableMetricsSystemFilter.matches(system),
-          unstableMetricsSystemFilter.matches(system));
-      for (String path : rules) {
-        try (InputStream input = JmxTelemetryBuilder.class.getClassLoader().getResourceAsStream(path)){
-          addRules(input);
-        } catch (IOException e){
-          throw new IllegalStateException("Unable to load JMX rules from: " + path, e);
-        }
-      }
-    });
+    InternalMetricsDefinitions internalMetrics = new InternalMetricsDefinitions(classLoader);
+    InternalMetricsDefinitions.getSupportedSystems()
+        .forEach(
+            system -> {
+              Set<String> rules =
+                  internalMetrics.getRulesForSystem(
+                      system,
+                      stableMetricsSystemFilter.matches(system),
+                      unstableMetricsSystemFilter.matches(system));
+              for (String path : rules) {
+                try (InputStream input = classLoader.getResourceAsStream(path)) {
+                  if (input != null) {
+                    addRules(input);
+                  }
+                } catch (IOException e) {
+                  throw new IllegalStateException("Unable to load JMX rules from: " + path, e);
+                }
+              }
+            });
 
     HandlerRegistry handlerRegistry = new HandlerRegistry();
     handlerRegistry.load(componentLoader);

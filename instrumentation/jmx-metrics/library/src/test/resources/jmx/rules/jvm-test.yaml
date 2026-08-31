@@ -1,0 +1,31 @@
+---
+# subset of jvm rules for testing without dependency on real jvm metrics evolution
+rules:
+
+  - bean: java.lang:type=MemoryPool,name=*
+    prefix: jvm.memory.
+    type: updowncounter
+    unit: By
+    metricAttribute:
+      jvm.memory.pool.name: param(name)
+      jvm.memory.type: lowercase(beanattr(Type))
+    mapping:
+      # jvm.memory.used
+      Usage.used:
+        metric: used
+        desc: Measure of memory used.
+      # jvm.memory.committed
+      Usage.committed:
+        metric: committed
+        desc: Measure of memory committed.
+
+  - bean: java.lang:type=Threading
+    prefix: jvm.thread.
+    mapping:
+      # jvm.thread.count
+      # limitation: 'jvm.thread.daemon' and 'jvm.thread.state' metric attributes are not provided
+      ThreadCount:
+        metric: count
+        type: updowncounter
+        unit: "{thread}"
+        desc: Number of executing platform threads.
