@@ -328,6 +328,7 @@ class DbExecutionTest {
         "/",
         "/var/run/postgresql,host2",
         "/var/run/postgresql=secret",
+        "/var/run/postgresql%3Fpassword%3Dsecret",
         "/var/run/user:secret@postgresql",
         "/var/run/postgresql?password=secret",
         "/var/run/postgresql#fragment"

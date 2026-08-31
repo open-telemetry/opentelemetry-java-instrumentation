@@ -163,6 +163,7 @@ public final class DbExecution {
         || serverAddress.length() == 1
         || serverAddress.indexOf(',') >= 0
         || serverAddress.indexOf('=') >= 0
+        || serverAddress.indexOf('%') >= 0
         || serverAddress.indexOf('@') >= 0
         || serverAddress.indexOf('?') >= 0
         || serverAddress.indexOf('#') >= 0) {
