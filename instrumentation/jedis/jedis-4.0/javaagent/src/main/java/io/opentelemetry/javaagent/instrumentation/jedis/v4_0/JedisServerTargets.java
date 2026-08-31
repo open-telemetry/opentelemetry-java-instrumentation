@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.HostAndPort;
@@ -26,8 +25,7 @@ public final class JedisServerTargets {
         endpoints.add(RedisServerTarget.endpoint(node.getHost(), node.getPort()));
       }
     }
-    Collections.sort(endpoints);
-    return RedisServerTarget.ofEndpoints(endpoints);
+    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
 
   @Nullable
@@ -47,7 +45,7 @@ public final class JedisServerTargets {
         }
       }
     }
-    return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, masterName);
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, masterName);
   }
 
   // Sentinel constructor argument order varies across supported Jedis 4 releases.
@@ -61,7 +59,7 @@ public final class JedisServerTargets {
         }
       }
     }
-    return RedisServerTarget.ofEndpointsAndLogicalName(null, masterName);
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(null, masterName);
   }
 
   private static String normalizeSentinelEndpoint(String endpoint) {

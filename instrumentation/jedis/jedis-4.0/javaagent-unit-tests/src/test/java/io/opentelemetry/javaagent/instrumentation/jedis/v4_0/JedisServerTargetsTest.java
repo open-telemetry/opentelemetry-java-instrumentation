@@ -38,17 +38,17 @@ class JedisServerTargetsTest {
   }
 
   @Test
-  void nodesThatNameTheSameEndpointCollapse() {
+  void duplicateNodesFromAListArePreserved() {
     RedisServerTarget target =
         JedisServerTargets.ofNodes(
             asList(new HostAndPort("node1", 7000), new HostAndPort("node1", 7000)));
 
-    assertThat(target.getAddress()).isEqualTo("node1");
-    assertThat(target.getPort()).isEqualTo(7000);
+    assertThat(target.getAddress()).isEqualTo("node1:7000,node1:7000");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void sentinelsAreSortedDeduplicatedAndShareTheirMasterSuffix() {
+  void sentinelsAreSortedAndKeepDuplicatesAndMasterSuffix() {
     RedisServerTarget target =
         JedisServerTargets.ofSentinels(
             "mymaster",
@@ -57,7 +57,8 @@ class JedisServerTargetsTest {
                 new HostAndPort("sentinel1", 26379),
                 new HostAndPort("sentinel2", 26380)));
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
+    assertThat(target.getAddress())
+        .isEqualTo("sentinel1:26379,sentinel2:26380,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 

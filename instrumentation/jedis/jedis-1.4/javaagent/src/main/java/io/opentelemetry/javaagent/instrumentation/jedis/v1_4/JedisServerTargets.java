@@ -22,7 +22,7 @@ public final class JedisServerTargets {
     for (JedisShardInfo shard : shards) {
       endpoints.add(RedisServerTarget.endpoint(shard.getHost(), shard.getPort()));
     }
-    return RedisServerTarget.ofEndpoints(endpoints);
+    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
 
   private JedisServerTargets() {}

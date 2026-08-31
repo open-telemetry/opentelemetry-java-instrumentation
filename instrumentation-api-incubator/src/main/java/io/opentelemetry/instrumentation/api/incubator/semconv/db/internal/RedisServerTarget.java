@@ -6,10 +6,8 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("OtelInternalJavadoc")
@@ -45,6 +43,17 @@ public final class RedisServerTarget {
 
   @Nullable
   public static RedisServerTarget ofEndpoints(@Nullable List<String> endpoints) {
+    return createFromEndpoints(endpoints, false);
+  }
+
+  @Nullable
+  public static RedisServerTarget ofUnorderedEndpoints(@Nullable List<String> endpoints) {
+    return createFromEndpoints(endpoints, true);
+  }
+
+  @Nullable
+  private static RedisServerTarget createFromEndpoints(
+      @Nullable List<String> endpoints, boolean unordered) {
     if (endpoints == null || endpoints.isEmpty()) {
       return null;
     }
@@ -62,22 +71,21 @@ public final class RedisServerTarget {
       Endpoint only = parsed.get(0);
       return new RedisServerTarget(only.host, only.port);
     }
-    Set<String> rendered = new LinkedHashSet<>();
+    List<String> rendered = new ArrayList<>(parsed.size());
     for (Endpoint endpoint : parsed) {
       rendered.add(endpoint.render());
     }
-    if (rendered.size() == 1) {
-      Endpoint only = parsed.get(0);
-      return new RedisServerTarget(only.host, only.port);
+    if (unordered) {
+      Collections.sort(rendered);
     }
     return new RedisServerTarget(String.join(",", rendered), null);
   }
 
   @Nullable
-  public static RedisServerTarget ofEndpointsAndLogicalName(
+  public static RedisServerTarget ofUnorderedEndpointsAndLogicalName(
       @Nullable List<String> endpoints, @Nullable String name) {
     String logicalName = name == null ? "" : name.trim();
-    Set<String> rendered = new TreeSet<>();
+    List<String> rendered = new ArrayList<>();
     if (endpoints != null) {
       for (String endpoint : endpoints) {
         Endpoint parsed = Endpoint.parse(endpoint);
@@ -86,6 +94,7 @@ public final class RedisServerTarget {
         }
       }
     }
+    Collections.sort(rendered);
     if (rendered.isEmpty()) {
       return ofLogicalName(logicalName);
     }
