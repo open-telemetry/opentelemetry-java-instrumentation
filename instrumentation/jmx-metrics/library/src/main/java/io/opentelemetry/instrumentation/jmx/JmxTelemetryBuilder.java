@@ -13,6 +13,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
+import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
@@ -40,6 +41,8 @@ public final class JmxTelemetryBuilder {
   private final Set<String> registeredMetrics = new HashSet<>();
   private final Set<String> registeredHandlers = new HashSet<>();
   private IncludeExclude metrics = IncludeExclude.builder().build();
+  private IncludeExclude stableMetricsSystemFilter = null;
+  private IncludeExclude unstableMetricsSystemFilter = null;
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -118,6 +121,18 @@ public final class JmxTelemetryBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder addStableMetrics(IncludeExclude systemFilter) {
+    this.stableMetricsSystemFilter = systemFilter;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder addUnstableMetrics(IncludeExclude systemFilter) {
+    this.unstableMetricsSystemFilter = systemFilter;
+    return this;
+  }
+
   /** Sets the {@link ClassLoader} to be used to load SPI implementations. */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder setServiceClassLoader(ClassLoader serviceClassLoader) {
@@ -127,6 +142,21 @@ public final class JmxTelemetryBuilder {
   }
 
   public JmxTelemetry build() {
+
+
+    Set<String> resourcesToLoad = new HashSet<>();
+    if(stableMetricsSystemFilter != null || unstableMetricsSystemFilter != null){
+      InternalMetricsDefinitions internalMetrics = new InternalMetricsDefinitions();
+      internalMetrics.getSupportedSystems().forEach(system ->{
+        if(stableMetricsSystemFilter != null && stableMetricsSystemFilter.matches(system) ||
+        unstableMetricsSystemFilter != null && unstableMetricsSystemFilter.matches(system)){
+          String rulesPath = internalMetrics.getRulesPathForSystem(system);
+          if(rulesPath != null){
+            resourcesToLoad.add(rulesPath);
+          }
+        }
+      });
+    }
 
     HandlerRegistry handlerRegistry = new HandlerRegistry();
     handlerRegistry.load(componentLoader);
