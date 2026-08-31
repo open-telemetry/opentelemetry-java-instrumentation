@@ -27,6 +27,7 @@ dependencies {
   library("org.mongodb:mongo-java-driver:3.11.0")
   latestDepTestLibrary("org.mongodb:mongo-java-driver:3.+") // see mongo-4.0 module
 
+  testImplementation(project(":instrumentation:mongo:mongo-3.1:testing"))
   testImplementation(project(":instrumentation:mongo:mongo-common:testing"))
   testImplementation("com.github.jnr:jnr-unixsocket:0.18")
 
