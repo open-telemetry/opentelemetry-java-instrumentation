@@ -5,7 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -70,9 +75,11 @@ class SpringWebfluxClientInstrumentationTest
                     histogram ->
                         histogram.hasPointsSatisfying(
                             point ->
-                                point.hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsEntry(NETWORK_PROTOCOL_VERSION, "1.1")))));
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                    equalTo(SERVER_ADDRESS, uri.getHost()),
+                                    equalTo(SERVER_PORT, uri.getPort())))));
   }
 }
