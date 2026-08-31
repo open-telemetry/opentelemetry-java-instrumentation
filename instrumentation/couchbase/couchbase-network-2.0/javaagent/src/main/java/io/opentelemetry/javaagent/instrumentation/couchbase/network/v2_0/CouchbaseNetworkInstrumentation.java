@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.network.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.network.v2_0.VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -48,12 +49,16 @@ class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ChannelHandlerContext channelHandlerContext,
         @Advice.Argument(1) CouchbaseRequest request) {
 
+      // core-io before 1.6.0 has no reliable, version-stable way to read the node string the driver
+      // considers itself connected to, so unlike couchbase-2.6 this only records the actual peer
+      // the driver connected to. The old semantic conventions describe these spans with that node
+      // string, so they are left as they are.
+      if (!emitStableDatabaseSemconv()) {
+        return;
+      }
+
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {
-        // core-io before 1.6.0 has no reliable, version-stable way to read the node string the
-        // driver considers itself connected to, so unlike couchbase-2.6 this only records the
-        // actual peer the driver connected to, leaving the old (non-stable) semconv server
-        // address/port fallback unset rather than guessing at an unresolved value.
         requestInfo.setNode(channelHandlerContext.channel().remoteAddress(), null);
       }
     }
