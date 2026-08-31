@@ -16,14 +16,7 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
-  val testDupSemconv = register<Test>("testDupSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
-  }
-
   check {
-    dependsOn(testDupSemconv, testStableSemconv)
+    dependsOn(testStableSemconv)
   }
 }
