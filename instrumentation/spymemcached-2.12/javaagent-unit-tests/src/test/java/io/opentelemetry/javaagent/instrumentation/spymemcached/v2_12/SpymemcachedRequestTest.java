@@ -186,6 +186,33 @@ class SpymemcachedRequestTest {
   }
 
   @Test
+  void fullBulkRetryToOneNodeUsesRetryNode() {
+    MemcachedConnection connection = mock(MemcachedConnection.class);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
+    Operation initialOperation = operation("one.example", 11211, "one", "two");
+    Context context = SpymemcachedRequestHolder.init(Context.root(), request);
+    SpymemcachedRequestHolder.associateOperation(context, initialOperation);
+    SpymemcachedRequestHolder.captureHandlingNode(context, initialOperation);
+
+    MemcachedNode retryNode = memcachedNode("two.example", 11212);
+    SpymemcachedRequestHolder.RetryScope retryScope =
+        SpymemcachedRequestHolder.startRetry(initialOperation);
+    assertThat(retryScope).isNotNull();
+    try {
+      Operation firstRetry = operation(retryNode, "one");
+      SpymemcachedRequestHolder.associateOperation(Context.current(), firstRetry);
+      SpymemcachedRequestHolder.captureHandlingNode(Context.current(), firstRetry);
+      Operation secondRetry = operation(retryNode, "two");
+      SpymemcachedRequestHolder.associateOperation(Context.current(), secondRetry);
+      SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondRetry);
+    } finally {
+      retryScope.close();
+    }
+
+    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
+  }
+
+  @Test
   void retryOntoSeveralNodesHasNoHandlingNode() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
@@ -304,8 +331,11 @@ class SpymemcachedRequestTest {
   }
 
   private static Operation operation(String host, int port, String... keys) {
+    return operation(memcachedNode(host, port), keys);
+  }
+
+  private static Operation operation(MemcachedNode node, String... keys) {
     KeyedOperation operation = mock(KeyedOperation.class);
-    MemcachedNode node = memcachedNode(host, port);
     when(operation.getHandlingNode()).thenReturn(node);
     when(operation.getKeys()).thenReturn(asList(keys));
     return operation;
