@@ -19,11 +19,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  * which is where the jakarta client and API dependencies live) for the jakarta namespace
  * equivalent; it cannot live here because this module deliberately has no jakarta dependency.
  *
- * <p>NOTE: broker-backed coverage (span kind on classic {@code MQQueue.put}, both {@code put}
- * overloads with call-depth suppression, JMS producer and asynchronous listener enrichment, the
- * message-keyed fallback, and re-reading the identifier after a client reconnect) still needs a
- * testcontainers integration test against a real queue manager. That is not covered here -- see
- * {@code IbmMqJmsTest} (javax) and {@code IbmMqJakartaJmsTest} (jakarta).
+ * <p>Broker-backed integration tests are in {@code IbmMqJmsTest} (javax) and {@code
+ * IbmMqJakartaJmsTest} (jakarta), run against testcontainers. They verify QMID enrichment on JMS
+ * producer spans, asynchronous listener process spans, and the message-keyed fallback path.
  */
 class IbmMqTest {
 

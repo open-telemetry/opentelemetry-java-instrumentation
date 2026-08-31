@@ -9,7 +9,7 @@ import com.ibm.msg.client.jms.JmsReadablePropertyContext;
 import com.ibm.msg.client.wmq.common.CommonConstants;
 import javax.annotation.Nullable;
 
-public final class IbmMqJmsQmid {
+public class IbmMqJmsQmid {
 
   // Never cached: the resolved properties are refreshed after an automatic client reconnect, which
   // may land on a different queue manager.

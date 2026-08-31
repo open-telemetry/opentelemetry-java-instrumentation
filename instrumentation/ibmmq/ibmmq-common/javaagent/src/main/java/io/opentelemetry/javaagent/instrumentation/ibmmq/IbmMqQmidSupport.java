@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 
 // Shared by the javax and jakarta variants; references neither client type. Muzzle collects
 // references per class, and the two MQ client jars are disjoint, so a leaked reference would fail.
-public final class IbmMqQmidSupport {
+public class IbmMqQmidSupport {
 
   // Proposed for the OpenTelemetry semantic conventions messaging registry; not yet merged.
   private static final AttributeKey<String> MESSAGING_IBMMQ_QUEUE_MANAGER_ID =

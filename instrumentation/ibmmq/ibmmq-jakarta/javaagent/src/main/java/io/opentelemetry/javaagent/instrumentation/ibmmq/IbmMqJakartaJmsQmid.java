@@ -9,7 +9,7 @@ import com.ibm.msg.client.jakarta.jms.JmsReadablePropertyContext;
 import com.ibm.msg.client.jakarta.wmq.common.CommonConstants;
 import javax.annotation.Nullable;
 
-public final class IbmMqJakartaJmsQmid {
+public class IbmMqJakartaJmsQmid {
 
   @Nullable
   public static String readQmid(Object jmsObject) {

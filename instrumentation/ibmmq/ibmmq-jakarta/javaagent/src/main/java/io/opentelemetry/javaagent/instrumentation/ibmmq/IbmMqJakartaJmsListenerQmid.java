@@ -10,7 +10,7 @@ import jakarta.jms.Message;
 import jakarta.jms.MessageListener;
 import javax.annotation.Nullable;
 
-public final class IbmMqJakartaJmsListenerQmid {
+public class IbmMqJakartaJmsListenerQmid {
 
   private static final Object NOT_AVAILABLE = new Object();
 
