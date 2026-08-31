@@ -97,7 +97,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       AsyncResponseConsumer<?> modifiedResponseConsumer = responseConsumer;
       if (captureSearchPeer) {
         modifiedResponseConsumer =
-            new SearchPeerResponseConsumer<>(parentContext, httpContext, responseConsumer);
+            new SearchPeerResponseConsumer<>(parentContext, responseConsumer);
       }
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(
@@ -187,13 +187,10 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
   public static class SearchPeerResponseConsumer<T> implements AsyncResponseConsumer<T> {
     private final Context parentContext;
-    private final HttpContext httpContext;
     private final AsyncResponseConsumer<T> delegate;
 
-    public SearchPeerResponseConsumer(
-        Context parentContext, HttpContext httpContext, AsyncResponseConsumer<T> delegate) {
+    public SearchPeerResponseConsumer(Context parentContext, AsyncResponseConsumer<T> delegate) {
       this.parentContext = parentContext;
-      this.httpContext = httpContext;
       this.delegate = delegate;
     }
 
@@ -232,7 +229,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void failed(Exception cause) {
-      capture(parentContext, httpContext);
       delegate.failed(cause);
     }
 
