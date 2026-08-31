@@ -103,7 +103,7 @@ public abstract class JedisRequest {
 
   @Nullable
   private static RedisServerTarget serverTargetOf(@Nullable Object connection) {
-    return connection instanceof Connection
+    return emitStableDatabaseSemconv() && connection instanceof Connection
         ? JedisSingletons.connectionTarget((Connection) connection)
         : null;
   }
