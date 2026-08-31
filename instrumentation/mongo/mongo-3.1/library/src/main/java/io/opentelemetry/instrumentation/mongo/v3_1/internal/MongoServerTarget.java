@@ -9,6 +9,7 @@ import com.mongodb.ServerAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -17,6 +18,7 @@ import javax.annotation.Nullable;
  */
 public final class MongoServerTarget {
 
+  private static final int DEFAULT_PORT = 27017;
   private static final String SRV_SCHEME = "mongodb+srv://";
 
   // the driver reports its default port for socket paths, but the port is not part of the target
@@ -30,7 +32,8 @@ public final class MongoServerTarget {
     if (srvHost == null || srvHost.isEmpty()) {
       return null;
     }
-    return new MongoServerTarget(SRV_SCHEME + srvHost, null);
+    String host = sanitizeSrvHost(srvHost);
+    return host.isEmpty() ? null : new MongoServerTarget(SRV_SCHEME + host, null);
   }
 
   @Nullable
@@ -38,28 +41,42 @@ public final class MongoServerTarget {
     if (seeds == null || seeds.isEmpty()) {
       return null;
     }
-    if (seeds.size() == 1) {
-      return single(seeds.get(0));
-    }
 
-    List<String> endpoints = new ArrayList<>(seeds.size());
+    List<String> hosts = new ArrayList<>(seeds.size());
+    List<Integer> ports = new ArrayList<>(seeds.size());
+    boolean hasSharedPort = true;
+    Integer sharedPort = null;
     for (ServerAddress seed : seeds) {
-      String endpoint = endpoint(seed);
-      if (endpoint == null) {
+      String host = host(seed);
+      if (host == null) {
         return null;
       }
-      endpoints.add(endpoint);
+      Integer port = isUnixSocket(host) ? null : seed.getPort();
+      hosts.add(host);
+      ports.add(port);
+      if (hosts.size() == 1) {
+        sharedPort = port;
+      } else if (!Objects.equals(sharedPort, port)) {
+        hasSharedPort = false;
+      }
     }
-    Collections.sort(endpoints, String::compareTo);
+
+    List<String> addresses = new ArrayList<>(seeds.size());
+    for (int i = 0; i < hosts.size(); i++) {
+      addresses.add(hasSharedPort ? hosts.get(i) : endpoint(hosts.get(i), ports.get(i)));
+    }
+    Collections.sort(addresses, String::compareTo);
 
     StringBuilder address = new StringBuilder();
-    for (String endpoint : endpoints) {
+    for (String value : addresses) {
       if (address.length() > 0) {
         address.append(',');
       }
-      address.append(endpoint);
+      address.append(value);
     }
-    return new MongoServerTarget(address.toString(), null);
+    Integer port =
+        hasSharedPort && sharedPort != null && sharedPort != DEFAULT_PORT ? sharedPort : null;
+    return new MongoServerTarget(address.toString(), port);
   }
 
   private MongoServerTarget(String address, @Nullable Integer port) {
@@ -67,31 +84,14 @@ public final class MongoServerTarget {
     this.port = port;
   }
 
-  @Nullable
-  private static MongoServerTarget single(@Nullable ServerAddress seed) {
-    if (seed == null) {
-      return null;
-    }
-    String host = host(seed);
-    if (host == null) {
-      return null;
-    }
-    return new MongoServerTarget(host, isUnixSocket(host) ? null : seed.getPort());
-  }
-
-  @Nullable
-  private static String endpoint(@Nullable ServerAddress seed) {
-    if (seed == null) {
-      return null;
-    }
-    String host = host(seed);
-    if (host == null || isUnixSocket(host)) {
+  private static String endpoint(String host, @Nullable Integer port) {
+    if (port == null) {
       return host;
     }
     if (host.indexOf(':') >= 0) {
-      return "[" + host + "]:" + seed.getPort();
+      return "[" + host + "]:" + port;
     }
-    return host + ":" + seed.getPort();
+    return host + ":" + port;
   }
 
   @Nullable
@@ -109,6 +109,21 @@ public final class MongoServerTarget {
       return host.substring(1, host.length() - 1);
     }
     return host;
+  }
+
+  private static String sanitizeSrvHost(String value) {
+    int schemeSeparator = value.indexOf("://");
+    String host = schemeSeparator < 0 ? value : value.substring(schemeSeparator + 3);
+    int end = host.length();
+    for (char separator : new char[] {'/', '?', '#'}) {
+      int index = host.indexOf(separator);
+      if (index >= 0 && index < end) {
+        end = index;
+      }
+    }
+    host = host.substring(0, end);
+    int credentialsSeparator = host.lastIndexOf('@');
+    return credentialsSeparator < 0 ? host : host.substring(credentialsSeparator + 1);
   }
 
   private static boolean isUnixSocket(String host) {

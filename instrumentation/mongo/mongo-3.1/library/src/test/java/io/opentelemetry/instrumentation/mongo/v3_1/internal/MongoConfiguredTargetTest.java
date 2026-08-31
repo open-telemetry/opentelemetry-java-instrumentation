@@ -56,7 +56,7 @@ class MongoConfiguredTargetTest {
   }
 
   @Test
-  void configuredSingleSeedKeepsItsPort() {
+  void configuredSingleDefaultSeedOmitsItsPort() {
     ClusterId clusterId =
         configuredCluster(
             MongoServerTarget.seeds(singletonList(new ServerAddress("db1.example", 27017))));
@@ -64,9 +64,29 @@ class MongoConfiguredTargetTest {
 
     assertThat(getter.getServerAddress(event))
         .isEqualTo(emitStableDatabaseSemconv() ? "db1.example" : "db2.example");
-    assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? 27017 : 27018);
+    assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
     assertThat(getter.getNetworkPeerAddress(event, null)).isNull();
     assertThat(getter.getNetworkPeerPort(event, null)).isNull();
+  }
+
+  @Test
+  void configuredTargetIsStableAcrossSelectedServers() {
+    ClusterId clusterId =
+        configuredCluster(
+            MongoServerTarget.seeds(
+                asList(
+                    new ServerAddress("db2.example", 27017),
+                    new ServerAddress("db1.example", 27017))));
+    CommandStartedEvent first = commandStartedEvent(clusterId, "test_db", "find");
+    CommandStartedEvent second =
+        commandStartedEvent(clusterId, new ServerAddress("db3.example", 27019), "test_db", "find");
+
+    assertThat(getter.getServerAddress(first))
+        .isEqualTo(emitStableDatabaseSemconv() ? "db1.example,db2.example" : "db2.example");
+    assertThat(getter.getServerPort(first)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
+    assertThat(getter.getServerAddress(second))
+        .isEqualTo(emitStableDatabaseSemconv() ? "db1.example,db2.example" : "db3.example");
+    assertThat(getter.getServerPort(second)).isEqualTo(emitStableDatabaseSemconv() ? null : 27019);
   }
 
   @Test
@@ -111,8 +131,7 @@ class MongoConfiguredTargetTest {
 
     assertThat(attributes.get(SERVER_ADDRESS))
         .isEqualTo(emitStableDatabaseSemconv() ? "configured.example" : "db2.example");
-    assertThat(attributes.get(SERVER_PORT))
-        .isEqualTo(emitStableDatabaseSemconv() ? 27017L : 27018L);
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018L);
     assertThat(attributes.get(NETWORK_PEER_ADDRESS)).isNull();
     assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
     assertThat(attributes.get(DB_CONNECTION_STRING))
@@ -189,8 +208,13 @@ class MongoConfiguredTargetTest {
 
   private static CommandStartedEvent commandStartedEvent(
       ClusterId clusterId, String databaseName, String commandName) {
+    return commandStartedEvent(clusterId, SELECTED_SERVER, databaseName, commandName);
+  }
+
+  private static CommandStartedEvent commandStartedEvent(
+      ClusterId clusterId, ServerAddress selectedServer, String databaseName, String commandName) {
     ConnectionDescription connectionDescription =
-        new ConnectionDescription(new ServerId(clusterId, SELECTED_SERVER));
+        new ConnectionDescription(new ServerId(clusterId, selectedServer));
     return new CommandStartedEvent(
         0,
         connectionDescription,

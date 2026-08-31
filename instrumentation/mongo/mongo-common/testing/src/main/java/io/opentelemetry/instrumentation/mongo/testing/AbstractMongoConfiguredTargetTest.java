@@ -63,7 +63,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void severalSeedsAreReportedAsOneStableLogicalServer() {
+  void mixedPortSeedsRetainTheirPortsInTheStableLogicalServer() {
     try (ConfiguredClient client =
         createClient(
             asList(
@@ -76,13 +76,38 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void singleSeedKeepsItsPort() {
-    try (ConfiguredClient client =
-        createClient(singletonList(new ServerAddress("db1.example", 27017)))) {
+  void singleOmittedDefaultPortIsNotReported() {
+    try (ConfiguredClient client = createClient(singletonList(new ServerAddress("db1.example")))) {
       runCommand(client);
     }
 
-    assertFindSpan("db1.example", 27017L);
+    assertFindSpan("db1.example", null);
+  }
+
+  @Test
+  void severalMaterializedDefaultPortsAreNotReported() {
+    try (ConfiguredClient client =
+        createClient(
+            asList(
+                new ServerAddress("db2.example", 27017),
+                new ServerAddress("db1.example", 27017)))) {
+      runCommand(client);
+    }
+
+    assertFindSpan("db1.example,db2.example", null);
+  }
+
+  @Test
+  void sharedCustomPortIsReportedSeparately() {
+    try (ConfiguredClient client =
+        createClient(
+            asList(
+                new ServerAddress("db2.example", 27018),
+                new ServerAddress("db1.example", 27018)))) {
+      runCommand(client);
+    }
+
+    assertFindSpan("db1.example,db2.example", 27018L);
   }
 
   @Test
@@ -104,7 +129,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
         createClient(
             asList(
                 new ServerAddress("db2.example", 27018),
-                new ServerAddress("db1.example", 27017)))) {
+                new ServerAddress("db1.example", 27018)))) {
       runCommand(
           client, null, "listDatabases", new BsonDocument("listDatabases", new BsonInt32(1)));
     }
@@ -116,7 +141,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "listDatabases db1.example:27017,db2.example:27018"
+                                    ? "listDatabases db1.example,db2.example:27018"
                                     : "listDatabases")
                             .hasKind(CLIENT)));
   }
