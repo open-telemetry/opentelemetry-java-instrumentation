@@ -26,7 +26,7 @@ public class SpymemcachedServerTargets {
   }
 
   @Nullable
-  public static SpymemcachedServerTarget get(MemcachedConnection connection) {
+  static SpymemcachedServerTarget get(MemcachedConnection connection) {
     return CONFIGURED_TARGETS.get(connection);
   }
 
