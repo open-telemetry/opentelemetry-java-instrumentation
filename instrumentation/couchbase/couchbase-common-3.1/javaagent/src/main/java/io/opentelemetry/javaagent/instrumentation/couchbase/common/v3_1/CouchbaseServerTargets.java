@@ -9,9 +9,6 @@ import com.couchbase.client.core.Core;
 import com.couchbase.client.core.env.SeedNode;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -47,16 +44,7 @@ public class CouchbaseServerTargets {
   @Nullable
   static CouchbaseServerTarget target(Set<SeedNode> seedNodes) {
     CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder();
-    // Direct seed sets have no configured order, so normalize them before rendering the target.
-    List<SeedNode> orderedSeedNodes = new ArrayList<>(seedNodes);
-    orderedSeedNodes.sort(
-        Comparator.nullsFirst(
-            Comparator.comparing(SeedNode::address)
-                .thenComparing(seedNode -> seedNode.kvPort().isPresent())
-                .thenComparing(seedNode -> seedNode.kvPort().orElse(0))
-                .thenComparing(seedNode -> seedNode.clusterManagerPort().isPresent())
-                .thenComparing(seedNode -> seedNode.clusterManagerPort().orElse(0))));
-    for (SeedNode seedNode : orderedSeedNodes) {
+    for (SeedNode seedNode : seedNodes) {
       if (seedNode == null) {
         target.addSeed(null, 0);
       } else {

@@ -41,7 +41,7 @@ public class CouchbaseConnectionStrings {
           target.addSeed(seed.hostname(), seed.port());
         }
       }
-      return target.build();
+      return target.buildPreservingOrder();
     } catch (RuntimeException ignored) {
       return null;
     }

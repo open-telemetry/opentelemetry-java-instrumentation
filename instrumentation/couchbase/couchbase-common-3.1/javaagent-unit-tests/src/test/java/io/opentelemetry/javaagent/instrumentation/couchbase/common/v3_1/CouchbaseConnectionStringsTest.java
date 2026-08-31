@@ -32,11 +32,11 @@ class CouchbaseConnectionStringsTest {
   }
 
   @Test
-  void severalSeedsKeepTheirOrderAndLoseThePort() {
+  void severalSeedsKeepTheirOrderAndDuplicatesAndLoseThePort() {
     CouchbaseServerTarget target =
-        CouchbaseConnectionStrings.target("couchbase://two.example,one.example:11210");
+        CouchbaseConnectionStrings.target("couchbase://two.example,one.example:11210,two.example");
 
-    assertThat(target.getAddress()).isEqualTo("two.example,one.example:11210");
+    assertThat(target.getAddress()).isEqualTo("two.example,one.example:11210,two.example");
     assertThat(target.getPort()).isNull();
   }
 
@@ -69,8 +69,10 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void ipv6SeedsAreBracketedOnlyWhenTheyShareAnAddress() {
-    assertThat(CouchbaseConnectionStrings.target("couchbase://[2001:db8::1]:11210").getAddress())
-        .isEqualTo("2001:db8::1");
+    CouchbaseServerTarget single =
+        CouchbaseConnectionStrings.target("couchbase://[2001:db8::1]:11210");
+    assertThat(single.getAddress()).isEqualTo("2001:db8::1");
+    assertThat(single.getPort()).isEqualTo(11210);
     assertThat(
             CouchbaseConnectionStrings.target("couchbase://[2001:db8::1]:11210,[2001:db8::2]")
                 .getAddress())
