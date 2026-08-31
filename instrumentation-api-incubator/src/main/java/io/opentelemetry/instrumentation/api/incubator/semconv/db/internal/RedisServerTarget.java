@@ -207,7 +207,7 @@ public final class RedisServerTarget {
 
     @Nullable
     private static Endpoint hostAndPort(String authority) {
-      if (authority.indexOf(',') >= 0) {
+      if (authority.indexOf(',') >= 0 || hasInvalidAuthorityCharacter(authority)) {
         return null;
       }
       if (authority.startsWith("[")) {
@@ -249,6 +249,16 @@ public final class RedisServerTarget {
         return null;
       }
       return new Endpoint(authority, null, false);
+    }
+
+    private static boolean hasInvalidAuthorityCharacter(String authority) {
+      for (int i = 0; i < authority.length(); i++) {
+        char c = authority.charAt(i);
+        if (Character.isWhitespace(c) || Character.isSpaceChar(c) || Character.isISOControl(c)) {
+          return true;
+        }
+      }
+      return false;
     }
 
     private static boolean isIpv6Literal(String value) {
