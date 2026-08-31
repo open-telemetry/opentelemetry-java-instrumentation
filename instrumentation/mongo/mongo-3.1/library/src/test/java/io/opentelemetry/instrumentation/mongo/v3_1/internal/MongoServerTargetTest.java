@@ -104,12 +104,12 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void multiSeedConnectionStringKeepsItsConfiguredOrder() {
+  void multiSeedConnectionStringIsReportedAsOneLogicalTarget() {
     ClusterSettings settings =
         ClusterSettings.builder()
             .applyConnectionString(
                 new ConnectionString(
-                    "mongodb://user:pass@db1.example:27017,db2.example:27018/mydb"
+                    "mongodb://user:pass@db2.example:27018,db1.example:27017/mydb"
                         + "?replicaSet=rs0&ssl=true"))
             .build();
 
