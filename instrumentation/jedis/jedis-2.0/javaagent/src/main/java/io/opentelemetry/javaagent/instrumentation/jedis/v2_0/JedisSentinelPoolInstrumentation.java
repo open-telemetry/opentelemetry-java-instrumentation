@@ -44,12 +44,27 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(
+        @Advice.Argument(0) @Nullable String masterName,
+        @Advice.Argument(1) @Nullable Set<?> sentinels) {
+      return JedisSingletons.openConfiguredTargetScope(
+          JedisServerTargets.ofSentinels(masterName, sentinels));
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable String masterName,
-        @Advice.Argument(1) @Nullable Set<?> sentinels) {
-      JedisSingletons.setPoolTarget(pool, JedisServerTargets.ofSentinels(masterName, sentinels));
+        @Advice.Argument(1) @Nullable Set<?> sentinels,
+        @Advice.Enter @Nullable Scope scope) {
+      try {
+        JedisSingletons.setPoolTarget(pool, JedisServerTargets.ofSentinels(masterName, sentinels));
+      } finally {
+        if (scope != null) {
+          scope.close();
+        }
+      }
     }
   }
 
