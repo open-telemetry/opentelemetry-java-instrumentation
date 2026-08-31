@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -25,14 +26,20 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class ConnectionFactoryInstrumentation implements TypeInstrumentation {
 
+  private static final String VERTX_5_0_CONNECTION_FACTORY =
+      "io.vertx.sqlclient.spi.ConnectionFactory";
+  private static final String VERTX_5_1_CONNECTION_FACTORY =
+      "io.vertx.sqlclient.spi.connection.ConnectionFactory";
+
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("io.vertx.sqlclient.spi.ConnectionFactory");
+    return hasClassesNamed(VERTX_5_0_CONNECTION_FACTORY)
+        .or(hasClassesNamed(VERTX_5_1_CONNECTION_FACTORY));
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.vertx.sqlclient.spi.ConnectionFactory");
+    return namedOneOf(VERTX_5_0_CONNECTION_FACTORY, VERTX_5_1_CONNECTION_FACTORY);
   }
 
   @Override
