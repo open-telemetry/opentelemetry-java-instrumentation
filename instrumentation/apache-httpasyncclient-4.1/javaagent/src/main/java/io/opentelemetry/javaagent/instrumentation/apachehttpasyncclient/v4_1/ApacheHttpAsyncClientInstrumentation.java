@@ -238,9 +238,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return;
       }
       HttpInetConnection inetConnection = (HttpInetConnection) connection;
-      if (!inetConnection.isOpen()) {
-        return;
-      }
       InetAddress remoteAddress = inetConnection.getRemoteAddress();
       int remotePort = inetConnection.getRemotePort();
       if (remoteAddress == null || remotePort < 0) {
