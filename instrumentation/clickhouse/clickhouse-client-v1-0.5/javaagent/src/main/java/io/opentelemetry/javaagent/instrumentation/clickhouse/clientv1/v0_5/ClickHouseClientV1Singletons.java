@@ -139,6 +139,14 @@ public class ClickHouseClientV1Singletons {
 
     @Nullable
     private static String sanitizeHost(String host) {
+      if (host.indexOf('/') >= 0
+          || host.indexOf('?') >= 0
+          || host.indexOf('#') >= 0
+          || host.indexOf(',') >= 0
+          || host.indexOf('=') >= 0) {
+        return null;
+      }
+
       int at = host.indexOf('@');
       if (at >= 0) {
         if (at != host.lastIndexOf('@')) {
@@ -146,12 +154,7 @@ public class ClickHouseClientV1Singletons {
         }
         host = host.substring(at + 1);
       }
-      if (host.isEmpty()
-          || host.indexOf('/') >= 0
-          || host.indexOf('?') >= 0
-          || host.indexOf('#') >= 0
-          || host.indexOf(',') >= 0
-          || host.indexOf('=') >= 0) {
+      if (host.isEmpty()) {
         return null;
       }
 

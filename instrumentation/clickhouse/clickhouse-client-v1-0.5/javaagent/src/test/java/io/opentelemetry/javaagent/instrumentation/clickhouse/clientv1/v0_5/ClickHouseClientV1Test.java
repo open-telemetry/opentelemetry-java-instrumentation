@@ -50,6 +50,8 @@ import java.util.function.Function;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -751,9 +753,10 @@ class ClickHouseClientV1Test {
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
   }
 
-  @Test
-  void testConfiguredNodeHostsRejectCommas() throws Exception {
-    ClickHouseNode malformedNode = ClickHouseNode.builder(server).host("host1,host2").build();
+  @ParameterizedTest
+  @ValueSource(strings = {"host1,host2", "host?email=user@example.com"})
+  void testConfiguredNodeHostsRejectMalformedValues(String configuredHost) throws Exception {
+    ClickHouseNode malformedNode = ClickHouseNode.builder(server).host(configuredHost).build();
     ClickHouseNodes nodes = createNodes(ImmutableList.of(server, malformedNode));
     nodes.update(malformedNode, ClickHouseNode.Status.FAULTY);
 
