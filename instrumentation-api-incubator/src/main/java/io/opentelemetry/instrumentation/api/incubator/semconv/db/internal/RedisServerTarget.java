@@ -189,7 +189,7 @@ public final class RedisServerTarget {
       }
       if (socket) {
         String path = stripSocketCredentials(value);
-        return path.isEmpty() ? null : new Endpoint(path, null, true);
+        return path.isEmpty() || path.indexOf(',') >= 0 ? null : new Endpoint(path, null, true);
       }
 
       // everything from the first slash on is the selected database, not part of the endpoint

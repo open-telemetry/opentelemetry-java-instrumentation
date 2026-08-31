@@ -269,6 +269,8 @@ class RedisServerTargetTest {
         "redis://?timeout=5s",
         "redis-socket://?db=1",
         "unix://#fragment",
+        "/tmp/redis,node.sock",
+        "redis-socket:///tmp/redis,node.sock",
         "redis://default:sec/ret@localhost:6379",
         "redis://default:sec?ret@localhost:6379",
         "redis://default:sec#ret@localhost:6379",
@@ -339,6 +341,15 @@ class RedisServerTargetTest {
             asList("redis-socket:///var/run/redis1.sock", "redis-socket:///var/run/redis2.sock"));
 
     assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock,/var/run/redis2.sock");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void endpointListDropsCommaDelimitedSocketPath() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpoints(asList("/tmp/redis,node.sock", "/tmp/redis.sock"));
+
+    assertThat(target.getAddress()).isEqualTo("/tmp/redis.sock");
     assertThat(target.getPort()).isNull();
   }
 
