@@ -40,11 +40,21 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         // 4.4 and later
         "redis.clients.jedis.providers.SentineledConnectionProvider",
         "redis.clients.jedis.providers.SentineledConnectionProvider$SentinelListener",
+        "redis.clients.jedis.JedisClusterInfoCache",
         "redis.clients.jedis.JedisClusterInfoCache$TopologyRefreshTask");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isConstructor().and(isDeclaredBy(named("redis.clients.jedis.JedisClusterInfoCache"))),
+        getClass().getName() + "$ClusterInfoCacheConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor()
+            .and(
+                isDeclaredBy(
+                    named("redis.clients.jedis.JedisClusterInfoCache$TopologyRefreshTask"))),
+        getClass().getName() + "$TopologyRefreshTaskConstructorAdvice");
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("java.util.Set"))),
         getClass().getName() + "$ClusterConstructorAdvice");
@@ -90,6 +100,32 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$GetConnectionMapAdvice");
     transformer.applyAdviceToMethod(
         named("renewSlotCache"), getClass().getName() + "$RenewSlotCacheAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ClusterInfoCacheConstructorAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.AllArguments Object[] arguments) {
+      return JedisSingletons.openConfiguredTargetScope(
+          JedisServerTargets.ofNodesFromArguments(arguments));
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class TopologyRefreshTaskConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.FieldValue("this$0") Object cache) {
+      JedisSingletons.setTopologyTargetFromCurrent(cache);
+    }
   }
 
   @SuppressWarnings("unused")

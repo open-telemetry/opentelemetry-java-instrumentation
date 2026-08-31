@@ -15,8 +15,20 @@ import redis.clients.jedis.HostAndPort;
 class JedisServerTargets {
 
   @Nullable
-  public static RedisServerTarget ofNodes(@Nullable Collection<HostAndPort> nodes) {
+  public static RedisServerTarget ofNodes(@Nullable Collection<?> nodes) {
     return RedisServerTarget.ofUnorderedEndpoints(endpointStrings(nodes));
+  }
+
+  @Nullable
+  public static RedisServerTarget ofNodesFromArguments(@Nullable Object[] arguments) {
+    if (arguments != null) {
+      for (Object argument : arguments) {
+        if (argument instanceof Collection) {
+          return ofNodes((Collection<?>) argument);
+        }
+      }
+    }
+    return null;
   }
 
   @Nullable
@@ -25,13 +37,14 @@ class JedisServerTargets {
   }
 
   @Nullable
-  private static List<String> endpointStrings(@Nullable Collection<HostAndPort> nodes) {
+  private static List<String> endpointStrings(@Nullable Collection<?> nodes) {
     if (nodes == null || nodes.isEmpty()) {
       return null;
     }
     List<String> endpoints = new ArrayList<>(nodes.size());
-    for (HostAndPort node : nodes) {
-      if (node != null) {
+    for (Object value : nodes) {
+      if (value instanceof HostAndPort) {
+        HostAndPort node = (HostAndPort) value;
         endpoints.add(RedisServerTarget.endpoint(node.getHost(), node.getPort()));
       }
     }
