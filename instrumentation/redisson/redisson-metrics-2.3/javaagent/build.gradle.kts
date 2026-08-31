@@ -26,6 +26,20 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("redisson251Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        compileOnly(project())
+        implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
+        implementation("org.redisson:redisson:2.5.1")
+      }
+    }
+
     register<JvmTestSuite>("redisson311Test") {
       sources {
         java {

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redissonmetrics.v2_3;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -20,11 +19,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisClient;
 
 class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.redisson.connection.ClientConnectionsEntry");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

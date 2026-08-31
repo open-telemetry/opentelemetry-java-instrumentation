@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.redisson.pubsub.AsyncSemaphore;
 
-public class RedissonConnectionPoolAccessor {
+class RedissonConnectionPoolAccessor {
 
   @Nullable private static final Field counterField = findAsyncSemaphoreField("counter");
   @Nullable private static final Method queueSizeMethod;
@@ -35,7 +35,7 @@ public class RedissonConnectionPoolAccessor {
   }
 
   @Nullable
-  public static Supplier<Integer> availableConnectionsSupplier(Object freeConnectionsCounter) {
+  static Supplier<Integer> availableConnectionsSupplier(Object freeConnectionsCounter) {
     if (freeConnectionsCounter instanceof AtomicInteger) {
       return ((AtomicInteger) freeConnectionsCounter)::get;
     }
@@ -46,7 +46,7 @@ public class RedissonConnectionPoolAccessor {
   }
 
   @Nullable
-  public static Supplier<Integer> pendingRequestsSupplier(Object freeConnectionsCounter) {
+  static Supplier<Integer> pendingRequestsSupplier(Object freeConnectionsCounter) {
     if (!(freeConnectionsCounter instanceof AsyncSemaphore)) {
       return null;
     }

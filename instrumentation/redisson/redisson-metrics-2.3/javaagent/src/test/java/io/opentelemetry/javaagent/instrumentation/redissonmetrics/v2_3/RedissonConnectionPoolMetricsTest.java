@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.javaagent.instrumentation.redissonmetrics.AbstractRedissonConnectionPoolMetricsTest;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -27,8 +28,17 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
   }
 
   @Override
-  protected String serverAddress(String endpoint) throws NoSuchFieldException {
-    return usesAsyncSemaphore() ? "redis://" + endpoint : endpoint;
+  protected String serverAddress(String endpoint) {
+    String prefixedEndpoint = "redis://" + endpoint;
+    try {
+      Class<?> uriBuilder = Class.forName("org.redisson.misc.URIBuilder");
+      URI uri = (URI) uriBuilder.getMethod("create", String.class).invoke(null, prefixedEndpoint);
+      return uri.getScheme() == null ? endpoint : prefixedEndpoint;
+    } catch (ClassNotFoundException ignored) {
+      return prefixedEndpoint;
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   @Override
