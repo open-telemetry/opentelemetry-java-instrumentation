@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import com.mongodb.ServerAddress;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -40,25 +42,22 @@ public final class MongoServerTarget {
       return single(seeds.get(0));
     }
 
-    StringBuilder address = new StringBuilder();
+    List<String> endpoints = new ArrayList<>(seeds.size());
     for (ServerAddress seed : seeds) {
-      String host = host(seed);
-      if (host == null) {
+      String endpoint = endpoint(seed);
+      if (endpoint == null) {
         return null;
       }
+      endpoints.add(endpoint);
+    }
+    Collections.sort(endpoints, String::compareTo);
+
+    StringBuilder address = new StringBuilder();
+    for (String endpoint : endpoints) {
       if (address.length() > 0) {
         address.append(',');
       }
-      if (isUnixSocket(host)) {
-        address.append(host);
-      } else {
-        if (host.indexOf(':') >= 0) {
-          address.append('[').append(host).append(']');
-        } else {
-          address.append(host);
-        }
-        address.append(':').append(seed.getPort());
-      }
+      address.append(endpoint);
     }
     return new MongoServerTarget(address.toString(), null);
   }
@@ -78,6 +77,21 @@ public final class MongoServerTarget {
       return null;
     }
     return new MongoServerTarget(host, isUnixSocket(host) ? null : seed.getPort());
+  }
+
+  @Nullable
+  private static String endpoint(@Nullable ServerAddress seed) {
+    if (seed == null) {
+      return null;
+    }
+    String host = host(seed);
+    if (host == null || isUnixSocket(host)) {
+      return host;
+    }
+    if (host.indexOf(':') >= 0) {
+      return "[" + host + "]:" + seed.getPort();
+    }
+    return host + ":" + seed.getPort();
   }
 
   @Nullable

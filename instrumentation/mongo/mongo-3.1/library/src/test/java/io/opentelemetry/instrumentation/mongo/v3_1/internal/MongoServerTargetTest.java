@@ -27,13 +27,27 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void severalSeedsAreReportedAsOneLogicalTarget() {
+  void seedGroupsHaveAStableOrder() {
     MongoServerTarget target =
         MongoServerTarget.seeds(
             asList(
-                new ServerAddress("db1.example", 27017), new ServerAddress("db2.example", 27018)));
+                new ServerAddress("db2.example", 27018), new ServerAddress("db1.example", 27017)));
 
     assertThat(target.getAddress()).isEqualTo("db1.example:27017,db2.example:27018");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void duplicateSeedsArePreserved() {
+    MongoServerTarget target =
+        MongoServerTarget.seeds(
+            asList(
+                new ServerAddress("db2.example", 27018),
+                new ServerAddress("db1.example", 27017),
+                new ServerAddress("db1.example", 27017)));
+
+    assertThat(target.getAddress())
+        .isEqualTo("db1.example:27017,db1.example:27017,db2.example:27018");
     assertThat(target.getPort()).isNull();
   }
 
@@ -58,7 +72,7 @@ class MongoServerTargetTest {
   void severalIpv6SeedsAreBracketed() {
     MongoServerTarget target =
         MongoServerTarget.seeds(
-            asList(bracketedSeed("::1", 27017), bracketedSeed("fe80::1", 27018)));
+            asList(bracketedSeed("fe80::1", 27018), bracketedSeed("::1", 27017)));
 
     assertThat(target.getAddress()).isEqualTo("[::1]:27017,[fe80::1]:27018");
     assertThat(target.getPort()).isNull();

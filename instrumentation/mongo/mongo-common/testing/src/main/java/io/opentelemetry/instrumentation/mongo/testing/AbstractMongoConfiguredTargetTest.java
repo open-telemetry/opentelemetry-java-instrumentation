@@ -67,12 +67,26 @@ public abstract class AbstractMongoConfiguredTargetTest {
     try (ConfiguredClient client =
         createClient(
             asList(
-                new ServerAddress("db1.example", 27017),
-                new ServerAddress("db2.example", 27018)))) {
+                new ServerAddress("db2.example", 27018),
+                new ServerAddress("db1.example", 27017)))) {
       runCommand(client);
     }
 
     assertFindSpan("db1.example:27017,db2.example:27018", null);
+  }
+
+  @Test
+  void duplicateSeedsArePreserved() {
+    try (ConfiguredClient client =
+        createClient(
+            asList(
+                new ServerAddress("db2.example", 27018),
+                new ServerAddress("db1.example", 27017),
+                new ServerAddress("db1.example", 27017)))) {
+      runCommand(client);
+    }
+
+    assertFindSpan("db1.example:27017,db1.example:27017,db2.example:27018", null);
   }
 
   @Test
@@ -91,7 +105,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
 
     try (ConfiguredClient client =
         createClient(
-            asList(new ServerAddress("[::1]", 27017), new ServerAddress("[fe80::1]", 27018)))) {
+            asList(new ServerAddress("[fe80::1]", 27018), new ServerAddress("[::1]", 27017)))) {
       runCommand(client);
     }
 
@@ -103,8 +117,8 @@ public abstract class AbstractMongoConfiguredTargetTest {
     try (ConfiguredClient client =
         createClient(
             asList(
-                new ServerAddress("db1.example", 27017),
-                new ServerAddress("db2.example", 27018)))) {
+                new ServerAddress("db2.example", 27018),
+                new ServerAddress("db1.example", 27017)))) {
       runCommand(
           client, null, "listDatabases", new BsonDocument("listDatabases", new BsonInt32(1)));
     }

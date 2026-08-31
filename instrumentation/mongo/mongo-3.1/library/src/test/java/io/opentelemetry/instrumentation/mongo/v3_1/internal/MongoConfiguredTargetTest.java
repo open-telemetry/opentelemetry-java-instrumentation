@@ -46,7 +46,7 @@ class MongoConfiguredTargetTest {
     ClusterId clusterId = new ClusterId();
     MongoClusterTargets.register(
         clusterId,
-        MongoServerTarget.seeds(asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
+        MongoServerTarget.seeds(asList(SELECTED_SERVER, new ServerAddress("db1.example", 27017))));
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
     assertThat(getter.getServerAddress(event))
@@ -127,8 +127,8 @@ class MongoConfiguredTargetTest {
         MongoTelemetry.create(OpenTelemetry.noop())
             .createCommandListener(
                 asList(
-                    new ServerAddress("configured1.example", 27017),
-                    new ServerAddress("configured2.example", 27018)));
+                    new ServerAddress("configured2.example", 27018),
+                    new ServerAddress("configured1.example", 27017)));
 
     listener.commandStarted(event);
 
@@ -160,7 +160,7 @@ class MongoConfiguredTargetTest {
     ClusterId clusterId = new ClusterId();
     MongoClusterTargets.register(
         clusterId,
-        MongoServerTarget.seeds(asList(new ServerAddress("db1.example", 27017), SELECTED_SERVER)));
+        MongoServerTarget.seeds(asList(SELECTED_SERVER, new ServerAddress("db1.example", 27017))));
     CommandStartedEvent event = commandStartedEvent(clusterId, null, "listDatabases");
 
     String spanName = new MongoSpanNameExtractor(getter).extract(event);
