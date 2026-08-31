@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_ADDRESS;
@@ -73,6 +74,9 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Collection<?> commands) {
+      if (!emitStableDatabaseSemconv()) {
+        return;
+      }
       for (Object command : commands) {
         if (command instanceof RedisCommand) {
           LettuceSingletons.linkCommandPeer((RedisCommand<?, ?, ?>) command);
@@ -86,7 +90,9 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-      LettuceSingletons.linkCommandPeer(command);
+      if (emitStableDatabaseSemconv()) {
+        LettuceSingletons.linkCommandPeer(command);
+      }
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
@@ -204,6 +210,10 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Channel channel) {
+      // the handler only feeds network.peer.*, which is emitted in stable database semconv
+      if (!emitStableDatabaseSemconv()) {
+        return;
+      }
       if (channel.pipeline().get(LettuceCommandOutboundHandler.NAME) == null) {
         ChannelHandlerContext encoder = channel.pipeline().context(CommandEncoder.class);
         if (encoder != null) {
