@@ -172,9 +172,7 @@ public final class DbExecution {
   }
 
   private static boolean isServerAddressGroupCandidate(@Nullable String serverAddress) {
-    return serverAddress != null
-        && serverAddress.indexOf(',') >= 0
-        && !serverAddress.startsWith("/");
+    return serverAddress != null && serverAddress.indexOf(',') >= 0;
   }
 
   @Nullable
