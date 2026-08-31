@@ -20,10 +20,10 @@ import redis.clients.jedis.JedisShardInfo;
 class JedisServerTargetsTest {
 
   @Test
-  void shardsKeepEveryConfiguredEndpoint() {
+  void shardsAreSorted() {
     RedisServerTarget target =
         JedisServerTargets.ofShards(
-            asList(new JedisShardInfo("shard1", 6379), new JedisShardInfo("shard2", 6380)));
+            asList(new JedisShardInfo("shard2", 6380), new JedisShardInfo("shard1", 6379)));
 
     assertThat(target.getAddress()).isEqualTo("shard1:6379,shard2:6380");
     assertThat(target.getPort()).isNull();

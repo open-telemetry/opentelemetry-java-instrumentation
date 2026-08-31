@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.JedisShardInfo;
@@ -24,22 +23,20 @@ public final class JedisServerTargets {
     for (JedisShardInfo shard : shards) {
       endpoints.add(RedisServerTarget.endpoint(shard.getHost(), shard.getPort()));
     }
-    return RedisServerTarget.ofEndpoints(endpoints);
+    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
 
   @Nullable
   public static RedisServerTarget ofSentinels(
       @Nullable String masterName, @Nullable Collection<?> sentinels) {
-    return RedisServerTarget.ofEndpointsAndLogicalName(endpointStrings(sentinels), masterName);
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+        endpointStrings(sentinels), masterName);
   }
 
   @Nullable
   public static RedisServerTarget ofNodes(@Nullable Collection<?> nodes) {
     List<String> endpoints = endpointStrings(nodes);
-    if (endpoints != null) {
-      Collections.sort(endpoints);
-    }
-    return RedisServerTarget.ofEndpoints(endpoints);
+    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
 
   @Nullable

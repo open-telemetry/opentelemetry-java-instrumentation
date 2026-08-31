@@ -59,20 +59,21 @@ class RedisServerTargetTest {
   }
 
   @Test
-  void discoveryEndpointsAreSortedDeduplicatedAndShareLogicalName() {
+  void discoveryEndpointsAreSortedAndKeepDuplicatesAndLogicalName() {
     RedisServerTarget target =
-        RedisServerTarget.ofEndpointsAndLogicalName(
+        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
             asList("redis://sentinel2:26380", "redis://sentinel1:26379", "redis://sentinel2:26380"),
             "  mymaster  ");
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
+    assertThat(target.getAddress())
+        .isEqualTo("sentinel1:26379,sentinel2:26380,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
   void singleDiscoveryEndpointKeepsItsPortInTheAddress() {
     RedisServerTarget target =
-        RedisServerTarget.ofEndpointsAndLogicalName(
+        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
             singletonList("redis://sentinel1:26379"), "mymaster");
 
     assertThat(target.getAddress()).isEqualTo("sentinel1:26379/mymaster");
@@ -82,7 +83,7 @@ class RedisServerTargetTest {
   @Test
   void discoveryTargetSanitizesAndBracketsEndpoints() {
     RedisServerTarget target =
-        RedisServerTarget.ofEndpointsAndLogicalName(
+        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
             asList("redis://user:password@[::2]:26380/2", "redis://[::1]:26379?timeout=5s"),
             "mymaster");
 
@@ -92,7 +93,7 @@ class RedisServerTargetTest {
   @Test
   void discoveryTargetFallsBackToSortedEndpoints() {
     RedisServerTarget target =
-        RedisServerTarget.ofEndpointsAndLogicalName(
+        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
             asList("sentinel2:26380", "sentinel1:26379"), " ");
 
     assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
@@ -102,7 +103,7 @@ class RedisServerTargetTest {
   @Test
   void discoveryTargetFallsBackToLogicalName() {
     RedisServerTarget target =
-        RedisServerTarget.ofEndpointsAndLogicalName(
+        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
             asList("", "redis://", "://sentinel"), "mymaster");
 
     assertThat(target.getAddress()).isEqualTo("mymaster");
@@ -136,20 +137,68 @@ class RedisServerTargetTest {
   }
 
   @Test
-  void repeatedEndpointIsSingular() {
+  void repeatedEndpointsArePreserved() {
     RedisServerTarget target =
         RedisServerTarget.ofEndpoints(asList("node1:6379", "node1:6379", "node1:6379"));
+
+    assertThat(target.getAddress()).isEqualTo("node1:6379,node1:6379,node1:6379");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void orderedEndpointsKeepOrderAndDuplicates() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpoints(asList("node2:6380", "node1:6379", "node2:6380"));
+
+    assertThat(target.getAddress()).isEqualTo("node2:6380,node1:6379,node2:6380");
+  }
+
+  @Test
+  void unorderedEndpointPermutationsRenderIdentically() {
+    RedisServerTarget first =
+        RedisServerTarget.ofUnorderedEndpoints(asList("node2:6380", "node1:6379", "node3:6381"));
+    RedisServerTarget second =
+        RedisServerTarget.ofUnorderedEndpoints(asList("node3:6381", "node2:6380", "node1:6379"));
+
+    assertThat(first.getAddress()).isEqualTo("node1:6379,node2:6380,node3:6381");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+  }
+
+  @Test
+  void unorderedDuplicateCapableInputKeepsDuplicates() {
+    RedisServerTarget target =
+        RedisServerTarget.ofUnorderedEndpoints(asList("node2:6380", "node1:6379", "node2:6380"));
+
+    assertThat(target.getAddress()).isEqualTo("node1:6379,node2:6380,node2:6380");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void singleUnorderedEndpointKeepsNativeShape() {
+    RedisServerTarget target =
+        RedisServerTarget.ofUnorderedEndpoints(singletonList("redis://node1:6379"));
 
     assertThat(target.getAddress()).isEqualTo("node1");
     assertThat(target.getPort()).isEqualTo(6379);
   }
 
   @Test
-  void duplicatesAreCollapsedInOrder() {
+  void unorderedUnixSocketEndpointsAreSortedAndPreserved() {
     RedisServerTarget target =
-        RedisServerTarget.ofEndpoints(asList("node2:6380", "node1:6379", "node2:6380"));
+        RedisServerTarget.ofUnorderedEndpoints(
+            asList("unix:///var/run/redis2.sock", "unix:///var/run/redis1.sock"));
 
-    assertThat(target.getAddress()).isEqualTo("node2:6380,node1:6379");
+    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock,/var/run/redis2.sock");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void unorderedIpv6EndpointsStayBracketedWithPorts() {
+    RedisServerTarget target =
+        RedisServerTarget.ofUnorderedEndpoints(asList("[::2]:6380", "[::1]:6379"));
+
+    assertThat(target.getAddress()).isEqualTo("[::1]:6379,[::2]:6380");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
