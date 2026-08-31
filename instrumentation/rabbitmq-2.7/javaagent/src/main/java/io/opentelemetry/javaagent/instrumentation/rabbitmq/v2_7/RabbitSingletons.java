@@ -100,10 +100,7 @@ public class RabbitSingletons {
     if (RabbitConnectionAttributes.enabled()) {
       builder.addAttributesExtractor(
           new RabbitConnectionAttributesExtractor<ChannelAndMethod, Void>(
-              channelAndMethod ->
-                  channelAndMethod.isPublish() || channelAndMethod.getDeliveryTag() != null
-                      ? channelAndMethod.getChannel().getConnection()
-                      : null));
+              channelAndMethod -> channelAndMethod.getChannel().getConnection()));
     }
     return builder;
   }
