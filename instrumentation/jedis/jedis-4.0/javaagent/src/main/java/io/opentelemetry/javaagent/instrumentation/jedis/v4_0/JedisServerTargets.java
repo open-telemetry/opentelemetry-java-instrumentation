@@ -71,6 +71,9 @@ public final class JedisServerTargets {
     if (firstColon < 0 || firstColon == lastColon) {
       return endpoint;
     }
+    if (endpoint.charAt(lastColon - 1) == ':') {
+      return endpoint;
+    }
     String port = endpoint.substring(lastColon + 1);
     if (!isPort(port)) {
       return endpoint;
