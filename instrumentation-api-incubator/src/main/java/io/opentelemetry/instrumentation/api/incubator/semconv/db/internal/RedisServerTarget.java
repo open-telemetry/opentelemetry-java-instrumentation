@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -227,12 +229,27 @@ public final class RedisServerTarget {
       }
 
       int portStart = authority.indexOf(':');
-      // an unbracketed literal IPv6 address has more than one colon and carries no port
-      if (portStart > 0 && authority.indexOf(':', portStart + 1) < 0) {
+      int secondColon = portStart < 0 ? -1 : authority.indexOf(':', portStart + 1);
+      if (portStart > 0 && secondColon < 0) {
         Integer port = parsePort(authority.substring(portStart + 1));
         return port == null ? null : new Endpoint(authority.substring(0, portStart), port, false);
       }
+      // an unbracketed literal IPv6 address has more than one colon and carries no port
+      if (secondColon >= 0 && isIpv6Literal(authority)) {
+        return new Endpoint(authority, null, false);
+      }
+      if (portStart >= 0) {
+        return null;
+      }
       return new Endpoint(authority, null, false);
+    }
+
+    private static boolean isIpv6Literal(String value) {
+      try {
+        return new URI("redis://[" + value + "]").getHost() != null;
+      } catch (URISyntaxException ignored) {
+        return false;
+      }
     }
 
     private static boolean isSocket(@Nullable String scheme, String value) {

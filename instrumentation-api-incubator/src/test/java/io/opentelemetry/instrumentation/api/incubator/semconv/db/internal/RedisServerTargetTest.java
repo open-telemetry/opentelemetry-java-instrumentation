@@ -282,6 +282,10 @@ class RedisServerTargetTest {
         "localhost:",
         "localhost:-1",
         "localhost:6379x",
+        "localhost:banana:extra",
+        ":6379",
+        "1:2:3",
+        "2001:db8::g",
         "::1]",
         "[[::1]:6379"
       })
