@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
@@ -90,8 +89,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
             .and(returns(named("java.util.Map"))),
         getClass().getName() + "$GetConnectionMapAdvice");
     transformer.applyAdviceToMethod(
-        named("renewSlotCache").and(takesArguments(0)),
-        getClass().getName() + "$RenewSlotCacheAdvice");
+        named("renewSlotCache"), getClass().getName() + "$RenewSlotCacheAdvice");
   }
 
   @SuppressWarnings("unused")
