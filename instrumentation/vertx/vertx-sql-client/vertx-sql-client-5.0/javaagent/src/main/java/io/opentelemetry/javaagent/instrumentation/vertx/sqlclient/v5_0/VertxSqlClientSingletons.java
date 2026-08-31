@@ -280,7 +280,7 @@ public class VertxSqlClientSingletons {
   }
 
   @Nullable
-  public static VertxSqlClientData getConnectionFailureData(Throwable throwable) {
+  private static VertxSqlClientData getConnectionFailureData(Throwable throwable) {
     return connectionFailureDataCache.get(throwable);
   }
 
