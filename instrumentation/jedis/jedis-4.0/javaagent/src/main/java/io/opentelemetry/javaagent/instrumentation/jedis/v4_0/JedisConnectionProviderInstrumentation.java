@@ -86,7 +86,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
             .and(returns(named("redis.clients.jedis.Connection"))),
         getClass().getName() + "$GetConnectionAdvice");
     transformer.applyAdviceToMethod(
-        namedOneOf("getConnectionMap", "getPrimaryNodesConnectionMap")
+        namedOneOf("getNodes", "getConnectionMap", "getPrimaryNodesConnectionMap")
             .and(returns(named("java.util.Map"))),
         getClass().getName() + "$GetConnectionMapAdvice");
     transformer.applyAdviceToMethod(
