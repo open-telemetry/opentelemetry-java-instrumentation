@@ -27,7 +27,7 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
-  void nodePermutationsHaveTheSameTarget() {
+  void nodeOrderIsPreserved() {
     SpymemcachedServerTarget first =
         SpymemcachedServerTarget.create(
             asList(node("one.example", 11211), node("two.example", 11212)));
@@ -36,7 +36,7 @@ class SpymemcachedServerTargetTest {
             asList(node("two.example", 11212), node("one.example", 11211)));
 
     assertThat(first.getAddress()).isEqualTo("one.example:11211,two.example:11212");
-    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(second.getAddress()).isEqualTo("two.example:11212,one.example:11211");
     assertThat(first.getPort()).isNull();
     assertThat(second.getPort()).isNull();
   }
@@ -51,7 +51,7 @@ class SpymemcachedServerTargetTest {
                 node("two.example", 11212)));
 
     assertThat(target.getAddress())
-        .isEqualTo("one.example:11211,two.example:11212,two.example:11212");
+        .isEqualTo("two.example:11212,one.example:11211,two.example:11212");
     assertThat(target.getPort()).isNull();
   }
 

@@ -31,7 +31,6 @@ public class SpymemcachedServerTarget {
       }
       endpoints.add(endpoint(host, node.getPort()));
     }
-    endpoints.sort(String::compareTo);
     return new SpymemcachedServerTarget(String.join(",", endpoints), null);
   }
 
