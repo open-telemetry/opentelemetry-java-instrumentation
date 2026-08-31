@@ -277,6 +277,7 @@ class RedisServerTargetTest {
         "[::1]:",
         "[::1]:70000",
         "[::1]suffix",
+        "[not-an-ip]:6379",
         "localhost:banana",
         "localhost:70000",
         "localhost:",
