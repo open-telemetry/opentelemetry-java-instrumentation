@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jmx;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
-import static java.util.stream.Collectors.toList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -17,7 +16,7 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.nio.file.Path;
@@ -31,6 +30,7 @@ import java.util.logging.Logger;
 public class JmxMetricInsightInstaller implements AgentListener {
 
   private static final Logger logger = Logger.getLogger(JmxMetricInsightInstaller.class.getName());
+  private static final String EXPERIMENTAL_PREFIX = "experimental-";
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
@@ -48,33 +48,23 @@ public class JmxMetricInsightInstaller implements AgentListener {
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
 
-      boolean v3Preview = AgentCommonConfig.get().isV3Preview();
       List<String> systemsConfig =
-          config.get("target").getScalarList("system", String.class, emptyList()).stream()
-              .map(
-                  target -> {
-                    if (target.equals("kafka-broker") && !v3Preview) {
-                      logger.log(
-                          WARNING,
-                          "The kafka-broker JMX target system has been renamed to experimental-kafka-broker.");
-                      return "experimental-kafka-broker";
-                    }
-                    if (target.equals("kafka-connect") && !v3Preview) {
-                      logger.log(
-                          WARNING,
-                          "The kafka-connect JMX target system has been renamed to experimental-kafka-connect.");
-                      return "experimental-kafka-connect";
-                    }
-                    return target;
-                  })
-              .collect(toList());
+          config.get("target").getScalarList("system", String.class, emptyList());
 
-      IncludeExclude systems =
-          IncludeExclude.builder()
-              .setIncluded(systemsConfig)
-              // jvm metrics excluded in instrumentation as covered by runtime-telemetry
-              .setExcluded("jvm")
-              .build();
+      // warn users when using any unsupported system value, with mapping for legacy values
+      systemsConfig.stream().map(s -> s.startsWith(EXPERIMENTAL_PREFIX) ? s.substring(EXPERIMENTAL_PREFIX.length()) : s).forEach(
+          system -> {
+            if (!InternalMetricsDefinitions.getSupportedSystems().contains(system)) {
+              logger.log(
+                  WARNING,
+                  "JMX target system "
+                      + system
+                      + " is not supported. Supported systems are: "
+                      + InternalMetricsDefinitions.getSupportedSystems());
+            }
+          });
+
+      IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
 
       jmx.addStableMetrics(systems).addUnstableMetrics(systems);
 

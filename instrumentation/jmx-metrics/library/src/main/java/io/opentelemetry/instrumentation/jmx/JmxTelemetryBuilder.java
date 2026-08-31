@@ -164,8 +164,19 @@ public final class JmxTelemetryBuilder {
       InternalMetricsDefinitions.getSupportedSystems()
           .forEach(
               system -> {
-                boolean includeStable = stableMetricsSystemFilter.matches(system);
-                boolean includeUnstable = unstableMetricsSystemFilter.matches(system);
+                System.out.println(
+                    "Loading JMX rules for system: "
+                        + system
+                        + "stable filter: "
+                        + stableMetricsSystemFilter
+                        + ", unstable filter: "
+                        + unstableMetricsSystemFilter);
+                boolean includeStable =
+                    !stableMetricsSystemFilter.isEmpty()
+                        && stableMetricsSystemFilter.matches(system);
+                boolean includeUnstable =
+                    !unstableMetricsSystemFilter.isEmpty()
+                        && unstableMetricsSystemFilter.matches(system);
                 Set<String> rules =
                     internalMetrics.getRulesForSystem(system, includeStable, includeUnstable);
 
