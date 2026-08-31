@@ -119,6 +119,13 @@ public class JedisSingletons {
     }
   }
 
+  public static void setTopologyTargetFromCurrent(Object topologyOwner) {
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    if (configuredTarget != null) {
+      setTopologyTarget(topologyOwner, configuredTarget.target);
+    }
+  }
+
   public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
     if (!Boolean.TRUE.equals(POOL_TARGET_CONFIGURED.get(pool))) {
       return;
