@@ -53,9 +53,9 @@ class OpenSearchServerTargetTest {
   }
 
   @Test
-  void severalEndpointsIncludeTheirPorts() {
+  void severalEndpointsAreSortedAndIncludeTheirPorts() {
     OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(asList(new Endpoint("h1", 9200), new Endpoint("h2", 9201)));
+        OpenSearchServerTarget.of(asList(new Endpoint("h2", 9201), new Endpoint("h1", 9200)));
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9201");
@@ -63,12 +63,38 @@ class OpenSearchServerTargetTest {
   }
 
   @Test
-  void literalIpv6AddressesAreBracketedInGroups() {
+  void endpointPermutationsHaveTheSameTarget() {
+    OpenSearchServerTarget first =
+        OpenSearchServerTarget.of(
+            asList(new Endpoint("h3", 9202), new Endpoint("h1", 9200), new Endpoint("h2", 9201)));
+    OpenSearchServerTarget second =
+        OpenSearchServerTarget.of(
+            asList(new Endpoint("h2", 9201), new Endpoint("h3", 9202), new Endpoint("h1", 9200)));
+
+    assertThat(first).isNotNull();
+    assertThat(second).isNotNull();
+    assertThat(first.getAddress()).isEqualTo("h1:9200,h2:9201,h3:9202");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+  }
+
+  @Test
+  void duplicateEndpointsArePreserved() {
     OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(asList(new Endpoint("::1", 9200), new Endpoint("[fe80::1]", -1)));
+        OpenSearchServerTarget.of(
+            asList(new Endpoint("h2", 9201), new Endpoint("h1", 9200), new Endpoint("h1", 9200)));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]:9200,[fe80::1]");
+    assertThat(target.getAddress()).isEqualTo("h1:9200,h1:9200,h2:9201");
+  }
+
+  @Test
+  void literalIpv6AddressesAreBracketedInGroups() {
+    OpenSearchServerTarget target =
+        OpenSearchServerTarget.of(
+            asList(new Endpoint("::1", 9200), new Endpoint("[fe80::1]", 9201)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("[::1]:9200,[fe80::1]:9201");
   }
 
   @Test

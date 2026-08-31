@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -36,25 +37,28 @@ public class OpenSearchServerTarget {
 
   @Nullable
   private static String renderGroup(List<Endpoint> endpoints) {
-    StringBuilder group = new StringBuilder();
-    for (int i = 0; i < endpoints.size(); i++) {
-      Endpoint endpoint = endpoints.get(i);
+    List<String> renderedEndpoints = new ArrayList<>(endpoints.size());
+    for (Endpoint endpoint : endpoints) {
       if (endpoint.host == null) {
         return null;
       }
-      if (i > 0) {
-        group.append(',');
-      }
-      if (endpoint.host.indexOf(':') >= 0 && !endpoint.host.startsWith("[")) {
-        group.append('[').append(endpoint.host).append(']');
-      } else {
-        group.append(endpoint.host);
-      }
-      if (endpoint.port >= 0) {
-        group.append(':').append(endpoint.port);
-      }
+      renderedEndpoints.add(renderEndpoint(endpoint.host, endpoint.port));
     }
-    return group.toString();
+    renderedEndpoints.sort(String::compareTo);
+    return String.join(",", renderedEndpoints);
+  }
+
+  private static String renderEndpoint(String host, int port) {
+    StringBuilder endpoint = new StringBuilder();
+    if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
+      endpoint.append('[').append(host).append(']');
+    } else {
+      endpoint.append(host);
+    }
+    if (port >= 0) {
+      endpoint.append(':').append(port);
+    }
+    return endpoint.toString();
   }
 
   public String getAddress() {
