@@ -22,6 +22,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.CommandEncoder;
+import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.DecoratedCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
