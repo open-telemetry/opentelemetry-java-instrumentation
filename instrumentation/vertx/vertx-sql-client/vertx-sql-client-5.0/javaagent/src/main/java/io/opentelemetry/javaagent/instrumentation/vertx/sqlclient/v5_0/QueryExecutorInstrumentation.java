@@ -158,7 +158,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           String dbSystem = dataCapture.getDbSystem();
           if (dbSystem == null || !isKnownDbSystem(dbSystem)) {
             VertxSqlClientSingletons.setPendingConnectionDataListener(adviceScope);
-            promiseInternal.future().onFailure(ignored -> adviceScope.cancelCapture());
+            promiseInternal
+                .future()
+                .onFailure(throwable -> adviceScope.endFallbackSpan(dbSystem, throwable));
             return adviceScope;
           }
           Context context =
@@ -238,9 +240,10 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         }
       }
 
-      private synchronized void cancelCapture() {
-        if (context == null) {
-          cancelled = true;
+      private synchronized void endFallbackSpan(String dbSystem, Throwable throwable) {
+        if (context == null
+            && startSpan(new VertxSqlClientData(null, dbSystem, null), true) != null) {
+          endSpan(throwable);
         }
       }
 

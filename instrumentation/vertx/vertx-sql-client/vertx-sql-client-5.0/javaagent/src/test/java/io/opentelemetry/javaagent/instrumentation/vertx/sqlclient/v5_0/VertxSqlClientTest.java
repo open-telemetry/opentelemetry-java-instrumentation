@@ -55,6 +55,7 @@ import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.pgclient.PgBuilder;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgException;
+import io.vertx.pgclient.spi.PgDriver;
 import io.vertx.sqlclient.ClientBuilder;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
@@ -419,6 +420,22 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testUnknownDriverSupplierFailureUsesFallbackDbSystem() {
+    RuntimeException failed = new RuntimeException("future failed");
+    Pool supplierPool =
+        ClientBuilder.pool(new PgDriver() {})
+            .using(vertx)
+            .connectingTo(() -> Future.failedFuture(failed))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    assertThatThrownBy(() -> select(supplierPool)).hasCause(failed);
+
+    testing.waitAndAssertTraces(trace -> assertSupplierFailure(trace, failed, "other_sql"));
+  }
+
+  @Test
   void testOracleSupplierConnectFailureCapturesSuppliedOptions() {
     OracleConnectOptions options =
         new OracleConnectOptions()
@@ -687,6 +704,11 @@ class VertxSqlClientTest {
   }
 
   private static void assertSupplierFailure(TraceAssert trace, RuntimeException error) {
+    assertSupplierFailure(trace, error, POSTGRESQL);
+  }
+
+  private static void assertSupplierFailure(
+      TraceAssert trace, RuntimeException error, String dbSystem) {
     trace.hasSpansSatisfyingExactly(
         span ->
             span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT test")
@@ -702,8 +724,7 @@ class VertxSqlClientTest {
                                 satisfies(
                                     EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
                 .hasAttributesSatisfyingExactly(
-                    equalTo(
-                        maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                    equalTo(maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? dbSystem : null),
                     equalTo(maybeStable(DB_STATEMENT), "select * from test"),
                     equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
                     equalTo(
