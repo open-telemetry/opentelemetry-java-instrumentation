@@ -147,7 +147,7 @@ class LettuceClusterClientTest {
     redisServer.assertNoFailure();
   }
 
-  private static final class TestRedisClusterClient extends RedisClusterClient {
+  private static class TestRedisClusterClient extends RedisClusterClient {
     private final RedisURI nodeUri;
 
     private TestRedisClusterClient(List<RedisURI> seedUris, RedisURI nodeUri) {
@@ -175,7 +175,7 @@ class LettuceClusterClientTest {
     }
   }
 
-  private static final class TestRedisCluster implements AutoCloseable {
+  private static class TestRedisCluster implements AutoCloseable {
     private final ServerSocket serverSocket;
     private final Set<Socket> connections = ConcurrentHashMap.newKeySet();
     private final AtomicReference<Throwable> failure = new AtomicReference<>();

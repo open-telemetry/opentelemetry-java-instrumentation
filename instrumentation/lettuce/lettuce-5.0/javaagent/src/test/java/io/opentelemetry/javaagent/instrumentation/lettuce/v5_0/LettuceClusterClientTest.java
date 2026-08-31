@@ -193,7 +193,7 @@ class LettuceClusterClientTest {
     redisServer.assertNoFailure();
   }
 
-  private static final class TestRedisCluster implements AutoCloseable {
+  private static class TestRedisCluster implements AutoCloseable {
     private final ServerSocket serverSocket;
     private final Set<Socket> connections = ConcurrentHashMap.newKeySet();
     private final AtomicReference<Throwable> failure = new AtomicReference<>();

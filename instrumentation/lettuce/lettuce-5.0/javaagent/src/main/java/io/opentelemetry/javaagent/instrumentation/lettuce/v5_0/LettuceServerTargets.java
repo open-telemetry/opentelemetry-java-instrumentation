@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public final class LettuceServerTargets {
+public class LettuceServerTargets {
 
   @Nullable
   public static RedisServerTarget of(@Nullable RedisURI redisUri) {
