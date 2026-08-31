@@ -37,7 +37,8 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         "redis.clients.jedis.providers.ClusterConnectionProvider",
         "redis.clients.jedis.providers.ShardedConnectionProvider",
         // 4.4 and later
-        "redis.clients.jedis.providers.SentineledConnectionProvider");
+        "redis.clients.jedis.providers.SentineledConnectionProvider",
+        "redis.clients.jedis.providers.SentineledConnectionProvider$SentinelListener");
   }
 
   @Override
@@ -58,6 +59,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("initSentinels").and(takesArgument(0, named("java.util.Set"))),
         getClass().getName() + "$InitializeSentinelsAdvice");
+    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$SentinelListenerAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf(
                 "getConnection",
@@ -124,12 +126,32 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitializeSentinelsAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
+        @Advice.This Object provider,
         @Advice.FieldValue("masterName") @Nullable String masterName,
         @Advice.Argument(0) @Nullable Set<HostAndPort> sentinels) {
-      return JedisSingletons.openConfiguredTargetScope(
-          JedisServerTargets.ofSentinels(masterName, sentinels));
+      JedisSingletons.setProviderTarget(
+          provider, JedisServerTargets.ofSentinels(masterName, sentinels));
+      return JedisSingletons.openProviderTargetScope(provider);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SentinelListenerAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.FieldValue("this$0") Object provider) {
+      return JedisSingletons.openProviderTargetScope(provider);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

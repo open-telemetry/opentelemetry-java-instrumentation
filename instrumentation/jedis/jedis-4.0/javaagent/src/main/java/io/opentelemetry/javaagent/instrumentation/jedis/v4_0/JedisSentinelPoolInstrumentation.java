@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Scope;
@@ -24,7 +25,9 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // reintroduced in Jedis 4.0.0 after the 4.0.0 beta
-    return named("redis.clients.jedis.JedisSentinelPool");
+    return namedOneOf(
+        "redis.clients.jedis.JedisSentinelPool",
+        "redis.clients.jedis.JedisSentinelPool$MasterListener");
   }
 
   @Override
@@ -39,6 +42,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("java.util.Set")))
             .and(takesArgument(1, named("java.lang.String"))),
         getClass().getName() + "$InitializeAdvice");
+    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$MasterListenerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -56,12 +60,31 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitializeAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
+        @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable Set<?> sentinels,
         @Advice.Argument(1) @Nullable String masterName) {
-      return JedisSingletons.openConfiguredTargetScope(
-          JedisServerTargets.ofSentinels(masterName, sentinels));
+      JedisSingletons.setPoolTarget(pool, JedisServerTargets.ofSentinels(masterName, sentinels));
+      return JedisSingletons.openPoolTargetScope(pool);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class MasterListenerAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.FieldValue("this$0") Pool<?> pool) {
+      return JedisSingletons.openPoolTargetScope(pool);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
