@@ -36,7 +36,7 @@ public final class ConfigServerTargetsSince317 {
       return MethodHandles.publicLookup()
           .findVirtual(serviceManagerClass, "getCfg", MethodType.methodType(Config.class));
     } catch (ReflectiveOperationException e) {
-      // redisson only routes the configuration through a service manager between 3.20 and 3.29
+      // redisson only routes the configuration through a service manager between 3.20 and 3.27
       return null;
     }
   }

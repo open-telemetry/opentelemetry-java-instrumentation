@@ -37,7 +37,7 @@ class ConnectionManagerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("org.redisson.config.Config"))),
         getClass().getName() + "$ConfigSecondConstructorAdvice");
-    // redisson 3.20 through 3.29 hand the manager the service manager the configuration lives in
+    // redisson 3.20 through 3.27 hand the manager the service manager the configuration lives in
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("org.redisson.connection.ServiceManager"))),
         getClass().getName() + "$ServiceManagerConstructorAdvice");
