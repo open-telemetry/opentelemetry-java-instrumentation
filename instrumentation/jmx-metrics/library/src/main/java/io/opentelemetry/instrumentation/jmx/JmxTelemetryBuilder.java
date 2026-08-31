@@ -126,19 +126,34 @@ public final class JmxTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Configure loading embedded stable metrics definitions for the specified systems.
+   *
+   * @param systemFilter system name filter
+   * @return this
+   */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addStableMetrics(IncludeExclude systemFilter) {
     this.stableMetricsSystemFilter = systemFilter;
     return this;
   }
 
+  /**
+   * Configure loading embedded unstable metrics definitions for the specified systems.
+   *
+   * @param systemFilter system name filter
+   * @return this
+   */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addUnstableMetrics(IncludeExclude systemFilter) {
     this.unstableMetricsSystemFilter = systemFilter;
     return this;
   }
 
-  /** Sets the {@link ClassLoader} to be used to load SPI implementations. */
+  /**
+   * Sets the {@link ClassLoader} to be used to load SPI implementations and internal resource
+   * loading
+   */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder setServiceClassLoader(ClassLoader serviceClassLoader) {
     requireNonNull(serviceClassLoader, "serviceClassLoader");
