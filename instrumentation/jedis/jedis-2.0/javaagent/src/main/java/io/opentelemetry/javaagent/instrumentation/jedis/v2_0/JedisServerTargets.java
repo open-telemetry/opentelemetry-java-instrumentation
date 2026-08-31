@@ -12,7 +12,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.JedisShardInfo;
 
-class JedisServerTargets {
+public class JedisServerTargets {
 
   @Nullable
   public static RedisServerTarget ofShards(@Nullable List<JedisShardInfo> shards) {

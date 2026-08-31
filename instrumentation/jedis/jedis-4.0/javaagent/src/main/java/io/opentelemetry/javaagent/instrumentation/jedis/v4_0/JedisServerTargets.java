@@ -12,7 +12,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.HostAndPort;
 
-class JedisServerTargets {
+public class JedisServerTargets {
 
   @Nullable
   public static RedisServerTarget ofNodes(@Nullable Collection<?> nodes) {
