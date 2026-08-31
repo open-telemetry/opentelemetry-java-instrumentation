@@ -599,3 +599,4 @@ redisson-metrics-common-3.18:testing
 elasticsearch-rest-common-5.0:bootstrap
 elasticsearch-rest-common-5.0:javaagent-unit-tests
 opensearch-java-3.0:javaagent-unit-tests
+apache-commons-pool-2.0:bootstrap
