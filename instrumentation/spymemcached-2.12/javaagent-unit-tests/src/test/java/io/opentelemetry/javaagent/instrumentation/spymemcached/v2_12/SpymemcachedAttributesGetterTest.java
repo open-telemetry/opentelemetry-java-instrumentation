@@ -25,7 +25,7 @@ class SpymemcachedAttributesGetterTest {
   @Test
   void singleConfiguredNodeKeepsItsAddressAndPort() {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
-    request.setHandlingNode(memcachedNode("one.example", 11211));
+    request.setHandlingNode(memcachedNode("selected.example", 11212));
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? "one.example" : null);
