@@ -56,8 +56,8 @@ public final class MongoTelemetry {
    * Returns a new {@link CommandListener} for a client configured with exactly the given server
    * address.
    *
-   * <p>The configured address is reported as the stable logical server target. The server selected
-   * for each command is reported separately as the network peer.
+   * <p>The configured address is reported as the stable logical server target. This listener does
+   * not expose the transport endpoint, so network peer attributes are omitted.
    */
   public CommandListener createCommandListener(ServerAddress configuredServerAddress) {
     return createCommandListener(singletonList(configuredServerAddress));
@@ -66,8 +66,8 @@ public final class MongoTelemetry {
   /**
    * Returns a new {@link CommandListener} for a client configured with the given seed list.
    *
-   * <p>The configured seeds are reported as the stable logical server target. The server selected
-   * for each command is reported separately as the network peer.
+   * <p>The configured seeds are reported as the stable logical server target. This listener does
+   * not expose the transport endpoint, so network peer attributes are omitted.
    */
   public CommandListener createCommandListener(List<ServerAddress> configuredServerAddresses) {
     return new TracingCommandListener(
