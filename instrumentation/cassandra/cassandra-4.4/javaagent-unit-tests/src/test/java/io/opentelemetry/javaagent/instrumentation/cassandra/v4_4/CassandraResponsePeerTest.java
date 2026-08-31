@@ -83,6 +83,32 @@ class CassandraResponsePeerTest {
     assertThat(get(executionInfo)).isEqualTo(peer);
   }
 
+  @Test
+  void finalRetryResponseKeepsItsChannelPeer() throws Exception {
+    ChannelHandlerContext firstContext = mock(ChannelHandlerContext.class);
+    ChannelHandlerContext retryContext = mock(ChannelHandlerContext.class);
+    Channel firstChannel = mock(Channel.class);
+    Channel retryChannel = mock(Channel.class);
+    Frame firstResponse = frame(1);
+    Frame retryResponse = frame(1);
+    ExecutionInfo firstExecutionInfo = mock(ExecutionInfo.class);
+    ExecutionInfo retryExecutionInfo = mock(ExecutionInfo.class);
+    InetSocketAddress firstPeer = resolved(19042);
+    InetSocketAddress retryPeer = resolved(29042);
+    when(firstContext.channel()).thenReturn(firstChannel);
+    when(retryContext.channel()).thenReturn(retryChannel);
+    when(firstChannel.remoteAddress()).thenReturn(firstPeer);
+    when(retryChannel.remoteAddress()).thenReturn(retryPeer);
+
+    InFlightHandlerInstrumentation.ChannelReadAdvice.onEnter(firstContext, firstResponse);
+    InFlightHandlerInstrumentation.ChannelReadAdvice.onEnter(retryContext, retryResponse);
+    DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(firstExecutionInfo, firstResponse);
+    DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(retryExecutionInfo, retryResponse);
+
+    assertThat(get(firstExecutionInfo)).isEqualTo(firstPeer);
+    assertThat(get(retryExecutionInfo)).isEqualTo(retryPeer);
+  }
+
   private static InetSocketAddress resolved(int port) throws Exception {
     return new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), port);
   }
