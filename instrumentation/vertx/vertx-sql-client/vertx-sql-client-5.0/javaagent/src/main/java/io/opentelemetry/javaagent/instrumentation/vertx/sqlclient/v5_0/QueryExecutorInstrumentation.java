@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientDataProvider;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.isKnownDbSystem;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory.updateSpanName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -152,12 +154,24 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
                 batchSize,
                 Context.current(),
                 dataCapture);
-        VertxSqlClientData data = dataCapture != null ? null : dataProvider.get();
-        if (data == null) {
-          if (dataCapture != null) {
+        if (dataCapture != null) {
+          String dbSystem = dataCapture.getDbSystem();
+          if (dbSystem == null || !isKnownDbSystem(dbSystem)) {
             VertxSqlClientSingletons.setPendingConnectionDataListener(adviceScope);
             promiseInternal.future().onFailure(ignored -> adviceScope.cancelCapture());
+            return adviceScope;
           }
+          Context context =
+              adviceScope.startSpan(new VertxSqlClientData(null, dbSystem, null), true);
+          if (context != null) {
+            VertxSqlClientSingletons.setPendingConnectionDataListener(adviceScope);
+            promiseInternal.future().onFailure(adviceScope::endSpan);
+          }
+          return adviceScope;
+        }
+
+        VertxSqlClientData data = dataProvider.get();
+        if (data == null) {
           return adviceScope;
         }
         adviceScope.startSpan(data);
@@ -166,6 +180,12 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
       @Nullable
       private synchronized Context startSpan(VertxSqlClientData data) {
+        return startSpan(data, false);
+      }
+
+      @Nullable
+      private synchronized Context startSpan(
+          VertxSqlClientData data, boolean allowMissingConnectOptions) {
         if (cancelled
             || context != null
             || sql == null
@@ -174,11 +194,11 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return null;
         }
         SqlConnectOptions connectOptions = data.getConnectOptions();
-        if (connectOptions == null) {
+        if (connectOptions == null && !allowMissingConnectOptions) {
           return null;
         }
         String dbSystem = data.getDbSystem();
-        if (dbSystem == null) {
+        if (dbSystem == null && connectOptions != null) {
           dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
         }
         if (dbSystem == null) {
@@ -206,6 +226,17 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         return context;
       }
 
+      private void endSpan(Throwable throwable) {
+        if (promiseInternal == null) {
+          return;
+        }
+        Scope parentScope =
+            VertxSqlClientUtil.endQuerySpan(instrumenter(), promiseInternal, throwable);
+        if (parentScope != null) {
+          parentScope.close();
+        }
+      }
+
       private synchronized void cancelCapture() {
         if (context == null) {
           cancelled = true;
@@ -214,8 +245,17 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
       @Override
       @Nullable
-      public Context onConnectionData(VertxSqlClientData data) {
-        return startSpan(data);
+      public synchronized Context onConnectionData(VertxSqlClientData data) {
+        if (context == null) {
+          return startSpan(data);
+        }
+        VertxSqlClientRequest request = otelRequest;
+        if (request == null) {
+          return null;
+        }
+        request.setConnectionData(data);
+        updateSpanName(context, request);
+        return context;
       }
 
       public synchronized void end(@Nullable Throwable throwable) {
@@ -230,10 +270,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           scope.close();
         }
         if (throwable != null) {
-          cancelCapture();
-          if (context != null && otelRequest != null) {
-            instrumenter().end(context, otelRequest, null, throwable);
-          }
+          endSpan(throwable);
         }
         // span will be ended in QueryResultBuilderInstrumentation
       }

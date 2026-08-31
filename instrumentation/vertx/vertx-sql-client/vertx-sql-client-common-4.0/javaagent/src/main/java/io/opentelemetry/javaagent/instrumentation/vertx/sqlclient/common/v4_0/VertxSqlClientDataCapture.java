@@ -15,6 +15,17 @@ import javax.annotation.Nullable;
  */
 public class VertxSqlClientDataCapture implements VertxSqlClientDataProvider {
 
+  @Nullable private volatile String dbSystem;
+
+  public void setDbSystem(@Nullable String dbSystem) {
+    this.dbSystem = dbSystem;
+  }
+
+  @Nullable
+  public String getDbSystem() {
+    return dbSystem;
+  }
+
   @Override
   @Nullable
   public VertxSqlClientData get() {

@@ -163,6 +163,10 @@ public class VertxSqlClientUtil {
     return OTHER_SQL;
   }
 
+  public static boolean isKnownDbSystem(String value) {
+    return dbSystemNameByPackage.containsValue(value);
+  }
+
   // See https://github.com/eclipse-vertx/vertx-sql-client for the full list of supported
   // database-specific client modules
   private static Map<String, String> buildPackageDbSystemNameMap() {
@@ -185,9 +189,13 @@ public class VertxSqlClientUtil {
       Instrumenter<VertxSqlClientRequest, Void> instrumenter,
       Promise<?> promise,
       @Nullable Throwable throwable) {
-    RequestData requestData = REQUEST_DATA.get(promise);
-    if (requestData == null) {
-      return null;
+    RequestData requestData;
+    synchronized (promise) {
+      requestData = REQUEST_DATA.get(promise);
+      if (requestData == null) {
+        return null;
+      }
+      REQUEST_DATA.set(promise, null);
     }
     instrumenter.end(requestData.context, requestData.request, null, throwable);
     return requestData.parentContext.makeCurrent();

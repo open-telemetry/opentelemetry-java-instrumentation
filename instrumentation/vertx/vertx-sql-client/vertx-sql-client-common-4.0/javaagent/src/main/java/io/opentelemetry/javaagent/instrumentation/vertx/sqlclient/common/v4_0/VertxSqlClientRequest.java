@@ -11,11 +11,12 @@ import javax.annotation.Nullable;
 public class VertxSqlClientRequest {
 
   private final String queryText;
-  @Nullable private final SqlConnectOptions sqlConnectOptions;
+  @Nullable private volatile SqlConnectOptions sqlConnectOptions;
   private final boolean parameterizedQuery;
   private final String dbSystemName;
   @Nullable private final Long operationBatchSize;
-  @Nullable private final VertxSqlAddressGroup addressGroup;
+  @Nullable private volatile VertxSqlAddressGroup addressGroup;
+  private volatile boolean connectionDataUpdated;
 
   public VertxSqlClientRequest(
       String queryText,
@@ -30,6 +31,16 @@ public class VertxSqlClientRequest {
     this.dbSystemName = dbSystemName;
     this.operationBatchSize = operationBatchSize;
     this.addressGroup = addressGroup;
+  }
+
+  public void setConnectionData(VertxSqlClientData data) {
+    sqlConnectOptions = data.getConnectOptions();
+    addressGroup = data.getAddressGroup();
+    connectionDataUpdated = true;
+  }
+
+  public boolean isConnectionDataUpdated() {
+    return connectionDataUpdated;
   }
 
   public String getQueryText() {

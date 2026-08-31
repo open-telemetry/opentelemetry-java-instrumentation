@@ -385,6 +385,10 @@ class VertxSqlClientTest {
     cleanup.deferCleanup(failingPool::close);
 
     assertThatThrownBy(() -> select(failingPool)).hasCause(failed);
+
+    testing.waitAndAssertTraces(
+        trace -> assertSupplierFailure(trace, thrown),
+        trace -> assertSupplierFailure(trace, failed));
   }
 
   @Test
@@ -571,7 +575,8 @@ class VertxSqlClientTest {
     if (emitOldDatabaseSemconv() && emitStableDatabaseSemconv()) {
       trace.hasSpansSatisfyingExactly(
           span ->
-              span.hasKind(SpanKind.CLIENT)
+              span.hasName("select test")
+                  .hasKind(SpanKind.CLIENT)
                   .hasAttributesSatisfyingExactly(
                       equalTo(maybeStable(DB_SYSTEM), POSTGRESQL),
                       equalTo(maybeStable(DB_NAME), DB),
@@ -589,7 +594,8 @@ class VertxSqlClientTest {
     }
     trace.hasSpansSatisfyingExactly(
         span ->
-            span.hasKind(SpanKind.CLIENT)
+            span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
+                .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
                     equalTo(
                         maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
@@ -603,6 +609,34 @@ class VertxSqlClientTest {
                     equalTo(maybeStablePeerService(), "test-peer-service"),
                     equalTo(SERVER_ADDRESS, expectedHost),
                     equalTo(SERVER_PORT, Long.valueOf(port))));
+  }
+
+  private static void assertSupplierFailure(TraceAssert trace, RuntimeException error) {
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT test")
+                .hasKind(SpanKind.CLIENT)
+                .hasStatus(StatusData.error())
+                .hasEventsSatisfyingExactly(
+                    event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                                equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                    equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                    equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
+                    equalTo(
+                        maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                    equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
+                    equalTo(
+                        ERROR_TYPE,
+                        emitStableDatabaseSemconv() ? error.getClass().getName() : null)));
   }
 
   private static void select(SqlClient client) throws Exception {
