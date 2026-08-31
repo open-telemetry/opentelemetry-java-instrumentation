@@ -12,6 +12,7 @@ import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.api.StatefulConnection;
 import com.lambdaworks.redis.cluster.RedisClusterClient;
+import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -165,6 +166,7 @@ public class LettuceSingletons {
   @Nullable
   static LettucePeerAddress connectionPeer(StatefulConnection<?, ?> connection) {
     return connection instanceof RedisChannelHandler
+            && !(connection instanceof StatefulRedisClusterConnection)
         ? CONNECTION_PEER.get((RedisChannelHandler<?, ?>) connection)
         : null;
   }
