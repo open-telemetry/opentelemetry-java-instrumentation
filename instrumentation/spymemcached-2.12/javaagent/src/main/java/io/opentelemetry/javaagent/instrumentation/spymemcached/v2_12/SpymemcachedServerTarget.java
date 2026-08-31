@@ -20,27 +20,19 @@ public class SpymemcachedServerTarget {
     if (nodes == null || nodes.isEmpty()) {
       return null;
     }
-    List<String> hosts = new ArrayList<>(nodes.size());
-    List<Integer> ports = new ArrayList<>(nodes.size());
+    List<String> endpoints = new ArrayList<>(nodes.size());
     for (InetSocketAddress node : nodes) {
       String host = node == null ? null : clean(node.getHostString());
       if (host == null || node.getPort() <= 0) {
         return null;
       }
-      hosts.add(host);
-      ports.add(node.getPort());
-    }
-    if (hosts.size() == 1) {
-      return new SpymemcachedServerTarget(hosts.get(0), ports.get(0));
-    }
-    StringBuilder address = new StringBuilder();
-    for (int i = 0; i < hosts.size(); i++) {
-      if (i > 0) {
-        address.append(',');
+      if (nodes.size() == 1) {
+        return new SpymemcachedServerTarget(host, node.getPort());
       }
-      appendNode(address, hosts.get(i), ports.get(i));
+      endpoints.add(endpoint(host, node.getPort()));
     }
-    return new SpymemcachedServerTarget(address.toString(), null);
+    endpoints.sort(String::compareTo);
+    return new SpymemcachedServerTarget(String.join(",", endpoints), null);
   }
 
   private SpymemcachedServerTarget(String address, @Nullable Integer port) {
@@ -57,13 +49,14 @@ public class SpymemcachedServerTarget {
     return port;
   }
 
-  private static void appendNode(StringBuilder address, String host, int port) {
+  private static String endpoint(String host, int port) {
+    StringBuilder endpoint = new StringBuilder();
     if (host.indexOf(':') >= 0) {
-      address.append('[').append(host).append(']');
+      endpoint.append('[').append(host).append(']');
     } else {
-      address.append(host);
+      endpoint.append(host);
     }
-    address.append(':').append(port);
+    return endpoint.append(':').append(port).toString();
   }
 
   @Nullable
