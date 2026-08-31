@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
@@ -48,26 +48,24 @@ public class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
 
-    @Nullable
+    @Advice.AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static RedisServerTarget onEnter(
-        @Advice.Argument(value = 2, readOnly = false, typing = Assigner.Typing.DYNAMIC)
-            Object targetSource) {
+    public static Object[] onEnter(@Advice.Argument(2) Object targetSource) {
       if (targetSource instanceof RedisURI) {
-        return LettuceServerTargets.of((RedisURI) targetSource);
+        return new Object[] {LettuceServerTargets.of((RedisURI) targetSource), targetSource};
       }
+      // the iterable may only be traversed once, so the method continues with the snapshot
       List<Object> snapshot = new ArrayList<>();
       for (Object redisUri : (Iterable<?>) targetSource) {
         snapshot.add(redisUri);
       }
-      targetSource = snapshot;
-      return LettuceServerTargets.ofMasterSlaveUris(snapshot);
+      return new Object[] {LettuceServerTargets.ofMasterSlaveUris(snapshot), snapshot};
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Enter @Nullable RedisServerTarget target,
-        @Advice.Return @Nullable Object connection) {
+        @Advice.Enter Object[] enter, @Advice.Return @Nullable Object connection) {
+      RedisServerTarget target = (RedisServerTarget) enter[0];
       if (target != null && connection instanceof RedisChannelHandler) {
         CONNECTION_TARGET.set((RedisChannelHandler<?, ?>) connection, target);
       }
