@@ -62,12 +62,19 @@ public class CouchbaseServerTarget {
         int port = ports.get(0);
         return new CouchbaseServerTarget(hosts.get(0), port > 0 ? port : null);
       }
-      StringBuilder group = new StringBuilder();
+      List<String> endpoints = new ArrayList<>(hosts.size());
       for (int i = 0; i < hosts.size(); i++) {
-        if (i > 0) {
+        StringBuilder endpoint = new StringBuilder();
+        appendSeed(endpoint, hosts.get(i), ports.get(i));
+        endpoints.add(endpoint.toString());
+      }
+      endpoints.sort(String::compareTo);
+      StringBuilder group = new StringBuilder();
+      for (String endpoint : endpoints) {
+        if (group.length() > 0) {
           group.append(',');
         }
-        appendSeed(group, hosts.get(i), ports.get(i));
+        group.append(endpoint);
       }
       return new CouchbaseServerTarget(group.toString(), null);
     }

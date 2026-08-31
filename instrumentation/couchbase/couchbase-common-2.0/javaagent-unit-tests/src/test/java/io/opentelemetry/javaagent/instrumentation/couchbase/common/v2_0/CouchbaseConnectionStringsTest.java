@@ -28,12 +28,12 @@ class CouchbaseConnectionStringsTest {
   }
 
   @Test
-  void readsSeveralSeedsInTheOrderTheyWereConfigured() {
+  void readsSeveralSeedsInNormalizedOrder() {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(
             ConnectionString.create("couchbases://two.example,one.example"));
 
-    assertThat(target.getAddress()).isEqualTo("two.example,one.example");
+    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
     assertThat(target.getPort()).isNull();
   }
 
@@ -76,7 +76,7 @@ class CouchbaseConnectionStringsTest {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
-                asList(new Seed("2001:db8::1", 11207), new Seed("node.example", 0))));
+                asList(new Seed("node.example", 0), new Seed("2001:db8::1", 11207))));
 
     assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:11207,node.example");
   }
