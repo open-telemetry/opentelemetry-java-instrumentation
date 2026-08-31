@@ -33,7 +33,7 @@ public final class ConfigServerTargetsBefore317 {
   private static Method findConfigMethod(String methodName) {
     try {
       return Config.class.getDeclaredMethod(methodName);
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }
