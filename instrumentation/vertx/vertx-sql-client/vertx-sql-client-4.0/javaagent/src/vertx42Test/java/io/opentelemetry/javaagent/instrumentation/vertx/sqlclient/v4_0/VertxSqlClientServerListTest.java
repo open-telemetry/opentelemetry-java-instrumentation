@@ -35,6 +35,9 @@ import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.BeforeAll;
@@ -89,7 +92,8 @@ class VertxSqlClientServerListTest {
     PgConnectOptions second = connectOptions().setHost("/var/run/postgres:primary").setPort(5432);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
 
-    assertServerListTarget(pool, host + ":" + port + ",/var/run/postgres:primary");
+    assertServerListTarget(
+        pool, sortedServerAddress(host + ":" + port, "/var/run/postgres:primary"));
   }
 
   @Test
@@ -99,7 +103,7 @@ class VertxSqlClientServerListTest {
     PgConnectOptions second = connectOptions().setHost("2001:db8::1").setPort(5432);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
 
-    assertServerListTarget(pool, host + ":" + port + ",[2001:db8::1]:5432");
+    assertServerListTarget(pool, sortedServerAddress(host + ":" + port, "[2001:db8::1]:5432"));
   }
 
   @Test
@@ -109,7 +113,7 @@ class VertxSqlClientServerListTest {
     PgConnectOptions second = connectOptions().setPort(port + 1);
     SqlClient client = PgPool.client(vertx, asList(first, second), poolOptions());
 
-    assertServerListTarget(client, host + ":" + port + "," + host + ":" + (port + 1));
+    assertServerListTarget(client, sortedServerAddress(host + ":" + port, host + ":" + (port + 1)));
   }
 
   @Test
@@ -123,7 +127,7 @@ class VertxSqlClientServerListTest {
 
     executePreparedStatement(pool, query, Tuple.of(1));
 
-    assertServerListTarget(host + ":" + port + "," + host + ":" + (port + 1), query);
+    assertServerListTarget(sortedServerAddress(host + ":" + port, host + ":" + (port + 1)), query);
   }
 
   @Test
@@ -140,7 +144,7 @@ class VertxSqlClientServerListTest {
     PgConnectOptions second = connectOptions().setPort(port + 1);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
 
-    assertServerListTarget(pool, host + ":" + port + "," + host + ":" + (port + 1));
+    assertServerListTarget(pool, sortedServerAddress(host + ":" + port, host + ":" + (port + 1)));
   }
 
   private static void assertServerListTarget(SqlClient client, String serverAddress)
@@ -280,7 +284,8 @@ class VertxSqlClientServerListTest {
                             equalTo(
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv()
-                                    ? host + ":" + port + "," + host + ":" + (port + 1)
+                                    ? sortedServerAddress(
+                                        host + ":" + port, host + ":" + (port + 1))
                                     : host),
                             equalTo(
                                 SERVER_PORT,
@@ -312,6 +317,12 @@ class VertxSqlClientServerListTest {
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
+  }
+
+  private static String sortedServerAddress(String... values) {
+    List<String> addresses = new ArrayList<>(asList(values));
+    Collections.sort(addresses);
+    return String.join(",", addresses);
   }
 
   private static PoolOptions poolOptions() {

@@ -520,6 +520,8 @@ class VertxSqlClientTest {
 
   private static void assertServerGroup(
       TraceAssert trace, String secondHost, int secondPort, String statement) {
+    List<String> addresses = asList(host + ":" + port, secondHost + ":" + secondPort);
+    Collections.sort(addresses);
     trace.hasSpansSatisfyingExactly(
         span ->
             span.hasKind(SpanKind.CLIENT)
@@ -538,9 +540,7 @@ class VertxSqlClientTest {
                         emitStableDatabaseSemconv() ? null : "test-peer-service"),
                     equalTo(
                         SERVER_ADDRESS,
-                        emitStableDatabaseSemconv()
-                            ? host + ":" + port + "," + secondHost + ":" + secondPort
-                            : host),
+                        emitStableDatabaseSemconv() ? String.join(",", addresses) : host),
                     equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port))));
   }
 

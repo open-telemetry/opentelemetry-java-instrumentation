@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import io.vertx.sqlclient.SqlConnectOptions;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -31,7 +33,7 @@ public class VertxSqlAddressGroup {
     if (databases.size() == 1) {
       return of(databases.get(0));
     }
-    StringBuilder address = new StringBuilder();
+    List<String> addresses = new ArrayList<>(databases.size());
     for (SqlConnectOptions database : databases) {
       if (database == null) {
         return null;
@@ -40,12 +42,12 @@ public class VertxSqlAddressGroup {
       if (host == null) {
         return null;
       }
-      if (address.length() > 0) {
-        address.append(',');
-      }
+      StringBuilder address = new StringBuilder();
       appendHostPort(address, host, database.getPort());
+      addresses.add(address.toString());
     }
-    return new VertxSqlAddressGroup(address.toString(), null);
+    Collections.sort(addresses);
+    return new VertxSqlAddressGroup(String.join(",", addresses), null);
   }
 
   private VertxSqlAddressGroup(String address, @Nullable Integer port) {
