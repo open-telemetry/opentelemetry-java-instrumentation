@@ -480,10 +480,14 @@ public class Resilience4jCircuitBreakerDecorators {
               : Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         Object result = method.invoke(delegate, args);
-        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
-            Resilience4jCircuitBreakerSpans.endCapture(capture);
-        if (pendingSpan != null) {
-          pendingSpan.end("success", null);
+        if (captureRecentAcquisition) {
+          Resilience4jCircuitBreakerSpans.cancelCapture(capture);
+        } else {
+          Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+              Resilience4jCircuitBreakerSpans.endCapture(capture);
+          if (pendingSpan != null) {
+            pendingSpan.end("success", null);
+          }
         }
         return wrapCheckedAdapterResult(circuitBreaker, method, result);
       } catch (InvocationTargetException e) {

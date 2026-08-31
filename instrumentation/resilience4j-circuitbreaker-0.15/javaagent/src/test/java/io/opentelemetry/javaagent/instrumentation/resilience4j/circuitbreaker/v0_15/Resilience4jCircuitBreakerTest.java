@@ -909,6 +909,23 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
+  void createsFailureSpanWhenVavrFunctionAdapterResultMatchesRecordResultPredicate()
+      throws Exception {
+    Method recordResultPredicate = recordResultPredicateMethod();
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    recordResultPredicate.invoke(builder, (Predicate<Object>) result -> "failure".equals(result));
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    Object checkedFunction = decorateVavrCheckedFunction(circuitBreaker, value -> value);
+
+    Object memoized = checkedFunction.getClass().getMethod("memoized").invoke(checkedFunction);
+    String result = testing.runWithSpan("parent", () -> invokeFunction1(memoized, "failure"));
+
+    assertThat(result).isEqualTo("failure");
+    assertCircuitBreakerSpan("closed", "failure", null);
+  }
+
+  @Test
   void createsCircuitBreakerSpanWhenVavrFunctionAdapterFails() throws Exception {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     IllegalStateException exception = new IllegalStateException("boom");
