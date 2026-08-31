@@ -74,14 +74,28 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void duplicateContactPointsAreOneTarget() {
+  void contactPointPermutationsHaveTheSameOrder() {
+    CassandraServerTarget first =
+        CassandraServerTarget.of(asList("node2.example.com:9042", "node1.example.com:9042"));
+    CassandraServerTarget second =
+        CassandraServerTarget.of(asList("node1.example.com:9042", "node2.example.com:9042"));
+
+    assertThat(first).isNotNull();
+    assertThat(second).isNotNull();
+    assertThat(first.getAddress()).isEqualTo("node1.example.com:9042,node2.example.com:9042");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+  }
+
+  @Test
+  void duplicateConfiguredContactPointsArePreserved() {
     CassandraServerTarget target =
         CassandraServerTarget.of(
             asList("cassandra.example.com:9042", "cassandra.example.com:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
-    assertThat(target.getPort()).isEqualTo(9042);
+    assertThat(target.getAddress())
+        .isEqualTo("cassandra.example.com:9042,cassandra.example.com:9042");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -134,6 +148,45 @@ class CassandraServerTargetTest {
     assertThat(target.getAddress())
         .isEqualTo("configured.example.com:9042,programmatic.example.com:9142");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void sessionPreservesDuplicatesFromConfiguredAndProgrammaticContactPoints() {
+    configureContactPoints(singletonList("duplicate.example.com:9042"));
+    when(session.getContext()).thenReturn(context);
+    Set<EndPoint> programmaticContactPoints =
+        new LinkedHashSet<>(
+            singletonList(
+                new DefaultEndPoint(
+                    InetSocketAddress.createUnresolved("duplicate.example.com", 9042))));
+
+    CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress())
+        .isEqualTo("duplicate.example.com:9042,duplicate.example.com:9042");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void programmaticContactPointSetIterationOrderDoesNotChangeTheTarget() {
+    configureContactPoints(emptyList());
+    when(session.getContext()).thenReturn(context);
+    EndPoint first =
+        new DefaultEndPoint(InetSocketAddress.createUnresolved("node1.example.com", 9042));
+    EndPoint second =
+        new DefaultEndPoint(InetSocketAddress.createUnresolved("node2.example.com", 9142));
+    Set<EndPoint> forward = new LinkedHashSet<>(asList(first, second));
+    Set<EndPoint> reverse = new LinkedHashSet<>(asList(second, first));
+
+    CassandraServerTarget forwardTarget = CassandraServerTarget.of(session, forward);
+    CassandraServerTarget reverseTarget = CassandraServerTarget.of(session, reverse);
+
+    assertThat(forwardTarget).isNotNull();
+    assertThat(reverseTarget).isNotNull();
+    assertThat(forwardTarget.getAddress())
+        .isEqualTo("node1.example.com:9042,node2.example.com:9142");
+    assertThat(reverseTarget.getAddress()).isEqualTo(forwardTarget.getAddress());
   }
 
   @Test
