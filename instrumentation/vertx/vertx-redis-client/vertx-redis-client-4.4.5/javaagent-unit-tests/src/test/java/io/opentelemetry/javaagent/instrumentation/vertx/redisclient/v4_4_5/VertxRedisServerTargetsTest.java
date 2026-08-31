@@ -71,15 +71,21 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void clusterKeepsEveryConfiguredEndpoint() {
-    RedisServerTarget target =
+  void clusterEndpointPermutationsRenderIdentically() {
+    RedisServerTarget first =
+        VertxRedisServerTargets.of(
+            new RedisClusterConnectOptions()
+                .addConnectionString("redis://node2:7001")
+                .addConnectionString("redis://node1:7000"));
+    RedisServerTarget second =
         VertxRedisServerTargets.of(
             new RedisClusterConnectOptions()
                 .addConnectionString("redis://node1:7000")
                 .addConnectionString("redis://node2:7001"));
 
-    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
-    assertThat(target.getPort()).isNull();
+    assertThat(first.getAddress()).isEqualTo("node1:7000,node2:7001");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getPort()).isNull();
   }
 
   @Test
@@ -117,28 +123,59 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void clusterCollapsesTheEndpointsThatNameTheSameServer() {
+  void clusterKeepsDuplicateEffectiveEndpoints() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
             new RedisClusterConnectOptions()
                 .addConnectionString("redis://node1")
                 .addConnectionString("redis://node1:6379"));
 
-    assertThat(target.getAddress()).isEqualTo("node1");
-    assertThat(target.getPort()).isEqualTo(6379);
+    assertThat(target.getAddress()).isEqualTo("node1:6379,node1:6379");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void clusterSortsUnixSocketsAndKeepsThemPortless() {
+    RedisServerTarget target =
+        VertxRedisServerTargets.of(
+            new RedisClusterConnectOptions()
+                .addConnectionString("unix:///var/run/redis2.sock")
+                .addConnectionString("unix:///var/run/redis1.sock"));
+
+    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock,/var/run/redis2.sock");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void clusterSortsIpv6EndpointsWithoutDoubleBracketing() {
+    RedisServerTarget target =
+        VertxRedisServerTargets.of(
+            new RedisClusterConnectOptions()
+                .addConnectionString("redis://[2001:db8::2]:7001")
+                .addConnectionString("redis://[2001:db8::1]:7000"));
+
+    assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:7000,[2001:db8::2]:7001");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
   void sentinelsAreScopedByTheirMaster() {
-    RedisServerTarget target =
+    RedisServerTarget first =
+        VertxRedisServerTargets.of(
+            new RedisSentinelConnectOptions()
+                .setMasterName("themaster")
+                .addConnectionString("redis://sentinel2:26380")
+                .addConnectionString("redis://sentinel1:26379"));
+    RedisServerTarget second =
         VertxRedisServerTargets.of(
             new RedisSentinelConnectOptions()
                 .setMasterName("themaster")
                 .addConnectionString("redis://sentinel1:26379")
                 .addConnectionString("redis://sentinel2:26380"));
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/themaster");
-    assertThat(target.getPort()).isNull();
+    assertThat(first.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/themaster");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getPort()).isNull();
   }
 
   @Test
