@@ -281,7 +281,9 @@ class RedisServerTargetTest {
         "localhost:70000",
         "localhost:",
         "localhost:-1",
-        "localhost:6379x"
+        "localhost:6379x",
+        "::1]",
+        "[[::1]:6379"
       })
   void unusableEndpoint(String endpoint) {
     assertThat(RedisServerTarget.ofEndpoint(endpoint)).isNull();
