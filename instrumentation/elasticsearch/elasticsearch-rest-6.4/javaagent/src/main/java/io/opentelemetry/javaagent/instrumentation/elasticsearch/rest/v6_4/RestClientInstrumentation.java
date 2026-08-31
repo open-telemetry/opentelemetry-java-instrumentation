@@ -89,7 +89,8 @@ class RestClientInstrumentation implements TypeInstrumentation {
       ResponseListener responseListener = originalResponseListener;
 
       ElasticsearchRestRequest otelRequest =
-          ElasticsearchRestRequest.create(request.getMethod(), request.getEndpoint());
+          ElasticsearchRestRequest.create(
+              request.getMethod(), request.getEndpoint(), null, request.getEntity());
       AdviceScope adviceScope = AdviceScope.start(otelRequest);
       if (adviceScope == null) {
         return new Object[] {null, responseListener};

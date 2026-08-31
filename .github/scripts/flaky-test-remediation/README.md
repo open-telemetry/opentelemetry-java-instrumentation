@@ -1,13 +1,12 @@
 # Flaky-test fix toolkit
 
 A small pipeline that picks the most-flaky JUnit test from Develocity and asks
-the Copilot CLI agent to fix it. Drives both the
-[`flaky-test-remediation.yml`](../../workflows/flaky-test-remediation.yml) workflow and a
-local equivalent.
+the Copilot CLI agent to fix it. It is run by the
+[`flaky-test-remediation.yml`](../../workflows/flaky-test-remediation.yml) workflow.
 
 ## Pipeline
 
-```
+```text
    skip.txt (from progress branch)
         |
         v
@@ -33,32 +32,23 @@ centralized in [`_paths.py`](_paths.py).
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `1-select-flaky-test.py` | Hits Develocity dashboard endpoints, picks one flaky test, writes `selected.json`.                                                                                                    |
 | `2-fix-flaky-test.py`    | Renders `prompt.txt` and invokes the Copilot CLI agent to fix the test (writes `copilot-output.jsonl`, `copilot-stderr.log`, and — if Copilot follows the protocol — `diagnosis.md`). |
-| `3-open-pr.py`           | Renders `pr-body.md` (incorporates `diagnosis.md` if Copilot wrote one) and opens the PR via `gh pr create`.                                                                          |
+| `3-open-pr.py`           | Renders `pr-body.md` with the failure's Gradle Build Scan links (and `diagnosis.md` if Copilot wrote one), then opens the PR via `gh pr create`.                                      |
 | `_paths.py`              | Single source of truth for every file under `build/flaky-test-remediation/`.                                                                                                          |
 | `_render.py`             | Tiny formatting helpers shared by the renderers.                                                                                                                                      |
-| `run-local.py`           | Local driver: runs the same pipeline as CI, pushes to `origin`, opens the PR against `upstream/main`.                                                                                 |
 
 ## Skip list / progress tracking
 
-The orphan branch `otelbot/flaky-test-remediation-progress` carries a single
-`attempted.txt` file (one Develocity test container/class name per line). Both the CI
-workflow and `run-local.py` read it as a skip list so we don't keep retrying
-related flaky methods in the same class, and append the selected class after each
-successful attempt.
+The orphan branch `otelbot/flaky-test-remediation-progress` carries an
+`attempted.txt` file with one Develocity test container/class name per line.
+The workflow reads it as a skip list so it doesn't keep retrying related flaky
+methods in the same class. It appends the selected class after each successful
+attempt.
 
-## Local usage
+## Workflow usage
 
-```bash
-python .github/scripts/flaky-test-remediation/run-local.py            # opens a PR
-python .github/scripts/flaky-test-remediation/run-local.py --draft    # opens a draft
-```
-
-Requires:
-
-- `git` remotes `origin` (your fork) and `upstream`
-  (`open-telemetry/opentelemetry-java-instrumentation`)
-- `gh` authenticated for the upstream repo
-- `copilot` CLI on PATH
+Run `Flaky Test Remediation` manually from GitHub Actions. Each run analyzes
+one test class, uploads the analysis and fix diagnostics as workflow artifacts,
+and opens an automated draft PR when Copilot produces a change.
 
 ## Environment
 
