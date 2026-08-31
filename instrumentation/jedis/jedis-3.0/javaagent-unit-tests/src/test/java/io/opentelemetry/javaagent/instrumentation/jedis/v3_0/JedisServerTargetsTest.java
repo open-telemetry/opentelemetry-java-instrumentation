@@ -73,6 +73,14 @@ class JedisServerTargetsTest {
   }
 
   @Test
+  void portlessStringIpv6SentinelStaysUnbracketed() {
+    RedisServerTarget target = JedisServerTargets.ofSentinels("mymaster", sentinels("2001:db8::1"));
+
+    assertThat(target.getAddress()).isEqualTo("2001:db8::1/mymaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void sentinelsWithoutAMasterNameKeepTheSentinels() {
     RedisServerTarget target =
         JedisServerTargets.ofSentinels(" ", sentinels("sentinel1:26379", "sentinel2:26380"));
