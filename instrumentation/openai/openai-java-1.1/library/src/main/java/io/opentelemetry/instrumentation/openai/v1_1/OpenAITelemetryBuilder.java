@@ -60,7 +60,7 @@ public final class OpenAITelemetryBuilder {
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(chatBuilder);
     Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter =
-        chatBuilder.buildInstrumenter();
+        chatBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     EmbeddingAttributesGetter embeddingAttributesGetter = new EmbeddingAttributesGetter();
     InstrumenterBuilder<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsBuilder =

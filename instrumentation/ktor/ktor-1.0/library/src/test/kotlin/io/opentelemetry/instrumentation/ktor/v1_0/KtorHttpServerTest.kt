@@ -123,6 +123,7 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
 
   override fun configure(options: HttpServerTestOptions) {
     options.setTestPathParam(true)
+    options.setTestClientAddressFromSocketPeer(false)
 
     options.setHttpAttributes {
       HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES - ServerAttributes.SERVER_PORT
