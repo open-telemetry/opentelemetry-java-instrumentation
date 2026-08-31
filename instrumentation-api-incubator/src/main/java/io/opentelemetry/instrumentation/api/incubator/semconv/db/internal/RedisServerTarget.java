@@ -66,29 +66,15 @@ public final class RedisServerTarget {
   }
 
   @Nullable
+  public static RedisServerTarget ofEndpointsAndLogicalName(
+      @Nullable List<String> endpoints, @Nullable String name) {
+    return createFromEndpointsAndLogicalName(endpoints, name, false);
+  }
+
+  @Nullable
   public static RedisServerTarget ofUnorderedEndpointsAndLogicalName(
       @Nullable List<String> endpoints, @Nullable String name) {
-    String logicalName = name == null ? "" : name.trim();
-    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints, true);
-    if (parsed == null) {
-      return null;
-    }
-    List<String> rendered = new ArrayList<>(parsed.size());
-    for (Endpoint endpoint : parsed) {
-      rendered.add(endpoint.renderConfigured());
-    }
-    if (rendered.isEmpty()) {
-      return ofLogicalName(logicalName);
-    }
-    rendered.sort(String::compareTo);
-    String address = renderEndpointList(rendered);
-    if (address == null) {
-      return ofLogicalName(logicalName);
-    }
-    if (!isSafeLogicalName(logicalName)) {
-      return new RedisServerTarget(address, null);
-    }
-    return new RedisServerTarget(address + "/" + logicalName, null);
+    return createFromEndpointsAndLogicalName(endpoints, name, true);
   }
 
   private RedisServerTarget(String address, @Nullable Integer port) {
@@ -193,6 +179,34 @@ public final class RedisServerTarget {
   @Nullable
   private static RedisServerTarget fromSharedTarget(@Nullable DbServerTarget target) {
     return target == null ? null : new RedisServerTarget(target.getAddress(), target.getPort());
+  }
+
+  @Nullable
+  private static RedisServerTarget createFromEndpointsAndLogicalName(
+      @Nullable List<String> endpoints, @Nullable String name, boolean unordered) {
+    String logicalName = name == null ? "" : name.trim();
+    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints, true);
+    if (parsed == null) {
+      return null;
+    }
+    List<String> rendered = new ArrayList<>(parsed.size());
+    for (Endpoint endpoint : parsed) {
+      rendered.add(endpoint.renderConfigured());
+    }
+    if (unordered) {
+      rendered.sort(String::compareTo);
+    }
+    if (rendered.isEmpty()) {
+      return ofLogicalName(logicalName);
+    }
+    String address = renderEndpointList(rendered);
+    if (address == null) {
+      return ofLogicalName(logicalName);
+    }
+    if (!isSafeLogicalName(logicalName)) {
+      return new RedisServerTarget(address, null);
+    }
+    return new RedisServerTarget(address + "/" + logicalName, null);
   }
 
   @Nullable
