@@ -273,7 +273,9 @@ class DbExecutionTest {
         "host1,12345::1",
         "host1,1::999.999.999.999",
         "host1:65536,host2",
-        "host1,user:secret@host2,host3"
+        "host1,user:secret@host2,host3",
+        "host1,host two",
+        "host1,[fe80::1%eth 0]"
       })
   void dbExecutionRejectsMalformedMultiHostAddress(String host) {
     ConnectionFactoryOptions factoryOptions =

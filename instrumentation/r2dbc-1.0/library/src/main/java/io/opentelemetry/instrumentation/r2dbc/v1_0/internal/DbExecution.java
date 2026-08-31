@@ -271,6 +271,11 @@ public final class DbExecution {
         || value.indexOf('[') > 0) {
       return false;
     }
+    for (int i = 0; i < value.length(); i++) {
+      if (Character.isWhitespace(value.charAt(i))) {
+        return false;
+      }
+    }
     if (value.startsWith("[")) {
       int closingBracket = value.indexOf(']');
       if (closingBracket <= 1 || value.indexOf(']', closingBracket + 1) >= 0) {
