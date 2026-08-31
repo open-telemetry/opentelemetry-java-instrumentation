@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -26,23 +27,31 @@ public class ElasticsearchTransportServerTarget {
       return new ElasticsearchTransportServerTarget(endpoint.host, endpoint.port);
     }
 
-    StringBuilder group = new StringBuilder();
-    for (int i = 0; i < endpoints.size(); i++) {
-      Endpoint endpoint = endpoints.get(i);
-      if (endpoint.host == null) {
+    List<String> renderedEndpoints = new ArrayList<>(endpoints.size());
+    for (Endpoint endpoint : endpoints) {
+      String host = endpoint.host;
+      if (host == null) {
         return null;
       }
-      if (i > 0) {
+      renderedEndpoints.add(renderEndpoint(host, endpoint.port));
+    }
+    renderedEndpoints.sort(String::compareTo);
+
+    StringBuilder group = new StringBuilder();
+    for (String renderedEndpoint : renderedEndpoints) {
+      if (group.length() > 0) {
         group.append(',');
       }
-      if (endpoint.host.indexOf(':') >= 0 && !endpoint.host.startsWith("[")) {
-        group.append('[').append(endpoint.host).append(']');
-      } else {
-        group.append(endpoint.host);
-      }
-      group.append(':').append(endpoint.port);
+      group.append(renderedEndpoint);
     }
     return new ElasticsearchTransportServerTarget(group.toString(), null);
+  }
+
+  private static String renderEndpoint(String host, int port) {
+    if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
+      return "[" + host + "]:" + port;
+    }
+    return host + ":" + port;
   }
 
   private ElasticsearchTransportServerTarget(String address, @Nullable Integer port) {

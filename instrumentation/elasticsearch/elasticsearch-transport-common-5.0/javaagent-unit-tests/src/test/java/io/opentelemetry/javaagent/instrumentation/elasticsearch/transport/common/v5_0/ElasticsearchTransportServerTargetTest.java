@@ -36,13 +36,29 @@ class ElasticsearchTransportServerTargetTest {
   }
 
   @Test
-  void severalAddressesAreListedWithoutAPortOfTheirOwn() {
-    ElasticsearchTransportServerTarget target =
+  void addressGroupIsStableAcrossPermutations() {
+    ElasticsearchTransportServerTarget first =
+        ElasticsearchTransportServerTarget.of(
+            asList(new Endpoint("10.0.0.2", 9301), new Endpoint("10.0.0.1", 9300)));
+    ElasticsearchTransportServerTarget second =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("10.0.0.1", 9300), new Endpoint("10.0.0.2", 9301)));
 
+    assertThat(first).isNotNull();
+    assertThat(first.getAddress()).isEqualTo("10.0.0.1:9300,10.0.0.2:9301");
+    assertThat(first.getPort()).isNull();
+    assertThat(second).isNotNull();
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+  }
+
+  @Test
+  void duplicateAddressesArePreserved() {
+    ElasticsearchTransportServerTarget target =
+        ElasticsearchTransportServerTarget.of(
+            asList(new Endpoint("10.0.0.1", 9300), new Endpoint("10.0.0.1", 9300)));
+
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("10.0.0.1:9300,10.0.0.2:9301");
+    assertThat(target.getAddress()).isEqualTo("10.0.0.1:9300,10.0.0.1:9300");
     assertThat(target.getPort()).isNull();
   }
 
