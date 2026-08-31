@@ -47,16 +47,16 @@ public class ElasticsearchTransportServerTarget {
     return new ElasticsearchTransportServerTarget(group.toString(), null);
   }
 
+  private ElasticsearchTransportServerTarget(String address, @Nullable Integer port) {
+    this.address = address;
+    this.port = port;
+  }
+
   private static String renderEndpoint(String host, int port) {
     if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
       return "[" + host + "]:" + port;
     }
     return host + ":" + port;
-  }
-
-  private ElasticsearchTransportServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
   }
 
   @Nullable
