@@ -59,6 +59,31 @@ public class ElasticsearchTransportServerTarget {
     this.port = port;
   }
 
+  @Nullable
+  private static String sanitizeHost(@Nullable String hostName) {
+    if (hostName == null) {
+      return null;
+    }
+    String host = hostName;
+    int authorityEnd = host.length();
+    for (int i = 0; i < host.length(); i++) {
+      char c = host.charAt(i);
+      if (c == '/' || c == '?' || c == '#') {
+        authorityEnd = i;
+        break;
+      }
+    }
+    int credentialsEnd = host.lastIndexOf('@');
+    if (credentialsEnd >= authorityEnd) {
+      return null;
+    }
+    host = host.substring(credentialsEnd + 1, authorityEnd);
+    if (host.length() >= 2 && host.charAt(0) == '[' && host.charAt(host.length() - 1) == ']') {
+      host = host.substring(1, host.length() - 1);
+    }
+    return host.isEmpty() ? null : host;
+  }
+
   public String getAddress() {
     return address;
   }
@@ -74,7 +99,7 @@ public class ElasticsearchTransportServerTarget {
     private final int port;
 
     public Endpoint(@Nullable String host, int port) {
-      this.host = host == null || host.isEmpty() ? null : host;
+      this.host = sanitizeHost(host);
       this.port = port;
     }
   }

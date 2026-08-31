@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTarget.Endpoint;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ElasticsearchTransportServerTargetTest {
@@ -70,5 +71,56 @@ class ElasticsearchTransportServerTargetTest {
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("[::1]:9300,[fe80::1]:9300");
+  }
+
+  @Test
+  void credentialsPathQueryAndFragmentAreRemoved() {
+    List<Endpoint> endpoints =
+        asList(
+            new Endpoint("user:secret@h1", 9300),
+            new Endpoint("h2/prefix", 9300),
+            new Endpoint("h3?token=secret", 9300),
+            new Endpoint("h4#secret", 9300));
+
+    ElasticsearchTransportServerTarget target = ElasticsearchTransportServerTarget.of(endpoints);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("h1:9300,h2:9300,h3:9300,h4:9300");
+    assertThat(target.getAddress()).doesNotContain("secret");
+  }
+
+  @Test
+  void userinfoAfterAuthorityHasNoTarget() {
+    assertThat(
+            ElasticsearchTransportServerTarget.of(
+                singletonList(new Endpoint("es.example?token=user@secret", 9300))))
+        .isNull();
+    assertThat(
+            ElasticsearchTransportServerTarget.of(
+                singletonList(new Endpoint("user:pa/ss@es.example", 9300))))
+        .isNull();
+  }
+
+  @Test
+  void credentialsAreRemovedFromOneAddress() {
+    ElasticsearchTransportServerTarget target =
+        ElasticsearchTransportServerTarget.of(
+            singletonList(new Endpoint("user:secret@es.example", 9300)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("es.example");
+    assertThat(target.getPort()).isEqualTo(9300);
+  }
+
+  @Test
+  void addressThatIsOnlyCredentialsHasNoTarget() {
+    assertThat(
+            ElasticsearchTransportServerTarget.of(
+                singletonList(new Endpoint("user:secret@", 9300))))
+        .isNull();
+    assertThat(
+            ElasticsearchTransportServerTarget.of(
+                asList(new Endpoint("h1", 9300), new Endpoint("user:secret@", 9300))))
+        .isNull();
   }
 }
