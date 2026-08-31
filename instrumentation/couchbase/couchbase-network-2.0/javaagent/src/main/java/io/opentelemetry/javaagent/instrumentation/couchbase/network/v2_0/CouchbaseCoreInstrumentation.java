@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.network.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.network.v2_0.VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -41,6 +42,10 @@ class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void bridgeRequestInfoToRequest(@Advice.Argument(0) CouchbaseRequest request) {
+      if (!emitStableDatabaseSemconv()) {
+        return;
+      }
+
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {
         return;
