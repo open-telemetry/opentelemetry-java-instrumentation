@@ -78,7 +78,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -603,7 +602,7 @@ class VertxSqlClientTest {
       String secondHost,
       int secondPort,
       String statement,
-      @Nullable Throwable error) {
+      Throwable error) {
     List<String> addresses = asList(firstHost + ":" + firstPort, secondHost + ":" + secondPort);
     Collections.sort(addresses);
     Consumer<SpanDataAssert> operationSpan =
