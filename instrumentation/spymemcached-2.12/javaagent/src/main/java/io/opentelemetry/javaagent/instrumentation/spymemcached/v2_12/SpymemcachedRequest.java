@@ -30,6 +30,7 @@ public abstract class SpymemcachedRequest {
 
   @Nullable private MemcachedNode handlingNode;
   @Nullable private InetSocketAddress handlingNodeAddress;
+  @Nullable private MemcachedNode retryHandlingNode;
   private boolean hasMultipleHandlingNodes;
 
   public void setHandlingNode(@Nullable MemcachedNode node) {
@@ -37,6 +38,14 @@ public abstract class SpymemcachedRequest {
   }
 
   public void setRetryHandlingNode(@Nullable MemcachedNode node) {
+    if (node == null || hasMultipleHandlingNodes) {
+      return;
+    }
+    if (retryHandlingNode != null && node != retryHandlingNode) {
+      clearHandlingNode();
+      return;
+    }
+    retryHandlingNode = node;
     captureHandlingNode(node, true);
   }
 

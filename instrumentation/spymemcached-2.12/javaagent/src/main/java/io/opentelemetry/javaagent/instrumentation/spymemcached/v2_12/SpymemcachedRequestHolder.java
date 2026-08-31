@@ -6,15 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import static io.opentelemetry.context.ContextKey.named;
-import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.util.IdentityHashMap;
-import java.util.Map;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.ops.KeyedOperation;
@@ -26,10 +23,8 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
       named("opentelemetry-spymemcached-request-holder");
   private static final VirtualField<Operation, SpymemcachedRequestAssociations> REQUESTS =
       VirtualField.find(Operation.class, SpymemcachedRequestAssociations.class);
-
   private final SpymemcachedRequestAssociations associations;
   private final boolean retry;
-  private final Map<SpymemcachedRequest, MemcachedNode> retryNodes;
 
   private SpymemcachedRequestHolder(SpymemcachedRequest request) {
     this(SpymemcachedRequestAssociations.create(request), false);
@@ -38,9 +33,6 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
   private SpymemcachedRequestHolder(SpymemcachedRequestAssociations associations, boolean retry) {
     this.associations = associations;
     this.retry = retry;
-    // SpymemcachedRequest is an AutoValue type with value equality, so retried requests have to be
-    // told apart by identity
-    this.retryNodes = retry ? new IdentityHashMap<>() : emptyMap();
   }
 
   public static Context init(Context context, SpymemcachedRequest request) {
@@ -87,11 +79,8 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
           && holder.associations.hasRequestKeysOutside(
               request, ((KeyedOperation) operation).getKeys())) {
         request.clearHandlingNode();
-      } else if (!holder.retryNodes.containsKey(request)) {
-        holder.retryNodes.put(request, node);
+      } else {
         request.setRetryHandlingNode(node);
-      } else if (node != holder.retryNodes.get(request)) {
-        request.clearHandlingNode();
       }
     }
   }

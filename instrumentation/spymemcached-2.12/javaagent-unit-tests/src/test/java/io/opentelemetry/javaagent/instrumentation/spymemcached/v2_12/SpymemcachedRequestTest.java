@@ -212,6 +212,40 @@ class SpymemcachedRequestTest {
   }
 
   @Test
+  void retryOntoSeveralNodesAcrossRetryScopesHasNoHandlingNode() {
+    MemcachedConnection connection = mock(MemcachedConnection.class);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
+    Operation initialOperation = operation("one.example", 11211);
+    Context context = SpymemcachedRequestHolder.init(Context.root(), request);
+    SpymemcachedRequestHolder.associateOperation(context, initialOperation);
+    SpymemcachedRequestHolder.captureHandlingNode(context, initialOperation);
+
+    Operation firstRetry = operation("two.example", 11212);
+    SpymemcachedRequestHolder.RetryScope firstRetryScope =
+        SpymemcachedRequestHolder.startRetry(initialOperation);
+    assertThat(firstRetryScope).isNotNull();
+    try {
+      SpymemcachedRequestHolder.associateOperation(Context.current(), firstRetry);
+      SpymemcachedRequestHolder.captureHandlingNode(Context.current(), firstRetry);
+    } finally {
+      firstRetryScope.close();
+    }
+
+    SpymemcachedRequestHolder.RetryScope secondRetryScope =
+        SpymemcachedRequestHolder.startRetry(firstRetry);
+    assertThat(secondRetryScope).isNotNull();
+    try {
+      Operation secondRetry = operation("three.example", 11213);
+      SpymemcachedRequestHolder.associateOperation(Context.current(), secondRetry);
+      SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondRetry);
+    } finally {
+      secondRetryScope.close();
+    }
+
+    assertThat(request.getHandlingNodeAddress()).isNull();
+  }
+
+  @Test
   void optimizedRetryKeepsRequestsSeparateByKey() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest firstRequest = SpymemcachedRequest.create(connection, "asyncGet");
