@@ -1,8 +1,0 @@
-whitespace_control:
-  trim_blocks: true
-  lstrip_blocks: true
-
-templates:
-  - pattern: metrics-list.j2
-    filter: semconv_grouped_metrics($params)
-    application_mode: single

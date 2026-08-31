@@ -52,17 +52,21 @@ public class JmxMetricInsightInstaller implements AgentListener {
           config.get("target").getScalarList("system", String.class, emptyList());
 
       // warn users when using any unsupported system value, with mapping for legacy values
-      systemsConfig.stream().map(s -> s.startsWith(EXPERIMENTAL_PREFIX) ? s.substring(EXPERIMENTAL_PREFIX.length()) : s).forEach(
-          system -> {
-            if (!InternalMetricsDefinitions.getSupportedSystems().contains(system)) {
-              logger.log(
-                  WARNING,
-                  "JMX target system "
-                      + system
-                      + " is not supported. Supported systems are: "
-                      + InternalMetricsDefinitions.getSupportedSystems());
-            }
-          });
+      systemsConfig.stream()
+          .map(
+              s ->
+                  s.startsWith(EXPERIMENTAL_PREFIX) ? s.substring(EXPERIMENTAL_PREFIX.length()) : s)
+          .forEach(
+              system -> {
+                if (!InternalMetricsDefinitions.getSupportedSystems().contains(system)) {
+                  logger.log(
+                      WARNING,
+                      "JMX target system "
+                          + system
+                          + " is not supported. Supported systems are: "
+                          + InternalMetricsDefinitions.getSupportedSystems());
+                }
+              });
 
       IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
 
