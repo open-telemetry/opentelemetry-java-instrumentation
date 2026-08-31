@@ -89,9 +89,6 @@ final class CouchbaseAttributesGetter
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       CouchbaseRequestInfo request, @Nullable Void unused) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
     Node node = request.getNode();
     if (node == null) {
       return null;
