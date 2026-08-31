@@ -31,14 +31,14 @@ public final class VertxRedisServerTargets {
       return null;
     }
     if (options instanceof RedisSentinelConnectOptions) {
-      return RedisServerTarget.ofEndpointsAndLogicalName(
+      return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
           effectiveEndpoints(options.getEndpoints()),
           ((RedisSentinelConnectOptions) options).getMasterName());
     }
     if (options instanceof RedisStandaloneConnectOptions) {
       return RedisServerTarget.ofEndpoint(effectiveEndpoint(options.getEndpoint()));
     }
-    return RedisServerTarget.ofEndpoints(effectiveEndpoints(options.getEndpoints()));
+    return RedisServerTarget.ofUnorderedEndpoints(effectiveEndpoints(options.getEndpoints()));
   }
 
   private static List<String> effectiveEndpoints(List<String> connectionStrings) {

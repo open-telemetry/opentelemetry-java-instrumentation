@@ -30,13 +30,13 @@ public final class VertxRedisServerTargets {
       return null;
     }
     if (options.getType() == RedisClientType.SENTINEL) {
-      return RedisServerTarget.ofEndpointsAndLogicalName(
+      return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
           effectiveEndpoints(options.getEndpoints()), options.getMasterName());
     }
     if (options.getType() == RedisClientType.STANDALONE) {
       return RedisServerTarget.ofEndpoint(effectiveEndpoint(options.getEndpoint()));
     }
-    return RedisServerTarget.ofEndpoints(effectiveEndpoints(options.getEndpoints()));
+    return RedisServerTarget.ofUnorderedEndpoints(effectiveEndpoints(options.getEndpoints()));
   }
 
   private static List<String> effectiveEndpoints(List<String> connectionStrings) {
