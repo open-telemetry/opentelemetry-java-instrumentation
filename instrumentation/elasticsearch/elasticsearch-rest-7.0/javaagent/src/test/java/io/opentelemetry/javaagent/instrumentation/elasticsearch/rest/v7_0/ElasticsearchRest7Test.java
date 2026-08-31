@@ -281,13 +281,13 @@ class ElasticsearchRest7Test {
   }
 
   private static String hostList(HttpHost deadHost) {
-    return deadHost.getHostName()
+    return httpHost.getHostName()
         + ":"
-        + deadHost.getPort()
+        + httpHost.getPort()
         + ","
-        + httpHost.getHostName()
+        + deadHost.getHostName()
         + ":"
-        + httpHost.getPort();
+        + deadHost.getPort();
   }
 
   private static void assertConfiguredTarget(String hostList) {
