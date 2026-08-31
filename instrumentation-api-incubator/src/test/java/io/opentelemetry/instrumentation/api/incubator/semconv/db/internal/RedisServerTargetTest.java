@@ -284,6 +284,7 @@ class RedisServerTargetTest {
         "localhost:-1",
         "localhost:6379x",
         "localhost:banana:extra",
+        "node1,node2",
         ":6379",
         "1:2:3",
         "2001:db8::g",
@@ -303,6 +304,14 @@ class RedisServerTargetTest {
                     "redis://user:sec?ret@node2:6379",
                     "redis://user:sec#ret@node3:6379")))
         .isNull();
+  }
+
+  @Test
+  void endpointListDropsCommaDelimitedAuthority() {
+    RedisServerTarget target = RedisServerTarget.ofEndpoints(asList("node1,node2", "node3:6379"));
+
+    assertThat(target.getAddress()).isEqualTo("node3");
+    assertThat(target.getPort()).isEqualTo(6379);
   }
 
   @ParameterizedTest
