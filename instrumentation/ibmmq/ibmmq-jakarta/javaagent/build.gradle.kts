@@ -28,6 +28,11 @@ dependencies {
   testInstrumentation(project(":instrumentation:jms:jms-3.0:javaagent"))
 }
 
+// The generic jakarta JMS instrumentation that this module enriches requires Java 11.
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
