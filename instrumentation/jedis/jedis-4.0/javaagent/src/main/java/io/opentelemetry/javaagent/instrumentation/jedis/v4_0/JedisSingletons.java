@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
@@ -119,11 +120,8 @@ public class JedisSingletons {
     }
   }
 
-  public static void setTopologyTargetFromCurrent(Object topologyOwner) {
-    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
-    if (configuredTarget != null) {
-      setTopologyTarget(topologyOwner, configuredTarget.target);
-    }
+  public static void setTopologyTargetFromNodes(Object topologyOwner, Collection<?> startNodes) {
+    setTopologyTarget(topologyOwner, JedisServerTargets.ofNodes(startNodes));
   }
 
   public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {

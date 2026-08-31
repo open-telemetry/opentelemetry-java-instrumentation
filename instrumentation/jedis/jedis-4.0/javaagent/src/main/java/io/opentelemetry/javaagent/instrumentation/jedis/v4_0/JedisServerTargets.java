@@ -20,18 +20,6 @@ class JedisServerTargets {
   }
 
   @Nullable
-  public static RedisServerTarget ofNodesFromArguments(@Nullable Object[] arguments) {
-    if (arguments != null) {
-      for (Object argument : arguments) {
-        if (argument instanceof Collection) {
-          return ofNodes((Collection<?>) argument);
-        }
-      }
-    }
-    return null;
-  }
-
-  @Nullable
   public static RedisServerTarget ofShards(@Nullable List<HostAndPort> shards) {
     return RedisServerTarget.ofEndpoints(endpointStrings(shards));
   }
