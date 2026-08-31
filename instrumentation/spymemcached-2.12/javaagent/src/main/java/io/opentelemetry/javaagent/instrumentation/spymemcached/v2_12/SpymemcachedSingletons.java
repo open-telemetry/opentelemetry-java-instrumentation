@@ -28,7 +28,6 @@ public class SpymemcachedSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(new SpymemcachedServerAttributesExtractor())
             .addContextCustomizer(
                 (context, request, attributes) -> SpymemcachedRequestHolder.init(context, request))
             .addOperationMetrics(DbClientMetrics.get());

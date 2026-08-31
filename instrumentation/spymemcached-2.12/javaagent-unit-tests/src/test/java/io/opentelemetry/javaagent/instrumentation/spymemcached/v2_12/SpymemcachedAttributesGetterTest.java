@@ -23,20 +23,31 @@ class SpymemcachedAttributesGetterTest {
   private final SpymemcachedAttributesGetter getter = new SpymemcachedAttributesGetter();
 
   @Test
-  void singleConfiguredNodeKeepsItsAddressAndPort() {
+  void singleDefaultPortIsOmittedInStableTelemetry() {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
     request.setHandlingNode(memcachedNode("selected.example", 11212));
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? "one.example" : null);
-    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? 11211 : null);
+    assertThat(getter.getServerPort(request)).isNull();
   }
 
   @Test
-  void severalConfiguredNodesAreReportedWithoutAPort() {
+  void sharedCustomPortIsReportedSeparatelyInStableTelemetry() {
+    SpymemcachedRequest request =
+        request(asList(node("one.example", 11212), node("two.example", 11212)));
+    request.setHandlingNode(memcachedNode("two.example", 11212));
+
+    assertThat(getter.getServerAddress(request))
+        .isEqualTo(emitStableDatabaseSemconv() ? "one.example,two.example" : null);
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? 11212 : null);
+  }
+
+  @Test
+  void mixedPortsStayInlineInStableTelemetry() {
     SpymemcachedRequest request =
         request(asList(node("one.example", 11211), node("two.example", 11212)));
-    request.setHandlingNode(memcachedNode("two.example", 11212));
+    request.setHandlingNode(memcachedNode("selected.example", 11213));
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? "one.example:11211,two.example:11212" : null);

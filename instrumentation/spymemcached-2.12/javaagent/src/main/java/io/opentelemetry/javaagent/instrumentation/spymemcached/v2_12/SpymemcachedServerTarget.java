@@ -12,6 +12,8 @@ import javax.annotation.Nullable;
 
 public class SpymemcachedServerTarget {
 
+  private static final int DEFAULT_PORT = 11211;
+
   private final String address;
   @Nullable private final Integer port;
 
@@ -20,18 +22,33 @@ public class SpymemcachedServerTarget {
     if (nodes == null || nodes.isEmpty()) {
       return null;
     }
-    List<String> endpoints = new ArrayList<>(nodes.size());
+    List<String> hosts = new ArrayList<>(nodes.size());
+    List<Integer> ports = new ArrayList<>(nodes.size());
+    int commonPort = -1;
+    boolean hasMixedPorts = false;
     for (InetSocketAddress node : nodes) {
       String host = node == null ? null : clean(node.getHostString());
       if (host == null || node.getPort() <= 0) {
         return null;
       }
-      if (nodes.size() == 1) {
-        return new SpymemcachedServerTarget(host, node.getPort());
+      if (commonPort == -1) {
+        commonPort = node.getPort();
+      } else if (commonPort != node.getPort()) {
+        hasMixedPorts = true;
       }
-      endpoints.add(endpoint(host, node.getPort()));
+      hosts.add(host);
+      ports.add(node.getPort());
     }
-    return new SpymemcachedServerTarget(String.join(",", endpoints), null);
+
+    if (hasMixedPorts) {
+      List<String> endpoints = new ArrayList<>(hosts.size());
+      for (int i = 0; i < hosts.size(); i++) {
+        endpoints.add(endpoint(hosts.get(i), ports.get(i)));
+      }
+      return new SpymemcachedServerTarget(String.join(",", endpoints), null);
+    }
+    return new SpymemcachedServerTarget(
+        String.join(",", hosts), commonPort == DEFAULT_PORT ? null : commonPort);
   }
 
   private SpymemcachedServerTarget(String address, @Nullable Integer port) {

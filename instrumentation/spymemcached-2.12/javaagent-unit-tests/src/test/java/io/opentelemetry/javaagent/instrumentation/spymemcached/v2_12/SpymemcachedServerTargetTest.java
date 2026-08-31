@@ -18,16 +18,45 @@ import org.junit.jupiter.api.Test;
 class SpymemcachedServerTargetTest {
 
   @Test
-  void singleNodeKeepsItsHostAndPort() {
+  void singleDefaultPortIsOmitted() {
     SpymemcachedServerTarget target =
-        SpymemcachedServerTarget.create(singletonList(node("cache.example", 11211)));
+        SpymemcachedServerTarget.create(singletonList(node("192.0.2.1", 11211)));
 
-    assertThat(target.getAddress()).isEqualTo("cache.example");
-    assertThat(target.getPort()).isEqualTo(11211);
+    assertThat(target.getAddress()).isEqualTo("192.0.2.1");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void nodeOrderIsPreserved() {
+  void defaultPortsAreOmittedFromAList() {
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(
+            asList(node("one.example", 11211), node("two.example", 11211)));
+
+    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void singleCustomPortIsReportedSeparately() {
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(singletonList(node("cache.example", 11212)));
+
+    assertThat(target.getAddress()).isEqualTo("cache.example");
+    assertThat(target.getPort()).isEqualTo(11212);
+  }
+
+  @Test
+  void sharedCustomPortIsReportedSeparately() {
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(
+            asList(node("one.example", 11212), node("two.example", 11212)));
+
+    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
+    assertThat(target.getPort()).isEqualTo(11212);
+  }
+
+  @Test
+  void mixedPortsStayInlineAndNodeOrderIsPreserved() {
     SpymemcachedServerTarget first =
         SpymemcachedServerTarget.create(
             asList(node("one.example", 11211), node("two.example", 11212)));
@@ -76,7 +105,7 @@ class SpymemcachedServerTargetTest {
         SpymemcachedServerTarget.create(singletonList(node("2001:db8::1", 11211)));
 
     assertThat(single.getAddress()).isEqualTo("2001:db8::1");
-    assertThat(single.getPort()).isEqualTo(11211);
+    assertThat(single.getPort()).isNull();
   }
 
   @Test
@@ -85,7 +114,17 @@ class SpymemcachedServerTargetTest {
         SpymemcachedServerTarget.create(singletonList(node("[2001:db8::1]", 11211)));
 
     assertThat(target.getAddress()).isEqualTo("2001:db8::1");
-    assertThat(target.getPort()).isEqualTo(11211);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void ipv6NodesWithASharedPortDoNotNeedBrackets() {
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(
+            asList(node("2001:db8::1", 11212), node("2001:db8::2", 11212)));
+
+    assertThat(target.getAddress()).isEqualTo("2001:db8::1,2001:db8::2");
+    assertThat(target.getPort()).isEqualTo(11212);
   }
 
   @Test

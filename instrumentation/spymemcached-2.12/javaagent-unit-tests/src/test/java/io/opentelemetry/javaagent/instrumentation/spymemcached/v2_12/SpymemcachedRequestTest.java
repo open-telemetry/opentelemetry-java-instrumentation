@@ -5,18 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.context.Context;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,46 +38,6 @@ class SpymemcachedRequestTest {
     MemcachedConnection connection = mock(MemcachedConnection.class);
 
     assertThat(SpymemcachedRequest.create(connection, "asyncGet").getServerTarget()).isNull();
-  }
-
-  @Test
-  void uncapturedTargetReportsHandlingNodeOnlyForLegacyTelemetry() {
-    MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
-    request.setHandlingNode(memcachedNode("selected.example", 11212));
-    AttributesBuilder attributes = Attributes.builder();
-
-    new SpymemcachedServerAttributesExtractor()
-        .onEnd(attributes, Context.root(), request, null, null);
-
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.build().asMap()).isEmpty();
-    } else {
-      Attributes result = attributes.build();
-      assertThat(result.get(SERVER_ADDRESS)).isEqualTo("selected.example");
-      assertThat(result.get(SERVER_PORT)).isEqualTo(11212);
-    }
-  }
-
-  @Test
-  void stableConfiguredTargetIsNotOverwrittenByHandlingNode() {
-    MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(
-        connection, asList(node("one.example", 11211), node("two.example", 11212)));
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
-    request.setHandlingNode(memcachedNode("selected.example", 11213));
-    AttributesBuilder attributes = Attributes.builder();
-
-    new SpymemcachedServerAttributesExtractor()
-        .onEnd(attributes, Context.root(), request, null, null);
-
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.build().asMap()).isEmpty();
-    } else {
-      Attributes result = attributes.build();
-      assertThat(result.get(SERVER_ADDRESS)).isEqualTo("selected.example");
-      assertThat(result.get(SERVER_PORT)).isEqualTo(11213);
-    }
   }
 
   @Test
@@ -115,7 +69,7 @@ class SpymemcachedRequestTest {
   }
 
   @Test
-  void retryOntoAnotherNodeForgetsTheHandlingNodeButKeepsTheTarget() {
+  void sequentialSingleKeyRetryDoesNotChangeTheConfiguredTarget() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedServerTargets.capture(
         connection, asList(node("one.example", 11211), node("two.example", 11212)));
