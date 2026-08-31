@@ -155,6 +155,10 @@ public class LettuceSingletons {
     }
 
     RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
+    RedisServerTarget commandTarget = COMMAND_TARGET.get(command);
+    if (commandTarget == null) {
+      commandTarget = CONNECTION_TARGET.get(connectionHandler);
+    }
 
     // Reactive commands previously copied endpoint metadata only when
     // RedisChannelHandler.getChannelWriter() returned a DefaultEndpoint directly. That works with
@@ -178,7 +182,7 @@ public class LettuceSingletons {
     // Reading CONNECTION_* here avoids depending on the concrete channel-writer wrapper chain.
     COMMAND_ADDRESS.set(command, CONNECTION_ADDRESS.get(connectionHandler));
     COMMAND_DATABASE_INDEX.set(command, CONNECTION_DATABASE_INDEX.get(connectionHandler));
-    COMMAND_TARGET.set(command, CONNECTION_TARGET.get(connectionHandler));
+    COMMAND_TARGET.set(command, commandTarget);
   }
 
   private LettuceSingletons() {}
