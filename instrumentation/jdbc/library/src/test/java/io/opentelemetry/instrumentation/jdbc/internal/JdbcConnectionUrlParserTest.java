@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.MYSQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.POSTGRESQL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -2212,6 +2213,48 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .setName("mdbdb")
             .build());
+  }
+
+  private static Stream<Arguments> orderedServerAddressGroupArguments() {
+    return Stream.of(
+        argumentSet(
+            "reversed PostgreSQL targets with a duplicate",
+            "jdbc:postgresql://pg.host2:5433,pg.host1:5432,pg.host2:5433/pgdb",
+            "pg.host2:5433,pg.host1:5432,pg.host2:5433"),
+        argumentSet(
+            "reversed MariaDB sequential targets",
+            "jdbc:mariadb:sequential://mdb.host2:3307,mdb.host1:3306/mdbdb",
+            "mdb.host2:3307,mdb.host1:3306"),
+        argumentSet(
+            "MySQL replication target order",
+            "jdbc:mysql:replication://address=(host=replica.host)(port=3307),"
+                + "address=(host=source.host)(port=3306)/mydb",
+            "address=(host=replica.host)(port=3307)," + "address=(host=source.host)(port=3306)"),
+        argumentSet(
+            "SQL Server principal and failover partner order",
+            "jdbc:sqlserver://principal.host:1433;failoverPartner=partner.host:1444",
+            "principal.host:1433,partner.host:1444"),
+        argumentSet(
+            "SQL Server IPv6 ports",
+            "jdbc:sqlserver://[2001:db8::1]:1433;failoverPartner=[2001:db8::2]:1444",
+            "[2001:db8::1]:1433,[2001:db8::2]:1444"),
+        argumentSet(
+            "Oracle address list order with a duplicate",
+            "jdbc:oracle:thin:@(description=(address_list="
+                + "(address=(protocol=tcp)(host=orcl.host2)(port=1522))"
+                + "(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
+                + "(address=(protocol=tcp)(host=orcl.host2)(port=1522)))"
+                + "(connect_data=(service_name=orclsn)))",
+            "oracle:thin:@(description=(address_list="
+                + "(address=(protocol=tcp)(host=orcl.host2)(port=1522))"
+                + "(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
+                + "(address=(protocol=tcp)(host=orcl.host2)(port=1522))))"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("orderedServerAddressGroupArguments")
+  void preservesOrderedServerAddressGroups(String url, String expectedServerAddressGroup) {
+    assertThat(parse(url, null).getServerAddressGroup()).isEqualTo(expectedServerAddressGroup);
   }
 
   @ParameterizedTest(name = "{index}: {0}")
