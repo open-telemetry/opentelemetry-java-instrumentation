@@ -93,11 +93,15 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
-  void severalHandlingNodesHaveNoNetworkPeer() {
+  void severalHandlingNodesHaveNoNetworkPeer() throws UnknownHostException {
     SpymemcachedRequest request =
         request(asList(node("one.example", 11211), node("two.example", 11212)));
-    request.setHandlingNode(memcachedNode("one.example", 11211));
-    request.setHandlingNode(memcachedNode("two.example", 11212));
+    InetSocketAddress firstPeer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 11211);
+    InetSocketAddress secondPeer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 41}), 11212);
+    request.setHandlingNode(memcachedNode(firstPeer));
+    request.setHandlingNode(memcachedNode(secondPeer));
 
     assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
   }
