@@ -20,6 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.utility.MountableFile;
 
 class TomcatTest extends TargetSystemTest {
@@ -40,7 +41,11 @@ class TomcatTest extends TargetSystemTest {
             .withEnv("CATALINA_OPTS", String.join(" ", jvmArgs))
             .withStartupTimeout(Duration.ofMinutes(2))
             .withExposedPorts(8080)
-            .waitingFor(Wait.forHttp("/datasource.jsp").forPort(8080).forStatusCode(200));
+            .waitingFor(
+                new WaitAllStrategy()
+                    .withStrategy(Wait.forHttp("/datasource.jsp").forPort(8080).forStatusCode(200))
+                    .withStrategy(
+                        Wait.forHttp("/other/datasource.jsp").forPort(8080).forStatusCode(200)));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
@@ -48,12 +53,16 @@ class TomcatTest extends TargetSystemTest {
     // Deploy example web application to the tomcat to enable reporting tomcat.session.active.count
     // metric
     copyTestWebAppToTarget(target, "/usr/local/tomcat/webapps/ROOT.war");
+    copyTestWebAppToTarget(target, "/usr/local/tomcat/webapps/other.war");
     target.withCopyFileToContainer(
         MountableFile.forClasspathResource("tomcat-context.xml"),
         "/usr/local/tomcat/conf/context.xml");
     target.withCopyFileToContainer(
         MountableFile.forClasspathResource("datasource.jsp"),
         "/usr/local/tomcat/webapps/ROOT/datasource.jsp");
+    target.withCopyFileToContainer(
+        MountableFile.forClasspathResource("datasource.jsp"),
+        "/usr/local/tomcat/webapps/other/datasource.jsp");
 
     startWeaverValidation(
         "tomcat.yaml",
@@ -89,7 +98,8 @@ class TomcatTest extends TargetSystemTest {
                     asList(
                         "tomcat.request.processor.name",
                         "tomcat.context",
-                        "tomcat.thread.pool.name"),
+                        "tomcat.thread.pool.name",
+                        "tomcat.host"),
                     emptyList())
                 .checkRegisteredAttributes(
                     "db.client.",
@@ -108,6 +118,9 @@ class TomcatTest extends TargetSystemTest {
         attribute("tomcat.thread.pool.name", "\"http-nio-8080\"");
     AttributeMatcher dataSourcePoolNameAttribute =
         attribute("db.client.connection.pool.name", "\"jdbc/TestDB\"");
+    AttributeMatcher dataSourceHostAttribute = attribute("tomcat.host", "localhost");
+    AttributeMatcher rootDataSourceContextAttribute = attribute("tomcat.context", "/");
+    AttributeMatcher otherDataSourceContextAttribute = attribute("tomcat.context", "/other");
     AttributeMatcher usedConnectionStateAttribute = attribute("db.client.connection.state", "used");
     AttributeMatcher idleConnectionStateAttribute = attribute("db.client.connection.state", "idle");
 
@@ -119,7 +132,15 @@ class TomcatTest extends TargetSystemTest {
                     .hasDescription("The configured initial size of the JDBC connection pool.")
                     .hasUnit("{connection}")
                     .isUpDownCounter()
-                    .hasDataPointsWithOneAttribute(dataSourcePoolNameAttribute))
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            rootDataSourceContextAttribute),
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            otherDataSourceContextAttribute)))
         .add(
             "tomcat.db.client.connection.count",
             metric ->
@@ -128,8 +149,26 @@ class TomcatTest extends TargetSystemTest {
                     .hasUnit("{connection}")
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
-                        attributeGroup(dataSourcePoolNameAttribute, usedConnectionStateAttribute),
-                        attributeGroup(dataSourcePoolNameAttribute, idleConnectionStateAttribute)))
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            rootDataSourceContextAttribute,
+                            usedConnectionStateAttribute),
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            otherDataSourceContextAttribute,
+                            usedConnectionStateAttribute),
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            rootDataSourceContextAttribute,
+                            idleConnectionStateAttribute),
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            otherDataSourceContextAttribute,
+                            idleConnectionStateAttribute)))
         .add(
             "tomcat.db.client.connection.limit",
             metric ->
@@ -137,7 +176,15 @@ class TomcatTest extends TargetSystemTest {
                     .hasDescription("The configured maximum size of the JDBC connection pool.")
                     .hasUnit("{connection}")
                     .isUpDownCounter()
-                    .hasDataPointsWithOneAttribute(dataSourcePoolNameAttribute))
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            rootDataSourceContextAttribute),
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            otherDataSourceContextAttribute)))
         .add(
             "tomcat.error.count",
             metric ->

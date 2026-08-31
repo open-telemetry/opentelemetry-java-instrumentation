@@ -9,6 +9,12 @@ groups:
         brief: Web application context path
         examples:
           - "/myapp"
+      - id: tomcat.host
+        type: string
+        stability: development
+        brief: Name of the Tomcat host.
+        examples:
+          - "localhost"
       - id: tomcat.request.processor.name
         type: string
         stability: development
@@ -49,6 +55,8 @@ groups:
     unit: "{connection}"
     instrument: updowncounter
     attributes:
+      - ref: tomcat.host
+      - ref: tomcat.context
       - ref: db.client.connection.pool.name
 
   - id: metric.tomcat.db.client.connection.count
@@ -59,6 +67,8 @@ groups:
     unit: "{connection}"
     instrument: updowncounter
     attributes:
+      - ref: tomcat.host
+      - ref: tomcat.context
       - ref: db.client.connection.pool.name
       - ref: db.client.connection.state
 
@@ -70,6 +80,8 @@ groups:
     unit: "{connection}"
     instrument: updowncounter
     attributes:
+      - ref: tomcat.host
+      - ref: tomcat.context
       - ref: db.client.connection.pool.name
 
   - id: metric.tomcat.session.duration.max

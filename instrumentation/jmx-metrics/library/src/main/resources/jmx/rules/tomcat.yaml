@@ -9,6 +9,8 @@ rules:
     prefix: tomcat.db.client.connection.
     metricAttribute:
       db.client.connection.pool.name: param(name)
+      tomcat.host: param(host)
+      tomcat.context: param(context)
     mapping:
       # DBCP2 and Tomcat JDBC expose equivalent pool values under different names.
       # A datasource uses one implementation, so these mappings intentionally converge
