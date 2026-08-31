@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("OtelInternalJavadoc")
@@ -260,7 +261,8 @@ public final class RedisServerTarget {
 
     private static boolean isSocket(@Nullable String scheme, String value) {
       if (scheme != null) {
-        return scheme.endsWith("socket") || scheme.endsWith("unix");
+        String normalizedScheme = scheme.toLowerCase(Locale.ROOT);
+        return normalizedScheme.endsWith("socket") || normalizedScheme.endsWith("unix");
       }
       return value.charAt(0) == '/';
     }
