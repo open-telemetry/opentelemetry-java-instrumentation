@@ -25,7 +25,7 @@ class ConfigServerTargetsTest {
     config
         .useSentinelServers()
         .setMasterName("mymaster")
-        .addSentinelAddress(redisAddress("sentinel1:26379"), redisAddress("sentinel2:26380"));
+        .addSentinelAddress(redisAddress("sentinel2:26380"), redisAddress("sentinel1:26379"));
 
     RedisServerTarget target = ConfigServerTargetsBefore317.of(config);
 
@@ -34,17 +34,24 @@ class ConfigServerTargetsTest {
   }
 
   @Test
-  void clusterKeepsEveryConfiguredNodeInStableOrder() {
-    Config config = new Config();
-    config
+  void clusterPermutationsRenderIdenticallyAfterNormalization() {
+    Config first = new Config();
+    first
         .useClusterServers()
         .addNodeAddress(redisAddress("node2:7001"))
-        .addNodeAddress(redisAddress("node1:7000"));
+        .addNodeAddress(secureRedisAddress("node1:7000"));
+    Config second = new Config();
+    second
+        .useClusterServers()
+        .addNodeAddress(secureRedisAddress("node1:7000"))
+        .addNodeAddress(redisAddress("node2:7001"));
 
-    RedisServerTarget target = ConfigServerTargetsBefore317.of(config);
+    RedisServerTarget firstTarget = ConfigServerTargetsBefore317.of(first);
+    RedisServerTarget secondTarget = ConfigServerTargetsBefore317.of(second);
 
-    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
-    assertThat(target.getPort()).isNull();
+    assertThat(firstTarget.getAddress()).isEqualTo("node1:7000,node2:7001");
+    assertThat(secondTarget.getAddress()).isEqualTo(firstTarget.getAddress());
+    assertThat(firstTarget.getPort()).isNull();
   }
 
   @Test
@@ -88,7 +95,7 @@ class ConfigServerTargetsTest {
     config
         .useMasterSlaveServers()
         .setMasterAddress(redisAddress("master:6379"))
-        .addSlaveAddress(redisAddress("replica2:6381"), redisAddress("replica1:6380"));
+        .addSlaveAddress(redisAddress("replica2:6381"), secureRedisAddress("replica1:6380"));
 
     assertThat(ConfigServerTargetsBefore317.of(config).getAddress())
         .isEqualTo("master:6379,replica1:6380,replica2:6381");
@@ -129,6 +136,10 @@ class ConfigServerTargetsTest {
 
   private static String redisAddress(String address) {
     return (testLatestDeps() ? "redis://" : "") + address;
+  }
+
+  private static String secureRedisAddress(String address) {
+    return (testLatestDeps() ? "rediss://" : "") + address;
   }
 
   private static Method findMethod(String methodName) {

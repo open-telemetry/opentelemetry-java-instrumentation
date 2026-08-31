@@ -23,7 +23,7 @@ class ConfigServerTargetsTest {
     config
         .useSentinelServers()
         .setMasterName("mymaster")
-        .addSentinelAddress("redis://sentinel1:26379", "redis://sentinel2:26380");
+        .addSentinelAddress("redis://sentinel2:26380", "redis://sentinel1:26379");
 
     RedisServerTarget target = ConfigServerTargetsSince317.of(config);
 
@@ -32,17 +32,24 @@ class ConfigServerTargetsTest {
   }
 
   @Test
-  void clusterKeepsEveryConfiguredNode() {
-    Config config = new Config();
-    config
+  void clusterPermutationsRenderIdenticallyAfterNormalization() {
+    Config first = new Config();
+    first
         .useClusterServers()
         .addNodeAddress("redis://node2:7001")
-        .addNodeAddress("redis://node1:7000");
+        .addNodeAddress("rediss://node1:7000");
+    Config second = new Config();
+    second
+        .useClusterServers()
+        .addNodeAddress("rediss://node1:7000")
+        .addNodeAddress("redis://node2:7001");
 
-    RedisServerTarget target = ConfigServerTargetsSince317.of(config);
+    RedisServerTarget firstTarget = ConfigServerTargetsSince317.of(first);
+    RedisServerTarget secondTarget = ConfigServerTargetsSince317.of(second);
 
-    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
-    assertThat(target.getPort()).isNull();
+    assertThat(firstTarget.getAddress()).isEqualTo("node1:7000,node2:7001");
+    assertThat(secondTarget.getAddress()).isEqualTo(firstTarget.getAddress());
+    assertThat(firstTarget.getPort()).isNull();
   }
 
   @Test
@@ -87,7 +94,7 @@ class ConfigServerTargetsTest {
     config
         .useMasterSlaveServers()
         .setMasterAddress("redis://master:6379")
-        .addSlaveAddress("redis://replica1:6380", "redis://replica2:6381");
+        .addSlaveAddress("redis://replica2:6381", "rediss://replica1:6380");
 
     assertThat(ConfigServerTargetsSince317.of(config).getAddress())
         .isEqualTo("master:6379,replica1:6380,replica2:6381");

@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -129,8 +127,7 @@ public final class ConfigServerTargetsBefore317 {
         endpoints.add(addressString(address));
       }
     }
-    Collections.sort(endpoints);
-    return RedisServerTarget.ofEndpoints(endpoints);
+    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
 
   @Nullable
@@ -140,14 +137,21 @@ public final class ConfigServerTargetsBefore317 {
     if (firstAddress != null) {
       endpoints.add(addressString(firstAddress));
     }
-    Set<String> sortedAddresses = new TreeSet<>();
+    List<String> sortedAddresses = new ArrayList<>();
     if (otherAddresses != null) {
       for (Object address : otherAddresses) {
         if (address != null) {
-          sortedAddresses.add(addressString(address));
+          RedisServerTarget target = RedisServerTarget.ofEndpoint(addressString(address));
+          if (target != null) {
+            Integer port = target.getPort();
+            sortedAddresses.add(
+                RedisServerTarget.endpoint(
+                    target.getAddress(), port == null ? -1 : port.intValue()));
+          }
         }
       }
     }
+    Collections.sort(sortedAddresses);
     endpoints.addAll(sortedAddresses);
     return RedisServerTarget.ofEndpoints(endpoints);
   }
@@ -156,7 +160,7 @@ public final class ConfigServerTargetsBefore317 {
   private static RedisServerTarget ofAddresses(
       @Nullable Collection<?> addresses, @Nullable String logicalName) {
     if (addresses == null || addresses.isEmpty()) {
-      return RedisServerTarget.ofEndpointsAndLogicalName(null, logicalName);
+      return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(null, logicalName);
     }
     List<String> endpoints = new ArrayList<>(addresses.size());
     for (Object address : addresses) {
@@ -164,7 +168,7 @@ public final class ConfigServerTargetsBefore317 {
         endpoints.add(addressString(address));
       }
     }
-    return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, logicalName);
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, logicalName);
   }
 
   private static String addressString(Object address) {

@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -205,7 +204,7 @@ public final class RediscalaServerTargets {
         }
       }
     }
-    return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, master);
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, master);
   }
 
   @Nullable
@@ -232,7 +231,7 @@ public final class RediscalaServerTargets {
         endpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
       }
     }
-    return RedisServerTarget.ofEndpoints(endpoints);
+    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
 
   @Nullable
@@ -264,8 +263,7 @@ public final class RediscalaServerTargets {
         }
       }
     }
-    Collections.sort(endpoints);
-    return RedisServerTarget.ofEndpoints(endpoints);
+    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
 
   private RediscalaServerTargets() {}

@@ -277,7 +277,7 @@ class RediscalaClientTest {
 
   @Test def testImmutablePoolCommandUsesConfiguredTarget(): Unit = {
     assumeTrue(emitStableDatabaseSemconv())
-    val hosts = Seq(host, alternateHost(host)).sorted
+    val hosts = Seq(alternateHost(host), host, alternateHost(host))
     val pool = classOf[RedisClientPool].getConstructors
       .find(_.getParameterCount == 4)
       .get
@@ -292,7 +292,7 @@ class RediscalaClientTest {
       val result = pool.set("immutable-pool-target", "value")
       Await.result(result, Duration("3 second"))
       assertConfiguredTargetSpan(
-        hosts.map(serverHost => s"$serverHost:$port").mkString(",")
+        hosts.sorted.map(serverHost => s"$serverHost:$port").mkString(",")
       )
     } finally {
       pool.stop()
@@ -301,8 +301,7 @@ class RediscalaClientTest {
 
   @Test def testSentinelMasterSlavesCommandUsesConfiguredTarget(): Unit = {
     assumeTrue(emitStableDatabaseSemconv())
-    val sentinelHosts =
-      Seq(sentinelHost, alternateHost(sentinelHost)).sorted
+    val sentinelHosts = Seq(alternateHost(sentinelHost), sentinelHost)
     val client =
       classOf[SentinelMonitoredRedisClientMasterSlaves].getConstructors
         .find(_.getParameterCount == 4)
@@ -318,7 +317,7 @@ class RediscalaClientTest {
       val result = client.set("sentinel-target", "value")
       Await.result(result, Duration("10 second"))
       assertConfiguredTargetSpan(
-        sentinelHosts
+        sentinelHosts.sorted
           .map(serverHost => s"$serverHost:$sentinelPort")
           .mkString(",") + "/mymaster"
       )
