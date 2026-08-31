@@ -55,7 +55,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void captureConfiguredTarget(
         @Advice.Return Core core, @Advice.Argument(2) Set<SeedNode> seedNodes) {
-      CouchbaseServerTargets.registerDirectSeedNodes(core, seedNodes);
+      CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes);
     }
   }
 

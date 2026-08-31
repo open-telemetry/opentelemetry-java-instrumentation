@@ -37,10 +37,6 @@ public class CouchbaseServerTargets {
     }
   }
 
-  public static void registerDirectSeedNodes(Core core, Set<SeedNode> seedNodes) {
-    register(core, target(seedNodes));
-  }
-
   public static void registerFromSeedNodes(Core core, @Nullable Set<SeedNode> seedNodes) {
     if (seedNodes != null) {
       CouchbaseServerTarget target = seedNodeTargets.get(seedNodes);

@@ -9,12 +9,16 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.mock;
 
+import com.couchbase.client.core.Core;
 import com.couchbase.client.core.env.SeedNode;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -48,6 +52,24 @@ class CouchbaseServerTargetsTest {
             SeedNode.create("node.example", Optional.of(11210), Optional.of(8091)),
             "node.example:11210,node.example:8091",
             null));
+  }
+
+  @Test
+  void registeredConnectionStringTargetTakesPrecedenceOverDirectFallback() {
+    Set<SeedNode> seedNodes =
+        new LinkedHashSet<>(
+            asList(
+                SeedNode.create("two.example", Optional.empty(), Optional.empty()),
+                SeedNode.create("one.example", Optional.empty(), Optional.empty())));
+    CouchbaseServerTarget connectionStringTarget =
+        CouchbaseConnectionStrings.target("couchbase://two.example,one.example");
+    assertThat(connectionStringTarget).isNotNull();
+
+    Core core = mock(Core.class);
+    CouchbaseServerTargets.registerSeedNodes(seedNodes, connectionStringTarget);
+    CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes);
+
+    assertThat(CouchbaseServerTargets.get(core)).isSameAs(connectionStringTarget);
   }
 
   @ParameterizedTest
