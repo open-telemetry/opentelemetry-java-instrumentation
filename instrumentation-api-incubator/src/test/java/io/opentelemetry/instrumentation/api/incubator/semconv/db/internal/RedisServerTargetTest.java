@@ -319,7 +319,9 @@ class RedisServerTargetTest {
   @ParameterizedTest
   @CsvSource({
     "redis-socket:///var/run/redis.sock, /var/run/redis.sock",
+    "Redis-Socket:///var/run/redis.sock, /var/run/redis.sock",
     "unix:///var/run/redis.sock, /var/run/redis.sock",
+    "UNIX:///var/run/redis.sock, /var/run/redis.sock",
     "redis-socket://user:password@/var/run/redis.sock, /var/run/redis.sock",
     "/var/run/redis.sock, /var/run/redis.sock",
     "/tmp/redis#1.sock, /tmp/redis#1.sock",
