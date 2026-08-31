@@ -39,6 +39,7 @@ import org.testcontainers.containers.GenericContainer
 import redis.commands.TransactionBuilder
 import redis.{
   RedisClient,
+  RedisClientMasterSlaves,
   RedisClientMutablePool,
   RedisClientPool,
   RedisDispatcher,
@@ -296,6 +297,37 @@ class RediscalaClientTest {
       )
     } finally {
       pool.stop()
+    }
+  }
+
+  @Test def testMasterSlavesCommandUsesConfiguredTarget(): Unit = {
+    assumeTrue(emitStableDatabaseSemconv())
+    val master = RedisServer(host, port.intValue())
+    val slaves = Seq(
+      RedisServer(host, port.intValue()),
+      RedisServer(alternateHost(host), port.intValue())
+    )
+    val client = classOf[RedisClientMasterSlaves].getConstructors
+      .find(_.getParameterCount == 4)
+      .get
+      .newInstance(
+        master,
+        slaves,
+        system,
+        RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
+      )
+      .asInstanceOf[RedisClientMasterSlaves]
+    try {
+      val result = client.set("master-slaves-target", "value")
+      Await.result(result, Duration("3 second"))
+      assertConfiguredTargetSpan(
+        (s"${master.host}:${master.port}" +: slaves
+          .map(server => s"${server.host}:${server.port}")
+          .sorted).mkString(",")
+      )
+    } finally {
+      client.masterClient.stop()
+      client.slavesClients.stop()
     }
   }
 
