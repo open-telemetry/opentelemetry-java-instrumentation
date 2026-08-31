@@ -56,8 +56,9 @@ public final class MongoTelemetry {
    * Returns a new {@link CommandListener} for a client configured with exactly the given server
    * address.
    *
-   * <p>The configured address is reported as the stable logical server target. The old database
-   * conventions are unchanged, and keep describing the server that the driver selected.
+   * <p>Where stable database conventions are emitted, the configured address is reported as the
+   * logical server target. Where the old conventions are emitted, {@code db.connection_string}
+   * describes the server that the driver selected.
    */
   public CommandListener createCommandListener(ServerAddress configuredServerAddress) {
     return createCommandListener(singletonList(configuredServerAddress));
@@ -66,8 +67,9 @@ public final class MongoTelemetry {
   /**
    * Returns a new {@link CommandListener} for a client configured with the given seed list.
    *
-   * <p>The configured seeds are reported as the stable logical server target. The old database
-   * conventions are unchanged, and keep describing the server that the driver selected.
+   * <p>Where stable database conventions are emitted, the configured seeds are reported as the
+   * logical server target. Where the old conventions are emitted, {@code db.connection_string}
+   * describes the server that the driver selected.
    */
   public CommandListener createCommandListener(List<ServerAddress> configuredServerAddresses) {
     return new TracingCommandListener(
