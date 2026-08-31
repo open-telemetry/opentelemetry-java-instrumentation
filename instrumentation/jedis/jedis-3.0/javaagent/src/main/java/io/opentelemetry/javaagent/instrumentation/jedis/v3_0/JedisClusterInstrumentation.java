@@ -57,23 +57,11 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
-      return JedisSingletons.openConfiguredTargetScope(JedisServerTargets.ofNodes(nodes));
-    }
-
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This JedisClusterConnectionHandler handler,
-        @Advice.Argument(0) @Nullable Set<HostAndPort> nodes,
-        @Advice.Enter @Nullable Scope scope) {
-      try {
-        JedisSingletons.setClusterTarget(handler, JedisServerTargets.ofNodes(nodes));
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
-      }
+        @Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
+      JedisSingletons.setClusterTarget(handler, JedisServerTargets.ofNodes(nodes));
     }
   }
 

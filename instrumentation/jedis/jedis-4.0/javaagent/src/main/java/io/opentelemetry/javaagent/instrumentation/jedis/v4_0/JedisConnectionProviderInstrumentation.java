@@ -75,23 +75,10 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ClusterConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
-      return JedisSingletons.openConfiguredTargetScope(JedisServerTargets.ofNodes(nodes));
-    }
-
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This Object provider,
-        @Advice.Argument(0) @Nullable Set<HostAndPort> nodes,
-        @Advice.Enter @Nullable Scope scope) {
-      try {
-        JedisSingletons.setProviderTarget(provider, JedisServerTargets.ofNodes(nodes));
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
-      }
+        @Advice.This Object provider, @Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
+      JedisSingletons.setProviderTarget(provider, JedisServerTargets.ofNodes(nodes));
     }
   }
 
@@ -108,27 +95,13 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SentineledConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(
-        @Advice.Argument(0) @Nullable String masterName, @Advice.AllArguments Object[] arguments) {
-      return JedisSingletons.openConfiguredTargetScope(
-          JedisServerTargets.ofSentinelsFromArguments(masterName, arguments));
-    }
-
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Object provider,
         @Advice.Argument(0) @Nullable String masterName,
-        @Advice.AllArguments Object[] arguments,
-        @Advice.Enter @Nullable Scope scope) {
-      try {
-        JedisSingletons.setProviderTarget(
-            provider, JedisServerTargets.ofSentinelsFromArguments(masterName, arguments));
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
-      }
+        @Advice.AllArguments Object[] arguments) {
+      JedisSingletons.setProviderTarget(
+          provider, JedisServerTargets.ofSentinelsFromArguments(masterName, arguments));
     }
   }
 
