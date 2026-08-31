@@ -22,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Collections.singleton;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.env.TimeoutConfig;
@@ -71,6 +72,7 @@ class CouchbaseClient31Test {
   private static String seedAddress;
   private static int kvPort;
   private static int clusterManagerPort;
+  private static int queryPort;
   private static Cluster cluster;
   private static Collection collection;
 
@@ -79,8 +81,8 @@ class CouchbaseClient31Test {
     couchbase =
         new CouchbaseContainer("couchbase/server:7.6.0")
             .withExposedPorts(8091)
-            .withEnabledServices(CouchbaseService.KV)
-            .withBucket(new BucketDefinition("test"))
+            .withEnabledServices(CouchbaseService.KV, CouchbaseService.QUERY)
+            .withBucket(new BucketDefinition("test").withPrimaryIndex(false))
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupAttempts(5)
             .withStartupTimeout(Duration.ofMinutes(2));
@@ -99,6 +101,7 @@ class CouchbaseClient31Test {
     seedAddress = seed.substring(0, portSeparator);
     kvPort = Integer.parseInt(seed.substring(portSeparator + 1));
     clusterManagerPort = couchbase.getMappedPort(8091);
+    queryPort = couchbase.getMappedPort(8093);
     cluster =
         Cluster.connect(
             singleton(
@@ -170,6 +173,25 @@ class CouchbaseClient31Test {
                 span ->
                     span.hasName("dispatch_to_server")
                         .hasAttributesSatisfyingExactly(dispatchAttributes)));
+  }
+
+  @Test
+  void capturesQueryPeerThroughChunkedHttpHandler() throws UnknownHostException {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    cluster.query("SELECT 1");
+    String hostAddress = InetAddress.getByName(couchbase.getHost()).getHostAddress();
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("query"),
+                span ->
+                    span.hasName("dispatch_to_server")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "couchbase"),
+                            equalTo(NETWORK_PEER_ADDRESS, hostAddress),
+                            equalTo(NETWORK_PEER_PORT, queryPort))));
   }
 
   private static String serverAddress() {
