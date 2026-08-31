@@ -542,7 +542,8 @@ class ClickHouseClientV2Test {
             .setOption("compress", "false")
             .build();
     cleanup.deferCleanup(testClient);
-    replaceEndpoints(testClient, "http://current.example:8123");
+    String currentHost = "127.0.0.1".equals(host) ? "localhost" : "127.0.0.1";
+    replaceEndpoints(testClient, "http://" + currentHost + ":" + port);
 
     QueryResponse response = testClient.query("select * from " + TABLE_NAME).join();
     response.close();
@@ -561,9 +562,8 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? host : "current.example"),
-                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? port : 8123),
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? host : currentHost),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
