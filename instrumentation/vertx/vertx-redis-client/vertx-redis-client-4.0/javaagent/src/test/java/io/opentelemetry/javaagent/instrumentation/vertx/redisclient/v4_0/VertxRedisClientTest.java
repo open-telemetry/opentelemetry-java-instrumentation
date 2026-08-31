@@ -32,6 +32,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -56,6 +57,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
@@ -320,6 +322,52 @@ class VertxRedisClientTest {
     } catch (ReflectiveOperationException ignored) {
       return false;
     }
+  }
+
+  @Test
+  void dynamicClientUsesSelectedEndpoint() throws Exception {
+    assumeTrue(isVertx5() && emitStableDatabaseSemconv());
+
+    Object selectedOptions = redisStandaloneConnectOptions("redis://" + host + ":" + port);
+    Object laterOptions = redisStandaloneConnectOptions("redis://later.example:1234");
+    AtomicInteger supplierCalls = new AtomicInteger();
+    Supplier<Future<Object>> optionsSupplier =
+        () ->
+            Future.succeededFuture(
+                supplierCalls.getAndIncrement() == 0 ? selectedOptions : laterOptions);
+    Redis dynamicClient =
+        (Redis)
+            Redis.class
+                .getMethod(
+                    "createStandaloneClient", Vertx.class, RedisOptions.class, Supplier.class)
+                .invoke(null, vertx, new RedisOptions(), optionsSupplier);
+    cleanup.deferCleanup(dynamicClient::close);
+
+    RedisConnection dynamicConnection =
+        dynamicClient.connect().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    assertThat(supplierCalls.get()).isGreaterThanOrEqualTo(2);
+    dynamicConnection
+        .send(Request.cmd(Command.GET).arg("dynamic-client"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasAttribute(equalTo(SERVER_ADDRESS, host))));
+  }
+
+  private static Object redisStandaloneConnectOptions(String connectionString)
+      throws ReflectiveOperationException {
+    Class<?> optionsClass = Class.forName("io.vertx.redis.client.RedisStandaloneConnectOptions");
+    Object options = optionsClass.getConstructor().newInstance();
+    optionsClass.getMethod("setConnectionString", String.class).invoke(options, connectionString);
+    optionsClass.getMethod("setProtocolNegotiation", boolean.class).invoke(options, false);
+    return options;
   }
 
   @Test
