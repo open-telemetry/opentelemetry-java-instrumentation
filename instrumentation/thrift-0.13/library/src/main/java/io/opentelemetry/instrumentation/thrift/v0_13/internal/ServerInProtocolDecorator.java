@@ -127,19 +127,22 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     return socket;
   }
 
+  public void closeScope() {
+    if (currentScope != null) {
+      currentScope.close();
+    }
+    currentScope = null;
+  }
+
   public void endSpan(@Nullable Throwable throwable, boolean failed) {
     if (currentContext == null || currentRequest == null) {
       return;
-    }
-    if (currentScope != null) {
-      currentScope.close();
     }
     instrumenter.end(
         currentContext, currentRequest, failed ? ThriftResponse.FAILED : null, throwable);
     // Avoid duplicate end invocations from exceptions in asynchronous workflows
     currentContext = null;
     currentRequest = null;
-    currentScope = null;
   }
 
   private boolean isContextPropagationField(TField field) {
