@@ -178,16 +178,23 @@ class CouchbaseClient31Test {
     cluster.query("SELECT 1");
     String hostAddress = InetAddress.getByName(couchbase.getHost()).getHostAddress();
 
+    List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
+    dispatchAttributes.add(equalTo(maybeStable(DB_SYSTEM), "couchbase"));
+    if (EXPERIMENTAL_ATTRIBUTES) {
+      // the chunked http handler reports a textual operation id, unlike the key-value handler
+      dispatchAttributes.add(
+          satisfies(stringKey("db.couchbase.operation_id"), val -> val.isNotBlank()));
+    }
+    dispatchAttributes.add(equalTo(NETWORK_PEER_ADDRESS, hostAddress));
+    dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, queryPort));
+
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("query"),
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "couchbase"),
-                            equalTo(NETWORK_PEER_ADDRESS, hostAddress),
-                            equalTo(NETWORK_PEER_PORT, queryPort))));
+                        .hasAttributesSatisfyingExactly(dispatchAttributes)));
   }
 
   private static String serverAddress() {
