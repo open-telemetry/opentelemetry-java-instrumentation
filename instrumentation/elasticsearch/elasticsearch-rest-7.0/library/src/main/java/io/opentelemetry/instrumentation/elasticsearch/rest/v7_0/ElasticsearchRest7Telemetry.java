@@ -53,8 +53,8 @@ public final class ElasticsearchRest7Telemetry {
    * instance.
    *
    * <p>This overload cannot capture the original configured nodes because a constructed client
-   * exposes only its current routing nodes. Use {@link #wrap(RestClientBuilder)} to capture the
-   * configured target.
+   * exposes only its current routing nodes. Use {@link #wrap(RestClient, HttpHost...)} to capture
+   * the configured target.
    */
   public RestClient wrap(RestClient restClient) {
     return RestClientWrapper.wrap(restClient, instrumenter);
