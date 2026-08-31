@@ -12,8 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Set;
-import java.util.TreeSet;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
@@ -167,7 +170,7 @@ public class HbaseServerTarget {
       return null;
     }
 
-    Set<String> hosts = new TreeSet<>();
+    List<String> hosts = new ArrayList<>();
     Integer clientPort = null;
     for (String configuredEndpoint : quorumServers.split(",", -1)) {
       String endpoint = canonicalEndpoint(configuredEndpoint, null);
@@ -191,6 +194,7 @@ public class HbaseServerTarget {
     if (hosts.isEmpty() || clientPort == null || znodeParent == null) {
       return null;
     }
+    hosts.sort(String::compareTo);
     return String.join(",", hosts) + ":" + clientPort + ":" + znodeParent;
   }
 
@@ -231,7 +235,7 @@ public class HbaseServerTarget {
     if (defaultPort == null) {
       return null;
     }
-    Set<String> masters = canonicalEndpoints(masterAddresses(configuration), defaultPort);
+    List<String> masters = canonicalEndpoints(masterAddresses(configuration), defaultPort);
     return masters == null ? null : String.join(",", masters);
   }
 
@@ -266,13 +270,13 @@ public class HbaseServerTarget {
   }
 
   @Nullable
-  private static Set<String> canonicalEndpoints(
+  private static List<String> canonicalEndpoints(
       @Nullable String configuredEndpoints, @Nullable Integer defaultPort) {
     if (configuredEndpoints == null) {
       return null;
     }
 
-    Set<String> endpoints = new TreeSet<>();
+    List<String> endpoints = new ArrayList<>();
     for (String configuredEndpoint : configuredEndpoints.split(",", -1)) {
       String endpoint = canonicalEndpoint(configuredEndpoint, defaultPort);
       if (endpoint == null) {
@@ -280,6 +284,7 @@ public class HbaseServerTarget {
       }
       endpoints.add(endpoint);
     }
+    endpoints.sort(String::compareTo);
     return endpoints;
   }
 
@@ -289,12 +294,29 @@ public class HbaseServerTarget {
       return null;
     }
     String quorum = configuredQuorum.replaceAll("[\\t\\n\\x0B\\f\\r]", "");
+    List<String> endpoints = new ArrayList<>();
     for (String endpoint : quorum.split(",", -1)) {
-      if (!endpoint.equals(canonicalEndpoint(endpoint, null))) {
+      String canonicalEndpoint = canonicalZkQuorumEndpoint(endpoint);
+      if (canonicalEndpoint == null) {
         return null;
       }
+      endpoints.add(canonicalEndpoint);
     }
-    return quorum;
+    return String.join(",", endpoints);
+  }
+
+  @Nullable
+  private static String canonicalZkQuorumEndpoint(String configuredEndpoint) {
+    String endpoint = sanitizeEndpoint(configuredEndpoint);
+    if (endpoint == null || !endpoint.equals(configuredEndpoint)) {
+      return null;
+    }
+    if (endpoint.charAt(0) != '['
+        && endpoint.indexOf(':') != endpoint.lastIndexOf(':')
+        && isIpv6Address(endpoint)) {
+      return "[" + endpoint + "]";
+    }
+    return endpoint.equals(canonicalEndpoint(endpoint, null)) ? endpoint : null;
   }
 
   @Nullable
@@ -310,6 +332,9 @@ public class HbaseServerTarget {
     if (endpoint.charAt(0) == '[') {
       int bracket = endpoint.indexOf(']');
       if (bracket <= 1) {
+        return null;
+      }
+      if (!isIpv6Address(endpoint.substring(1, bracket))) {
         return null;
       }
       host = endpoint.substring(0, bracket + 1);
@@ -329,7 +354,7 @@ public class HbaseServerTarget {
           return null;
         }
         if (colon != endpoint.lastIndexOf(':')) {
-          if (defaultPort == null) {
+          if (defaultPort == null || !isIpv6Address(endpoint)) {
             return null;
           }
           host = "[" + endpoint + "]";
@@ -361,6 +386,14 @@ public class HbaseServerTarget {
       }
     }
     return endpoint.isEmpty() ? null : endpoint;
+  }
+
+  private static boolean isIpv6Address(String address) {
+    try {
+      return InetAddress.getByName(address) instanceof Inet6Address;
+    } catch (UnknownHostException ignored) {
+      return false;
+    }
   }
 
   @Nullable
