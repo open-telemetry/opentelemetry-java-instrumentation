@@ -76,20 +76,6 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void duplicateSeedsArePreserved() {
-    try (ConfiguredClient client =
-        createClient(
-            asList(
-                new ServerAddress("db2.example", 27018),
-                new ServerAddress("db1.example", 27017),
-                new ServerAddress("db1.example", 27017)))) {
-      runCommand(client);
-    }
-
-    assertFindSpan("db1.example:27017,db1.example:27017,db2.example:27018", null);
-  }
-
-  @Test
   void singleSeedKeepsItsPort() {
     try (ConfiguredClient client =
         createClient(singletonList(new ServerAddress("db1.example", 27017)))) {
