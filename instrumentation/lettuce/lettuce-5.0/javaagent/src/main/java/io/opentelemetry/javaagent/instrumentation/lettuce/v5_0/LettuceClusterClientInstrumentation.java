@@ -105,7 +105,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static final class EndpointAddressSupplier implements Supplier<SocketAddress> {
+  public static class EndpointAddressSupplier implements Supplier<SocketAddress> {
     private final Supplier<SocketAddress> delegate;
     private final DefaultEndpoint endpoint;
 
