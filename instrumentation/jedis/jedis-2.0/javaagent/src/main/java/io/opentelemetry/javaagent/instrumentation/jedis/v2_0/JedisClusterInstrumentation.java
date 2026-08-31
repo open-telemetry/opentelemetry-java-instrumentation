@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -59,8 +58,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$GetNodesAdvice");
     transformer.applyAdviceToMethod(
         named("renewSlotCache")
-            .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
-            .and(takesArguments(0)),
+            .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler"))),
         getClass().getName() + "$RenewSlotCacheAdvice");
   }
 
