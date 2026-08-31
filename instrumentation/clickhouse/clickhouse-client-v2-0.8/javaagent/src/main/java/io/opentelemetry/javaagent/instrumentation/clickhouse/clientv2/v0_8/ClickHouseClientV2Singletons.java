@@ -47,6 +47,8 @@ public class ClickHouseClientV2Singletons {
     SERVER_INFO_FIELD.set(client, ServerInfo.of(client.getEndpoints()));
   }
 
+  // ClickHouseClientV2Test calls this reflectively to simulate a client whose endpoints were never
+  // captured
   static void clearServerInfo(Client client) {
     SERVER_INFO_FIELD.set(client, null);
   }
