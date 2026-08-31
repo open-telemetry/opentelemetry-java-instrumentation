@@ -32,13 +32,28 @@ class CouchbaseServerTargetTest {
   }
 
   @Test
-  void severalSeedsAreRenderedAsAConnectionString() {
+  void severalSeedsAreRenderedInNormalizedOrder() {
+    CouchbaseServerTarget.Builder first = CouchbaseServerTarget.builder();
+    first.addSeed("two.example", 11207);
+    first.addSeed("one.example", 0);
+
+    CouchbaseServerTarget.Builder second = CouchbaseServerTarget.builder();
+    second.addSeed("one.example", 0);
+    second.addSeed("two.example", 11207);
+
+    assertThat(first.build().getAddress()).isEqualTo("one.example,two.example:11207");
+    assertThat(second.build().getAddress()).isEqualTo("one.example,two.example:11207");
+  }
+
+  @Test
+  void duplicateSeedsArePreserved() {
     CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder();
+    builder.addSeed("two.example", 11210);
     builder.addSeed("one.example", 0);
-    builder.addSeed("two.example", 11207);
+    builder.addSeed("two.example", 11210);
 
     CouchbaseServerTarget target = builder.build();
-    assertThat(target.getAddress()).isEqualTo("one.example,two.example:11207");
+    assertThat(target.getAddress()).isEqualTo("one.example,two.example:11210,two.example:11210");
     assertThat(target.getPort()).isNull();
   }
 
@@ -50,8 +65,8 @@ class CouchbaseServerTargetTest {
     assertThat(single.build().getPort()).isEqualTo(11210);
 
     CouchbaseServerTarget.Builder group = CouchbaseServerTarget.builder();
-    group.addSeed("192.0.2.1", 11210);
     group.addSeed("192.0.2.2", 0);
+    group.addSeed("192.0.2.1", 11210);
     assertThat(group.build().getAddress()).isEqualTo("192.0.2.1:11210,192.0.2.2");
   }
 
@@ -68,8 +83,8 @@ class CouchbaseServerTargetTest {
   @Test
   void groupedIpv6SeedsAreBracketed() {
     CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder();
-    builder.addSeed("2001:db8::1", 11210);
     builder.addSeed("[2001:db8::2]", 0);
+    builder.addSeed("2001:db8::1", 11210);
 
     assertThat(builder.build().getAddress()).isEqualTo("[2001:db8::1]:11210,[2001:db8::2]");
   }
