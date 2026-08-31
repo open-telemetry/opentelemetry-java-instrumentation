@@ -249,11 +249,6 @@ class RedisServerTargetTest {
     "[2001:db8::1]:6380, 2001:db8::1, 6380",
     "redis://[::1], ::1, ",
     "::1, ::1, ",
-    "localhost:banana, localhost:banana, ",
-    "localhost:70000, localhost:70000, ",
-    "localhost:, localhost:, ",
-    "localhost:-1, localhost:-1, ",
-    "localhost:6379x, localhost:6379x, ",
   })
   void sanitizesEndpoint(String endpoint, String address, Integer port) {
     RedisServerTarget target = RedisServerTarget.ofEndpoint(endpoint);
@@ -281,7 +276,12 @@ class RedisServerTargetTest {
         "[]",
         "[::1]:",
         "[::1]:70000",
-        "[::1]suffix"
+        "[::1]suffix",
+        "localhost:banana",
+        "localhost:70000",
+        "localhost:",
+        "localhost:-1",
+        "localhost:6379x"
       })
   void unusableEndpoint(String endpoint) {
     assertThat(RedisServerTarget.ofEndpoint(endpoint)).isNull();

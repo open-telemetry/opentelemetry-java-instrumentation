@@ -225,9 +225,7 @@ public final class RedisServerTarget {
       // an unbracketed literal IPv6 address has more than one colon and carries no port
       if (portStart > 0 && authority.indexOf(':', portStart + 1) < 0) {
         Integer port = parsePort(authority.substring(portStart + 1));
-        if (port != null) {
-          return new Endpoint(authority.substring(0, portStart), port, false);
-        }
+        return port == null ? null : new Endpoint(authority.substring(0, portStart), port, false);
       }
       return new Endpoint(authority, null, false);
     }
