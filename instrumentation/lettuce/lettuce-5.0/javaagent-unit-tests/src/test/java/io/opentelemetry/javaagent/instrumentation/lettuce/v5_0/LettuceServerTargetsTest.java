@@ -43,7 +43,7 @@ class LettuceServerTargetsTest {
                 .build());
 
     assertThat(target.getAddress())
-        .isEqualTo("sentinel1:26379,sentinel2:26380,sentinel2:26380/mymaster");
+        .isEqualTo("sentinel2:26380,sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
@@ -68,7 +68,7 @@ class LettuceServerTargetsTest {
 
     RedisServerTarget target = LettuceServerTargets.ofMasterSlaveUris(singletonList(sentinel));
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
+    assertThat(target.getAddress()).isEqualTo("sentinel2:26380,sentinel1:26379/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
