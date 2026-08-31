@@ -1,28 +1,21 @@
 package io.opentelemetry.instrumentation.jmx.internal;
 
+import java.util.Collections;
 import java.util.Set;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ */
 public class InternalMetricsDefinitions {
 
   public InternalMetricsDefinitions() {}
 
   public Set<String> getSupportedSystems() {
-    // list of all supported systems
-    // TODO: need to build and maintain an explicit list of all the systems and their resource path.
-    return null;
+    return Collections.emptySet();
   }
 
-  public String getRulesPathForSystem(String system) {
-    // path to a given resource file for system, allows to provide migration options when we want to rename/promote things
-    return null;
+  public Set<String> getRulesForSystem(String system, boolean includeStable, boolean includeUnstable) {
+    return Collections.emptySet();
   }
 
-  public boolean isStableMetric(String system, String metricName) {
-    // current heuristic on target system name
-    if(system.startsWith("experimental-")){
-      return false;
-    }
-    // lookup in the metric registry
-    return false;
-  }
 }

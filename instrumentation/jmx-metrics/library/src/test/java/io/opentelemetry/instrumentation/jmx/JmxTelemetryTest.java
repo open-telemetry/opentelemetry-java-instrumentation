@@ -39,16 +39,16 @@ class JmxTelemetryTest {
   @Test
   void invalidClasspathTarget() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    assertThatThrownBy(() -> addClasspathRules(builder, "jmx/rules/invalid.yaml"))
+    assertThatThrownBy(() -> builder.addRules(classpathRules("jmx/rules/invalid.yaml")))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void knownValidYaml() {
-    JmxTelemetryBuilder jmxtelemetry = JmxTelemetry.builder(OpenTelemetry.noop());
-    addClasspathRules(jmxtelemetry, "jmx/rules/jvm.yaml");
-    jmxtelemetry.setMetrics(IncludeExclude.builder().setExcluded("excluded.metric").build());
-    JmxTelemetry telemetry = jmxtelemetry.build();
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    builder.addRules(classpathRules("jmx/rules/jvm.yaml"));
+    builder.setMetrics(IncludeExclude.builder().setExcluded("excluded.metric").build());
+    JmxTelemetry telemetry = builder.build();
     assertThat(telemetry).isNotNull();
 
     // by default include should contain all registered metrics, and the provided excluded should
@@ -61,23 +61,36 @@ class JmxTelemetryTest {
 
   @Test
   void metricsExplicitInclude() {
-    JmxTelemetryBuilder jmxtelemetry = JmxTelemetry.builder(OpenTelemetry.noop());
-    addClasspathRules(jmxtelemetry, "jmx/rules/jvm.yaml");
-    jmxtelemetry.setMetrics(
-        IncludeExclude.builder()
-            .setIncluded("jvm.memory.used")
-            .setExcluded("missing.metric")
-            .build());
-    JmxTelemetry telemetry = jmxtelemetry.build();
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop())
+        .addRules(classpathRules("jmx/rules/jvm.yaml"))
+        .setMetrics(
+            IncludeExclude.builder()
+                .setIncluded("jvm.memory.used")
+                .setExcluded("missing.metric")
+                .build());
+    JmxTelemetry telemetry = builder.build();
     assertThat(telemetry).isNotNull();
 
     assertThat(telemetry.getMetrics().getIncluded()).containsOnly("jvm.memory.used");
     assertThat(telemetry.getMetrics().getExcluded()).containsOnly("missing.metric");
   }
 
-  private static void addClasspathRules(JmxTelemetryBuilder builder, String path) {
-    InputStream input = JmxTelemetryTest.class.getClassLoader().getResourceAsStream(path);
-    builder.addRules(input);
+  @Test
+  void includeStableAndUnstableBySystem(){
+    // allows to provide a fallback to include embedded metrics per-system
+    IncludeExclude includeInclude = IncludeExclude.builder().setIncluded("jvm").build();
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop())
+        .addStableMetrics(includeInclude)
+        .addUnstableMetrics(includeInclude);
+    JmxTelemetry telemetry = builder.build();
+    assertThat(telemetry).isNotNull();
+
+    // all the jvm metrics should be included
+    assertThat(telemetry.getMetrics().getIncluded()).allMatch(m -> m.startsWith("jvm."));
+  }
+
+  private static InputStream classpathRules(String path) {
+    return JmxTelemetryTest.class.getClassLoader().getResourceAsStream(path);
   }
 
   @Test
