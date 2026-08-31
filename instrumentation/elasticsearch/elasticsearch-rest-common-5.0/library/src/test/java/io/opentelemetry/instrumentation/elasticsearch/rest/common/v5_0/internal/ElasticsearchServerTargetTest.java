@@ -53,14 +53,39 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void severalHostsOmitTheirSharedScheme() {
+  void severalHostsAreSortedAndOmitTheirSharedScheme() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(
-            asList(new HttpHost("h1", 9200, "http"), new HttpHost("h2", 9201, "http")));
+            asList(new HttpHost("h2", 9201, "http"), new HttpHost("h1", 9200, "http")));
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9201");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void hostPermutationsHaveTheSameTarget() {
+    ElasticsearchServerTarget first =
+        ElasticsearchServerTarget.of(
+            asList(new HttpHost("h3", 9202), new HttpHost("h1", 9200), new HttpHost("h2", 9201)));
+    ElasticsearchServerTarget second =
+        ElasticsearchServerTarget.of(
+            asList(new HttpHost("h2", 9201), new HttpHost("h3", 9202), new HttpHost("h1", 9200)));
+
+    assertThat(first).isNotNull();
+    assertThat(second).isNotNull();
+    assertThat(first.getAddress()).isEqualTo("h1:9200,h2:9201,h3:9202");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+  }
+
+  @Test
+  void duplicateHostsArePreserved() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(
+            asList(new HttpHost("h2", 9201), new HttpHost("h1", 9200), new HttpHost("h1", 9200)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("h1:9200,h1:9200,h2:9201");
   }
 
   @Test

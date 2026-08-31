@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
@@ -42,30 +43,29 @@ public class ElasticsearchServerTarget {
 
   @Nullable
   private static String renderGroup(List<HttpHost> hosts) {
-    StringBuilder group = new StringBuilder();
-    for (int i = 0; i < hosts.size(); i++) {
-      HttpHost httpHost = hosts.get(i);
+    List<String> endpoints = new ArrayList<>(hosts.size());
+    for (HttpHost httpHost : hosts) {
       String host = sanitizeHost(httpHost.getHostName());
       if (host == null) {
         return null;
       }
-      if (i > 0) {
-        group.append(',');
-      }
-      appendHostAndPort(group, host, httpHost.getPort());
+      endpoints.add(renderHostAndPort(host, httpHost.getPort()));
     }
-    return group.toString();
+    endpoints.sort(String::compareTo);
+    return String.join(",", endpoints);
   }
 
-  private static void appendHostAndPort(StringBuilder group, String host, int port) {
+  private static String renderHostAndPort(String host, int port) {
+    StringBuilder endpoint = new StringBuilder();
     if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
-      group.append('[').append(host).append(']');
+      endpoint.append('[').append(host).append(']');
     } else {
-      group.append(host);
+      endpoint.append(host);
     }
     if (port >= 0) {
-      group.append(':').append(port);
+      endpoint.append(':').append(port);
     }
+    return endpoint.toString();
   }
 
   @Nullable
