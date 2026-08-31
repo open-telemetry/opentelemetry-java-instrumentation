@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.jmx;
 
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 
@@ -43,11 +42,8 @@ public final class JmxTelemetryBuilder {
   private final Set<String> registeredHandlers = new HashSet<>();
   private IncludeExclude metrics = IncludeExclude.builder().build();
 
-  // include no metrics by default
-  private IncludeExclude stableMetricsSystemFilter =
-      IncludeExclude.builder().setIncluded(emptyList()).build();
-  private IncludeExclude unstableMetricsSystemFilter =
-      IncludeExclude.builder().setIncluded(emptyList()).build();
+  private IncludeExclude stableMetricsSystemFilter = IncludeExclude.builder().build();
+  private IncludeExclude unstableMetricsSystemFilter = IncludeExclude.builder().build();
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -163,26 +159,27 @@ public final class JmxTelemetryBuilder {
   }
 
   public JmxTelemetry build() {
+    if (!stableMetricsSystemFilter.isEmpty() || !unstableMetricsSystemFilter.isEmpty()) {
+      InternalMetricsDefinitions internalMetrics = new InternalMetricsDefinitions(classLoader);
+      InternalMetricsDefinitions.getSupportedSystems()
+          .forEach(
+              system -> {
+                boolean includeStable = stableMetricsSystemFilter.matches(system);
+                boolean includeUnstable = unstableMetricsSystemFilter.matches(system);
+                Set<String> rules =
+                    internalMetrics.getRulesForSystem(system, includeStable, includeUnstable);
 
-    InternalMetricsDefinitions internalMetrics = new InternalMetricsDefinitions(classLoader);
-    InternalMetricsDefinitions.getSupportedSystems()
-        .forEach(
-            system -> {
-              Set<String> rules =
-                  internalMetrics.getRulesForSystem(
-                      system,
-                      stableMetricsSystemFilter.matches(system),
-                      unstableMetricsSystemFilter.matches(system));
-              for (String path : rules) {
-                try (InputStream input = classLoader.getResourceAsStream(path)) {
-                  if (input != null) {
-                    addRules(input);
+                for (String path : rules) {
+                  try (InputStream input = classLoader.getResourceAsStream(path)) {
+                    if (input != null) {
+                      addRules(input);
+                    }
+                  } catch (IOException e) {
+                    throw new IllegalStateException("Unable to load JMX rules from: " + path, e);
                   }
-                } catch (IOException e) {
-                  throw new IllegalStateException("Unable to load JMX rules from: " + path, e);
                 }
-              }
-            });
+              });
+    }
 
     HandlerRegistry handlerRegistry = new HandlerRegistry();
     handlerRegistry.load(componentLoader);

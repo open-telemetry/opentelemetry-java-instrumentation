@@ -62,6 +62,7 @@ class InternalMetricsDefinitionsTest {
 
   @Test
   void loadByStability() {
+    // we intentionally use a fake (unsupported) system to test resource resolution
     InternalMetricsDefinitions definitions = new InternalMetricsDefinitions(CLASS_LOADER);
     assertThat(definitions.getRulesForSystem("fake-system", false, false)).isEmpty();
     assertThat(definitions.getRulesForSystem("fake-system", true, false))
