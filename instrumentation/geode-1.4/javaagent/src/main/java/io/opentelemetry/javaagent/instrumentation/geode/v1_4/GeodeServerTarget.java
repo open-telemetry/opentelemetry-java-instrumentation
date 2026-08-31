@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 
 class GeodeServerTarget {
@@ -37,8 +36,8 @@ class GeodeServerTarget {
 
     private static final int MAX_PORT = 65535;
 
-    private final SortedMap<String, Endpoint> servers = new TreeMap<>();
-    private final SortedMap<String, Endpoint> locators = new TreeMap<>();
+    private final List<Endpoint> servers = new ArrayList<>();
+    private final List<Endpoint> locators = new ArrayList<>();
     @Nullable private String serverGroup;
     private boolean serverConfigured;
     private boolean locatorConfigured;
@@ -91,10 +90,10 @@ class GeodeServerTarget {
         return null;
       }
       if (servers.size() == 1) {
-        Endpoint only = servers.get(servers.firstKey());
+        Endpoint only = servers.get(0);
         return new GeodeServerTarget(only.host, only.port);
       }
-      return new GeodeServerTarget(String.join(",", servers.keySet()), null);
+      return new GeodeServerTarget(render(servers), null);
     }
 
     @Nullable
@@ -102,21 +101,29 @@ class GeodeServerTarget {
       if (!locatorsComplete || locators.isEmpty()) {
         return null;
       }
-      String address = String.join(",", locators.keySet());
+      String address = render(locators);
       if (!group.isEmpty()) {
         address += "/" + group;
       }
       return new GeodeServerTarget(address, null);
     }
 
-    private static boolean add(Map<String, Endpoint> endpoints, @Nullable String host, int port) {
+    private static boolean add(List<Endpoint> endpoints, @Nullable String host, int port) {
       String cleaned = clean(host);
       if (cleaned == null || port <= 0 || port > MAX_PORT) {
         return false;
       }
-      Endpoint endpoint = new Endpoint(cleaned, port);
-      endpoints.put(endpoint.render(), endpoint);
+      endpoints.add(new Endpoint(cleaned, port));
       return true;
+    }
+
+    private static String render(List<Endpoint> endpoints) {
+      List<String> rendered = new ArrayList<>(endpoints.size());
+      for (Endpoint endpoint : endpoints) {
+        rendered.add(endpoint.render());
+      }
+      rendered.sort(String::compareTo);
+      return String.join(",", rendered);
     }
 
     private static String render(String host, int port) {

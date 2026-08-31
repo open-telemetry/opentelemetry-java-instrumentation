@@ -22,15 +22,22 @@ class GeodeServerTargetTest {
   }
 
   @Test
-  void severalServersAreSortedAndDeduplicated() {
-    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
-    builder.addServer("two.example", 40405);
-    builder.addServer("one.example", 40404);
-    builder.addServer("two.example", 40405);
+  void serverPermutationsAreSortedAndKeepDuplicates() {
+    GeodeServerTarget.Builder first = GeodeServerTarget.builder();
+    first.addServer("two.example", 40405);
+    first.addServer("one.example", 40404);
+    first.addServer("two.example", 40405);
 
-    GeodeServerTarget target = builder.build();
-    assertThat(target.getAddress()).isEqualTo("one.example:40404,two.example:40405");
-    assertThat(target.getPort()).isNull();
+    GeodeServerTarget.Builder second = GeodeServerTarget.builder();
+    second.addServer("two.example", 40405);
+    second.addServer("two.example", 40405);
+    second.addServer("one.example", 40404);
+
+    assertThat(first.build().getAddress())
+        .isEqualTo("one.example:40404,two.example:40405,two.example:40405")
+        .isEqualTo(second.build().getAddress());
+    assertThat(first.build().getPort()).isNull();
+    assertThat(second.build().getPort()).isNull();
   }
 
   @Test
@@ -70,7 +77,7 @@ class GeodeServerTargetTest {
   void locatorsWithoutAGroupAreReportedAsAPlainEndpointList() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addLocator("two.example", 10335);
-    builder.addLocator("[2001:db8::1]", 10334);
+    builder.addLocator("2001:db8::1", 10334);
 
     GeodeServerTarget target = builder.build();
     assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:10334,two.example:10335");
@@ -78,16 +85,24 @@ class GeodeServerTargetTest {
   }
 
   @Test
-  void locatorsAreSortedDeduplicatedAndShareTheirGroupSuffix() {
-    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
-    builder.addLocator("two.example", 10335);
-    builder.addLocator("one.example", 10334);
-    builder.addLocator("two.example", 10335);
-    builder.setServerGroup("  orders  ");
+  void locatorPermutationsAreSortedAndKeepDuplicatesWithSharedGroupSuffix() {
+    GeodeServerTarget.Builder first = GeodeServerTarget.builder();
+    first.addLocator("two.example", 10335);
+    first.addLocator("one.example", 10334);
+    first.addLocator("two.example", 10335);
+    first.setServerGroup("  orders  ");
 
-    GeodeServerTarget target = builder.build();
-    assertThat(target.getAddress()).isEqualTo("one.example:10334,two.example:10335/orders");
-    assertThat(target.getPort()).isNull();
+    GeodeServerTarget.Builder second = GeodeServerTarget.builder();
+    second.addLocator("two.example", 10335);
+    second.addLocator("two.example", 10335);
+    second.addLocator("one.example", 10334);
+    second.setServerGroup("orders");
+
+    assertThat(first.build().getAddress())
+        .isEqualTo("one.example:10334,two.example:10335,two.example:10335/orders")
+        .isEqualTo(second.build().getAddress());
+    assertThat(first.build().getPort()).isNull();
+    assertThat(second.build().getPort()).isNull();
   }
 
   @Test
@@ -135,7 +150,7 @@ class GeodeServerTargetTest {
     assertThat(single.build().getPort()).isEqualTo(40404);
 
     GeodeServerTarget.Builder several = GeodeServerTarget.builder();
-    several.addServer("[2001:db8::1]", 40404);
+    several.addServer("2001:db8::1", 40404);
     several.addServer("two.example", 40405);
 
     assertThat(several.build().getAddress()).isEqualTo("[2001:db8::1]:40404,two.example:40405");
