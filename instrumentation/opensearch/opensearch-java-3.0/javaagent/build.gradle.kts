@@ -21,6 +21,7 @@ dependencies {
   compileOnly("com.fasterxml.jackson.core:jackson-core")
 
   testImplementation("org.opensearch.client:opensearch-rest-client:3.0.0")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind")
   testImplementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:testing"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
 
