@@ -111,6 +111,14 @@ def flaky_result_count(history):
     return total
 
 
+def visible_flaky_result_count(history):
+    return sum(
+        1
+        for result in (history.get("testResults") or [])
+        if result.get("outcome") in FLAKY_OUTCOMES
+    )
+
+
 def _all_source_files():
     """Tracked .java/.groovy/.kt files, posix-relative to WORKSPACE_ROOT."""
     out = subprocess.check_output(
@@ -198,7 +206,8 @@ def collect_flaky_scans_by_time(fetch_history, *, base, since_ms, until_ms,
     history = fetch_history(since_ms, until_ms)
     sample_build, sample_failure = best_failure_sample(history)
     scans = collect_flaky_scans(history, base=base, limit=limit, seen=seen)
-    if scans or flaky_result_count(history) == 0:
+    if (len(scans) >= limit
+            or flaky_result_count(history) <= visible_flaky_result_count(history)):
         return sample_build, sample_failure, scans
 
     if (depth >= MAX_HISTORY_SPLIT_DEPTH
@@ -208,7 +217,7 @@ def collect_flaky_scans_by_time(fetch_history, *, base, since_ms, until_ms,
     mid_ms = (since_ms + until_ms) // 2
     right_build, right_failure, right_scans = collect_flaky_scans_by_time(
         fetch_history, base=base, since_ms=mid_ms + 1, until_ms=until_ms,
-        limit=limit, seen=seen, depth=depth + 1,
+        limit=limit - len(scans), seen=seen, depth=depth + 1,
     )
     scans.extend(right_scans)
     if not sample_failure:
@@ -323,7 +332,7 @@ def main():
         # narrowed to each day-bucket that had a flaky execution. Busy
         # tests can still return only passed rows for an entire day, so
         # recursively split those windows until the flaky rows are visible.
-        if not sample_failure or not recent_scans:
+        if not sample_failure or len(recent_scans) < 5:
             def fetch_history_window(since_ms, until_ms):
                 return fetch_test_history(
                     base, container=cname, test_name=chosen["name"],
