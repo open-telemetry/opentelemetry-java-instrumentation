@@ -608,16 +608,13 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testConfiguredNodeOrderIsCanonicalAndKeepsDuplicates() throws Exception {
+  void testConfiguredNodeOrderPreservesPriorityAndDuplicates() throws Exception {
     ClickHouseNode ipv6Node = ClickHouseNode.builder(server).host("2001:db8::2").build();
-    ClickHouseNodes nodes = createNodes(ImmutableList.of(server, ipv6Node, ipv6Node));
+    ClickHouseNodes nodes = createNodes(ImmutableList.of(ipv6Node, server, ipv6Node));
     nodes.update(ipv6Node, ClickHouseNode.Status.FAULTY);
     String ipv6Address = "[2001:db8::2]:" + port;
     String hostAddress = host + ":" + port;
-    String addressGroup =
-        hostAddress.compareTo(ipv6Address) < 0
-            ? hostAddress + "," + ipv6Address + "," + ipv6Address
-            : ipv6Address + "," + ipv6Address + "," + hostAddress;
+    String addressGroup = ipv6Address + "," + hostAddress + "," + ipv6Address;
 
     ClickHouseResponse response =
         client

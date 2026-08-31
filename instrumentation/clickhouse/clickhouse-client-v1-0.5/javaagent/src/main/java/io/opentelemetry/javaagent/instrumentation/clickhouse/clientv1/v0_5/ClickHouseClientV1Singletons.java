@@ -120,7 +120,6 @@ public class ClickHouseClientV1Singletons {
         appendAddress(address, host, node.getPort());
         addresses.add(address.toString());
       }
-      addresses.sort(String::compareTo);
       return new ServerTarget(null, null, String.join(",", addresses));
     }
 
