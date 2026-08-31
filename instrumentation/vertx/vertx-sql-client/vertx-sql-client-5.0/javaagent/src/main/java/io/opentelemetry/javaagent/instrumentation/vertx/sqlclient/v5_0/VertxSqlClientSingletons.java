@@ -269,6 +269,9 @@ public class VertxSqlClientSingletons {
     while (candidate != null) {
       VertxSqlClientData data = connectionDataCache.get(candidate);
       if (data != null) {
+        if (candidate != connection) {
+          connectionDataCache.put(connection, data);
+        }
         return data;
       }
       candidate = unwrap(candidate);
