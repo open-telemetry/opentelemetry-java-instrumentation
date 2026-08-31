@@ -32,21 +32,33 @@ public final class LettuceServerTargets {
   }
 
   @Nullable
-  public static RedisServerTarget ofUris(@Nullable Iterable<RedisURI> redisUris) {
+  public static RedisServerTarget ofUris(@Nullable Iterable<?> redisUris) {
     if (redisUris == null) {
       return null;
     }
     List<String> endpoints = new ArrayList<>();
-    for (RedisURI redisUri : redisUris) {
-      if (redisUri == null) {
+    for (Object redisUri : redisUris) {
+      if (!(redisUri instanceof RedisURI)) {
         continue;
       }
-      RedisServerTarget target = of(redisUri);
+      RedisServerTarget target = of((RedisURI) redisUri);
       if (target != null) {
         endpoints.add(render(target));
       }
     }
-    return RedisServerTarget.ofEndpoints(endpoints);
+    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
+  }
+
+  @Nullable
+  public static RedisServerTarget ofMasterSlaveUris(List<?> redisUris) {
+    if (!redisUris.isEmpty() && redisUris.get(0) instanceof RedisURI) {
+      RedisURI first = (RedisURI) redisUris.get(0);
+      List<RedisURI> sentinels = first.getSentinels();
+      if (first.getSentinelMasterId() != null || (sentinels != null && !sentinels.isEmpty())) {
+        return of(first);
+      }
+    }
+    return ofUris(redisUris);
   }
 
   private static String render(RedisServerTarget target) {
@@ -60,7 +72,8 @@ public final class LettuceServerTargets {
   private static RedisServerTarget ofSentinel(RedisURI redisUri) {
     List<RedisURI> sentinels = redisUri.getSentinels();
     if (sentinels == null || sentinels.isEmpty()) {
-      return RedisServerTarget.ofEndpointsAndLogicalName(null, redisUri.getSentinelMasterId());
+      return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+          null, redisUri.getSentinelMasterId());
     }
     List<String> endpoints = new ArrayList<>(sentinels.size());
     for (RedisURI sentinel : sentinels) {
@@ -70,7 +83,8 @@ public final class LettuceServerTargets {
               ? socket
               : RedisServerTarget.endpoint(sentinel.getHost(), sentinel.getPort()));
     }
-    return RedisServerTarget.ofEndpointsAndLogicalName(endpoints, redisUri.getSentinelMasterId());
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+        endpoints, redisUri.getSentinelMasterId());
   }
 
   private LettuceServerTargets() {}

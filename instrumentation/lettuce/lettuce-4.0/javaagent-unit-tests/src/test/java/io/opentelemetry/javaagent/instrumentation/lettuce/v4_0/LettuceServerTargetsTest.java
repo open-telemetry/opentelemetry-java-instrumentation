@@ -37,11 +37,13 @@ class LettuceServerTargetsTest {
   void sentinelsAreScopedByTheirMaster() {
     RedisServerTarget target =
         LettuceServerTargets.of(
-            RedisURI.Builder.sentinel("sentinel1", 26379, "mymaster")
+            RedisURI.Builder.sentinel("sentinel2", 26380, "mymaster")
+                .withSentinel("sentinel1", 26379)
                 .withSentinel("sentinel2", 26380)
                 .build());
 
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
+    assertThat(target.getAddress())
+        .isEqualTo("sentinel1:26379,sentinel2:26380,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
@@ -54,6 +56,19 @@ class LettuceServerTargetsTest {
     RedisServerTarget target = LettuceServerTargets.of(redisUri);
 
     assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void masterSlaveSentinelIterableKeepsTheMasterSuffix() {
+    RedisURI sentinel =
+        RedisURI.Builder.sentinel("sentinel2", 26380, "mymaster")
+            .withSentinel("sentinel1", 26379)
+            .build();
+
+    RedisServerTarget target = LettuceServerTargets.ofMasterSlaveUris(singletonList(sentinel));
+
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
@@ -85,11 +100,31 @@ class LettuceServerTargetsTest {
 
   @Test
   void clusterKeepsEveryConfiguredEndpoint() {
-    RedisServerTarget target =
+    RedisServerTarget first =
+        LettuceServerTargets.ofUris(
+            asList(RedisURI.create("redis://node2:7001"), RedisURI.create("redis://node1:7000")));
+    RedisServerTarget second =
         LettuceServerTargets.ofUris(
             asList(RedisURI.create("redis://node1:7000"), RedisURI.create("redis://node2:7001")));
 
-    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
+    assertThat(first.getAddress()).isEqualTo("node1:7000,node2:7001");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getPort()).isNull();
+  }
+
+  @Test
+  void clusterKeepsDuplicatesFromIterable() {
+    Iterable<RedisURI> redisUris =
+        () ->
+            asList(
+                    RedisURI.create("redis://node2:7001"),
+                    RedisURI.create("redis://node1:7000"),
+                    RedisURI.create("redis://node2:7001"))
+                .iterator();
+
+    RedisServerTarget target = LettuceServerTargets.ofUris(redisUris);
+
+    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001,node2:7001");
     assertThat(target.getPort()).isNull();
   }
 
@@ -111,6 +146,28 @@ class LettuceServerTargetsTest {
                 RedisURI.create("redis://node2:7001")));
 
     assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void clusterKeepsUnixSockets() {
+    RedisServerTarget target =
+        LettuceServerTargets.ofUris(
+            asList(
+                RedisURI.Builder.socket("/var/run/redis2.sock").build(),
+                RedisURI.Builder.socket("/var/run/redis1.sock").build()));
+
+    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock,/var/run/redis2.sock");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void clusterKeepsIpv6Ports() {
+    RedisServerTarget target =
+        LettuceServerTargets.ofUris(
+            asList(RedisURI.create("redis://[::2]:7001"), RedisURI.create("redis://[::1]:7000")));
+
+    assertThat(target.getAddress()).isEqualTo("[::1]:7000,[::2]:7001");
     assertThat(target.getPort()).isNull();
   }
 
