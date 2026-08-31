@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -58,6 +59,11 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
             .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
             .and(returns(named("java.util.Map"))),
         getClass().getName() + "$GetNodesAdvice");
+    transformer.applyAdviceToMethod(
+        named("renewSlotCache")
+            .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
+            .and(takesArguments(0)),
+        getClass().getName() + "$RenewSlotCacheAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -119,6 +125,23 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         @Advice.This JedisClusterConnectionHandler handler,
         @Advice.Return @Nullable Map<?, ?> pools) {
       JedisSingletons.attachClusterTargetToPools(handler, pools);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class RenewSlotCacheAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
+      return JedisSingletons.openClusterTargetScope(handler);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }
