@@ -290,13 +290,13 @@ public final class DbExecution {
     }
     int firstColon = value.indexOf(':');
     if (firstColon < 0) {
-      return true;
+      return value.indexOf('%') < 0;
     }
     int lastColon = value.lastIndexOf(':');
     if (firstColon != lastColon) {
       return isIpv6Literal(value);
     }
-    return firstColon > 0 && isPort(value.substring(firstColon + 1));
+    return value.indexOf('%') < 0 && firstColon > 0 && isPort(value.substring(firstColon + 1));
   }
 
   // Checks the syntax rather than resolving the value: InetAddress hands anything it cannot parse

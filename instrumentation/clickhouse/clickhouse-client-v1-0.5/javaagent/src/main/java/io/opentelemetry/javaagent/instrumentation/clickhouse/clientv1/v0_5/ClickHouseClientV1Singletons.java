@@ -172,7 +172,11 @@ public class ClickHouseClientV1Singletons {
           return null;
         }
       }
-      if (host.indexOf(':') >= 0) {
+      int firstColon = host.indexOf(':');
+      if (host.indexOf('%') >= 0 && firstColon == host.lastIndexOf(':')) {
+        return null;
+      }
+      if (firstColon >= 0) {
         try {
           if (new URI(null, null, host, -1, null, null, null).getHost() == null) {
             return null;

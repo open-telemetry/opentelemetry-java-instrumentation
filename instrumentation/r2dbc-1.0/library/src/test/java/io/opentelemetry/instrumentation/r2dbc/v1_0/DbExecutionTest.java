@@ -346,7 +346,11 @@ class DbExecutionTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"host1,host1,5432", "[2001:db8::1],2001:db8::1,5432"})
+  @CsvSource({
+    "host1,host1,5432",
+    "[2001:db8::1],2001:db8::1,5432",
+    "[fe80::1%eth0],fe80::1%eth0,5432"
+  })
   void dbExecutionTreatsSingleHostAsSingular(
       String host, String configuredAddress, Integer configuredPort) {
     ConnectionFactoryOptions factoryOptions =
@@ -361,6 +365,21 @@ class DbExecutionTest {
     assertThat(dbExecution.getServerAddress()).isEqualTo(host);
     assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo(configuredAddress);
     assertThat(dbExecution.getConfiguredServerPort()).isEqualTo(configuredPort);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"host%3Fpassword%3Dsecret", "host%3fpassword%3dsecret:5432"})
+  void dbExecutionRejectsPercentEscapesInNonIpv6Hosts(String host) {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, host)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isNull();
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
   private static QueryExecutionInfo queryExecutionInfo() {

@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -707,6 +708,50 @@ class ClickHouseClientV2Test {
                                     : null))));
   }
 
+  @Test
+  void testProgrammaticEndpointRejectsEncodedSensitiveOptions() throws Exception {
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint(Protocol.HTTP, host, port, false)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false")
+            .build();
+    cleanup.deferCleanup(testClient);
+    String currentEndpoint = testClient.getEndpoints().iterator().next();
+    String legacyAddress = UrlParser.getHost(currentEndpoint);
+    Integer legacyPort = UrlParser.getPort(currentEndpoint);
+    replaceRawEndpoint(testClient, "http://configured.example%3fpassword%3dsecret:8123");
+    captureServerInfo(testClient);
+    replaceRawEndpoint(testClient, currentEndpoint);
+
+    QueryResponse response = testClient.query("select 1").join();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : legacyAddress),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() || legacyPort == null
+                                    ? null
+                                    : legacyPort.longValue()),
+                            equalTo(maybeStable(DB_STATEMENT), "select ?"),
+                            equalTo(
+                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
   private static void replaceEndpoints(Client client, String endpoint) throws Exception {
     Field endpointsField = Client.class.getDeclaredField("endpoints");
     endpointsField.setAccessible(true);
@@ -720,14 +765,31 @@ class ClickHouseClientV2Test {
     }
   }
 
+  private static void replaceRawEndpoint(Client client, String endpoint) throws Exception {
+    Field endpointsField = Client.class.getDeclaredField("endpoints");
+    endpointsField.setAccessible(true);
+    endpointsField.set(client, singleton(endpoint));
+  }
+
+  private static void captureServerInfo(Client client) throws Exception {
+    singletons(client).getMethod("captureServerInfo", Client.class).invoke(null, client);
+  }
+
   private static Object clearServerInfo(Client client) throws Exception {
+    Class<?> singletons = singletons(client);
+    Method clearServerInfo = singletons.getDeclaredMethod("clearServerInfo", Client.class);
+    clearServerInfo.setAccessible(true);
+    clearServerInfo.invoke(null, client);
+    return singletons.getMethod("serverInfo", Client.class).invoke(null, client);
+  }
+
+  private static Class<?> singletons(Client client) throws Exception {
     String singletonsName =
         "io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8."
             + "ClickHouseClientV2Singletons";
     ClassLoader clientClassLoader = client.getClass().getClassLoader();
-    Class<?> singletons;
     try {
-      singletons = Class.forName(singletonsName, true, clientClassLoader);
+      return Class.forName(singletonsName, true, clientClassLoader);
     } catch (ClassNotFoundException ignored) {
       Class<?> registry =
           AgentClassLoaderAccess.loadClass(
@@ -741,12 +803,7 @@ class ClickHouseClientV2Test {
                   "io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8."
                       + "ClickHouseClientV2InstrumentationModule",
                   clientClassLoader);
-      singletons = Class.forName(singletonsName, true, instrumentationClassLoader);
+      return Class.forName(singletonsName, true, instrumentationClassLoader);
     }
-
-    Method clearServerInfo = singletons.getDeclaredMethod("clearServerInfo", Client.class);
-    clearServerInfo.setAccessible(true);
-    clearServerInfo.invoke(null, client);
-    return singletons.getMethod("serverInfo", Client.class).invoke(null, client);
   }
 }

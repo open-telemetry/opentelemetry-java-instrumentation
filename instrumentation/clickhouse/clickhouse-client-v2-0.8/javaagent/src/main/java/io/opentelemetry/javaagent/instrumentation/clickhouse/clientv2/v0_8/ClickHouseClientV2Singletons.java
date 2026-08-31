@@ -93,13 +93,20 @@ public class ClickHouseClientV2Singletons {
       }
       if (endpoints.size() == 1) {
         String endpoint = sanitizeEndpoint(endpoints.iterator().next());
+        if (endpoint == null) {
+          return EMPTY;
+        }
         return new ServerInfo(endpointAddress(endpoint), endpointPort(endpoint), null);
       }
 
       // Endpoint iteration order is unspecified, so canonicalize the configured target.
       List<String> sanitized = new ArrayList<>(endpoints.size());
       for (String endpoint : endpoints) {
-        sanitized.add(sanitizeEndpoint(endpoint));
+        String sanitizedEndpoint = sanitizeEndpoint(endpoint);
+        if (sanitizedEndpoint == null) {
+          return EMPTY;
+        }
+        sanitized.add(sanitizedEndpoint);
       }
       sanitized.sort(String::compareTo);
 
@@ -157,6 +164,7 @@ public class ClickHouseClientV2Singletons {
       }
     }
 
+    @Nullable
     private static String sanitizeEndpoint(String endpoint) {
       int authorityStart = endpoint.indexOf("://");
       authorityStart = authorityStart < 0 ? 0 : authorityStart + 3;
@@ -172,7 +180,22 @@ public class ClickHouseClientV2Singletons {
       if (userInfoEnd >= authorityStart) {
         authorityStart = userInfoEnd + 1;
       }
-      return endpoint.substring(authorityStart, authorityEnd);
+      String authority = endpoint.substring(authorityStart, authorityEnd);
+      if (authority.indexOf('=') >= 0 || hasUnsafePercentEscape(authority)) {
+        return null;
+      }
+      return authority;
+    }
+
+    private static boolean hasUnsafePercentEscape(String authority) {
+      int percent = authority.indexOf('%');
+      if (percent < 0) {
+        return false;
+      }
+      int bracketEnd = authority.indexOf(']');
+      return !authority.startsWith("[")
+          || bracketEnd < percent
+          || authority.indexOf('%', percent + 1) >= 0;
     }
 
     @Nullable
