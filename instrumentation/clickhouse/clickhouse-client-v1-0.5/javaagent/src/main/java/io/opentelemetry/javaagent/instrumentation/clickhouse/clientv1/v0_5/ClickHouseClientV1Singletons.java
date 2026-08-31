@@ -150,6 +150,7 @@ public class ClickHouseClientV1Singletons {
           || host.indexOf('/') >= 0
           || host.indexOf('?') >= 0
           || host.indexOf('#') >= 0
+          || host.indexOf(',') >= 0
           || host.indexOf('=') >= 0) {
         return null;
       }

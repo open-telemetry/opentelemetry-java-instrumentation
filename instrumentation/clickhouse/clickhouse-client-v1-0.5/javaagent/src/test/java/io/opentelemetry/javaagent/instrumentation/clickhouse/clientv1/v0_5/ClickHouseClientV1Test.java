@@ -752,6 +752,41 @@ class ClickHouseClientV1Test {
   }
 
   @Test
+  void testConfiguredNodeHostsRejectCommas() throws Exception {
+    ClickHouseNode malformedNode = ClickHouseNode.builder(server).host("host1,host2").build();
+    ClickHouseNodes nodes = createNodes(ImmutableList.of(server, malformedNode));
+    nodes.update(malformedNode, ClickHouseNode.Status.FAULTY);
+
+    ClickHouseResponse response =
+        client
+            .read(nodes)
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + TABLE_NAME)
+            .executeAndWait();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
   void testCopiedSealedNodeListReportsTheWholeConfiguredTarget() throws ClickHouseException {
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
     String addressGroup = host + ":" + port + "," + host + ":" + (port + 1);
