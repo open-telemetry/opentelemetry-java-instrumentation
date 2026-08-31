@@ -58,7 +58,8 @@ class SpymemcachedAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(SpymemcachedRequest spymemcachedRequest) {
-    // The configured target is part of stable database telemetry only.
+    // server.address and server.port describe the configured target and are emitted only when
+    // stable database conventions are enabled and the target was captured
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
