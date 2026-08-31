@@ -206,6 +206,9 @@ public final class RedisServerTarget {
 
     @Nullable
     private static Endpoint hostAndPort(String authority) {
+      if (authority.indexOf(',') >= 0) {
+        return null;
+      }
       if (authority.startsWith("[")) {
         int hostEnd = authority.indexOf(']');
         if (hostEnd <= 1
