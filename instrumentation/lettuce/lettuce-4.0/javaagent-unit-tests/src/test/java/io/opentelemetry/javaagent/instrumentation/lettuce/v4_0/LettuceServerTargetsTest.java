@@ -99,7 +99,7 @@ class LettuceServerTargetsTest {
   }
 
   @Test
-  void clusterKeepsEveryConfiguredEndpoint() {
+  void clusterKeepsConfiguredEndpointOrder() {
     RedisServerTarget first =
         LettuceServerTargets.ofUris(
             asList(RedisURI.create("redis://node2:7001"), RedisURI.create("redis://node1:7000")));
@@ -107,9 +107,10 @@ class LettuceServerTargetsTest {
         LettuceServerTargets.ofUris(
             asList(RedisURI.create("redis://node1:7000"), RedisURI.create("redis://node2:7001")));
 
-    assertThat(first.getAddress()).isEqualTo("node1:7000,node2:7001");
-    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getAddress()).isEqualTo("node2:7001,node1:7000");
+    assertThat(second.getAddress()).isEqualTo("node1:7000,node2:7001");
     assertThat(first.getPort()).isNull();
+    assertThat(second.getPort()).isNull();
   }
 
   @Test
@@ -124,7 +125,7 @@ class LettuceServerTargetsTest {
 
     RedisServerTarget target = LettuceServerTargets.ofUris(redisUris);
 
-    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001,node2:7001");
+    assertThat(target.getAddress()).isEqualTo("node2:7001,node1:7000,node2:7001");
     assertThat(target.getPort()).isNull();
   }
 
@@ -157,7 +158,7 @@ class LettuceServerTargetsTest {
                 RedisURI.Builder.socket("/var/run/redis2.sock").build(),
                 RedisURI.Builder.socket("/var/run/redis1.sock").build()));
 
-    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock,/var/run/redis2.sock");
+    assertThat(target.getAddress()).isEqualTo("/var/run/redis2.sock,/var/run/redis1.sock");
     assertThat(target.getPort()).isNull();
   }
 
@@ -167,7 +168,7 @@ class LettuceServerTargetsTest {
         LettuceServerTargets.ofUris(
             asList(RedisURI.create("redis://[::2]:7001"), RedisURI.create("redis://[::1]:7000")));
 
-    assertThat(target.getAddress()).isEqualTo("[::1]:7000,[::2]:7001");
+    assertThat(target.getAddress()).isEqualTo("[::2]:7001,[::1]:7000");
     assertThat(target.getPort()).isNull();
   }
 

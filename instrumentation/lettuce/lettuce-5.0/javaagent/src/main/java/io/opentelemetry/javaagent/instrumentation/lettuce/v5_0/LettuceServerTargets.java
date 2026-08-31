@@ -46,7 +46,7 @@ public final class LettuceServerTargets {
         endpoints.add(render(target));
       }
     }
-    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
+    return RedisServerTarget.ofEndpoints(endpoints);
   }
 
   @Nullable
