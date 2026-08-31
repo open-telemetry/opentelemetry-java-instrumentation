@@ -41,7 +41,7 @@ class CouchbaseConnectionStringsTest {
   }
 
   @Test
-  void theSchemeIsKeptForSeveralSeeds() {
+  void theSchemeIsStrippedFromSeveralSeeds() {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target("couchbases://one.example,two.example");
 
