@@ -9,10 +9,15 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.util.List;
+import java.util.stream.Stream;
 import org.apache.http.HttpHost;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ElasticsearchServerTargetTest {
 
@@ -30,6 +35,17 @@ class ElasticsearchServerTargetTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("es.example");
     assertThat(target.getPort()).isEqualTo(9200);
+  }
+
+  @ParameterizedTest
+  @MethodSource("defaultPortCases")
+  void singleHostOmitsItsDefaultPort(String scheme, int port) {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example", port, scheme)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("es.example");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -53,13 +69,37 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void severalHostsAreSortedAndOmitTheirSharedScheme() {
+  void mixedPortsStayInTheSortedAddressList() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h2", 9201, "http"), new HttpHost("h1", 9200, "http")));
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9201");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void sharedNonDefaultPortIsSeparatedFromIpv4AndIpv6Addresses() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(
+            asList(new HttpHost("::1", 9200, "https"), new HttpHost("192.0.2.1", 9200, "http")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("192.0.2.1,[::1]");
+    assertThat(target.getPort()).isEqualTo(9200);
+  }
+
+  @Test
+  void mixedHttpAndHttpsDefaultPortsAreOmitted() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(
+            asList(
+                new HttpHost("secure.example", 443, "https"),
+                new HttpHost("plain.example", 80, "http")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("plain.example,secure.example");
     assertThat(target.getPort()).isNull();
   }
 
@@ -95,7 +135,8 @@ class ElasticsearchServerTargetTest {
             asList(new HttpHost("h1", 9200, "http"), new HttpHost("h2", 9200, "https")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9200");
+    assertThat(target.getAddress()).isEqualTo("h1,h2");
+    assertThat(target.getPort()).isEqualTo(9200);
   }
 
   @Test
@@ -105,7 +146,8 @@ class ElasticsearchServerTargetTest {
             asList(new HttpHost("::1", 9200, "http"), new HttpHost("[fe80::1]", 9200, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]:9200,[fe80::1]:9200");
+    assertThat(target.getAddress()).isEqualTo("[::1],[fe80::1]");
+    assertThat(target.getPort()).isEqualTo(9200);
   }
 
   @Test
@@ -120,7 +162,8 @@ class ElasticsearchServerTargetTest {
     ElasticsearchServerTarget target = ElasticsearchServerTarget.of(hosts);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9200,h3:9200,h4:9200");
+    assertThat(target.getAddress()).isEqualTo("h1,h2,h3,h4");
+    assertThat(target.getPort()).isEqualTo(9200);
     assertThat(target.getAddress()).doesNotContain("secret");
   }
 
@@ -154,5 +197,13 @@ class ElasticsearchServerTargetTest {
             ElasticsearchServerTarget.of(
                 asList(new HttpHost("h1", 9200), new HttpHost("user:secret@", 9200))))
         .isNull();
+  }
+
+  private static Stream<Arguments> defaultPortCases() {
+    return Stream.of(
+        argumentSet("HTTP", "http", 80),
+        argumentSet("case-insensitive HTTP", "HTTP", 80),
+        argumentSet("HTTPS", "https", 443),
+        argumentSet("case-insensitive HTTPS", "HTTPS", 443));
   }
 }

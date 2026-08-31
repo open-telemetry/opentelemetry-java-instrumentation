@@ -25,15 +25,15 @@ public class ElasticsearchServerTarget {
       return null;
     }
     if (hosts.size() == 1) {
-      String host = sanitizeHost(hosts.get(0).getHostName());
+      HttpHost httpHost = hosts.get(0);
+      String host = sanitizeHost(httpHost.getHostName());
       if (host == null) {
         return null;
       }
-      int port = hosts.get(0).getPort();
+      int port = normalizePort(httpHost);
       return new ElasticsearchServerTarget(host, port >= 0 ? port : null);
     }
-    String group = renderGroup(hosts);
-    return group == null ? null : new ElasticsearchServerTarget(group, null);
+    return renderGroup(hosts);
   }
 
   private ElasticsearchServerTarget(String address, @Nullable Integer port) {
@@ -42,17 +42,38 @@ public class ElasticsearchServerTarget {
   }
 
   @Nullable
-  private static String renderGroup(List<HttpHost> hosts) {
-    List<String> endpoints = new ArrayList<>(hosts.size());
+  private static ElasticsearchServerTarget renderGroup(List<HttpHost> hosts) {
+    List<String> addresses = new ArrayList<>(hosts.size());
+    int sharedPort = normalizePort(hosts.get(0));
+    boolean portsMatch = true;
     for (HttpHost httpHost : hosts) {
       String host = sanitizeHost(httpHost.getHostName());
       if (host == null) {
         return null;
       }
-      endpoints.add(renderHostAndPort(host, httpHost.getPort()));
+      int port = normalizePort(httpHost);
+      if (port != sharedPort) {
+        portsMatch = false;
+      }
+      addresses.add(host);
+    }
+    List<String> endpoints = new ArrayList<>(hosts.size());
+    for (int i = 0; i < hosts.size(); i++) {
+      endpoints.add(
+          renderHostAndPort(addresses.get(i), portsMatch ? -1 : normalizePort(hosts.get(i))));
     }
     endpoints.sort(String::compareTo);
-    return String.join(",", endpoints);
+    return new ElasticsearchServerTarget(
+        String.join(",", endpoints), portsMatch && sharedPort >= 0 ? sharedPort : null);
+  }
+
+  private static int normalizePort(HttpHost httpHost) {
+    int port = httpHost.getPort();
+    if ((port == 80 && httpHost.getSchemeName().equalsIgnoreCase("http"))
+        || (port == 443 && httpHost.getSchemeName().equalsIgnoreCase("https"))) {
+      return -1;
+    }
+    return port;
   }
 
   private static String renderHostAndPort(String host, int port) {
