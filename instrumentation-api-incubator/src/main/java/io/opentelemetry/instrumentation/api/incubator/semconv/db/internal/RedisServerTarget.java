@@ -202,18 +202,23 @@ public final class RedisServerTarget {
       return hostAndPort(authority);
     }
 
+    @Nullable
     private static Endpoint hostAndPort(String authority) {
       if (authority.startsWith("[")) {
         int hostEnd = authority.indexOf(']');
-        if (hostEnd > 0) {
-          String host = authority.substring(1, hostEnd);
-          String rest = authority.substring(hostEnd + 1);
-          Integer port = rest.startsWith(":") ? parsePort(rest.substring(1)) : null;
-          if (!host.isEmpty()) {
-            return new Endpoint(host, port, false);
-          }
+        if (hostEnd <= 1) {
+          return null;
         }
-        return new Endpoint(authority, null, false);
+        String host = authority.substring(1, hostEnd);
+        String rest = authority.substring(hostEnd + 1);
+        if (rest.isEmpty()) {
+          return new Endpoint(host, null, false);
+        }
+        if (!rest.startsWith(":")) {
+          return null;
+        }
+        Integer port = parsePort(rest.substring(1));
+        return port == null ? null : new Endpoint(host, port, false);
       }
 
       int portStart = authority.indexOf(':');

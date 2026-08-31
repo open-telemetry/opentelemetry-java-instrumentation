@@ -276,7 +276,12 @@ class RedisServerTargetTest {
         "unix://#fragment",
         "redis://default:sec/ret@localhost:6379",
         "redis://default:sec?ret@localhost:6379",
-        "redis://default:sec#ret@localhost:6379"
+        "redis://default:sec#ret@localhost:6379",
+        "[::1",
+        "[]",
+        "[::1]:",
+        "[::1]:70000",
+        "[::1]suffix"
       })
   void unusableEndpoint(String endpoint) {
     assertThat(RedisServerTarget.ofEndpoint(endpoint)).isNull();
