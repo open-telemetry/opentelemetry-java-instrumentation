@@ -48,6 +48,16 @@ class JedisServerTargetsTest {
   }
 
   @Test
+  void shardsKeepTheirOrder() {
+    RedisServerTarget target =
+        JedisServerTargets.ofShards(
+            asList(new HostAndPort("shard2", 6380), new HostAndPort("shard1", 6379)));
+
+    assertThat(target.getAddress()).isEqualTo("shard2:6380,shard1:6379");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void sentinelsAreSortedAndKeepDuplicatesAndMasterSuffix() {
     RedisServerTarget target =
         JedisServerTargets.ofSentinels(

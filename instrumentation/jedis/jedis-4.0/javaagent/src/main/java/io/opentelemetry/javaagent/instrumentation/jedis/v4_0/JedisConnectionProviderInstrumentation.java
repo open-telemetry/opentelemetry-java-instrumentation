@@ -110,7 +110,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Object provider, @Advice.Argument(0) @Nullable List<HostAndPort> shards) {
-      JedisSingletons.setProviderTarget(provider, JedisServerTargets.ofNodes(shards));
+      JedisSingletons.setProviderTarget(provider, JedisServerTargets.ofShards(shards));
     }
   }
 
@@ -155,7 +155,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) @Nullable List<HostAndPort> shards) {
-      return JedisSingletons.openConfiguredTargetScope(JedisServerTargets.ofNodes(shards));
+      return JedisSingletons.openConfiguredTargetScope(JedisServerTargets.ofShards(shards));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
