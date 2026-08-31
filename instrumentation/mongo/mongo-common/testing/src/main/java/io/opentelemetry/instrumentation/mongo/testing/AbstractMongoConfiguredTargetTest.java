@@ -255,7 +255,8 @@ public abstract class AbstractMongoConfiguredTargetTest {
       try {
         return type.getConstructor(legacyParameterTypes).newInstance(legacyArguments);
       } catch (NoSuchMethodException ignored) {
-        // driver 5.0 added request context and operation id constructor parameters
+        // driver 5.0 removed the legacy constructors, leaving only the request context and
+        // operation id form
         return type.getConstructor(currentParameterTypes).newInstance(currentArguments);
       }
     } catch (ReflectiveOperationException e) {
