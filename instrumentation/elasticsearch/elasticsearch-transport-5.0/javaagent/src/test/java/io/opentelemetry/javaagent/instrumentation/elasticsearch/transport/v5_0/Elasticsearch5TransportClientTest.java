@@ -204,13 +204,6 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     return getAddress() + ":" + getPort() + "," + DOWN_HOST + ":" + addressThatIsDown.getPort();
   }
 
-  private static class TestFilterClient extends FilterClient {
-
-    TestFilterClient(TransportClient delegate) {
-      super(Settings.EMPTY, delegate.threadPool(), delegate);
-    }
-  }
-
   private static TransportClient newClient() {
     TransportClient newClient =
         new PreBuiltTransportClient(
@@ -222,5 +215,12 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
                 .build());
     cleanup.deferCleanup(newClient);
     return newClient;
+  }
+
+  private static class TestFilterClient extends FilterClient {
+
+    TestFilterClient(TransportClient delegate) {
+      super(Settings.EMPTY, delegate.threadPool(), delegate);
+    }
   }
 }
