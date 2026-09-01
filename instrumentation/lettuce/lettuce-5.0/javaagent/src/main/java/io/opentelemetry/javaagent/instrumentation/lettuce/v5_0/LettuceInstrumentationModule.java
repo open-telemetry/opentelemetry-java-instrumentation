@@ -44,6 +44,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
         new LettuceClientInstrumentation(),
         new LettuceClusterClientInstrumentation(),
         new LettuceMasterSlaveInstrumentation(),
+        new LettuceReactiveSubscriptionInstrumentation(),
         new LettuceReactiveCommandsInstrumentation());
   }
 }

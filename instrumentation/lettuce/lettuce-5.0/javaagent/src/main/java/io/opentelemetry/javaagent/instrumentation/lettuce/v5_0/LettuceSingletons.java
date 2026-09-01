@@ -31,6 +31,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import javax.annotation.Nullable;
 
 public class LettuceSingletons {
@@ -61,8 +63,8 @@ public class LettuceSingletons {
   private static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
       VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
 
-  private static final VirtualField<RedisCommand<?, ?, ?>, Boolean> COMMAND_PEER_SHARED =
-      VirtualField.find(RedisCommand.class, Boolean.class);
+  private static final ThreadLocal<Deque<RedisCommand<?, ?, ?>>> REACTIVE_COMMANDS =
+      new ThreadLocal<>();
 
   public static final VirtualField<DefaultEndpoint, Integer> ENDPOINT_DATABASE_INDEX =
       VirtualField.find(DefaultEndpoint.class, Integer.class);
@@ -221,24 +223,9 @@ public class LettuceSingletons {
     }
     synchronized (command) {
       if (COMMAND_PEER.get(command) == null) {
-        LettuceCommandPeer peer = findCommandPeer(command);
-        if (peer != null && isCommandPeerShared(command)) {
-          attachCommandPeer(command, peer);
-          markCommandPeerShared(command);
-        } else {
-          attachCommandPeer(command, new LettuceCommandPeer());
-        }
+        attachCommandPeer(command, new LettuceCommandPeer());
       }
     }
-  }
-
-  public static void linkCommandPeer(
-      RedisCommand<?, ?, ?> command, RedisCommand<?, ?, ?> linkedCommand) {
-    LettuceCommandPeer peer = new LettuceCommandPeer();
-    attachCommandPeer(command, peer);
-    attachCommandPeer(linkedCommand, peer);
-    markCommandPeerShared(command);
-    markCommandPeerShared(linkedCommand);
   }
 
   static void useCommandPeer(RedisCommand<?, ?, ?> command, LettuceCommandPeer peer) {
@@ -292,31 +279,6 @@ public class LettuceSingletons {
     }
   }
 
-  private static boolean isCommandPeerShared(RedisCommand<?, ?, ?> command) {
-    RedisCommand<?, ?, ?> current = command;
-    while (current != null) {
-      if (COMMAND_PEER_SHARED.get(current) != null) {
-        return true;
-      }
-      current =
-          current instanceof DecoratedCommand
-              ? ((DecoratedCommand<?, ?, ?>) current).getDelegate()
-              : null;
-    }
-    return false;
-  }
-
-  private static void markCommandPeerShared(RedisCommand<?, ?, ?> command) {
-    RedisCommand<?, ?, ?> current = command;
-    while (current != null) {
-      COMMAND_PEER_SHARED.set(current, true);
-      current =
-          current instanceof DecoratedCommand
-              ? ((DecoratedCommand<?, ?, ?>) current).getDelegate()
-              : null;
-    }
-  }
-
   @Nullable
   static InetSocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
     // A command that does not expect a response has its span ended synchronously in
@@ -327,6 +289,32 @@ public class LettuceSingletons {
     }
     LettuceCommandPeer peer = findCommandPeer(command);
     return peer == null ? null : peer.getAddress();
+  }
+
+  public static void enterReactiveCommand(RedisCommand<?, ?, ?> command) {
+    Deque<RedisCommand<?, ?, ?>> commands = REACTIVE_COMMANDS.get();
+    if (commands == null) {
+      commands = new ArrayDeque<>();
+      REACTIVE_COMMANDS.set(commands);
+    }
+    commands.push(command);
+  }
+
+  public static void exitReactiveCommand() {
+    Deque<RedisCommand<?, ?, ?>> commands = REACTIVE_COMMANDS.get();
+    if (commands == null) {
+      return;
+    }
+    commands.pop();
+    if (commands.isEmpty()) {
+      REACTIVE_COMMANDS.remove();
+    }
+  }
+
+  @Nullable
+  public static RedisCommand<?, ?, ?> currentReactiveCommand() {
+    Deque<RedisCommand<?, ?, ?>> commands = REACTIVE_COMMANDS.get();
+    return commands == null ? null : commands.peek();
   }
 
   private LettuceSingletons() {}

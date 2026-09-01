@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -23,6 +25,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
 
 class LettuceNetworkAttributesGetterTest {
@@ -155,6 +161,54 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
+  void outboundWriteRecordsPeerBeforePromiseCompletes() throws UnknownHostException {
+    InetSocketAddress address =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
+    RedisCommand<?, ?, ?> command = command();
+    Channel channel = mock(Channel.class);
+    when(channel.remoteAddress()).thenReturn(address);
+    ChannelHandlerContext context = mock(ChannelHandlerContext.class);
+    when(context.channel()).thenReturn(channel);
+    ChannelPromise promise = mock(ChannelPromise.class);
+
+    new LettuceCommandOutboundHandler().write(context, command, promise);
+
+    assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
+    verify(context).write(command, promise);
+  }
+
+  @Test
+  void concurrentReactiveSubscriptionsKeepDistinctPeers() throws Exception {
+    InetSocketAddress firstAddress =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
+    InetSocketAddress secondAddress =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT);
+    RedisCommand<?, ?, ?> firstCommand = command();
+    RedisCommand<?, ?, ?> secondCommand = command();
+
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch release = new CountDownLatch(1);
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+    try {
+      Future<InetSocketAddress> first =
+          executor.submit(
+              () -> recordReactiveSubscriptionPeer(firstCommand, firstAddress, ready, release));
+      Future<InetSocketAddress> second =
+          executor.submit(
+              () -> recordReactiveSubscriptionPeer(secondCommand, secondAddress, ready, release));
+
+      assertThat(ready.await(10, SECONDS)).isTrue();
+      release.countDown();
+
+      assertThat(first.get(10, SECONDS)).isEqualTo(firstAddress);
+      assertThat(second.get(10, SECONDS)).isEqualTo(secondAddress);
+    } finally {
+      release.countDown();
+      executor.shutdownNow();
+    }
+  }
+
+  @Test
   void newWrapperDoesNotReusePreviousPeer() throws UnknownHostException {
     RedisCommand<String, String, String> command = command();
     AsyncCommand<String, String, String> firstWrapper = new AsyncCommand<>(command);
@@ -197,5 +251,23 @@ class LettuceNetworkAttributesGetterTest {
 
   private static RedisCommand<String, String, String> command() {
     return new Command<>(CommandType.GET, null);
+  }
+
+  private static InetSocketAddress recordReactiveSubscriptionPeer(
+      RedisCommand<?, ?, ?> subscriptionCommand,
+      InetSocketAddress address,
+      CountDownLatch ready,
+      CountDownLatch release)
+      throws InterruptedException {
+    LettuceSingletons.enterReactiveCommand(subscriptionCommand);
+    try {
+      RedisCommand<?, ?, ?> command = requireNonNull(LettuceSingletons.currentReactiveCommand());
+      LettuceSingletons.recordCommandPeer(command, address);
+      ready.countDown();
+      release.await();
+      return LettuceSingletons.commandPeerAddress(command);
+    } finally {
+      LettuceSingletons.exitReactiveCommand();
+    }
   }
 }
