@@ -9,30 +9,34 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class RedisServerTargetTest {
 
   @Test
-  void singleEndpointKeepsPort() {
+  void singleDefaultEndpointOmitsPort() {
     RedisServerTarget target = RedisServerTarget.ofEndpoint("redis://localhost:6379");
 
     assertThat(target.getAddress()).isEqualTo("localhost");
-    assertThat(target.getPort()).isEqualTo(6379);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
   void hostAndPort() {
-    RedisServerTarget target = RedisServerTarget.ofHostAndPort("localhost", 6379);
+    RedisServerTarget target = RedisServerTarget.ofHostAndPort("localhost", 6380);
 
     assertThat(target.getAddress()).isEqualTo("localhost");
-    assertThat(target.getPort()).isEqualTo(6379);
+    assertThat(target.getPort()).isEqualTo(6380);
   }
 
   @Test
@@ -110,6 +114,100 @@ class RedisServerTargetTest {
     assertThat(target.getPort()).isNull();
   }
 
+  @ParameterizedTest
+  @MethodSource("directEndpointCases")
+  void canonicalizesDirectEndpointPorts(
+      List<String> endpoints, String expectedAddress, Integer expectedPort) {
+    RedisServerTarget target = RedisServerTarget.ofEndpoints(endpoints);
+
+    assertThat(target.getAddress()).isEqualTo(expectedAddress);
+    assertThat(target.getPort()).isEqualTo(expectedPort);
+  }
+
+  private static Stream<Arguments> directEndpointCases() {
+    return Stream.of(
+        argumentSet("single default IPv4", singletonList("node1:6379"), "node1", null),
+        argumentSet(
+            "implicit and explicit default IPv4",
+            asList("node1", "node2:6379"),
+            "node1,node2",
+            null),
+        argumentSet(
+            "shared non-default IPv4", asList("node1:6380", "node2:6380"), "node1,node2", 6380),
+        argumentSet("mixed IPv4", asList("node1", "node2:6380"), "node1:6379,node2:6380", null),
+        argumentSet("default IPv6", asList("[::1]:6379", "[::2]:6379"), "::1,::2", null),
+        argumentSet("shared non-default IPv6", asList("[::1]:6380", "[::2]:6380"), "::1,::2", 6380),
+        argumentSet(
+            "mixed IPv6", asList("[::1]:6379", "[::2]:6380"), "[::1]:6379,[::2]:6380", null),
+        argumentSet(
+            "Unix sockets",
+            asList("unix:///var/run/redis1.sock", "unix:///var/run/redis2.sock"),
+            "/var/run/redis1.sock,/var/run/redis2.sock",
+            null),
+        argumentSet(
+            "socket and network endpoint",
+            asList("unix:///var/run/redis.sock", "node1"),
+            "/var/run/redis.sock,node1:6379",
+            null));
+  }
+
+  @ParameterizedTest
+  @MethodSource("discoveryTargetCases")
+  void preservesDiscoveryEndpointPortsAndSafeLogicalNames(
+      List<String> endpoints, String logicalName, String expectedAddress) {
+    RedisServerTarget target =
+        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, logicalName);
+
+    assertThat(target.getAddress()).isEqualTo(expectedAddress);
+    assertThat(target.getPort()).isNull();
+  }
+
+  private static Stream<Arguments> discoveryTargetCases() {
+    List<String> endpoints = asList("sentinel2:26379", "sentinel1:26379");
+    return Stream.of(
+        argumentSet(
+            "shared discovery ports",
+            endpoints,
+            "mymaster",
+            "sentinel1:26379,sentinel2:26379/mymaster"),
+        argumentSet(
+            "IPv6 discovery port",
+            singletonList("[2001:db8::1]:26379"),
+            "mymaster",
+            "[2001:db8::1]:26379/mymaster"),
+        argumentSet(
+            "trimmed logical name",
+            endpoints,
+            "  mymaster  ",
+            "sentinel1:26379,sentinel2:26379/mymaster"),
+        argumentSet(
+            "slash in logical name", endpoints, "master/name", "sentinel1:26379,sentinel2:26379"),
+        argumentSet(
+            "comma in logical name", endpoints, "master,name", "sentinel1:26379,sentinel2:26379"),
+        argumentSet(
+            "query in logical name", endpoints, "master?name", "sentinel1:26379,sentinel2:26379"),
+        argumentSet(
+            "fragment in logical name",
+            endpoints,
+            "master#name",
+            "sentinel1:26379,sentinel2:26379"),
+        argumentSet(
+            "encoded delimiter in logical name",
+            endpoints,
+            "master%2Fname",
+            "sentinel1:26379,sentinel2:26379"),
+        argumentSet(
+            "whitespace in logical name",
+            endpoints,
+            "master name",
+            "sentinel1:26379,sentinel2:26379"),
+        argumentSet(
+            "backslash in logical name",
+            endpoints,
+            "master\\name",
+            "sentinel1:26379,sentinel2:26379"));
+  }
+
   @Test
   void endpointListCarriesEveryEndpointAndNoPort() {
     RedisServerTarget target =
@@ -133,7 +231,7 @@ class RedisServerTargetTest {
     RedisServerTarget target = RedisServerTarget.ofEndpoints(singletonList("node1:6379"));
 
     assertThat(target.getAddress()).isEqualTo("node1");
-    assertThat(target.getPort()).isEqualTo(6379);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -141,7 +239,7 @@ class RedisServerTargetTest {
     RedisServerTarget target =
         RedisServerTarget.ofEndpoints(asList("node1:6379", "node1:6379", "node1:6379"));
 
-    assertThat(target.getAddress()).isEqualTo("node1:6379,node1:6379,node1:6379");
+    assertThat(target.getAddress()).isEqualTo("node1,node1,node1");
     assertThat(target.getPort()).isNull();
   }
 
@@ -179,7 +277,7 @@ class RedisServerTargetTest {
         RedisServerTarget.ofUnorderedEndpoints(singletonList("redis://node1:6379"));
 
     assertThat(target.getAddress()).isEqualTo("node1");
-    assertThat(target.getPort()).isEqualTo(6379);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -254,7 +352,7 @@ class RedisServerTargetTest {
     RedisServerTarget target = RedisServerTarget.ofEndpoint(endpoint);
 
     assertThat(target.getAddress()).isEqualTo(address);
-    assertThat(target.getPort()).isEqualTo(port);
+    assertThat(target.getPort()).isEqualTo(port != null && port == 6379 ? null : port);
   }
 
   @ParameterizedTest
@@ -316,7 +414,7 @@ class RedisServerTargetTest {
     RedisServerTarget target = RedisServerTarget.ofEndpoints(asList("node1,node2", "node3:6379"));
 
     assertThat(target.getAddress()).isEqualTo("node3");
-    assertThat(target.getPort()).isEqualTo(6379);
+    assertThat(target.getPort()).isNull();
   }
 
   @ParameterizedTest
@@ -400,6 +498,21 @@ class RedisServerTargetTest {
     assertThat(RedisServerTarget.endpoint("::1", -1)).isEqualTo("::1");
     assertThat(RedisServerTarget.endpoint("[::1]", 6379)).isEqualTo("[::1]:6379");
     assertThat(RedisServerTarget.endpoint(null, 6379)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+      delimiter = '|',
+      value = {
+        "localhost:6379 | localhost:6379",
+        "[2001:db8::1]:6379 | [2001:db8::1]:6379",
+        "2001:db8::1:6379 | [2001:db8::1]:6379",
+        "2001:db8:::6379 | [2001:db8::]:6379",
+        "2001:db8::1 | 2001:db8::1",
+        "2001:db8:: | 2001:db8::"
+      })
+  void normalizesHostAndPort(String value, String expected) {
+    assertThat(RedisServerTarget.normalizeHostAndPort(value)).isEqualTo(expected);
   }
 
   @Test

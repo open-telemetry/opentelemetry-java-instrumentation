@@ -13,6 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.LinkedHashSet;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import redis.clients.jedis.HostAndPort;
 
 class JedisServerTargetsTest {
@@ -43,8 +45,8 @@ class JedisServerTargetsTest {
         JedisServerTargets.ofNodes(
             asList(new HostAndPort("node1", 7000), new HostAndPort("node1", 7000)));
 
-    assertThat(target.getAddress()).isEqualTo("node1:7000,node1:7000");
-    assertThat(target.getPort()).isNull();
+    assertThat(target.getAddress()).isEqualTo("node1,node1");
+    assertThat(target.getPort()).isEqualTo(7000);
   }
 
   @Test
@@ -82,12 +84,13 @@ class JedisServerTargetsTest {
     assertThat(target.getPort()).isNull();
   }
 
-  @Test
-  void stringSentinelIpv6AddressKeepsItsPort() {
+  @ParameterizedTest
+  @ValueSource(strings = {"2001:db8::1", "2001:db8::"})
+  void stringSentinelIpv6AddressKeepsItsPort(String host) {
     RedisServerTarget target =
-        JedisServerTargets.ofSentinels("mymaster", singletonList("2001:db8::1:26379"));
+        JedisServerTargets.ofSentinels("mymaster", singletonList(host + ":26379"));
 
-    assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:26379/mymaster");
+    assertThat(target.getAddress()).isEqualTo("[" + host + "]:26379/mymaster");
     assertThat(target.getPort()).isNull();
   }
 
