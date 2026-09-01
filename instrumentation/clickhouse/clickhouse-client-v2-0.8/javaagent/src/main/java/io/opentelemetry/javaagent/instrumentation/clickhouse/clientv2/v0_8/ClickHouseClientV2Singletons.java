@@ -68,6 +68,15 @@ public class ClickHouseClientV2Singletons {
     return currentServerInfo.serverInfo;
   }
 
+  public static void capturePeer(ClickHouseDbRequest request, Object selectedNode)
+      throws Exception {
+    Class<?> selectedNodeClass = selectedNode.getClass();
+    String host = (String) selectedNodeClass.getMethod("getHost").invoke(selectedNode);
+    int port = (Integer) selectedNodeClass.getMethod("getPort").invoke(selectedNode);
+    EndpointTarget endpoint = ServerInfo.sanitizeEndpoint(host);
+    request.setPeer(endpoint == null ? null : endpoint.address, endpoint == null ? null : port);
+  }
+
   public static class ServerInfo {
 
     private static final ServerInfo EMPTY = new ServerInfo(null, null, null);
@@ -75,12 +84,25 @@ public class ClickHouseClientV2Singletons {
     @Nullable private final String address;
     @Nullable private final Integer port;
     @Nullable private final String addressGroup;
+    @Nullable private final String peerAddress;
+    @Nullable private final Integer peerPort;
 
     private ServerInfo(
         @Nullable String address, @Nullable Integer port, @Nullable String addressGroup) {
+      this(address, port, addressGroup, address, port);
+    }
+
+    private ServerInfo(
+        @Nullable String address,
+        @Nullable Integer port,
+        @Nullable String addressGroup,
+        @Nullable String peerAddress,
+        @Nullable Integer peerPort) {
       this.address = address;
       this.port = port;
       this.addressGroup = addressGroup;
+      this.peerAddress = peerAddress;
+      this.peerPort = peerPort;
     }
 
     public static ServerInfo empty() {
@@ -92,32 +114,51 @@ public class ClickHouseClientV2Singletons {
         return EMPTY;
       }
       if (endpoints.size() == 1) {
-        String endpoint = sanitizeEndpoint(endpoints.iterator().next());
+        EndpointTarget endpoint = sanitizeEndpoint(endpoints.iterator().next());
         if (endpoint == null) {
           return EMPTY;
         }
-        return new ServerInfo(endpointAddress(endpoint), endpointPort(endpoint), null);
+        return new ServerInfo(
+            endpoint.address, endpoint.isDefaultPort() ? null : endpoint.port, null);
       }
 
       // Endpoint iteration order is unspecified, so canonicalize the configured target.
-      List<String> sanitized = new ArrayList<>(endpoints.size());
+      List<EndpointTarget> sanitized = new ArrayList<>(endpoints.size());
+      boolean allDefaultPorts = true;
+      boolean commonNonDefaultPort = true;
+      Integer commonPort = null;
       for (String endpoint : endpoints) {
-        String sanitizedEndpoint = sanitizeEndpoint(endpoint);
+        EndpointTarget sanitizedEndpoint = sanitizeEndpoint(endpoint);
         if (sanitizedEndpoint == null) {
           return EMPTY;
         }
         sanitized.add(sanitizedEndpoint);
+        if (sanitizedEndpoint.isDefaultPort()) {
+          commonNonDefaultPort = false;
+        } else {
+          allDefaultPorts = false;
+          if (sanitizedEndpoint.port == null) {
+            commonNonDefaultPort = false;
+          } else if (commonPort == null) {
+            commonPort = sanitizedEndpoint.port;
+          } else if (!commonPort.equals(sanitizedEndpoint.port)) {
+            commonNonDefaultPort = false;
+          }
+        }
       }
-      sanitized.sort(String::compareTo);
+      boolean inlinePorts = !allDefaultPorts && !commonNonDefaultPort;
+      sanitized.sort(
+          (left, right) -> left.render(inlinePorts).compareTo(right.render(inlinePorts)));
 
       StringBuilder addressGroup = new StringBuilder();
-      for (String endpoint : sanitized) {
+      for (EndpointTarget endpoint : sanitized) {
         if (addressGroup.length() > 0) {
           addressGroup.append(',');
         }
-        addressGroup.append(endpoint);
+        addressGroup.append(endpoint.render(inlinePorts));
       }
-      return new ServerInfo(null, null, addressGroup.toString());
+      return new ServerInfo(
+          null, commonNonDefaultPort ? commonPort : null, addressGroup.toString());
     }
 
     public static ServerInfo ofCurrentEndpoint(Set<String> endpoints) {
@@ -125,7 +166,13 @@ public class ClickHouseClientV2Singletons {
         return EMPTY;
       }
       String endpoint = endpoints.iterator().next();
-      return new ServerInfo(UrlParser.getHost(endpoint), UrlParser.getPort(endpoint), null);
+      EndpointTarget peer = sanitizeEndpoint(endpoint);
+      return new ServerInfo(
+          UrlParser.getHost(endpoint),
+          UrlParser.getPort(endpoint),
+          null,
+          peer == null ? null : peer.address,
+          peer == null ? null : peer.port);
     }
 
     private static String endpointAddress(String endpoint) {
@@ -165,9 +212,15 @@ public class ClickHouseClientV2Singletons {
     }
 
     @Nullable
-    private static String sanitizeEndpoint(String endpoint) {
+    private static EndpointTarget sanitizeEndpoint(String endpoint) {
+      String scheme = null;
       int authorityStart = endpoint.indexOf("://");
-      authorityStart = authorityStart < 0 ? 0 : authorityStart + 3;
+      if (authorityStart < 0) {
+        authorityStart = 0;
+      } else {
+        scheme = endpoint.substring(0, authorityStart);
+        authorityStart += 3;
+      }
       int authorityEnd = endpoint.length();
       for (int i = authorityStart; i < endpoint.length(); i++) {
         char c = endpoint.charAt(i);
@@ -184,7 +237,11 @@ public class ClickHouseClientV2Singletons {
       if (authority.indexOf('=') >= 0 || hasUnsafePercentEscape(authority)) {
         return null;
       }
-      return authority;
+      String address = endpointAddress(authority);
+      if (address.isEmpty()) {
+        return null;
+      }
+      return new EndpointTarget(scheme, address, endpointPort(authority));
     }
 
     private static boolean hasUnsafePercentEscape(String authority) {
@@ -211,6 +268,49 @@ public class ClickHouseClientV2Singletons {
     @Nullable
     public String getAddressGroup() {
       return addressGroup;
+    }
+
+    @Nullable
+    public String getPeerAddress() {
+      return peerAddress;
+    }
+
+    @Nullable
+    public Integer getPeerPort() {
+      return peerPort;
+    }
+  }
+
+  private static class EndpointTarget {
+    @Nullable private final String scheme;
+    private final String address;
+    @Nullable private final Integer port;
+
+    private EndpointTarget(@Nullable String scheme, String address, @Nullable Integer port) {
+      this.scheme = scheme;
+      this.address = address;
+      this.port = port;
+    }
+
+    private boolean isDefaultPort() {
+      if (port == null || scheme == null) {
+        return false;
+      }
+      return ("http".equalsIgnoreCase(scheme) && port == 8123)
+          || ("https".equalsIgnoreCase(scheme) && port == 8443);
+    }
+
+    private String render(boolean includePort) {
+      StringBuilder rendered = new StringBuilder();
+      if (address.indexOf(':') >= 0) {
+        rendered.append('[').append(address).append(']');
+      } else {
+        rendered.append(address);
+      }
+      if (includePort && port != null) {
+        rendered.append(':').append(port);
+      }
+      return rendered.toString();
     }
   }
 

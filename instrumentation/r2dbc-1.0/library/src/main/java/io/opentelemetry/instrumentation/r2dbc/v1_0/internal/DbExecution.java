@@ -117,19 +117,17 @@ public final class DbExecution {
         factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
     this.serverPort =
         factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
+    Integer defaultPort =
+        resolveDefaultPort(
+            resolvedDriver,
+            resolvedProtocol,
+            factoryOptions.hasOption(SSL) && Boolean.TRUE.equals(factoryOptions.getValue(SSL)));
     ServerTarget configuredServerTarget =
         isUnixDomainSocket(serverAddress)
             ? sanitizeUnixDomainSocket(serverAddress)
             : isServerAddressGroupCandidate(serverAddress)
-                ? sanitizeServerAddressGroup(
-                    serverAddress,
-                    serverPort,
-                    resolveDefaultPort(
-                        resolvedDriver,
-                        resolvedProtocol,
-                        factoryOptions.hasOption(SSL)
-                            && Boolean.TRUE.equals(factoryOptions.getValue(SSL))))
-                : sanitizeServerTarget(serverAddress, serverPort);
+                ? sanitizeServerAddressGroup(serverAddress, serverPort, defaultPort)
+                : sanitizeServerTarget(serverAddress, serverPort, defaultPort);
     this.configuredServerAddress = configuredServerTarget.address;
     this.configuredServerPort = configuredServerTarget.port;
     this.connectionString =
@@ -293,6 +291,14 @@ public final class DbExecution {
           host.substring(0, firstColon), Integer.valueOf(host.substring(firstColon + 1)));
     }
     return new ServerTarget(host, serverPort);
+  }
+
+  private static ServerTarget sanitizeServerTarget(
+      @Nullable String serverAddress, @Nullable Integer serverPort, @Nullable Integer defaultPort) {
+    ServerTarget target = sanitizeServerTarget(serverAddress, serverPort);
+    return defaultPort != null && defaultPort.equals(target.port)
+        ? new ServerTarget(target.address, null)
+        : target;
   }
 
   private static void appendAddress(

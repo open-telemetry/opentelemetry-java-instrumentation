@@ -184,7 +184,8 @@ class R2dbcSqlAttributesGetterTest {
 
     assertThat(getter.getServerAddress(dbExecution))
         .isEqualTo(emitStableDatabaseSemconv() ? "host1" : "user:secret@host1");
-    assertThat(getter.getServerPort(dbExecution)).isEqualTo(5432);
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
   }
 
   @Test
@@ -205,14 +206,15 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @Test
-  void singleHostKeepsPortInEveryMode() {
+  void singleHostOmitsKnownDefaultPortInStableMode() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
             ConnectionFactoryOptions.parse("r2dbc:postgresql://host1:5432/db"));
 
     assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1");
-    assertThat(getter.getServerPort(dbExecution)).isEqualTo(5432);
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
   }
 
   @Test

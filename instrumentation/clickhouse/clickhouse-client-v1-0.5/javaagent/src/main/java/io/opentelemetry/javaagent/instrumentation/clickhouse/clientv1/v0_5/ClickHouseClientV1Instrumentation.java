@@ -62,6 +62,8 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
           ClickHouseDbRequest.create(
               clickHouseRequest.getServer().getHost(),
               clickHouseRequest.getServer().getPort(),
+              ClickHouseDbRequest.endpoint(
+                  clickHouseRequest.getServer().getHost(), clickHouseRequest.getServer().getPort()),
               ClickHouseClientV1Singletons.serverAddress(clickHouseRequest),
               ClickHouseClientV1Singletons.serverPort(clickHouseRequest),
               ClickHouseClientV1Singletons.serverAddressGroup(clickHouseRequest),

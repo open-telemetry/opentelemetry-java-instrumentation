@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseScope;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.ServerInfo;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -76,6 +77,8 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
           ClickHouseDbRequest.create(
               currentServerInfo.getAddress(),
               currentServerInfo.getPort(),
+              ClickHouseDbRequest.endpoint(
+                  currentServerInfo.getPeerAddress(), currentServerInfo.getPeerPort()),
               configuredServerInfo.getAddress(),
               configuredServerInfo.getPort(),
               configuredServerInfo.getAddressGroup(),
@@ -88,13 +91,18 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return(readOnly = false) @Nullable CompletableFuture<?> future,
         @Advice.Enter @Nullable ClickHouseScope scope) {
       CallDepth callDepth = CallDepth.forClass(Client.class);
       if (callDepth.decrementAndGet() > 0 || scope == null) {
         return;
       }
 
-      scope.end(throwable);
+      if (throwable != null || future == null) {
+        scope.end(throwable);
+      } else {
+        future = scope.endOnCompletion(future);
+      }
     }
   }
 }

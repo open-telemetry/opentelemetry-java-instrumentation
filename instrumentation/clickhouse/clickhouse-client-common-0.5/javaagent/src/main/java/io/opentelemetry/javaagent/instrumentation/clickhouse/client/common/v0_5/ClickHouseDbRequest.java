@@ -14,13 +14,18 @@ public abstract class ClickHouseDbRequest {
   public static ClickHouseDbRequest create(
       @Nullable String host,
       @Nullable Integer port,
+      Endpoint peer,
       @Nullable String configuredHost,
       @Nullable Integer configuredPort,
       @Nullable String serverAddressGroup,
       @Nullable String namespace,
       String sql) {
     return new AutoValue_ClickHouseDbRequest(
-        host, port, configuredHost, configuredPort, serverAddressGroup, namespace, sql);
+        host, port, peer, configuredHost, configuredPort, serverAddressGroup, namespace, sql);
+  }
+
+  public static Endpoint endpoint(@Nullable String address, @Nullable Integer port) {
+    return new Endpoint(address, port);
   }
 
   @Nullable
@@ -28,6 +33,22 @@ public abstract class ClickHouseDbRequest {
 
   @Nullable
   public abstract Integer getPort();
+
+  abstract Endpoint getPeer();
+
+  @Nullable
+  public final String getPeerAddress() {
+    return getPeer().address;
+  }
+
+  @Nullable
+  public final Integer getPeerPort() {
+    return getPeer().port;
+  }
+
+  public final void setPeer(@Nullable String address, @Nullable Integer port) {
+    getPeer().set(address, port);
+  }
 
   @Nullable
   public abstract String getConfiguredHost();
@@ -42,4 +63,19 @@ public abstract class ClickHouseDbRequest {
   public abstract String getNamespace();
 
   public abstract String getSql();
+
+  public static class Endpoint {
+    @Nullable private volatile String address;
+    @Nullable private volatile Integer port;
+
+    private Endpoint(@Nullable String address, @Nullable Integer port) {
+      this.address = address;
+      this.port = port;
+    }
+
+    private void set(@Nullable String address, @Nullable Integer port) {
+      this.address = address;
+      this.port = port;
+    }
+  }
 }

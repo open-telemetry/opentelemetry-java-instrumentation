@@ -206,6 +206,53 @@ class DbExecutionTest {
     assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
+  @ParameterizedTest
+  @CsvSource({
+    "postgresql, 5432",
+    "mysql, 3306",
+    "mariadb, 3306",
+    "mssql, 1433",
+    "oracle, 1521",
+    "db2, 50000",
+    "clickhouse, 8123"
+  })
+  void dbExecutionOmitsKnownDefaultPortForSingleHost(String driver, int defaultPort) {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, driver)
+            .option(ConnectionFactoryOptions.HOST, "host1")
+            .option(ConnectionFactoryOptions.PORT, defaultPort)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getServerPort()).isEqualTo(defaultPort);
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @Test
+  void dbExecutionPreservesSingleNonDefaultAndUnknownDriverPorts() {
+    ConnectionFactoryOptions postgresqlOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, "host1")
+            .option(ConnectionFactoryOptions.PORT, 15432)
+            .build();
+    ConnectionFactoryOptions unknownOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "unknown")
+            .option(ConnectionFactoryOptions.HOST, "host2")
+            .option(ConnectionFactoryOptions.PORT, 5432)
+            .build();
+
+    DbExecution postgresqlExecution = new DbExecution(queryExecutionInfo(), postgresqlOptions);
+    DbExecution unknownExecution = new DbExecution(queryExecutionInfo(), unknownOptions);
+
+    assertThat(postgresqlExecution.getConfiguredServerPort()).isEqualTo(15432);
+    assertThat(unknownExecution.getConfiguredServerPort()).isEqualTo(5432);
+  }
+
   @Test
   void dbExecutionUsesTheWrappedDriverProtocolDefaultPort() {
     ConnectionFactoryOptions factoryOptions =
@@ -472,13 +519,8 @@ class DbExecutionTest {
   }
 
   @ParameterizedTest
-  @CsvSource({
-    "host1,host1,5432",
-    "[2001:db8::1],2001:db8::1,5432",
-    "[fe80::1%eth0],fe80::1%eth0,5432"
-  })
-  void dbExecutionTreatsSingleHostAsSingular(
-      String host, String configuredAddress, Integer configuredPort) {
+  @CsvSource({"host1,host1", "[2001:db8::1],2001:db8::1", "[fe80::1%eth0],fe80::1%eth0"})
+  void dbExecutionTreatsSingleHostAsSingular(String host, String configuredAddress) {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
             .option(ConnectionFactoryOptions.DRIVER, "postgresql")
@@ -490,7 +532,7 @@ class DbExecutionTest {
 
     assertThat(dbExecution.getServerAddress()).isEqualTo(host);
     assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo(configuredAddress);
-    assertThat(dbExecution.getConfiguredServerPort()).isEqualTo(configuredPort);
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
   @ParameterizedTest

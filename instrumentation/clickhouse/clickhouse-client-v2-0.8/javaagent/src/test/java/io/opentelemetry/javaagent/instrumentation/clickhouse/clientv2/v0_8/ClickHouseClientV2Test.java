@@ -13,6 +13,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -42,6 +44,7 @@ import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -127,6 +130,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -141,6 +149,8 @@ class ClickHouseClientV2Test {
         DB_SYSTEM_NAME,
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -175,6 +185,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + TABLE_NAME + " values(?)(?)(?)"),
                             equalTo(
@@ -195,6 +210,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -233,6 +253,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -269,6 +294,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from non_existent_table"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -285,6 +315,8 @@ class ClickHouseClientV2Test {
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
         ERROR_TYPE,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
     if (emitStableDatabaseSemconv()) {
@@ -328,6 +360,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
                             equalTo(
@@ -363,6 +400,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
@@ -406,6 +448,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + TABLE_NAME + " values(?)"),
                             equalTo(
@@ -426,6 +473,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
@@ -472,6 +524,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " where value={param_s: String}"),
                             equalTo(
@@ -499,12 +556,14 @@ class ClickHouseClientV2Test {
             .build();
     cleanup.deferCleanup(client);
 
-    List<String> endpoints = new ArrayList<>(asList(host + ":" + port, secondHost + ":" + port));
+    List<String> endpoints = new ArrayList<>(asList(host, secondHost));
     endpoints.sort(String::compareTo);
     String addressGroup = String.join(",", endpoints);
     String firstEndpoint = client.getEndpoints().iterator().next();
     String legacyAddress = UrlParser.getHost(firstEndpoint);
     Integer legacyPort = UrlParser.getPort(firstEndpoint);
+    String peerAddress = endpointHost(firstEndpoint);
+    int peerPort = URI.create(firstEndpoint).getPort();
 
     QueryResponse response = client.query("select * from " + TABLE_NAME).join();
     response.close();
@@ -522,7 +581,15 @@ class ClickHouseClientV2Test {
                                 emitStableDatabaseSemconv() ? addressGroup : legacyAddress),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(legacyPort)),
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(port)
+                                    : Long.valueOf(legacyPort)),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? peerAddress : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) peerPort : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -530,6 +597,64 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testConfiguredHttpAndHttpsDefaultPortsAreOmitted() throws Exception {
+    Client httpClient =
+        new Client.Builder()
+            .addEndpoint("http://http.example:8123")
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .build();
+    Client httpsClient =
+        new Client.Builder()
+            .addEndpoint("https://https.example:8443")
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .build();
+    Client multiClient =
+        new Client.Builder()
+            .addEndpoint("http://http.example:8123")
+            .addEndpoint("https://https.example:8443")
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .build();
+    cleanup.deferCleanup(httpClient);
+    cleanup.deferCleanup(httpsClient);
+    cleanup.deferCleanup(multiClient);
+
+    assertServerInfo(httpClient, "http.example", null, null);
+    assertServerInfo(httpsClient, "https.example", null, null);
+    assertServerInfo(multiClient, null, null, "http.example,https.example");
+  }
+
+  @Test
+  void testConfiguredEndpointsExtractCommonNonDefaultPort() throws Exception {
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint("http://host2.example:9123")
+            .addEndpoint("https://host1.example:9123")
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .build();
+    cleanup.deferCleanup(testClient);
+
+    assertServerInfo(testClient, null, 9123, "host1.example,host2.example");
+  }
+
+  @Test
+  void testConfiguredEndpointsInlineMixedPortsAndBracketIpv6() throws Exception {
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint("http://host.example:8123")
+            .addEndpoint("https://[2001:db8::1]:9443")
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .build();
+    cleanup.deferCleanup(testClient);
+
+    assertServerInfo(testClient, null, null, "[2001:db8::1]:9443,host.example:8123");
   }
 
   @Test
@@ -541,6 +666,7 @@ class ClickHouseClientV2Test {
             .setUsername(USERNAME)
             .setPassword(PASSWORD)
             .setOption("compress", "false")
+            .useAsyncRequests(true)
             .build();
     cleanup.deferCleanup(testClient);
     String currentHost = "127.0.0.1".equals(host) ? "localhost" : "127.0.0.1";
@@ -565,6 +691,11 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? host : currentHost),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -602,6 +733,11 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -633,6 +769,8 @@ class ClickHouseClientV2Test {
     String currentEndpoint = testClient.getEndpoints().iterator().next();
     String legacyAddress = UrlParser.getHost(currentEndpoint);
     Integer legacyPort = UrlParser.getPort(currentEndpoint);
+    String peerAddress = endpointHost(currentEndpoint);
+    int peerPort = URI.create(currentEndpoint).getPort();
 
     Throwable thrown = catchThrowable(() -> testClient.query("select 1").join());
     assertThat(thrown).isNotNull();
@@ -648,13 +786,19 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv()
-                                    ? "[2001:db8::1]:8443,host.example:8123"
+                                    ? "[2001:db8::1],host.example"
                                     : legacyAddress),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() || legacyPort == null
                                     ? null
                                     : legacyPort.longValue()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? peerAddress : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) peerPort : null),
                             equalTo(maybeStable(DB_STATEMENT), "select ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
@@ -695,6 +839,10 @@ class ClickHouseClientV2Test {
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? "2001:db8::1" : "[2001"),
                             equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? 8443L : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? "2001:db8::1" : null),
+                            equalTo(NETWORK_PEER_PORT, emitStableDatabaseSemconv() ? 8443L : null),
                             equalTo(maybeStable(DB_STATEMENT), "select ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
@@ -722,6 +870,8 @@ class ClickHouseClientV2Test {
     String currentEndpoint = testClient.getEndpoints().iterator().next();
     String legacyAddress = UrlParser.getHost(currentEndpoint);
     Integer legacyPort = UrlParser.getPort(currentEndpoint);
+    String peerAddress = endpointHost(currentEndpoint);
+    int peerPort = URI.create(currentEndpoint).getPort();
     replaceRawEndpoint(testClient, "http://configured.example%3fpassword%3dsecret:8123");
     captureServerInfo(testClient);
     replaceRawEndpoint(testClient, currentEndpoint);
@@ -744,6 +894,12 @@ class ClickHouseClientV2Test {
                                 emitStableDatabaseSemconv() || legacyPort == null
                                     ? null
                                     : legacyPort.longValue()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? peerAddress : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) peerPort : null),
                             equalTo(maybeStable(DB_STATEMENT), "select ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
@@ -775,12 +931,31 @@ class ClickHouseClientV2Test {
     singletons(client).getMethod("captureServerInfo", Client.class).invoke(null, client);
   }
 
+  private static Object serverInfo(Client client) throws Exception {
+    return singletons(client).getMethod("serverInfo", Client.class).invoke(null, client);
+  }
+
   private static Object clearServerInfo(Client client) throws Exception {
     Class<?> singletons = singletons(client);
     Method clearServerInfo = singletons.getDeclaredMethod("clearServerInfo", Client.class);
     clearServerInfo.setAccessible(true);
     clearServerInfo.invoke(null, client);
-    return singletons.getMethod("serverInfo", Client.class).invoke(null, client);
+    return serverInfo(client);
+  }
+
+  private static void assertServerInfo(
+      Client client, String address, Integer port, String addressGroup) throws Exception {
+    Object serverInfo = serverInfo(client);
+    Class<?> serverInfoClass = serverInfo.getClass();
+    assertThat(serverInfoClass.getMethod("getAddress").invoke(serverInfo)).isEqualTo(address);
+    assertThat(serverInfoClass.getMethod("getPort").invoke(serverInfo)).isEqualTo(port);
+    assertThat(serverInfoClass.getMethod("getAddressGroup").invoke(serverInfo))
+        .isEqualTo(addressGroup);
+  }
+
+  private static String endpointHost(String endpoint) {
+    String host = URI.create(endpoint).getHost();
+    return host.startsWith("[") ? host.substring(1, host.length() - 1) : host;
   }
 
   private static Class<?> singletons(Client client) throws Exception {
