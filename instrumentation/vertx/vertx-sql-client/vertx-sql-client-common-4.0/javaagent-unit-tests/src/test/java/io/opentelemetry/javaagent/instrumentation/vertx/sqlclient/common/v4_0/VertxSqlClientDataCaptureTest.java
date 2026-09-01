@@ -7,43 +7,36 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.vertx.sqlclient.SqlConnectOptions;
 import org.junit.jupiter.api.Test;
 
 class VertxSqlClientDataCaptureTest {
 
   @Test
-  void keepsReusedFailureTargetsWithinTheirClient() {
-    RuntimeException failure = new RuntimeException("failed");
-    VertxSqlClientDataCapture firstCapture = new VertxSqlClientDataCapture();
-    VertxSqlClientDataCapture secondCapture = new VertxSqlClientDataCapture();
-    VertxSqlClientData firstData = data("first.example");
-    VertxSqlClientData secondData = data("second.example");
+  void assignsRequestsBeforeConnectionAttemptsComplete() {
+    VertxSqlClientDataCapture capture = new VertxSqlClientDataCapture();
+    Object firstRequest = new Object();
+    Object secondRequest = new Object();
 
-    firstCapture.addFailureData(failure, firstData);
-    secondCapture.addFailureData(failure, secondData);
+    capture.addConnectionRequest(firstRequest);
+    capture.addConnectionRequest(secondRequest);
+    Object firstAttempt = capture.takeConnectionRequest();
+    Object secondAttempt = capture.takeConnectionRequest();
 
-    assertThat(firstCapture.takeFailureData(failure)).isSameAs(firstData);
-    assertThat(secondCapture.takeFailureData(failure)).isSameAs(secondData);
+    assertThat(secondAttempt).isSameAs(secondRequest);
+    assertThat(firstAttempt).isSameAs(firstRequest);
+    assertThat(capture.takeConnectionRequest()).isNull();
   }
 
   @Test
-  void keepsConcurrentFailureTargetsInCaptureOrder() {
-    RuntimeException failure = new RuntimeException("failed");
+  void removesRequestCompletedWithoutAConnectionAttempt() {
     VertxSqlClientDataCapture capture = new VertxSqlClientDataCapture();
-    VertxSqlClientData firstData = data("first.example");
-    VertxSqlClientData secondData = data("second.example");
+    Object completedRequest = new Object();
+    Object pendingRequest = new Object();
 
-    capture.addFailureData(failure, firstData);
-    capture.addFailureData(failure, secondData);
+    capture.addConnectionRequest(completedRequest);
+    capture.addConnectionRequest(pendingRequest);
+    capture.removeConnectionRequest(completedRequest);
 
-    assertThat(capture.takeFailureData(failure)).isSameAs(firstData);
-    assertThat(capture.takeFailureData(failure)).isSameAs(secondData);
-    assertThat(capture.takeFailureData(failure)).isNull();
-  }
-
-  private static VertxSqlClientData data(String host) {
-    return VertxSqlClientData.fromConnectOptions(
-        new SqlConnectOptions().setHost(host).setPort(5432), "postgresql");
+    assertThat(capture.takeConnectionRequest()).isSameAs(pendingRequest);
   }
 }

@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import java.util.ArrayDeque;
-import java.util.Map;
-import java.util.WeakHashMap;
 import javax.annotation.Nullable;
 
 /**
@@ -19,7 +17,7 @@ import javax.annotation.Nullable;
 public class VertxSqlClientDataCapture implements VertxSqlClientDataProvider {
 
   @Nullable private volatile String dbSystem;
-  private final Map<Throwable, ArrayDeque<VertxSqlClientData>> failureData = new WeakHashMap<>();
+  private final ArrayDeque<Object> connectionRequests = new ArrayDeque<>();
 
   public void setDbSystem(@Nullable String dbSystem) {
     this.dbSystem = dbSystem;
@@ -30,26 +28,17 @@ public class VertxSqlClientDataCapture implements VertxSqlClientDataProvider {
     return dbSystem;
   }
 
-  public synchronized void addFailureData(Throwable throwable, VertxSqlClientData data) {
-    ArrayDeque<VertxSqlClientData> failures = failureData.get(throwable);
-    if (failures == null) {
-      failures = new ArrayDeque<>();
-      failureData.put(throwable, failures);
-    }
-    failures.addLast(data);
+  public synchronized void addConnectionRequest(Object request) {
+    connectionRequests.addLast(request);
   }
 
   @Nullable
-  public synchronized VertxSqlClientData takeFailureData(Throwable throwable) {
-    ArrayDeque<VertxSqlClientData> failures = failureData.get(throwable);
-    if (failures == null) {
-      return null;
-    }
-    VertxSqlClientData data = failures.pollFirst();
-    if (failures.isEmpty()) {
-      failureData.remove(throwable);
-    }
-    return data;
+  public synchronized Object takeConnectionRequest() {
+    return connectionRequests.pollFirst();
+  }
+
+  public synchronized void removeConnectionRequest(Object request) {
+    connectionRequests.remove(request);
   }
 
   @Override

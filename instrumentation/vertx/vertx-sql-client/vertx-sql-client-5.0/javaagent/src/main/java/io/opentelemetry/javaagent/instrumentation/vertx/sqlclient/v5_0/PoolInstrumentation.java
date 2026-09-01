@@ -25,6 +25,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -101,16 +102,39 @@ class PoolInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetConnectionAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Object onEnter(@Advice.This Pool pool) {
+      VertxSqlClientDataCapture dataCapture = VertxSqlClientSingletons.getPoolDataCapture(pool);
+      if (dataCapture == null) {
+        return null;
+      }
+      Object connectionRequest = new Object();
+      dataCapture.addConnectionRequest(connectionRequest);
+      return connectionRequest;
+    }
+
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Nullable
     public static Future<SqlConnection> onExit(
-        @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
+        @Advice.This Pool pool,
+        @Advice.Return @Nullable Future<SqlConnection> future,
+        @Advice.Enter @Nullable Object connectionRequest) {
+      VertxSqlClientDataCapture dataCapture = VertxSqlClientSingletons.getPoolDataCapture(pool);
+      if (future == null) {
+        if (dataCapture != null && connectionRequest != null) {
+          dataCapture.removeConnectionRequest(connectionRequest);
+        }
+        return null;
+      }
       return wrapContext(
           VertxSqlClientSingletons.attachClientState(
               future,
               getPoolSqlConnectOptions(pool),
               getPoolAddressGroup(pool),
-              VertxSqlClientSingletons.getPoolDataCapture(pool)));
+              dataCapture,
+              connectionRequest));
     }
   }
 }

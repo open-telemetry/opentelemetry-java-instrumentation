@@ -154,8 +154,11 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
                 batchSize,
                 Context.current(),
                 dataCapture);
-        VertxSqlClientSingletons.setPromiseDataCapture(promiseInternal, dataCapture);
         if (dataCapture != null) {
+          dataCapture.addConnectionRequest(adviceScope);
+          promiseInternal
+              .future()
+              .onComplete(ignored -> dataCapture.removeConnectionRequest(adviceScope));
           String dbSystem = dataCapture.getDbSystem();
           if (dbSystem == null || !isKnownDbSystem(dbSystem)) {
             VertxSqlClientSingletons.setPendingConnectionDataListener(adviceScope);
@@ -233,7 +236,6 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         if (promiseInternal == null) {
           return;
         }
-        VertxSqlClientSingletons.updateConnectionFailureData(promiseInternal, throwable);
         Scope parentScope =
             VertxSqlClientUtil.endQuerySpan(instrumenter(), promiseInternal, throwable);
         if (parentScope != null) {
@@ -251,6 +253,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
       @Override
       @Nullable
       public synchronized Context onConnectionData(VertxSqlClientData data) {
+        if (dataCapture != null) {
+          dataCapture.removeConnectionRequest(this);
+        }
         if (context == null) {
           return startSpan(data);
         }

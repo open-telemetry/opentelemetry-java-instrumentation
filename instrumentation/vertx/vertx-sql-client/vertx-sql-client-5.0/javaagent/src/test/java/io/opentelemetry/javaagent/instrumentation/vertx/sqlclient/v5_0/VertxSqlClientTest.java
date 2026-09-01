@@ -74,6 +74,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -485,6 +486,53 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testConcurrentSupplierFailuresKeepTheirOptions() throws Exception {
+    RuntimeException failed = new RuntimeException("connection failed");
+    AtomicInteger calls = new AtomicInteger();
+    PgConnectOptions firstOptions = new PgConnectOptions(connectOptions()).setHost("first.example");
+    List<Promise<SqlConnection>> connectionAttempts = new CopyOnWriteArrayList<>();
+    CountDownLatch attemptsStarted = new CountDownLatch(2);
+    Pool supplierPool =
+        ClientBuilder.pool(
+                driver(
+                    options -> {
+                      Promise<SqlConnection> attempt = Promise.promise();
+                      connectionAttempts.add(attempt);
+                      attemptsStarted.countDown();
+                      return attempt.future();
+                    }))
+            .using(vertx)
+            .connectingTo(
+                () ->
+                    Future.succeededFuture(
+                        calls.getAndIncrement() == 0 ? firstOptions : connectOptions()))
+            .with(new PoolOptions().setMaxSize(2))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    Future<?> firstResult = supplierPool.query("select * from test").execute();
+    Future<?> secondResult = supplierPool.query("select * from test").execute();
+    assertThat(attemptsStarted.await(30, SECONDS)).isTrue();
+    connectionAttempts.get(1).fail(failed);
+    connectionAttempts.get(0).fail(failed);
+
+    assertThatThrownBy(
+            () ->
+                Future.all(firstResult, secondResult)
+                    .toCompletionStage()
+                    .toCompletableFuture()
+                    .get(30, SECONDS))
+        .hasCause(failed);
+    assertThat(calls).hasValue(2);
+    List<String> expectedHosts = asList("first.example", host);
+    Collections.sort(expectedHosts);
+    testing.waitAndAssertSortedTraces(
+        comparingRootSpanAttribute(SERVER_ADDRESS),
+        trace -> assertSupplierFailure(trace, failed, "other_sql", expectedHosts.get(0)),
+        trace -> assertSupplierFailure(trace, failed, "other_sql", expectedHosts.get(1)));
+  }
+
+  @Test
   void testOracleSupplierConnectFailureCapturesSuppliedOptions() {
     OracleConnectOptions options =
         new OracleConnectOptions()
@@ -800,7 +848,9 @@ class VertxSqlClientTest {
                     equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
                     equalTo(
                         maybeStablePeerService(),
-                        expectedHost != null && !emitStableDatabaseSemconv()
+                        expectedHost != null
+                                && expectedHost.equals(host)
+                                && !emitStableDatabaseSemconv()
                             ? "test-peer-service"
                             : null),
                     equalTo(SERVER_ADDRESS, expectedAddress),
@@ -813,6 +863,11 @@ class VertxSqlClientTest {
   }
 
   private static PgDriver failingDriver(RuntimeException failure) {
+    return driver(options -> Future.failedFuture(failure));
+  }
+
+  private static PgDriver driver(
+      Function<PgConnectOptions, Future<SqlConnection>> connectionProvider) {
     return new PgDriver() {
       @Override
       public ConnectionFactory<PgConnectOptions> createConnectionFactory(
@@ -820,7 +875,7 @@ class VertxSqlClientTest {
         return new ConnectionFactory<PgConnectOptions>() {
           @Override
           public Future<SqlConnection> connect(Context context, PgConnectOptions options) {
-            return Future.failedFuture(failure);
+            return connectionProvider.apply(options);
           }
 
           @Override
