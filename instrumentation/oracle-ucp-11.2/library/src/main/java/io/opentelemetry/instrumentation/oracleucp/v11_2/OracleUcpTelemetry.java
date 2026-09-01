@@ -26,7 +26,7 @@ public final class OracleUcpTelemetry {
     ConnectionPoolMetrics.registerMetrics(openTelemetry, universalConnectionPool);
   }
 
-  /** Start collecting metrics using {@code poolName} without changing the Oracle UCP pool name. */
+  /** Start collecting metrics using {@code poolName} as the connection pool name. */
   public void registerMetrics(UniversalConnectionPool universalConnectionPool, String poolName) {
     ConnectionPoolMetrics.registerMetrics(openTelemetry, universalConnectionPool, poolName);
   }
