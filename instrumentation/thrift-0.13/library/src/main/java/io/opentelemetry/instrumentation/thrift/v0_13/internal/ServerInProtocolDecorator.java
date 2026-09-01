@@ -78,6 +78,11 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
 
   @Override
   public TField readFieldBegin() throws TException {
+    // ignore context propagation fields when the span has already been started
+    if (currentRequest != null) {
+      return readNextField();
+    }
+
     TField field = super.readFieldBegin();
     // start span when context propagation field is read, if the message doesn't include context
     // propagation field, span will be started in readMessageEnd()
