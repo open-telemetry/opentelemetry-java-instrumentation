@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
+import com.mongodb.ConnectionString;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
@@ -60,6 +61,25 @@ public abstract class AbstractMongoConfiguredTargetTest {
 
   protected boolean supportsIpv6Seeds() {
     return true;
+  }
+
+  protected static ConnectionString resolvedSrvConnectionString() {
+    return resolvedSrvConnectionString(
+        "mongodb+srv://user:password@cluster0.example.invalid/database?tls=true#fragment");
+  }
+
+  protected static ConnectionString resolvedSrvConnectionString(String connectionString) {
+    return new ConnectionString("mongodb://placeholder.example") {
+      @Override
+      public List<String> getHosts() {
+        return asList("resolved2.example:27018", "resolved1.example:27017");
+      }
+
+      @Override
+      public String getConnectionString() {
+        return connectionString;
+      }
+    };
   }
 
   @Test
@@ -108,6 +128,30 @@ public abstract class AbstractMongoConfiguredTargetTest {
     }
 
     assertFindSpan("db1.example,db2.example", 27018L);
+  }
+
+  @Test
+  void duplicateConfiguredSeedsArePreserved() {
+    try (ConfiguredClient client =
+        createClient(
+            asList(
+                new ServerAddress("db2.example", 27018),
+                new ServerAddress("db1.example", 27017),
+                new ServerAddress("db1.example", 27017)))) {
+      runCommand(client);
+    }
+
+    assertFindSpan("db1.example:27017,db1.example:27017,db2.example:27018", null);
+  }
+
+  @Test
+  void unsafeConfiguredSeedTargetIsOmitted() {
+    try (ConfiguredClient client =
+        createClient(singletonList(new ServerAddress("user%3Apassword%40db1.example", 27017)))) {
+      runCommand(client);
+    }
+
+    assertFindSpan(null, null);
   }
 
   @Test

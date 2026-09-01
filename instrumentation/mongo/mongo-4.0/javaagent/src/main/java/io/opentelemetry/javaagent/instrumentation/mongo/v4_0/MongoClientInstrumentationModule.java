@@ -31,6 +31,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new MongoClientSettingsBuilderInstrumentation(),
+        new ClusterSettingsBuilderInstrumentation(),
         new InternalStreamConnectionInstrumentation(),
         new BaseClusterInstrumentation(),
         new ClusterInstrumentation(),

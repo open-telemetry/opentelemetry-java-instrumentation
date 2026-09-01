@@ -39,7 +39,11 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new MongoClientOptionsBuilderInstrumentation(), new ClusterInstrumentation());
+    return asList(
+        new MongoClientOptionsBuilderInstrumentation(),
+        new ClusterSettingsBuilderInstrumentation(),
+        new MongoClientUriInstrumentation(),
+        new ClusterInstrumentation());
   }
 
   public static final class MongoClientOptionsBuilderInstrumentation

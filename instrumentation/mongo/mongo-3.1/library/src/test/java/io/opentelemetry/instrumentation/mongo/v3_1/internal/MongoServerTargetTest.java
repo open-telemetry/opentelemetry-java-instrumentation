@@ -124,12 +124,30 @@ class MongoServerTargetTest {
   }
 
   @Test
+  void scopedIpv6SeedIsPreserved() {
+    MongoServerTarget target =
+        MongoServerTarget.seeds(singletonList(seedWithHost("[fe80::1%eth0]", 27018)));
+
+    assertThat(target.getAddress()).isEqualTo("fe80::1%eth0");
+    assertThat(target.getPort()).isEqualTo(27018);
+  }
+
+  @Test
   void unixSocketSeedCarriesNoPort() {
     MongoServerTarget target =
         MongoServerTarget.seeds(singletonList(new ServerAddress("/tmp/mongodb-27017.sock")));
 
     assertThat(target.getAddress()).isEqualTo("/tmp/mongodb-27017.sock");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void hostnameEndingInSockIsNotTreatedAsAUnixSocket() {
+    MongoServerTarget target =
+        MongoServerTarget.seeds(singletonList(new ServerAddress("db.sock", 27018)));
+
+    assertThat(target.getAddress()).isEqualTo("db.sock");
+    assertThat(target.getPort()).isEqualTo(27018);
   }
 
   @Test
@@ -151,11 +169,50 @@ class MongoServerTargetTest {
   }
 
   @Test
+  void unsafeEncodedSrvIdentityIsNotReported() {
+    assertThat(
+            MongoServerTarget.srvConnectionString(
+                "mongodb+srv://user%3Apassword%40cluster0.example.com"))
+        .isNull();
+    assertThat(MongoServerTarget.srvConnectionString("mongodb://cluster0.example.com")).isNull();
+  }
+
+  @Test
   void unknownTargetsAreNotReported() {
     assertThat(MongoServerTarget.srvHost(null)).isNull();
     assertThat(MongoServerTarget.srvHost("")).isNull();
     assertThat(MongoServerTarget.seeds(null)).isNull();
     assertThat(MongoServerTarget.seeds(emptyList())).isNull();
+  }
+
+  @Test
+  void unsafeDirectSeedHostsAreNotReported() {
+    assertThat(
+            MongoServerTarget.seeds(
+                singletonList(seedWithHost("user:password@example.com", 27017))))
+        .isNull();
+    assertThat(
+            MongoServerTarget.seeds(
+                singletonList(seedWithHost("user%3Apassword%40example.com", 27017))))
+        .isNull();
+    assertThat(
+            MongoServerTarget.seeds(
+                singletonList(seedWithHost("mongodb://user:password@example.com", 27017))))
+        .isNull();
+    assertThat(
+            MongoServerTarget.seeds(
+                asList(
+                    new ServerAddress("safe.example", 27017),
+                    seedWithHost("unsafe.example?authSource=admin", 27017))))
+        .isNull();
+    assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("apiKey=secret", 27017))))
+        .isNull();
+    assertThat(
+            MongoServerTarget.seeds(singletonList(seedWithHost("/tmp/apiKey=secret.sock", 27017))))
+        .isNull();
+    assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("abc:def:123", 27017)))).isNull();
+    assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("[::1%3Apassword]", 27017))))
+        .isNull();
   }
 
   @Test
@@ -190,12 +247,16 @@ class MongoServerTargetTest {
 
   // drivers 3.3 through 3.7 preserve IPv6 brackets; the compile-time driver strips them
   private static ServerAddress bracketedSeed(String address, int port) {
-    return new ServerAddress("[" + address + "]", port) {
+    return seedWithHost("[" + address + "]", port);
+  }
+
+  private static ServerAddress seedWithHost(String host, int port) {
+    return new ServerAddress("safe.example", port) {
       private static final long serialVersionUID = 1L;
 
       @Override
       public String getHost() {
-        return "[" + address + "]";
+        return host;
       }
     };
   }

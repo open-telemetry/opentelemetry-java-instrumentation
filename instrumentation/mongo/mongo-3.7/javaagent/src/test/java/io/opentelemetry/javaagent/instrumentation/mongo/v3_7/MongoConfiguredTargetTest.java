@@ -49,6 +49,40 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
+  void anSrvConnectionStringDoesNotExposeResolvedHosts() {
+    ClusterIdCapture clusterId = new ClusterIdCapture();
+    MongoClientSettings settings =
+        MongoClientSettings.builder()
+            .applyConnectionString(resolvedSrvConnectionString())
+            .applyToClusterSettings(builder -> builder.addClusterListener(clusterId))
+            .build();
+
+    try (ConfiguredClient client = createClient(settings, clusterId)) {
+      runCommand(client);
+    }
+
+    assertFindSpan("mongodb+srv://cluster0.example.invalid", null);
+  }
+
+  @Test
+  void anUnsafeSrvConnectionStringDoesNotFallBackToResolvedHosts() {
+    ClusterIdCapture clusterId = new ClusterIdCapture();
+    MongoClientSettings settings =
+        MongoClientSettings.builder()
+            .applyConnectionString(
+                resolvedSrvConnectionString(
+                    "mongodb+srv://user%3Apassword%40cluster0.example.invalid"))
+            .applyToClusterSettings(builder -> builder.addClusterListener(clusterId))
+            .build();
+
+    try (ConfiguredClient client = createClient(settings, clusterId)) {
+      runCommand(client);
+    }
+
+    assertFindSpan(null, null);
+  }
+
+  @Test
   void anSrvHostIsPreferredOverTheSeedsItStandsIn() {
     // srvHost was added in 3.10
     Method srvHost = srvHostSetter();
