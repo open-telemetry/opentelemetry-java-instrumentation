@@ -151,6 +151,29 @@ class LettuceServerTargetsTest {
   }
 
   @Test
+  void clusterWithNullUriIsOmitted() {
+    assertThat(LettuceServerTargets.ofUris(asList(RedisURI.create("redis://node1:7000"), null)))
+        .isNull();
+  }
+
+  @Test
+  void clusterWithUnsupportedValueIsOmitted() {
+    assertThat(
+            LettuceServerTargets.ofUris(
+                asList(RedisURI.create("redis://node1:7000"), "unsupported")))
+        .isNull();
+  }
+
+  @Test
+  void clusterWithUnrepresentableUriIsOmitted() {
+    RedisURI invalid = RedisURI.create("redis://node2:7001");
+    invalid.setHost("invalid,host");
+
+    assertThat(LettuceServerTargets.ofUris(asList(RedisURI.create("redis://node1:7000"), invalid)))
+        .isNull();
+  }
+
+  @Test
   void clusterWithOneUnixSocketKeepsItsPath() {
     RedisServerTarget target =
         LettuceServerTargets.ofUris(

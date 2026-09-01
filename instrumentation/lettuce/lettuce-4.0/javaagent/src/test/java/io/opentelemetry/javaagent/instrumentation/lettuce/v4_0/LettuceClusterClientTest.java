@@ -31,7 +31,6 @@ import com.lambdaworks.redis.cluster.models.partitions.Partitions;
 import com.lambdaworks.redis.cluster.models.partitions.RedisClusterNode;
 import com.lambdaworks.redis.cluster.models.partitions.RedisClusterNode.NodeFlag;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -68,7 +67,6 @@ class LettuceClusterClientTest {
 
   private static TestRedisCluster redisServer;
   private static StatefulRedisClusterConnection<String, String> connection;
-  private static String configuredTarget;
   private static String host;
   private static int port;
 
@@ -80,13 +78,11 @@ class LettuceClusterClientTest {
     host = redisServer.getHost();
     port = redisServer.getPort();
 
-    int unavailablePort = PortUtils.findOpenPort();
-    configuredTarget = host + ":" + port + "," + host + ":" + unavailablePort;
-    List<RedisURI> seedUris =
-        asList(
-            RedisURI.create("redis://" + host + ":" + port),
-            RedisURI.create("redis://" + host + ":" + unavailablePort));
-    RedisClusterClient client = new TestRedisClusterClient(seedUris, seedUris.get(0));
+    RedisURI nodeUri = RedisURI.create("redis://" + host + ":" + port);
+    RedisURI invalidSeedUri = RedisURI.create("redis://invalid:6379");
+    invalidSeedUri.setHost("invalid,host");
+    List<RedisURI> seedUris = asList(nodeUri, invalidSeedUri);
+    RedisClusterClient client = new TestRedisClusterClient(seedUris, nodeUri);
     cleanup.deferAfterAll(() -> client.shutdown(0, 15, SECONDS));
 
     connection = client.connect();
@@ -94,7 +90,7 @@ class LettuceClusterClientTest {
   }
 
   @Test
-  void configuredSeedsAreUsedForCommandsAndBatches() throws Exception {
+  void invalidConfiguredSeedOmitsTargetForCommandsAndBatches() throws Exception {
     RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = connection.async();
     assertThat(asyncCommands.set("CLUSTER_COMMAND_KEY", "value").get(10, SECONDS)).isEqualTo("OK");
 
@@ -110,12 +106,10 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : host),
+                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
@@ -125,15 +119,10 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "PIPELINE SET " + configuredTarget
-                                : "PIPELINE SET")
+                    span.hasName("PIPELINE SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : host),
+                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
