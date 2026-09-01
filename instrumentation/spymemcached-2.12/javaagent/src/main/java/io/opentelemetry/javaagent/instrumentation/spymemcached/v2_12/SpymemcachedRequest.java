@@ -48,13 +48,9 @@ public abstract class SpymemcachedRequest {
     }
   }
 
-  public synchronized void setRetryHandlingNode(
-      @Nullable MemcachedNode node, Collection<String> operationKeys) {
-    if (operationKeys.isEmpty()) {
-      captureHandlingNode(node, true);
-    } else {
-      captureHandlingNode(node, operationKeys);
-    }
+  public synchronized void setRetryHandlingNode(@Nullable MemcachedNode node) {
+    hasMultipleHandlingNodes = false;
+    captureHandlingNode(node, true);
   }
 
   public synchronized void clearHandlingNode() {

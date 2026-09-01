@@ -89,7 +89,7 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
           retryState = new RetryState();
           holder.retries.put(request, retryState);
         }
-        retryState.captureHandlingNode(request, node, operationKeys);
+        retryState.captureHandlingNode(node, operationKeys);
       }
     }
   }
@@ -106,9 +106,13 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
 
   private void completeRetry() {
     for (Map.Entry<SpymemcachedRequest, RetryState> entry : retries.entrySet()) {
-      if (entry.getValue().keys.isEmpty()
-          && associations.hasRequestKeysOutside(entry.getKey(), entry.getValue().keys)) {
+      RetryState retry = entry.getValue();
+      if (retry.hasMultipleHandlingNodes
+          || (retry.keys.isEmpty()
+              && associations.hasRequestKeysOutside(entry.getKey(), retry.keys))) {
         entry.getKey().clearHandlingNode();
+      } else if (retry.handlingNode != null) {
+        entry.getKey().setRetryHandlingNode(retry.handlingNode);
       }
     }
   }
@@ -121,25 +125,19 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
   private static class RetryState {
     @Nullable private MemcachedNode handlingNode;
     private final Set<String> keys = new HashSet<>();
+    private boolean hasMultipleHandlingNodes;
 
-    void captureHandlingNode(
-        SpymemcachedRequest request,
-        @Nullable MemcachedNode node,
-        Collection<String> operationKeys) {
-      if (!operationKeys.isEmpty()) {
-        keys.addAll(operationKeys);
-        request.setRetryHandlingNode(node, operationKeys);
+    void captureHandlingNode(@Nullable MemcachedNode node, Collection<String> operationKeys) {
+      if (node == null || hasMultipleHandlingNodes) {
         return;
       }
-      if (node == null) {
-        return;
-      }
+      keys.addAll(operationKeys);
       if (handlingNode != null && node != handlingNode) {
-        request.clearHandlingNode();
+        handlingNode = null;
+        hasMultipleHandlingNodes = true;
         return;
       }
       handlingNode = node;
-      request.setRetryHandlingNode(node, operationKeys);
     }
   }
 
