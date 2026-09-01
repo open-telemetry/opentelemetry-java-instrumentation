@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_PEER;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.batchInstrumenter;
 
@@ -65,7 +66,6 @@ public final class LettuceBatchContext {
     // flushCommands() does not re-enable auto-flush, so keep batching active with a fresh buffer
     BATCH_STATE.set(commands, new BatchState());
     InetSocketAddress serverAddress = LettuceSingletons.serverAddress(commands.getConnection());
-    LettucePeerAddress peerAddress = LettuceSingletons.connectionPeer(commands.getConnection());
     Integer databaseIndex = LettuceSingletons.databaseIndex(commands.getConnection());
     RedisServerTarget serverTarget = LettuceSingletons.serverTarget(commands.getConnection());
     return BatchScope.start(
@@ -73,7 +73,7 @@ public final class LettuceBatchContext {
         state.asyncCommands,
         state.parentContext,
         serverAddress,
-        peerAddress,
+        state.peerAddress,
         databaseIndex,
         serverTarget);
   }
@@ -148,10 +148,21 @@ public final class LettuceBatchContext {
   private static final class BatchState {
     private final List<RedisCommand<?, ?, ?>> commands = new ArrayList<>();
     private final List<AsyncCommand<?, ?, ?>> asyncCommands = new ArrayList<>();
+    private final LettucePeerAddress peerAddress = LettucePeerAddress.forBatch();
     @Nullable private Context parentContext;
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
+      LettucePeerAddress commandPeer =
+          asyncCommand == null ? COMMAND_PEER.get(command) : COMMAND_PEER.get(asyncCommand);
+      InetSocketAddress address = commandPeer == null ? null : commandPeer.getAddress();
+      if (address != null) {
+        peerAddress.record(address);
+      }
+      COMMAND_PEER.set(command, peerAddress);
+      if (asyncCommand != null) {
+        COMMAND_PEER.set(asyncCommand, peerAddress);
+      }
       if (parentContext == null && asyncCommand != null) {
         parentContext = CONTEXT.get(asyncCommand);
       }

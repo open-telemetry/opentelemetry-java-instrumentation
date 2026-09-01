@@ -9,19 +9,32 @@ import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 class LettuceCommandPeer {
+  private final boolean omitOnDifferentAddress;
   @Nullable private InetSocketAddress address;
   private boolean ambiguous;
+
+  LettuceCommandPeer() {
+    this(false);
+  }
+
+  private LettuceCommandPeer(boolean omitOnDifferentAddress) {
+    this.omitOnDifferentAddress = omitOnDifferentAddress;
+  }
+
+  static LettuceCommandPeer forBatch() {
+    return new LettuceCommandPeer(true);
+  }
 
   synchronized void record(InetSocketAddress address) {
     if (ambiguous) {
       return;
     }
-    if (this.address == null) {
-      this.address = address;
-    } else if (!this.address.equals(address)) {
+    if (omitOnDifferentAddress && this.address != null && !this.address.equals(address)) {
       this.address = null;
       ambiguous = true;
+      return;
     }
+    this.address = address;
   }
 
   @Nullable

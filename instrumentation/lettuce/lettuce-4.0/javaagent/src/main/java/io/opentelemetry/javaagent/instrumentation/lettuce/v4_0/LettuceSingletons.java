@@ -12,7 +12,6 @@ import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.api.StatefulConnection;
 import com.lambdaworks.redis.cluster.RedisClusterClient;
-import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -29,6 +28,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
 public class LettuceSingletons {
@@ -41,6 +41,9 @@ public class LettuceSingletons {
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v4_0-context-key");
 
+  public static final ContextKey<LettucePeerAddress> COMMAND_PEER_KEY =
+      ContextKey.named("opentelemetry-lettuce-v4_0-peer-key");
+
   public static final VirtualField<RedisCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(RedisCommand.class, Context.class);
 
@@ -50,9 +53,6 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisChannelHandler<?, ?>, InetSocketAddress>
       CONNECTION_ADDRESS = VirtualField.find(RedisChannelHandler.class, InetSocketAddress.class);
-
-  public static final VirtualField<RedisChannelHandler<?, ?>, LettucePeerAddress> CONNECTION_PEER =
-      VirtualField.find(RedisChannelHandler.class, LettucePeerAddress.class);
 
   public static final VirtualField<RedisCommand<?, ?, ?>, LettucePeerAddress> COMMAND_PEER =
       VirtualField.find(RedisCommand.class, LettucePeerAddress.class);
@@ -151,7 +151,7 @@ public class LettuceSingletons {
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
-    COMMAND_PEER.set(command, connectionPeer(connection));
+    COMMAND_PEER.set(command, new LettucePeerAddress());
     COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));
     COMMAND_TARGET.set(command, serverTarget(connection));
   }
@@ -163,28 +163,32 @@ public class LettuceSingletons {
         : null;
   }
 
-  @Nullable
-  static LettucePeerAddress connectionPeer(StatefulConnection<?, ?> connection) {
-    return connection instanceof RedisChannelHandler
-            && !(connection instanceof StatefulRedisClusterConnection)
-        ? CONNECTION_PEER.get((RedisChannelHandler<?, ?>) connection)
-        : null;
+  public static void recordCommandPeers(Object message, InetSocketAddress address) {
+    if (message instanceof RedisCommand) {
+      recordCommandPeer((RedisCommand<?, ?, ?>) message, address);
+    } else if (message instanceof Collection) {
+      for (Object item : (Collection<?>) message) {
+        if (item instanceof RedisCommand) {
+          recordCommandPeer((RedisCommand<?, ?, ?>) item, address);
+        }
+      }
+    }
+  }
+
+  private static void recordCommandPeer(RedisCommand<?, ?, ?> command, InetSocketAddress address) {
+    LettucePeerAddress peer = COMMAND_PEER.get(command);
+    if (peer != null) {
+      peer.record(address);
+    }
   }
 
   @Nullable
   static InetSocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
+    if (!InstrumentationPoints.expectsResponse(command)) {
+      return null;
+    }
     LettucePeerAddress peer = COMMAND_PEER.get(command);
     return peer != null ? peer.getAddress() : null;
-  }
-
-  public static void clearConnectionPeer(RedisChannelHandler<?, ?> connection) {
-    LettucePeerAddress peer = CONNECTION_PEER.get(connection);
-    if (peer != null) {
-      // commands dispatched on this channel share the holder, and lettuce rewrites the ones still
-      // queued on the next channel, which may reach a different socket
-      peer.invalidate();
-    }
-    CONNECTION_PEER.set(connection, null);
   }
 
   @Nullable

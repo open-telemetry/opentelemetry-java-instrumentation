@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceTestSemconv.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceTestSemconv.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -130,8 +130,14 @@ class LettuceClusterClientTest {
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
-                            equalTo(NETWORK_PEER_ADDRESS, null),
-                            equalTo(NETWORK_PEER_PORT, null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? secondRedisServer.getHost() : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(secondRedisServer.getPort())
+                                    : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
                             equalTo(maybeStable(DB_OPERATION), "SET"))),

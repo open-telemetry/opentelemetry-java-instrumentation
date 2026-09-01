@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceTestSemconv.emitOldDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceTestSemconv.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceTestSemconv.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -198,9 +199,11 @@ class LettuceSyncClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? REDIS : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "SET" : null),
+                            equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "SET" : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
@@ -266,7 +269,9 @@ class LettuceSyncClientTest {
                             equalTo(DB_NAMESPACE, null),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(SERVER_PORT, null))));
+                            equalTo(SERVER_PORT, null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port))));
   }
 
   @Test
@@ -491,10 +496,8 @@ class LettuceSyncClientTest {
                             equalTo(maybeStable(DB_OPERATION), "DEBUG"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, serverPort),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(serverPort) : null))));
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null))));
   }
 
   @Test
@@ -537,11 +540,7 @@ class LettuceSyncClientTest {
                             equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, shutdownServerPort),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(shutdownServerPort)
-                                    : null))));
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null))));
   }
 }

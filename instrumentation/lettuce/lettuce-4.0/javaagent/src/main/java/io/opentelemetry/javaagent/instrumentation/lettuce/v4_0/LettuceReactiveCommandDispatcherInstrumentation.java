@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_PEER;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_PEER_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.REACTIVE_DISPATCHER_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -96,7 +98,10 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
       Context context = instrumenter().start(parentContext, otelCommand);
       // remember the context that called dispatch, it is used in
       // LettuceObservableCommandInstrumentation
-      context = context.with(COMMAND_CONTEXT_KEY, parentContext);
+      context =
+          context
+              .with(COMMAND_CONTEXT_KEY, parentContext)
+              .with(COMMAND_PEER_KEY, COMMAND_PEER.get(otelCommand));
       return new AdviceScope(otelCommand, context);
     }
 
