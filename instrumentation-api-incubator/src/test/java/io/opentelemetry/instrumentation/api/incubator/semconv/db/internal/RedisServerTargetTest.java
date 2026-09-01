@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -199,6 +200,31 @@ class RedisServerTargetTest {
   }
 
   @Test
+  void discoveryEndpointListDropsCompleteSortedEndpointsFromTheEndAt255Characters() {
+    String first = String.join("", nCopies(80, "a"));
+    String second = String.join("", nCopies(80, "b"));
+    String third = String.join("", nCopies(80, "c"));
+
+    RedisServerTarget target =
+        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+            asList(third + ":26379", second + ":26379", first + ":26379"), "mymaster");
+
+    assertThat(target.getAddress()).isEqualTo(first + ":26379," + second + ":26379/mymaster");
+  }
+
+  @Test
+  void discoveryEndpointListNeverCutsAnEndpoint() {
+    String endpoint = String.join("", nCopies(256, "a"));
+
+    RedisServerTarget target =
+        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+            singletonList(endpoint + ":26379"), "mymaster");
+
+    assertThat(target.getAddress()).isEqualTo("mymaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void endpointListCarriesEveryEndpointAndNoPort() {
     RedisServerTarget target =
         RedisServerTarget.ofEndpoints(asList("node1:6379", "node2:6380", "node3:6381"));
@@ -242,6 +268,19 @@ class RedisServerTargetTest {
   }
 
   @Test
+  void orderedEndpointListDropsCompleteEndpointsFromTheEndAt255Characters() {
+    String first = String.join("", nCopies(120, "b"));
+    String second = String.join("", nCopies(120, "a"));
+    String third = String.join("", nCopies(120, "c"));
+
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpoints(asList(first + ":6379", second + ":6379", third + ":6379"));
+
+    assertThat(target.getAddress()).isEqualTo(first + "," + second);
+    assertThat(target.getAddress()).hasSizeLessThanOrEqualTo(255);
+  }
+
+  @Test
   void unorderedEndpointPermutationsRenderIdentically() {
     RedisServerTarget first =
         RedisServerTarget.ofUnorderedEndpoints(asList("node2:6380", "node1:6379", "node3:6381"));
@@ -250,6 +289,20 @@ class RedisServerTargetTest {
 
     assertThat(first.getAddress()).isEqualTo("node1:6379,node2:6380,node3:6381");
     assertThat(second.getAddress()).isEqualTo(first.getAddress());
+  }
+
+  @Test
+  void unorderedEndpointListSortsBeforeDroppingCompleteEndpoints() {
+    String first = String.join("", nCopies(120, "a"));
+    String second = String.join("", nCopies(120, "b"));
+    String third = String.join("", nCopies(120, "c"));
+
+    RedisServerTarget target =
+        RedisServerTarget.ofUnorderedEndpoints(
+            asList(third + ":6379", second + ":6379", first + ":6379"));
+
+    assertThat(target.getAddress()).isEqualTo(first + "," + second);
+    assertThat(target.getAddress()).hasSizeLessThanOrEqualTo(255);
   }
 
   @Test
