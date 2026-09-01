@@ -149,6 +149,12 @@ public class ServicePeerResolver {
   @Nullable
   private ServicePeer resolveServicePeer(
       String host, @Nullable Integer port, Supplier<String> pathSupplier) {
+    if (port != null && hasMultipleEndpoints(host)) {
+      ServicePeer exactHostPortMatch = exactServicePeerMapping.get(host + ":" + port);
+      if (exactHostPortMatch != null) {
+        return exactHostPortMatch;
+      }
+    }
     ServicePeer exactMatch = exactServicePeerMapping.get(host);
     if (exactMatch != null) {
       return exactMatch;

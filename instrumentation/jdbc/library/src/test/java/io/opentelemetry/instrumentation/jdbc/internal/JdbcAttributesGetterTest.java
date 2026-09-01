@@ -98,13 +98,14 @@ class JdbcAttributesGetterTest {
             .dbSystemName(MARIADB)
             .serverAddress("h1")
             .serverPort(3306)
-            .serverAddressGroup("h1:3306,h2:3306")
+            .serverAddressGroup("h1,h2")
+            .serverAddressGroupPort(15432)
             .build();
     DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
 
     if (emitStableDatabaseSemconv()) {
-      assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1:3306,h2:3306");
-      assertThat(attributesGetter.getServerPort(request)).isNull();
+      assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1,h2");
+      assertThat(attributesGetter.getServerPort(request)).isEqualTo(15432);
     } else {
       assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1");
       assertThat(attributesGetter.getServerPort(request)).isEqualTo(3306);
@@ -147,6 +148,11 @@ class JdbcAttributesGetterTest {
             "jdbc:sqlserver://h1;failoverPartner=unexpected=value",
             "h1",
             1433),
+        argumentSet(
+            "malformed Oracle Easy Connect list",
+            "jdbc:oracle:thin:@//h1,unexpected=value/service",
+            "h1",
+            1521),
         argumentSet(
             "malformed Oracle address list",
             "jdbc:oracle:thin:@(description=(address=(host=h1)(port=1521))"

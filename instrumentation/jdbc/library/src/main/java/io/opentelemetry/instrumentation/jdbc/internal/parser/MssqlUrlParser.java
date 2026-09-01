@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
 
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import java.util.Map;
 import java.util.Properties;
 import javax.annotation.Nullable;
@@ -107,10 +108,8 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     appendPrimary(group, ctx, host, instanceName, portConfigured);
     group.append(',');
     appendServerAddress(group, failoverPartner);
-    String serverAddressGroup = sanitizeHostList(group.toString());
-    if (serverAddressGroup != null) {
-      ctx.serverAddressGroup(serverAddressGroup);
-    }
+    ServerAddressGroup serverAddressGroup = parseServerAddressGroup(group.toString(), DEFAULT_PORT);
+    ctx.serverAddressGroup(serverAddressGroup);
   }
 
   private static boolean hasConfiguredServer(
