@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_0.RedissonSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -54,7 +55,11 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
             (InetSocketAddress) connection.getChannel().remoteAddress();
         // the redisson 3.0 client API does not expose the database index
         RedissonRequest request =
-            RedissonRequest.create(remoteAddress, arg, null, RedissonServerTargets.of(connection));
+            RedissonRequest.create(
+                remoteAddress,
+                arg,
+                null,
+                emitStableDatabaseSemconv() ? RedissonServerTargets.of(connection) : null);
         PromiseWrapper<?> promise = request.getPromiseWrapper();
         if (promise == null) {
           return null;
