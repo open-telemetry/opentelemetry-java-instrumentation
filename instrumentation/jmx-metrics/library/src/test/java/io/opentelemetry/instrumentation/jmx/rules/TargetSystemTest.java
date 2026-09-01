@@ -19,6 +19,7 @@ import com.linecorp.armeria.testing.junit5.server.ServerExtension;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse;
 import io.opentelemetry.proto.collector.metrics.v1.MetricsServiceGrpc;
@@ -33,6 +34,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -173,12 +175,37 @@ public class TargetSystemTest {
   }
 
   /**
-   * Generates otel configuration for JMX testing with instrumentation agent
+   * Generates otel configuration for JMX testing with custom yaml configuration files
    *
    * @param yamlFiles JMX metrics definitions in YAML
    * @return map of otel configuration properties for JMX testing
    */
-  protected static Map<String, String> otelConfigProperties(List<String> yamlFiles) {
+  protected static Map<String, String> otelConfigProperties(Collection<String> yamlFiles) {
+    Map<String, String> config = commonOtelConfig();
+    assertThat(yamlFiles).isNotEmpty();
+    // set yaml config files to test
+    config.put(
+        "otel.jmx.config",
+        yamlFiles.stream().map(TargetSystemTest::containerYamlPath).collect(joining(",")));
+    return config;
+  }
+
+  /**
+   * Generates otel configuration for JMX testing with opt-in for experimental unstable metrics
+   *
+   * @param experimentalInclude comma-separated list of systems for which we need to enable
+   *     non-stable metrics
+   * @return map of otel configuration properties for JMX testing
+   */
+  protected Map<String, String> otelConfigPropertiesExperimentalOptIn(String experimentalInclude) {
+    Map<String, String> config = commonOtelConfig();
+    config.put("otel.jmx.experimental.include", experimentalInclude);
+    // v3 preview, not necessary anymore after 3.0 release
+    config.put("otel.instrumentation.common.v3-preview", "true");
+    return config;
+  }
+
+  private static Map<String, String> commonOtelConfig() {
     Map<String, String> config = new HashMap<>();
     // only export metrics
     config.put("otel.logs.exporter", "none");
@@ -191,10 +218,6 @@ public class TargetSystemTest {
     config.put("otel.metric.export.interval", "5s");
     // the agent only provides the machinery, the JMX instrumentation is added on top of it
     config.put("otel.javaagent.experimental.initializer.jar", JMX_INSTRUMENTATION_PATH);
-    // set yaml config files to test
-    config.put(
-        "otel.jmx.config",
-        yamlFiles.stream().map(TargetSystemTest::containerYamlPath).collect(joining(",")));
     return config;
   }
 
@@ -240,7 +263,8 @@ public class TargetSystemTest {
         MountableFile.forHostPath(jmxInstrumentationPath), JMX_INSTRUMENTATION_PATH);
   }
 
-  protected static void copyYamlFilesToTarget(GenericContainer<?> target, List<String> yamlFiles) {
+  protected static void copyYamlFilesToTarget(
+      GenericContainer<?> target, Collection<String> yamlFiles) {
     for (String file : yamlFiles) {
       String resourcePath = yamlResourcePath(file);
       String destPath = containerYamlPath(file);
@@ -260,6 +284,9 @@ public class TargetSystemTest {
   }
 
   private static String yamlResourcePath(String yaml) {
+    if (yaml.startsWith("jmx/rules/")) {
+      return yaml;
+    }
     return "jmx/rules/" + yaml;
   }
 
@@ -299,6 +326,13 @@ public class TargetSystemTest {
                         metricsVerifier.verify(metrics);
                       });
             });
+  }
+
+  protected static Set<String> getAllRuleFilesForSystem(String system) {
+    InternalMetricsDefinitions definitions =
+        new InternalMetricsDefinitions(TargetSystemTest.class.getClassLoader());
+    Set<String> rules = definitions.getRulesForSystem(system, true, true);
+    return rules;
   }
 
   /** Minimal OTLP gRPC backend to capture metrics */

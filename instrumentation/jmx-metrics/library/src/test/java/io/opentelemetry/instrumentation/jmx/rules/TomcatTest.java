@@ -10,27 +10,48 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 class TomcatTest extends TargetSystemTest {
 
+  static Stream<Arguments> tomcatArgs() {
+    return Stream.of(
+        arguments("tomcat:10.0", true),
+        arguments("tomcat:10.0", false),
+        arguments("tomcat:9.0", true),
+        arguments("tomcat:9.0", false));
+  }
+
   @ParameterizedTest
-  @ValueSource(strings = {"tomcat:10.0", "tomcat:9.0"})
-  void testCollectedMetrics(String dockerImageName) {
-    List<String> yamlFiles = singletonList("tomcat.yaml");
+  @MethodSource("tomcatArgs")
+  void testCollectedMetrics(String dockerImageName, boolean v3Preview) {
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
-    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
+
+    List<String> yamlFiles = new ArrayList<>();
+    Map<String, String> config;
+    if (v3Preview) {
+      yamlFiles = emptyList();
+      config = otelConfigPropertiesExperimentalOptIn("tomca*");
+    } else {
+      yamlFiles.addAll(getAllRuleFilesForSystem("tomcat"));
+      config = otelConfigProperties(yamlFiles);
+    }
+
+    jvmArgs.addAll(javaPropertiesToJvmArgs(config));
 
     GenericContainer<?> target =
         new GenericContainer<>(dockerImageName)

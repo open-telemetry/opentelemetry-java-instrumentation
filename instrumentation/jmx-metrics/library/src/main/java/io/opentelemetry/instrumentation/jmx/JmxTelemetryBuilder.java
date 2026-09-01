@@ -164,13 +164,6 @@ public final class JmxTelemetryBuilder {
       InternalMetricsDefinitions.getSupportedSystems()
           .forEach(
               system -> {
-                System.out.println(
-                    "Loading JMX rules for system: "
-                        + system
-                        + "stable filter: "
-                        + stableMetricsSystemFilter
-                        + ", unstable filter: "
-                        + unstableMetricsSystemFilter);
                 boolean includeStable =
                     !stableMetricsSystemFilter.isEmpty()
                         && stableMetricsSystemFilter.matches(system);
@@ -179,14 +172,15 @@ public final class JmxTelemetryBuilder {
                         && unstableMetricsSystemFilter.matches(system);
                 Set<String> rules =
                     internalMetrics.getRulesForSystem(system, includeStable, includeUnstable);
-
                 for (String path : rules) {
+                  logger.log(FINE, "loading embedded JMX rules from {0}", path);
                   try (InputStream input = classLoader.getResourceAsStream(path)) {
                     if (input != null) {
                       addRules(input);
                     }
                   } catch (IOException e) {
-                    throw new IllegalStateException("Unable to load JMX rules from: " + path, e);
+                    throw new IllegalStateException(
+                        "Unable to load embedded JMX rules from: " + path, e);
                   }
                 }
               });

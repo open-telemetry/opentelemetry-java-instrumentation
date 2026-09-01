@@ -14,6 +14,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.config.IncludeExcludeBuilder;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
@@ -39,6 +40,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
 
+    boolean v3Preview = AgentCommonConfig.get().isV3Preview();
+
     if (config.getBoolean("enabled", true)) {
       JmxTelemetryBuilder jmx =
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
@@ -50,16 +53,18 @@ public class JmxMetricInsightInstaller implements AgentListener {
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
 
-      if (AgentCommonConfig.get().isV3Preview()) {
-        // excluding stable jvm metrics as they overlap runtime-telemetry
+      if (v3Preview) {
+        // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
         jmx.addStableMetrics(IncludeExclude.builder().setExcluded("jvm").build());
 
-        // TODO: find a better name than 'otel.jmx.experimental.unstable'
         List<String> unstableInclude =
-            config.get("experimental").getScalarList("unstable", String.class, emptyList());
-        // we need to also exclude stable jvm metrics as they overlap runtime-telemetry
-        jmx.addUnstableMetrics(
-            IncludeExclude.builder().setIncluded(unstableInclude).setExcluded("jvm").build());
+            config.get("experimental").getScalarList("include", String.class, emptyList());
+        IncludeExcludeBuilder builder = IncludeExclude.builder();
+        if (!unstableInclude.isEmpty()) {
+          // only include explicitly opted-in, others will be excluded
+          builder.setIncluded(unstableInclude);
+        }
+        jmx.addUnstableMetrics(builder.build());
 
       } else {
         // pre-v3 compatibility
