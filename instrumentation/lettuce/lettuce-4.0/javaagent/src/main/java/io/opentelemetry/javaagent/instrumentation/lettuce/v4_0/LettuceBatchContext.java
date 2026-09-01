@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_PEER;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.batchInstrumenter;
 
@@ -47,7 +46,6 @@ public final class LettuceBatchContext {
     if (state == null) {
       return false;
     }
-    COMMAND_PEER.set(command, state.peerAddress);
     return true;
   }
 
@@ -79,7 +77,6 @@ public final class LettuceBatchContext {
         state.asyncCommands,
         state.parentContext,
         serverAddress,
-        state.peerAddress,
         databaseIndex,
         serverTarget);
   }
@@ -104,12 +101,10 @@ public final class LettuceBatchContext {
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
         @Nullable InetSocketAddress serverAddress,
-        @Nullable LettucePeerAddress peerAddress,
         @Nullable Integer databaseIndex,
         @Nullable RedisServerTarget serverTarget) {
       LettuceBatchRequest request =
-          LettuceBatchRequest.create(
-              commands, serverAddress, peerAddress, databaseIndex, serverTarget);
+          LettuceBatchRequest.create(commands, serverAddress, databaseIndex, serverTarget);
       Context parentContext =
           capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {
@@ -154,7 +149,6 @@ public final class LettuceBatchContext {
   private static final class BatchState {
     private final List<RedisCommand<?, ?, ?>> commands = new ArrayList<>();
     private final List<AsyncCommand<?, ?, ?>> asyncCommands = new ArrayList<>();
-    private final LettucePeerAddress peerAddress = LettucePeerAddress.forBatch();
     @Nullable private Context parentContext;
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {

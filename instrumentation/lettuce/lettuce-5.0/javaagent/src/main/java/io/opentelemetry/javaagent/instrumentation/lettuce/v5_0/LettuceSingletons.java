@@ -31,8 +31,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 import javax.annotation.Nullable;
 
 public class LettuceSingletons {
@@ -213,7 +215,7 @@ public class LettuceSingletons {
     }
   }
 
-  static void recordCommandPeer(RedisCommand<?, ?, ?> command, InetSocketAddress peerAddress) {
+  static void recordCommandPeer(RedisCommand<?, ?, ?> command, SocketAddress peerAddress) {
     commandPeer(command).record(peerAddress);
   }
 
@@ -226,15 +228,6 @@ public class LettuceSingletons {
         attachCommandPeer(command, new LettuceCommandPeer());
       }
     }
-  }
-
-  static void useCommandPeer(RedisCommand<?, ?, ?> command, LettuceCommandPeer peer) {
-    LettuceCommandPeer commandPeer = findCommandPeer(command);
-    InetSocketAddress address = commandPeer == null ? null : commandPeer.getAddress();
-    if (address != null) {
-      peer.record(address);
-    }
-    attachCommandPeer(command, peer);
   }
 
   private static LettuceCommandPeer commandPeer(RedisCommand<?, ?, ?> command) {
@@ -280,7 +273,7 @@ public class LettuceSingletons {
   }
 
   @Nullable
-  static InetSocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
+  static SocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
     // A command that does not expect a response has its span ended synchronously in
     // DefaultEndpoint.write, while the channel write that records the peer runs later on the netty
     // event loop, so the peer is not known yet.
@@ -289,6 +282,27 @@ public class LettuceSingletons {
     }
     LettuceCommandPeer peer = findCommandPeer(command);
     return peer == null ? null : peer.getAddress();
+  }
+
+  @Nullable
+  static SocketAddress batchPeerAddress(List<RedisCommand<?, ?, ?>> commands) {
+    SocketAddress batchPeerAddress = null;
+    for (RedisCommand<?, ?, ?> command : commands) {
+      LettuceCommandPeer peer = findCommandPeer(command);
+      if (peer == null) {
+        return null;
+      }
+      SocketAddress commandPeerAddress = peer.getAddress();
+      if (commandPeerAddress == null) {
+        return null;
+      }
+      if (batchPeerAddress == null) {
+        batchPeerAddress = commandPeerAddress;
+      } else if (!batchPeerAddress.equals(commandPeerAddress)) {
+        return null;
+      }
+    }
+    return batchPeerAddress;
   }
 
   public static void enterReactiveCommand(RedisCommand<?, ?, ?> command) {

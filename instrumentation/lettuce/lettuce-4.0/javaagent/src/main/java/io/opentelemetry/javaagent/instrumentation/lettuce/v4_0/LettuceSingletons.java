@@ -28,7 +28,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Collection;
+import java.util.List;
 import javax.annotation.Nullable;
 
 public class LettuceSingletons {
@@ -163,7 +165,7 @@ public class LettuceSingletons {
         : null;
   }
 
-  public static void recordCommandPeers(Object message, InetSocketAddress address) {
+  public static void recordCommandPeers(Object message, SocketAddress address) {
     if (message instanceof RedisCommand) {
       recordCommandPeer((RedisCommand<?, ?, ?>) message, address);
     } else if (message instanceof Collection) {
@@ -175,7 +177,7 @@ public class LettuceSingletons {
     }
   }
 
-  private static void recordCommandPeer(RedisCommand<?, ?, ?> command, InetSocketAddress address) {
+  private static void recordCommandPeer(RedisCommand<?, ?, ?> command, SocketAddress address) {
     LettucePeerAddress peer = COMMAND_PEER.get(command);
     if (peer != null) {
       peer.record(address);
@@ -183,12 +185,33 @@ public class LettuceSingletons {
   }
 
   @Nullable
-  static InetSocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
+  static SocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
     if (!InstrumentationPoints.expectsResponse(command)) {
       return null;
     }
     LettucePeerAddress peer = COMMAND_PEER.get(command);
     return peer != null ? peer.getAddress() : null;
+  }
+
+  @Nullable
+  static SocketAddress batchPeerAddress(List<RedisCommand<?, ?, ?>> commands) {
+    SocketAddress batchPeerAddress = null;
+    for (RedisCommand<?, ?, ?> command : commands) {
+      LettucePeerAddress peer = COMMAND_PEER.get(command);
+      if (peer == null) {
+        return null;
+      }
+      SocketAddress commandPeerAddress = peer.getAddress();
+      if (commandPeerAddress == null) {
+        return null;
+      }
+      if (batchPeerAddress == null) {
+        batchPeerAddress = commandPeerAddress;
+      } else if (!batchPeerAddress.equals(commandPeerAddress)) {
+        return null;
+      }
+    }
+    return batchPeerAddress;
   }
 
   @Nullable

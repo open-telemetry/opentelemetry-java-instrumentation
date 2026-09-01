@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -21,8 +22,10 @@ import io.lettuce.core.protocol.RedisCommand;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.channel.unix.DomainSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
@@ -81,10 +84,8 @@ class LettuceNetworkAttributesGetterTest {
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
     RedisCommand<?, ?, ?> command = command();
     LettuceSingletons.recordCommandPeer(command, address);
-    LettuceCommandPeer peerAddress = LettuceCommandPeer.forBatch();
-    LettuceSingletons.useCommandPeer(command, peerAddress);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(singletonList(command), null, peerAddress, null, null);
+        LettuceBatchRequest.create(singletonList(command), null, null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -95,14 +96,40 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void batchDropsAmbiguousSelectedAddress() throws UnknownHostException {
-    LettuceCommandPeer peerAddress = LettuceCommandPeer.forBatch();
-    peerAddress.record(
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
-    peerAddress.record(
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT));
+  void batchUsesCommonFinalAddressAfterRetry() throws UnknownHostException {
+    InetSocketAddress firstAddress =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
+    InetSocketAddress finalAddress =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT);
+    RedisCommand<?, ?, ?> firstCommand = command();
+    RedisCommand<?, ?, ?> secondCommand = command();
+    LettuceSingletons.recordCommandPeer(firstCommand, firstAddress);
+    LettuceSingletons.recordCommandPeer(firstCommand, finalAddress);
+    LettuceSingletons.recordCommandPeer(secondCommand, finalAddress);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(singletonList(command()), null, peerAddress, null, null);
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.4" : null);
+    assertThat(getter.getNetworkPeerPort(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+  }
+
+  @Test
+  void batchDropsDifferentFinalAddressesAfterRetry() throws UnknownHostException {
+    InetSocketAddress firstAddress =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
+    InetSocketAddress secondAddress =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT);
+    RedisCommand<?, ?, ?> firstCommand = command();
+    RedisCommand<?, ?, ?> secondCommand = command();
+    LettuceSingletons.recordCommandPeer(firstCommand, firstAddress);
+    LettuceSingletons.recordCommandPeer(firstCommand, secondAddress);
+    LettuceSingletons.recordCommandPeer(secondCommand, firstAddress);
+    LettuceBatchRequest request =
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -111,7 +138,7 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void commandUsesLastSelectedAddress() throws UnknownHostException {
+  void commandRetryUsesLastSelectedAddress() throws UnknownHostException {
     RedisCommand<?, ?, ?> command = command();
     LettuceSingletons.recordCommandPeer(
         command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
@@ -124,6 +151,26 @@ class LettuceNetworkAttributesGetterTest {
         .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.4" : null);
     assertThat(getter.getNetworkPeerPort(command, null))
         .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+  }
+
+  @Test
+  void outboundWriteCapturesDomainSocketPath() {
+    DomainSocketAddress address = new DomainSocketAddress("/var/run/redis.sock");
+    RedisCommand<?, ?, ?> command = command();
+    Channel channel = mock(Channel.class);
+    when(channel.remoteAddress()).thenReturn(address);
+    ChannelHandlerContext context = mock(ChannelHandlerContext.class);
+    when(context.channel()).thenReturn(channel);
+    ChannelPromise promise = mock(ChannelPromise.class);
+
+    new LettuceCommandOutboundHandler().write(context, command, promise);
+
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+    assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
+    assertThat(getter.getNetworkPeerAddress(command, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "/var/run/redis.sock" : null);
+    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+    verify(context).write(command, promise);
   }
 
   @Test
@@ -190,10 +237,10 @@ class LettuceNetworkAttributesGetterTest {
     CountDownLatch release = new CountDownLatch(1);
     ExecutorService executor = Executors.newFixedThreadPool(2);
     try {
-      Future<InetSocketAddress> first =
+      Future<SocketAddress> first =
           executor.submit(
               () -> recordReactiveSubscriptionPeer(firstCommand, firstAddress, ready, release));
-      Future<InetSocketAddress> second =
+      Future<SocketAddress> second =
           executor.submit(
               () -> recordReactiveSubscriptionPeer(secondCommand, secondAddress, ready, release));
 
@@ -253,7 +300,7 @@ class LettuceNetworkAttributesGetterTest {
     return new Command<>(CommandType.GET, null);
   }
 
-  private static InetSocketAddress recordReactiveSubscriptionPeer(
+  private static SocketAddress recordReactiveSubscriptionPeer(
       RedisCommand<?, ?, ?> subscriptionCommand,
       InetSocketAddress address,
       CountDownLatch ready,

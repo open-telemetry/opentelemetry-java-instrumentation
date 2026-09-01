@@ -7,6 +7,7 @@ dependencies {
   testImplementation(project(":instrumentation:lettuce:lettuce-5.0:javaagent"))
   testImplementation(project(":javaagent-extension-api"))
   testImplementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
+  testImplementation("io.netty:netty-transport-native-unix-common")
 }
 
 tasks {

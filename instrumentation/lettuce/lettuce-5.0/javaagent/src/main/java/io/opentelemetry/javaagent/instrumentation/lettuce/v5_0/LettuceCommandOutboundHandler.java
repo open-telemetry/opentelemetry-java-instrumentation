@@ -9,7 +9,6 @@ import io.lettuce.core.protocol.RedisCommand;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
 
@@ -20,9 +19,8 @@ public class LettuceCommandOutboundHandler extends ChannelOutboundHandlerAdapter
   public void write(ChannelHandlerContext context, Object message, ChannelPromise promise) {
     try {
       SocketAddress remoteAddress = context.channel().remoteAddress();
-      if (remoteAddress instanceof InetSocketAddress) {
-        InetSocketAddress peerAddress = (InetSocketAddress) remoteAddress;
-        recordCommands(message, peerAddress);
+      if (remoteAddress != null) {
+        recordCommands(message, remoteAddress);
       }
     } catch (Throwable ignored) {
       // Do not let telemetry collection disrupt Redis I/O.
@@ -30,7 +28,7 @@ public class LettuceCommandOutboundHandler extends ChannelOutboundHandlerAdapter
     context.write(message, promise);
   }
 
-  static void recordCommands(Object message, InetSocketAddress remoteAddress) {
+  static void recordCommands(Object message, SocketAddress remoteAddress) {
     if (message instanceof RedisCommand) {
       recordCommand((RedisCommand<?, ?, ?>) message, remoteAddress);
     } else if (message instanceof Collection) {
@@ -42,8 +40,7 @@ public class LettuceCommandOutboundHandler extends ChannelOutboundHandlerAdapter
     }
   }
 
-  private static void recordCommand(
-      RedisCommand<?, ?, ?> command, InetSocketAddress remoteAddress) {
+  private static void recordCommand(RedisCommand<?, ?, ?> command, SocketAddress remoteAddress) {
     LettuceSingletons.recordCommandPeer(command, remoteAddress);
   }
 }
