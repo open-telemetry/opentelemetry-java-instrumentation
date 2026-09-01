@@ -11,6 +11,8 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.http.HttpHost;
@@ -80,6 +82,19 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
+  void mixedDefaultAndNonDefaultPortsStayInTheAddressList() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(
+            asList(
+                new HttpHost("non-default.example", 9200, "http"),
+                new HttpHost("default.example", -1, "http")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("default.example:80,non-default.example:9200");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void sharedNonDefaultPortIsSeparatedFromIpv4AndIpv6Addresses() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(
@@ -91,7 +106,7 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void mixedHttpAndHttpsDefaultPortsAreOmitted() {
+  void mixedHttpAndHttpsDefaultPortsStayInTheAddressList() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(
             asList(
@@ -99,7 +114,7 @@ class ElasticsearchServerTargetTest {
                 new HttpHost("plain.example", 80, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("plain.example,secure.example");
+    assertThat(target.getAddress()).isEqualTo("plain.example:80,secure.example:443");
     assertThat(target.getPort()).isNull();
   }
 
@@ -196,6 +211,21 @@ class ElasticsearchServerTargetTest {
     assertThat(
             ElasticsearchServerTarget.of(
                 asList(new HttpHost("h1", 9200), new HttpHost("user:secret@", 9200))))
+        .isNull();
+  }
+
+  @Test
+  void resolvedHostAliasContainingCommaHasNoTarget() throws UnknownHostException {
+    HttpHost unsafeHost =
+        new HttpHost(
+            InetAddress.getByAddress("h1.example,h2.example", new byte[] {127, 0, 0, 1}),
+            9200,
+            "http");
+
+    assertThat(ElasticsearchServerTarget.of(singletonList(unsafeHost))).isNull();
+    assertThat(
+            ElasticsearchServerTarget.of(
+                asList(new HttpHost("safe.example", 9200, "http"), unsafeHost)))
         .isNull();
   }
 

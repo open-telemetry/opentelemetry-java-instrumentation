@@ -30,7 +30,7 @@ public class ElasticsearchServerTarget {
       if (host == null) {
         return null;
       }
-      int port = normalizePort(httpHost);
+      int port = normalizedPort(httpHost);
       return new ElasticsearchServerTarget(host, port >= 0 ? port : null);
     }
     return renderGroup(hosts);
@@ -44,36 +44,53 @@ public class ElasticsearchServerTarget {
   @Nullable
   private static ElasticsearchServerTarget renderGroup(List<HttpHost> hosts) {
     List<String> addresses = new ArrayList<>(hosts.size());
-    int sharedPort = normalizePort(hosts.get(0));
+    List<Integer> effectivePorts = new ArrayList<>(hosts.size());
+    int sharedPort = effectivePort(hosts.get(0));
     boolean portsMatch = true;
+    boolean allPortsAreDefault = true;
     for (HttpHost httpHost : hosts) {
       String host = sanitizeHost(httpHost.getHostName());
       if (host == null) {
         return null;
       }
-      int port = normalizePort(httpHost);
+      int port = effectivePort(httpHost);
       if (port != sharedPort) {
         portsMatch = false;
       }
+      if (port != defaultPort(httpHost)) {
+        allPortsAreDefault = false;
+      }
       addresses.add(host);
+      effectivePorts.add(port);
     }
     List<String> endpoints = new ArrayList<>(hosts.size());
     for (int i = 0; i < hosts.size(); i++) {
-      endpoints.add(
-          renderHostAndPort(addresses.get(i), portsMatch ? -1 : normalizePort(hosts.get(i))));
+      endpoints.add(renderHostAndPort(addresses.get(i), portsMatch ? -1 : effectivePorts.get(i)));
     }
     endpoints.sort(String::compareTo);
     return new ElasticsearchServerTarget(
-        String.join(",", endpoints), portsMatch && sharedPort >= 0 ? sharedPort : null);
+        String.join(",", endpoints),
+        portsMatch && sharedPort >= 0 && !allPortsAreDefault ? sharedPort : null);
   }
 
-  private static int normalizePort(HttpHost httpHost) {
+  private static int normalizedPort(HttpHost httpHost) {
+    int port = effectivePort(httpHost);
+    return port == defaultPort(httpHost) ? -1 : port;
+  }
+
+  private static int effectivePort(HttpHost httpHost) {
     int port = httpHost.getPort();
-    if ((port == 80 && httpHost.getSchemeName().equalsIgnoreCase("http"))
-        || (port == 443 && httpHost.getSchemeName().equalsIgnoreCase("https"))) {
-      return -1;
+    return port >= 0 ? port : defaultPort(httpHost);
+  }
+
+  private static int defaultPort(HttpHost httpHost) {
+    if (httpHost.getSchemeName().equalsIgnoreCase("http")) {
+      return 80;
     }
-    return port;
+    if (httpHost.getSchemeName().equalsIgnoreCase("https")) {
+      return 443;
+    }
+    return -1;
   }
 
   private static String renderHostAndPort(String host, int port) {
@@ -108,6 +125,9 @@ public class ElasticsearchServerTarget {
       return null;
     }
     host = host.substring(credentialsEnd + 1, authorityEnd);
+    if (host.indexOf(',') >= 0) {
+      return null;
+    }
     if (host.length() >= 2 && host.charAt(0) == '[' && host.charAt(host.length() - 1) == ']') {
       host = host.substring(1, host.length() - 1);
     }
