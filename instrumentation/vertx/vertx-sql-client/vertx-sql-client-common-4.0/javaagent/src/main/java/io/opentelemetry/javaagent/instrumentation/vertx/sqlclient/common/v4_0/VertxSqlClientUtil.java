@@ -42,6 +42,8 @@ public class VertxSqlClientUtil {
   private static final Map<String, String> dbSystemNameByPackage = buildPackageDbSystemNameMap();
   private static final VirtualField<Promise<?>, RequestData> REQUEST_DATA =
       VirtualField.find(Promise.class, RequestData.class);
+  private static final VirtualField<Promise<?>, VertxSqlClientData> PENDING_QUERY_CONNECTION_DATA =
+      VirtualField.find(Promise.class, VertxSqlClientData.class);
   private static final VirtualField<PreparedStatement, VertxSqlClientData> PREPARED_STATEMENT_DATA =
       VirtualField.find(PreparedStatement.class, VertxSqlClientData.class);
 
@@ -181,13 +183,23 @@ public class VertxSqlClientUtil {
 
   public static void attachRequest(
       Promise<?> promise, VertxSqlClientRequest request, Context context, Context parentContext) {
-    REQUEST_DATA.set(promise, new RequestData(request, context, parentContext));
+    synchronized (promise) {
+      REQUEST_DATA.set(promise, new RequestData(request, context, parentContext));
+      VertxSqlClientData data = PENDING_QUERY_CONNECTION_DATA.get(promise);
+      if (data != null) {
+        PENDING_QUERY_CONNECTION_DATA.set(promise, null);
+        if (request.setConnectionData(data)) {
+          VertxSqlInstrumenterFactory.updateSpanName(context, request);
+        }
+      }
+    }
   }
 
   public static void setQueryConnectionData(Promise<?> promise, VertxSqlClientData data) {
     synchronized (promise) {
       RequestData requestData = REQUEST_DATA.get(promise);
       if (requestData == null) {
+        PENDING_QUERY_CONNECTION_DATA.set(promise, data);
         return;
       }
       if (requestData.request.setConnectionData(data)) {

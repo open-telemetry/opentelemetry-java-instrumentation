@@ -189,10 +189,10 @@ public class VertxSqlClientSingletons {
       @Nullable SqlConnectOptions connectOptions,
       @Nullable VertxSqlAddressGroup addressGroup,
       @Nullable VertxSqlClientDataCapture dataCapture) {
-    return future.map(
-        sqlConnection -> {
-          if (sqlConnection instanceof SqlClientBase) {
-            SqlClientBase sqlClientBase = (SqlClientBase) sqlConnection;
+    return future.transform(
+        result -> {
+          if (result.succeeded() && result.result() instanceof SqlClientBase) {
+            SqlClientBase sqlClientBase = (SqlClientBase) result.result();
             VertxSqlClientData data = dataCapture != null ? getConnectionData(sqlClientBase) : null;
             if (data != null) {
               attachClientState(
@@ -200,8 +200,10 @@ public class VertxSqlClientSingletons {
             } else {
               attachClientState(sqlClientBase, connectOptions, addressGroup, null);
             }
+          } else if (result.failed() && dataCapture != null) {
+            dataCapture.takeFailureData(result.cause());
           }
-          return sqlConnection;
+          return copyResult(result);
         });
   }
 

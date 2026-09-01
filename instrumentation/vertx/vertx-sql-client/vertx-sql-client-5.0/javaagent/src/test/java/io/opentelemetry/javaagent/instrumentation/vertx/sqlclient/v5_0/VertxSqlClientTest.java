@@ -47,9 +47,12 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.vertx.core.Completable;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.net.NetClientOptions;
 import io.vertx.oracleclient.OracleBuilder;
 import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.pgclient.PgBuilder;
@@ -65,6 +68,7 @@ import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
+import io.vertx.sqlclient.spi.ConnectionFactory;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -435,6 +439,52 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testUnknownDriverSupplierConnectFailureCapturesSuppliedOptions() {
+    RuntimeException failed = new RuntimeException("connection failed");
+    Pool supplierPool =
+        ClientBuilder.pool(failingDriver(failed))
+            .using(vertx)
+            .connectingTo(() -> Future.succeededFuture(connectOptions()))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    assertThatThrownBy(() -> select(supplierPool)).hasCause(failed);
+
+    testing.waitAndAssertTraces(trace -> assertSupplierFailure(trace, failed, "other_sql", host));
+  }
+
+  @Test
+  void testStandaloneConnectionFailureDoesNotPoisonLaterQuery() {
+    RuntimeException failed = new RuntimeException("connection failed");
+    AtomicInteger calls = new AtomicInteger();
+    PgConnectOptions staleOptions = new PgConnectOptions(connectOptions()).setHost("stale.example");
+    Pool supplierPool =
+        ClientBuilder.pool(failingDriver(failed))
+            .using(vertx)
+            .connectingTo(
+                () ->
+                    Future.succeededFuture(
+                        calls.getAndIncrement() == 0 ? staleOptions : connectOptions()))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    assertThatThrownBy(
+            () ->
+                supplierPool
+                    .getConnection()
+                    .toCompletionStage()
+                    .toCompletableFuture()
+                    .get(30, SECONDS))
+        .hasCause(failed);
+    assertThatThrownBy(() -> select(supplierPool)).hasCause(failed);
+
+    assertThat(calls).hasValue(2);
+    testing.waitAndAssertTraces(trace -> assertSupplierFailure(trace, failed, "other_sql", host));
+  }
+
+  @Test
   void testOracleSupplierConnectFailureCapturesSuppliedOptions() {
     OracleConnectOptions options =
         new OracleConnectOptions()
@@ -707,14 +757,25 @@ class VertxSqlClientTest {
   }
 
   private static void assertSupplierFailure(TraceAssert trace, RuntimeException error) {
-    assertSupplierFailure(trace, error, POSTGRESQL);
+    assertSupplierFailure(trace, error, POSTGRESQL, null);
   }
 
   private static void assertSupplierFailure(
       TraceAssert trace, RuntimeException error, String dbSystem) {
+    assertSupplierFailure(trace, error, dbSystem, null);
+  }
+
+  private static void assertSupplierFailure(
+      TraceAssert trace, RuntimeException error, String dbSystem, String expectedHost) {
+    boolean inlinePort =
+        expectedHost != null && emitStableDatabaseSemconv() && dbSystem.equals("other_sql");
+    String expectedAddress = inlinePort ? expectedHost + ":" + port : expectedHost;
     trace.hasSpansSatisfyingExactly(
         span ->
-            span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT test")
+            span.hasName(
+                    emitStableDatabaseSemconv()
+                        ? "select test"
+                        : expectedHost != null ? "SELECT tempdb.test" : "SELECT test")
                 .hasKind(SpanKind.CLIENT)
                 .hasStatus(StatusData.error())
                 .hasEventsSatisfyingExactly(
@@ -728,14 +789,47 @@ class VertxSqlClientTest {
                                     EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
                 .hasAttributesSatisfyingExactly(
                     equalTo(maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? dbSystem : null),
+                    equalTo(maybeStable(DB_NAME), expectedHost != null ? DB : null),
+                    equalTo(
+                        DB_USER,
+                        expectedHost != null && !emitStableDatabaseSemconv() ? USER_DB : null),
                     equalTo(maybeStable(DB_STATEMENT), "select * from test"),
                     equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
                     equalTo(
                         maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
                     equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
                     equalTo(
+                        maybeStablePeerService(),
+                        expectedHost != null && !emitStableDatabaseSemconv()
+                            ? "test-peer-service"
+                            : null),
+                    equalTo(SERVER_ADDRESS, expectedAddress),
+                    equalTo(
+                        SERVER_PORT,
+                        expectedHost != null && !inlinePort ? Long.valueOf(port) : null),
+                    equalTo(
                         ERROR_TYPE,
                         emitStableDatabaseSemconv() ? error.getClass().getName() : null)));
+  }
+
+  private static PgDriver failingDriver(RuntimeException failure) {
+    return new PgDriver() {
+      @Override
+      public ConnectionFactory<PgConnectOptions> createConnectionFactory(
+          Vertx vertx, NetClientOptions transportOptions) {
+        return new ConnectionFactory<PgConnectOptions>() {
+          @Override
+          public Future<SqlConnection> connect(Context context, PgConnectOptions options) {
+            return Future.failedFuture(failure);
+          }
+
+          @Override
+          public void close(Completable<Void> completion) {
+            completion.succeed();
+          }
+        };
+      }
+    };
   }
 
   private static void assertOracleConnectFailure(TraceAssert trace, Throwable error) {
