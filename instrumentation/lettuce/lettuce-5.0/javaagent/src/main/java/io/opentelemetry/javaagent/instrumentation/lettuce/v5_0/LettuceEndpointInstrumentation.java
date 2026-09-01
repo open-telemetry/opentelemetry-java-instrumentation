@@ -86,8 +86,11 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
   public static class WriteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-      LettuceSingletons.linkCommandPeer(command);
+    public static void onEnter(
+        @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
+      if (!LettuceBatchContext.prepareCommandPeer(endpoint, command)) {
+        LettuceSingletons.linkCommandPeer(command);
+      }
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
@@ -101,8 +104,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         COMMAND_TARGET.set(command, commandTarget);
       }
 
-      if (LettuceBatchContext.isBatching(endpoint)) {
-        LettuceBatchContext.capture(endpoint, command, asyncCommand);
+      if (LettuceBatchContext.capture(endpoint, command, asyncCommand)) {
         return;
       }
       if (commandTarget == null) {
