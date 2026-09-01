@@ -68,19 +68,6 @@ public class JmxMetricInsightInstaller implements AgentListener {
         }
       }
 
-      // include/exclude metrics by name
-      List<String> metricsInclude =
-          config.get("metrics").getScalarList("include", String.class, emptyList());
-      List<String> metricsExclude =
-          config.get("metrics").getScalarList("exclude", String.class, emptyList());
-      if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
-        jmx.setMetrics(
-            IncludeExclude.builder()
-                .setIncluded(metricsInclude)
-                .setExcluded(metricsExclude)
-                .build());
-      }
-
       if (v3Preview) {
         // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
         jmx.addStableMetrics(IncludeExclude.builder().setExcluded("jvm").build());
@@ -122,6 +109,19 @@ public class JmxMetricInsightInstaller implements AgentListener {
         // all embedded metrics definitions per system.
         IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
         jmx.addStableMetrics(systems).addUnstableMetrics(systems);
+      }
+
+      // include/exclude metrics by name
+      List<String> metricsInclude =
+          config.get("metrics").getScalarList("include", String.class, emptyList());
+      List<String> metricsExclude =
+          config.get("metrics").getScalarList("exclude", String.class, emptyList());
+      if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
+        jmx.setMetrics(
+            IncludeExclude.builder()
+                .setIncluded(metricsInclude)
+                .setExcluded(metricsExclude)
+                .build());
       }
 
       jmx.build().start();

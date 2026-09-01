@@ -51,6 +51,11 @@ to allow reusing them without instrumentation. When using instrumentation, the [
 instrumentation is used and recommended as it provides more metrics attributes that can't be captured
 through the YAML-based metric definitions.
 
+It is possible to filter metrics to be collected by configuration using the following properties (wildcards are supported):
+
+- `otel.jmx.metrics.include` : include only metrics matching the specified patterns, all other metrics will be excluded. Default is to include all of them.
+- `otel.jmx.metrics.exclude` : exclude metrics matching the specified patterns, all other metrics will be included. Default is to exclude none.
+
 ## Configuration Files
 
 To provide your own metric definitions, create one or more YAML configuration files, and specify their location using the `otel.jmx.config` property. Absolute or relative pathnames can be specified. For example
