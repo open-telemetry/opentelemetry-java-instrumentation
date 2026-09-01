@@ -11,6 +11,8 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTarget.Endpoint;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -144,6 +146,19 @@ class ElasticsearchTransportServerTargetTest {
     assertThat(
             ElasticsearchTransportServerTarget.of(
                 asList(new Endpoint("h1", 9300), new Endpoint("user:secret@", 9300))))
+        .isNull();
+  }
+
+  @Test
+  void resolvedHostAliasContainingCommaHasNoTarget() throws UnknownHostException {
+    String unsafeHost =
+        InetAddress.getByAddress("h1.example,h2.example", new byte[] {127, 0, 0, 1}).getHostName();
+
+    assertThat(ElasticsearchTransportServerTarget.of(singletonList(new Endpoint(unsafeHost, 9300))))
+        .isNull();
+    assertThat(
+            ElasticsearchTransportServerTarget.of(
+                asList(new Endpoint("safe.example", 9300), new Endpoint(unsafeHost, 9300))))
         .isNull();
   }
 }

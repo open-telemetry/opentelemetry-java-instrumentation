@@ -99,6 +99,9 @@ public class ElasticsearchTransportServerTarget {
       return null;
     }
     host = host.substring(credentialsEnd + 1, authorityEnd);
+    if (host.indexOf(',') >= 0) {
+      return null;
+    }
     if (host.length() >= 2 && host.charAt(0) == '[' && host.charAt(host.length() - 1) == ']') {
       host = host.substring(1, host.length() - 1);
     }
