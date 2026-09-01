@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 public class VertxSqlAddressGroup {
 
   private final List<Endpoint> endpoints;
-  private final String address;
+  @Nullable private final String address;
   @Nullable private final Integer port;
 
   @Nullable
@@ -75,13 +75,17 @@ public class VertxSqlAddressGroup {
       return;
     }
 
+    for (Endpoint endpoint : endpoints) {
+      if (endpoint.unixSocket) {
+        address = null;
+        port = null;
+        return;
+      }
+    }
+
     Integer commonPort = null;
     boolean samePort = defaultPort != null;
     for (Endpoint endpoint : endpoints) {
-      if (endpoint.unixSocket) {
-        samePort = false;
-        continue;
-      }
       Integer effectivePort = endpoint.port != null ? endpoint.port : defaultPort;
       if (effectivePort == null) {
         samePort = false;
@@ -98,7 +102,7 @@ public class VertxSqlAddressGroup {
         value.append(',');
       }
       Integer effectivePort = endpoint.port != null ? endpoint.port : defaultPort;
-      appendHostPort(value, endpoint.host, samePort || endpoint.unixSocket ? null : effectivePort);
+      appendHostPort(value, endpoint.host, samePort ? null : effectivePort);
     }
     address = value.toString();
     port = samePort && !commonPort.equals(defaultPort) ? commonPort : null;
@@ -108,6 +112,7 @@ public class VertxSqlAddressGroup {
     return new VertxSqlAddressGroup(endpoints, dbSystem);
   }
 
+  @Nullable
   public String getAddress() {
     return address;
   }

@@ -125,7 +125,7 @@ class VertxSqlAddressGroupTest {
   }
 
   @Test
-  void preservesUnixDomainSocketWithinAddressGroupWithoutPort() {
+  void omitsAddressAndPortForAddressGroupContainingUnixDomainSocket() {
     VertxSqlAddressGroup addressGroup =
         VertxSqlAddressGroup.of(
             asList(
@@ -133,7 +133,7 @@ class VertxSqlAddressGroupTest {
                 new SqlConnectOptions().setHost("2001:db8::1").setPort(5432)),
             "postgresql");
 
-    assertThat(addressGroup.getAddress()).isEqualTo("/var/run/postgres:primary,[2001:db8::1]:5432");
+    assertThat(addressGroup.getAddress()).isNull();
     assertThat(addressGroup.getPort()).isNull();
   }
 

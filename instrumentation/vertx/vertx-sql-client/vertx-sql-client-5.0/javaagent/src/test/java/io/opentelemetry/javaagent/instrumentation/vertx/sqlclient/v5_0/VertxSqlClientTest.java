@@ -168,6 +168,25 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testConnectingToServerListWithUnixSocketOmitsStableTarget() throws Exception {
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second =
+        new PgConnectOptions(first).setHost("/var/run/postgres:primary").setPort(5432);
+    Pool listPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(asList(first, second))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(listPool::close);
+
+    select(listPool);
+
+    testing.waitAndAssertTraces(
+        trace -> assertServerGroup(trace, "/var/run/postgres:primary", 5432));
+  }
+
+  @Test
   void testConnectingToServerListFailureReportsTheWholeConfiguredTarget() {
     PgConnectOptions first = new PgConnectOptions(connectOptions()).setHost("127.0.0.1").setPort(1);
     PgConnectOptions second = new PgConnectOptions(first).setPort(2);
@@ -724,12 +743,16 @@ class VertxSqlClientTest {
       int secondPort,
       String statement,
       Throwable error) {
+    boolean hasUnixSocket = firstHost.startsWith("/") || secondHost.startsWith("/");
     boolean samePort = firstPort == secondPort;
     String stableAddress =
-        samePort
-            ? firstHost + "," + secondHost
-            : firstHost + ":" + firstPort + "," + secondHost + ":" + secondPort;
-    Long stablePort = samePort && firstPort != 5432 ? Long.valueOf(firstPort) : null;
+        hasUnixSocket
+            ? null
+            : samePort
+                ? firstHost + "," + secondHost
+                : firstHost + ":" + firstPort + "," + secondHost + ":" + secondPort;
+    Long stablePort =
+        !hasUnixSocket && samePort && firstPort != 5432 ? Long.valueOf(firstPort) : null;
     Consumer<SpanDataAssert> operationSpan =
         span ->
             span.hasKind(SpanKind.CLIENT)
