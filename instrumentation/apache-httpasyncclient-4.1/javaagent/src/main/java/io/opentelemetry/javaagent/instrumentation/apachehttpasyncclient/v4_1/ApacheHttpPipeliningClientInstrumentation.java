@@ -258,11 +258,8 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void failed(Exception ex) {
-      try {
-        delegate.failed(ex);
-      } finally {
-        state.end(ex);
-      }
+      state.end(ex);
+      delegate.failed(ex);
     }
 
     @Override
