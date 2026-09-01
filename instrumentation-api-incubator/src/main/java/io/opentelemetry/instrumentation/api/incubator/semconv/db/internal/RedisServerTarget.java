@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
+import static java.util.Collections.emptyList;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -59,17 +61,8 @@ public final class RedisServerTarget {
   @Nullable
   private static RedisServerTarget createFromEndpoints(
       @Nullable List<String> endpoints, boolean unordered) {
-    if (endpoints == null || endpoints.isEmpty()) {
-      return null;
-    }
-    List<Endpoint> parsed = new ArrayList<>(endpoints.size());
-    for (String endpoint : endpoints) {
-      Endpoint value = Endpoint.parse(endpoint);
-      if (value != null) {
-        parsed.add(value);
-      }
-    }
-    if (parsed.isEmpty()) {
+    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints);
+    if (parsed == null || parsed.isEmpty()) {
       return null;
     }
     if (parsed.size() == 1) {
@@ -98,6 +91,24 @@ public final class RedisServerTarget {
     return new RedisServerTarget(String.join(",", rendered), port);
   }
 
+  @Nullable
+  private static List<Endpoint> parseConfiguredEndpoints(@Nullable List<String> endpoints) {
+    if (endpoints == null || endpoints.isEmpty()) {
+      return emptyList();
+    }
+    List<Endpoint> parsed = new ArrayList<>(endpoints.size());
+    boolean hasSocket = false;
+    for (String endpoint : endpoints) {
+      Endpoint value = Endpoint.parse(endpoint);
+      if (value == null) {
+        return null;
+      }
+      parsed.add(value);
+      hasSocket |= value.socket;
+    }
+    return parsed.size() > 1 && hasSocket ? null : parsed;
+  }
+
   private static RedisServerTarget directTarget(Endpoint endpoint) {
     Integer port = endpoint.port != null && endpoint.port != DEFAULT_PORT ? endpoint.port : null;
     return new RedisServerTarget(endpoint.renderWithoutPort(), port);
@@ -107,19 +118,18 @@ public final class RedisServerTarget {
   public static RedisServerTarget ofUnorderedEndpointsAndLogicalName(
       @Nullable List<String> endpoints, @Nullable String name) {
     String logicalName = name == null ? "" : name.trim();
-    List<String> rendered = new ArrayList<>();
-    if (endpoints != null) {
-      for (String endpoint : endpoints) {
-        Endpoint parsed = Endpoint.parse(endpoint);
-        if (parsed != null) {
-          rendered.add(parsed.renderConfigured());
-        }
-      }
+    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints);
+    if (parsed == null) {
+      return null;
     }
-    Collections.sort(rendered);
+    List<String> rendered = new ArrayList<>(parsed.size());
+    for (Endpoint endpoint : parsed) {
+      rendered.add(endpoint.renderConfigured());
+    }
     if (rendered.isEmpty()) {
       return ofLogicalName(logicalName);
     }
+    Collections.sort(rendered);
     if (!isSafeLogicalName(logicalName)) {
       return new RedisServerTarget(String.join(",", rendered), null);
     }
