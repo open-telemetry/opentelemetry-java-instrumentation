@@ -25,7 +25,7 @@ abstract class JettySmokeTest extends AppServerTest {
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started Server.*"));
   }
 
-  @AppServer(version = "9.4.58", jdk = "8")
+  @AppServer(version = "9.4.58", jdk = "8", inReducedMatrix = true)
   static class Jetty9Jdk8 extends JettySmokeTest {}
 
   @AppServer(version = "9.4.58", jdk = "8-openj9")
@@ -55,7 +55,7 @@ abstract class JettySmokeTest extends AppServerTest {
   @AppServer(version = "9.4.58", jdk = "25-openj9")
   static class Jetty9Jdk25Openj9 extends JettySmokeTest {}
 
-  @AppServer(version = "10.0.26", jdk = "11")
+  @AppServer(version = "10.0.26", jdk = "11", inReducedMatrix = true)
   static class Jetty10Jdk11 extends JettySmokeTest {}
 
   @AppServer(version = "10.0.26", jdk = "11-openj9")
@@ -79,7 +79,7 @@ abstract class JettySmokeTest extends AppServerTest {
   @AppServer(version = "10.0.26", jdk = "25-openj9")
   static class Jetty10Jdk25Openj9 extends JettySmokeTest {}
 
-  @AppServer(version = "11.0.26", jdk = "11")
+  @AppServer(version = "11.0.26", jdk = "11", inReducedMatrix = true)
   static class Jetty11Jdk11 extends JettySmokeTest {}
 
   @AppServer(version = "11.0.26", jdk = "11-openj9")
@@ -103,7 +103,7 @@ abstract class JettySmokeTest extends AppServerTest {
   @AppServer(version = "11.0.26", jdk = "25-openj9")
   static class Jetty11Jdk25Openj9 extends JettySmokeTest {}
 
-  @AppServer(version = "12.0.28", jdk = "17")
+  @AppServer(version = "12.0.28", jdk = "17", inReducedMatrix = true)
   static class Jetty12Jdk17 extends JettySmokeTest {}
 
   @AppServer(version = "12.0.28", jdk = "17-openj9")
