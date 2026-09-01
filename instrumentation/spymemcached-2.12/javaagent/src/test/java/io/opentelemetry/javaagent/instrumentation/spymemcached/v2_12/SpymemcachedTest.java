@@ -1710,9 +1710,8 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv() ? (long) finalAddress.getPort() : null),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : (long) finalAddress.getPort()))));
+                                emitStableDatabaseSemconv() ? null : (long) finalAddress.getPort()),
+                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
   @Test
