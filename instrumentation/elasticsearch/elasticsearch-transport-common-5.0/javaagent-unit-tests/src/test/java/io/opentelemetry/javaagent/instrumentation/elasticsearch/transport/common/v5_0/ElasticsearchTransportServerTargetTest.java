@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.commo
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -73,6 +74,60 @@ class ElasticsearchTransportServerTargetTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("10.0.0.1,10.0.0.1");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void duplicateEndpointsAtAddressLimitArePreserved() {
+    String host = repeat("a", 127);
+
+    ElasticsearchTransportServerTarget target =
+        ElasticsearchTransportServerTarget.of(
+            asList(new Endpoint(host, 9301), new Endpoint(host, 9301)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(host + "," + host).hasSize(255);
+    assertThat(target.getPort()).isEqualTo(9301);
+  }
+
+  @Test
+  void endpointsBeyondAddressLimitAreOmittedWholeAfterSorting() {
+    Endpoint ipv6 = new Endpoint("::1", 9300);
+    Endpoint longHost = new Endpoint(repeat("b", 239), 9300);
+    Endpoint omittedHost = new Endpoint("z.example", 9301);
+
+    ElasticsearchTransportServerTarget first =
+        ElasticsearchTransportServerTarget.of(asList(omittedHost, longHost, ipv6));
+    ElasticsearchTransportServerTarget second =
+        ElasticsearchTransportServerTarget.of(asList(ipv6, omittedHost, longHost));
+
+    assertThat(first).isNotNull();
+    assertThat(second).isNotNull();
+    assertThat(first.getAddress())
+        .isEqualTo("[::1]:9300," + repeat("b", 239) + ":9300")
+        .hasSize(255)
+        .doesNotContain("z.example");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getPort()).isNull();
+    assertThat(second.getPort()).isNull();
+  }
+
+  @Test
+  void firstEndpointThatExceedsAddressLimitHasNoTarget() {
+    String hostAtLimit = repeat("a", 255);
+    String hostOverLimit = repeat("a", 256);
+
+    ElasticsearchTransportServerTarget target =
+        ElasticsearchTransportServerTarget.of(singletonList(new Endpoint(hostAtLimit, 9300)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(hostAtLimit).hasSize(255);
+    assertThat(
+            ElasticsearchTransportServerTarget.of(singletonList(new Endpoint(hostOverLimit, 9300))))
+        .isNull();
+    assertThat(
+            ElasticsearchTransportServerTarget.of(
+                asList(new Endpoint("z.example", 9300), new Endpoint(hostOverLimit, 9300))))
+        .isNull();
   }
 
   @Test
@@ -160,5 +215,9 @@ class ElasticsearchTransportServerTargetTest {
             ElasticsearchTransportServerTarget.of(
                 asList(new Endpoint("safe.example", 9300), new Endpoint(unsafeHost, 9300))))
         .isNull();
+  }
+
+  private static String repeat(String value, int count) {
+    return String.join("", nCopies(count, value));
   }
 }

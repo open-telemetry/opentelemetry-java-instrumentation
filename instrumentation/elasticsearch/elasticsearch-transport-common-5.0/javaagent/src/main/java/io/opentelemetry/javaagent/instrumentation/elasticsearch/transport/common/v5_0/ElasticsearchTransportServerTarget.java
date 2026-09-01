@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
+import static java.util.Collections.singletonList;
+
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -12,6 +14,7 @@ import javax.annotation.Nullable;
 public class ElasticsearchTransportServerTarget {
 
   private static final int DEFAULT_PORT = 9300;
+  private static final int MAX_ADDRESS_LENGTH = 255;
 
   private final String address;
   @Nullable private final Integer port;
@@ -26,8 +29,12 @@ public class ElasticsearchTransportServerTarget {
       if (endpoint.host == null) {
         return null;
       }
+      String address = joinEndpointsWithinLimit(singletonList(endpoint.host));
+      if (address == null) {
+        return null;
+      }
       int port = normalizePort(endpoint.port);
-      return new ElasticsearchTransportServerTarget(endpoint.host, port >= 0 ? port : null);
+      return new ElasticsearchTransportServerTarget(address, port >= 0 ? port : null);
     }
 
     List<String> addresses = new ArrayList<>(endpoints.size());
@@ -51,16 +58,29 @@ public class ElasticsearchTransportServerTarget {
     }
     renderedEndpoints.sort(String::compareTo);
 
-    StringBuilder group = new StringBuilder();
-    for (String renderedEndpoint : renderedEndpoints) {
-      if (group.length() > 0) {
-        group.append(',');
-      }
-      group.append(renderedEndpoint);
+    String address = joinEndpointsWithinLimit(renderedEndpoints);
+    if (address == null) {
+      return null;
     }
     int port = normalizePort(sharedPort);
-    return new ElasticsearchTransportServerTarget(
-        group.toString(), portsMatch && port >= 0 ? port : null);
+    return new ElasticsearchTransportServerTarget(address, portsMatch && port >= 0 ? port : null);
+  }
+
+  @Nullable
+  private static String joinEndpointsWithinLimit(List<String> endpoints) {
+    StringBuilder address = new StringBuilder();
+    for (String endpoint : endpoints) {
+      int separatorLength = address.length() == 0 ? 0 : 1;
+      int available = MAX_ADDRESS_LENGTH - address.length() - separatorLength;
+      if (endpoint.length() > available) {
+        break;
+      }
+      if (separatorLength != 0) {
+        address.append(',');
+      }
+      address.append(endpoint);
+    }
+    return address.length() == 0 ? null : address.toString();
   }
 
   private ElasticsearchTransportServerTarget(String address, @Nullable Integer port) {
