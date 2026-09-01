@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -24,6 +25,7 @@ import io.vertx.core.Vertx;
 import io.vertx.redis.client.Command;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisClientType;
+import io.vertx.redis.client.RedisConnection;
 import io.vertx.redis.client.RedisOptions;
 import io.vertx.redis.client.RedisRole;
 import io.vertx.redis.client.Request;
@@ -128,5 +130,49 @@ class VertxRedisClient403Test {
               assertThat(spans.get(0).getAttributes().get(SERVER_PORT))
                   .isEqualTo(Long.valueOf(port));
             });
+  }
+
+  @Test
+  void trailingInvalidClusterEndpointOmitsStableTarget() {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    TestRedisCluster redisCluster = new TestRedisCluster();
+    cleanup.deferCleanup(redisCluster);
+    Redis clusterClient =
+        Redis.createClient(
+            vertx,
+            new RedisOptions()
+                .setType(RedisClientType.CLUSTER)
+                .addConnectionString(
+                    "redis://" + redisCluster.getHost() + ":" + redisCluster.getPort())
+                .addConnectionString("redis://"));
+    cleanup.deferCleanup(clusterClient::close);
+
+    RedisConnection clusterConnection =
+        clusterClient.connect().toCompletionStage().toCompletableFuture().join();
+    cleanup.deferCleanup(clusterConnection::close);
+    clusterConnection
+        .send(Request.cmd(Command.SET).arg("invalid-cluster-endpoint").arg("value"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .join();
+
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              List<SpanData> spans =
+                  testing.spans().stream()
+                      .filter(span -> span.getName().equals("SET"))
+                      .collect(toList());
+              assertThat(spans).hasSize(1);
+              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS)).isNull();
+              assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isNull();
+              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS))
+                  .isEqualTo(redisCluster.getHost());
+              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
+                  .isEqualTo(Long.valueOf(redisCluster.getPort()));
+            });
+    redisCluster.assertNoFailure();
   }
 }
