@@ -29,6 +29,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSpanName;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v3_1_6.shaded.com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v3_1_6.shaded.com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer;
 import java.time.Duration;
@@ -77,11 +78,11 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   private static final class TranslatingRequestSpan implements RequestSpan {
 
-    private final String name;
+    private final CouchbaseSpanName spanName;
     private final RequestSpan delegate;
 
     private TranslatingRequestSpan(String name, RequestSpan delegate) {
-      this.name = name;
+      spanName = new CouchbaseSpanName(name);
       this.delegate = delegate;
     }
 
@@ -90,6 +91,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       if (emitStableDatabaseSemconv()) {
         String stableKey = stableKey(key);
         if (stableKey != null) {
+          spanName.captureAttribute(stableKey, value);
           delegate.attribute(stableKey, value);
         } else if (captureExperimentalAttribute(key)) {
           delegate.attribute(key, value);
@@ -137,6 +139,9 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void end() {
+      if (emitStableDatabaseSemconv() && spanName.isDatabaseRequest()) {
+        ((OpenTelemetryRequestSpan) delegate).span().updateName(spanName.spanName());
+      }
       delegate.end();
     }
 
@@ -145,16 +150,16 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       delegate.requestContext(requestContext);
       // the old conventions never described a server for Couchbase, and they are frozen
       if (emitStableDatabaseSemconv()) {
-        setConfiguredTarget(name, delegate, CouchbaseServerTargets.get(requestContext.core()));
+        setConfiguredTarget(spanName, delegate, CouchbaseServerTargets.get(requestContext.core()));
       }
     }
 
     private static void setConfiguredTarget(
-        String name, RequestSpan span, @Nullable CouchbaseServerTarget target) {
+        CouchbaseSpanName spanName, RequestSpan span, @Nullable CouchbaseServerTarget target) {
+      spanName.captureServerTarget(target);
       if (target == null) {
         return;
       }
-      ((OpenTelemetryRequestSpan) span).span().updateName(name + " " + target.getAddress());
       span.attribute(SERVER_ADDRESS.getKey(), target.getAddress());
       Integer port = target.getPort();
       if (port != null) {
@@ -164,6 +169,16 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @SuppressWarnings("deprecation") // using deprecated semconv
     private static String stableKey(String key) {
+      if (key.equals(DB_COLLECTION_NAME.getKey())
+          || key.equals(DB_NAMESPACE.getKey())
+          || key.equals(DB_OPERATION_NAME.getKey())
+          || key.equals(DB_QUERY_TEXT.getKey())
+          || key.equals(DB_SYSTEM_NAME.getKey())
+          || key.equals(NETWORK_PEER_ADDRESS.getKey())
+          || key.equals(NETWORK_PEER_PORT.getKey())
+          || key.equals("db.query.summary")) {
+        return key;
+      }
       if (key.equals(DB_COUCHBASE_COLLECTION)) {
         return DB_COLLECTION_NAME.getKey();
       }

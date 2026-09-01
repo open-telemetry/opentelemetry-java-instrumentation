@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
 import com.couchbase.client.core.Core;
+import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.env.SeedNode;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
@@ -37,16 +38,21 @@ public class CouchbaseServerTargets {
     }
   }
 
-  public static void registerFromSeedNodes(Core core, @Nullable Set<SeedNode> seedNodes) {
+  public static void registerFromSeedNodes(
+      Core core, @Nullable Set<SeedNode> seedNodes, @Nullable CoreEnvironment environment) {
     if (seedNodes != null) {
       CouchbaseServerTarget target = seedNodeTargets.get(seedNodes);
-      register(core, target != null ? target : target(seedNodes));
+      if (target == null && environment != null) {
+        target = target(seedNodes, environment.securityConfig().tlsEnabled());
+      }
+      register(core, target);
     }
   }
 
   @Nullable
-  static CouchbaseServerTarget target(Set<SeedNode> seedNodes) {
-    CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder("couchbase");
+  static CouchbaseServerTarget target(Set<SeedNode> seedNodes, boolean tlsEnabled) {
+    CouchbaseServerTarget.Builder target =
+        CouchbaseServerTarget.builder(tlsEnabled ? "couchbases" : "couchbase");
     Map<String, Set<Integer>> portsByAddress = new HashMap<>();
     for (SeedNode seedNode : seedNodes) {
       if (seedNode == null) {

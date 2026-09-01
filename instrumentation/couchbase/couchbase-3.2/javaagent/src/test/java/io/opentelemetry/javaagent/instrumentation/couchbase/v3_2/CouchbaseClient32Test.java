@@ -125,7 +125,7 @@ class CouchbaseClient32Test {
   }
 
   private static String spanName() {
-    return emitStableDatabaseSemconv() ? "get " + serverAddress() : "get";
+    return emitStableDatabaseSemconv() ? "get _default" : "get";
   }
 
   private static <T> T oldOrExperimental(T value) {

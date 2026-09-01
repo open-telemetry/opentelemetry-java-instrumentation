@@ -30,15 +30,20 @@ class CouchbaseRequestTracerTest {
     Field delegateField = span.getClass().getDeclaredField("delegate");
     delegateField.setAccessible(true);
     RequestSpan delegate = (RequestSpan) delegateField.get(span);
+    Class<?> spanNameClass =
+        Class.forName(
+            "io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSpanName");
+    Object spanName = spanNameClass.getConstructor(String.class).newInstance("test");
     Method method =
         span.getClass()
             .getDeclaredMethod(
                 "setConfiguredTarget",
-                String.class,
+                spanNameClass,
                 RequestSpan.class,
                 CouchbaseServerTarget.class);
     method.setAccessible(true);
 
-    assertThatCode(() -> method.invoke(null, "test", delegate, target)).doesNotThrowAnyException();
+    assertThatCode(() -> method.invoke(null, spanName, delegate, target))
+        .doesNotThrowAnyException();
   }
 }

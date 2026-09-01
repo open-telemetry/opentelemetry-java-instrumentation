@@ -29,7 +29,7 @@ class CouchbaseServerTargetsTest {
   @MethodSource("directSeedTargets")
   void directSeedKeepsConfiguredEndpoints(
       SeedNode seedNode, String expectedAddress, Integer expectedPort) {
-    CouchbaseServerTarget target = CouchbaseServerTargets.target(singleton(seedNode));
+    CouchbaseServerTarget target = CouchbaseServerTargets.target(singleton(seedNode), false);
 
     assertThat(target.getAddress()).isEqualTo(expectedAddress);
     assertThat(target.getPort()).isEqualTo(expectedPort);
@@ -67,7 +67,7 @@ class CouchbaseServerTargetsTest {
 
     Core core = mock(Core.class);
     CouchbaseServerTargets.registerSeedNodes(seedNodes, connectionStringTarget);
-    CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes);
+    CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, null);
 
     assertThat(CouchbaseServerTargets.get(core)).isSameAs(connectionStringTarget);
     assertThat(connectionStringTarget.getAddress()).isEqualTo("cluster.example");
@@ -79,7 +79,7 @@ class CouchbaseServerTargetsTest {
   void directSeedEndpointsAreDistinctAndHaveDeterministicOrder(
       SeedNode first, SeedNode second, SeedNode third) {
     CouchbaseServerTarget target =
-        CouchbaseServerTargets.target(new LinkedHashSet<>(asList(first, second, third)));
+        CouchbaseServerTargets.target(new LinkedHashSet<>(asList(first, second, third)), false);
 
     assertThat(target.getAddress())
         .isEqualTo("one.example:11210,one.example:8091,one.example:8092,two.example:11211");
@@ -94,5 +94,35 @@ class CouchbaseServerTargetsTest {
     return Stream.of(
         argumentSet("forward insertion", one, oneWithAnotherManagerPort, two),
         argumentSet("reverse insertion", two, oneWithAnotherManagerPort, one));
+  }
+
+  @ParameterizedTest
+  @MethodSource("secureDirectSeedTargets")
+  void secureDirectSeedUsesTlsDefaultPort(
+      int configuredPort, String expectedAddress, Integer expectedPort) {
+    SeedNode seedNode =
+        SeedNode.create("secure.example", Optional.of(configuredPort), Optional.empty());
+
+    CouchbaseServerTarget target = CouchbaseServerTargets.target(singleton(seedNode), true);
+
+    assertThat(target.getAddress()).isEqualTo(expectedAddress);
+    assertThat(target.getPort()).isEqualTo(expectedPort);
+  }
+
+  private static Stream<Arguments> secureDirectSeedTargets() {
+    return Stream.of(
+        argumentSet("TLS default port", 11207, "secure.example", null),
+        argumentSet("TLS non-default port", 11208, "secure.example", 11208));
+  }
+
+  @Test
+  void directSeedWithoutEnvironmentHasNoTarget() {
+    Core core = mock(Core.class);
+    Set<SeedNode> seedNodes =
+        singleton(SeedNode.create("node.example", Optional.of(11210), Optional.empty()));
+
+    CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, null);
+
+    assertThat(CouchbaseServerTargets.get(core)).isNull();
   }
 }
