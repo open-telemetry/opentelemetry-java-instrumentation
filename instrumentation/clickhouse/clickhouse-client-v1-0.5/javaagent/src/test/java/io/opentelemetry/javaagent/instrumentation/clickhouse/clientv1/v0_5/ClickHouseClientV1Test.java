@@ -41,9 +41,11 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -694,9 +696,9 @@ class ClickHouseClientV1Test {
                 ClickHouseNode.of("tcp://tcp.example"),
                 ClickHouseNode.of("tcps://tcps.example")));
 
-    assertThat(ClickHouseClientV1Singletons.serverAddressGroup(request))
+    assertThat(serverAddressGroup(request))
         .isEqualTo("http.example,https.example,tcp.example,tcps.example");
-    assertThat(ClickHouseClientV1Singletons.serverPort(request)).isNull();
+    assertThat(serverPort(request)).isNull();
   }
 
   @Test
@@ -710,9 +712,8 @@ class ClickHouseClientV1Test {
             .build();
     ClickHouseRequest<?> request = requestWithNodes(ImmutableList.of(httpNode, tcpNode));
 
-    assertThat(ClickHouseClientV1Singletons.serverAddressGroup(request))
-        .isEqualTo("http.example,[2001:db8::2]");
-    assertThat(ClickHouseClientV1Singletons.serverPort(request)).isEqualTo(12345);
+    assertThat(serverAddressGroup(request)).isEqualTo("http.example,[2001:db8::2]");
+    assertThat(serverPort(request)).isEqualTo(12345);
   }
 
   @Test
@@ -721,9 +722,8 @@ class ClickHouseClientV1Test {
     ClickHouseNode httpsNode = ClickHouseNode.of("https://https.example:9444");
     ClickHouseRequest<?> request = requestWithNodes(ImmutableList.of(httpNode, httpsNode));
 
-    assertThat(ClickHouseClientV1Singletons.serverAddressGroup(request))
-        .isEqualTo("http.example:8123,https.example:9444");
-    assertThat(ClickHouseClientV1Singletons.serverPort(request)).isNull();
+    assertThat(serverAddressGroup(request)).isEqualTo("http.example:8123,https.example:9444");
+    assertThat(serverPort(request)).isNull();
   }
 
   @Test
@@ -1080,5 +1080,41 @@ class ClickHouseClientV1Test {
   private static ClickHouseRequest<?> requestWithNodes(Collection<ClickHouseNode> nodes)
       throws Exception {
     return client.read(createNodes(nodes));
+  }
+
+  private static String serverAddressGroup(ClickHouseRequest<?> request) throws Exception {
+    return (String)
+        singletons(request)
+            .getMethod("serverAddressGroup", ClickHouseRequest.class)
+            .invoke(null, request);
+  }
+
+  private static Integer serverPort(ClickHouseRequest<?> request) throws Exception {
+    return (Integer)
+        singletons(request).getMethod("serverPort", ClickHouseRequest.class).invoke(null, request);
+  }
+
+  private static Class<?> singletons(ClickHouseRequest<?> request) throws Exception {
+    String singletonsName =
+        "io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5."
+            + "ClickHouseClientV1Singletons";
+    ClassLoader requestClassLoader = request.getClass().getClassLoader();
+    try {
+      return Class.forName(singletonsName, true, requestClassLoader);
+    } catch (ClassNotFoundException ignored) {
+      Class<?> registry =
+          AgentClassLoaderAccess.loadClass(
+              "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+      Method getInstrumentationClassLoader =
+          registry.getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class);
+      ClassLoader instrumentationClassLoader =
+          (ClassLoader)
+              getInstrumentationClassLoader.invoke(
+                  null,
+                  "io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5."
+                      + "ClickHouseClientV1InstrumentationModule",
+                  requestClassLoader);
+      return Class.forName(singletonsName, true, instrumentationClassLoader);
+    }
   }
 }
