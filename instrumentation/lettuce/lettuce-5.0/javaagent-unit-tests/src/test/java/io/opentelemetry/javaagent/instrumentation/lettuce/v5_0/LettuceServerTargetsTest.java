@@ -73,11 +73,11 @@ class LettuceServerTargetsTest {
   }
 
   @Test
-  void socket() {
+  void singleSocket() {
     RedisServerTarget target =
-        LettuceServerTargets.of(RedisURI.Builder.socket("/var/run/redis.sock").build());
+        LettuceServerTargets.of(RedisURI.Builder.socket("/var/run/redis1.sock").build());
 
-    assertThat(target.getAddress()).isEqualTo("/var/run/redis.sock");
+    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock");
     assertThat(target.getPort()).isNull();
   }
 
@@ -151,15 +151,23 @@ class LettuceServerTargetsTest {
   }
 
   @Test
-  void clusterKeepsUnixSockets() {
+  void clusterWithOneUnixSocketKeepsItsPath() {
     RedisServerTarget target =
         LettuceServerTargets.ofUris(
-            asList(
-                RedisURI.Builder.socket("/var/run/redis2.sock").build(),
-                RedisURI.Builder.socket("/var/run/redis1.sock").build()));
+            singletonList(RedisURI.Builder.socket("/var/run/redis1.sock").build()));
 
-    assertThat(target.getAddress()).isEqualTo("/var/run/redis2.sock,/var/run/redis1.sock");
+    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void clusterWithMultipleUnixSocketsIsOmitted() {
+    assertThat(
+            LettuceServerTargets.ofUris(
+                asList(
+                    RedisURI.Builder.socket("/var/run/redis1.sock").build(),
+                    RedisURI.Builder.socket("/var/run/redis2.sock").build())))
+        .isNull();
   }
 
   @Test
