@@ -61,6 +61,8 @@ public final class UrlParsingUtils {
       Pattern.compile("\\(\\s*host\\s*=\\s*([^)]*?)\\s*\\)", Pattern.CASE_INSENSITIVE);
   private static final Pattern ADDRESS_PORT_PATTERN =
       Pattern.compile("\\(\\s*port\\s*=\\s*([\\d]+)\\s*\\)", Pattern.CASE_INSENSITIVE);
+  private static final Pattern ADDRESS_ENTRY_PATTERN =
+      Pattern.compile("^address\\s*=", Pattern.CASE_INSENSITIVE);
 
   private UrlParsingUtils() {}
 
@@ -396,7 +398,7 @@ public final class UrlParsingUtils {
   @Nullable
   private static String sanitizeHostEntry(String entry) {
     String host = entry.trim();
-    if (!host.regionMatches(true, 0, "address=", 0, "address=".length())) {
+    if (!ADDRESS_ENTRY_PATTERN.matcher(host).find()) {
       return host.indexOf('=') < 0 && isValidHostPort(host) ? host : null;
     }
 
@@ -462,6 +464,79 @@ public final class UrlParsingUtils {
       group.append(host);
     }
     return group.toString();
+  }
+
+  @Nullable
+  public static ServerAddressGroup parseServerAddressGroup(
+      String authority, @Nullable Integer defaultPort) {
+    String sanitized = sanitizeHostList(authority);
+    if (sanitized == null || defaultPort == null) {
+      return sanitized == null ? null : new ServerAddressGroup(sanitized, null);
+    }
+
+    List<HostPort> endpoints = new ArrayList<>();
+    Integer commonPort = null;
+    boolean samePort = true;
+    for (String entry : splitHostList(sanitized)) {
+      HostPort endpoint = extractSanitizedHostPort(entry);
+      if (endpoint.host().indexOf('\\') >= 0 || endpoint.host().startsWith("/")) {
+        return new ServerAddressGroup(sanitized, null);
+      }
+      Integer effectivePort = endpoint.port() != null ? endpoint.port() : defaultPort;
+      endpoints.add(new HostPort(endpoint.host(), effectivePort, endpoint.ipv6Address()));
+      if (commonPort == null) {
+        commonPort = effectivePort;
+      } else if (!commonPort.equals(effectivePort)) {
+        samePort = false;
+      }
+    }
+
+    StringBuilder address = new StringBuilder();
+    for (HostPort endpoint : endpoints) {
+      if (address.length() > 0) {
+        address.append(',');
+      }
+      appendHostPort(address, endpoint.host(), samePort ? null : endpoint.port());
+    }
+    Integer port = samePort && !defaultPort.equals(commonPort) ? commonPort : null;
+    return new ServerAddressGroup(address.toString(), port);
+  }
+
+  private static HostPort extractSanitizedHostPort(String entry) {
+    if (!ADDRESS_ENTRY_PATTERN.matcher(entry).find()) {
+      return extractHostPort(entry);
+    }
+    Matcher hostMatcher = ADDRESS_HOST_PATTERN.matcher(entry);
+    hostMatcher.find();
+    Matcher portMatcher = ADDRESS_PORT_PATTERN.matcher(entry);
+    Integer port = portMatcher.find() ? parsePort(portMatcher.group(1)) : null;
+    String host = hostMatcher.group(1).trim();
+    return new HostPort(stripIpv6Brackets(host), port, host.indexOf(':') >= 0 ? host : null);
+  }
+
+  /**
+   * A normalized configured server address group.
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
+   */
+  public static final class ServerAddressGroup {
+    private final String address;
+    @Nullable private final Integer port;
+
+    private ServerAddressGroup(String address, @Nullable Integer port) {
+      this.address = address;
+      this.port = port;
+    }
+
+    public String address() {
+      return address;
+    }
+
+    @Nullable
+    public Integer port() {
+      return port;
+    }
   }
 
   /**

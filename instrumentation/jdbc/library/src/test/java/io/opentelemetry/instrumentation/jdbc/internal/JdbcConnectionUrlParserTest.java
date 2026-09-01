@@ -111,6 +111,8 @@ class JdbcConnectionUrlParserTest {
         "jdbc:h2:tcp://h1:8082,h2:8083/db",
         "jdbc:sqlserver://;failoverPartner=h2",
         "jdbc:sqlserver://h1;failoverPartner=unexpected=value",
+        "jdbc:oracle:thin:@//h1,unexpected=value/service",
+        "jdbc:oracle:thin:@ldap://ldap1:389,ldap2:389/cn=oraclecontext",
         "jdbc:oracle:thin:@(description=(address=(host=h1)(port=1521))"
             + "(address=(host=h2)(port=1522)"
       })
@@ -167,7 +169,7 @@ class JdbcConnectionUrlParserTest {
     DbInfo dbInfo =
         parse("jdbc:postgresql://h1:5432,h2:5432?options=email=user@example.com,mode=strict", null);
 
-    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("h1:5432,h2:5432");
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("h1,h2");
   }
 
   @ParameterizedTest
@@ -188,7 +190,7 @@ class JdbcConnectionUrlParserTest {
 
     DbInfo dbInfo = parse(url, null);
 
-    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("h1:3306,h2:3306");
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("h1,h2");
     assertThat(dbInfo.getHost()).isEqualTo("h1");
     assertThat(dbInfo.getName()).isEqualTo("db");
     assertThat(dbInfo.getDbUser()).isEqualTo("admin@corp.com");
@@ -228,7 +230,7 @@ class JdbcConnectionUrlParserTest {
                 + "?sessionVariables=email='user@example.com',sql_mode=ANSI",
             null);
 
-    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("address=(host=h1),address=(host=h2)");
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("h1,h2");
     assertThat(dbInfo.getHost()).isEqualTo("h1");
   }
 
@@ -328,7 +330,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("127.0.0.1")
             .setPort(3306)
             .setName("mdbdb")
-            .setServerAddressGroup("127.0.0.1,127.0.0.1:3306")
+            .setServerAddressGroup("127.0.0.1,127.0.0.1")
             .build(),
         arg("jdbc:mysql:replication://address=(HOST=127.0.0.1)(port=33)(user=mdbuser)(password=PW),address=(host=mdb.host)(port=3306)(user=otheruser)(password=PW)/mdbdb?user=wrong&password=PW")
             .setShortUrl("mysql:replication://127.0.0.1:33")
@@ -338,8 +340,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("127.0.0.1")
             .setPort(33)
             .setName("mdbdb")
-            .setServerAddressGroup(
-                "address=(host=127.0.0.1)(port=33),address=(host=mdb.host)(port=3306)")
+            .setServerAddressGroup("127.0.0.1:33,mdb.host:3306")
             .build(),
         arg("jdbc:mysql:replication://address=(HOST=mdb.host),address=(host=anotherhost)(port=3306)(user=wrong)(password=PW)/mdbdb?user=mdbuser&password=PW")
             .setShortUrl("mysql:replication://mdb.host:3306")
@@ -349,7 +350,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host")
             .setPort(3306)
             .setName("mdbdb")
-            .setServerAddressGroup("address=(host=mdb.host),address=(host=anotherhost)(port=3306)")
+            .setServerAddressGroup("mdb.host,anotherhost")
             .build(),
         arg("jdbc:mysql:replication://address=(host=::1)(port=33)/mydb")
             .setShortUrl("mysql:replication://[::1]:33")
@@ -628,7 +629,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host1")
             .setPort(33)
             .setName("mdbdb")
-            .setServerAddressGroup("mdb.host1:33,mdb.host")
+            .setServerAddressGroup("mdb.host1:33,mdb.host:3306")
             .build(),
         arg("jdbc:mariadb:sequential://mdb.host1,mdb.host2:33/mdbdb")
             .setShortUrl("mariadb:sequential://mdb.host1:3306")
@@ -637,7 +638,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host1")
             .setPort(3306)
             .setName("mdbdb")
-            .setServerAddressGroup("mdb.host1,mdb.host2:33")
+            .setServerAddressGroup("mdb.host1:3306,mdb.host2:33")
             .build(),
         arg("jdbc:mariadb:loadbalance://127.0.0.1:33,mdb.host/mdbdb")
             .setShortUrl("mariadb:loadbalance://127.0.0.1:33")
@@ -646,7 +647,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("127.0.0.1")
             .setPort(33)
             .setName("mdbdb")
-            .setServerAddressGroup("127.0.0.1:33,mdb.host")
+            .setServerAddressGroup("127.0.0.1:33,mdb.host:3306")
             .build(),
         arg("jdbc:mariadb:loadbalance://127.0.0.1:33/mdbdb")
             .setShortUrl("mariadb:loadbalance://127.0.0.1:33")
@@ -663,7 +664,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("2001:0660:7401:0200:0000:0000:0edf:bdd7")
             .setPort(33)
             .setName("mdbdb")
-            .setServerAddressGroup("[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host")
+            .setServerAddressGroup("[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host:3306")
             .build(),
         arg("jdbc:mariadb:replication://localhost:33,anotherhost:3306/mdbdb")
             .setShortUrl("mariadb:replication://localhost:33")
@@ -997,7 +998,22 @@ class JdbcConnectionUrlParserTest {
 
     assertThat(info.getServerAddress()).isEqualTo("property.host1");
     assertThat(info.getServerPort()).isEqualTo(1444);
-    assertThat(info.getServerAddressGroup()).isEqualTo("property.host1:1444,property.host2");
+    assertThat(info.getServerAddressGroup()).isEqualTo("property.host1:1444,property.host2:1433");
+  }
+
+  @Test
+  void oracleEasyConnectListParsesFirstEndpointAndService() {
+    DbInfo info =
+        parse(
+            "jdbc:oracle:thin:@tcps://[2001:db8::1]:2521,"
+                + "[2001:db8::2]:2521/orclsn?retry_count=3",
+            null);
+
+    assertThat(info.getServerAddress()).isEqualTo("2001:db8::1");
+    assertThat(info.getServerPort()).isEqualTo(2521);
+    assertThat(info.getDbNamespace()).isEqualTo("orclsn");
+    assertThat(info.getServerAddressGroup()).isEqualTo("[2001:db8::1],[2001:db8::2]");
+    assertThat(info.getServerAddressGroupPort()).isEqualTo(2521);
   }
 
   private static Stream<Arguments> oracleArguments() {
@@ -1100,12 +1116,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("orcl.host1")
             .setPort(1521)
             .setName("orclsn")
-            .setServerAddressGroup(
-                "oracle:thin:@(description=(address_list="
-                    + "(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
-                    + "(address=(protocol=tcp)(host=orcl.host2)(port=1521))"
-                    + "(address=(protocol=tcp)(host=orcl.host3)(port=1521))"
-                    + "(address=(protocol=tcp)(host=orcl.host4)(port=1521))))")
+            .setServerAddressGroup("orcl.host1,orcl.host2,orcl.host3,orcl.host4")
             .build(),
 
         // https://docs.oracle.com/cd/B28359_01/java.111/b31224/instclnt.htm
@@ -2082,7 +2093,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(5432)
             .setName("pgdb")
-            .setServerAddressGroup("pg.host1:5432,pg.host2:5432")
+            .setServerAddressGroup("pg.host1,pg.host2")
             .build(),
         // the user info of a url shaped authority ends at its last '@', so a password that holds a
         // comma cannot leave a fragment of itself among the hosts
@@ -2124,8 +2135,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host1")
             .setPort(33)
             .setName("mdbdb")
-            .setServerAddressGroup(
-                "address=(host=mdb.host1)(port=33)," + "address=(host=mdb.host2)(port=3306)")
+            .setServerAddressGroup("mdb.host1:33,mdb.host2:3306")
             .build(),
         // https://learn.microsoft.com/en-us/sql/connect/jdbc/setting-the-connection-properties
         arg("jdbc:sqlserver://ss.host1:1433;databaseName=ssdb;failoverPartner=ss.host2")
@@ -2135,7 +2145,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("ss.host1")
             .setPort(1433)
             .setName("ssdb")
-            .setServerAddressGroup("ss.host1:1433,ss.host2")
+            .setServerAddressGroup("ss.host1,ss.host2")
             .build(),
         arg("jdbc:sqlserver://ss.host1\\instance1:1433;databaseName=ssdb;"
                 + "failoverPartner=ss.host2\\instance2")
@@ -2162,7 +2172,7 @@ class JdbcConnectionUrlParserTest {
             .setOldSystem("mssql")
             .setHost("2001:db8::1")
             .setPort(1433)
-            .setServerAddressGroup("[2001:db8::1]:1433,[2001:db8::2]")
+            .setServerAddressGroup("[2001:db8::1],[2001:db8::2]")
             .build(),
         // an ADDRESS_LIST is optional, a DESCRIPTION may hold the addresses directly
         arg("jdbc:oracle:thin:@(description=(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
@@ -2175,9 +2185,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("orcl.host1")
             .setPort(1521)
             .setName("orclsn")
-            .setServerAddressGroup(
-                "oracle:thin:@(description=(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
-                    + "(address=(protocol=tcp)(host=orcl.host2)(port=1522)))")
+            .setServerAddressGroup("orcl.host1:1521,orcl.host2:1522")
             .build(),
         // a DESCRIPTION_LIST holds independent descriptions, so its addresses are not one group
         arg("jdbc:oracle:thin:@(description_list="
@@ -2229,7 +2237,7 @@ class JdbcConnectionUrlParserTest {
             "MySQL replication target order",
             "jdbc:mysql:replication://address=(host=replica.host)(port=3307),"
                 + "address=(host=source.host)(port=3306)/mydb",
-            "address=(host=replica.host)(port=3307)," + "address=(host=source.host)(port=3306)"),
+            "replica.host:3307,source.host:3306"),
         argumentSet(
             "SQL Server principal and failover partner order",
             "jdbc:sqlserver://principal.host:1433;failoverPartner=partner.host:1444",
@@ -2245,10 +2253,80 @@ class JdbcConnectionUrlParserTest {
                 + "(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
                 + "(address=(protocol=tcp)(host=orcl.host2)(port=1522)))"
                 + "(connect_data=(service_name=orclsn)))",
-            "oracle:thin:@(description=(address_list="
-                + "(address=(protocol=tcp)(host=orcl.host2)(port=1522))"
-                + "(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
-                + "(address=(protocol=tcp)(host=orcl.host2)(port=1522))))"));
+            "orcl.host2:1522,orcl.host1:1521,orcl.host2:1522"));
+  }
+
+  private static Stream<Arguments> normalizedServerAddressGroupArguments() {
+    return Stream.of(
+        argumentSet(
+            "PostgreSQL shared non-default port",
+            "jdbc:postgresql://pg.host1:15432,pg.host2:15432/pgdb",
+            "pg.host1,pg.host2",
+            15432),
+        argumentSet(
+            "PostgreSQL default ports",
+            "jdbc:postgresql://pg.host1,pg.host2:5432/pgdb",
+            "pg.host1,pg.host2",
+            null),
+        argumentSet(
+            "PostgreSQL mixed IPv6 ports",
+            "jdbc:postgresql://[2001:db8::1],[2001:db8::2]:15432/pgdb",
+            "[2001:db8::1]:5432,[2001:db8::2]:15432",
+            null),
+        argumentSet(
+            "MySQL address blocks on default ports",
+            "jdbc:mysql:replication://address=(host=source.host)(port=3306),"
+                + "address=(host=replica.host)/mydb",
+            "source.host,replica.host",
+            null),
+        argumentSet(
+            "MariaDB shared non-default port",
+            "jdbc:mariadb:failover://mdb.host1:13306,mdb.host2:13306/mdbdb",
+            "mdb.host1,mdb.host2",
+            13306),
+        argumentSet(
+            "SQL Server shared non-default port",
+            "jdbc:sqlserver://primary.host:1444;failoverPartner=partner.host:1444",
+            "primary.host,partner.host",
+            1444),
+        argumentSet(
+            "Oracle shared non-default port",
+            "jdbc:oracle:thin:@(description="
+                + "(address=(protocol=tcp)(host=orcl.host1)(port=2521))"
+                + "(address=(protocol=tcp)(host=orcl.host2)(port=2521))"
+                + "(connect_data=(service_name=orclsn)))",
+            "orcl.host1,orcl.host2",
+            2521),
+        argumentSet(
+            "Oracle Easy Connect default ports",
+            "jdbc:oracle:thin:@//orcl.host1,orcl.host2/orclsn",
+            "orcl.host1,orcl.host2",
+            null),
+        argumentSet(
+            "Oracle Easy Connect shared non-default port",
+            "jdbc:oracle:thin:@tcps://orcl.host1:2521,orcl.host2:2521/orclsn",
+            "orcl.host1,orcl.host2",
+            2521),
+        argumentSet(
+            "Oracle Easy Connect mixed IPv6 ports",
+            "jdbc:oracle:thin:@//[2001:db8::1],[2001:db8::2]:2521/orclsn",
+            "[2001:db8::1]:1521,[2001:db8::2]:2521",
+            null),
+        argumentSet(
+            "unknown database default keeps explicit ports",
+            "jdbc:unknown://unknown.host1:1234,unknown.host2:1234/db",
+            "unknown.host1:1234,unknown.host2:1234",
+            null));
+  }
+
+  @ParameterizedTest
+  @MethodSource("normalizedServerAddressGroupArguments")
+  void normalizesServerAddressGroupPorts(
+      String url, String expectedServerAddressGroup, Integer expectedServerAddressGroupPort) {
+    DbInfo dbInfo = parse(url, null);
+
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo(expectedServerAddressGroup);
+    assertThat(dbInfo.getServerAddressGroupPort()).isEqualTo(expectedServerAddressGroupPort);
   }
 
   @ParameterizedTest
@@ -2296,6 +2374,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(info.getServerAddress()).isEqualTo(expected.getServerAddress());
     assertThat(info.getServerPort()).isEqualTo(expected.getServerPort());
     assertThat(info.getServerAddressGroup()).isEqualTo(expected.getServerAddressGroup());
+    assertThat(info.getServerAddressGroupPort()).isEqualTo(expected.getServerAddressGroupPort());
     assertThat(info.isMultiTarget()).isEqualTo(expected.isMultiTarget());
     assertThat(info.getDbUser()).isEqualTo(expected.getDbUser());
     assertThat(info.getDbNamespace()).isEqualTo(expected.getDbNamespace());
@@ -2327,6 +2406,7 @@ class JdbcConnectionUrlParserTest {
               .serverAddress(builder.host)
               .serverPort(builder.port)
               .serverAddressGroup(builder.serverAddressGroup)
+              .serverAddressGroupPort(builder.serverAddressGroupPort)
               .multiTarget(builder.multiTarget || builder.serverAddressGroup != null)
               .build();
     }
@@ -2349,6 +2429,7 @@ class JdbcConnectionUrlParserTest {
     String namespace;
     String name;
     String serverAddressGroup;
+    Integer serverAddressGroupPort;
     boolean multiTarget;
 
     ParseTestArgumentBuilder(String url) {
@@ -2410,6 +2491,11 @@ class JdbcConnectionUrlParserTest {
 
     ParseTestArgumentBuilder setServerAddressGroup(String serverAddressGroup) {
       this.serverAddressGroup = serverAddressGroup;
+      return this;
+    }
+
+    ParseTestArgumentBuilder setServerAddressGroupPort(int serverAddressGroupPort) {
+      this.serverAddressGroupPort = serverAddressGroupPort;
       return this;
     }
 

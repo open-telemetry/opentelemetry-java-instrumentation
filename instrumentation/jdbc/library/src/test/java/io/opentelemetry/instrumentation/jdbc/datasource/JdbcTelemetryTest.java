@@ -81,11 +81,12 @@ class JdbcTelemetryTest {
         SERVER_PORT);
   }
 
-  @Test
-  void groupTargetSuppressesPortInStableSemconv() throws SQLException {
+  @ParameterizedTest
+  @MethodSource("groupTargets")
+  void groupTargetUsesNormalizedPortsOnlyInStableSemconv(
+      String url, String stableAddress, Long stablePort) throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
-    DataSource dataSource =
-        telemetry.wrap(new TestDataSource("jdbc:postgresql://pg.host1:5432,pg.host2:5433/dbname"));
+    DataSource dataSource = telemetry.wrap(new TestDataSource(url));
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -109,17 +110,36 @@ class JdbcTelemetryTest {
                         // server
                         equalTo(
                             SERVER_ADDRESS,
-                            emitStableDatabaseSemconv()
-                                ? "pg.host1:5432,pg.host2:5433"
-                                : "localhost"),
-                        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : 5432L))));
+                            emitStableDatabaseSemconv() ? stableAddress : "localhost"),
+                        equalTo(
+                            SERVER_PORT,
+                            emitStableDatabaseSemconv() ? stablePort : Long.valueOf(5432)))));
+  }
+
+  private static Stream<Arguments> groupTargets() {
+    return Stream.of(
+        argumentSet(
+            "default ports",
+            "jdbc:postgresql://pg.host1,pg.host2:5432/dbname",
+            "pg.host1,pg.host2",
+            null),
+        argumentSet(
+            "shared non-default port",
+            "jdbc:postgresql://pg.host1:15432,pg.host2:15432/dbname",
+            "pg.host1,pg.host2",
+            15432L),
+        argumentSet(
+            "mixed ports",
+            "jdbc:postgresql://pg.host1:5432,pg.host2:15432/dbname",
+            "pg.host1:5432,pg.host2:15432",
+            null));
   }
 
   @Test
   void spanNameFallsBackToGroupTarget() throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
     DataSource dataSource =
-        telemetry.wrap(new TestDataSource("jdbc:postgresql://pg.host1:5432,pg.host2:5433"));
+        telemetry.wrap(new TestDataSource("jdbc:postgresql://pg.host1:15432,pg.host2:15432"));
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("invalid"));
@@ -132,7 +152,7 @@ class JdbcTelemetryTest {
                 span -> span.hasName("parent"),
                 span ->
                     span.hasName(
-                        emitStableDatabaseSemconv() ? "pg.host1:5432,pg.host2:5433" : "DB Query")));
+                        emitStableDatabaseSemconv() ? "pg.host1,pg.host2:15432" : "DB Query")));
   }
 
   @ParameterizedTest

@@ -7,12 +7,14 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Parses standard URL-like JDBC connection strings using Java's URI parser.
@@ -42,11 +44,15 @@ public final class GenericUrlParser implements JdbcUrlParser {
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
+    parse(jdbcUrl, ctx, null);
+  }
+
+  public void parse(String jdbcUrl, ParseContext ctx, @Nullable Integer defaultPort) {
     if (ctx.system() == null) {
       ctx.system(OTHER_SQL);
     }
 
-    if (!applyHostGroup(jdbcUrl, ctx)) {
+    if (!applyHostGroup(jdbcUrl, ctx, defaultPort)) {
       return;
     }
 
@@ -93,7 +99,8 @@ public final class GenericUrlParser implements JdbcUrlParser {
     ctx.applyCommonParams(jdbcUrl, "?", "&");
   }
 
-  private static boolean applyHostGroup(String jdbcUrl, ParseContext ctx) {
+  private static boolean applyHostGroup(
+      String jdbcUrl, ParseContext ctx, @Nullable Integer defaultPort) {
     String authority = extractAuthority(jdbcUrl);
     if (authority == null) {
       authority = extractAuthorityWithQueryAt(jdbcUrl);
@@ -101,10 +108,8 @@ public final class GenericUrlParser implements JdbcUrlParser {
         return jdbcUrl.indexOf("://") < 0;
       }
     }
-    String hostList = sanitizeHostList(authority);
-    if (hostList != null) {
-      ctx.serverAddressGroup(hostList);
-    }
+    ServerAddressGroup hostList = parseServerAddressGroup(authority, defaultPort);
+    ctx.serverAddressGroup(hostList);
     return true;
   }
 }

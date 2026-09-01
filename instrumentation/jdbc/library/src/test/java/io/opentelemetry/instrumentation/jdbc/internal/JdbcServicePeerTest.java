@@ -29,9 +29,7 @@ import org.junit.jupiter.api.Test;
 class JdbcServicePeerTest {
 
   private static final String GROUP_TARGET = "pg.host1:5432,pg.host2:5433";
-  private static final String OPAQUE_GROUP_TARGET =
-      "oracle:thin:@(description=(address=(protocol=tcp)(host=h1)(port=1521))"
-          + "(address=(protocol=tcp)(host=h2)(port=1521)))";
+  private static final String DEFAULT_PORT_GROUP_TARGET = "orcl.host1,orcl.host2";
 
   @Test
   void groupTargetCanBeMatchedExactly() {
@@ -70,21 +68,42 @@ class JdbcServicePeerTest {
   }
 
   @Test
-  void opaqueGroupTargetCanBeMatchedExactly() {
+  void defaultPortGroupTargetCanBeMatchedExactly() {
     DbRequest request =
         request(
             DbInfo.builder()
                 .dbSystemName("oracle.db")
-                .serverAddress("oracle")
+                .serverAddress("orcl.host1")
                 .serverPort(1521)
-                .serverAddressGroup(OPAQUE_GROUP_TARGET)
+                .serverAddressGroup(DEFAULT_PORT_GROUP_TARGET)
                 .build());
 
     if (emitStableDatabaseSemconv()) {
-      assertThat(resolve(request, OPAQUE_GROUP_TARGET))
+      assertThat(resolve(request, DEFAULT_PORT_GROUP_TARGET))
           .containsOnly(entry(maybeStablePeerService(), "myService"));
     } else {
-      assertThat(resolve(request, OPAQUE_GROUP_TARGET)).isEmpty();
+      assertThat(resolve(request, DEFAULT_PORT_GROUP_TARGET)).isEmpty();
+    }
+  }
+
+  @Test
+  void commonPortGroupTargetCanBeMatchedExactly() {
+    String target = "pg.host1,pg.host2";
+    DbRequest request =
+        request(
+            DbInfo.builder()
+                .dbSystemName(POSTGRESQL)
+                .serverAddress("localhost")
+                .serverPort(5432)
+                .serverAddressGroup(target)
+                .serverAddressGroupPort(15432)
+                .build());
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(resolve(request, target + ":15432"))
+          .containsOnly(entry(maybeStablePeerService(), "myService"));
+    } else {
+      assertThat(resolve(request, target + ":15432")).isEmpty();
     }
   }
 

@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.appendTypePrefix;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.buildShortUrl;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.UrlParams;
 import java.util.Map;
 import java.util.Properties;
@@ -30,6 +30,7 @@ public final class ParseContext {
   @Nullable private String host;
   @Nullable private Integer port;
   @Nullable private String serverAddressGroup;
+  @Nullable private Integer serverAddressGroupPort;
   private boolean multiTarget;
   @Nullable private String user;
   @Nullable private String databaseName;
@@ -115,18 +116,12 @@ public final class ParseContext {
     this.port = port;
   }
 
-  public void serverAddressGroup(@Nullable String serverAddressGroup) {
-    this.serverAddressGroup = serverAddressGroup;
-    if (serverAddressGroup != null) {
-      multiTarget = true;
+  public void serverAddressGroup(@Nullable ServerAddressGroup serverAddressGroup) {
+    if (serverAddressGroup == null) {
+      return;
     }
-  }
-
-  public void opaqueServerAddressGroup(String target) {
-    StringBuilder groupAddress = new StringBuilder();
-    appendTypePrefix(groupAddress, type, subtype);
-    groupAddress.append(target);
-    serverAddressGroup = groupAddress.toString();
+    this.serverAddressGroup = serverAddressGroup.address();
+    this.serverAddressGroupPort = serverAddressGroup.port();
     multiTarget = true;
   }
 
@@ -362,7 +357,7 @@ public final class ParseContext {
     }
     builder.dbConnectionString(buildShortUrl(type, subtype, host, port));
     if (serverAddressGroup != null) {
-      builder.serverAddressGroup(serverAddressGroup);
+      builder.serverAddressGroup(serverAddressGroup).serverAddressGroupPort(serverAddressGroupPort);
     }
     return builder.build();
   }

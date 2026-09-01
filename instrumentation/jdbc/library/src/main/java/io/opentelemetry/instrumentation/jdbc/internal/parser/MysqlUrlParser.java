@@ -9,8 +9,9 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
 
+import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -83,7 +84,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       parseMariaSubProtocol(jdbcUrl.substring(protoLoc + 3), ctx);
     } else if (protoLoc > 0) {
       // Standard URL format - delegate to GenericUrlParser
-      GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx);
+      GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx, DEFAULT_PORT);
     } else {
       // Non-standard format: type/host:port/db?params
       parseNonStandardUrl(jdbcUrl, ctx);
@@ -228,10 +229,8 @@ public final class MysqlUrlParser implements JdbcUrlParser {
         return false;
       }
     }
-    String hostList = sanitizeHostList(authority);
-    if (hostList != null) {
-      ctx.serverAddressGroup(hostList);
-    }
+    ServerAddressGroup hostList = parseServerAddressGroup(authority, DEFAULT_PORT);
+    ctx.serverAddressGroup(hostList);
     return true;
   }
 
