@@ -105,13 +105,11 @@ class RedisServerTargetTest {
   }
 
   @Test
-  void discoveryTargetFallsBackToLogicalName() {
-    RedisServerTarget target =
-        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
-            asList("", "redis://", "://sentinel"), "mymaster");
-
-    assertThat(target.getAddress()).isEqualTo("mymaster");
-    assertThat(target.getPort()).isNull();
+  void invalidDiscoveryEndpointsFailClosed() {
+    assertThat(
+            RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+                asList("", "redis://", "://sentinel"), "mymaster"))
+        .isNull();
   }
 
   @ParameterizedTest
@@ -138,17 +136,7 @@ class RedisServerTargetTest {
         argumentSet("default IPv6", asList("[::1]:6379", "[::2]:6379"), "::1,::2", null),
         argumentSet("shared non-default IPv6", asList("[::1]:6380", "[::2]:6380"), "::1,::2", 6380),
         argumentSet(
-            "mixed IPv6", asList("[::1]:6379", "[::2]:6380"), "[::1]:6379,[::2]:6380", null),
-        argumentSet(
-            "Unix sockets",
-            asList("unix:///var/run/redis1.sock", "unix:///var/run/redis2.sock"),
-            "/var/run/redis1.sock,/var/run/redis2.sock",
-            null),
-        argumentSet(
-            "socket and network endpoint",
-            asList("unix:///var/run/redis.sock", "node1"),
-            "/var/run/redis.sock,node1:6379",
-            null));
+            "mixed IPv6", asList("[::1]:6379", "[::2]:6380"), "[::1]:6379,[::2]:6380", null));
   }
 
   @ParameterizedTest
@@ -281,13 +269,21 @@ class RedisServerTargetTest {
   }
 
   @Test
-  void unorderedUnixSocketEndpointsAreSortedAndPreserved() {
-    RedisServerTarget target =
-        RedisServerTarget.ofUnorderedEndpoints(
-            asList("unix:///var/run/redis2.sock", "unix:///var/run/redis1.sock"));
-
-    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock,/var/run/redis2.sock");
-    assertThat(target.getPort()).isNull();
+  void endpointListsContainingUnixSocketsAreOmitted() {
+    assertThat(
+            RedisServerTarget.ofEndpoints(
+                asList("unix:///var/run/redis1.sock", "unix:///var/run/redis2.sock")))
+        .isNull();
+    assertThat(RedisServerTarget.ofEndpoints(asList("unix:///var/run/redis.sock", "node1:6379")))
+        .isNull();
+    assertThat(
+            RedisServerTarget.ofUnorderedEndpoints(
+                asList("node1:6379", "unix:///var/run/redis.sock")))
+        .isNull();
+    assertThat(
+            RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+                asList("unix:///var/run/redis.sock", "node1:6379"), "mymaster"))
+        .isNull();
   }
 
   @Test
@@ -308,11 +304,15 @@ class RedisServerTargetTest {
   }
 
   @Test
-  void unusableEndpointsAreSkipped() {
-    RedisServerTarget target =
-        RedisServerTarget.ofEndpoints(asList("", "node1:6379", "   ", "node2:6380"));
-
-    assertThat(target.getAddress()).isEqualTo("node1:6379,node2:6380");
+  void endpointListsFailClosedOnUnusableMembers() {
+    assertThat(RedisServerTarget.ofEndpoints(asList("node1:6379", "", "node2:6380"))).isNull();
+    assertThat(RedisServerTarget.ofEndpoints(asList("node1:6379", null))).isNull();
+    assertThat(RedisServerTarget.ofUnorderedEndpoints(asList("node1:6379", "   ", "node2:6380")))
+        .isNull();
+    assertThat(
+            RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+                asList("sentinel1:26379", "://sentinel"), "mymaster"))
+        .isNull();
   }
 
   @ParameterizedTest
@@ -410,11 +410,8 @@ class RedisServerTargetTest {
   }
 
   @Test
-  void endpointListDropsCommaDelimitedAuthority() {
-    RedisServerTarget target = RedisServerTarget.ofEndpoints(asList("node1,node2", "node3:6379"));
-
-    assertThat(target.getAddress()).isEqualTo("node3");
-    assertThat(target.getPort()).isNull();
+  void endpointListFailsClosedOnCommaDelimitedAuthority() {
+    assertThat(RedisServerTarget.ofEndpoints(asList("node1,node2", "node3:6379"))).isNull();
   }
 
   @ParameterizedTest
@@ -432,28 +429,18 @@ class RedisServerTargetTest {
   })
   void socketEndpointKeepsPathAndDropsPort(String endpoint, String address) {
     RedisServerTarget target = RedisServerTarget.ofEndpoint(endpoint);
+    RedisServerTarget listTarget = RedisServerTarget.ofEndpoints(singletonList(endpoint));
 
     assertThat(target.getAddress()).isEqualTo(address);
     assertThat(target.getPort()).isNull();
+    assertThat(listTarget.getAddress()).isEqualTo(address);
+    assertThat(listTarget.getPort()).isNull();
   }
 
   @Test
-  void socketEndpointsInAList() {
-    RedisServerTarget target =
-        RedisServerTarget.ofEndpoints(
-            asList("redis-socket:///var/run/redis1.sock", "redis-socket:///var/run/redis2.sock"));
-
-    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock,/var/run/redis2.sock");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void endpointListDropsCommaDelimitedSocketPath() {
-    RedisServerTarget target =
-        RedisServerTarget.ofEndpoints(asList("/tmp/redis,node.sock", "/tmp/redis.sock"));
-
-    assertThat(target.getAddress()).isEqualTo("/tmp/redis.sock");
-    assertThat(target.getPort()).isNull();
+  void endpointListFailsClosedOnCommaDelimitedSocketPath() {
+    assertThat(RedisServerTarget.ofEndpoints(asList("/tmp/redis,node.sock", "/tmp/redis.sock")))
+        .isNull();
   }
 
   @Test
