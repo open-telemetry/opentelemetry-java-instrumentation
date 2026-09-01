@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
+  ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
 - Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query
   bodies by default under v3-preview; outside v3-preview, capture defaults remain unchanged. The
   javaagent also sanitizes explicitly enabled capture by default, replacing literal values with `?`
