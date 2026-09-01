@@ -22,7 +22,7 @@ from urllib.request import Request, urlopen
 
 from _paths import OUT_DIR, SELECTED, SKIP
 
-DEFAULT_DEVELOCITY_URL = "https://develocity.opentelemetry.io"
+DEFAULT_DEVELOCITY_URL = "https://community.develocity.cloud"
 PROJECT_NAME = "opentelemetry-java-instrumentation"
 WORKSPACE_ROOT = Path(subprocess.check_output(
     ["git", "rev-parse", "--show-toplevel"], text=True).strip())

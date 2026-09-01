@@ -37,7 +37,7 @@ jobs:
       - name: Find top flaky test
         id: select
         env:
-          DEVELOCITY_URL: https://develocity.opentelemetry.io
+          DEVELOCITY_URL: https://community.develocity.cloud
         run: |
           python .github/scripts/flaky-test-remediation/1-select-flaky-test.py
 

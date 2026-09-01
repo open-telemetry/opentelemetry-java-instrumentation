@@ -20,13 +20,13 @@ import java.lang.reflect.Method;
 final class InstrumentedChatCompletionService
     extends DelegatingInvocationHandler<ChatCompletionService> {
 
-  private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
+  private final Instrumenter<ChatCompletionRequest, ChatCompletion> instrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
 
   InstrumentedChatCompletionService(
       ChatCompletionService delegate,
-      Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter,
+      Instrumenter<ChatCompletionRequest, ChatCompletion> instrumenter,
       Logger eventLogger,
       boolean captureMessageContent) {
     super(delegate);
@@ -73,21 +73,22 @@ final class InstrumentedChatCompletionService
 
   private ChatCompletion create(
       ChatCompletionCreateParams chatCompletionCreateParams, RequestOptions requestOptions) {
+    ChatCompletionRequest request = ChatCompletionRequest.create(chatCompletionCreateParams);
     Context parentContext = Context.current();
-    if (!instrumenter.shouldStart(parentContext, chatCompletionCreateParams)) {
+    if (!instrumenter.shouldStart(parentContext, request)) {
       return createWithLogs(parentContext, chatCompletionCreateParams, requestOptions);
     }
 
-    Context context = instrumenter.start(parentContext, chatCompletionCreateParams);
+    Context context = instrumenter.start(parentContext, request);
     ChatCompletion completion;
     try (Scope ignored = context.makeCurrent()) {
       completion = createWithLogs(context, chatCompletionCreateParams, requestOptions);
     } catch (Throwable t) {
-      instrumenter.end(context, chatCompletionCreateParams, null, t);
+      instrumenter.end(context, request, null, t);
       throw t;
     }
 
-    instrumenter.end(context, chatCompletionCreateParams, completion, null);
+    instrumenter.end(context, request, completion, null);
     return completion;
   }
 
@@ -105,26 +106,28 @@ final class InstrumentedChatCompletionService
 
   private StreamResponse<ChatCompletionChunk> createStreaming(
       ChatCompletionCreateParams chatCompletionCreateParams, RequestOptions requestOptions) {
+    ChatCompletionRequest request =
+        ChatCompletionRequest.createStreaming(chatCompletionCreateParams);
     Context parentContext = Context.current();
-    if (!instrumenter.shouldStart(parentContext, chatCompletionCreateParams)) {
-      return createStreamingWithLogs(
-          parentContext, chatCompletionCreateParams, requestOptions, false);
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      return createStreamingWithLogs(parentContext, request, requestOptions, false);
     }
 
-    Context context = instrumenter.start(parentContext, chatCompletionCreateParams);
+    Context context = instrumenter.start(parentContext, request);
     try (Scope ignored = context.makeCurrent()) {
-      return createStreamingWithLogs(context, chatCompletionCreateParams, requestOptions, true);
+      return createStreamingWithLogs(context, request, requestOptions, true);
     } catch (Throwable t) {
-      instrumenter.end(context, chatCompletionCreateParams, null, t);
+      instrumenter.end(context, request, null, t);
       throw t;
     }
   }
 
   private StreamResponse<ChatCompletionChunk> createStreamingWithLogs(
       Context context,
-      ChatCompletionCreateParams chatCompletionCreateParams,
+      ChatCompletionRequest request,
       RequestOptions requestOptions,
       boolean newSpan) {
+    ChatCompletionCreateParams chatCompletionCreateParams = request.getRequest();
     ChatCompletionEventsHelper.emitPromptLogEvents(
         context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     StreamResponse<ChatCompletionChunk> result =
@@ -132,11 +135,6 @@ final class InstrumentedChatCompletionService
     return new TracingStreamedResponse(
         result,
         new StreamListener(
-            context,
-            chatCompletionCreateParams,
-            instrumenter,
-            eventLogger,
-            captureMessageContent,
-            newSpan));
+            context, request, instrumenter, eventLogger, captureMessageContent, newSpan));
   }
 }

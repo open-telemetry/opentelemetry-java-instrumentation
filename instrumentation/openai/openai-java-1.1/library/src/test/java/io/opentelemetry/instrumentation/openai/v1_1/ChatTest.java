@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVEN
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_ID;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_MODEL;
@@ -622,6 +623,7 @@ class ChatTest extends AbstractChatTest {
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                     equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                    equalTo(GEN_AI_REQUEST_STREAM, true),
                                     satisfies(
                                         GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                     equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -718,6 +720,7 @@ class ChatTest extends AbstractChatTest {
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                     equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                    equalTo(GEN_AI_REQUEST_STREAM, true),
                                     satisfies(
                                         GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                     equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -820,6 +823,7 @@ class ChatTest extends AbstractChatTest {
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                     equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                    equalTo(GEN_AI_REQUEST_STREAM, true),
                                     satisfies(
                                         GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                     equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -922,6 +926,7 @@ class ChatTest extends AbstractChatTest {
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                     equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                    equalTo(GEN_AI_REQUEST_STREAM, true),
                                     satisfies(
                                         GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
                                     equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),

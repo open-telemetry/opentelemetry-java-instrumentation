@@ -23,6 +23,8 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   String getRequestModel(REQUEST request);
 
+  boolean isRequestStreaming(REQUEST request);
+
   @Nullable
   Long getRequestSeed(REQUEST request);
 
