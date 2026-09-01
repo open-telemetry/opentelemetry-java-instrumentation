@@ -56,9 +56,9 @@ public class ClickHouseScope {
     return Context.current().get(REQUEST_KEY);
   }
 
-  public CompletableFuture<?> endOnCompletion(CompletableFuture<?> future) {
+  public void endOnCompletion(CompletableFuture<?> future) {
     scope.close();
-    return future.whenComplete(
+    future.whenComplete(
         (result, throwable) ->
             instrumenter.end(context, clickHouseDbRequest, null, unwrap(throwable)));
   }

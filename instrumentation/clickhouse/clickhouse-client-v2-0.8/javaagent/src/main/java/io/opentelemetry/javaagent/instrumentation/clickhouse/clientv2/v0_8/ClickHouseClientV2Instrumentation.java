@@ -91,7 +91,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return(readOnly = false) @Nullable CompletableFuture<?> future,
+        @Advice.Return @Nullable CompletableFuture<?> future,
         @Advice.Enter @Nullable ClickHouseScope scope) {
       CallDepth callDepth = CallDepth.forClass(Client.class);
       if (callDepth.decrementAndGet() > 0 || scope == null) {
@@ -101,7 +101,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
       if (throwable != null || future == null) {
         scope.end(throwable);
       } else {
-        future = scope.endOnCompletion(future);
+        scope.endOnCompletion(future);
       }
     }
   }
