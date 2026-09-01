@@ -16,6 +16,8 @@ import javax.annotation.Nullable;
 @SuppressWarnings("OtelInternalJavadoc")
 public final class RedisServerTarget {
 
+  private static final int DEFAULT_PORT = 6379;
+
   private final String address;
   @Nullable private final Integer port;
 
@@ -30,13 +32,13 @@ public final class RedisServerTarget {
       return null;
     }
     String trimmed = name.trim();
-    return trimmed.isEmpty() ? null : new RedisServerTarget(trimmed, null);
+    return isSafeLogicalName(trimmed) ? new RedisServerTarget(trimmed, null) : null;
   }
 
   @Nullable
   public static RedisServerTarget ofEndpoint(@Nullable String endpoint) {
     Endpoint parsed = Endpoint.parse(endpoint);
-    return parsed == null ? null : new RedisServerTarget(parsed.host, parsed.port);
+    return parsed == null ? null : directTarget(parsed);
   }
 
   @Nullable
@@ -71,17 +73,34 @@ public final class RedisServerTarget {
       return null;
     }
     if (parsed.size() == 1) {
-      Endpoint only = parsed.get(0);
-      return new RedisServerTarget(only.host, only.port);
+      return directTarget(parsed.get(0));
     }
+
+    Integer commonPort = parsed.get(0).effectivePort();
+    boolean mixedPorts = false;
+    for (int i = 1; i < parsed.size(); i++) {
+      Integer port = parsed.get(i).effectivePort();
+      if (commonPort == null ? port != null : !commonPort.equals(port)) {
+        mixedPorts = true;
+        break;
+      }
+    }
+
     List<String> rendered = new ArrayList<>(parsed.size());
     for (Endpoint endpoint : parsed) {
-      rendered.add(endpoint.render());
+      rendered.add(mixedPorts ? endpoint.renderWithEffectivePort() : endpoint.renderWithoutPort());
     }
     if (unordered) {
       Collections.sort(rendered);
     }
-    return new RedisServerTarget(String.join(",", rendered), null);
+    Integer port =
+        !mixedPorts && commonPort != null && commonPort != DEFAULT_PORT ? commonPort : null;
+    return new RedisServerTarget(String.join(",", rendered), port);
+  }
+
+  private static RedisServerTarget directTarget(Endpoint endpoint) {
+    Integer port = endpoint.port != null && endpoint.port != DEFAULT_PORT ? endpoint.port : null;
+    return new RedisServerTarget(endpoint.renderWithoutPort(), port);
   }
 
   @Nullable
@@ -93,7 +112,7 @@ public final class RedisServerTarget {
       for (String endpoint : endpoints) {
         Endpoint parsed = Endpoint.parse(endpoint);
         if (parsed != null) {
-          rendered.add(parsed.render());
+          rendered.add(parsed.renderConfigured());
         }
       }
     }
@@ -101,10 +120,31 @@ public final class RedisServerTarget {
     if (rendered.isEmpty()) {
       return ofLogicalName(logicalName);
     }
-    if (logicalName.isEmpty()) {
+    if (!isSafeLogicalName(logicalName)) {
       return new RedisServerTarget(String.join(",", rendered), null);
     }
     return new RedisServerTarget(String.join(",", rendered) + "/" + logicalName, null);
+  }
+
+  private static boolean isSafeLogicalName(String value) {
+    if (value.isEmpty()) {
+      return false;
+    }
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      if (c == '/'
+          || c == '\\'
+          || c == ','
+          || c == '?'
+          || c == '#'
+          || c == '%'
+          || Character.isWhitespace(c)
+          || Character.isSpaceChar(c)
+          || Character.isISOControl(c)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   public static String endpoint(@Nullable String host, int port) {
@@ -117,6 +157,19 @@ public final class RedisServerTarget {
       builder.append(':').append(port);
     }
     return builder.toString();
+  }
+
+  public static String normalizeHostAndPort(@Nullable String value) {
+    if (value == null || value.startsWith("[") || value.indexOf("://") >= 0) {
+      return value == null ? "" : value;
+    }
+    int portStart = value.lastIndexOf(':');
+    if (portStart <= 0) {
+      return value;
+    }
+    Integer port = Endpoint.parsePort(value.substring(portStart + 1));
+    String host = value.substring(0, portStart);
+    return port != null && Endpoint.isIpv6Literal(host) ? endpoint(host, port) : value;
   }
 
   private static void appendHost(StringBuilder builder, String host, boolean hasPort) {
@@ -321,7 +374,26 @@ public final class RedisServerTarget {
       return port <= 65535 ? port : null;
     }
 
-    String render() {
+    @Nullable
+    Integer effectivePort() {
+      return socket ? null : port != null ? port : DEFAULT_PORT;
+    }
+
+    String renderWithoutPort() {
+      return host;
+    }
+
+    String renderWithEffectivePort() {
+      if (socket) {
+        return host;
+      }
+      StringBuilder builder = new StringBuilder();
+      appendHost(builder, host, true);
+      builder.append(':').append(effectivePort());
+      return builder.toString();
+    }
+
+    String renderConfigured() {
       StringBuilder builder = new StringBuilder();
       if (socket) {
         builder.append(host);

@@ -47,44 +47,10 @@ public class JedisServerTargets {
     List<String> endpoints = new ArrayList<>(nodes.size());
     for (Object node : nodes) {
       if (node != null) {
-        endpoints.add(normalizeEndpoint(node.toString()));
+        endpoints.add(RedisServerTarget.normalizeHostAndPort(node.toString()));
       }
     }
     return endpoints;
-  }
-
-  private static String normalizeEndpoint(String endpoint) {
-    if (endpoint.startsWith("[") || endpoint.indexOf("://") >= 0) {
-      return endpoint;
-    }
-    int firstColon = endpoint.indexOf(':');
-    int lastColon = endpoint.lastIndexOf(':');
-    if (firstColon < 0 || firstColon == lastColon) {
-      return endpoint;
-    }
-    if (endpoint.charAt(lastColon - 1) == ':') {
-      return endpoint;
-    }
-    String port = endpoint.substring(lastColon + 1);
-    if (!isPort(port)) {
-      return endpoint;
-    }
-    return "[" + endpoint.substring(0, lastColon) + "]:" + port;
-  }
-
-  private static boolean isPort(String value) {
-    if (value.isEmpty() || value.length() > 5) {
-      return false;
-    }
-    int port = 0;
-    for (int i = 0; i < value.length(); i++) {
-      char c = value.charAt(i);
-      if (c < '0' || c > '9') {
-        return false;
-      }
-      port = port * 10 + (c - '0');
-    }
-    return port <= 65535;
   }
 
   private JedisServerTargets() {}
