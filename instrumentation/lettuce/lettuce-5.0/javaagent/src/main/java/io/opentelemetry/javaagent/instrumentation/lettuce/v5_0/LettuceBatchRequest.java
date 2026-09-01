@@ -28,6 +28,7 @@ final class LettuceBatchRequest {
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
   @Nullable private final InetSocketAddress serverAddress;
+  @Nullable private final LettuceCommandPeer peerAddress;
   @Nullable private final Integer databaseIndex;
   @Nullable private final RedisServerTarget serverTarget;
 
@@ -36,12 +37,14 @@ final class LettuceBatchRequest {
       @Nullable String queryText,
       @Nullable Long batchSize,
       @Nullable InetSocketAddress serverAddress,
+      @Nullable LettuceCommandPeer peerAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
     this.serverAddress = serverAddress;
+    this.peerAddress = peerAddress;
     this.databaseIndex = databaseIndex;
     this.serverTarget = serverTarget;
   }
@@ -51,11 +54,21 @@ final class LettuceBatchRequest {
       @Nullable InetSocketAddress serverAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
+    return create(commands, serverAddress, null, databaseIndex, serverTarget);
+  }
+
+  static LettuceBatchRequest create(
+      List<RedisCommand<?, ?, ?>> commands,
+      @Nullable InetSocketAddress serverAddress,
+      @Nullable LettuceCommandPeer peerAddress,
+      @Nullable Integer databaseIndex,
+      @Nullable RedisServerTarget serverTarget) {
     return new LettuceBatchRequest(
         operationName(commands),
         queryText(commands),
         commands.size() != 1 ? (long) commands.size() : null,
         serverAddress,
+        peerAddress,
         databaseIndex,
         serverTarget);
   }
@@ -77,6 +90,11 @@ final class LettuceBatchRequest {
   @Nullable
   InetSocketAddress getServerAddress() {
     return serverAddress;
+  }
+
+  @Nullable
+  InetSocketAddress getPeerAddress() {
+    return peerAddress == null ? null : peerAddress.getAddress();
   }
 
   @Nullable

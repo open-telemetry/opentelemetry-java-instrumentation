@@ -21,7 +21,21 @@ public class LettuceCommandOutboundHandler extends ChannelOutboundHandlerAdapter
     try {
       SocketAddress remoteAddress = context.channel().remoteAddress();
       if (remoteAddress instanceof InetSocketAddress) {
-        recordCommands(message, (InetSocketAddress) remoteAddress);
+        InetSocketAddress peerAddress = (InetSocketAddress) remoteAddress;
+        if (promise.isVoid()) {
+          recordCommands(message, peerAddress);
+        } else {
+          promise.addListener(
+              future -> {
+                if (future.isSuccess()) {
+                  try {
+                    recordCommands(message, peerAddress);
+                  } catch (Throwable ignored) {
+                    // Do not let telemetry collection disrupt Redis I/O.
+                  }
+                }
+              });
+        }
       }
     } catch (Throwable ignored) {
       // Do not let telemetry collection disrupt Redis I/O.

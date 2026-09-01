@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.ExperimentalHelper.experimental;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceTestSemconv.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceTestSemconv.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -623,10 +623,8 @@ class LettuceAsyncClientTest {
                             equalTo(maybeStable(DB_OPERATION), "SADD"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
                             equalTo(booleanKey("lettuce.command.cancelled"), experimental(true))),
                 span ->
                     span.hasName("callback")
@@ -918,10 +916,8 @@ class LettuceAsyncClientTest {
                             equalTo(maybeStable(DB_OPERATION), "DEBUG"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, serverPort),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(serverPort) : null))));
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null))));
   }
 
   @Test
@@ -964,11 +960,7 @@ class LettuceAsyncClientTest {
                             equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, shutdownServerPort),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(shutdownServerPort)
-                                    : null))));
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null))));
   }
 }

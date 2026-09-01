@@ -8,9 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
-import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.protocol.Command;
 import com.lambdaworks.redis.protocol.CommandType;
 import com.lambdaworks.redis.protocol.RedisCommand;
@@ -53,6 +51,57 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
+  void commandUsesLastSelectedAddress() throws UnknownHostException {
+    RedisCommand<?, ?, ?> command = command();
+    LettucePeerAddress peerAddress = new LettucePeerAddress();
+    LettuceSingletons.COMMAND_PEER.set(command, peerAddress);
+    LettuceSingletons.recordCommandPeers(
+        command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
+    LettuceSingletons.recordCommandPeers(
+        command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT));
+
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(command, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.4" : null);
+    assertThat(getter.getNetworkPeerPort(command, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+  }
+
+  @Test
+  void commandUsesResolvedIpv6Address() throws UnknownHostException {
+    RedisCommand<?, ?, ?> command = command();
+    LettuceSingletons.COMMAND_PEER.set(
+        command,
+        new LettucePeerAddress(
+            new InetSocketAddress(
+                InetAddress.getByAddress(
+                    new byte[] {0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}),
+                PORT)));
+
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(command, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "2001:db8:0:0:0:0:0:1" : null);
+    assertThat(getter.getNetworkPeerPort(command, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+  }
+
+  @Test
+  void commandThatDoesNotExpectResponseDropsSelectedAddress() throws UnknownHostException {
+    RedisCommand<?, ?, ?> command = new Command<>(CommandType.DEBUG, null);
+    LettuceSingletons.COMMAND_PEER.set(
+        command,
+        new LettucePeerAddress(
+            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT)));
+
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+  }
+
+  @Test
   void commandKeepsConfiguredServerAddressWhenPeerIsUnknown() {
     RedisCommand<?, ?, ?> command = command();
     LettuceSingletons.COMMAND_ADDRESS.set(
@@ -63,7 +112,7 @@ class LettuceNetworkAttributesGetterTest {
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
     assertThat(getter.getServerAddress(command)).isEqualTo("redis.example");
-    assertThat(getter.getServerPort(command)).isEqualTo(PORT);
+    assertThat(getter.getServerPort(command)).isEqualTo(emitStableDatabaseSemconv() ? null : PORT);
     assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
   }
@@ -102,60 +151,19 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void disconnectDropsPeerOfBatchFlushedBeforeIt() throws UnknownHostException {
-    RedisChannelHandler<?, ?> connection = mock(RedisChannelHandler.class);
-    LettuceSingletons.CONNECTION_PEER.set(
-        connection,
-        new LettucePeerAddress(
-            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT)));
+  void batchDropsAmbiguousSelectedAddress() throws UnknownHostException {
+    LettucePeerAddress peerAddress = LettucePeerAddress.forBatch();
+    peerAddress.record(
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
+    peerAddress.record(
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT));
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(
-            singletonList(command()),
-            null,
-            LettuceSingletons.CONNECTION_PEER.get(connection),
-            null,
-            null);
-
-    LettuceSingletons.clearConnectionPeer(connection);
+        LettuceBatchRequest.create(singletonList(command()), null, peerAddress, null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerPort(request, null)).isNull();
-  }
-
-  @Test
-  void disconnectDropsPeerAndKeepsConfiguredServerAddress() throws UnknownHostException {
-    RedisChannelHandler<?, ?> connection = mock(RedisChannelHandler.class);
-    InetSocketAddress configuredAddress = InetSocketAddress.createUnresolved("redis.example", PORT);
-    LettuceSingletons.CONNECTION_ADDRESS.set(connection, configuredAddress);
-    LettuceSingletons.CONNECTION_PEER.set(
-        connection,
-        new LettucePeerAddress(
-            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT)));
-
-    LettuceSingletons.clearConnectionPeer(connection);
-
-    assertThat(LettuceSingletons.CONNECTION_PEER.get(connection)).isNull();
-    assertThat(LettuceSingletons.CONNECTION_ADDRESS.get(connection)).isEqualTo(configuredAddress);
-  }
-
-  @Test
-  void disconnectDropsPeerOfCommandDispatchedBeforeIt() throws UnknownHostException {
-    RedisChannelHandler<?, ?> connection = mock(RedisChannelHandler.class);
-    LettuceSingletons.CONNECTION_PEER.set(
-        connection,
-        new LettucePeerAddress(
-            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT)));
-    RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(command, LettuceSingletons.CONNECTION_PEER.get(connection));
-
-    LettuceSingletons.clearConnectionPeer(connection);
-
-    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-
-    assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
   }
 
   private static RedisCommand<?, ?, ?> command() {

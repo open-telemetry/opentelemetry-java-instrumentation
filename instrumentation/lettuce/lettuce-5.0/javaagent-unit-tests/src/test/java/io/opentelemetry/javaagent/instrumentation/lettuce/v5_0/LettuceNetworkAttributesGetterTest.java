@@ -23,8 +23,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Test;
 
 class LettuceNetworkAttributesGetterTest {
@@ -72,13 +70,33 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void batchOmitsSelectedAddress() throws UnknownHostException {
+  void batchUsesResolvedSelectedAddress() throws UnknownHostException {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
     RedisCommand<?, ?, ?> command = command();
     LettuceSingletons.recordCommandPeer(command, address);
+    LettuceCommandPeer peerAddress = LettuceCommandPeer.forBatch();
+    LettuceSingletons.useCommandPeer(command, peerAddress);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(singletonList(command), null, null, null);
+        LettuceBatchRequest.create(singletonList(command), null, peerAddress, null, null);
+
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
+    assertThat(getter.getNetworkPeerPort(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+  }
+
+  @Test
+  void batchDropsAmbiguousSelectedAddress() throws UnknownHostException {
+    LettuceCommandPeer peerAddress = LettuceCommandPeer.forBatch();
+    peerAddress.record(
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
+    peerAddress.record(
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT));
+    LettuceBatchRequest request =
+        LettuceBatchRequest.create(singletonList(command()), null, peerAddress, null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -87,7 +105,7 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void commandDropsAmbiguousSelectedAddress() throws UnknownHostException {
+  void commandUsesLastSelectedAddress() throws UnknownHostException {
     RedisCommand<?, ?, ?> command = command();
     LettuceSingletons.recordCommandPeer(
         command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
@@ -96,8 +114,10 @@ class LettuceNetworkAttributesGetterTest {
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
-    assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+    assertThat(getter.getNetworkPeerAddress(command, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.4" : null);
+    assertThat(getter.getNetworkPeerPort(command, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
   }
 
   @Test
@@ -135,7 +155,7 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void collectionReplayToDifferentPeerIsAmbiguous() throws UnknownHostException {
+  void newWrapperDoesNotReusePreviousPeer() throws UnknownHostException {
     RedisCommand<String, String, String> command = command();
     AsyncCommand<String, String, String> firstWrapper = new AsyncCommand<>(command);
     InetSocketAddress first =
@@ -147,57 +167,35 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandOutboundHandler.recordCommands(firstWrapper, first);
     AsyncCommand<String, String, String> replayWrapper = new AsyncCommand<>(command);
     LettuceSingletons.linkCommandPeer(replayWrapper);
+
+    assertThat(LettuceSingletons.commandPeerAddress(firstWrapper)).isEqualTo(first);
+    assertThat(LettuceSingletons.commandPeerAddress(replayWrapper)).isNull();
+
     LettuceCommandOutboundHandler.recordCommands(singletonList(replayWrapper), second);
 
-    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    assertThat(getter.getNetworkPeerAddress(firstWrapper, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(firstWrapper, null)).isNull();
-    assertThat(getter.getNetworkPeerAddress(replayWrapper, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(replayWrapper, null)).isNull();
+    assertThat(LettuceSingletons.commandPeerAddress(firstWrapper)).isEqualTo(first);
+    assertThat(LettuceSingletons.commandPeerAddress(replayWrapper)).isEqualTo(second);
   }
 
   @Test
-  void concurrentLinkAndRedirectPreserveAmbiguity() throws Exception {
-    RedisCommand<String, String, String> command = command();
-    AsyncCommand<String, String, String> firstWrapper = new AsyncCommand<>(command);
-    AsyncCommand<String, String, String> redirectWrapper = new AsyncCommand<>(command);
-    InetSocketAddress first =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
-    InetSocketAddress second =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT);
-    LettuceSingletons.recordCommandPeer(firstWrapper, first);
-
-    CountDownLatch start = new CountDownLatch(1);
-    CompletableFuture<Void> link =
-        CompletableFuture.runAsync(
-            () -> {
-              await(start);
-              LettuceSingletons.linkCommandPeer(redirectWrapper);
-            });
-    CompletableFuture<Void> redirect =
-        CompletableFuture.runAsync(
-            () -> {
-              await(start);
-              LettuceSingletons.recordCommandPeer(command, second);
-            });
-    start.countDown();
-    CompletableFuture.allOf(link, redirect).get();
+  void commandUsesResolvedIpv6Address() throws UnknownHostException {
+    InetSocketAddress address =
+        new InetSocketAddress(
+            InetAddress.getByAddress(
+                new byte[] {0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}),
+            PORT);
+    RedisCommand<?, ?, ?> command = command();
+    LettuceSingletons.recordCommandPeer(command, address);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    assertThat(getter.getNetworkPeerAddress(firstWrapper, null)).isNull();
-    assertThat(getter.getNetworkPeerAddress(redirectWrapper, null)).isNull();
+
+    assertThat(getter.getNetworkPeerAddress(command, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "2001:db8:0:0:0:0:0:1" : null);
+    assertThat(getter.getNetworkPeerPort(command, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
   }
 
   private static RedisCommand<String, String, String> command() {
     return new Command<>(CommandType.GET, null);
-  }
-
-  private static void await(CountDownLatch latch) {
-    try {
-      latch.await();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new AssertionError(e);
-    }
   }
 }

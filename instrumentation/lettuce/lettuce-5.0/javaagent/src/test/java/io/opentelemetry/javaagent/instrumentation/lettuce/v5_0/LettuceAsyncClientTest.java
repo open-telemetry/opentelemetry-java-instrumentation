@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceTestSemconv.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceTestSemconv.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -679,8 +679,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, null),
-                            equalTo(NETWORK_PEER_PORT, null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
@@ -742,8 +744,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, null),
-                            equalTo(NETWORK_PEER_PORT, null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
                             equalTo(

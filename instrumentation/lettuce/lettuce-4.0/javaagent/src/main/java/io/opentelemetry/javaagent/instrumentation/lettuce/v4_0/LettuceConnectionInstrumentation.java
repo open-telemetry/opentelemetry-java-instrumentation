@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_PEER;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -16,11 +15,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.lambdaworks.redis.ConnectionBuilder;
 import com.lambdaworks.redis.RedisChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,19 +35,17 @@ class LettuceConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("build").and(takesArguments(0)), getClass().getName() + "$BuildAdvice");
+        named("build")
+            .and(isDeclaredBy(named("com.lambdaworks.redis.ConnectionBuilder")))
+            .and(takesArguments(0)),
+        getClass().getName() + "$BuildAdvice");
     transformer.applyAdviceToMethod(
-        named("channelActive")
+        named("write")
             .and(isDeclaredBy(named("com.lambdaworks.redis.protocol.CommandHandler")))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("io.netty.channel.ChannelHandlerContext"))),
-        getClass().getName() + "$ChannelActiveAdvice");
-    transformer.applyAdviceToMethod(
-        named("channelInactive")
-            .and(isDeclaredBy(named("com.lambdaworks.redis.protocol.CommandHandler")))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("io.netty.channel.ChannelHandlerContext"))),
-        getClass().getName() + "$ChannelInactiveAdvice");
+            .and(takesArguments(3))
+            .and(takesArgument(0, named("io.netty.channel.ChannelHandlerContext")))
+            .and(takesArgument(2, named("io.netty.channel.ChannelPromise"))),
+        getClass().getName() + "$WriteAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -65,28 +62,18 @@ class LettuceConnectionInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class ChannelActiveAdvice {
+  public static class WriteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) ChannelHandlerContext context,
-        @Advice.FieldValue("redisChannelHandler") @Nullable RedisChannelHandler<?, ?> connection) {
+        @Advice.Argument(1) Object message,
+        @Advice.Argument(2) ChannelPromise promise) {
       SocketAddress address = context.channel().remoteAddress();
-      if (connection != null && address instanceof InetSocketAddress) {
-        CONNECTION_PEER.set(connection, new LettucePeerAddress((InetSocketAddress) address));
+      if (!(address instanceof InetSocketAddress)) {
+        return;
       }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class ChannelInactiveAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.FieldValue("redisChannelHandler") @Nullable RedisChannelHandler<?, ?> connection) {
-      if (connection != null) {
-        LettuceSingletons.clearConnectionPeer(connection);
-      }
+      LettuceSingletons.recordCommandPeers(message, (InetSocketAddress) address);
     }
   }
 }

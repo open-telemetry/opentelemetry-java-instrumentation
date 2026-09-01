@@ -75,6 +75,7 @@ public final class LettuceBatchContext {
         state.asyncCommands,
         state.parentContext,
         ENDPOINT_ADDRESS.get(endpoint),
+        state.peerAddress,
         ENDPOINT_DATABASE_INDEX.get(endpoint),
         state.getServerTarget(ENDPOINT_TARGET.get(endpoint)));
   }
@@ -99,10 +100,12 @@ public final class LettuceBatchContext {
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
         @Nullable InetSocketAddress serverAddress,
+        LettuceCommandPeer peerAddress,
         @Nullable Integer databaseIndex,
         @Nullable RedisServerTarget serverTarget) {
       LettuceBatchRequest request =
-          LettuceBatchRequest.create(commands, serverAddress, databaseIndex, serverTarget);
+          LettuceBatchRequest.create(
+              commands, serverAddress, peerAddress, databaseIndex, serverTarget);
       Context parentContext =
           capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {
@@ -148,12 +151,14 @@ public final class LettuceBatchContext {
   private static final class BatchState {
     private final List<RedisCommand<?, ?, ?>> commands = new ArrayList<>();
     private final List<AsyncCommand<?, ?, ?>> asyncCommands = new ArrayList<>();
+    private final LettuceCommandPeer peerAddress = LettuceCommandPeer.forBatch();
     @Nullable private Context parentContext;
     @Nullable private RedisServerTarget serverTarget;
     private boolean serverTargetVaries;
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
+      LettuceSingletons.useCommandPeer(command, peerAddress);
       RedisServerTarget commandTarget = COMMAND_TARGET.get(command);
       if (commandTarget != null && !serverTargetVaries) {
         if (serverTarget == null) {

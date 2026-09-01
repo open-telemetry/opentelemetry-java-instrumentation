@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_PEER;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_PEER_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -61,7 +62,7 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
       Context context = Java8BytecodeBridge.currentContext();
       if (context.get(COMMAND_CONTEXT_KEY) != null) {
         CONTEXT.set(observableCommand, context);
-        COMMAND_PEER.set(observableCommand, COMMAND_PEER.get(command));
+        COMMAND_PEER.set(observableCommand, context.get(COMMAND_PEER_KEY));
       }
     }
   }

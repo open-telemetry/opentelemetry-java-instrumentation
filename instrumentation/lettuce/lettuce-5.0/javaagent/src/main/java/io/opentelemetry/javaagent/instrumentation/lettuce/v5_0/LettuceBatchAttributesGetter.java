@@ -73,4 +73,26 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
     InetSocketAddress serverAddress = request.getServerAddress();
     return serverAddress != null ? serverAddress.getPort() : null;
   }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(LettuceBatchRequest request, @Nullable Void unused) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    InetSocketAddress peerAddress = request.getPeerAddress();
+    return peerAddress != null && !peerAddress.isUnresolved()
+        ? peerAddress.getAddress().getHostAddress()
+        : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(LettuceBatchRequest request, @Nullable Void unused) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    InetSocketAddress peerAddress = request.getPeerAddress();
+    return peerAddress != null && !peerAddress.isUnresolved() ? peerAddress.getPort() : null;
+  }
 }

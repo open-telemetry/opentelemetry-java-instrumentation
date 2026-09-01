@@ -132,7 +132,20 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+    systemProperty("testStableDatabaseSemconv", "true")
+    systemProperty("testStableDatabaseSemconvOnly", "true")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*LettuceSyncClientTest.testSetCommand")
+    }
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,service.peer")
+    systemProperty("testStableDatabaseSemconv", "true")
   }
 
   val testConnectionTelemetryEnabledStableSemconv =
@@ -143,6 +156,8 @@ tasks {
         "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
         "-Dotel.semconv-stability.opt-in=database,service.peer"
       )
+      systemProperty("testStableDatabaseSemconv", "true")
+      systemProperty("testStableDatabaseSemconvOnly", "true")
       systemProperty(
         "metadataConfig",
         "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=database,service.peer"
@@ -155,6 +170,8 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("testStableDatabaseSemconv", "true")
+    systemProperty("testStableDatabaseSemconvOnly", "true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
@@ -163,6 +180,7 @@ tasks {
       testing.suites,
       testConnectionTelemetryEnabled,
       testConnectionTelemetryEnabledStableSemconv,
+      testBothSemconv,
       testStableSemconv,
       testExperimental,
       testV3Preview
