@@ -5,11 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
+import static java.util.Collections.singletonList;
+
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
 public class OpenSearchServerTarget {
+
+  private static final int MAX_ADDRESS_LENGTH = 255;
 
   private final String address;
   @Nullable private final Integer port;
@@ -24,8 +28,12 @@ public class OpenSearchServerTarget {
       if (endpoint.host == null) {
         return null;
       }
+      String address = joinEndpointsWithinLimit(singletonList(endpoint.host));
+      if (address == null) {
+        return null;
+      }
       int port = normalizePort(endpoint);
-      return new OpenSearchServerTarget(endpoint.host, port >= 0 ? port : null);
+      return new OpenSearchServerTarget(address, port >= 0 ? port : null);
     }
     return renderGroup(endpoints);
   }
@@ -62,9 +70,30 @@ public class OpenSearchServerTarget {
           renderEndpoint(addresses.get(i), portsMatch ? -1 : effectivePorts.get(i)));
     }
     renderedEndpoints.sort(String::compareTo);
+
+    String address = joinEndpointsWithinLimit(renderedEndpoints);
+    if (address == null) {
+      return null;
+    }
     return new OpenSearchServerTarget(
-        String.join(",", renderedEndpoints),
-        portsMatch && sharedPort >= 0 && !allPortsAreDefault ? sharedPort : null);
+        address, portsMatch && sharedPort >= 0 && !allPortsAreDefault ? sharedPort : null);
+  }
+
+  @Nullable
+  private static String joinEndpointsWithinLimit(List<String> endpoints) {
+    StringBuilder address = new StringBuilder();
+    for (String endpoint : endpoints) {
+      int separatorLength = address.length() == 0 ? 0 : 1;
+      int available = MAX_ADDRESS_LENGTH - address.length() - separatorLength;
+      if (endpoint.length() > available) {
+        break;
+      }
+      if (separatorLength != 0) {
+        address.append(',');
+      }
+      address.append(endpoint);
+    }
+    return address.length() == 0 ? null : address.toString();
   }
 
   private static String renderEndpoint(String host, int port) {

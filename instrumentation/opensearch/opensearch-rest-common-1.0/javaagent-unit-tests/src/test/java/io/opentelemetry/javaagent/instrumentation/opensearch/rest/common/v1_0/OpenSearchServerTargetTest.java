@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -154,6 +155,66 @@ class OpenSearchServerTargetTest {
   }
 
   @Test
+  void duplicateEndpointsAtAddressLimitArePreserved() {
+    String host = repeat("a", 127);
+
+    OpenSearchServerTarget target =
+        OpenSearchServerTarget.of(
+            asList(new Endpoint(host, 9200, "https"), new Endpoint(host, 9200, "https")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(host + "," + host).hasSize(255);
+    assertThat(target.getPort()).isEqualTo(9200);
+  }
+
+  @Test
+  void endpointsBeyondAddressLimitAreOmittedWholeAfterSorting() {
+    Endpoint ipv6 = new Endpoint("::1", 9200, "http");
+    Endpoint longHost = new Endpoint(repeat("b", 234), 9200, "http");
+    Endpoint oversizedNext = new Endpoint(repeat("m", 10), 9201, "http");
+    Endpoint duplicatedLaterEndpoint = new Endpoint("z", 80, "http");
+
+    OpenSearchServerTarget first =
+        OpenSearchServerTarget.of(
+            asList(
+                duplicatedLaterEndpoint, oversizedNext, ipv6, duplicatedLaterEndpoint, longHost));
+    OpenSearchServerTarget second =
+        OpenSearchServerTarget.of(
+            asList(
+                longHost, duplicatedLaterEndpoint, ipv6, oversizedNext, duplicatedLaterEndpoint));
+
+    assertThat(first).isNotNull();
+    assertThat(second).isNotNull();
+    assertThat(first.getAddress())
+        .isEqualTo("[::1]:9200," + repeat("b", 234) + ":9200")
+        .hasSize(250)
+        .doesNotContain(repeat("m", 10), "z:80");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getPort()).isNull();
+    assertThat(second.getPort()).isNull();
+  }
+
+  @Test
+  void firstEndpointThatExceedsAddressLimitHasNoTarget() {
+    String hostAtLimit = repeat("a", 255);
+    String hostOverLimit = repeat("a", 256);
+
+    OpenSearchServerTarget target =
+        OpenSearchServerTarget.of(singletonList(new Endpoint(hostAtLimit, 443, "https")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(hostAtLimit).hasSize(255);
+    assertThat(OpenSearchServerTarget.of(singletonList(new Endpoint(hostOverLimit, 443, "https"))))
+        .isNull();
+    assertThat(
+            OpenSearchServerTarget.of(
+                asList(
+                    new Endpoint("z.example", 443, "https"),
+                    new Endpoint(hostOverLimit, 443, "https"))))
+        .isNull();
+  }
+
+  @Test
   void literalIpv6AddressesAreBracketedInGroups() {
     OpenSearchServerTarget target =
         OpenSearchServerTarget.of(
@@ -238,5 +299,9 @@ class OpenSearchServerTargetTest {
         argumentSet("case-insensitive HTTP", "HTTP", 80),
         argumentSet("HTTPS", "https", 443),
         argumentSet("case-insensitive HTTPS", "HTTPS", 443));
+  }
+
+  private static String repeat(String value, int count) {
+    return String.join("", nCopies(count, value));
   }
 }
