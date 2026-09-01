@@ -9,6 +9,9 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
@@ -30,26 +33,31 @@ public abstract class SpymemcachedRequest {
 
   @Nullable private MemcachedNode handlingNode;
   @Nullable private InetSocketAddress handlingNodeAddress;
-  @Nullable private MemcachedNode retryHandlingNode;
+  @Nullable private Map<String, MemcachedNode> handlingNodesByKey;
   private boolean hasMultipleHandlingNodes;
 
-  public void setHandlingNode(@Nullable MemcachedNode node) {
+  public synchronized void setHandlingNode(@Nullable MemcachedNode node) {
     captureHandlingNode(node, false);
   }
 
-  public void setRetryHandlingNode(@Nullable MemcachedNode node) {
-    if (node == null || hasMultipleHandlingNodes) {
-      return;
+  public synchronized void setHandlingNode(@Nullable MemcachedNode node, Collection<String> keys) {
+    if (keys.isEmpty()) {
+      setHandlingNode(node);
+    } else {
+      captureHandlingNode(node, keys);
     }
-    if (retryHandlingNode != null && node != retryHandlingNode) {
-      clearHandlingNode();
-      return;
-    }
-    retryHandlingNode = node;
-    captureHandlingNode(node, true);
   }
 
-  public void clearHandlingNode() {
+  public synchronized void setRetryHandlingNode(
+      @Nullable MemcachedNode node, Collection<String> operationKeys) {
+    if (operationKeys.isEmpty()) {
+      captureHandlingNode(node, true);
+    } else {
+      captureHandlingNode(node, operationKeys);
+    }
+  }
+
+  public synchronized void clearHandlingNode() {
     hasMultipleHandlingNodes = true;
     handlingNode = null;
     handlingNodeAddress = null;
@@ -74,8 +82,31 @@ public abstract class SpymemcachedRequest {
     }
   }
 
+  private void captureHandlingNode(@Nullable MemcachedNode node, Collection<String> operationKeys) {
+    if (node == null || hasMultipleHandlingNodes) {
+      return;
+    }
+    if (handlingNodesByKey == null) {
+      handlingNodesByKey = new HashMap<>();
+    }
+    for (String key : operationKeys) {
+      handlingNodesByKey.put(key, node);
+    }
+
+    MemcachedNode singleNode = null;
+    for (MemcachedNode keyNode : handlingNodesByKey.values()) {
+      if (singleNode != null && keyNode != singleNode) {
+        handlingNode = null;
+        handlingNodeAddress = null;
+        return;
+      }
+      singleNode = keyNode;
+    }
+    captureHandlingNode(singleNode, true);
+  }
+
   @Nullable
-  public InetSocketAddress getHandlingNodeAddress() {
+  public synchronized InetSocketAddress getHandlingNodeAddress() {
     return handlingNodeAddress;
   }
 

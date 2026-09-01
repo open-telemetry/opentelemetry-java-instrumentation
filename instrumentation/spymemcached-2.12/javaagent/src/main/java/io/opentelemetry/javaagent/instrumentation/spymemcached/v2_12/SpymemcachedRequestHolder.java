@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedNode;
-import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 
 public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
@@ -31,7 +30,7 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
       VirtualField.find(Operation.class, SpymemcachedRequestAssociations.class);
   private final SpymemcachedRequestAssociations associations;
   private final boolean retry;
-  private final Map<SpymemcachedRequest, Set<String>> retryKeys;
+  private final Map<SpymemcachedRequest, RetryState> retries;
 
   private SpymemcachedRequestHolder(SpymemcachedRequest request) {
     this(SpymemcachedRequestAssociations.create(request), false);
@@ -40,7 +39,7 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
   private SpymemcachedRequestHolder(SpymemcachedRequestAssociations associations, boolean retry) {
     this.associations = associations;
     this.retry = retry;
-    this.retryKeys = retry ? new IdentityHashMap<>() : emptyMap();
+    this.retries = retry ? new IdentityHashMap<>() : emptyMap();
   }
 
   public static Context init(Context context, SpymemcachedRequest request) {
@@ -81,24 +80,18 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
     }
     MemcachedNode node = operation.getHandlingNode();
     for (SpymemcachedRequest request : operationAssociations.requests()) {
+      Collection<String> operationKeys = operationAssociations.getRequestKeys(request);
       if (!holder.retry) {
-        request.setHandlingNode(node);
+        request.setHandlingNode(node, operationKeys);
       } else {
-        request.setRetryHandlingNode(node);
-        if (operation instanceof KeyedOperation) {
-          holder.addRetryKeys(request, ((KeyedOperation) operation).getKeys());
+        RetryState retryState = holder.retries.get(request);
+        if (retryState == null) {
+          retryState = new RetryState();
+          holder.retries.put(request, retryState);
         }
+        retryState.captureHandlingNode(request, node, operationKeys);
       }
     }
-  }
-
-  private void addRetryKeys(SpymemcachedRequest request, Collection<String> keys) {
-    Set<String> requestRetryKeys = retryKeys.get(request);
-    if (requestRetryKeys == null) {
-      requestRetryKeys = new HashSet<>();
-      retryKeys.put(request, requestRetryKeys);
-    }
-    requestRetryKeys.addAll(keys);
   }
 
   @Nullable
@@ -112,8 +105,9 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
   }
 
   private void completeRetry() {
-    for (Map.Entry<SpymemcachedRequest, Set<String>> entry : retryKeys.entrySet()) {
-      if (associations.hasRequestKeysOutside(entry.getKey(), entry.getValue())) {
+    for (Map.Entry<SpymemcachedRequest, RetryState> entry : retries.entrySet()) {
+      if (entry.getValue().keys.isEmpty()
+          && associations.hasRequestKeysOutside(entry.getKey(), entry.getValue().keys)) {
         entry.getKey().clearHandlingNode();
       }
     }
@@ -122,6 +116,31 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
   @Override
   public Context storeInContext(Context context) {
     return context.with(KEY, this);
+  }
+
+  private static class RetryState {
+    @Nullable private MemcachedNode handlingNode;
+    private final Set<String> keys = new HashSet<>();
+
+    void captureHandlingNode(
+        SpymemcachedRequest request,
+        @Nullable MemcachedNode node,
+        Collection<String> operationKeys) {
+      if (!operationKeys.isEmpty()) {
+        keys.addAll(operationKeys);
+        request.setRetryHandlingNode(node, operationKeys);
+        return;
+      }
+      if (node == null) {
+        return;
+      }
+      if (handlingNode != null && node != handlingNode) {
+        request.clearHandlingNode();
+        return;
+      }
+      handlingNode = node;
+      request.setRetryHandlingNode(node, operationKeys);
+    }
   }
 
   public static class RetryScope implements AutoCloseable {

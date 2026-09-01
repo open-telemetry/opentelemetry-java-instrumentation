@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
+import static java.util.Collections.emptySet;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -81,6 +83,11 @@ class SpymemcachedRequestAssociations {
       }
     }
     return false;
+  }
+
+  Collection<String> getRequestKeys(SpymemcachedRequest request) {
+    Set<String> requestKeys = keysByRequest.get(request);
+    return requestKeys == null ? emptySet() : requestKeys;
   }
 
   private void addRequests(RequestList requests) {
