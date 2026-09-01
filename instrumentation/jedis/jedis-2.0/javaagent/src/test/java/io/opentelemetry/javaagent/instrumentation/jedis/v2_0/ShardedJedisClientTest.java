@@ -41,6 +41,7 @@ import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
+import redis.clients.jedis.ShardedJedisPipeline;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class ShardedJedisClientTest {
@@ -125,6 +126,93 @@ class ShardedJedisClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             attributes("SET", "SET all-shards ?", shard))));
+  }
+
+  @Test
+  void shardedPipelineFanOutWithinOneScopeKeepsPerCommandPeers() {
+    List<Jedis> shards = new ArrayList<>(sharded.getAllShards());
+    Jedis firstShard = shards.get(0);
+    Jedis secondShard = shards.get(1);
+    String firstKey = keyForShard(firstShard, "same-scope-first");
+    String secondKey = keyForShard(secondShard, "same-scope-second");
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          sharded.pipelined(
+              new ShardedJedisPipeline() {
+                @Override
+                public void execute() {
+                  set(firstKey, "first");
+                  set(secondKey, "second");
+                }
+              });
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET " + firstKey + " ?", firstShard)),
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET " + secondKey + " ?", secondShard))));
+  }
+
+  @Test
+  void shardedPipelineFanOutAcrossScopesKeepsPerCommandPeers() {
+    List<Jedis> shards = new ArrayList<>(sharded.getAllShards());
+    Jedis firstShard = shards.get(0);
+    Jedis secondShard = shards.get(1);
+    String firstKey = keyForShard(firstShard, "cross-scope-first");
+    String secondKey = keyForShard(secondShard, "cross-scope-second");
+
+    sharded.pipelined(
+        new ShardedJedisPipeline() {
+          @Override
+          public void execute() {
+            testing.runWithSpan("first parent", () -> set(firstKey, "first"));
+            testing.runWithSpan("second parent", () -> set(secondKey, "second"));
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("first parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET " + firstKey + " ?", firstShard))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("second parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET " + secondKey + " ?", secondShard))));
+  }
+
+  private static String keyForShard(Jedis selectedShard, String prefix) {
+    for (int i = 0; i < 1000; i++) {
+      String key = prefix + "-" + i;
+      if (sharded.getShard(key) == selectedShard) {
+        return key;
+      }
+    }
+    throw new AssertionError("Could not find a key for selected shard");
   }
 
   private static List<AttributeAssertion> attributes(
