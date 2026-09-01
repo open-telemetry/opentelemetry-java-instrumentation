@@ -27,7 +27,8 @@ public class CouchbaseConnectionStrings {
       if (seeds == null) {
         return null;
       }
-      CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder();
+      CouchbaseServerTarget.Builder target =
+          CouchbaseServerTarget.builder(scheme(type, connectionString));
       for (Object seed : seeds) {
         addSeed(target, seed);
       }
@@ -49,6 +50,17 @@ public class CouchbaseConnectionStrings {
     }
     Object value = hosts.invoke(connectionString);
     return value instanceof List ? (List<?>) value : null;
+  }
+
+  @Nullable
+  private static String scheme(Class<?> type, Object connectionString)
+      throws ReflectiveOperationException {
+    Method scheme = method(type, "scheme");
+    if (scheme == null) {
+      return null;
+    }
+    Object value = scheme.invoke(connectionString);
+    return value == null ? null : value.toString();
   }
 
   private static void addSeed(CouchbaseServerTarget.Builder target, @Nullable Object seed)

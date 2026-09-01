@@ -9,15 +9,30 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-// Multi-seed targets keep each seed's port in the address and therefore have no separate port.
-// Unqualified seeds also have no port because each Couchbase service uses a different default.
 public class CouchbaseServerTarget {
+
+  private static final int COUCHBASE_DEFAULT_PORT = 11210;
+  private static final int COUCHBASES_DEFAULT_PORT = 11207;
 
   private final String address;
   @Nullable private final Integer port;
 
   public static Builder builder() {
-    return new Builder();
+    return builderWithDefaultPort(0);
+  }
+
+  public static Builder builder(@Nullable String scheme) {
+    int defaultPort = 0;
+    if ("couchbase".equalsIgnoreCase(scheme)) {
+      defaultPort = COUCHBASE_DEFAULT_PORT;
+    } else if ("couchbases".equalsIgnoreCase(scheme)) {
+      defaultPort = COUCHBASES_DEFAULT_PORT;
+    }
+    return builderWithDefaultPort(defaultPort);
+  }
+
+  public static Builder builderWithDefaultPort(int defaultPort) {
+    return new Builder(defaultPort > 0 ? defaultPort : 0);
   }
 
   private CouchbaseServerTarget(String address, @Nullable Integer port) {
@@ -36,11 +51,14 @@ public class CouchbaseServerTarget {
 
   public static class Builder {
 
+    private final int defaultPort;
     private final List<String> hosts = new ArrayList<>();
     private final List<Integer> ports = new ArrayList<>();
     private boolean complete = true;
 
-    private Builder() {}
+    private Builder(int defaultPort) {
+      this.defaultPort = defaultPort;
+    }
 
     public void addSeed(@Nullable String host, int port) {
       String cleaned = clean(host);
@@ -58,14 +76,19 @@ public class CouchbaseServerTarget {
       if (!complete || hosts.isEmpty()) {
         return null;
       }
-      if (hosts.size() == 1) {
-        int port = ports.get(0);
-        return new CouchbaseServerTarget(hosts.get(0), port > 0 ? port : null);
+      int commonPort = effectivePort(ports.get(0));
+      boolean mixedPorts = false;
+      for (int port : ports) {
+        if (effectivePort(port) != commonPort) {
+          mixedPorts = true;
+          break;
+        }
       }
       List<String> endpoints = new ArrayList<>(hosts.size());
       for (int i = 0; i < hosts.size(); i++) {
         StringBuilder endpoint = new StringBuilder();
-        appendSeed(endpoint, hosts.get(i), ports.get(i));
+        appendSeed(
+            endpoint, hosts.get(i), mixedPorts ? effectivePort(ports.get(i)) : 0, hosts.size() > 1);
         endpoints.add(endpoint.toString());
       }
       endpoints.sort(String::compareTo);
@@ -76,12 +99,18 @@ public class CouchbaseServerTarget {
         }
         group.append(endpoint);
       }
-      return new CouchbaseServerTarget(group.toString(), null);
+      Integer port = !mixedPorts && commonPort > 0 && commonPort != defaultPort ? commonPort : null;
+      return new CouchbaseServerTarget(group.toString(), port);
     }
 
-    private static void appendSeed(StringBuilder group, String host, int port) {
+    private int effectivePort(int port) {
+      return port > 0 ? port : defaultPort;
+    }
+
+    private static void appendSeed(
+        StringBuilder group, String host, int port, boolean groupedEndpoint) {
       // a literal ipv6 address is bracketed so that the port stays unambiguous
-      if (host.indexOf(':') >= 0) {
+      if (host.indexOf(':') >= 0 && (port > 0 || groupedEndpoint)) {
         group.append('[').append(host).append(']');
       } else {
         group.append(host);
