@@ -82,7 +82,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
         List<String> systemsConfig =
             config.get("target").getScalarList("system", String.class, emptyList());
 
-        // warn users when using any unsupported system value, with mapping for legacy values
+        // mapping of 'experimental-' deprecated prefix in target system
         systemsConfig =
             systemsConfig.stream()
                 .map(
@@ -91,6 +91,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
                             ? s.substring(EXPERIMENTAL_PREFIX.length())
                             : s)
                 .collect(toList());
+
+        // warn about unsupported systems
         systemsConfig.forEach(
             system -> {
               if (!InternalMetricsDefinitions.getSupportedSystems().contains(system)) {
@@ -103,9 +105,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
               }
             });
 
-        // Using the same filter to include both the stable and unstable metrics allow to load
-        // embedded
-        // metrics definitions per system.
+        // Using the same filter to include both the stable and unstable metrics allowing to load
+        // all embedded metrics definitions per system.
         IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
         jmx.addStableMetrics(systems).addUnstableMetrics(systems);
       }
