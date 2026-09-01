@@ -61,7 +61,7 @@ public final class RedisServerTarget {
   @Nullable
   private static RedisServerTarget createFromEndpoints(
       @Nullable List<String> endpoints, boolean unordered) {
-    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints);
+    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints, false);
     if (parsed == null || parsed.isEmpty()) {
       return null;
     }
@@ -92,21 +92,28 @@ public final class RedisServerTarget {
   }
 
   @Nullable
-  private static List<Endpoint> parseConfiguredEndpoints(@Nullable List<String> endpoints) {
+  private static List<Endpoint> parseConfiguredEndpoints(
+      @Nullable List<String> endpoints, boolean allowAllUnrepresentable) {
     if (endpoints == null || endpoints.isEmpty()) {
       return emptyList();
     }
     List<Endpoint> parsed = new ArrayList<>(endpoints.size());
     boolean hasSocket = false;
+    boolean unrepresentable = false;
     for (String endpoint : endpoints) {
       Endpoint value = Endpoint.parse(endpoint);
       if (value == null) {
-        return null;
+        unrepresentable = true;
+        continue;
       }
       parsed.add(value);
       hasSocket |= value.socket;
     }
-    return parsed.size() > 1 && hasSocket ? null : parsed;
+    if ((unrepresentable && (!allowAllUnrepresentable || !parsed.isEmpty()))
+        || (parsed.size() > 1 && hasSocket)) {
+      return null;
+    }
+    return parsed;
   }
 
   private static RedisServerTarget directTarget(Endpoint endpoint) {
@@ -118,7 +125,7 @@ public final class RedisServerTarget {
   public static RedisServerTarget ofUnorderedEndpointsAndLogicalName(
       @Nullable List<String> endpoints, @Nullable String name) {
     String logicalName = name == null ? "" : name.trim();
-    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints);
+    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints, true);
     if (parsed == null) {
       return null;
     }
