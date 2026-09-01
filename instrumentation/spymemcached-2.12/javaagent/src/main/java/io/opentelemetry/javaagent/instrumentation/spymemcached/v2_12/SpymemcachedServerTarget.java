@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 public class SpymemcachedServerTarget {
 
   private static final int DEFAULT_PORT = 11211;
+  private static final int MAX_ADDRESS_LENGTH = 255;
 
   private final String address;
   @Nullable private final Integer port;
@@ -47,10 +48,13 @@ public class SpymemcachedServerTarget {
       for (int i = 0; i < hosts.size(); i++) {
         endpoints.add(endpoint(hosts.get(i), ports.get(i)));
       }
-      return new SpymemcachedServerTarget(String.join(",", endpoints), null);
+      String address = joinEndpoints(endpoints);
+      return address == null ? null : new SpymemcachedServerTarget(address, null);
     }
-    return new SpymemcachedServerTarget(
-        String.join(",", hosts), commonPort == DEFAULT_PORT ? null : commonPort);
+    String address = joinEndpoints(hosts);
+    return address == null
+        ? null
+        : new SpymemcachedServerTarget(address, commonPort == DEFAULT_PORT ? null : commonPort);
   }
 
   private SpymemcachedServerTarget(String address, @Nullable Integer port) {
@@ -75,6 +79,22 @@ public class SpymemcachedServerTarget {
       endpoint.append(host);
     }
     return endpoint.append(':').append(port).toString();
+  }
+
+  @Nullable
+  private static String joinEndpoints(List<String> endpoints) {
+    StringBuilder address = new StringBuilder();
+    for (String endpoint : endpoints) {
+      int separatorLength = address.length() == 0 ? 0 : 1;
+      if (address.length() + separatorLength + endpoint.length() > MAX_ADDRESS_LENGTH) {
+        break;
+      }
+      if (separatorLength != 0) {
+        address.append(',');
+      }
+      address.append(endpoint);
+    }
+    return address.length() == 0 ? null : address.toString();
   }
 
   @Nullable

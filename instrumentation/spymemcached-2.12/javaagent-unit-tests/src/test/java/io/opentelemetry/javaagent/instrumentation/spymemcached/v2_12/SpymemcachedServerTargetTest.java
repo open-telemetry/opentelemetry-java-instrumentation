@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -84,6 +85,40 @@ class SpymemcachedServerTargetTest {
     assertThat(target.getAddress())
         .isEqualTo("two.example:11212,one.example:11211,two.example:11212");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void endpointListAtLengthLimitIsPreserved() {
+    String first = repeated("a", 127);
+    String second = repeated("b", 127);
+
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(
+            asList(node(first, 11211), node(second, 11211), node("overflow", 11211)));
+
+    assertThat(target.getAddress()).isEqualTo(first + "," + second);
+    assertThat(target.getAddress()).hasSize(255);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void endpointListOverflowRemovesCompleteEndpointsFromTheEnd() {
+    String first = repeated("a", 247);
+
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(
+            asList(node(first, 11211), node("two.example", 11212), node("three.example", 11211)));
+
+    assertThat(target.getAddress()).isEqualTo(first + ":11211");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void firstEndpointThatExceedsLengthLimitHasNoTarget() {
+    assertThat(
+            SpymemcachedServerTarget.create(
+                asList(node(repeated("a", 250), 11211), node("two.example", 11212))))
+        .isNull();
   }
 
   @Test
@@ -201,5 +236,9 @@ class SpymemcachedServerTargetTest {
 
   private static InetSocketAddress node(String host, int port) {
     return InetSocketAddress.createUnresolved(host, port);
+  }
+
+  private static String repeated(String value, int count) {
+    return String.join("", Collections.nCopies(count, value));
   }
 }
