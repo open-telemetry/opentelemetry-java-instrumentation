@@ -65,7 +65,7 @@ final class LettuceBatchRequest {
 
   @Nullable
   InetSocketAddress getPeerAddress() {
-    // resolved when the span ends, so a channel that went down since the flush reports no peer
+    // Read when the span ends so an outbound write after the flush can still supply the peer.
     return peerAddress != null ? peerAddress.getAddress() : null;
   }
 
