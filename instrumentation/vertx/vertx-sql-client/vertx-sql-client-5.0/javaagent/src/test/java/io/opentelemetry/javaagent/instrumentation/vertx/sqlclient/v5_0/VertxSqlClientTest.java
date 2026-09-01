@@ -425,6 +425,20 @@ class VertxSqlClientTest {
 
   @Test
   void testUnknownDriverSupplierFailureUsesFallbackDbSystem() {
+    RuntimeException thrown = new RuntimeException("supplier failed");
+    Pool throwingPool =
+        ClientBuilder.pool(new PgDriver() {})
+            .using(vertx)
+            .connectingTo(
+                () -> {
+                  throw thrown;
+                })
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(throwingPool::close);
+
+    assertThatThrownBy(() -> select(throwingPool)).isSameAs(thrown);
+
     RuntimeException failed = new RuntimeException("future failed");
     Pool supplierPool =
         ClientBuilder.pool(new PgDriver() {})
@@ -436,7 +450,9 @@ class VertxSqlClientTest {
 
     assertThatThrownBy(() -> select(supplierPool)).hasCause(failed);
 
-    testing.waitAndAssertTraces(trace -> assertSupplierFailure(trace, failed, "other_sql"));
+    testing.waitAndAssertTraces(
+        trace -> assertSupplierFailure(trace, thrown, "other_sql"),
+        trace -> assertSupplierFailure(trace, failed, "other_sql"));
   }
 
   @Test

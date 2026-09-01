@@ -281,7 +281,14 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           scope.close();
         }
         if (throwable != null) {
-          endSpan(throwable);
+          if (dataCapture != null) {
+            dataCapture.removeConnectionRequest(this);
+          }
+          if (dataCapture != null && context == null) {
+            endFallbackSpan(dataCapture.getDbSystem(), throwable);
+          } else {
+            endSpan(throwable);
+          }
         }
         // span will be ended in QueryResultBuilderInstrumentation
       }
