@@ -13,9 +13,9 @@ import com.datastax.oss.driver.api.core.context.DriverContext;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.session.Session;
 import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
+import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
 import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
-import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -27,6 +27,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 final class CassandraServerTarget {
+
+  private static final int DEFAULT_PORT = 9042;
 
   private final String address;
   @Nullable private final Integer port;
@@ -47,30 +49,34 @@ final class CassandraServerTarget {
       // session names its contact points on the builder alone
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
       List<CassandraServerTarget> contactPoints = valid(configuredContactPoints);
-      boolean hasConfiguredTargets = !contactPoints.isEmpty();
+      if (contactPoints == null) {
+        return null;
+      }
+      boolean hasConfiguredContactPoints = !configuredContactPoints.isEmpty();
       for (DefaultNode node : metadataManager.getContactPoints()) {
         EndPoint endPoint = node.getEndPoint();
-        if (endPoint instanceof SniEndPoint) {
+        if (endPoint.getClass() != DefaultEndPoint.class) {
           return null;
         }
         SocketAddress address = endPoint.resolve();
         if (!(address instanceof InetSocketAddress)) {
           return null;
         }
-        InetSocketAddress inetAddress = (InetSocketAddress) address;
-        CassandraServerTarget target =
-            new CassandraServerTarget(inetAddress.getHostString(), inetAddress.getPort());
+        CassandraServerTarget target = fromAddress((InetSocketAddress) address);
+        if (target == null) {
+          return null;
+        }
         if (matches(contactPoints, target)) {
           continue;
         }
-        if (hasConfiguredTargets) {
+        if (hasConfiguredContactPoints) {
           return null;
         }
         contactPoints.add(target);
       }
       return combine(contactPoints);
     } catch (RuntimeException ignored) {
-      // a session that cannot describe its own configuration keeps reporting its coordinator
+      // A session that cannot describe its configuration has no stable server target.
       return null;
     }
   }
@@ -84,21 +90,26 @@ final class CassandraServerTarget {
       // session names its contact points on the builder alone
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
       List<CassandraServerTarget> contactPoints = valid(configuredContactPoints);
+      if (contactPoints == null) {
+        return null;
+      }
       for (EndPoint endPoint : programmaticContactPoints) {
-        if (endPoint instanceof SniEndPoint) {
+        if (endPoint.getClass() != DefaultEndPoint.class) {
           return null;
         }
         SocketAddress address = endPoint.resolve();
         if (!(address instanceof InetSocketAddress)) {
           return null;
         }
-        InetSocketAddress inetAddress = (InetSocketAddress) address;
-        contactPoints.add(
-            new CassandraServerTarget(inetAddress.getHostString(), inetAddress.getPort()));
+        CassandraServerTarget target = fromAddress((InetSocketAddress) address);
+        if (target == null) {
+          return null;
+        }
+        contactPoints.add(target);
       }
       return combine(contactPoints);
     } catch (RuntimeException ignored) {
-      // a session that cannot describe its own configuration keeps reporting its coordinator
+      // A session that cannot describe its configuration has no stable server target.
       return null;
     }
   }
@@ -108,14 +119,22 @@ final class CassandraServerTarget {
     if (contactPoints == null || contactPoints.isEmpty()) {
       return null;
     }
-    return combine(valid(contactPoints));
+    List<CassandraServerTarget> validContactPoints = valid(contactPoints);
+    return validContactPoints == null ? null : combine(validContactPoints);
   }
 
   @Nullable
   static CassandraServerTarget ofAddresses(Collection<InetSocketAddress> contactPoints) {
     List<CassandraServerTarget> targets = new ArrayList<>();
     for (InetSocketAddress contactPoint : contactPoints) {
-      targets.add(new CassandraServerTarget(contactPoint.getHostString(), contactPoint.getPort()));
+      if (contactPoint == null) {
+        return null;
+      }
+      CassandraServerTarget target = fromAddress(contactPoint);
+      if (target == null) {
+        return null;
+      }
+      targets.add(target);
     }
     return combine(targets);
   }
@@ -125,9 +144,13 @@ final class CassandraServerTarget {
     this.port = port;
   }
 
+  @Nullable
   private static List<CassandraServerTarget> valid(List<String> contactPoints) {
     List<CassandraServerTarget> validContactPoints = new ArrayList<>();
     for (String contactPoint : contactPoints) {
+      if (contactPoint != null && !isSafeHost(contactPoint)) {
+        return null;
+      }
       CassandraServerTarget target = single(contactPoint);
       if (target != null) {
         validContactPoints.add(target);
@@ -141,22 +164,25 @@ final class CassandraServerTarget {
     if (contactPoints.isEmpty()) {
       return null;
     }
-    if (contactPoints.size() == 1) {
-      return contactPoints.get(0);
-    }
-    List<String> normalizedContactPoints = new ArrayList<>(contactPoints.size());
+
+    int commonPort = contactPoints.get(0).port;
+    boolean allPortsEqual = true;
+    List<String> hosts = new ArrayList<>(contactPoints.size());
+    List<String> endpoints = new ArrayList<>(contactPoints.size());
     for (CassandraServerTarget contactPoint : contactPoints) {
-      normalizedContactPoints.add(contactPoint.asContactPoint());
+      allPortsEqual &= contactPoint.port == commonPort;
+      hosts.add(contactPoint.address);
+      endpoints.add(contactPoint.asContactPoint());
     }
-    normalizedContactPoints.sort(String::compareTo);
-    StringBuilder group = new StringBuilder();
-    for (String contactPoint : normalizedContactPoints) {
-      if (group.length() > 0) {
-        group.append(',');
-      }
-      group.append(contactPoint);
+
+    if (allPortsEqual) {
+      hosts.sort(String::compareTo);
+      return new CassandraServerTarget(
+          String.join(",", hosts), commonPort == DEFAULT_PORT ? null : commonPort);
     }
-    return new CassandraServerTarget(group.toString(), null);
+
+    endpoints.sort(String::compareTo);
+    return new CassandraServerTarget(String.join(",", endpoints), null);
   }
 
   private static boolean matches(
@@ -168,42 +194,124 @@ final class CassandraServerTarget {
       if (configuredTarget.address.equals(target.address)) {
         return true;
       }
-      if (configuredTarget.address.indexOf(':') < 0 || target.address.indexOf(':') < 0) {
-        continue;
-      }
-      try {
-        // The driver may expand a configured IPv6 literal when it builds the metadata endpoint.
-        InetAddress configuredAddress = InetAddress.getByName(configuredTarget.address);
-        InetAddress targetAddress = InetAddress.getByName(target.address);
-        if (configuredAddress.equals(targetAddress)) {
-          return true;
-        }
-      } catch (UnknownHostException ignored) {
-        // Invalid configured contact points do not match retained metadata endpoints.
+      InetAddress configuredAddress = numericAddress(configuredTarget.address);
+      InetAddress targetAddress = numericAddress(target.address);
+      if (configuredAddress != null && configuredAddress.equals(targetAddress)) {
+        return true;
       }
     }
     return false;
   }
 
   @Nullable
-  private static CassandraServerTarget single(String contactPoint) {
+  private static InetAddress numericAddress(String address) {
+    if (address.indexOf(':') >= 0) {
+      try {
+        return InetAddress.getByName(address);
+      } catch (UnknownHostException ignored) {
+        return null;
+      }
+    }
+
+    byte[] bytes = ipv4Address(address);
+    if (bytes == null) {
+      return null;
+    }
+    try {
+      return InetAddress.getByAddress(bytes);
+    } catch (UnknownHostException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static byte[] ipv4Address(String address) {
+    byte[] bytes = new byte[4];
+    int byteIndex = 0;
+    int value = 0;
+    int digits = 0;
+    for (int i = 0; i <= address.length(); i++) {
+      char c = i == address.length() ? '.' : address.charAt(i);
+      if (c == '.') {
+        if (digits == 0 || byteIndex == bytes.length) {
+          return null;
+        }
+        bytes[byteIndex++] = (byte) value;
+        value = 0;
+        digits = 0;
+      } else if (c >= '0' && c <= '9') {
+        value = value * 10 + c - '0';
+        digits++;
+        if (digits > 3 || value > 255) {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
+    return byteIndex == bytes.length ? bytes : null;
+  }
+
+  @Nullable
+  private static CassandraServerTarget single(@Nullable String contactPoint) {
+    if (contactPoint == null) {
+      return null;
+    }
     int separator = contactPoint.lastIndexOf(':');
     if (separator < 0) {
       return null;
     }
     String host = contactPoint.substring(0, separator);
-    if (host.startsWith("[") && host.endsWith("]")) {
+    if (host.startsWith("[")) {
+      if (!host.endsWith("]")) {
+        return null;
+      }
       host = host.substring(1, host.length() - 1);
+    } else if (host.indexOf('[') >= 0 || host.indexOf(']') >= 0) {
+      return null;
     }
     Integer port = port(contactPoint.substring(separator + 1));
-    return host.isEmpty() || port == null ? null : new CassandraServerTarget(host, port);
+    return isSafeHost(host) && port != null ? new CassandraServerTarget(host, port) : null;
+  }
+
+  @Nullable
+  private static CassandraServerTarget fromAddress(InetSocketAddress address) {
+    String host = address.getHostString();
+    if (host.startsWith("[")) {
+      if (!host.endsWith("]")) {
+        return null;
+      }
+      host = host.substring(1, host.length() - 1);
+    } else if (host.indexOf('[') >= 0 || host.indexOf(']') >= 0) {
+      return null;
+    }
+    return isSafeHost(host) && validPort(address.getPort())
+        ? new CassandraServerTarget(host, address.getPort())
+        : null;
+  }
+
+  private static boolean isSafeHost(String host) {
+    if (host.isEmpty()) {
+      return false;
+    }
+    for (int i = 0; i < host.length(); i++) {
+      char c = host.charAt(i);
+      if (c <= ' ' || c == '@' || c == '/' || c == '\\' || c == '?' || c == '#' || c == ',') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean validPort(int port) {
+    return port > 0 && port <= 65535;
   }
 
   @Nullable
   private static Integer port(String port) {
     try {
       int value = Integer.parseInt(port);
-      return value >= 0 && value <= 65535 ? value : null;
+      return validPort(value) ? value : null;
     } catch (NumberFormatException ignored) {
       return null;
     }

@@ -70,7 +70,7 @@ class CassandraTelemetryTest {
 
     CassandraRequest request = execute(telemetry.wrap(session));
 
-    assertTarget(request, "configured.example.com", 9042);
+    assertTarget(request, "configured.example.com", null);
   }
 
   @Test
@@ -134,7 +134,7 @@ class CassandraTelemetryTest {
     return requestCaptor.getValue();
   }
 
-  private static void assertTarget(CassandraRequest request, String address, int port) {
+  private static void assertTarget(CassandraRequest request, String address, Integer port) {
     CassandraServerTarget target = request.getServerTarget();
     if (emitStableDatabaseSemconv()) {
       assertThat(target).isNotNull();

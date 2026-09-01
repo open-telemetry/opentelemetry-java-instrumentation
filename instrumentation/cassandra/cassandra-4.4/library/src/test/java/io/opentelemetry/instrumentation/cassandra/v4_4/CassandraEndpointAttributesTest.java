@@ -59,7 +59,7 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void singleContactPointCarriesItsPort() throws UnknownHostException {
+  void singleContactPointOmitsTheDefaultPort() throws UnknownHostException {
     if (!emitStableDatabaseSemconv()) {
       when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
     }
@@ -68,7 +68,7 @@ class CassandraEndpointAttributesTest {
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("cassandra.example.com");
-      assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
+      assertThat(attributes.get(SERVER_PORT)).isNull();
     } else {
       assertCoordinatorIsServer(attributes);
     }
@@ -84,8 +84,40 @@ class CassandraEndpointAttributesTest {
         serverAttributes(target(asList("node1.example.com:9042", "node2.example.com:9042")));
 
     if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS))
-          .isEqualTo("node1.example.com:9042,node2.example.com:9042");
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com,node2.example.com");
+      assertThat(attributes.get(SERVER_PORT)).isNull();
+    } else {
+      assertCoordinatorIsServer(attributes);
+    }
+  }
+
+  @Test
+  void severalContactPointsExtractASharedNonDefaultPort() throws UnknownHostException {
+    if (!emitStableDatabaseSemconv()) {
+      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+    }
+
+    Attributes attributes =
+        serverAttributes(target(asList("node1.example.com:9142", "node2.example.com:9142")));
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com,node2.example.com");
+      assertThat(attributes.get(SERVER_PORT)).isEqualTo(9142L);
+    } else {
+      assertCoordinatorIsServer(attributes);
+    }
+  }
+
+  @Test
+  void mixedPortsInlineIpv4AndIpv6Endpoints() throws UnknownHostException {
+    if (!emitStableDatabaseSemconv()) {
+      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
+    }
+
+    Attributes attributes = serverAttributes(target(asList("[::1]:9042", "10.0.0.5:9142")));
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("10.0.0.5:9142,[::1]:9042");
       assertThat(attributes.get(SERVER_PORT)).isNull();
     } else {
       assertCoordinatorIsServer(attributes);
@@ -105,7 +137,7 @@ class CassandraEndpointAttributesTest {
     Attributes attributes = builder.build();
     assertThat(attributes.get(SERVER_ADDRESS))
         .isEqualTo(emitStableDatabaseSemconv() ? "cassandra.example.com" : null);
-    assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? 9042L : null);
+    assertThat(attributes.get(SERVER_PORT)).isNull();
   }
 
   @Test
