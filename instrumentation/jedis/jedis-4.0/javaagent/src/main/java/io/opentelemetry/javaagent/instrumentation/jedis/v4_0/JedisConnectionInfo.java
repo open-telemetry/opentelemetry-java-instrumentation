@@ -15,20 +15,33 @@ import redis.clients.jedis.JedisSocketFactory;
 class JedisConnectionInfo {
   @Nullable private final String serverAddress;
   @Nullable private final Integer serverPort;
+  @Nullable private final String configuredAddress;
+  @Nullable private final Integer configuredPort;
   @Nullable private final Long databaseIndex;
 
   private JedisConnectionInfo(
-      @Nullable String serverAddress, @Nullable Integer serverPort, @Nullable Long databaseIndex) {
+      @Nullable String serverAddress,
+      @Nullable Integer serverPort,
+      @Nullable String configuredAddress,
+      @Nullable Integer configuredPort,
+      @Nullable Long databaseIndex) {
     this.serverAddress = serverAddress;
     this.serverPort = serverPort;
+    this.configuredAddress = configuredAddress;
+    this.configuredPort = configuredPort;
     this.databaseIndex = databaseIndex;
   }
 
   static JedisConnectionInfo create(
       @Nullable JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
-    HostAndPort hostAndPort = JedisSocketFactoryInfo.getConfiguredHostAndPort(socketFactory);
-    if (hostAndPort == null) {
-      hostAndPort = DefaultJedisSocketFactoryUtil.getSocketHostAndPort(socketFactory);
+    // The socket endpoint is the one the connection dials, after any HostAndPortMapper ran.
+    HostAndPort socketHostAndPort =
+        DefaultJedisSocketFactoryUtil.getSocketHostAndPort(socketFactory);
+    // The configured endpoint is the one the client was given, before any mapping.
+    HostAndPort configuredHostAndPort =
+        JedisSocketFactoryInfo.getConfiguredHostAndPort(socketFactory);
+    if (configuredHostAndPort == null) {
+      configuredHostAndPort = socketHostAndPort;
     }
     // Without a client config, Jedis leaves the new Redis connection on the default database 0.
     Long databaseIndex =
@@ -36,8 +49,10 @@ class JedisConnectionInfo {
             ? Long.valueOf(((JedisClientConfig) clientConfig).getDatabase())
             : 0L;
     return new JedisConnectionInfo(
-        hostAndPort != null ? hostAndPort.getHost() : null,
-        hostAndPort != null ? hostAndPort.getPort() : null,
+        socketHostAndPort != null ? socketHostAndPort.getHost() : null,
+        socketHostAndPort != null ? socketHostAndPort.getPort() : null,
+        configuredHostAndPort != null ? configuredHostAndPort.getHost() : null,
+        configuredHostAndPort != null ? configuredHostAndPort.getPort() : null,
         databaseIndex);
   }
 
@@ -58,8 +73,8 @@ class JedisConnectionInfo {
 
   @Nullable
   RedisServerTarget getServerTarget() {
-    return serverAddress == null || serverPort == null
+    return configuredAddress == null || configuredPort == null
         ? null
-        : RedisServerTarget.ofHostAndPort(serverAddress, serverPort);
+        : RedisServerTarget.ofHostAndPort(configuredAddress, configuredPort);
   }
 }
