@@ -129,6 +129,45 @@ class Jedis40ClientTest {
   }
 
   @Test
+  void mappedCommandUsesConfiguredTarget() {
+    String configuredHost = "redis.internal";
+    int configuredPort = 6380;
+    try (Jedis mapped =
+        new Jedis(
+            new HostAndPort(configuredHost, configuredPort),
+            DefaultJedisClientConfig.builder()
+                .hostAndPortMapper(ignored -> new HostAndPort(host, port))
+                .build())) {
+      testing.clearData();
+      mapped.set("mapped", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SET " + configuredHost + ":" + configuredPort
+                                : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_STATEMENT, emitOldDatabaseSemconv() ? "SET mapped ?" : null),
+                            equalTo(
+                                DB_QUERY_TEXT, emitStableDatabaseSemconv() ? "SET mapped ?" : null),
+                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "SET" : null),
+                            equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "SET" : null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, configuredHost),
+                            equalTo(SERVER_PORT, configuredPort),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @Test
   void pooledCommand() throws Exception {
     Class<?> poolClass;
     try {
