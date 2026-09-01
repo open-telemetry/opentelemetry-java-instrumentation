@@ -52,14 +52,6 @@ final class LettuceBatchRequest {
   static LettuceBatchRequest create(
       List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable Integer databaseIndex,
-      @Nullable RedisServerTarget serverTarget) {
-    return create(commands, serverAddress, null, databaseIndex, serverTarget);
-  }
-
-  static LettuceBatchRequest create(
-      List<RedisCommand<?, ?, ?>> commands,
-      @Nullable InetSocketAddress serverAddress,
       @Nullable LettuceCommandPeer peerAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
