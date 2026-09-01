@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -27,28 +26,25 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("acquirePermission")).and(takesArguments(0)),
+        named("acquirePermission").and(takesArguments(0)),
         getClass().getName() + "$AcquirePermissionAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("tryAcquirePermission")).and(takesArguments(0)),
+        named("tryAcquirePermission").and(takesArguments(0)),
         getClass().getName() + "$TryAcquirePermissionAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("releasePermission")).and(takesArguments(0)),
+        named("releasePermission").and(takesArguments(0)),
         getClass().getName() + "$ReleasePermissionAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("onSuccess")).and(takesArguments(1).or(takesArguments(2))),
+        named("onSuccess").and(takesArguments(1).or(takesArguments(2))),
         getClass().getName() + "$OnSuccessAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("onError")).and(takesArguments(2)),
-        getClass().getName() + "$OnErrorAdvice");
+        named("onError").and(takesArguments(2)), getClass().getName() + "$OnErrorAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("onError")).and(takesArguments(3)),
-        getClass().getName() + "$NewOnErrorAdvice");
+        named("onError").and(takesArguments(3)), getClass().getName() + "$NewOnErrorAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("onResult")).and(takesArguments(3)),
-        getClass().getName() + "$OnResultAdvice");
+        named("onResult").and(takesArguments(3)), getClass().getName() + "$OnResultAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("publishCircuitErrorEvent")).and(takesArguments(4)),
+        named("publishCircuitErrorEvent").and(takesArguments(4)),
         getClass().getName() + "$PublishCircuitErrorEventAdvice");
   }
 
@@ -106,9 +102,10 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
-      if (!Resilience4jCircuitBreakerSpans.isInCircuitBreakerCallback(circuitBreaker)) {
-        Resilience4jCircuitBreakerSpans.end(circuitBreaker, "cancelled", null);
+      if (Resilience4jCircuitBreakerSpans.isCurrentCircuitBreakerCallback(circuitBreaker)) {
+        return;
       }
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "cancelled", null);
     }
   }
 
@@ -118,7 +115,7 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker, @Advice.Thrown @Nullable Throwable throwable) {
-      if (Resilience4jCircuitBreakerSpans.isOnResultActive(circuitBreaker)) {
+      if (Resilience4jCircuitBreakerSpans.isCurrentOnResultCompletion(circuitBreaker)) {
         return;
       }
       Resilience4jCircuitBreakerSpans.end(

@@ -28,7 +28,7 @@ public class Resilience4jCircuitBreakerSpans {
   private static final ThreadLocal<Deque<AttemptToken>> currentAcquisitions = new ThreadLocal<>();
   private static final ThreadLocal<Deque<AttemptToken>> recentAcquisitions = new ThreadLocal<>();
   private static final ThreadLocal<Deque<Capture>> captures = new ThreadLocal<>();
-  private static final ThreadLocal<Deque<CircuitBreaker>> circuitBreakerCallbacks =
+  private static final ThreadLocal<Deque<CircuitBreakerCallback>> circuitBreakerCallbacks =
       new ThreadLocal<>();
   private static final ThreadLocal<Deque<OnResult>> onResults = new ThreadLocal<>();
 
@@ -221,32 +221,40 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   public static void enterCircuitBreakerCallback(CircuitBreaker circuitBreaker) {
-    Deque<CircuitBreaker> callbacks = circuitBreakerCallbacks.get();
+    Deque<CircuitBreakerCallback> callbacks = circuitBreakerCallbacks.get();
     if (callbacks == null) {
       callbacks = new ArrayDeque<>();
       circuitBreakerCallbacks.set(callbacks);
     }
-    callbacks.push(circuitBreaker);
+    callbacks.push(
+        new CircuitBreakerCallback(
+            circuitBreaker,
+            currentCompletionToken(circuitBreaker),
+            peekAttachedPendingSpan(circuitBreaker)));
   }
 
   public static void exitCircuitBreakerCallback(CircuitBreaker circuitBreaker) {
-    Deque<CircuitBreaker> callbacks = circuitBreakerCallbacks.get();
+    Deque<CircuitBreakerCallback> callbacks = circuitBreakerCallbacks.get();
     if (callbacks == null) {
       return;
     }
-    if (callbacks.peek() == circuitBreaker) {
+    CircuitBreakerCallback current = callbacks.peek();
+    if (current != null && current.circuitBreaker == circuitBreaker) {
       callbacks.poll();
     } else {
-      callbacks.remove(circuitBreaker);
+      callbacks.removeIf(callback -> callback.circuitBreaker == circuitBreaker);
     }
     if (callbacks.isEmpty()) {
       circuitBreakerCallbacks.remove();
     }
   }
 
-  public static boolean isInCircuitBreakerCallback(CircuitBreaker circuitBreaker) {
-    Deque<CircuitBreaker> callbacks = circuitBreakerCallbacks.get();
-    return callbacks != null && callbacks.peek() == circuitBreaker;
+  public static boolean isCurrentCircuitBreakerCallback(CircuitBreaker circuitBreaker) {
+    Deque<CircuitBreakerCallback> callbacks = circuitBreakerCallbacks.get();
+    return callbacks != null
+        && !callbacks.isEmpty()
+        && isCurrentCompletion(
+            circuitBreaker, callbacks.peek().token, callbacks.peek().pendingSpan);
   }
 
   public static void enterOnResult(CircuitBreaker circuitBreaker) {
@@ -255,12 +263,16 @@ public class Resilience4jCircuitBreakerSpans {
       results = new ArrayDeque<>();
       onResults.set(results);
     }
-    results.push(new OnResult(circuitBreaker));
+    results.push(
+        new OnResult(
+            currentCompletionToken(circuitBreaker), peekAttachedPendingSpan(circuitBreaker)));
   }
 
-  public static boolean isOnResultActive(CircuitBreaker circuitBreaker) {
+  public static boolean isCurrentOnResultCompletion(CircuitBreaker circuitBreaker) {
     Deque<OnResult> results = onResults.get();
-    return results != null && !results.isEmpty() && results.peek().circuitBreaker == circuitBreaker;
+    return results != null
+        && !results.isEmpty()
+        && isCurrentCompletion(circuitBreaker, results.peek().token, results.peek().pendingSpan);
   }
 
   public static boolean exitOnResult() {
@@ -322,17 +334,18 @@ public class Resilience4jCircuitBreakerSpans {
   public static void endIfResultRecordedAsFailure(
       CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
     Deque<OnResult> results = onResults.get();
-    if (results != null
-        && !results.isEmpty()
-        && results.peek().circuitBreaker == circuitBreaker
-        && throwable != null
+    if (results == null || results.isEmpty() || throwable == null) {
+      return;
+    }
+    OnResult result = results.peek();
+    if (isCurrentCompletion(circuitBreaker, result.token, result.pendingSpan)
         // ResultRecordedAsFailureException was added in newer Resilience4j versions and is not
         // present across the full supported range, so avoid a hard reference that would break
         // muzzle on older versions.
         && "io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException"
             .equals(throwable.getClass().getName())) {
       end(circuitBreaker, "failure", null);
-      results.peek().ended = true;
+      result.ended = true;
     }
   }
 
@@ -366,6 +379,43 @@ public class Resilience4jCircuitBreakerSpans {
     if (spans.isEmpty()) {
       attachedPendingSpans.remove();
     }
+  }
+
+  @Nullable
+  private static AttemptToken currentCompletionToken(CircuitBreaker circuitBreaker) {
+    AttemptToken captureToken = activeCaptureToken(circuitBreaker);
+    return captureToken == null ? peekRecentAcquisition(circuitBreaker) : captureToken;
+  }
+
+  private static boolean isCurrentCompletion(
+      CircuitBreaker circuitBreaker,
+      @Nullable AttemptToken token,
+      @Nullable PendingSpan attachedPendingSpan) {
+    if (token != null) {
+      AttemptToken recentToken = peekRecentAcquisition(circuitBreaker);
+      if (recentToken != null && recentToken != token) {
+        return false;
+      }
+      AttemptToken captureToken = activeCaptureToken(circuitBreaker);
+      return token == recentToken || token == captureToken;
+    }
+    PendingSpan pendingSpan = peekAttachedPendingSpan(circuitBreaker);
+    return attachedPendingSpan != null && attachedPendingSpan == pendingSpan;
+  }
+
+  @Nullable
+  private static PendingSpan peekAttachedPendingSpan(CircuitBreaker circuitBreaker) {
+    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
+    if (spans == null) {
+      return null;
+    }
+    for (AttachedPendingSpan attachedPendingSpan : spans) {
+      PendingSpan pendingSpan = attachedPendingSpan.pendingSpan;
+      if (pendingSpan.isFor(circuitBreaker)) {
+        return pendingSpan;
+      }
+    }
+    return null;
   }
 
   @Nullable
@@ -445,11 +495,28 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   private static class OnResult {
-    private final CircuitBreaker circuitBreaker;
+    @Nullable private final AttemptToken token;
+    @Nullable private final PendingSpan pendingSpan;
     private boolean ended;
 
-    private OnResult(CircuitBreaker circuitBreaker) {
+    private OnResult(@Nullable AttemptToken token, @Nullable PendingSpan pendingSpan) {
+      this.token = token;
+      this.pendingSpan = pendingSpan;
+    }
+  }
+
+  private static class CircuitBreakerCallback {
+    private final CircuitBreaker circuitBreaker;
+    @Nullable private final AttemptToken token;
+    @Nullable private final PendingSpan pendingSpan;
+
+    private CircuitBreakerCallback(
+        CircuitBreaker circuitBreaker,
+        @Nullable AttemptToken token,
+        @Nullable PendingSpan pendingSpan) {
       this.circuitBreaker = circuitBreaker;
+      this.token = token;
+      this.pendingSpan = pendingSpan;
     }
   }
 

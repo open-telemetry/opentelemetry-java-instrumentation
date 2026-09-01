@@ -233,6 +233,64 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void onResultDoesNotSuppressNestedAttemptForSameCircuitBreaker() throws Exception {
+    Method transitionOnResult = transitionOnResultMethod();
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    CircuitBreaker[] circuitBreakerHolder = new CircuitBreaker[1];
+    transitionOnResult.invoke(
+        builder,
+        (Function<Object, Object>)
+            result -> {
+              circuitBreakerHolder[0].acquirePermission();
+              invokeOnSuccessUnchecked(circuitBreakerHolder[0]);
+              return noTransitionResult();
+            });
+    circuitBreakerHolder[0] = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    Supplier<Integer> decorated =
+        CircuitBreaker.decorateSupplier(circuitBreakerHolder[0], () -> 500);
+
+    Integer result = testing.runWithSpan("parent", decorated::get);
+
+    assertThat(result).isEqualTo(500);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.name"),
+                                experimental("test-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.outcome"),
+                                experimental("success"))),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.name"),
+                                experimental("test-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.outcome"),
+                                experimental("success")))));
+    assertThat(testing.spans())
+        .extracting(span -> span.getName())
+        .containsExactlyInAnyOrder(
+            "parent", "CircuitBreaker test-circuit-breaker", "CircuitBreaker test-circuit-breaker");
+  }
+
+  @Test
   @SuppressWarnings("unchecked")
   void createsFailureSpanWhenDecoratedCompletionStageTimestampFunctionThrows() throws Exception {
     Method currentTimestampFunction;
@@ -694,6 +752,60 @@ class Resilience4jCircuitBreakerTest {
                             equalTo(
                                 stringKey("resilience4j.circuit_breaker.outcome"),
                                 experimental("success")))));
+  }
+
+  @Test
+  void releasePermissionDoesNotSuppressNestedAttemptForSameCircuitBreaker() throws Exception {
+    Method recordException = recordExceptionMethod();
+    IllegalArgumentException outerException = new IllegalArgumentException("outer");
+    CircuitBreaker[] circuitBreakerHolder = new CircuitBreaker[1];
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    recordException.invoke(
+        builder,
+        (Predicate<Throwable>)
+            throwable -> {
+              circuitBreakerHolder[0].acquirePermission();
+              circuitBreakerHolder[0].releasePermission();
+              return true;
+            });
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    circuitBreakerHolder[0] = circuitBreaker;
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          circuitBreaker.acquirePermission();
+          invokeOnError(circuitBreaker, outerException);
+        });
+
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
+        .filteredOn(span -> span.getStatus().equals(StatusData.unset()))
+        .singleElement()
+        .satisfies(
+            span ->
+                assertThat(
+                        span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
+                    .isEqualTo(experimental("cancelled")));
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
+        .filteredOn(span -> span.getStatus().equals(StatusData.error()))
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(
+                      span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
+                  .isEqualTo(experimental("failure"));
+              assertThat(span.getEvents())
+                  .singleElement()
+                  .satisfies(
+                      event -> {
+                        assertThat(event.getAttributes().get(stringKey("exception.type")))
+                            .isEqualTo(outerException.getClass().getName());
+                        assertThat(event.getAttributes().get(stringKey("exception.message")))
+                            .isEqualTo(outerException.getMessage());
+                      });
+            });
   }
 
   @Test

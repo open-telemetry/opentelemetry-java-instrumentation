@@ -11,6 +11,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionStage;
@@ -71,7 +73,7 @@ public class Resilience4jCircuitBreakerDecorators {
     Class<?> delegateClass = delegate.getClass();
     return Proxy.newProxyInstance(
         delegateClass.getClassLoader(),
-        delegateClass.getInterfaces(),
+        interfaces(delegateClass),
         new CheckedInvocationHandler(circuitBreaker, delegate, captureRecentAcquisition));
   }
 
@@ -321,11 +323,16 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-      boolean result = delegate.cancel(mayInterruptIfRunning);
-      if (result) {
-        pendingSpan.end("cancelled", null);
+      try {
+        boolean result = delegate.cancel(mayInterruptIfRunning);
+        if (result) {
+          pendingSpan.end("cancelled", null);
+        }
+        return result;
+      } catch (RuntimeException | Error e) {
+        pendingSpan.end("failure", e);
+        throw e;
       }
-      return result;
     }
 
     @Override
@@ -492,10 +499,14 @@ public class Resilience4jCircuitBreakerDecorators {
         return wrapCheckedAdapterResult(circuitBreaker, method, result);
       } catch (InvocationTargetException e) {
         Throwable cause = e.getCause();
-        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
-            Resilience4jCircuitBreakerSpans.endCapture(capture);
-        if (pendingSpan != null) {
-          pendingSpan.end("failure", cause);
+        if (captureRecentAcquisition && cause instanceof Exception) {
+          Resilience4jCircuitBreakerSpans.cancelCapture(capture);
+        } else {
+          Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+              Resilience4jCircuitBreakerSpans.endCapture(capture);
+          if (pendingSpan != null) {
+            pendingSpan.end("failure", cause);
+          }
         }
         throw cause;
       } catch (Throwable t) {
@@ -532,6 +543,24 @@ public class Resilience4jCircuitBreakerDecorators {
         || type.getName().startsWith("io.vavr.Function");
   }
 
+  private static Class<?>[] interfaces(Class<?> type) {
+    Set<Class<?>> interfaces = new LinkedHashSet<>();
+    Class<?> current = type;
+    while (current != null) {
+      collectInterfaces(current, interfaces);
+      current = current.getSuperclass();
+    }
+    return interfaces.toArray(new Class<?>[0]);
+  }
+
+  private static void collectInterfaces(Class<?> type, Set<Class<?>> interfaces) {
+    for (Class<?> iface : type.getInterfaces()) {
+      if (interfaces.add(iface)) {
+        collectInterfaces(iface, interfaces);
+      }
+    }
+  }
+
   private static Object wrapFunctionalAdapterResult(
       CircuitBreaker circuitBreaker, Method method, @Nullable Object result) {
     if (result == null) {
@@ -547,7 +576,7 @@ public class Resilience4jCircuitBreakerDecorators {
   }
 
   private static Object wrapFunctionalAdapter(CircuitBreaker circuitBreaker, Object delegate) {
-    Class<?>[] interfaces = delegate.getClass().getInterfaces();
+    Class<?>[] interfaces = interfaces(delegate.getClass());
     if (interfaces.length == 0) {
       return delegate;
     }
@@ -666,6 +695,14 @@ public class Resilience4jCircuitBreakerDecorators {
 
     private BiConsumer<Object, Throwable> wrapWhenComplete(BiConsumer<?, ?> callback) {
       return (result, throwable) -> {
+        if (throwable instanceof Error) {
+          // Do not make a span current while invoking application callbacks for Error results. If
+          // the callback also fails, the original Error should remain the circuit-breaker outcome
+          // and span ownership/bookkeeping should already be closed.
+          pendingSpan.end("failure", throwable);
+          invokeWhenComplete(callback, result, throwable);
+          return;
+        }
         Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
         try {
           invokeWhenComplete(callback, result, throwable);

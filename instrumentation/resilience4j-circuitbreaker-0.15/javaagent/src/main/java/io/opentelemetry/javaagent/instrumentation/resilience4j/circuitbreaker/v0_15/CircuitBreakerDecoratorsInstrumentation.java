@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -34,29 +33,22 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateSupplier")),
-        getClass().getName() + "$SupplierAdvice");
+        isStatic().and(named("decorateSupplier")), getClass().getName() + "$SupplierAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateCallable")),
-        getClass().getName() + "$CallableAdvice");
+        isStatic().and(named("decorateCallable")), getClass().getName() + "$CallableAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateRunnable")),
-        getClass().getName() + "$RunnableAdvice");
+        isStatic().and(named("decorateRunnable")), getClass().getName() + "$RunnableAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateCompletionStage")),
+        isStatic().and(named("decorateCompletionStage")),
         getClass().getName() + "$CompletionStageSupplierAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateFuture")),
-        getClass().getName() + "$FutureSupplierAdvice");
+        isStatic().and(named("decorateFuture")), getClass().getName() + "$FutureSupplierAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateFunction")),
-        getClass().getName() + "$FunctionAdvice");
+        isStatic().and(named("decorateFunction")), getClass().getName() + "$FunctionAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateConsumer")),
-        getClass().getName() + "$ConsumerAdvice");
+        isStatic().and(named("decorateConsumer")), getClass().getName() + "$ConsumerAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isStatic())
+        isStatic()
             .and(
                 named("decorateCheckedSupplier")
                     .or(named("decorateCheckedRunnable"))
