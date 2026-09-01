@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.lang.reflect.Field;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -178,7 +179,7 @@ public final class SqsImpl {
         preparedEntries.add(entry.clone());
         continue;
       }
-      Timer timer = Timer.start();
+      Instant timestamp = Instant.now();
       Context creationContext =
           InstrumenterUtil.startAndEnd(
               producerCreateInstrumenter,
@@ -186,8 +187,8 @@ public final class SqsImpl {
               createRequest,
               null,
               null,
-              timer.startTime(),
-              timer.now());
+              timestamp,
+              timestamp);
       // A no-op tracer can pass shouldStart() but return a context with an invalid span.
       if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
         preparedEntries.add(entry.clone());
