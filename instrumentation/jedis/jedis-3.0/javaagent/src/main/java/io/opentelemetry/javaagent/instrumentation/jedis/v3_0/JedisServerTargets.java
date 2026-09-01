@@ -38,11 +38,10 @@ public class JedisServerTargets {
         if (sentinel instanceof HostAndPort) {
           HostAndPort hostAndPort = (HostAndPort) sentinel;
           endpoints.add(RedisServerTarget.endpoint(hostAndPort.getHost(), hostAndPort.getPort()));
+        } else if (sentinel instanceof String) {
+          endpoints.add(RedisServerTarget.normalizeHostAndPort((String) sentinel));
         } else {
-          endpoints.add(
-              sentinel == null
-                  ? null
-                  : RedisServerTarget.normalizeHostAndPort(sentinel.toString()));
+          endpoints.add(null);
         }
       }
     }

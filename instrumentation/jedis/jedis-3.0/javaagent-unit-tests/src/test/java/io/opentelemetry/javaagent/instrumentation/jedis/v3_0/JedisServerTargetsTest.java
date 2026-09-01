@@ -32,6 +32,16 @@ class JedisServerTargetsTest {
   }
 
   @Test
+  void shardsWithSharedNonDefaultPortKeepPortsInline() {
+    RedisServerTarget target =
+        JedisServerTargets.ofShards(
+            asList(new JedisShardInfo("shard1", 6380), new JedisShardInfo("shard2", 6380)));
+
+    assertThat(target.getAddress()).isEqualTo("shard1:6380,shard2:6380");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void oneShardOmitsItsDefaultPort() {
     RedisServerTarget target =
         JedisServerTargets.ofShards(singletonList(new JedisShardInfo("shard1", 6379)));
@@ -107,6 +117,14 @@ class JedisServerTargetsTest {
   }
 
   @Test
+  void sentinelListWithUnsupportedMemberFailsClosedWithoutConversion() {
+    assertThat(
+            JedisServerTargets.ofSentinels(
+                "mymaster", asList(new HostAndPort("sentinel1", 26379), unconvertibleMember())))
+        .isNull();
+  }
+
+  @Test
   void clusterNodesAreSorted() {
     RedisServerTarget target =
         JedisServerTargets.ofNodes(
@@ -150,6 +168,15 @@ class JedisServerTargetsTest {
   @Test
   void clusterNodeListWithNullMemberFailsClosed() {
     assertThat(JedisServerTargets.ofNodes(asList(new HostAndPort("node1", 7000), null))).isNull();
+  }
+
+  private static Object unconvertibleMember() {
+    return new Object() {
+      @Override
+      public String toString() {
+        throw new IllegalStateException("must not convert unsupported member");
+      }
+    };
   }
 
   private static Set<String> sentinels(String... addresses) {

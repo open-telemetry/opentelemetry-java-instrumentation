@@ -134,10 +134,17 @@ class RedisServerTargetTest {
             "node1,node2",
             null),
         argumentSet(
-            "shared non-default IPv4", asList("node1:6380", "node2:6380"), "node1,node2", 6380),
+            "shared non-default IPv4",
+            asList("node1:6380", "node2:6380"),
+            "node1:6380,node2:6380",
+            null),
         argumentSet("mixed IPv4", asList("node1", "node2:6380"), "node1:6379,node2:6380", null),
         argumentSet("default IPv6", asList("[::1]:6379", "[::2]:6379"), "::1,::2", null),
-        argumentSet("shared non-default IPv6", asList("[::1]:6380", "[::2]:6380"), "::1,::2", 6380),
+        argumentSet(
+            "shared non-default IPv6",
+            asList("[::1]:6380", "[::2]:6380"),
+            "[::1]:6380,[::2]:6380",
+            null),
         argumentSet(
             "mixed IPv6", asList("[::1]:6379", "[::2]:6380"), "[::1]:6379,[::2]:6380", null));
   }

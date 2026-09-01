@@ -81,9 +81,11 @@ public final class RedisServerTarget {
       }
     }
 
+    boolean includePorts = mixedPorts || (commonPort != null && commonPort != DEFAULT_PORT);
     List<String> rendered = new ArrayList<>(parsed.size());
     for (Endpoint endpoint : parsed) {
-      rendered.add(mixedPorts ? endpoint.renderWithEffectivePort() : endpoint.renderWithoutPort());
+      rendered.add(
+          includePorts ? endpoint.renderWithEffectivePort() : endpoint.renderWithoutPort());
     }
     if (unordered) {
       Collections.sort(rendered);
@@ -92,9 +94,7 @@ public final class RedisServerTarget {
     if (address == null) {
       return null;
     }
-    Integer port =
-        !mixedPorts && commonPort != null && commonPort != DEFAULT_PORT ? commonPort : null;
-    return new RedisServerTarget(address, port);
+    return new RedisServerTarget(address, null);
   }
 
   @Nullable
