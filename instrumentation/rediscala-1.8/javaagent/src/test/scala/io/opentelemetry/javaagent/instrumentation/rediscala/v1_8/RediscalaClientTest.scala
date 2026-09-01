@@ -294,9 +294,7 @@ class RediscalaClientTest {
     try {
       val result = pool.set("immutable-pool-target", "value")
       Await.result(result, Duration("3 second"))
-      assertConfiguredTargetSpan(
-        hosts.sorted.map(serverHost => s"$serverHost:$port").mkString(",")
-      )
+      assertConfiguredTargetSpan(hosts.sorted.mkString(","), port)
     } finally {
       pool.stop()
     }
@@ -341,9 +339,8 @@ class RediscalaClientTest {
         val result = cluster.get[String]("cluster-target")
         assertThat(Await.result(result, Duration("3 second")).isEmpty).isTrue
         assertConfiguredTargetSpan(
-          hosts.sorted
-            .map(serverHost => s"$serverHost:$clusterPort")
-            .mkString(","),
+          hosts.sorted.mkString(","),
+          clusterPort.longValue(),
           operationName = "GET"
         )
       } finally {
@@ -375,9 +372,8 @@ class RediscalaClientTest {
       val result = client.set("master-slaves-target", "value")
       Await.result(result, Duration("3 second"))
       assertConfiguredTargetSpan(
-        (s"${master.host}:${master.port}" +: slaves
-          .map(server => s"${server.host}:${server.port}")
-          .sorted).mkString(",")
+        (master.host +: slaves.map(_.host).sorted).mkString(","),
+        port
       )
     } finally {
       client.masterClient.stop()
@@ -407,9 +403,8 @@ class RediscalaClientTest {
       transaction.set("master-slaves-transaction-target", "value")
       Await.result(transaction.exec(), Duration("3 second"))
       assertConfiguredTargetSpan(
-        (s"${master.host}:${master.port}" +: slaves
-          .map(server => s"${server.host}:${server.port}")
-          .sorted).mkString(","),
+        (master.host +: slaves.map(_.host).sorted).mkString(","),
+        port,
         operationName = "MULTI SET"
       )
     } finally {
@@ -474,10 +469,8 @@ class RediscalaClientTest {
         Duration("3 second")
       )
       assertConfiguredTargetSpan(
-        Seq(first, second)
-          .map(server => s"${server.host}:${server.port}")
-          .sorted
-          .mkString(",")
+        Seq(first, second).map(_.host).sorted.mkString(","),
+        port
       )
 
       pool.removeServer(first)

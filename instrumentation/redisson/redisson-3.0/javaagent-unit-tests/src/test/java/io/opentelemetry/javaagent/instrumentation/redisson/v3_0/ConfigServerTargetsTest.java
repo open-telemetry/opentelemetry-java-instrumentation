@@ -101,11 +101,19 @@ class ConfigServerTargetsTest {
         .isEqualTo("master:6379,replica1:6380,replica2:6381");
   }
 
+  @Test
+  void singleServerOmitsTheDefaultPort() {
+    Config config = new Config();
+    config.useSingleServer().setAddress(redisAddress("localhost:6379"));
+
+    RedisServerTarget target = ConfigServerTargetsBefore317.of(config);
+
+    assertThat(target.getAddress()).isEqualTo("localhost");
+    assertThat(target.getPort()).isNull();
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "localhost:6379, localhost, 6379",
-    "user:password@secure.example:6380/2?timeout=5s, secure.example, 6380"
-  })
+  @CsvSource({"user:password@secure.example:6380/2?timeout=5s, secure.example, 6380"})
   void singleServerUsesSanitizedConfiguredAddress(
       String configuredAddress, String expectedAddress, int expectedPort) {
     Config config = new Config();
