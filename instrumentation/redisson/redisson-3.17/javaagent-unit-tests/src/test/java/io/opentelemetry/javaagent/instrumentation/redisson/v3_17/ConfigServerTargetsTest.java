@@ -101,19 +101,29 @@ class ConfigServerTargetsTest {
   }
 
   @Test
-  void masterWithoutReplicasKeepsItsPort() {
+  void masterWithoutReplicasOmitsTheDefaultPort() {
     Config config = new Config();
     config.useMasterSlaveServers().setMasterAddress("redis://master:6379");
 
     RedisServerTarget target = ConfigServerTargetsSince317.of(config);
 
     assertThat(target.getAddress()).isEqualTo("master");
-    assertThat(target.getPort()).isEqualTo(6379);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void singleServerOmitsTheDefaultPort() {
+    Config config = new Config();
+    config.useSingleServer().setAddress("redis://localhost:6379");
+
+    RedisServerTarget target = ConfigServerTargetsSince317.of(config);
+
+    assertThat(target.getAddress()).isEqualTo("localhost");
+    assertThat(target.getPort()).isNull();
   }
 
   @ParameterizedTest
   @CsvSource({
-    "redis://localhost:6379, localhost, 6379",
     "rediss://user:password@secure.example:6380/2?timeout=5s, secure.example, 6380",
     "redis://[2001:db8::1]:6381, 2001:db8::1, 6381"
   })

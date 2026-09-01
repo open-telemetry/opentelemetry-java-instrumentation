@@ -283,7 +283,9 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void configuredServerTarget() {
     String aliasHost = host.equals(ip) ? "localhost" : ip;
-    String configuredTarget = address + "," + aliasHost + ":" + port;
+    String configuredTarget =
+        useRedisProtocol() ? host + "," + aliasHost + ":" + port : host + "," + aliasHost;
+    Long configuredPort = useRedisProtocol() ? null : port;
 
     Config config = new Config();
     config
@@ -293,7 +295,12 @@ public abstract class AbstractRedissonClientTest {
     RedissonClient configuredClient = Redisson.create(config);
     try {
       assertConfiguredTarget(
-          configuredClient, "configured-target", configuredTarget, configuredTarget, null, host);
+          configuredClient,
+          "configured-target",
+          configuredTarget,
+          configuredTarget,
+          configuredPort,
+          host);
     } finally {
       configuredClient.shutdown();
     }
