@@ -60,10 +60,12 @@ public class JmxMetricInsightInstaller implements AgentListener {
       List<String> systemsConfig =
           config.get("target").getScalarList("system", String.class, emptyList());
       if (!systemsConfig.isEmpty()) {
-        logger.log(WARNING,
+        logger.log(
+            WARNING,
             "'otel.jmx.target.system' is deprecated and will be removed in future versions. Use 'otel.jmx.experimental.include' instead.");
         if (!unstableInclude.isEmpty()) {
-          logger.log(WARNING,
+          logger.log(
+              WARNING,
               "both 'otel.jmx.target.system' and 'otel.jmx.experimental.include' are set, 'otel.jmx.experimental.include' will take precedence.");
         }
       }
