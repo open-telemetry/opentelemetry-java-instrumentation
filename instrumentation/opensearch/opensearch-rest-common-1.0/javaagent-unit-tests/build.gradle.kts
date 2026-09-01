@@ -4,4 +4,5 @@ plugins {
 
 dependencies {
   testImplementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent"))
+  testImplementation("org.apache.httpcomponents:httpcore:4.4.16")
 }
