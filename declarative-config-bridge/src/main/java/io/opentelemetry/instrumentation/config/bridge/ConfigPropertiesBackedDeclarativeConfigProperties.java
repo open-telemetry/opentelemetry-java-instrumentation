@@ -103,6 +103,8 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
     SPECIAL_MAPPINGS.put("java.jmx.experimental.include", "otel.jmx.experimental.include");
+    SPECIAL_MAPPINGS.put("java.jmx.metrics.include", "otel.jmx.metrics.include");
+    SPECIAL_MAPPINGS.put("java.jmx.metrics.exclude", "otel.jmx.metrics.exclude");
   }
 
   private final ConfigProperties configProperties;
