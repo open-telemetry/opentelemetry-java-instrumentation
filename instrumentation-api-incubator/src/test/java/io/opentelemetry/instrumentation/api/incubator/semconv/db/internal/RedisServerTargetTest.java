@@ -105,11 +105,13 @@ class RedisServerTargetTest {
   }
 
   @Test
-  void invalidDiscoveryEndpointsFailClosed() {
-    assertThat(
-            RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
-                asList("", "redis://", "://sentinel"), "mymaster"))
-        .isNull();
+  void discoveryTargetFallsBackToLogicalName() {
+    RedisServerTarget target =
+        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+            asList("", "redis://", "://sentinel"), "mymaster");
+
+    assertThat(target.getAddress()).isEqualTo("mymaster");
+    assertThat(target.getPort()).isNull();
   }
 
   @ParameterizedTest
