@@ -213,6 +213,25 @@ class RedisServerTargetTest {
   }
 
   @Test
+  void discoveryEndpointListIncludesAtMostFirstFiveSortedEndpoints() {
+    RedisServerTarget target =
+        RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+            asList(
+                "sentinel6:26379",
+                "sentinel5:26379",
+                "sentinel4:26379",
+                "sentinel3:26379",
+                "sentinel2:26379",
+                "sentinel1:26379"),
+            "mymaster");
+
+    assertThat(target.getAddress())
+        .isEqualTo(
+            "sentinel1:26379,sentinel2:26379,sentinel3:26379,"
+                + "sentinel4:26379,sentinel5:26379/mymaster");
+  }
+
+  @Test
   void discoveryEndpointListNeverCutsAnEndpoint() {
     String endpoint = String.join("", nCopies(256, "a"));
 
@@ -268,6 +287,21 @@ class RedisServerTargetTest {
   }
 
   @Test
+  void orderedEndpointListIncludesAtMostFirstFiveEndpoints() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpoints(
+            asList(
+                "node6:6379",
+                "node5:6379",
+                "node4:6379",
+                "node3:6379",
+                "node2:6379",
+                "node1:6379"));
+
+    assertThat(target.getAddress()).isEqualTo("node6,node5,node4,node3,node2");
+  }
+
+  @Test
   void orderedEndpointListDropsCompleteEndpointsFromTheEndAt255Characters() {
     String first = String.join("", nCopies(120, "b"));
     String second = String.join("", nCopies(120, "a"));
@@ -289,6 +323,21 @@ class RedisServerTargetTest {
 
     assertThat(first.getAddress()).isEqualTo("node1:6379,node2:6380,node3:6381");
     assertThat(second.getAddress()).isEqualTo(first.getAddress());
+  }
+
+  @Test
+  void unorderedEndpointListSortsBeforeIncludingAtMostFiveEndpoints() {
+    RedisServerTarget target =
+        RedisServerTarget.ofUnorderedEndpoints(
+            asList(
+                "node6:6379",
+                "node5:6379",
+                "node4:6379",
+                "node3:6379",
+                "node2:6379",
+                "node1:6379"));
+
+    assertThat(target.getAddress()).isEqualTo("node1,node2,node3,node4,node5");
   }
 
   @Test

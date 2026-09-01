@@ -31,6 +31,21 @@ class JedisServerTargetsTest {
   }
 
   @Test
+  void nodesIncludeAtMostFirstFiveAfterSorting() {
+    RedisServerTarget target =
+        JedisServerTargets.ofNodes(
+            asList(
+                new HostAndPort("node6", 6379),
+                new HostAndPort("node5", 6379),
+                new HostAndPort("node4", 6379),
+                new HostAndPort("node3", 6379),
+                new HostAndPort("node2", 6379),
+                new HostAndPort("node1", 6379)));
+
+    assertThat(target.getAddress()).isEqualTo("node1,node2,node3,node4,node5");
+  }
+
+  @Test
   void oneNodeKeepsItsPort() {
     RedisServerTarget target =
         JedisServerTargets.ofNodes(singletonList(new HostAndPort("node1", 7000)));
