@@ -635,14 +635,21 @@ class VertxSqlClientTest {
   void testMutableServerListIsSnapshottedForEachBuild() throws Exception {
     PgConnectOptions first = connectOptions();
     String alternateHost = host.equals("localhost") ? "127.0.0.1" : "localhost";
-    List<SqlConnectOptions> databases =
-        new ArrayList<>(asList(first, new PgConnectOptions(first).setHost(alternateHost)));
+    PgConnectOptions second = new PgConnectOptions(first).setHost(alternateHost);
+    List<SqlConnectOptions> databases = new ArrayList<>(asList(first, second));
     ClientBuilder<Pool> builder =
         PgBuilder.pool().using(vertx).connectingTo(databases).with(new PoolOptions().setMaxSize(1));
 
     Pool firstPool = builder.build();
     cleanup.deferCleanup(firstPool::close);
-    databases.set(1, new PgConnectOptions(first));
+    select(firstPool);
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    first.setHost("mutated-first.example");
+    second.setHost("mutated-second.example");
+    databases.set(0, connectOptions());
+    databases.set(1, new PgConnectOptions(connectOptions()));
     Pool secondPool = builder.build();
     cleanup.deferCleanup(secondPool::close);
 

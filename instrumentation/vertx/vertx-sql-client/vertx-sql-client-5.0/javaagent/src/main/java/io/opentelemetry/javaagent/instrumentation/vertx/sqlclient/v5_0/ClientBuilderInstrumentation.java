@@ -100,7 +100,11 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
       List<SqlConnectOptions> databases =
           VertxSqlClientSingletons.getBuilderDatabases(clientBuilder);
       if (databases != null && !databases.isEmpty()) {
-        databases = new ArrayList<>(databases);
+        List<SqlConnectOptions> snapshots = new ArrayList<>(databases.size());
+        for (SqlConnectOptions database : databases) {
+          snapshots.add(database != null ? new SqlConnectOptions(database) : null);
+        }
+        databases = snapshots;
         SqlConnectOptions firstDatabase = databases.get(0);
         VertxSqlAddressGroup addressGroup = VertxSqlAddressGroup.of(databases);
         setSqlConnectOptions(firstDatabase);
