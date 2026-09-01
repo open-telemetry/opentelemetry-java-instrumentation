@@ -37,6 +37,9 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("java.util.Set"))),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
+        named("parseHostAndPorts").and(takesArgument(0, named("java.util.Set"))),
+        getClass().getName() + "$ParseHostAndPortsAdvice");
+    transformer.applyAdviceToMethod(
         named("initSentinels")
             .and(takesArgument(0, named("java.util.Set")))
             .and(takesArgument(1, named("java.lang.String"))),
@@ -52,7 +55,18 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable String masterName,
         @Advice.Argument(1) @Nullable Set<?> sentinels) {
-      JedisSingletons.setPoolTarget(pool, JedisServerTargets.ofSentinels(masterName, sentinels));
+      JedisSingletons.setPoolTarget(pool, JedisSingletons.sentinelTarget(masterName, sentinels));
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ParseHostAndPortsAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Argument(0) @Nullable Set<?> configuredSentinels,
+        @Advice.Return @Nullable Set<?> parsedSentinels) {
+      JedisSingletons.attachConfiguredSentinels(parsedSentinels, configuredSentinels);
     }
   }
 
@@ -65,7 +79,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable Set<?> sentinels,
         @Advice.Argument(1) @Nullable String masterName) {
-      JedisSingletons.setPoolTarget(pool, JedisServerTargets.ofSentinels(masterName, sentinels));
+      JedisSingletons.setPoolTarget(pool, JedisSingletons.sentinelTarget(masterName, sentinels));
       return JedisSingletons.openPoolTargetScope(pool);
     }
 
