@@ -58,8 +58,8 @@ tasks {
     }
 
   val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}BothSemconv") {
+    .associate { suite ->
+      suite.name to register<Test>("${suite.name}BothSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
         filter {
@@ -75,9 +75,9 @@ tasks {
 
   check {
     if (otelProps.testLatestDeps) {
-      dependsOn(stableSemconvSuites.getValue("test"), bothSemconvSuites)
+      dependsOn(stableSemconvSuites.getValue("test"), bothSemconvSuites.getValue("test"))
     } else {
-      dependsOn(testing.suites, stableSemconvSuites.values, bothSemconvSuites)
+      dependsOn(testing.suites, stableSemconvSuites.values, bothSemconvSuites.values)
     }
   }
 }
