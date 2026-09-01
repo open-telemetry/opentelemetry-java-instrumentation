@@ -199,8 +199,10 @@ instrumentation/development:
       # Enables experimental span attributes emitted from the underlying Couchbase library.
       experimental_span_attributes/development: false
     elasticsearch:
-      # Enable the capture of search query bodies. It is important to note that Elasticsearch
-      # queries may contain personal or sensitive information.
+      # Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this
+      # to capture or omit search query bodies. Under v3-preview and in 3.0, the setting is ignored
+      # and search query bodies are always captured. Sanitization remains separately configurable
+      # with otel.instrumentation.elasticsearch.query-sanitization.enabled.
       capture_search_query: false
 
       # Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
@@ -210,6 +212,10 @@ instrumentation/development:
       # `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version`
       # experimental span attributes.
       experimental_span_attributes/development: false
+      query_sanitization:
+        # Enables sanitization of the captured search query bodies. Takes precedence over
+        # otel.instrumentation.common.db.query-sanitization.enabled.
+        enabled: true
     executors:
       # List of Executor subclasses to be instrumented.
       include: []
@@ -680,10 +686,15 @@ instrumentation/development:
         # Enable SSL telemetry.
         enabled: false
     opensearch:
-      # Deprecated and will be removed in 3.0, when sanitized search query bodies are always
-      # captured. There is no replacement. Until then, set this to false to disable capture. Search
-      # queries may contain personal or sensitive information.
+      # Deprecated and will be removed in 3.0, when search query bodies are always captured. There
+      # is no replacement. Until then, set this to false to disable capture. Search queries may
+      # contain personal or sensitive information.
       capture_search_query: true
+      query_sanitization:
+        # Enables sanitization of captured search query bodies. Takes precedence over
+        # otel.instrumentation.common.db.query-sanitization.enabled. When disabled, bodies are
+        # captured verbatim and may contain personal or sensitive information.
+        enabled: true
     opentelemetry_extension_annotations:
       # All methods to be excluded from auto-instrumentation by annotation-based advices.
       exclude_methods: ''
