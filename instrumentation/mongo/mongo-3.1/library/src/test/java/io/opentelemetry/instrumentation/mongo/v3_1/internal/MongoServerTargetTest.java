@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.mongodb.ConnectionString;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterSettings;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 class MongoServerTargetTest {
@@ -84,6 +85,46 @@ class MongoServerTargetTest {
     assertThat(target.getAddress())
         .isEqualTo("db1.example:27017,db1.example:27017,db2.example:27018");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void endpointListAtTheLengthLimitIsReportedCompletely() {
+    String first = host('a', 127);
+    String second = host('b', 127);
+
+    MongoServerTarget target =
+        MongoServerTarget.seeds(
+            asList(new ServerAddress(second, 27017), new ServerAddress(first, 27017)));
+
+    assertThat(target.getAddress()).isEqualTo(first + "," + second).hasSize(255);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void completeEndpointsAreRemovedFromTheEndAtTheLengthLimit() {
+    String first = host('a', 127);
+    String second = host('b', 127);
+    String third = host('c', 127);
+
+    MongoServerTarget target =
+        MongoServerTarget.seeds(
+            asList(
+                new ServerAddress(third, 27017),
+                new ServerAddress(first, 27017),
+                new ServerAddress(second, 27017)));
+
+    assertThat(target.getAddress()).isEqualTo(first + "," + second).hasSize(255);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void targetIsOmittedWhenTheFirstCompleteEndpointDoesNotFit() {
+    String host = host('a', 250);
+
+    assertThat(
+            MongoServerTarget.seeds(
+                asList(new ServerAddress(host, 27017), new ServerAddress("z", 27018))))
+        .isNull();
   }
 
   @Test
@@ -279,5 +320,14 @@ class MongoServerTargetTest {
         return host;
       }
     };
+  }
+
+  private static String host(char value, int length) {
+    char[] characters = new char[length];
+    Arrays.fill(characters, value);
+    for (int i = 63; i < length; i += 64) {
+      characters[i] = '.';
+    }
+    return new String(characters);
   }
 }

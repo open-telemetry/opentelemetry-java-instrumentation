@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 public final class MongoServerTarget {
 
   private static final int DEFAULT_PORT = 27017;
+  private static final int MAX_ENDPOINT_LIST_LENGTH = 255;
   private static final String SRV_SCHEME = "mongodb+srv://";
 
   // the driver reports its default port for socket paths, but the port is not part of the target
@@ -92,10 +93,17 @@ public final class MongoServerTarget {
 
     StringBuilder address = new StringBuilder();
     for (String value : addresses) {
-      if (address.length() > 0) {
+      int separatorLength = address.length() == 0 ? 0 : 1;
+      if (address.length() + separatorLength + value.length() > MAX_ENDPOINT_LIST_LENGTH) {
+        break;
+      }
+      if (separatorLength != 0) {
         address.append(',');
       }
       address.append(value);
+    }
+    if (address.length() == 0) {
+      return null;
     }
     Integer port =
         hasSharedPort && sharedPort != null && sharedPort != DEFAULT_PORT ? sharedPort : null;

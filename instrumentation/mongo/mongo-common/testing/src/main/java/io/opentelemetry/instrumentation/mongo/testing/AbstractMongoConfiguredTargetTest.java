@@ -35,6 +35,7 @@ import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.bson.BsonDocument;
@@ -145,6 +146,36 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
+  void configuredSeedListIsLimitedToCompleteEndpoints() {
+    String first = host('a', 127);
+    String second = host('b', 127);
+    String third = host('c', 127);
+
+    try (ConfiguredClient client =
+        createClient(
+            asList(
+                new ServerAddress(third, 27017),
+                new ServerAddress(first, 27017),
+                new ServerAddress(second, 27017)))) {
+      runCommand(client);
+    }
+
+    assertFindSpan(first + "," + second, null);
+  }
+
+  @Test
+  void configuredTargetIsOmittedWhenTheFirstEndpointDoesNotFit() {
+    String host = host('a', 250);
+
+    try (ConfiguredClient client =
+        createClient(asList(new ServerAddress(host, 27017), new ServerAddress("z", 27018)))) {
+      runCommand(client);
+    }
+
+    assertFindSpan(null, null);
+  }
+
+  @Test
   void unsafeConfiguredSeedTargetIsOmitted() {
     try (ConfiguredClient client =
         createClient(singletonList(new ServerAddress("user%3Apassword%40db1.example", 27017)))) {
@@ -205,6 +236,15 @@ public abstract class AbstractMongoConfiguredTargetTest {
         commandStartedEvent(requestId, connectionDescription, databaseName, commandName, command));
     listener.commandSucceeded(
         commandSucceededEvent(requestId, connectionDescription, commandName, new BsonDocument()));
+  }
+
+  private static String host(char value, int length) {
+    char[] characters = new char[length];
+    Arrays.fill(characters, value);
+    for (int i = 63; i < length; i += 64) {
+      characters[i] = '.';
+    }
+    return new String(characters);
   }
 
   @SuppressWarnings("deprecation")
