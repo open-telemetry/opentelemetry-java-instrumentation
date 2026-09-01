@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Propagates context to the messages that pekko sends to the other nodes of a cluster. Pekko
- * serializes remote messages in the artery outbound stream, the context is attached to the message
- * with the {@code RemoteInstrument} spi and restored before the message is delivered to the
+ * Propagates context with remote messages sent between Pekko cluster nodes. Artery uses the
+ * {@code RemoteInstrument} SPI, while classic remoting appends an unknown protobuf field. The
+ * received context is restored before dispatch so Pekko actor instrumentation can carry it to the
  * receiving actor.
  */
 @AutoService(InstrumentationModule.class)
