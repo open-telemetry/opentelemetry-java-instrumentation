@@ -90,7 +90,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasAttributesSatisfyingExactly(
                             clusterHealthAttributes(
                                 emitStableDatabaseSemconv() ? getAddress() : null,
-                                emitStableDatabaseSemconv() ? Long.valueOf(getPort()) : null)),
+                                emitStableDatabaseSemconv() ? serverPort() : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -130,13 +130,21 @@ public abstract class AbstractElasticsearchTransportClientTest
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
     if (emitStableDatabaseSemconv()) {
       result.add(equalTo(SERVER_ADDRESS, getAddress()));
-      result.add(equalTo(SERVER_PORT, getPort()));
+      result.add(equalTo(SERVER_PORT, serverPort()));
     }
     return result;
   }
 
   private String spanName(String action, String wireAction) {
-    return emitStableDatabaseSemconv() ? wireAction + " " + getAddress() + ":" + getPort() : action;
+    if (!emitStableDatabaseSemconv()) {
+      return action;
+    }
+    Long serverPort = serverPort();
+    return wireAction + " " + getAddress() + (serverPort == null ? "" : ":" + serverPort);
+  }
+
+  private Long serverPort() {
+    return getPort() == 9300 ? null : Long.valueOf(getPort());
   }
 
   private Stream<Arguments> errorArguments() {

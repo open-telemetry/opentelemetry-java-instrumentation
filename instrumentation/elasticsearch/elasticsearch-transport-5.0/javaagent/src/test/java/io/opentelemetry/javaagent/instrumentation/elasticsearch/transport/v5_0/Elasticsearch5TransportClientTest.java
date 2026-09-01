@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
@@ -132,7 +133,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           ElasticsearchTransportServerTarget target =
               ElasticsearchTransportServerTargets.get(addressListClient);
           assertThat(target).isNotNull();
-          assertThat(target.getAddress()).isEqualTo(configuredAddressList());
+          assertThat(target.getAddress()).isEqualTo(configuredAddressListWithMixedPorts());
           assertThat(target.getPort()).isNull();
           // adding an address makes the client reach out to it, which reports telemetry of its own
           clusterHealth(addressListClient);
@@ -142,7 +143,35 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
     clusterHealth(addressListClient);
 
-    assertConfiguredTarget(configuredAddressList());
+    assertConfiguredTarget(configuredAddressListWithMixedPorts(), null);
+  }
+
+  @Test
+  void sharedDefaultPortIsOmitted() {
+    TransportClient addressListClient = connectedClient();
+    ElasticsearchTransportServerTargets.update(
+        addressListClient,
+        asList(
+            new ElasticsearchTransportServerTarget.Endpoint(getAddress(), 9300),
+            new ElasticsearchTransportServerTarget.Endpoint(DOWN_HOST, 9300)));
+
+    clusterHealth(addressListClient);
+
+    assertConfiguredTarget(configuredAddressListWithSharedPort(), null);
+  }
+
+  @Test
+  void sharedNonDefaultPortIsReportedSeparately() {
+    TransportClient addressListClient = connectedClient();
+    ElasticsearchTransportServerTargets.update(
+        addressListClient,
+        asList(
+            new ElasticsearchTransportServerTarget.Endpoint(getAddress(), 9400),
+            new ElasticsearchTransportServerTarget.Endpoint(DOWN_HOST, 9400)));
+
+    clusterHealth(addressListClient);
+
+    assertConfiguredTarget(configuredAddressListWithSharedPort(), 9400L);
   }
 
   @Test
@@ -159,7 +188,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     testing.clearData();
 
     clusterHealth(filteredClient);
-    assertConfiguredTarget(null);
+    assertConfiguredTarget(null, null);
     testing.clearData();
 
     testing.runWithSpan("setup", () -> singleAddressClient.addTransportAddress(addressThatIsDown));
@@ -167,7 +196,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     testing.clearData();
 
     clusterHealth(filteredClient);
-    assertConfiguredTarget(configuredAddressList());
+    assertConfiguredTarget(configuredAddressListWithMixedPorts(), null);
     testing.clearData();
 
     testing.runWithSpan(
@@ -176,32 +205,51 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     testing.clearData();
 
     clusterHealth(filteredClient);
-    assertConfiguredTarget(null);
+    assertConfiguredTarget(null, null);
   }
 
   private static void clusterHealth(Client client) {
     client.admin().cluster().prepareHealth().execute().actionGet(TIMEOUT);
   }
 
-  private void assertConfiguredTarget(String addressList) {
-    boolean stableAddressList = emitStableDatabaseSemconv() && addressList != null;
+  private void assertConfiguredTarget(String addressList, Long sharedPort) {
+    String serverAddress = addressList == null ? getAddress() : addressList;
+    Long serverPort =
+        addressList == null ? (getPort() == 9300 ? null : Long.valueOf(getPort())) : sharedPort;
+    String stableSpanName =
+        "cluster:monitor/health " + serverAddress + (serverPort == null ? "" : ":" + serverPort);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasKind(SpanKind.CLIENT)
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? stableSpanName : "ClusterHealthAction")
+                        .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             clusterHealthAttributes(
-                                !emitStableDatabaseSemconv()
-                                    ? null
-                                    : (stableAddressList ? addressList : getAddress()),
-                                !emitStableDatabaseSemconv() || stableAddressList
-                                    ? null
-                                    : Long.valueOf(getPort())))));
+                                emitStableDatabaseSemconv() ? serverAddress : null,
+                                emitStableDatabaseSemconv() ? serverPort : null))));
   }
 
-  private String configuredAddressList() {
+  private String configuredAddressListWithMixedPorts() {
     return getAddress() + ":" + getPort() + "," + DOWN_HOST + ":" + addressThatIsDown.getPort();
+  }
+
+  private String configuredAddressListWithSharedPort() {
+    return getAddress() + "," + DOWN_HOST;
+  }
+
+  private static TransportClient connectedClient() {
+    TransportClient connectedClient = newClient();
+    testing.runWithSpan(
+        "setup",
+        () -> {
+          connectedClient.addTransportAddress(tcpPublishAddress);
+          clusterHealth(connectedClient);
+        });
+    testing.waitForTraces(1);
+    testing.clearData();
+    return connectedClient;
   }
 
   private static TransportClient newClient() {

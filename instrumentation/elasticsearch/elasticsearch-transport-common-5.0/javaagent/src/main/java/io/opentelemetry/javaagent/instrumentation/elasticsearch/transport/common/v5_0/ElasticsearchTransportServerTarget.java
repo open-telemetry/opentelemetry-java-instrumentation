@@ -11,6 +11,8 @@ import javax.annotation.Nullable;
 
 public class ElasticsearchTransportServerTarget {
 
+  private static final int DEFAULT_PORT = 9300;
+
   private final String address;
   @Nullable private final Integer port;
 
@@ -24,16 +26,28 @@ public class ElasticsearchTransportServerTarget {
       if (endpoint.host == null) {
         return null;
       }
-      return new ElasticsearchTransportServerTarget(endpoint.host, endpoint.port);
+      int port = normalizePort(endpoint.port);
+      return new ElasticsearchTransportServerTarget(endpoint.host, port >= 0 ? port : null);
     }
 
-    List<String> renderedEndpoints = new ArrayList<>(endpoints.size());
+    List<String> addresses = new ArrayList<>(endpoints.size());
+    int sharedPort = endpoints.get(0).port;
+    boolean portsMatch = true;
     for (Endpoint endpoint : endpoints) {
       String host = endpoint.host;
       if (host == null) {
         return null;
       }
-      renderedEndpoints.add(renderEndpoint(host, endpoint.port));
+      if (endpoint.port != sharedPort) {
+        portsMatch = false;
+      }
+      addresses.add(host);
+    }
+
+    List<String> renderedEndpoints = new ArrayList<>(endpoints.size());
+    for (int i = 0; i < endpoints.size(); i++) {
+      renderedEndpoints.add(
+          renderEndpoint(addresses.get(i), portsMatch ? -1 : endpoints.get(i).port));
     }
     renderedEndpoints.sort(String::compareTo);
 
@@ -44,7 +58,9 @@ public class ElasticsearchTransportServerTarget {
       }
       group.append(renderedEndpoint);
     }
-    return new ElasticsearchTransportServerTarget(group.toString(), null);
+    int port = normalizePort(sharedPort);
+    return new ElasticsearchTransportServerTarget(
+        group.toString(), portsMatch && port >= 0 ? port : null);
   }
 
   private ElasticsearchTransportServerTarget(String address, @Nullable Integer port) {
@@ -53,10 +69,15 @@ public class ElasticsearchTransportServerTarget {
   }
 
   private static String renderEndpoint(String host, int port) {
+    String renderedHost = host;
     if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
-      return "[" + host + "]:" + port;
+      renderedHost = "[" + host + "]";
     }
-    return host + ":" + port;
+    return port >= 0 ? renderedHost + ":" + port : renderedHost;
+  }
+
+  private static int normalizePort(int port) {
+    return port == DEFAULT_PORT ? -1 : port;
   }
 
   @Nullable

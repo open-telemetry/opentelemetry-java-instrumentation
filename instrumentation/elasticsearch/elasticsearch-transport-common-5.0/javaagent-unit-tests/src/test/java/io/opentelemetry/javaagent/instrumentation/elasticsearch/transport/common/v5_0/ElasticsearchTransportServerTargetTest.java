@@ -27,50 +27,72 @@ class ElasticsearchTransportServerTargetTest {
   }
 
   @Test
-  void oneAddressKeepsItsHostAndPort() {
+  void oneAddressKeepsItsNonDefaultPort() {
+    ElasticsearchTransportServerTarget target =
+        ElasticsearchTransportServerTarget.of(singletonList(new Endpoint("10.0.0.1", 9301)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("10.0.0.1");
+    assertThat(target.getPort()).isEqualTo(9301);
+  }
+
+  @Test
+  void oneAddressOmitsTheDefaultPort() {
     ElasticsearchTransportServerTarget target =
         ElasticsearchTransportServerTarget.of(singletonList(new Endpoint("10.0.0.1", 9300)));
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("10.0.0.1");
-    assertThat(target.getPort()).isEqualTo(9300);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void addressGroupIsStableAcrossPermutations() {
+  void mixedPortAddressGroupIsStableAcrossIpv4AndIpv6Permutations() {
     ElasticsearchTransportServerTarget first =
         ElasticsearchTransportServerTarget.of(
-            asList(new Endpoint("10.0.0.2", 9301), new Endpoint("10.0.0.1", 9300)));
+            asList(new Endpoint("::1", 9301), new Endpoint("10.0.0.1", 9300)));
     ElasticsearchTransportServerTarget second =
         ElasticsearchTransportServerTarget.of(
-            asList(new Endpoint("10.0.0.1", 9300), new Endpoint("10.0.0.2", 9301)));
+            asList(new Endpoint("10.0.0.1", 9300), new Endpoint("::1", 9301)));
 
     assertThat(first).isNotNull();
-    assertThat(first.getAddress()).isEqualTo("10.0.0.1:9300,10.0.0.2:9301");
+    assertThat(first.getAddress()).isEqualTo("10.0.0.1:9300,[::1]:9301");
     assertThat(first.getPort()).isNull();
     assertThat(second).isNotNull();
     assertThat(second.getAddress()).isEqualTo(first.getAddress());
   }
 
   @Test
-  void duplicateAddressesArePreserved() {
+  void duplicateAddressesWithTheDefaultPortArePreserved() {
     ElasticsearchTransportServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("10.0.0.1", 9300), new Endpoint("10.0.0.1", 9300)));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("10.0.0.1:9300,10.0.0.1:9300");
+    assertThat(target.getAddress()).isEqualTo("10.0.0.1,10.0.0.1");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void literalIpv6AddressesAreBracketed() {
+  void sharedNonDefaultPortIsSeparatedFromIpv4AndIpv6Addresses() {
+    ElasticsearchTransportServerTarget target =
+        ElasticsearchTransportServerTarget.of(
+            asList(new Endpoint("::1", 9301), new Endpoint("10.0.0.1", 9301)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("10.0.0.1,[::1]");
+    assertThat(target.getPort()).isEqualTo(9301);
+  }
+
+  @Test
+  void literalIpv6AddressesKeepBracketsAndOmitTheDefaultPort() {
     ElasticsearchTransportServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("::1", 9300), new Endpoint("[fe80::1]", 9300)));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]:9300,[fe80::1]:9300");
+    assertThat(target.getAddress()).isEqualTo("[::1],[fe80::1]");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -85,7 +107,8 @@ class ElasticsearchTransportServerTargetTest {
     ElasticsearchTransportServerTarget target = ElasticsearchTransportServerTarget.of(endpoints);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1:9300,h2:9300,h3:9300,h4:9300");
+    assertThat(target.getAddress()).isEqualTo("h1,h2,h3,h4");
+    assertThat(target.getPort()).isNull();
     assertThat(target.getAddress()).doesNotContain("secret");
   }
 
@@ -105,11 +128,11 @@ class ElasticsearchTransportServerTargetTest {
   void credentialsAreRemovedFromOneAddress() {
     ElasticsearchTransportServerTarget target =
         ElasticsearchTransportServerTarget.of(
-            singletonList(new Endpoint("user:secret@es.example", 9300)));
+            singletonList(new Endpoint("user:secret@es.example", 9301)));
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("es.example");
-    assertThat(target.getPort()).isEqualTo(9300);
+    assertThat(target.getPort()).isEqualTo(9301);
   }
 
   @Test
