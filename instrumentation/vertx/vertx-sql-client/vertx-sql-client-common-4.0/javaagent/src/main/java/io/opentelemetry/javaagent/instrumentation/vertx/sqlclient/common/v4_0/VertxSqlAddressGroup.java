@@ -122,7 +122,7 @@ public class VertxSqlAddressGroup {
       address.append(host);
       return;
     }
-    if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
+    if (port != null && host.indexOf(':') >= 0 && !host.startsWith("[")) {
       address.append('[').append(host).append(']');
     } else {
       address.append(host);

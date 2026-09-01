@@ -66,6 +66,19 @@ class VertxSqlAddressGroupTest {
   }
 
   @Test
+  void extractsSharedNonDefaultPortWithoutBracketingIpv6() {
+    VertxSqlAddressGroup addressGroup =
+        VertxSqlAddressGroup.of(
+            asList(
+                new SqlConnectOptions().setHost("db.example").setPort(6432),
+                new SqlConnectOptions().setHost("[2001:db8::1]").setPort(6432)),
+            "postgresql");
+
+    assertThat(addressGroup.getAddress()).isEqualTo("db.example,2001:db8::1");
+    assertThat(addressGroup.getPort()).isEqualTo(6432);
+  }
+
+  @Test
   void inlinesMixedEffectivePortsAndBracketsIpv6() {
     VertxSqlAddressGroup addressGroup =
         VertxSqlAddressGroup.of(
