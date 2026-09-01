@@ -237,11 +237,18 @@ public final class SqsImpl {
         continue;
       }
 
+      Timer timer = Timer.start();
       io.opentelemetry.context.Context creationContext =
-          producerCreateInstrumenter.start(creationParentContext, createRequest);
+          InstrumenterUtil.startAndEnd(
+              producerCreateInstrumenter,
+              creationParentContext,
+              createRequest,
+              null,
+              null,
+              timer.startTime(),
+              timer.now());
       // A no-op tracer can pass shouldStart() but return a context with an invalid span.
       if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
-        producerCreateInstrumenter.end(creationContext, createRequest, null, null);
         continue;
       }
       SendMessageBatchRequestEntry updatedEntry =
@@ -250,7 +257,6 @@ public final class SqsImpl {
         creationContexts.add(creationContext);
         entries.set(i, updatedEntry);
       }
-      producerCreateInstrumenter.end(creationContext, createRequest, null, null);
     }
     TracingExecutionInterceptor.setBatchMessageContexts(executionAttributes, creationContexts);
     return batchRequest.toBuilder().entries(entries).build();

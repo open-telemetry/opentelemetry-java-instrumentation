@@ -178,10 +178,18 @@ public final class SqsImpl {
         preparedEntries.add(entry.clone());
         continue;
       }
-      Context creationContext = producerCreateInstrumenter.start(parentContext, createRequest);
+      Timer timer = Timer.start();
+      Context creationContext =
+          InstrumenterUtil.startAndEnd(
+              producerCreateInstrumenter,
+              parentContext,
+              createRequest,
+              null,
+              null,
+              timer.startTime(),
+              timer.now());
       // A no-op tracer can pass shouldStart() but return a context with an invalid span.
       if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
-        producerCreateInstrumenter.end(creationContext, createRequest, null, null);
         preparedEntries.add(entry.clone());
         continue;
       }
@@ -191,7 +199,6 @@ public final class SqsImpl {
       if (preparedEntry == null) {
         throw new IllegalStateException("Could not inject the SQS message creation context");
       }
-      producerCreateInstrumenter.end(creationContext, createRequest, null, null);
       preparedEntries.add(preparedEntry);
     }
     preparedRequest.setEntries(preparedEntries);
