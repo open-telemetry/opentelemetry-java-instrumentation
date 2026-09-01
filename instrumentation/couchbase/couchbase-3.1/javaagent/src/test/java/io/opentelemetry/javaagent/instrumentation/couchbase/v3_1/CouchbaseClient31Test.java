@@ -191,7 +191,7 @@ class CouchbaseClient31Test {
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("query"),
+                span -> span.hasName("query " + serverAddress()),
                 span ->
                     span.hasName("dispatch_to_server")
                         .hasAttributesSatisfyingExactly(dispatchAttributes)));
