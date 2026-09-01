@@ -186,6 +186,11 @@ class CassandraConfiguredContactPointsTest {
   }
 
   @Test
+  void nullContactPointDropsEntireTarget() {
+    assertThat(CassandraConfiguredTarget.create(asList("db.example", null), 9042)).isNull();
+  }
+
+  @Test
   void ignoresInvalidContactPointData() {
     CassandraConfiguredTarget target =
         CassandraConfiguredTarget.create(new Object[] {null, "", new Object()}, 9042);
