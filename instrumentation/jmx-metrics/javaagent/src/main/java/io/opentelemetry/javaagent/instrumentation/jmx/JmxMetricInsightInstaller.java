@@ -54,7 +54,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
           .forEach(path -> addFileRules(path, jmx));
 
       List<String> unstableInclude =
-          config.get("experimental").getScalarList("include", String.class, emptyList());
+          config.get("experimental").getScalarList("included", String.class, emptyList());
 
       // otel.jmx.target.system support will be removed in v3
       List<String> systemsConfig =

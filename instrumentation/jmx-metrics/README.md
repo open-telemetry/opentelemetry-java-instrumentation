@@ -28,7 +28,7 @@ Starting with 3.0, the stable pre-defined metrics are always enabled by default,
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
-     -Dotel.jmx.experimental.include=jetty,kafka-* \
+     -Dotel.jmx.experimental.included=jetty,kafka-* \
      ... \
      -jar myapp.jar
 ```
