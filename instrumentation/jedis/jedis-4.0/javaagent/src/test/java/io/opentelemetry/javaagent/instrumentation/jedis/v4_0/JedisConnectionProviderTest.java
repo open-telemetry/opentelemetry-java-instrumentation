@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -23,6 +25,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -32,8 +36,10 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.time.Duration;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -60,6 +66,7 @@ class JedisConnectionProviderTest {
   private static Jedis jedis;
   private static AutoCloseable provider;
   private static boolean connectionSendsHello;
+  private static Set<HostAndPort> configuredNodes;
   private static String configuredTarget;
   private static String host;
   private static String ip;
@@ -95,7 +102,7 @@ class JedisConnectionProviderTest {
 
     HostAndPort selectedNode = new HostAndPort(host, port);
     HostAndPort unavailableNode = new HostAndPort(host, 1);
-    Set<HostAndPort> configuredNodes = new LinkedHashSet<>(asList(selectedNode, unavailableNode));
+    configuredNodes = new LinkedHashSet<>(asList(selectedNode, unavailableNode));
     configuredTarget = host + ":1," + host + ":" + port;
 
     Class<? extends AutoCloseable> providerClass = providerClass();
@@ -150,6 +157,37 @@ class JedisConnectionProviderTest {
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @Test
+  void periodicTopologyRefreshUsesConfiguredClusterNodesAsServerTarget()
+      throws ReflectiveOperationException {
+    assumeTrue(testLatestDeps());
+
+    AutoCloseable refreshingProvider =
+        providerClass()
+            .getConstructor(
+                Set.class, JedisClientConfig.class, GenericObjectPoolConfig.class, Duration.class)
+            .newInstance(
+                configuredNodes,
+                clientConfig(),
+                new GenericObjectPoolConfig<Connection>(),
+                Duration.ofMillis(100));
+    cleanup.deferCleanup(refreshingProvider);
+    testing.clearData();
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .filteredOn(span -> span.getName().startsWith("CLUSTER"))
+                    .isNotEmpty()
+                    .allSatisfy(
+                        span -> {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(configuredTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                        }));
   }
 
   private static Connection getConnection(Object... arguments) throws ReflectiveOperationException {
