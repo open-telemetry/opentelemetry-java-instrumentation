@@ -62,6 +62,8 @@ class PekkoClassicRemoteTest extends AbstractPekkoRemoteTest {
       String path =
           ((ExtendedActorSystem) receiver).provider().getDefaultAddress() + "/user/counter";
 
+      assertThat(delivers(sender, path, 1, 30_000)).isTrue();
+
       // the largest message that is delivered with no context to write, which is the limit the
       // agent must not lower
       int low = 0;
