@@ -463,12 +463,15 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   private void assertOverlappingBlpopSpan(SpanDataAssert span) {
     span.hasName(emitStableDatabaseSemconv() ? "BLPOP " + host + ":" + port : "BLPOP")
         .hasKind(SpanKind.CLIENT)
-        .hasAttribute(equalTo(SERVER_ADDRESS, host))
-        .hasAttribute(equalTo(SERVER_PORT, port));
-    if (emitStableDatabaseSemconv()) {
-      span.hasAttribute(equalTo(NETWORK_PEER_ADDRESS, ip))
-          .hasAttribute(equalTo(NETWORK_PEER_PORT, (long) port));
-    }
+        .hasAttributesSatisfyingExactly(
+            equalTo(SERVER_ADDRESS, host),
+            equalTo(SERVER_PORT, port),
+            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+            equalTo(NETWORK_PEER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
+            equalTo(maybeStable(DB_SYSTEM), REDIS),
+            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+            equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
+            equalTo(maybeStable(DB_OPERATION), "BLPOP"));
   }
 
   private void assertResubscribedSetSpan(SpanDataAssert span) {
