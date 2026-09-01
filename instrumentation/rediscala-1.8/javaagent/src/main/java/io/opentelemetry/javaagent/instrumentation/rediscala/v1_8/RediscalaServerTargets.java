@@ -28,7 +28,7 @@ import scala.Tuple2;
 import scala.collection.Iterable;
 import scala.collection.Iterator;
 
-public final class RediscalaServerTargets {
+public class RediscalaServerTargets {
 
   private static final Logger logger = Logger.getLogger(RediscalaServerTargets.class.getName());
 
