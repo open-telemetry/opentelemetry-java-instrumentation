@@ -82,6 +82,7 @@ import net.spy.memcached.ops.OperationQueueFactory;
 import net.spy.memcached.ops.OperationState;
 import net.spy.memcached.protocol.BaseOperationImpl;
 import net.spy.memcached.protocol.ascii.AsciiMemcachedNodeImpl;
+import net.spy.memcached.protocol.binary.MultiGetOperationImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -1712,6 +1713,76 @@ class SpymemcachedTest {
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : (long) finalAddress.getPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+  }
+
+  @Test
+  void partialBulkRetryUsesRetryNode() throws Exception {
+    InetSocketAddress retryContainerAddress = startAdditionalMemcached();
+    List<InetSocketAddress> configuredNodes = asList(memcachedAddress, retryContainerAddress);
+    ReentrantLock queueLock = new ReentrantLock();
+    OperationQueueFactory lockableQueueFactory = () -> getLockableQueue(queueLock);
+    MemcachedClient memcached =
+        getMemcached(
+            configuredNodes,
+            builder ->
+                builder.setFailureMode(Redistribute).setOpQueueFactory(lockableQueueFactory));
+    MemcachedConnection connection = memcached.getConnection();
+    waitForNodes(connection);
+    List<MemcachedNode> nodes = new ArrayList<>(connection.getLocator().getAll());
+    MemcachedNode initialNode = nodes.get(0);
+    List<String> keys = keysForNode(connection, initialNode, 2);
+    String retryKey = keys.get(1);
+    MemcachedNode retryNode = nextNode(connection, retryKey, initialNode);
+    InetSocketAddress retryAddress = (InetSocketAddress) retryNode.getSocketAddress();
+
+    BulkFuture<Map<String, Object>> future;
+    queueLock.lock();
+    try {
+      future = testing.runWithSpan("parent", () -> memcached.asyncGetBulk(keys));
+      Operation initialOperation = onlyOperation(initialNode.destroyInputQueue());
+      assertThat(initialOperation).isInstanceOf(MultiGetOperationImpl.class);
+      ((MultiGetOperationImpl) initialOperation).getRetryKeys().add(retryKey);
+      markForRetry(initialOperation);
+      initialNode.reconnecting();
+      connection.redistributeOperation(initialOperation);
+    } finally {
+      queueLock.unlock();
+    }
+
+    assertThat(future.get()).isEmpty();
+
+    String target = configuredTarget(configuredNodes);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(spanName(emitStableDatabaseSemconv() ? "get" : "getBulk", target))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "get" : "getBulk"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? target
+                                    : retryAddress.getHostString()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? retryAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) retryAddress.getPort() : null),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : (long) retryAddress.getPort()))));
   }
 
   @Test
