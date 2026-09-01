@@ -38,26 +38,33 @@ public class OpenSearchServerTarget {
   @Nullable
   private static OpenSearchServerTarget renderGroup(List<Endpoint> endpoints) {
     List<String> addresses = new ArrayList<>(endpoints.size());
-    int sharedPort = normalizePort(endpoints.get(0));
+    List<Integer> effectivePorts = new ArrayList<>(endpoints.size());
+    int sharedPort = effectivePort(endpoints.get(0));
     boolean portsMatch = true;
+    boolean allPortsAreDefault = true;
     for (Endpoint endpoint : endpoints) {
       if (endpoint.host == null) {
         return null;
       }
-      int port = normalizePort(endpoint);
+      int port = effectivePort(endpoint);
       if (port != sharedPort) {
         portsMatch = false;
       }
+      if (port != defaultPort(endpoint)) {
+        allPortsAreDefault = false;
+      }
       addresses.add(endpoint.host);
+      effectivePorts.add(port);
     }
     List<String> renderedEndpoints = new ArrayList<>(endpoints.size());
     for (int i = 0; i < endpoints.size(); i++) {
       renderedEndpoints.add(
-          renderEndpoint(addresses.get(i), portsMatch ? -1 : normalizePort(endpoints.get(i))));
+          renderEndpoint(addresses.get(i), portsMatch ? -1 : effectivePorts.get(i)));
     }
     renderedEndpoints.sort(String::compareTo);
     return new OpenSearchServerTarget(
-        String.join(",", renderedEndpoints), portsMatch && sharedPort >= 0 ? sharedPort : null);
+        String.join(",", renderedEndpoints),
+        portsMatch && sharedPort >= 0 && !allPortsAreDefault ? sharedPort : null);
   }
 
   private static String renderEndpoint(String host, int port) {
@@ -74,11 +81,22 @@ public class OpenSearchServerTarget {
   }
 
   private static int normalizePort(Endpoint endpoint) {
-    if ((endpoint.port == 80 && endpoint.scheme.equalsIgnoreCase("http"))
-        || (endpoint.port == 443 && endpoint.scheme.equalsIgnoreCase("https"))) {
-      return -1;
+    int port = effectivePort(endpoint);
+    return port == defaultPort(endpoint) ? -1 : port;
+  }
+
+  private static int effectivePort(Endpoint endpoint) {
+    return endpoint.port >= 0 ? endpoint.port : defaultPort(endpoint);
+  }
+
+  private static int defaultPort(Endpoint endpoint) {
+    if (endpoint.scheme.equalsIgnoreCase("http")) {
+      return 80;
     }
-    return endpoint.port;
+    if (endpoint.scheme.equalsIgnoreCase("https")) {
+      return 443;
+    }
+    return -1;
   }
 
   public String getAddress() {
@@ -121,6 +139,9 @@ public class OpenSearchServerTarget {
         return null;
       }
       host = host.substring(credentialsEnd + 1, authorityEnd);
+      if (host.indexOf(',') >= 0) {
+        return null;
+      }
       if (host.length() >= 2 && host.charAt(0) == '[' && host.charAt(host.length() - 1) == ']') {
         host = host.substring(1, host.length() - 1);
       }
