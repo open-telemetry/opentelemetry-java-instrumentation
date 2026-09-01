@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 public final class RedisServerTarget {
 
   private static final int DEFAULT_PORT = 6379;
+  private static final int MAX_ENDPOINTS = 5;
   private static final int MAX_ENDPOINT_LIST_LENGTH = 255;
 
   private final String address;
@@ -154,6 +155,9 @@ public final class RedisServerTarget {
 
   @Nullable
   private static String renderEndpointList(List<String> endpoints) {
+    if (endpoints.size() > MAX_ENDPOINTS) {
+      endpoints.subList(MAX_ENDPOINTS, endpoints.size()).clear();
+    }
     int length = endpoints.size() - 1;
     for (String endpoint : endpoints) {
       length += endpoint.length();
