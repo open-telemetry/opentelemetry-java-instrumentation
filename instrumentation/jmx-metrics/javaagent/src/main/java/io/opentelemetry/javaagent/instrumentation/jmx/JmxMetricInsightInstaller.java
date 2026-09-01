@@ -56,9 +56,9 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
       // include/exclude metrics by name
       List<String> metricsInclude =
-          config.get("metrics").getScalarList("include", String.class, emptyList());
+          config.get("metrics").getScalarList("included", String.class, emptyList());
       List<String> metricsExclude =
-          config.get("metrics").getScalarList("exclude", String.class, emptyList());
+          config.get("metrics").getScalarList("excluded", String.class, emptyList());
       if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
         jmx.setMetrics(
             IncludeExclude.builder()

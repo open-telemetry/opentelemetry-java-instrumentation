@@ -42,8 +42,8 @@ through the YAML-based metric definitions.
 
 It is possible to filter metrics to be collected by configuration using the following properties (wildcards are supported):
 
-- `otel.jmx.metrics.include` : include only metrics matching the specified patterns, all other metrics will be excluded. Default is to include all of them.
-- `otel.jmx.metrics.exclude` : exclude metrics matching the specified patterns, all other metrics will be included. Default is to exclude none.
+- `otel.jmx.metrics.included` : include only metrics matching the specified patterns, all other metrics will be excluded. Default is to include all of them.
+- `otel.jmx.metrics.excluded` : exclude metrics matching the specified patterns, all other metrics will be included. Default is to exclude none.
 
 ## Configuration Files
 
