@@ -112,15 +112,13 @@ public class ConfigServerTargetsSince317 {
     List<String> sortedAddresses = new ArrayList<>();
     if (otherAddresses != null) {
       for (String address : otherAddresses) {
-        if (address != null) {
-          RedisServerTarget target = RedisServerTarget.ofEndpoint(address);
-          if (target != null) {
-            Integer port = target.getPort();
-            sortedAddresses.add(
-                RedisServerTarget.endpoint(
-                    target.getAddress(), port == null ? -1 : port.intValue()));
-          }
+        RedisServerTarget target = RedisServerTarget.ofEndpoint(address);
+        if (target == null) {
+          return null;
         }
+        Integer port = target.getPort();
+        sortedAddresses.add(
+            RedisServerTarget.endpoint(target.getAddress(), port == null ? -1 : port.intValue()));
       }
     }
     Collections.sort(sortedAddresses);

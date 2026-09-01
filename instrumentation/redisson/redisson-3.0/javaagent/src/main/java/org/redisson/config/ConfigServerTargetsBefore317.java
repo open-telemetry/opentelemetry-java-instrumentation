@@ -9,6 +9,8 @@ import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -75,7 +77,7 @@ public class ConfigServerTargetsBefore317 {
 
   @Nullable
   private static RedisServerTarget ofAddress(@Nullable Object address) {
-    return address == null ? null : RedisServerTarget.ofEndpoint(addressString(address));
+    return RedisServerTarget.ofEndpoint(addressString(address));
   }
 
   // Redisson changes the single server address return type across supported versions.
@@ -123,9 +125,7 @@ public class ConfigServerTargetsBefore317 {
     }
     List<String> endpoints = new ArrayList<>(addresses.size());
     for (Object address : addresses) {
-      if (address != null) {
-        endpoints.add(addressString(address));
-      }
+      endpoints.add(addressString(address));
     }
     return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
@@ -134,21 +134,21 @@ public class ConfigServerTargetsBefore317 {
   private static RedisServerTarget ofAddresses(
       @Nullable Object firstAddress, @Nullable Collection<?> otherAddresses) {
     List<String> endpoints = new ArrayList<>();
-    if (firstAddress != null) {
-      endpoints.add(addressString(firstAddress));
+    String firstEndpoint = addressString(firstAddress);
+    if (firstEndpoint == null) {
+      return null;
     }
+    endpoints.add(firstEndpoint);
     List<String> sortedAddresses = new ArrayList<>();
     if (otherAddresses != null) {
       for (Object address : otherAddresses) {
-        if (address != null) {
-          RedisServerTarget target = RedisServerTarget.ofEndpoint(addressString(address));
-          if (target != null) {
-            Integer port = target.getPort();
-            sortedAddresses.add(
-                RedisServerTarget.endpoint(
-                    target.getAddress(), port == null ? -1 : port.intValue()));
-          }
+        RedisServerTarget target = RedisServerTarget.ofEndpoint(addressString(address));
+        if (target == null) {
+          return null;
         }
+        Integer port = target.getPort();
+        sortedAddresses.add(
+            RedisServerTarget.endpoint(target.getAddress(), port == null ? -1 : port.intValue()));
       }
     }
     Collections.sort(sortedAddresses);
@@ -164,15 +164,23 @@ public class ConfigServerTargetsBefore317 {
     }
     List<String> endpoints = new ArrayList<>(addresses.size());
     for (Object address : addresses) {
-      if (address != null) {
-        endpoints.add(addressString(address));
-      }
+      endpoints.add(addressString(address));
     }
     return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, logicalName);
   }
 
-  private static String addressString(Object address) {
-    String value = address.toString();
+  @Nullable
+  private static String addressString(@Nullable Object address) {
+    String value;
+    if (address instanceof String) {
+      value = (String) address;
+    } else if (address instanceof URI) {
+      value = address.toString();
+    } else if (address instanceof URL) {
+      value = ((URL) address).toExternalForm();
+    } else {
+      return null;
+    }
     return value.startsWith("//") ? "redis:" + value : value;
   }
 

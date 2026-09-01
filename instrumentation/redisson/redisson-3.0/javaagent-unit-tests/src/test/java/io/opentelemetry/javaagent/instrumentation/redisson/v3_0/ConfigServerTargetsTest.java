@@ -8,14 +8,22 @@ package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.redisson.config.Config;
 import org.redisson.config.ConfigServerTargetsBefore317;
+import org.redisson.config.MasterSlaveServersConfig;
 
 class ConfigServerTargetsTest {
 
@@ -99,6 +107,42 @@ class ConfigServerTargetsTest {
 
     assertThat(ConfigServerTargetsBefore317.of(config).getAddress())
         .isEqualTo("master:6379,replica1:6380,replica2:6381");
+  }
+
+  @ParameterizedTest
+  @MethodSource("invalidReplicaAddresses")
+  void masterAndReplicasFailClosedWhenAnyReplicaIsInvalid(Object invalidReplica)
+      throws ReflectiveOperationException {
+    Config config = new Config();
+    MasterSlaveServersConfig serverConfig =
+        config
+            .useMasterSlaveServers()
+            .setMasterAddress(redisAddress("master:6379"))
+            .addSlaveAddress(redisAddress("replica:6380"));
+    Object validReplica = serverConfig.getSlaveAddresses().iterator().next();
+    Set<Object> replicas = new LinkedHashSet<>();
+    replicas.add(validReplica);
+    replicas.add(invalidReplica);
+    serverConfig
+        .getClass()
+        .getMethod("setSlaveAddresses", Set.class)
+        .invoke(serverConfig, replicas);
+
+    assertThat(ConfigServerTargetsBefore317.of(config)).isNull();
+  }
+
+  private static Stream<Arguments> invalidReplicaAddresses() {
+    return Stream.of(
+        argumentSet("null", (Object) null),
+        argumentSet("malformed", URI.create("redis://replica:99999")),
+        argumentSet(
+            "unsupported conversion",
+            new Object() {
+              @Override
+              public String toString() {
+                throw new IllegalStateException("conversion failed");
+              }
+            }));
   }
 
   @Test
