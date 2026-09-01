@@ -57,11 +57,27 @@ tasks {
       }
     }
 
+  val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}BothSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+        filter {
+          includeTestsMatching("*VertxRedisClientTest.setCommand")
+          includeTestsMatching("*VertxRedisClientTest.concurrentClientsKeepDistinctConfiguredTargets")
+          includeTestsMatching("*VertxRedisClient403Test.optionsReuseDoesNotChangeClientTarget")
+          includeTestsMatching("*VertxRedisClient445Test.optionsReuseDoesNotChangeClientTarget")
+        }
+
+        jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,service.peer")
+      }
+    }
+
   check {
     if (otelProps.testLatestDeps) {
-      dependsOn(stableSemconvSuites.getValue("test"))
+      dependsOn(stableSemconvSuites.getValue("test"), bothSemconvSuites)
     } else {
-      dependsOn(testing.suites, stableSemconvSuites.values)
+      dependsOn(testing.suites, stableSemconvSuites.values, bothSemconvSuites)
     }
   }
 }

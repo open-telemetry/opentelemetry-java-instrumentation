@@ -30,6 +30,8 @@ public class VertxRedisClientInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new RedisClientFactoryInstrumentation(),
+        new BaseRedisClientInstrumentation(),
         new RedisConnectionProviderInstrumentation(),
         new RedisStandaloneConnectionInstrumentation());
   }

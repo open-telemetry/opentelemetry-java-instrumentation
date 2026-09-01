@@ -12,47 +12,40 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.redis.client.RedisConnectOptions;
-import io.vertx.redis.client.impl.RedisURI;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
+class BaseRedisClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.vertx.redis.client.impl.RedisConnectionManager$RedisConnectionProvider");
+    return named("io.vertx.redis.client.impl.BaseRedisClient");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(4, named("io.vertx.redis.client.RedisConnectOptions"))),
+        isConstructor().and(takesArgument(3, named("io.vertx.redis.client.RedisConnectOptions"))),
         getClass().getName() + "$ConstructorWithOptionsAdvice");
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArgument(4, named("java.util.function.Supplier")))
-            .and(takesArgument(6, String.class)),
-        getClass().getName() + "$ConstructorWithEndpointAdvice");
+        isConstructor().and(takesArgument(3, named("java.util.function.Supplier"))),
+        getClass().getName() + "$ConstructorWithSupplierAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorWithOptionsAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Argument(4) RedisConnectOptions options,
-        @Advice.FieldValue("redisURI") RedisURI redisUri) {
-      VertxRedisServerTargets.set(redisUri, VertxRedisServerTargets.get(options));
+    public static void onExit(@Advice.Argument(3) RedisConnectOptions options) {
+      VertxRedisServerTargets.capture(options);
     }
   }
 
   @SuppressWarnings("unused")
-  public static class ConstructorWithEndpointAdvice {
+  public static class ConstructorWithSupplierAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Argument(4) Supplier<?> optionsSupplier,
-        @Advice.FieldValue("redisURI") RedisURI redisUri) {
-      VertxRedisServerTargets.set(redisUri, VertxRedisServerTargets.get(optionsSupplier));
+    public static void onExit(@Advice.Argument(3) Supplier<?> optionsSupplier) {
+      VertxRedisServerTargets.capture(optionsSupplier);
     }
   }
 }

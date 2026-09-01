@@ -48,11 +48,15 @@ public final class VertxRedisServerTargets {
   }
 
   private static String effectiveEndpoint(String connectionString) {
-    RedisURI redisUri = new RedisURI(connectionString);
-    SocketAddress address = redisUri.socketAddress();
-    return address.isInetSocket()
-        ? RedisServerTarget.endpoint(address.host(), address.port())
-        : connectionString;
+    try {
+      RedisURI redisUri = new RedisURI(connectionString);
+      SocketAddress address = redisUri.socketAddress();
+      return address.isInetSocket()
+          ? RedisServerTarget.endpoint(address.host(), address.port())
+          : connectionString;
+    } catch (IllegalArgumentException ignored) {
+      return connectionString;
+    }
   }
 
   public static void set(RedisURI redisUri, @Nullable RedisServerTarget target) {
