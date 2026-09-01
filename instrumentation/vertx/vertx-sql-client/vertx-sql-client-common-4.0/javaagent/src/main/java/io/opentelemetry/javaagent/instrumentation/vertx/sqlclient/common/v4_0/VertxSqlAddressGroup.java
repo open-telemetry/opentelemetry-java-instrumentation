@@ -140,13 +140,13 @@ public class VertxSqlAddressGroup {
     if ("mysql".equals(dbSystem)) {
       return 3306;
     }
-    if ("microsoft.sql_server".equals(dbSystem) || "mssql".equals(dbSystem)) {
+    if ("microsoft.sql_server".equals(dbSystem)) {
       return 1433;
     }
-    if ("oracle".equals(dbSystem) || "oracle.db".equals(dbSystem)) {
+    if ("oracle.db".equals(dbSystem)) {
       return 1521;
     }
-    if ("db2".equals(dbSystem) || "ibm.db2".equals(dbSystem)) {
+    if ("ibm.db2".equals(dbSystem)) {
       return 50000;
     }
     return null;
