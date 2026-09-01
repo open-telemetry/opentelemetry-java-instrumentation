@@ -19,12 +19,41 @@ import org.junit.jupiter.api.Test;
 class CouchbaseConnectionStringsTest {
 
   @Test
-  void readsAConnectionStringTheDriverParsed() {
+  void omitsTheCouchbaseDefaultPort() {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(ConnectionString.create("couchbase://node:11210"));
 
     assertThat(target.getAddress()).isEqualTo("node");
-    assertThat(target.getPort()).isEqualTo(11210);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void omitsTheCouchbasesDefaultPort() {
+    CouchbaseServerTarget target =
+        CouchbaseConnectionStrings.target(ConnectionString.create("couchbases://node:11207"));
+
+    assertThat(target.getAddress()).isEqualTo("node");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void movesASharedCouchbasesNonDefaultPortToServerPort() {
+    CouchbaseServerTarget target =
+        CouchbaseConnectionStrings.target(
+            ConnectionString.create("couchbases://two.example:11208,one.example:11208"));
+
+    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
+    assertThat(target.getPort()).isEqualTo(11208);
+  }
+
+  @Test
+  void keepsDifferentCouchbasesPortsInline() {
+    CouchbaseServerTarget target =
+        CouchbaseConnectionStrings.target(
+            ConnectionString.create("couchbases://two.example:11208,one.example"));
+
+    assertThat(target.getAddress()).isEqualTo("one.example:11207,two.example:11208");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -54,7 +83,33 @@ class CouchbaseConnectionStringsTest {
                     InetSocketAddress.createUnresolved("one.example", 0),
                     InetSocketAddress.createUnresolved("two.example", 11210))));
 
-    assertThat(target.getAddress()).isEqualTo("one.example,two.example:11210");
+    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void movesACommonNonDefaultPortToServerPort() {
+    CouchbaseServerTarget target =
+        CouchbaseConnectionStrings.target(
+            new SeedListConnectionString(
+                asList(
+                    InetSocketAddress.createUnresolved("two.example", 11211),
+                    InetSocketAddress.createUnresolved("one.example", 11211))));
+
+    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
+    assertThat(target.getPort()).isEqualTo(11211);
+  }
+
+  @Test
+  void keepsDifferentPortsInline() {
+    CouchbaseServerTarget target =
+        CouchbaseConnectionStrings.target(
+            new SeedListConnectionString(
+                asList(
+                    InetSocketAddress.createUnresolved("two.example", 11211),
+                    InetSocketAddress.createUnresolved("one.example", 0))));
+
+    assertThat(target.getAddress()).isEqualTo("one.example:11210,two.example:11211");
     assertThat(target.getPort()).isNull();
   }
 
@@ -76,9 +131,10 @@ class CouchbaseConnectionStringsTest {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
-                asList(new Seed("node.example", 0), new Seed("2001:db8::1", 11207))));
+                asList(new Seed("node.example", 0), new Seed("2001:db8::1", 11207)), "COUCHBASES"));
 
-    assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:11207,node.example");
+    assertThat(target.getAddress()).isEqualTo("[2001:db8::1],node.example");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -108,13 +164,23 @@ class CouchbaseConnectionStringsTest {
   public static class SeedListConnectionString {
 
     private final List<?> hosts;
+    private final String scheme;
 
     SeedListConnectionString(List<?> hosts) {
+      this(hosts, "COUCHBASE");
+    }
+
+    SeedListConnectionString(List<?> hosts, String scheme) {
       this.hosts = hosts;
+      this.scheme = scheme;
     }
 
     public List<?> hosts() {
       return hosts;
+    }
+
+    public String scheme() {
+      return scheme;
     }
   }
 
