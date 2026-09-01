@@ -372,6 +372,50 @@ class VertxRedisClientTest {
                             equalTo(NETWORK_PEER_PORT, port))));
   }
 
+  @Test
+  void trailingInvalidClusterEndpointOmitsStableTarget() {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    TestRedisCluster redisCluster = new TestRedisCluster();
+    cleanup.deferCleanup(redisCluster);
+    Redis clusterClient =
+        Redis.createClient(
+            vertx,
+            new RedisOptions()
+                .setType(RedisClientType.CLUSTER)
+                .addConnectionString(
+                    "redis://" + redisCluster.getHost() + ":" + redisCluster.getPort())
+                .addConnectionString("redis://"));
+    cleanup.deferCleanup(clusterClient::close);
+
+    RedisConnection clusterConnection =
+        clusterClient.connect().toCompletionStage().toCompletableFuture().join();
+    cleanup.deferCleanup(clusterConnection::close);
+    clusterConnection
+        .send(Request.cmd(Command.SET).arg("invalid-cluster-endpoint").arg("value"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .join();
+
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              List<SpanData> spans =
+                  testing.spans().stream()
+                      .filter(span -> span.getName().equals("SET"))
+                      .collect(toList());
+              assertThat(spans).hasSize(1);
+              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS)).isNull();
+              assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isNull();
+              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS))
+                  .isEqualTo(redisCluster.getHost());
+              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
+                  .isEqualTo(Long.valueOf(redisCluster.getPort()));
+            });
+    redisCluster.assertNoFailure();
+  }
+
   private static Object redisStandaloneConnectOptions(String connectionString)
       throws ReflectiveOperationException {
     Class<?> optionsClass = Class.forName("io.vertx.redis.client.RedisStandaloneConnectOptions");

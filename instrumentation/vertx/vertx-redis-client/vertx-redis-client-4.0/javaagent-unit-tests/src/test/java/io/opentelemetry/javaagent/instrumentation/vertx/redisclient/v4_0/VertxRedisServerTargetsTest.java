@@ -172,7 +172,7 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void clusterSortsUnixSocketsAndKeepsThemPortless() {
+  void clusterWithMultipleUnixSocketsIsUnrepresentable() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
             new RedisOptions()
@@ -180,7 +180,18 @@ class VertxRedisServerTargetsTest {
                 .addConnectionString("unix:///var/run/redis2.sock")
                 .addConnectionString("unix:///var/run/redis1.sock"));
 
-    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock,/var/run/redis2.sock");
+    assertThat(target).isNull();
+  }
+
+  @Test
+  void clusterWithOneUnixSocketKeepsItsPath() {
+    RedisServerTarget target =
+        VertxRedisServerTargets.of(
+            new RedisOptions()
+                .setType(RedisClientType.CLUSTER)
+                .addConnectionString("unix:///var/run/redis.sock"));
+
+    assertThat(target.getAddress()).isEqualTo("/var/run/redis.sock");
     assertThat(target.getPort()).isNull();
   }
 
@@ -247,16 +258,15 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void invalidClusterEndpointIsOmitted() {
+  void invalidClusterEndpointMakesTheTargetUnrepresentable() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
             new RedisOptions()
                 .setType(RedisClientType.CLUSTER)
-                .addConnectionString("redis://")
-                .addConnectionString("redis://node:6379"));
+                .addConnectionString("redis://working-cluster-seed:7000")
+                .addConnectionString("redis://"));
 
-    assertThat(target.getAddress()).isEqualTo("node");
-    assertThat(target.getPort()).isNull();
+    assertThat(target).isNull();
   }
 
   @Test

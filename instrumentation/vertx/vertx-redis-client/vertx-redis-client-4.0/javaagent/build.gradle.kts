@@ -23,6 +23,14 @@ dependencies {
 
 testing {
   suites {
+    withType<JvmTestSuite>().configureEach {
+      sources {
+        java {
+          srcDir("src/testShared/java")
+        }
+      }
+    }
+
     register<JvmTestSuite>("test403") {
       dependencies {
         implementation("io.vertx:vertx-redis-client:4.0.3")
