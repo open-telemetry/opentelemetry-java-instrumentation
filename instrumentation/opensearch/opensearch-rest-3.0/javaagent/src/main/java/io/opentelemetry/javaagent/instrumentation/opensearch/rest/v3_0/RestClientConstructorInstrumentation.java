@@ -46,7 +46,9 @@ class RestClientConstructorInstrumentation implements TypeInstrumentation {
       List<OpenSearchServerTarget.Endpoint> endpoints = new ArrayList<>(configuredNodes.size());
       for (Node node : configuredNodes) {
         HttpHost host = node.getHost();
-        endpoints.add(new OpenSearchServerTarget.Endpoint(host.getHostName(), host.getPort()));
+        endpoints.add(
+            new OpenSearchServerTarget.Endpoint(
+                host.getHostName(), host.getPort(), host.getSchemeName()));
       }
       OpenSearchServerTargets.capture(restClient, endpoints);
     }

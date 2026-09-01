@@ -24,10 +24,10 @@ public class OpenSearchServerTarget {
       if (endpoint.host == null) {
         return null;
       }
-      return new OpenSearchServerTarget(endpoint.host, endpoint.port >= 0 ? endpoint.port : null);
+      int port = normalizePort(endpoint);
+      return new OpenSearchServerTarget(endpoint.host, port >= 0 ? port : null);
     }
-    String group = renderGroup(endpoints);
-    return group == null ? null : new OpenSearchServerTarget(group, null);
+    return renderGroup(endpoints);
   }
 
   private OpenSearchServerTarget(String address, @Nullable Integer port) {
@@ -36,16 +36,28 @@ public class OpenSearchServerTarget {
   }
 
   @Nullable
-  private static String renderGroup(List<Endpoint> endpoints) {
-    List<String> renderedEndpoints = new ArrayList<>(endpoints.size());
+  private static OpenSearchServerTarget renderGroup(List<Endpoint> endpoints) {
+    List<String> addresses = new ArrayList<>(endpoints.size());
+    int sharedPort = normalizePort(endpoints.get(0));
+    boolean portsMatch = true;
     for (Endpoint endpoint : endpoints) {
       if (endpoint.host == null) {
         return null;
       }
-      renderedEndpoints.add(renderEndpoint(endpoint.host, endpoint.port));
+      int port = normalizePort(endpoint);
+      if (port != sharedPort) {
+        portsMatch = false;
+      }
+      addresses.add(endpoint.host);
+    }
+    List<String> renderedEndpoints = new ArrayList<>(endpoints.size());
+    for (int i = 0; i < endpoints.size(); i++) {
+      renderedEndpoints.add(
+          renderEndpoint(addresses.get(i), portsMatch ? -1 : normalizePort(endpoints.get(i))));
     }
     renderedEndpoints.sort(String::compareTo);
-    return String.join(",", renderedEndpoints);
+    return new OpenSearchServerTarget(
+        String.join(",", renderedEndpoints), portsMatch && sharedPort >= 0 ? sharedPort : null);
   }
 
   private static String renderEndpoint(String host, int port) {
@@ -61,6 +73,14 @@ public class OpenSearchServerTarget {
     return endpoint.toString();
   }
 
+  private static int normalizePort(Endpoint endpoint) {
+    if ((endpoint.port == 80 && endpoint.scheme.equalsIgnoreCase("http"))
+        || (endpoint.port == 443 && endpoint.scheme.equalsIgnoreCase("https"))) {
+      return -1;
+    }
+    return endpoint.port;
+  }
+
   public String getAddress() {
     return address;
   }
@@ -74,10 +94,12 @@ public class OpenSearchServerTarget {
 
     @Nullable private final String host;
     private final int port;
+    private final String scheme;
 
-    public Endpoint(@Nullable String host, int port) {
+    public Endpoint(@Nullable String host, int port, String scheme) {
       this.host = sanitizeHost(host);
       this.port = port;
+      this.scheme = scheme;
     }
 
     @Nullable
