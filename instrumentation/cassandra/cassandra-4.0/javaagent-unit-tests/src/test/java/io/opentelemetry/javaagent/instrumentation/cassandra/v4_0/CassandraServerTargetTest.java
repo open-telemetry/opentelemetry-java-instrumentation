@@ -135,6 +135,30 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void endpointListMayReachTheExactAddressLimit() {
+    String first = repeat('a', 127);
+    String second = repeat('b', 127);
+
+    CassandraServerTarget target =
+        CassandraServerTarget.of(asList(first + ":9042", second + ":9042"));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(first + "," + second).hasSize(255);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void endpointListStopsBeforeAnOverflowingCompleteEndpoint() {
+    String first = repeat('a', 250);
+
+    CassandraServerTarget target = CassandraServerTarget.of(asList("b:9142", first + ":9042"));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(first + ":9042").hasSize(255);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void invalidContactPointsAreIgnored() {
     assertThat(CassandraServerTarget.of(emptyList())).isNull();
     assertThat(CassandraServerTarget.of((List<String>) null)).isNull();
@@ -225,6 +249,16 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void sessionHasNoTargetWhenTheFirstRenderedEndpointCannotFit() {
+    configureContactPoints(singletonList(repeat('a', 251) + ":9042"));
+    when(session.getContext()).thenReturn(context);
+    Set<EndPoint> programmaticContactPoints =
+        singleton(new DefaultEndPoint(InetSocketAddress.createUnresolved("b.example.com", 9142)));
+
+    assertThat(CassandraServerTarget.of(session, programmaticContactPoints)).isNull();
+  }
+
+  @Test
   void programmaticContactPointSetIterationOrderDoesNotChangeTheTarget() {
     configureContactPoints(emptyList());
     when(session.getContext()).thenReturn(context);
@@ -306,5 +340,13 @@ class CassandraServerTargetTest {
     when(config.getDefaultProfile()).thenReturn(defaultProfile);
     when(defaultProfile.getStringList(DefaultDriverOption.CONTACT_POINTS, emptyList()))
         .thenReturn(contactPoints);
+  }
+
+  private static String repeat(char value, int count) {
+    StringBuilder result = new StringBuilder(count);
+    for (int i = 0; i < count; i++) {
+      result.append(value);
+    }
+    return result.toString();
   }
 }
