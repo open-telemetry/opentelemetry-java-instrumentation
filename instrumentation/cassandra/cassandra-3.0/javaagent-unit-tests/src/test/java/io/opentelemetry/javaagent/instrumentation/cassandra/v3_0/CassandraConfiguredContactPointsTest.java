@@ -16,17 +16,52 @@ import org.junit.jupiter.api.Test;
 class CassandraConfiguredContactPointsTest {
 
   @Test
-  void createsSingleHostTargetWithoutResolvingIt() {
+  void omitsImplicitDefaultPortFromSingleHostTarget() {
     CassandraConfiguredTarget target =
         CassandraConfiguredTarget.create(new String[] {"db.example"}, 9042);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("db.example");
-    assertThat(target.getPort()).isEqualTo(9042);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void createsStableMultiHostTargetForPermutations() throws UnknownHostException {
+  void omitsMaterializedDefaultPortFromSingleHostTarget() {
+    CassandraConfiguredTarget target =
+        CassandraConfiguredTarget.create(
+            InetSocketAddress.createUnresolved("db.example", 9042), 9142);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("db.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void omitsDefaultPortFromMultipleContactPoints() {
+    CassandraConfiguredTarget target =
+        CassandraConfiguredTarget.create(
+            asList("second.example", InetSocketAddress.createUnresolved("first.example", 9042)),
+            9042);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("first.example,second.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void extractsSharedNonDefaultPortFromMultipleContactPoints() {
+    CassandraConfiguredTarget target =
+        CassandraConfiguredTarget.create(
+            asList("second.example", InetSocketAddress.createUnresolved("first.example", 9142)),
+            9142);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("first.example,second.example");
+    assertThat(target.getPort()).isEqualTo(9142);
+  }
+
+  @Test
+  void inlinesMixedPortsAndCreatesStableTargetForPermutations() throws UnknownHostException {
     InetAddress address = InetAddress.getByAddress(new byte[] {10, 0, 0, 1});
     InetSocketAddress otherAddress = InetSocketAddress.createUnresolved("other.example", 9142);
     CassandraConfiguredTarget firstTarget =
@@ -50,8 +85,7 @@ class CassandraConfiguredContactPointsTest {
             asList("second.example", "duplicate.example", "duplicate.example"), 9042);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress())
-        .isEqualTo("duplicate.example:9042,duplicate.example:9042,second.example:9042");
+    assertThat(target.getAddress()).isEqualTo("duplicate.example,duplicate.example,second.example");
     assertThat(target.getPort()).isNull();
   }
 
@@ -59,22 +93,23 @@ class CassandraConfiguredContactPointsTest {
   void preservesUnresolvedSocketAddress() {
     CassandraConfiguredTarget target =
         CassandraConfiguredTarget.create(
-            InetSocketAddress.createUnresolved("unresolved.example", 9042), 9142);
+            InetSocketAddress.createUnresolved("unresolved.example", 9142), 9042);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("unresolved.example");
-    assertThat(target.getPort()).isEqualTo(9042);
+    assertThat(target.getPort()).isEqualTo(9142);
   }
 
   @Test
-  void formatsIpv6InMultiHostTarget() throws UnknownHostException {
+  void formatsIpv6WhenPortsAreInlined() throws UnknownHostException {
     InetAddress address =
         InetAddress.getByAddress(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1});
+    InetSocketAddress otherAddress = InetSocketAddress.createUnresolved("db.example", 9142);
     CassandraConfiguredTarget target =
-        CassandraConfiguredTarget.create(asList(address, "db.example"), 9042);
+        CassandraConfiguredTarget.create(asList(address, otherAddress), 9042);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[0:0:0:0:0:0:0:1]:9042,db.example:9042");
+    assertThat(target.getAddress()).isEqualTo("[0:0:0:0:0:0:0:1]:9042,db.example:9142");
     assertThat(target.getPort()).isNull();
   }
 

@@ -20,6 +20,8 @@ import javax.annotation.Nullable;
 
 public class CassandraConfiguredTarget {
 
+  private static final int DEFAULT_PORT = 9042;
+
   private final String address;
   @Nullable private final Integer port;
 
@@ -37,9 +39,9 @@ public class CassandraConfiguredTarget {
     contactPoints.add(arguments);
   }
 
-  public static void store(Cluster.Builder builder, Cluster cluster, int defaultPort) {
+  public static void store(Cluster.Builder builder, Cluster cluster, int configuredPort) {
     CassandraConfiguredTarget target =
-        create(VirtualFields.BUILDER_CONTACT_POINTS.get(builder), defaultPort);
+        create(VirtualFields.BUILDER_CONTACT_POINTS.get(builder), configuredPort);
     if (target != null) {
       VirtualFields.CLUSTER_TARGET.set(cluster, target);
     }
@@ -51,38 +53,49 @@ public class CassandraConfiguredTarget {
   }
 
   @Nullable
-  static CassandraConfiguredTarget create(Object contactPoints, int defaultPort) {
+  static CassandraConfiguredTarget create(Object contactPoints, int configuredPort) {
     ContactPoints captured = new ContactPoints();
     captured.add(contactPoints);
-    return create(captured, defaultPort);
+    return create(captured, configuredPort);
   }
 
   @Nullable
   private static CassandraConfiguredTarget create(
-      @Nullable ContactPoints contactPoints, int defaultPort) {
-    if (contactPoints == null || defaultPort <= 0 || defaultPort > 65535) {
+      @Nullable ContactPoints contactPoints, int configuredPort) {
+    if (contactPoints == null || !validPort(configuredPort)) {
       return null;
     }
     List<ContactPoint> points = contactPoints.points;
     if (points.isEmpty()) {
       return null;
     }
-    if (points.size() == 1) {
-      ContactPoint point = points.get(0);
-      int port = point.port == null ? defaultPort : point.port;
-      return validPort(port) ? new CassandraConfiguredTarget(point.host, port) : null;
-    }
 
+    int firstPort = resolvePort(points.get(0), configuredPort);
+    boolean commonPort = true;
+    List<String> hostTokens = new ArrayList<>(points.size());
     List<String> endpointTokens = new ArrayList<>(points.size());
     for (ContactPoint point : points) {
-      int port = point.port == null ? defaultPort : point.port;
+      int port = resolvePort(point, configuredPort);
       if (!validPort(port)) {
         return null;
       }
+      commonPort &= port == firstPort;
+      hostTokens.add(point.host);
       endpointTokens.add(formatHost(point.host) + ':' + port);
     }
+
+    if (commonPort) {
+      hostTokens.sort(String::compareTo);
+      return new CassandraConfiguredTarget(
+          String.join(",", hostTokens), firstPort == DEFAULT_PORT ? null : firstPort);
+    }
+
     endpointTokens.sort(String::compareTo);
     return new CassandraConfiguredTarget(String.join(",", endpointTokens), null);
+  }
+
+  private static int resolvePort(ContactPoint point, int configuredPort) {
+    return point.port == null ? configuredPort : point.port;
   }
 
   private static boolean validPort(int port) {

@@ -222,36 +222,25 @@ class CassandraClientTest {
   void singleConfiguredContactPointIsStableTarget() {
     Cluster namedContactPointCluster =
         Cluster.builder().addContactPoint("LOCALHOST").withPort(cassandraPort).build();
-    cleanup.deferCleanup(namedContactPointCluster);
-    Session session = namedContactPointCluster.connect();
-    cleanup.deferCleanup(session);
 
-    ResultSet resultSet = session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
-    InetSocketAddress coordinatorAddress =
-        resultSet.getExecutionInfo().getQueriedHost().getSocketAddress();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.satisfies(
-                        spanData -> {
-                          assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(
-                                  emitStableDatabaseSemconv()
-                                      ? "LOCALHOST"
-                                      : coordinatorAddress.getHostString());
-                          assertThat(spanData.getAttributes().get(SERVER_PORT))
-                              .isEqualTo((long) coordinatorAddress.getPort());
-                          assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
-                              .isEqualTo(coordinatorAddress.getAddress().getHostAddress());
-                          assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
-                              .isEqualTo((long) coordinatorAddress.getPort());
-                        })));
+    assertConfiguredTarget(namedContactPointCluster, "LOCALHOST", cassandraPort);
   }
 
   @Test
-  void multipleConfiguredContactPointsAreStableTarget() {
+  void multipleConfiguredContactPointsWithSharedPortAreStableTarget() {
+    Cluster multiContactPointCluster =
+        Cluster.builder()
+            .addContactPoints(cassandra.getHost(), "127.0.0.2")
+            .withPort(cassandraPort)
+            .build();
+
+    String expectedAddress =
+        Stream.of(cassandraHost, "127.0.0.2").sorted(String::compareTo).collect(joining(","));
+    assertConfiguredTarget(multiContactPointCluster, expectedAddress, cassandraPort);
+  }
+
+  @Test
+  void multipleConfiguredContactPointsWithMixedPortsAreStableTarget() {
     Cluster multiContactPointCluster =
         Cluster.builder()
             .addContactPointsWithPorts(
@@ -259,8 +248,18 @@ class CassandraClientTest {
                 // unreachable on purpose: only the configuration is under test
                 new InetSocketAddress("127.0.0.2", 9042))
             .build();
-    cleanup.deferCleanup(multiContactPointCluster);
-    Session session = multiContactPointCluster.connect();
+
+    String expectedAddress =
+        Stream.of(cassandraHost + ":" + cassandraPort, "127.0.0.2:9042")
+            .sorted(String::compareTo)
+            .collect(joining(","));
+    assertConfiguredTarget(multiContactPointCluster, expectedAddress, null);
+  }
+
+  private static void assertConfiguredTarget(
+      Cluster configuredCluster, String expectedAddress, Integer expectedPort) {
+    cleanup.deferCleanup(configuredCluster);
+    Session session = configuredCluster.connect();
     cleanup.deferCleanup(session);
 
     ResultSet resultSet = session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
@@ -276,16 +275,19 @@ class CassandraClientTest {
                           assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
                               .isEqualTo(
                                   emitStableDatabaseSemconv()
-                                      ? Stream.of(
-                                              cassandraHost + ":" + cassandraPort, "127.0.0.2:9042")
-                                          .sorted(String::compareTo)
-                                          .collect(joining(","))
+                                      ? expectedAddress
                                       : coordinatorAddress.getHostString());
-                          assertThat(spanData.getAttributes().get(SERVER_PORT))
-                              .isEqualTo(
-                                  emitStableDatabaseSemconv()
-                                      ? null
-                                      : (long) coordinatorAddress.getPort());
+                          if (emitStableDatabaseSemconv()) {
+                            if (expectedPort == null) {
+                              assertThat(spanData.getAttributes().get(SERVER_PORT)).isNull();
+                            } else {
+                              assertThat(spanData.getAttributes().get(SERVER_PORT))
+                                  .isEqualTo(expectedPort.longValue());
+                            }
+                          } else {
+                            assertThat(spanData.getAttributes().get(SERVER_PORT))
+                                .isEqualTo((long) coordinatorAddress.getPort());
+                          }
                           assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
                               .isEqualTo(coordinatorAddress.getAddress().getHostAddress());
                           assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
