@@ -221,7 +221,29 @@ public abstract class AbstractOpenSearchRestTest {
 
     Response response = nodeListClient.performRequest(new Request("GET", "_cluster/health"));
 
-    assertConfiguredTarget(nodeList(), getResponseAddress(response));
+    assertConfiguredTarget(nodeList(), null, getResponseAddress(response));
+  }
+
+  @Test
+  void sharedDefaultPortsAreOmitted() throws Exception {
+    RestClient nodeListClient = buildRestClient("https://127.0.0.2:443", "http://127.0.0.3:80");
+    cleanup.deferCleanup(nodeListClient);
+    resetNodes(nodeListClient, opensearch.getHttpHostAddress());
+
+    Response response = nodeListClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget("127.0.0.2,127.0.0.3", null, getResponseAddress(response));
+  }
+
+  @Test
+  void sharedNonDefaultPortIsReportedSeparately() throws Exception {
+    RestClient nodeListClient = buildRestClient("https://127.0.0.2:9443", "http://127.0.0.3:9443");
+    cleanup.deferCleanup(nodeListClient);
+    resetNodes(nodeListClient, opensearch.getHttpHostAddress());
+
+    Response response = nodeListClient.performRequest(new Request("GET", "_cluster/health"));
+
+    assertConfiguredTarget("127.0.0.2,127.0.0.3", 9443L, getResponseAddress(response));
   }
 
   @Test
@@ -233,7 +255,8 @@ public abstract class AbstractOpenSearchRestTest {
 
     Response response = singleNodeClient.performRequest(new Request("GET", "_cluster/health"));
 
-    assertConfiguredTarget(null, getResponseAddress(response));
+    assertConfiguredTarget(
+        httpHost.getHost(), Long.valueOf(httpHost.getPort()), getResponseAddress(response));
   }
 
   private String addressOfHostThatIsDown() {
@@ -246,10 +269,14 @@ public abstract class AbstractOpenSearchRestTest {
   }
 
   private String openSearchSpanName() {
+    return openSearchSpanName(httpHost.getHost(), Long.valueOf(httpHost.getPort()));
+  }
+
+  private static String openSearchSpanName(String serverAddress, Long serverPort) {
     // the stable span name falls back to the target, because opensearch has no namespace or
     // collection to name
     return emitStableDatabaseSemconv()
-        ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+        ? "GET " + serverAddress + (serverPort != null ? ":" + serverPort : "")
         : "GET";
   }
 
@@ -290,18 +317,18 @@ public abstract class AbstractOpenSearchRestTest {
     return attributes;
   }
 
-  private void assertConfiguredTarget(String nodeList, String responseAddress) {
-    String expectedAddress =
-        !emitStableDatabaseSemconv() ? null : (nodeList != null ? nodeList : httpHost.getHost());
-    Long expectedPort =
-        !emitStableDatabaseSemconv() || nodeList != null ? null : Long.valueOf(httpHost.getPort());
-
+  private void assertConfiguredTarget(
+      String serverAddress, Long serverPort, String responseAddress) {
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 assertThat(trace.getSpan(0))
+                    .hasName(openSearchSpanName(serverAddress, serverPort))
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfyingExactly(
-                        openSearchAttributes(expectedAddress, expectedPort, responseAddress)));
+                        openSearchAttributes(
+                            emitStableDatabaseSemconv() ? serverAddress : null,
+                            emitStableDatabaseSemconv() ? serverPort : null,
+                            responseAddress)));
   }
 }
