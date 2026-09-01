@@ -231,14 +231,16 @@ public class VertxSqlClientSingletons {
     };
   }
 
+  @Nullable
   public static ConnectionAttempt createConnectionAttempt(
       Object connectionFactory, Future<SqlConnectOptions> connectOptionsFuture) {
     VertxSqlClientDataCapture dataCapture =
         supplierFutureDataCaptureCache.get(connectOptionsFuture);
-    if (dataCapture != null) {
-      supplierFutureDataCaptureCache.remove(connectOptionsFuture);
+    if (dataCapture == null) {
+      return null;
     }
-    Object connectionRequest = dataCapture != null ? dataCapture.takeConnectionRequest() : null;
+    supplierFutureDataCaptureCache.remove(connectOptionsFuture);
+    Object connectionRequest = dataCapture.takeConnectionRequest();
     return new ConnectionAttempt(
         getDbSystemNameFromClassName(connectionFactory), connectionRequest);
   }

@@ -57,15 +57,18 @@ class ConnectionFactoryInstrumentation implements TypeInstrumentation {
   public static class ConnectAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static ConnectionAttempt onEnter(
         @Advice.This Object connectionFactory,
         @Advice.Argument(value = 1, readOnly = false)
             Future<SqlConnectOptions> connectOptionsFuture) {
       ConnectionAttempt connectionAttempt =
           VertxSqlClientSingletons.createConnectionAttempt(connectionFactory, connectOptionsFuture);
-      connectOptionsFuture =
-          VertxSqlClientSingletons.captureConnectionAttempt(
-              connectOptionsFuture, connectionAttempt);
+      if (connectionAttempt != null) {
+        connectOptionsFuture =
+            VertxSqlClientSingletons.captureConnectionAttempt(
+                connectOptionsFuture, connectionAttempt);
+      }
       return connectionAttempt;
     }
 
@@ -74,7 +77,9 @@ class ConnectionFactoryInstrumentation implements TypeInstrumentation {
     public static Future<?> onExit(
         @Advice.Return Future<?> future,
         @Advice.Enter @Nullable ConnectionAttempt connectionAttempt) {
-      return wrapContext(VertxSqlClientSingletons.attachConnectionData(future, connectionAttempt));
+      return connectionAttempt != null
+          ? wrapContext(VertxSqlClientSingletons.attachConnectionData(future, connectionAttempt))
+          : future;
     }
   }
 }
