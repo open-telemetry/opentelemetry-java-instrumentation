@@ -40,6 +40,12 @@ class JedisServerTargetsTest {
   }
 
   @Test
+  void nodeListWithUnsupportedMemberFailsClosed() {
+    assertThat(JedisServerTargets.ofNodes(asList(new HostAndPort("node1", 7000), "unsupported")))
+        .isNull();
+  }
+
+  @Test
   void duplicateNodesFromAListArePreserved() {
     RedisServerTarget target =
         JedisServerTargets.ofNodes(
@@ -72,6 +78,14 @@ class JedisServerTargetsTest {
     assertThat(target.getAddress())
         .isEqualTo("sentinel1:26379,sentinel2:26380,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void sentinelListWithNullMemberFailsClosed() {
+    assertThat(
+            JedisServerTargets.ofSentinels(
+                "mymaster", asList(new HostAndPort("sentinel1", 26379), null)))
+        .isNull();
   }
 
   @Test
