@@ -9,13 +9,11 @@ sudo rm -rf /usr/share/dotnet
 sudo rm -rf /usr/local/julia*
 sudo rm -rf /usr/share/swift
 sudo rm -rf /usr/local/.ghcup
-# test suites pull many testcontainers images (elasticsearch, kafka connect, etc.) over the
-# course of a single job; prune whatever shipped with the runner image first to make room.
-# The reclaimable amount is runner-image dependent; GitHub-hosted jobs start on a fresh runner, so
-# this cannot reclaim Docker data from a previous workflow run.
-# On Windows, the Docker service can be stopped at this point; skip pruning in that case so the
-# workflow can start the service in the following step. Once the daemon is available, keep prune
-# failures fatal so that real cleanup errors are not hidden.
+# GitHub-hosted runners can include about 1.9 GB of unused GitHub and Dependabot images. Remove
+# them before Testcontainers starts pulling test images. Each job gets a fresh runner, so this
+# does not clean up Docker data from an earlier workflow run.
+# Docker may not be running yet on Windows. Skip pruning in that case, but fail the job if a
+# running daemon cannot be pruned.
 if docker info >/dev/null 2>&1; then
   docker system prune -af --volumes
 else
