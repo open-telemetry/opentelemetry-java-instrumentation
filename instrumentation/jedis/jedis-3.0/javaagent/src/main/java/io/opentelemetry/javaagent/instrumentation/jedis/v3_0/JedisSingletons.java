@@ -20,7 +20,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Connection;
@@ -47,6 +49,9 @@ public class JedisSingletons {
       VirtualField.find(Pool.class, RedisServerTarget.class);
   private static final VirtualField<Pool<?>, Boolean> POOL_TARGET_CONFIGURED =
       VirtualField.find(Pool.class, Boolean.class);
+
+  private static final VirtualField<Set<?>, Collection<?>> CONFIGURED_SENTINELS =
+      VirtualField.find(Set.class, Collection.class);
 
   private static final VirtualField<JedisClusterConnectionHandler, RedisServerTarget>
       CLUSTER_TARGET =
@@ -98,6 +103,26 @@ public class JedisSingletons {
   public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
     POOL_TARGET.set(pool, target);
     POOL_TARGET_CONFIGURED.set(pool, true);
+  }
+
+  public static void attachConfiguredSentinels(
+      @Nullable Set<?> parsedSentinels, @Nullable Collection<?> configuredSentinels) {
+    if (parsedSentinels != null && configuredSentinels != null) {
+      CONFIGURED_SENTINELS.set(parsedSentinels, configuredSentinels);
+    }
+  }
+
+  @Nullable
+  public static RedisServerTarget sentinelTarget(
+      @Nullable String masterName, @Nullable Collection<?> sentinels) {
+    Collection<?> configuredSentinels = sentinels;
+    if (sentinels instanceof Set<?>) {
+      Collection<?> originalSentinels = CONFIGURED_SENTINELS.get((Set<?>) sentinels);
+      if (originalSentinels != null) {
+        configuredSentinels = originalSentinels;
+      }
+    }
+    return JedisServerTargets.ofSentinels(masterName, configuredSentinels);
   }
 
   public static void setClusterTarget(
