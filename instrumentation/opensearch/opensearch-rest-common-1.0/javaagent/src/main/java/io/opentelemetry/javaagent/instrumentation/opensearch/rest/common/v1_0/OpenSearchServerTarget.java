@@ -5,15 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
-import static java.util.Collections.singletonList;
-
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
 public class OpenSearchServerTarget {
 
-  private static final int MAX_ADDRESS_LENGTH = 255;
+  private static final int MAX_ENDPOINTS = 5;
 
   private final String address;
   @Nullable private final Integer port;
@@ -28,12 +26,8 @@ public class OpenSearchServerTarget {
       if (endpoint.host == null) {
         return null;
       }
-      String address = joinEndpointsWithinLimit(singletonList(endpoint.host));
-      if (address == null) {
-        return null;
-      }
       int port = normalizePort(endpoint);
-      return new OpenSearchServerTarget(address, port >= 0 ? port : null);
+      return new OpenSearchServerTarget(endpoint.host, port >= 0 ? port : null);
     }
     return renderGroup(endpoints);
   }
@@ -47,17 +41,12 @@ public class OpenSearchServerTarget {
   private static OpenSearchServerTarget renderGroup(List<Endpoint> endpoints) {
     List<String> addresses = new ArrayList<>(endpoints.size());
     List<Integer> effectivePorts = new ArrayList<>(endpoints.size());
-    int sharedPort = effectivePort(endpoints.get(0));
-    boolean portsMatch = true;
     boolean allPortsAreDefault = true;
     for (Endpoint endpoint : endpoints) {
       if (endpoint.host == null) {
         return null;
       }
       int port = effectivePort(endpoint);
-      if (port != sharedPort) {
-        portsMatch = false;
-      }
       if (port != defaultPort(endpoint)) {
         allPortsAreDefault = false;
       }
@@ -67,33 +56,12 @@ public class OpenSearchServerTarget {
     List<String> renderedEndpoints = new ArrayList<>(endpoints.size());
     for (int i = 0; i < endpoints.size(); i++) {
       renderedEndpoints.add(
-          renderEndpoint(addresses.get(i), portsMatch ? -1 : effectivePorts.get(i)));
+          renderEndpoint(addresses.get(i), allPortsAreDefault ? -1 : effectivePorts.get(i)));
     }
     renderedEndpoints.sort(String::compareTo);
-
-    String address = joinEndpointsWithinLimit(renderedEndpoints);
-    if (address == null) {
-      return null;
-    }
     return new OpenSearchServerTarget(
-        address, portsMatch && sharedPort >= 0 && !allPortsAreDefault ? sharedPort : null);
-  }
-
-  @Nullable
-  private static String joinEndpointsWithinLimit(List<String> endpoints) {
-    StringBuilder address = new StringBuilder();
-    for (String endpoint : endpoints) {
-      int separatorLength = address.length() == 0 ? 0 : 1;
-      int available = MAX_ADDRESS_LENGTH - address.length() - separatorLength;
-      if (endpoint.length() > available) {
-        break;
-      }
-      if (separatorLength != 0) {
-        address.append(',');
-      }
-      address.append(endpoint);
-    }
-    return address.length() == 0 ? null : address.toString();
+        String.join(",", renderedEndpoints.subList(0, Math.min(MAX_ENDPOINTS, endpoints.size()))),
+        null);
   }
 
   private static String renderEndpoint(String host, int port) {
