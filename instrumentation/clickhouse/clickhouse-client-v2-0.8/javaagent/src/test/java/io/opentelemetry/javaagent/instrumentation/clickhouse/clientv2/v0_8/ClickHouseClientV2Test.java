@@ -26,6 +26,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.ServerException;
@@ -50,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -562,8 +564,9 @@ class ClickHouseClientV2Test {
     String firstEndpoint = client.getEndpoints().iterator().next();
     String legacyAddress = UrlParser.getHost(firstEndpoint);
     Integer legacyPort = UrlParser.getPort(firstEndpoint);
-    String peerAddress = endpointHost(firstEndpoint);
-    int peerPort = URI.create(firstEndpoint).getPort();
+    Object selectedEndpoint = selectedEndpoint(client);
+    String peerAddress = endpointHost(selectedEndpoint);
+    int peerPort = endpointPort(selectedEndpoint);
 
     QueryResponse response = client.query("select * from " + TABLE_NAME).join();
     response.close();
@@ -590,6 +593,71 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv() ? (long) peerPort : null),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testRetryReportsSelectedEndpoint() throws Exception {
+    assumeTrue(isClassPresent("com.clickhouse.client.api.transport.ClientNodeSelector"));
+
+    int unavailablePort = 1;
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint("http://127.0.0.1:" + unavailablePort)
+            .addEndpoint(Protocol.HTTP, host, port, false)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false")
+            .setConnectTimeout(100)
+            .setMaxRetries(1)
+            .useAsyncRequests(true)
+            .build();
+    cleanup.deferCleanup(testClient);
+
+    List<String> configuredAddresses =
+        new ArrayList<>(asList("127.0.0.1:" + unavailablePort, host + ":" + port));
+    configuredAddresses.sort(String::compareTo);
+    putUnreachableEndpointFirst(testClient, unavailablePort);
+    String currentEndpoint = testClient.getEndpoints().iterator().next();
+    String legacyAddress = UrlParser.getHost(currentEndpoint);
+    Integer legacyPort = UrlParser.getPort(currentEndpoint);
+
+    QueryResponse response = testClient.query("select * from " + TABLE_NAME).join();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "select test_table"
+                                : "SELECT " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? String.join(",", configuredAddresses)
+                                    : legacyAddress),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(legacyPort)),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -671,6 +739,9 @@ class ClickHouseClientV2Test {
     cleanup.deferCleanup(testClient);
     String currentHost = "127.0.0.1".equals(host) ? "localhost" : "127.0.0.1";
     replaceEndpoints(testClient, "http://" + currentHost + ":" + port);
+    Object selectedEndpoint = selectedEndpoint(testClient);
+    String peerAddress = endpointHost(selectedEndpoint);
+    int peerPort = endpointPort(selectedEndpoint);
 
     QueryResponse response = testClient.query("select * from " + TABLE_NAME).join();
     response.close();
@@ -692,10 +763,11 @@ class ClickHouseClientV2Test {
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? host : currentHost),
                             equalTo(SERVER_PORT, port),
                             equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? peerAddress : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? (long) port : null),
+                                emitStableDatabaseSemconv() ? (long) peerPort : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -748,7 +820,7 @@ class ClickHouseClientV2Test {
   }
 
   @Test
-  void testMultipleEndpointsExcludeCredentialsAndUrlComponents() {
+  void testMultipleEndpointsExcludeCredentialsAndUrlComponents() throws Exception {
     List<String> endpoints =
         new ArrayList<>(
             asList(
@@ -769,8 +841,9 @@ class ClickHouseClientV2Test {
     String currentEndpoint = testClient.getEndpoints().iterator().next();
     String legacyAddress = UrlParser.getHost(currentEndpoint);
     Integer legacyPort = UrlParser.getPort(currentEndpoint);
-    String peerAddress = endpointHost(currentEndpoint);
-    int peerPort = URI.create(currentEndpoint).getPort();
+    Object selectedEndpoint = selectedEndpoint(testClient);
+    String peerAddress = endpointHost(selectedEndpoint);
+    int peerPort = endpointPort(selectedEndpoint);
 
     Throwable thrown = catchThrowable(() -> testClient.query("select 1").join());
     assertThat(thrown).isNotNull();
@@ -872,9 +945,7 @@ class ClickHouseClientV2Test {
     Integer legacyPort = UrlParser.getPort(currentEndpoint);
     String peerAddress = endpointHost(currentEndpoint);
     int peerPort = URI.create(currentEndpoint).getPort();
-    replaceRawEndpoint(testClient, "http://configured.example%3fpassword%3dsecret:8123");
-    captureServerInfo(testClient);
-    replaceRawEndpoint(testClient, currentEndpoint);
+    replaceServerInfo(testClient, "http://configured.example%3fpassword%3dsecret:8123");
 
     QueryResponse response = testClient.query("select 1").join();
     response.close();
@@ -921,14 +992,20 @@ class ClickHouseClientV2Test {
     }
   }
 
-  private static void replaceRawEndpoint(Client client, String endpoint) throws Exception {
-    Field endpointsField = Client.class.getDeclaredField("endpoints");
-    endpointsField.setAccessible(true);
-    endpointsField.set(client, singleton(endpoint));
-  }
+  private static void replaceServerInfo(Client client, String endpoint) throws Exception {
+    Class<?> singletons = singletons(client);
+    Class<?> serverInfoClass = serverInfo(client).getClass();
+    Method of = serverInfoClass.getDeclaredMethod("of", Set.class);
+    of.setAccessible(true);
+    Object replacement = of.invoke(null, singleton(endpoint));
 
-  private static void captureServerInfo(Client client) throws Exception {
-    singletons(client).getMethod("captureServerInfo", Client.class).invoke(null, client);
+    Field serverInfoField = singletons.getDeclaredField("SERVER_INFO_FIELD");
+    serverInfoField.setAccessible(true);
+    Object virtualField = serverInfoField.get(null);
+    virtualField
+        .getClass()
+        .getMethod("set", Object.class, Object.class)
+        .invoke(virtualField, client, replacement);
   }
 
   private static Object serverInfo(Client client) throws Exception {
@@ -956,6 +1033,72 @@ class ClickHouseClientV2Test {
   private static String endpointHost(String endpoint) {
     String host = URI.create(endpoint).getHost();
     return host.startsWith("[") ? host.substring(1, host.length() - 1) : host;
+  }
+
+  private static String endpointHost(Object endpoint) throws Exception {
+    String host = (String) endpoint.getClass().getMethod("getHost").invoke(endpoint);
+    return host.startsWith("[") ? host.substring(1, host.length() - 1) : host;
+  }
+
+  private static Object selectedEndpoint(Client client) throws Exception {
+    try {
+      Field selectorField = Client.class.getDeclaredField("nodeSelector");
+      selectorField.setAccessible(true);
+      Object selector = selectorField.get(client);
+      return selector.getClass().getMethod("getEndpoint").invoke(selector);
+    } catch (NoSuchFieldException ignored) {
+      Field endpointsField;
+      try {
+        endpointsField = Client.class.getDeclaredField("serverNodes");
+      } catch (NoSuchFieldException ignore) {
+        endpointsField = Client.class.getDeclaredField("endpoints");
+      }
+      endpointsField.setAccessible(true);
+      return ((List<?>) endpointsField.get(client)).get(0);
+    }
+  }
+
+  private static int endpointPort(Object endpoint) throws Exception {
+    return (Integer) endpoint.getClass().getMethod("getPort").invoke(endpoint);
+  }
+
+  private static boolean isClassPresent(String className) {
+    try {
+      Class.forName(className, false, Client.class.getClassLoader());
+      return true;
+    } catch (ClassNotFoundException ignored) {
+      return false;
+    }
+  }
+
+  private static void putUnreachableEndpointFirst(Client client, int unavailablePort)
+      throws Exception {
+    Field endpointsField = Client.class.getDeclaredField("endpoints");
+    endpointsField.setAccessible(true);
+    List<?> endpoints = (List<?>) endpointsField.get(client);
+    List<Object> orderedEndpoints = new ArrayList<>(endpoints.size());
+    Object unavailableEndpoint = null;
+    for (Object endpoint : endpoints) {
+      int endpointPort = (Integer) endpoint.getClass().getMethod("getPort").invoke(endpoint);
+      if (endpointPort == unavailablePort) {
+        unavailableEndpoint = endpoint;
+      } else {
+        orderedEndpoints.add(endpoint);
+      }
+    }
+    assertThat(unavailableEndpoint).isNotNull();
+    orderedEndpoints.add(0, unavailableEndpoint);
+    endpointsField.set(client, orderedEndpoints);
+
+    Class<?> selectorClass =
+        Class.forName(
+            "com.clickhouse.client.api.transport.ClientNodeSelector",
+            true,
+            Client.class.getClassLoader());
+    Object selector = selectorClass.getConstructor(List.class).newInstance(orderedEndpoints);
+    Field selectorField = Client.class.getDeclaredField("nodeSelector");
+    selectorField.setAccessible(true);
+    selectorField.set(client, selector);
   }
 
   private static Class<?> singletons(Client client) throws Exception {
