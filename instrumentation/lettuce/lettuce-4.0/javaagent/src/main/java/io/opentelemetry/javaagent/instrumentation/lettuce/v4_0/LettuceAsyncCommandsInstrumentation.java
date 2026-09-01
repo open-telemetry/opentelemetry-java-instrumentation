@@ -94,7 +94,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
         @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
         @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       LettuceSingletons.attachAddress(command, commands.getConnection());
-      if (LettuceBatchContext.isBatching(commands)) {
+      if (LettuceBatchContext.prepareCommandPeer(commands, command)) {
         return AdviceScope.captureForBatching(commands);
       }
 

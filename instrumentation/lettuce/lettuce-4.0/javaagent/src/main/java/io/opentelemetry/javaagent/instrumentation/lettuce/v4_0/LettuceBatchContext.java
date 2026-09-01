@@ -41,8 +41,14 @@ public final class LettuceBatchContext {
     BATCH_STATE.set(commands, batching ? new BatchState() : null);
   }
 
-  public static boolean isBatching(AbstractRedisAsyncCommands<?, ?> commands) {
-    return BATCH_STATE.get(commands) != null;
+  public static boolean prepareCommandPeer(
+      AbstractRedisAsyncCommands<?, ?> commands, RedisCommand<?, ?, ?> command) {
+    BatchState state = BATCH_STATE.get(commands);
+    if (state == null) {
+      return false;
+    }
+    COMMAND_PEER.set(command, state.peerAddress);
+    return true;
   }
 
   public static boolean capture(
@@ -153,16 +159,6 @@ public final class LettuceBatchContext {
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
-      LettucePeerAddress commandPeer =
-          asyncCommand == null ? COMMAND_PEER.get(command) : COMMAND_PEER.get(asyncCommand);
-      InetSocketAddress address = commandPeer == null ? null : commandPeer.getAddress();
-      if (address != null) {
-        peerAddress.record(address);
-      }
-      COMMAND_PEER.set(command, peerAddress);
-      if (asyncCommand != null) {
-        COMMAND_PEER.set(asyncCommand, peerAddress);
-      }
       if (parentContext == null && asyncCommand != null) {
         parentContext = CONTEXT.get(asyncCommand);
       }

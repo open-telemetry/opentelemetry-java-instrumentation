@@ -44,8 +44,14 @@ public final class LettuceBatchContext {
     BATCH_STATE.set(endpoint, batching ? new BatchState() : null);
   }
 
-  public static boolean isBatching(DefaultEndpoint endpoint) {
-    return BATCH_STATE.get(endpoint) != null;
+  public static boolean prepareCommandPeer(
+      DefaultEndpoint endpoint, RedisCommand<?, ?, ?> command) {
+    BatchState state = BATCH_STATE.get(endpoint);
+    if (state == null) {
+      return false;
+    }
+    LettuceSingletons.useCommandPeer(command, state.peerAddress);
+    return true;
   }
 
   public static boolean capture(
@@ -157,7 +163,6 @@ public final class LettuceBatchContext {
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
-      LettuceSingletons.useCommandPeer(command, peerAddress);
       RedisServerTarget commandTarget = COMMAND_TARGET.get(command);
       if (commandTarget != null && !serverTargetsDisagree) {
         if (serverTarget == null) {
