@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -27,8 +28,8 @@ final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
+  private final List<RedisCommand<?, ?, ?>> commands;
   @Nullable private final InetSocketAddress serverAddress;
-  @Nullable private final LettuceCommandPeer peerAddress;
   @Nullable private final Integer databaseIndex;
   @Nullable private final RedisServerTarget serverTarget;
 
@@ -36,15 +37,15 @@ final class LettuceBatchRequest {
       String operationName,
       @Nullable String queryText,
       @Nullable Long batchSize,
+      List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable LettuceCommandPeer peerAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
+    this.commands = commands;
     this.serverAddress = serverAddress;
-    this.peerAddress = peerAddress;
     this.databaseIndex = databaseIndex;
     this.serverTarget = serverTarget;
   }
@@ -52,15 +53,14 @@ final class LettuceBatchRequest {
   static LettuceBatchRequest create(
       List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable LettuceCommandPeer peerAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
     return new LettuceBatchRequest(
         operationName(commands),
         queryText(commands),
         commands.size() != 1 ? (long) commands.size() : null,
+        commands,
         serverAddress,
-        peerAddress,
         databaseIndex,
         serverTarget);
   }
@@ -85,8 +85,8 @@ final class LettuceBatchRequest {
   }
 
   @Nullable
-  InetSocketAddress getPeerAddress() {
-    return peerAddress == null ? null : peerAddress.getAddress();
+  SocketAddress getPeerAddress() {
+    return LettuceSingletons.batchPeerAddress(commands);
   }
 
   @Nullable

@@ -8,28 +8,29 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
 final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final Long batchSize;
+  private final List<RedisCommand<?, ?, ?>> commands;
   @Nullable private final InetSocketAddress serverAddress;
-  @Nullable private final LettucePeerAddress peerAddress;
   @Nullable private final Integer databaseIndex;
   @Nullable private final RedisServerTarget serverTarget;
 
   private LettuceBatchRequest(
       String operationName,
       @Nullable Long batchSize,
+      List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable LettucePeerAddress peerAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
     this.batchSize = batchSize;
+    this.commands = commands;
     this.serverAddress = serverAddress;
-    this.peerAddress = peerAddress;
     this.databaseIndex = databaseIndex;
     this.serverTarget = serverTarget;
   }
@@ -37,14 +38,13 @@ final class LettuceBatchRequest {
   static LettuceBatchRequest create(
       List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable LettucePeerAddress peerAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
     return new LettuceBatchRequest(
         operationName(commands),
         commands.size() != 1 ? (long) commands.size() : null,
+        commands,
         serverAddress,
-        peerAddress,
         databaseIndex,
         serverTarget);
   }
@@ -64,9 +64,9 @@ final class LettuceBatchRequest {
   }
 
   @Nullable
-  InetSocketAddress getPeerAddress() {
+  SocketAddress getPeerAddress() {
     // Read when the span ends so an outbound write after the flush can still supply the peer.
-    return peerAddress != null ? peerAddress.getAddress() : null;
+    return LettuceSingletons.batchPeerAddress(commands);
   }
 
   @Nullable

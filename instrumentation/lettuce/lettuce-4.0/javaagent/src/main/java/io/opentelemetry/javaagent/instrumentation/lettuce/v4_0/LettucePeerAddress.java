@@ -6,44 +6,53 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 public class LettucePeerAddress {
-  private final boolean omitOnDifferentAddress;
-  @Nullable private InetSocketAddress address;
-  private boolean ambiguous;
+  private static final String DOMAIN_SOCKET_ADDRESS_CLASS =
+      "io.netty.channel.unix.DomainSocketAddress";
 
-  LettucePeerAddress() {
-    this(false);
-  }
+  @Nullable private SocketAddress address;
 
-  private LettucePeerAddress(boolean omitOnDifferentAddress) {
-    this.omitOnDifferentAddress = omitOnDifferentAddress;
-  }
+  LettucePeerAddress() {}
 
-  LettucePeerAddress(InetSocketAddress address) {
-    this(false);
+  LettucePeerAddress(SocketAddress address) {
     this.address = address;
   }
 
-  static LettucePeerAddress forBatch() {
-    return new LettucePeerAddress(true);
-  }
-
-  synchronized void record(InetSocketAddress address) {
-    if (ambiguous) {
-      return;
-    }
-    if (omitOnDifferentAddress && this.address != null && !this.address.equals(address)) {
-      this.address = null;
-      ambiguous = true;
-      return;
-    }
+  synchronized void record(SocketAddress address) {
     this.address = address;
   }
 
   @Nullable
-  synchronized InetSocketAddress getAddress() {
+  synchronized SocketAddress getAddress() {
     return address;
+  }
+
+  @Nullable
+  static String getNetworkPeerAddress(@Nullable SocketAddress peerAddress) {
+    if (peerAddress instanceof InetSocketAddress) {
+      InetSocketAddress inetPeerAddress = (InetSocketAddress) peerAddress;
+      return inetPeerAddress.isUnresolved() ? null : inetPeerAddress.getAddress().getHostAddress();
+    }
+    if (peerAddress != null
+        && peerAddress.getClass().getName().equals(DOMAIN_SOCKET_ADDRESS_CLASS)) {
+      try {
+        return (String) peerAddress.getClass().getMethod("path").invoke(peerAddress);
+      } catch (ReflectiveOperationException ignored) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  @Nullable
+  static Integer getNetworkPeerPort(@Nullable SocketAddress peerAddress) {
+    if (!(peerAddress instanceof InetSocketAddress)) {
+      return null;
+    }
+    InetSocketAddress inetPeerAddress = (InetSocketAddress) peerAddress;
+    return inetPeerAddress.isUnresolved() ? null : inetPeerAddress.getPort();
   }
 }

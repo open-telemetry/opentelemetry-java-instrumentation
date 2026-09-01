@@ -67,10 +67,9 @@ class LettuceConnectionInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) ChannelHandlerContext context, @Advice.Argument(1) Object message) {
       SocketAddress address = context.channel().remoteAddress();
-      if (!(address instanceof InetSocketAddress)) {
-        return;
+      if (address != null) {
+        LettuceSingletons.recordCommandPeers(message, address);
       }
-      LettuceSingletons.recordCommandPeers(message, (InetSocketAddress) address);
     }
   }
 }

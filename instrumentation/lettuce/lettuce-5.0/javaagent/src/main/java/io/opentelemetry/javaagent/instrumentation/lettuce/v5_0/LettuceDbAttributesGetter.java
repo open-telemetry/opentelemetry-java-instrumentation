@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -93,10 +94,8 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    InetSocketAddress peerAddress = LettuceSingletons.commandPeerAddress(request);
-    return peerAddress != null && !peerAddress.isUnresolved()
-        ? peerAddress.getAddress().getHostAddress()
-        : null;
+    SocketAddress peerAddress = LettuceSingletons.commandPeerAddress(request);
+    return LettuceCommandPeer.getNetworkPeerAddress(peerAddress);
   }
 
   @Nullable
@@ -105,7 +104,7 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    InetSocketAddress peerAddress = LettuceSingletons.commandPeerAddress(request);
-    return peerAddress != null && !peerAddress.isUnresolved() ? peerAddress.getPort() : null;
+    SocketAddress peerAddress = LettuceSingletons.commandPeerAddress(request);
+    return LettuceCommandPeer.getNetworkPeerPort(peerAddress);
   }
 }
