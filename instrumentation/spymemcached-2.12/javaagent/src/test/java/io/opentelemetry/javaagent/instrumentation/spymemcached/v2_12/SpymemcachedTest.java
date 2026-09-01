@@ -221,8 +221,10 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
                             equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -253,11 +255,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -268,7 +270,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
@@ -300,11 +302,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -315,7 +317,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(
                                 booleanKey("spymemcached.command.cancelled"),
                                 experimental(true)))));
@@ -374,11 +376,11 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? "net.spy.memcached.internal.CheckedOperationTimeoutException"
                                     : null),
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -389,7 +391,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -414,13 +416,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? "get" : "getBulk"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("getBulk"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -431,7 +431,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -452,11 +452,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "set"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("set"),
+                            stableDbOperation("set"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -467,7 +467,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -500,11 +500,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "set"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("set"),
+                            stableDbOperation("set"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -515,7 +515,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(
                                 booleanKey("spymemcached.command.cancelled"),
                                 experimental(true)))));
@@ -540,11 +540,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "add"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("add"),
+                            stableDbOperation("add"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -555,17 +555,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -576,7 +576,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
@@ -600,11 +600,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "add"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("add"),
+                            stableDbOperation("add"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -615,17 +615,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("add"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "add"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("add"),
+                            stableDbOperation("add"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -636,7 +636,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -658,11 +658,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "delete"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("delete"),
+                            stableDbOperation("delete"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -673,17 +673,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -694,7 +694,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
@@ -716,11 +716,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "delete"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("delete"),
+                            stableDbOperation("delete"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -731,7 +731,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -754,11 +754,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "replace"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("replace"),
+                            stableDbOperation("replace"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -769,17 +769,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -790,7 +790,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
@@ -816,11 +816,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "replace"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("replace"),
+                            stableDbOperation("replace"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -831,7 +831,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -855,11 +855,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "gets"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("gets"),
+                            stableDbOperation("gets"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -870,17 +870,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("append"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "append"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("append"),
+                            stableDbOperation("append"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -891,17 +891,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -912,7 +912,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
@@ -937,11 +937,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "gets"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("gets"),
+                            stableDbOperation("gets"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -952,17 +952,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("prepend"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "prepend"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("prepend"),
+                            stableDbOperation("prepend"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -973,17 +973,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -994,7 +994,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
@@ -1019,11 +1019,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "gets"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("gets"),
+                            stableDbOperation("gets"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1034,17 +1034,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("cas"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "cas"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("cas"),
+                            stableDbOperation("cas"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1055,7 +1055,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -1078,11 +1078,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "cas"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("cas"),
+                            stableDbOperation("cas"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1093,7 +1093,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -1114,11 +1114,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "touch"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("touch"),
+                            stableDbOperation("touch"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1129,7 +1129,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -1151,11 +1151,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "touch"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("touch"),
+                            stableDbOperation("touch"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1166,7 +1166,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -1188,13 +1188,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? "gat" : "getAndTouch"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("getAndTouch"),
+                            stableDbOperation("gat"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1205,7 +1203,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -1227,13 +1225,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? "gat" : "getAndTouch"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("getAndTouch"),
+                            stableDbOperation("gat"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1244,7 +1240,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -1270,11 +1266,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "decr"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("decr"),
+                            stableDbOperation("decr"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1285,17 +1281,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1306,7 +1302,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
@@ -1328,11 +1324,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "decr"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("decr"),
+                            stableDbOperation("decr"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1343,7 +1339,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -1407,11 +1403,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "incr"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("incr"),
+                            stableDbOperation("incr"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1422,17 +1418,17 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                            equalTo(SERVER_PORT, stableServerPort())),
                 span ->
                     span.hasName(spanName("get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1443,7 +1439,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
@@ -1465,11 +1461,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "incr"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? memcachedContainer.getHost() : null),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("incr"),
+                            stableDbOperation("incr"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1480,7 +1476,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, stableServerPort()))));
   }
 
   @Test
@@ -1601,7 +1597,11 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
                             equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? target : null),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? target
+                                    : retryAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1610,6 +1610,9 @@ class SpymemcachedTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv() ? (long) retryAddress.getPort() : null),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : (long) retryAddress.getPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("miss"))),
                 span ->
                     span.hasName(spanName("get", target))
@@ -1618,7 +1621,11 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
                             equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? target : null),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? target
+                                    : retryAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1627,6 +1634,9 @@ class SpymemcachedTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv() ? (long) retryAddress.getPort() : null),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : (long) retryAddress.getPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
@@ -1685,7 +1695,11 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
                             equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? target : null),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? target
+                                    : finalAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1693,9 +1707,12 @@ class SpymemcachedTest {
                                     : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) finalAddress.getPort() : null),
+                            equalTo(
+                                SERVER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? (long) finalAddress.getPort()
-                                    : null))));
+                                    ? null
+                                    : (long) finalAddress.getPort()))));
   }
 
   @Test
@@ -1782,7 +1799,6 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? null
                                     : Long.valueOf(memcachedAddress.getPort())),
-                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1795,20 +1811,14 @@ class SpymemcachedTest {
                                     : null),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
 
-    if (emitStableDatabaseSemconv()) {
-      assertDurationMetric(
-          testing,
-          "io.opentelemetry.spymemcached-2.12",
-          DB_SYSTEM_NAME,
-          maybeStable(DB_OPERATION),
-          NETWORK_PEER_ADDRESS,
-          NETWORK_PEER_PORT,
-          SERVER_ADDRESS,
-          SERVER_PORT);
-    } else {
-      assertDurationMetric(
-          testing, "io.opentelemetry.spymemcached-2.12", DB_SYSTEM_NAME, maybeStable(DB_OPERATION));
-    }
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        maybeStable(DB_OPERATION),
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS);
   }
 
   @Test
@@ -1831,9 +1841,11 @@ class SpymemcachedTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                            oldDbSystem(),
+                            stableDbSystem(),
+                            oldDbOperation("get"),
+                            stableDbOperation("get"),
+                            equalTo(SERVER_ADDRESS, stableServerAddress()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -1844,7 +1856,7 @@ class SpymemcachedTest {
                                 emitStableDatabaseSemconv()
                                     ? (long) memcachedAddress.getPort()
                                     : null),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, stableServerPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
