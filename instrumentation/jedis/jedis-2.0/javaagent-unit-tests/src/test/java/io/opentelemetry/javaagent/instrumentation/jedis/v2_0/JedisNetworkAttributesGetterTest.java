@@ -14,16 +14,21 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.Transaction;
 
 class JedisNetworkAttributesGetterTest {
 
-  @Test
-  void usesConnectedSocketAddress() {
-    InetSocketAddress peerAddress = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
+  @ParameterizedTest
+  @MethodSource("resolvedAddresses")
+  void usesConnectedInetSocketAddress(InetAddress address) {
+    InetSocketAddress peerAddress = new InetSocketAddress(address, 6379);
     Socket socket =
         new Socket() {
           @Override
@@ -129,7 +134,7 @@ class JedisNetworkAttributesGetterTest {
   }
 
   @Test
-  void peerAddressIsSnapshot() {
+  void laterCaptureReplacesEarlierPeerAddress() {
     InetSocketAddress first = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
     InetSocketAddress second = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380);
     Socket socket =
@@ -157,8 +162,9 @@ class JedisNetworkAttributesGetterTest {
         };
     JedisRequest request = JedisRequest.create(connection, Protocol.Command.GET);
     request.capturePeerAddress();
+    request.capturePeerAddress();
 
-    assertThat(request.getPeerAddress()).isEqualTo(first);
+    assertThat(request.getPeerAddress()).isEqualTo(second);
   }
 
   @Test
@@ -175,7 +181,7 @@ class JedisNetworkAttributesGetterTest {
   }
 
   @Test
-  void pipelineDropsPeerWhenCommandsUseDifferentPeerAddresses() {
+  void pipelineUsesLastSuccessfullyObservedPeerAddress() {
     JedisRequest first =
         requestWithPeer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379));
     first.capturePeerAddress();
@@ -185,11 +191,24 @@ class JedisNetworkAttributesGetterTest {
 
     JedisRequest pipelineRequest = JedisRequest.createPipeline(asList(first, second));
 
-    assertThat(pipelineRequest.getPeerAddress()).isNull();
+    assertThat(pipelineRequest.getPeerAddress()).isEqualTo(second.getPeerAddress());
   }
 
   @Test
-  void transactionDropsPeerWhenExecUsesDifferentSocket() {
+  void pipelineKeepsEarlierPeerWhenLaterSendHasNoReliableAddress() {
+    JedisRequest first =
+        requestWithPeer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379));
+    first.capturePeerAddress();
+    JedisRequest failed =
+        requestWithPeer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380));
+
+    JedisRequest pipelineRequest = JedisRequest.createPipeline(asList(first, failed));
+
+    assertThat(pipelineRequest.getPeerAddress()).isEqualTo(first.getPeerAddress());
+  }
+
+  @Test
+  void transactionUsesExecPeerAddress() {
     InetSocketAddress queuedPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
     JedisRequest queuedRequest = requestWithPeer(queuedPeer);
     queuedRequest.capturePeerAddress();
@@ -209,11 +228,11 @@ class JedisNetworkAttributesGetterTest {
       JedisPipelineContext.exitTransactionFraming();
     }
 
-    assertThat(transactionRequest.getPeerAddress()).isNull();
+    assertThat(transactionRequest.getPeerAddress()).isEqualTo(execPeer);
   }
 
   @Test
-  void transactionDropsPeerWhenExecFails() {
+  void transactionKeepsLastSuccessfulPeerWhenExecFails() {
     InetSocketAddress queuedPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
     JedisRequest queuedRequest = requestWithPeer(queuedPeer);
     queuedRequest.capturePeerAddress();
@@ -231,11 +250,11 @@ class JedisNetworkAttributesGetterTest {
       JedisPipelineContext.exitTransactionFraming();
     }
 
-    assertThat(transactionRequest.getPeerAddress()).isNull();
+    assertThat(transactionRequest.getPeerAddress()).isEqualTo(queuedPeer);
   }
 
   @Test
-  void transactionDropsPeerWhenMultiUsesDifferentSocket() {
+  void transactionUsesLastQueuedPeerAfterMulti() {
     InetSocketAddress queuedPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
     JedisRequest queuedRequest = requestWithPeer(queuedPeer);
     queuedRequest.capturePeerAddress();
@@ -247,7 +266,7 @@ class JedisNetworkAttributesGetterTest {
     JedisRequest transactionRequest =
         JedisRequest.createTransaction(singletonList(queuedRequest), multiRequest);
 
-    assertThat(transactionRequest.getPeerAddress()).isNull();
+    assertThat(transactionRequest.getPeerAddress()).isEqualTo(queuedPeer);
   }
 
   private static JedisRequest requestWithPeer(InetSocketAddress peerAddress) {
@@ -271,5 +290,11 @@ class JedisNetworkAttributesGetterTest {
           }
         };
     return JedisRequest.create(connection, Protocol.Command.GET);
+  }
+
+  private static Stream<InetAddress> resolvedAddresses() throws UnknownHostException {
+    return Stream.of(
+        InetAddress.getByAddress(new byte[] {127, 0, 0, 1}),
+        InetAddress.getByAddress(new byte[16]));
   }
 }
