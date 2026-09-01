@@ -21,7 +21,7 @@ class LettuceServerTargetsTest {
     RedisServerTarget target = LettuceServerTargets.of(RedisURI.create("redis://host:6379"));
 
     assertThat(target.getAddress()).isEqualTo("host");
-    assertThat(target.getPort()).isEqualTo(6379);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -30,7 +30,7 @@ class LettuceServerTargetsTest {
         LettuceServerTargets.of(RedisURI.create("redis://user:password@host:6379/2"));
 
     assertThat(target.getAddress()).isEqualTo("host");
-    assertThat(target.getPort()).isEqualTo(6379);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -90,7 +90,7 @@ class LettuceServerTargetsTest {
     redisUri.setPort(6380);
 
     assertThat(target.getAddress()).isEqualTo("host");
-    assertThat(target.getPort()).isEqualTo(6379);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
