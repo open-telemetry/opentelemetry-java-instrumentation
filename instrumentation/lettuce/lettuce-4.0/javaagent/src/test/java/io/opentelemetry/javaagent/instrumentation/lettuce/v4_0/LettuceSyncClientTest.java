@@ -231,7 +231,7 @@ class LettuceSyncClientTest {
     assertThat(masterSlaveConnection.sync().set("MASTER_SLAVE_COMMAND_KEY", "value"))
         .isEqualTo("OK");
 
-    String configuredTarget = host + ":" + port + "," + host + ":" + port;
+    String configuredTarget = host + "," + host + ":" + port;
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -242,8 +242,8 @@ class LettuceSyncClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(SERVER_PORT, null))));
+                            equalTo(SERVER_ADDRESS, host + "," + host),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
