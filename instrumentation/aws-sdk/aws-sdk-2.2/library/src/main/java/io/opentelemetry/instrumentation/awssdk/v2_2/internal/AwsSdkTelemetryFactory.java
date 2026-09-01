@@ -66,21 +66,8 @@ public final class AwsSdkTelemetryFactory {
                         false)));
     return builder
         .setBatchSendMessageCreationSpansEnabled(
-            awsSdk
-                .get("batch_send")
-                .get("message_creation_spans")
-                .getBoolean(
-                    "enabled",
-                    systemProperties.getBoolean(
-                        "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled",
-                        messaging
-                            .get("batch_send")
-                            .get("message_creation_spans")
-                            .getBoolean(
-                                "enabled",
-                                systemProperties.getBoolean(
-                                    "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled",
-                                    true)))))
+            MessagingConfig.isBatchSendMessageCreationSpansEnabled(
+                openTelemetry, "aws_sdk", systemProperties == SystemProperties.ENABLED))
         .setRecordIndividualHttpError(
             awsSdk.getBoolean(
                 "record_individual_http_error/development",

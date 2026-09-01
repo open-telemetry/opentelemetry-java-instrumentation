@@ -42,21 +42,7 @@ public final class TracingRequestHandler extends RequestHandler2 {
                         "otel.instrumentation.aws-sdk.experimental-span-attributes", false)));
     return builder
         .setBatchSendMessageCreationSpansEnabled(
-            awsSdk
-                .get("batch_send")
-                .get("message_creation_spans")
-                .getBoolean(
-                    "enabled",
-                    SystemProperty.getBoolean(
-                        "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled",
-                        messaging
-                            .get("batch_send")
-                            .get("message_creation_spans")
-                            .getBoolean(
-                                "enabled",
-                                SystemProperty.getBoolean(
-                                    "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled",
-                                    true)))))
+            MessagingConfig.isBatchSendMessageCreationSpansEnabled(openTelemetry, "aws_sdk", true))
         .setMessagingReceiveTelemetryEnabled(
             messaging
                 .get("receive_telemetry/development")
