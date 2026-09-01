@@ -13,6 +13,7 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +30,7 @@ class JettyTest extends TargetSystemTest {
   @ValueSource(ints = {9, 10, 11, 12})
   void testCollectedMetrics(int jettyMajorVersion) {
 
-    List<String> yamlFiles = singletonList("jetty.yaml");
+    Collection<String> yamlFiles = getAllRuleFilesForSystem("jetty");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());

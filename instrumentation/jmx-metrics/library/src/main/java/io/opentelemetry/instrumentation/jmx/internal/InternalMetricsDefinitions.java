@@ -66,14 +66,17 @@ public class InternalMetricsDefinitions {
     }
 
     String stablePath = String.format("jmx/rules/%s.yaml", system);
-    if (classLoader.getResource(stablePath) != null && includeStable) {
+    if (includeStable && classLoader.getResource(stablePath) != null) {
       result.add(stablePath);
     }
 
     String unstablePath = String.format("jmx/rules/%s_unstable.yaml", system);
-    if (classLoader.getResource(unstablePath) != null && includeUnstable) {
-      result.add(unstablePath);
+    if (includeUnstable) {
+      if (classLoader.getResource(unstablePath) != null) {
+        result.add(unstablePath);
+      }
     }
+
     return result;
   }
 }

@@ -10,12 +10,12 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -35,7 +35,8 @@ class WildflyTest extends TargetSystemTest {
         "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
       })
   void testWildflyMetrics(String dockerImage) {
-    List<String> yamlFiles = singletonList("wildfly.yaml");
+
+    Collection<String> yamlFiles = getAllRuleFilesForSystem("wildfly");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
