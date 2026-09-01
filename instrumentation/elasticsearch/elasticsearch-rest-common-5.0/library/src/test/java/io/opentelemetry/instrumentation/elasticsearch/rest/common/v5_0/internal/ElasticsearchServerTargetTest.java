@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -144,6 +145,62 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
+  void duplicateEndpointsAtAddressLimitArePreserved() {
+    String host = repeat("a", 127);
+
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(
+            asList(new HttpHost(host, 9200, "http"), new HttpHost(host, 9200, "http")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(host + "," + host).hasSize(255);
+    assertThat(target.getPort()).isEqualTo(9200);
+  }
+
+  @Test
+  void endpointsBeyondAddressLimitAreOmittedWholeAfterSorting() {
+    HttpHost ipv6 = new HttpHost("::1", -1, "http");
+    HttpHost longHost = new HttpHost(repeat("b", 240), 9200, "http");
+    HttpHost omittedHost = new HttpHost("z.example", 9201, "http");
+
+    ElasticsearchServerTarget first =
+        ElasticsearchServerTarget.of(asList(omittedHost, longHost, ipv6));
+    ElasticsearchServerTarget second =
+        ElasticsearchServerTarget.of(asList(ipv6, omittedHost, longHost));
+
+    assertThat(first).isNotNull();
+    assertThat(second).isNotNull();
+    assertThat(first.getAddress())
+        .isEqualTo("[::1]:80," + repeat("b", 240) + ":9200")
+        .hasSize(254)
+        .doesNotContain("z.example");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getPort()).isNull();
+    assertThat(second.getPort()).isNull();
+  }
+
+  @Test
+  void firstEndpointThatExceedsAddressLimitHasNoTarget() {
+    String hostAtLimit = repeat("a", 255);
+    String hostOverLimit = repeat("a", 256);
+
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(singletonList(new HttpHost(hostAtLimit, 9200, "http")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(hostAtLimit).hasSize(255);
+    assertThat(
+            ElasticsearchServerTarget.of(singletonList(new HttpHost(hostOverLimit, 9200, "http"))))
+        .isNull();
+    assertThat(
+            ElasticsearchServerTarget.of(
+                asList(
+                    new HttpHost("z.example", 9200, "http"),
+                    new HttpHost(hostOverLimit, 9200, "http"))))
+        .isNull();
+  }
+
+  @Test
   void severalHostsWithDifferentSchemesOmitThem() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(
@@ -235,5 +292,9 @@ class ElasticsearchServerTargetTest {
         argumentSet("case-insensitive HTTP", "HTTP", 80),
         argumentSet("HTTPS", "https", 443),
         argumentSet("case-insensitive HTTPS", "HTTPS", 443));
+  }
+
+  private static String repeat(String value, int count) {
+    return String.join("", nCopies(count, value));
   }
 }

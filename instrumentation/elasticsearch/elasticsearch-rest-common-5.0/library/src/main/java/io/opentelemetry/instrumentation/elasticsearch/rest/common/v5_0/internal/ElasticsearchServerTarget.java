@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
+import static java.util.Collections.singletonList;
+
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -15,6 +17,8 @@ import org.apache.http.HttpHost;
  * any time.
  */
 public class ElasticsearchServerTarget {
+
+  private static final int MAX_ADDRESS_LENGTH = 255;
 
   private final String address;
   @Nullable private final Integer port;
@@ -30,8 +34,12 @@ public class ElasticsearchServerTarget {
       if (host == null) {
         return null;
       }
+      String address = joinEndpointsWithinLimit(singletonList(host));
+      if (address == null) {
+        return null;
+      }
       int port = normalizedPort(httpHost);
-      return new ElasticsearchServerTarget(host, port >= 0 ? port : null);
+      return new ElasticsearchServerTarget(address, port >= 0 ? port : null);
     }
     return renderGroup(hosts);
   }
@@ -68,9 +76,29 @@ public class ElasticsearchServerTarget {
       endpoints.add(renderHostAndPort(addresses.get(i), portsMatch ? -1 : effectivePorts.get(i)));
     }
     endpoints.sort(String::compareTo);
+    String address = joinEndpointsWithinLimit(endpoints);
+    if (address == null) {
+      return null;
+    }
     return new ElasticsearchServerTarget(
-        String.join(",", endpoints),
-        portsMatch && sharedPort >= 0 && !allPortsAreDefault ? sharedPort : null);
+        address, portsMatch && sharedPort >= 0 && !allPortsAreDefault ? sharedPort : null);
+  }
+
+  @Nullable
+  private static String joinEndpointsWithinLimit(List<String> endpoints) {
+    StringBuilder address = new StringBuilder();
+    for (String endpoint : endpoints) {
+      int separatorLength = address.length() == 0 ? 0 : 1;
+      int available = MAX_ADDRESS_LENGTH - address.length() - separatorLength;
+      if (endpoint.length() > available) {
+        break;
+      }
+      if (separatorLength != 0) {
+        address.append(',');
+      }
+      address.append(endpoint);
+    }
+    return address.length() == 0 ? null : address.toString();
   }
 
   private static int normalizedPort(HttpHost httpHost) {
