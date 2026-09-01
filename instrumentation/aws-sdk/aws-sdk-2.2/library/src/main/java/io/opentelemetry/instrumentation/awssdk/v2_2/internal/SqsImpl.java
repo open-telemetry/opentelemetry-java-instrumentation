@@ -208,6 +208,7 @@ public final class SqsImpl {
     SendMessageBatchRequest batchRequest = (SendMessageBatchRequest) request;
     ArrayList<SendMessageBatchRequestEntry> entries = new ArrayList<>(batchRequest.entries());
     List<io.opentelemetry.context.Context> creationContexts = new ArrayList<>();
+    // Start each message creation span in a separate trace while preserving other context values.
     io.opentelemetry.context.Context creationParentContext = parentContext.with(Span.getInvalid());
 
     for (int i = 0; i < entries.size(); i++) {

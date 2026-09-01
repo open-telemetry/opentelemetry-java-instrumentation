@@ -162,6 +162,7 @@ public final class SqsImpl {
 
     SendMessageBatchRequest preparedRequest = request.clone();
     List<SendMessageBatchRequestEntry> preparedEntries = new ArrayList<>();
+    // Start each message creation span in a separate trace while preserving other context values.
     Context parentContext = Context.current().with(Span.getInvalid());
     for (SendMessageBatchRequestEntry entry : request.getEntries()) {
       String traceHeader = SqsMessageSystemAttributeAccess.getTraceHeader(entry);
