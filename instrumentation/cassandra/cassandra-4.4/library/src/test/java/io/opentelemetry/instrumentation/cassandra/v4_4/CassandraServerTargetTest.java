@@ -12,6 +12,8 @@ import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
@@ -25,6 +27,7 @@ import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
 import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
+import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -39,6 +42,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CassandraServerTargetTest {
 
+  private static final InetSocketAddress PROXY_ADDRESS =
+      InetSocketAddress.createUnresolved("proxy.example.com", 29042);
+
   @Mock private Session session;
   @Mock private InternalDriverContext context;
   @Mock private DriverConfig config;
@@ -46,15 +52,26 @@ class CassandraServerTargetTest {
   @Mock private MetadataManager metadataManager;
   @Mock private DefaultNode configuredNode;
   @Mock private DefaultNode programmaticNode;
+  @Mock private EndPoint customEndPoint;
 
   @Test
-  void singleContactPointKeepsItsHostAndPort() {
+  void singleContactPointOmitsTheDefaultPort() {
     CassandraServerTarget target =
         CassandraServerTarget.of(singletonList("cassandra.example.com:9042"));
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
-    assertThat(target.getPort()).isEqualTo(9042);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void singleContactPointExtractsANonDefaultPort() {
+    CassandraServerTarget target =
+        CassandraServerTarget.of(singletonList("cassandra.example.com:9142"));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
+    assertThat(target.getPort()).isEqualTo(9142);
   }
 
   @Test
@@ -63,7 +80,7 @@ class CassandraServerTargetTest {
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("::1");
-    assertThat(target.getPort()).isEqualTo(9042);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -74,26 +91,38 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void severalContactPointsBecomeOneAddressWithoutAPort() {
+  void severalContactPointsOmitTheSharedDefaultPort() {
     CassandraServerTarget target =
         CassandraServerTarget.of(asList("node1.example.com:9042", "10.0.0.5:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("10.0.0.5:9042,node1.example.com:9042");
+    assertThat(target.getAddress()).isEqualTo("10.0.0.5,node1.example.com");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void contactPointPermutationsHaveTheSameOrder() {
+  void severalContactPointsExtractASharedNonDefaultPort() {
+    CassandraServerTarget target =
+        CassandraServerTarget.of(asList("node1.example.com:9142", "10.0.0.5:9142"));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("10.0.0.5,node1.example.com");
+    assertThat(target.getPort()).isEqualTo(9142);
+  }
+
+  @Test
+  void mixedPortContactPointPermutationsHaveTheSameOrder() {
     CassandraServerTarget first =
-        CassandraServerTarget.of(asList("node2.example.com:9042", "node1.example.com:9042"));
+        CassandraServerTarget.of(asList("node2.example.com:9142", "node1.example.com:9042"));
     CassandraServerTarget second =
-        CassandraServerTarget.of(asList("node1.example.com:9042", "node2.example.com:9042"));
+        CassandraServerTarget.of(asList("node1.example.com:9042", "node2.example.com:9142"));
 
     assertThat(first).isNotNull();
     assertThat(second).isNotNull();
-    assertThat(first.getAddress()).isEqualTo("node1.example.com:9042,node2.example.com:9042");
+    assertThat(first.getAddress()).isEqualTo("node1.example.com:9042,node2.example.com:9142");
     assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getPort()).isNull();
+    assertThat(second.getPort()).isNull();
   }
 
   @Test
@@ -110,24 +139,85 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void explicitContactPointAddressesApplySharedPortRules() {
+    CassandraServerTarget defaultPortTarget =
+        CassandraServerTarget.ofAddresses(
+            asList(
+                InetSocketAddress.createUnresolved("node2.example.com", 9042),
+                InetSocketAddress.createUnresolved("node1.example.com", 9042)));
+    CassandraServerTarget nonDefaultPortTarget =
+        CassandraServerTarget.ofAddresses(
+            asList(
+                InetSocketAddress.createUnresolved("node2.example.com", 9142),
+                InetSocketAddress.createUnresolved("node1.example.com", 9142)));
+
+    assertThat(defaultPortTarget).isNotNull();
+    assertThat(defaultPortTarget.getAddress()).isEqualTo("node1.example.com,node2.example.com");
+    assertThat(defaultPortTarget.getPort()).isNull();
+    assertThat(nonDefaultPortTarget).isNotNull();
+    assertThat(nonDefaultPortTarget.getAddress()).isEqualTo("node1.example.com,node2.example.com");
+    assertThat(nonDefaultPortTarget.getPort()).isEqualTo(9142);
+  }
+
+  @Test
+  void explicitContactPointAddressesNormalizeIpv6Brackets() {
+    CassandraServerTarget target =
+        CassandraServerTarget.ofAddresses(
+            asList(
+                InetSocketAddress.createUnresolved("[::1]", 9042),
+                InetSocketAddress.createUnresolved("node.example.com", 9142)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("[::1]:9042,node.example.com:9142");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void unsafeExplicitContactPointAddressesHaveNoTarget() {
+    assertThat(CassandraServerTarget.ofAddresses(singletonList((InetSocketAddress) null))).isNull();
+    assertThat(
+            CassandraServerTarget.ofAddresses(
+                singletonList(InetSocketAddress.createUnresolved("node.example.com", 0))))
+        .isNull();
+    assertThat(
+            CassandraServerTarget.ofAddresses(
+                singletonList(
+                    InetSocketAddress.createUnresolved("user:password@node.example.com", 9042))))
+        .isNull();
+    assertThat(
+            CassandraServerTarget.ofAddresses(
+                singletonList(InetSocketAddress.createUnresolved("[::1", 9042))))
+        .isNull();
+  }
+
+  @Test
   void duplicateConfiguredContactPointsArePreserved() {
     CassandraServerTarget target =
         CassandraServerTarget.of(
             asList("cassandra.example.com:9042", "cassandra.example.com:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress())
-        .isEqualTo("cassandra.example.com:9042,cassandra.example.com:9042");
+    assertThat(target.getAddress()).isEqualTo("cassandra.example.com,cassandra.example.com");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void ipv6ContactPointsStayBracketedInAGroup() {
+  void ipv6ContactPointsOmitBracketsWhenTheyShareAPort() {
     CassandraServerTarget target =
         CassandraServerTarget.of(asList("[::1]:9042", "2001:db8::1:9042", "10.0.0.5:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("10.0.0.5:9042,[2001:db8::1]:9042,[::1]:9042");
+    assertThat(target.getAddress()).isEqualTo("10.0.0.5,2001:db8::1,::1");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void ipv6ContactPointsStayBracketedWhenPortsAreMixed() {
+    CassandraServerTarget target =
+        CassandraServerTarget.of(asList("[::1]:9042", "2001:db8::1:9142", "10.0.0.5:9042"));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("10.0.0.5:9042,[2001:db8::1]:9142,[::1]:9042");
     assertThat(target.getPort()).isNull();
   }
 
@@ -137,13 +227,23 @@ class CassandraServerTargetTest {
     assertThat(CassandraServerTarget.of((List<String>) null)).isNull();
     assertThat(CassandraServerTarget.of(singletonList("  "))).isNull();
     assertThat(CassandraServerTarget.of(singletonList("node.example.com:not-a-port"))).isNull();
+    assertThat(CassandraServerTarget.of(singletonList("node.example.com:0"))).isNull();
+    assertThat(CassandraServerTarget.of(singletonList("[::1:9042"))).isNull();
+    assertThat(CassandraServerTarget.of(singletonList("user:password@node.example.com:9042")))
+        .isNull();
+    assertThat(CassandraServerTarget.of(singletonList("node.example.com/path?token=secret:9042")))
+        .isNull();
+    assertThat(
+            CassandraServerTarget.of(
+                asList("node.example.com:9042", "user:password@other.example.com:9042")))
+        .isNull();
 
     CassandraServerTarget target =
         CassandraServerTarget.of(
             asList("missing-port", "node.example.com:9042", "invalid:not-a-port", "[::1]:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]:9042,node.example.com:9042");
+    assertThat(target.getAddress()).isEqualTo("::1,node.example.com");
     assertThat(target.getPort()).isNull();
   }
 
@@ -154,6 +254,40 @@ class CassandraServerTargetTest {
     when(metadataManager.wasImplicitContactPoint()).thenReturn(true);
 
     assertThat(CassandraServerTarget.of(session)).isNull();
+  }
+
+  @Test
+  void sessionWithSniContactPointHasNoStableTarget() {
+    configureMetadataContactPoint(new SniEndPoint(PROXY_ADDRESS, "host-id"));
+
+    assertThat(CassandraServerTarget.of(session)).isNull();
+  }
+
+  @Test
+  void sessionWithCustomDiscoveryEndPointHasNoStableTarget() {
+    configureMetadataContactPoint(customEndPoint);
+
+    assertThat(CassandraServerTarget.of(session)).isNull();
+    verify(customEndPoint, never()).resolve();
+  }
+
+  @Test
+  void capturedSniContactPointHasNoStableTarget() {
+    configureContactPoints(emptyList());
+    when(session.getContext()).thenReturn(context);
+
+    assertThat(
+            CassandraServerTarget.of(session, singleton(new SniEndPoint(PROXY_ADDRESS, "host-id"))))
+        .isNull();
+  }
+
+  @Test
+  void capturedCustomDiscoveryEndPointHasNoStableTarget() {
+    configureContactPoints(emptyList());
+    when(session.getContext()).thenReturn(context);
+
+    assertThat(CassandraServerTarget.of(session, singleton(customEndPoint))).isNull();
+    verify(customEndPoint, never()).resolve();
   }
 
   @Test
@@ -232,8 +366,7 @@ class CassandraServerTargetTest {
     CassandraServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress())
-        .isEqualTo("duplicate.example.com:9042,duplicate.example.com:9042");
+    assertThat(target.getAddress()).isEqualTo("duplicate.example.com,duplicate.example.com");
     assertThat(target.getPort()).isNull();
   }
 
@@ -289,7 +422,7 @@ class CassandraServerTargetTest {
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("localhost.");
-    assertThat(target.getPort()).isEqualTo(9042);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -310,7 +443,39 @@ class CassandraServerTargetTest {
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("::1");
-    assertThat(target.getPort()).isEqualTo(9042);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void sessionPreservesAnIpv4MappedIpv6LiteralAfterNormalization() {
+    configureContactPoints(singletonList("[::ffff:127.0.0.1]:9042"));
+    when(session.getContext()).thenReturn(context);
+    when(context.getMetadataManager()).thenReturn(metadataManager);
+    when(metadataManager.getContactPoints()).thenReturn(singleton(configuredNode));
+    when(configuredNode.getEndPoint())
+        .thenReturn(new DefaultEndPoint(InetSocketAddress.createUnresolved("127.0.0.1", 9042)));
+
+    CassandraServerTarget target = CassandraServerTarget.of(session);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("::ffff:127.0.0.1");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void sessionPreservesANoncanonicalIpv4LiteralAfterNormalization() {
+    configureContactPoints(singletonList("127.000.000.001:9042"));
+    when(session.getContext()).thenReturn(context);
+    when(context.getMetadataManager()).thenReturn(metadataManager);
+    when(metadataManager.getContactPoints()).thenReturn(singleton(configuredNode));
+    when(configuredNode.getEndPoint())
+        .thenReturn(new DefaultEndPoint(InetSocketAddress.createUnresolved("127.0.0.1", 9042)));
+
+    CassandraServerTarget target = CassandraServerTarget.of(session);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("127.000.000.001");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -331,7 +496,7 @@ class CassandraServerTargetTest {
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("configured.example.com");
-    assertThat(target.getPort()).isEqualTo(9042);
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -359,5 +524,13 @@ class CassandraServerTargetTest {
     when(config.getDefaultProfile()).thenReturn(defaultProfile);
     when(defaultProfile.getStringList(DefaultDriverOption.CONTACT_POINTS, emptyList()))
         .thenReturn(contactPoints);
+  }
+
+  private void configureMetadataContactPoint(EndPoint endPoint) {
+    configureContactPoints(emptyList());
+    when(session.getContext()).thenReturn(context);
+    when(context.getMetadataManager()).thenReturn(metadataManager);
+    when(metadataManager.getContactPoints()).thenReturn(singleton(configuredNode));
+    when(configuredNode.getEndPoint()).thenReturn(endPoint);
   }
 }
