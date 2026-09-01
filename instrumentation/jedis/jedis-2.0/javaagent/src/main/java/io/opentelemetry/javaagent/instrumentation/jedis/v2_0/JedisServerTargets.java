@@ -21,7 +21,8 @@ public class JedisServerTargets {
     }
     List<String> endpoints = new ArrayList<>(shards.size());
     for (JedisShardInfo shard : shards) {
-      endpoints.add(RedisServerTarget.endpoint(shard.getHost(), shard.getPort()));
+      endpoints.add(
+          shard == null ? null : RedisServerTarget.endpoint(shard.getHost(), shard.getPort()));
     }
     return RedisServerTarget.ofEndpoints(endpoints);
   }
@@ -46,9 +47,7 @@ public class JedisServerTargets {
     }
     List<String> endpoints = new ArrayList<>(nodes.size());
     for (Object node : nodes) {
-      if (node != null) {
-        endpoints.add(RedisServerTarget.normalizeHostAndPort(node.toString()));
-      }
+      endpoints.add(node == null ? null : RedisServerTarget.normalizeHostAndPort(node.toString()));
     }
     return endpoints;
   }

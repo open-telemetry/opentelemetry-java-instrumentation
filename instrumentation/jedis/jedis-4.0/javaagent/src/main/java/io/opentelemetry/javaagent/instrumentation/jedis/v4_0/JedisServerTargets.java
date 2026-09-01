@@ -34,6 +34,8 @@ public class JedisServerTargets {
       if (value instanceof HostAndPort) {
         HostAndPort node = (HostAndPort) value;
         endpoints.add(RedisServerTarget.endpoint(node.getHost(), node.getPort()));
+      } else {
+        endpoints.add(null);
       }
     }
     return endpoints;
@@ -53,6 +55,8 @@ public class JedisServerTargets {
           } else {
             endpoints.add(RedisServerTarget.normalizeHostAndPort(sentinel.toString()));
           }
+        } else {
+          endpoints.add(null);
         }
       }
     }

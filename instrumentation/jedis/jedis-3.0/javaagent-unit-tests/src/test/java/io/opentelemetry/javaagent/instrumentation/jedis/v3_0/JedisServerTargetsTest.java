@@ -99,6 +99,14 @@ class JedisServerTargetsTest {
   }
 
   @Test
+  void sentinelListWithNullMemberFailsClosed() {
+    assertThat(
+            JedisServerTargets.ofSentinels(
+                "mymaster", new LinkedHashSet<>(asList("sentinel1:26379", null))))
+        .isNull();
+  }
+
+  @Test
   void clusterNodesAreSorted() {
     RedisServerTarget target =
         JedisServerTargets.ofNodes(
@@ -122,6 +130,11 @@ class JedisServerTargetsTest {
   void noClusterNodes() {
     assertThat(JedisServerTargets.ofNodes(null)).isNull();
     assertThat(JedisServerTargets.ofNodes(emptyList())).isNull();
+  }
+
+  @Test
+  void clusterNodeListWithNullMemberFailsClosed() {
+    assertThat(JedisServerTargets.ofNodes(asList(new HostAndPort("node1", 7000), null))).isNull();
   }
 
   private static Set<String> sentinels(String... addresses) {
