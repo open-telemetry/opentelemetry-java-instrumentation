@@ -12,6 +12,8 @@ import javax.annotation.Nullable;
 
 public class VertxSqlAddressGroup {
 
+  private static final int MAX_ENDPOINT_LIST_LENGTH = 255;
+
   private final List<Endpoint> endpoints;
   @Nullable private final String address;
   @Nullable private final Integer port;
@@ -98,11 +100,21 @@ public class VertxSqlAddressGroup {
 
     StringBuilder value = new StringBuilder();
     for (Endpoint endpoint : endpoints) {
-      if (value.length() > 0) {
+      int endpointStart = value.length();
+      if (endpointStart > 0) {
         value.append(',');
       }
       Integer effectivePort = endpoint.port != null ? endpoint.port : defaultPort;
       appendHostPort(value, endpoint.host, samePort ? null : effectivePort);
+      if (value.length() > MAX_ENDPOINT_LIST_LENGTH) {
+        value.setLength(endpointStart);
+        break;
+      }
+    }
+    if (value.length() == 0) {
+      address = null;
+      port = null;
+      return;
     }
     address = value.toString();
     port = samePort && !commonPort.equals(defaultPort) ? commonPort : null;

@@ -113,6 +113,16 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
+  void serverListDoesNotReportPartialEndpoint()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    PgConnectOptions first = connectOptions().setPort(port);
+    PgConnectOptions second = connectOptions().setHost(hostOfLength(250)).setPort(port + 1);
+    Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
+
+    assertServerListTarget(pool, host + ":" + port);
+  }
+
+  @Test
   void preparedStatementServerListIsReportedAsOneTarget()
       throws InterruptedException, ExecutionException, TimeoutException {
     PgConnectOptions first = connectOptions().setPort(port);
@@ -320,5 +330,13 @@ class VertxSqlClientServerListTest {
 
   private static PgConnectOptions connectOptions() {
     return new PgConnectOptions().setHost(host).setDatabase(DB).setUser(USER_DB).setPassword(PW_DB);
+  }
+
+  private static String hostOfLength(int length) {
+    StringBuilder host = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+      host.append('a');
+    }
+    return host.toString();
   }
 }

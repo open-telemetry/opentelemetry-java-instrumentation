@@ -138,6 +138,59 @@ class VertxSqlAddressGroupTest {
   }
 
   @Test
+  void keepsCompleteEndpointListAt255Characters() {
+    String firstHost = hostOfLength(250);
+    VertxSqlAddressGroup addressGroup =
+        VertxSqlAddressGroup.of(
+            asList(
+                new SqlConnectOptions().setHost(firstHost).setPort(1234),
+                new SqlConnectOptions().setHost("db.example").setPort(1234)),
+            "other_sql");
+
+    assertThat(addressGroup.getAddress()).isEqualTo(firstHost + ":1234");
+    assertThat(addressGroup.getPort()).isNull();
+  }
+
+  @Test
+  void omitsAddressAndPortWhenFirstRenderedEndpointExceeds255Characters() {
+    VertxSqlAddressGroup addressGroup =
+        VertxSqlAddressGroup.of(
+            asList(
+                new SqlConnectOptions().setHost(hostOfLength(251)).setPort(1234),
+                new SqlConnectOptions().setHost("db.example").setPort(1234)),
+            "other_sql");
+
+    assertThat(addressGroup.getAddress()).isNull();
+    assertThat(addressGroup.getPort()).isNull();
+  }
+
+  @Test
+  void doesNotAppendPartialEndpoint() {
+    VertxSqlAddressGroup addressGroup =
+        VertxSqlAddressGroup.of(
+            asList(
+                new SqlConnectOptions().setHost("primary.example").setPort(5432),
+                new SqlConnectOptions().setHost(hostOfLength(250)).setPort(15432)),
+            "postgresql");
+
+    assertThat(addressGroup.getAddress()).isEqualTo("primary.example:5432");
+    assertThat(addressGroup.getPort()).isNull();
+  }
+
+  @Test
+  void preservesSharedPortWhenEndpointListIsTruncated() {
+    VertxSqlAddressGroup addressGroup =
+        VertxSqlAddressGroup.of(
+            asList(
+                new SqlConnectOptions().setHost("primary.example").setPort(6432),
+                new SqlConnectOptions().setHost(hostOfLength(250)).setPort(6432)),
+            "postgresql");
+
+    assertThat(addressGroup.getAddress()).isEqualTo("primary.example");
+    assertThat(addressGroup.getPort()).isEqualTo(6432);
+  }
+
+  @Test
   void canNormalizeAStoredSnapshotOnceTheDriverIsKnown() {
     SqlConnectOptions options = new SqlConnectOptions().setHost("db.example").setPort(5432);
     VertxSqlAddressGroup addressGroup = VertxSqlAddressGroup.of(options);
@@ -168,5 +221,13 @@ class VertxSqlAddressGroupTest {
             VertxSqlAddressGroup.of(
                 new SqlConnectOptions().setHost(host).setPort(5432), "postgresql"))
         .isNull();
+  }
+
+  private static String hostOfLength(int length) {
+    StringBuilder host = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+      host.append('a');
+    }
+    return host.toString();
   }
 }
