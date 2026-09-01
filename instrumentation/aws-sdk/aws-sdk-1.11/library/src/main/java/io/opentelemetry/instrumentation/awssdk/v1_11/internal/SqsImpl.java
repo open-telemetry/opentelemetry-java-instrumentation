@@ -179,6 +179,7 @@ public final class SqsImpl {
         continue;
       }
       Context creationContext = producerCreateInstrumenter.start(parentContext, createRequest);
+      // A no-op tracer can pass shouldStart() but return a context with an invalid span.
       if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
         producerCreateInstrumenter.end(creationContext, createRequest, null, null);
         preparedEntries.add(entry.clone());

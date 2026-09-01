@@ -239,6 +239,7 @@ public final class SqsImpl {
 
       io.opentelemetry.context.Context creationContext =
           producerCreateInstrumenter.start(creationParentContext, createRequest);
+      // A no-op tracer can pass shouldStart() but return a context with an invalid span.
       if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
         producerCreateInstrumenter.end(creationContext, createRequest, null, null);
         continue;
