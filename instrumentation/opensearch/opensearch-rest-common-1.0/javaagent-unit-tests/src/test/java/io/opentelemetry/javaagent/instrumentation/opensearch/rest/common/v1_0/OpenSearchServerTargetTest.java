@@ -12,8 +12,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchServerTarget.Endpoint;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.stream.Stream;
+import org.apache.http.HttpHost;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -80,6 +83,19 @@ class OpenSearchServerTargetTest {
   }
 
   @Test
+  void mixedDefaultAndNonDefaultPortsStayInTheAddressList() {
+    OpenSearchServerTarget target =
+        OpenSearchServerTarget.of(
+            asList(
+                new Endpoint("non-default.example", 9200, "http"),
+                new Endpoint("default.example", -1, "http")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("default.example:80,non-default.example:9200");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void sharedNonDefaultPortIsSeparatedFromIpv4AndIpv6Addresses() {
     OpenSearchServerTarget target =
         OpenSearchServerTarget.of(
@@ -91,7 +107,7 @@ class OpenSearchServerTargetTest {
   }
 
   @Test
-  void mixedHttpAndHttpsDefaultPortsAreOmitted() {
+  void mixedHttpAndHttpsDefaultPortsStayInTheAddressList() {
     OpenSearchServerTarget target =
         OpenSearchServerTarget.of(
             asList(
@@ -99,7 +115,7 @@ class OpenSearchServerTargetTest {
                 new Endpoint("plain.example", 80, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("plain.example,secure.example");
+    assertThat(target.getAddress()).isEqualTo("plain.example:80,secure.example:443");
     assertThat(target.getPort()).isNull();
   }
 
@@ -196,6 +212,23 @@ class OpenSearchServerTargetTest {
                 asList(
                     new Endpoint("h1", 9200, "https"),
                     new Endpoint("user:secret@", 9200, "https"))))
+        .isNull();
+  }
+
+  @Test
+  void resolvedHttpHostAliasContainingCommaHasNoTarget() throws UnknownHostException {
+    HttpHost unsafeHost =
+        new HttpHost(
+            InetAddress.getByAddress("h1.example,h2.example", new byte[] {127, 0, 0, 1}),
+            9200,
+            "http");
+    Endpoint unsafeEndpoint =
+        new Endpoint(unsafeHost.getHostName(), unsafeHost.getPort(), unsafeHost.getSchemeName());
+
+    assertThat(OpenSearchServerTarget.of(singletonList(unsafeEndpoint))).isNull();
+    assertThat(
+            OpenSearchServerTarget.of(
+                asList(new Endpoint("safe.example", 9200, "http"), unsafeEndpoint)))
         .isNull();
   }
 
