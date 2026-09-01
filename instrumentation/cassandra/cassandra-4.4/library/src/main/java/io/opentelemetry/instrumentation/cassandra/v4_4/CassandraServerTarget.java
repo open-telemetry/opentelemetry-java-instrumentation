@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 final class CassandraServerTarget {
 
   private static final int DEFAULT_PORT = 9042;
+  private static final int MAX_ADDRESS_LENGTH = 255;
 
   private final String address;
   @Nullable private final Integer port;
@@ -177,12 +178,31 @@ final class CassandraServerTarget {
 
     if (allPortsEqual) {
       hosts.sort(String::compareTo);
-      return new CassandraServerTarget(
-          String.join(",", hosts), commonPort == DEFAULT_PORT ? null : commonPort);
+      String address = joinWithinLimit(hosts);
+      return address == null
+          ? null
+          : new CassandraServerTarget(address, commonPort == DEFAULT_PORT ? null : commonPort);
     }
 
     endpoints.sort(String::compareTo);
-    return new CassandraServerTarget(String.join(",", endpoints), null);
+    String address = joinWithinLimit(endpoints);
+    return address == null ? null : new CassandraServerTarget(address, null);
+  }
+
+  @Nullable
+  private static String joinWithinLimit(List<String> values) {
+    StringBuilder result = new StringBuilder();
+    for (String value : values) {
+      int separatorLength = result.length() == 0 ? 0 : 1;
+      if (value.length() > MAX_ADDRESS_LENGTH - result.length() - separatorLength) {
+        break;
+      }
+      if (separatorLength != 0) {
+        result.append(',');
+      }
+      result.append(value);
+    }
+    return result.length() == 0 ? null : result.toString();
   }
 
   private static boolean matches(
