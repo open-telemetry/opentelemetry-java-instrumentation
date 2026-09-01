@@ -41,18 +41,18 @@ BedrockRuntimeAsyncClient bedrockClient = telemetry.wrapBedrockRuntimeClient(bed
 
 ## Trace propagation
 
-The AWS SDK instrumentation always injects the trace header into the request
-using the [AWS Trace Header](https://docs.aws.amazon.com/xray/latest/devguide/xray-concepts.html#xray-concepts-tracingheader) format.
-This format is the only format recognized by AWS managed services, and populating will allow
-propagating the trace through them.
+The AWS SDK v2 instrumentation injects the current context into the outbound HTTP request's
+`X-Amzn-Trace-Id` header using the
+[AWS Trace Header](https://docs.aws.amazon.com/xray/latest/devguide/xray-concepts.html#xray-concepts-tracingheader)
+format. This is the format recognized by AWS managed services.
 
-For SQS batch sends under stable messaging semantic conventions, when X-Ray propagation is enabled,
-the instrumentation writes each message creation context to that entry's `AWSTraceHeader` message
-system attribute. This uses the AWS-defined per-message carrier and does not consume one of the ten
-user message attributes. The X-Ray propagation setting also controls the shared request trace header,
-so disabling it disables both carriers. On SDK versions that do not support per-entry message system
-attributes, the configured messaging propagator can still inject each creation context into user
-message attributes when the experimental option is enabled and attribute capacity permits.
+For SQS `SendMessageBatch` operations under stable messaging semantic conventions, when X-Ray
+propagation is enabled, the instrumentation also writes each message creation context to that
+entry's `AWSTraceHeader` message system attribute. This per-message carrier is separate from the
+shared HTTP request header and does not consume one of the ten user message attributes. The X-Ray
+propagation setting controls both carriers. On SDK versions that do not support per-entry message
+system attributes, the configured messaging propagator can still inject each creation context into
+user message attributes when the experimental option is enabled and attribute capacity permits.
 
 Additionally, you can enable an experimental option to use the configured propagator to inject into
 message attributes (see [parent README](../../README.md)). This currently supports the following AWS APIs:
