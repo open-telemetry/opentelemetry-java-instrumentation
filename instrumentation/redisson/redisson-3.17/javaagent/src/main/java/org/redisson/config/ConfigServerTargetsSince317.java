@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-public final class ConfigServerTargetsSince317 {
+public class ConfigServerTargetsSince317 {
 
   private static final Logger logger =
       Logger.getLogger(ConfigServerTargetsSince317.class.getName());

@@ -12,7 +12,7 @@ import org.redisson.client.RedisClient;
 import org.redisson.client.RedisConnection;
 import org.redisson.connection.MasterSlaveConnectionManager;
 
-public final class RedissonServerTargets {
+public class RedissonServerTargets {
 
   private static final VirtualField<MasterSlaveConnectionManager, RedisServerTarget>
       MANAGER_TARGET =
