@@ -23,7 +23,6 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -58,7 +57,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     public static <K, V, T> LettuceReactiveCommandSupplier<K, V, T> wrapCommandSupplier(
         @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
-      return new LettuceReactiveCommandSupplier<>(supplier, commands.getConnection());
+      return new LettuceReactiveCommandSupplier<>(supplier);
     }
 
     // throwables wouldn't matter here, because no spans have been started due to redis command not
@@ -69,16 +68,9 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Return Mono<T> originalPublisher,
         @Advice.Enter LettuceReactiveCommandSupplier<K, V, T> commandSupplier) {
-      RedisCommand<K, V, T> command = commandSupplier.getTracingCommand();
-      Mono<T> publisher = originalPublisher;
-      boolean finishSpanOnClose = !expectsResponse(command);
-      LettuceMonoDualConsumer<? super Subscription, T> mdc =
-          new LettuceMonoDualConsumer<>(command, commands.getConnection(), finishSpanOnClose);
-      publisher = publisher.doOnSubscribe(mdc);
-      if (!finishSpanOnClose) {
-        publisher = mdc.finishSpanOnTerminal(publisher);
-      }
-      return publisher;
+      boolean commandExpectsResponse = expectsResponse(commandSupplier.getTracingCommand());
+      return LettuceMonoDualConsumer.monitor(
+          originalPublisher, commands.getConnection(), commandExpectsResponse);
     }
   }
 
@@ -90,7 +82,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     public static <K, V, T> LettuceReactiveCommandSupplier<K, V, T> wrapCommandSupplier(
         @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
-      return new LettuceReactiveCommandSupplier<>(supplier, commands.getConnection());
+      return new LettuceReactiveCommandSupplier<>(supplier);
     }
 
     // if there is an exception thrown, then don't make spans
@@ -100,18 +92,9 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Return Flux<T> originalPublisher,
         @Advice.Enter LettuceReactiveCommandSupplier<K, V, T> commandSupplier) {
-      RedisCommand<K, V, T> command = commandSupplier.getTracingCommand();
-      Flux<T> publisher = originalPublisher;
-
-      boolean expectsResponse = expectsResponse(command);
-      LettuceFluxTerminationRunnable handler =
-          new LettuceFluxTerminationRunnable(command, commands.getConnection(), expectsResponse);
-      publisher = publisher.doOnSubscribe(handler.getOnSubscribeConsumer());
-      if (expectsResponse) {
-        publisher = publisher.doOnEach(handler);
-        publisher = publisher.doOnCancel(handler);
-      }
-      return publisher;
+      boolean commandExpectsResponse = expectsResponse(commandSupplier.getTracingCommand());
+      return LettuceFluxTerminationRunnable.monitor(
+          originalPublisher, commands.getConnection(), commandExpectsResponse);
     }
   }
 }

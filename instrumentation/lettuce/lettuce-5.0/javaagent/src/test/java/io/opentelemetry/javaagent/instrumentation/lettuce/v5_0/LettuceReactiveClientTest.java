@@ -24,7 +24,9 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import io.lettuce.core.KeyValue;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -32,6 +34,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -421,6 +425,50 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace -> trace.hasSpansSatisfyingExactly(this::assertResubscribedSetSpan),
         trace -> trace.hasSpansSatisfyingExactly(this::assertResubscribedSetSpan));
+  }
+
+  @Test
+  void overlappingSubscriptionsUseIndependentCommands() throws Exception {
+    redisServer.execInContainer("redis-cli", "DEL", "overlapping");
+    Mono<KeyValue<String, String>> command = reactiveCommands.blpop(30, "overlapping");
+
+    CompletableFuture<KeyValue<String, String>> first = command.toFuture();
+    CompletableFuture<KeyValue<String, String>> second = command.toFuture();
+
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .until(
+            () ->
+                Arrays.stream(
+                            redisServer
+                                .execInContainer("redis-cli", "CLIENT", "LIST")
+                                .getStdout()
+                                .split("\\R"))
+                        .filter(line -> line.contains("cmd=blpop"))
+                        .count()
+                    == 1);
+    assertThat(first).isNotDone();
+    assertThat(second).isNotDone();
+
+    redisServer.execInContainer("redis-cli", "LPUSH", "overlapping", "first", "second");
+
+    assertThat(first.get(10, SECONDS).getKey()).isEqualTo("overlapping");
+    assertThat(second.get(10, SECONDS).getKey()).isEqualTo("overlapping");
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(this::assertOverlappingBlpopSpan),
+        trace -> trace.hasSpansSatisfyingExactly(this::assertOverlappingBlpopSpan));
+  }
+
+  private void assertOverlappingBlpopSpan(SpanDataAssert span) {
+    span.hasName(emitStableDatabaseSemconv() ? "BLPOP " + host + ":" + port : "BLPOP")
+        .hasKind(SpanKind.CLIENT)
+        .hasAttribute(equalTo(SERVER_ADDRESS, host))
+        .hasAttribute(equalTo(SERVER_PORT, port));
+    if (emitStableDatabaseSemconv()) {
+      span.hasAttribute(equalTo(NETWORK_PEER_ADDRESS, ip))
+          .hasAttribute(equalTo(NETWORK_PEER_PORT, (long) port));
+    }
   }
 
   private void assertResubscribedSetSpan(SpanDataAssert span) {
