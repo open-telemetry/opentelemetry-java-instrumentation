@@ -88,8 +88,8 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     public static AdviceScope start(JedisRequest request) {
       if (JedisPipelineContext.inTransactionFraming()) {
         // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI batch
-        // span rather than getting their own spans. Keep the request until method exit so the EXEC
-        // socket can be compared with the queued commands' sockets.
+        // span rather than getting their own spans. Keep the request until method exit so a
+        // successful EXEC socket can become the transaction's last observed peer.
         return new AdviceScope(null, null, request);
       }
       Context parentContext = Context.current();

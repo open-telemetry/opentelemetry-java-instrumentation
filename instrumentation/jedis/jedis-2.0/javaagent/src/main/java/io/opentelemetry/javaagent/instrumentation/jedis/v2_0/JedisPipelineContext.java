@@ -76,7 +76,7 @@ public final class JedisPipelineContext {
   public static void captureTransactionFramingPeer(JedisRequest request) {
     JedisRequest transactionRequest = currentTransactionRequest.get();
     if (transactionRequest != null) {
-      transactionRequest.retainCommonPeerAddress(request);
+      transactionRequest.useLaterPeerAddress(request);
     } else if (inTransactionFraming()) {
       currentTransactionFramingRequest.set(request);
     }

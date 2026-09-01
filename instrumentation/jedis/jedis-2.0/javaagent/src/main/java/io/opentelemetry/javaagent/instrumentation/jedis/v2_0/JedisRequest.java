@@ -47,7 +47,9 @@ public abstract class JedisRequest {
   public static JedisRequest createTransaction(
       List<JedisRequest> requests, @Nullable JedisRequest multiRequest) {
     JedisRequest request = createBatch(requests, "MULTI");
-    request.retainCommonPeerAddress(multiRequest);
+    if (request.peerAddress == null && multiRequest != null) {
+      request.peerAddress = multiRequest.peerAddress;
+    }
     return request;
   }
 
@@ -59,7 +61,7 @@ public abstract class JedisRequest {
             batchOperationName(requests, prefix),
             pipelineQueryText(requests),
             requests.size() != 1 ? (long) requests.size() : null);
-    request.peerAddress = commonPeerAddress(requests);
+    request.peerAddress = lastPeerAddress(requests);
     return request;
   }
 
@@ -98,24 +100,21 @@ public abstract class JedisRequest {
     return peerAddress;
   }
 
-  public void retainCommonPeerAddress(@Nullable JedisRequest request) {
-    if (request == null || peerAddress == null || !peerAddress.equals(request.peerAddress)) {
-      peerAddress = null;
+  public void useLaterPeerAddress(JedisRequest request) {
+    if (request.peerAddress != null) {
+      peerAddress = request.peerAddress;
     }
   }
 
   @Nullable
-  private static InetSocketAddress commonPeerAddress(List<JedisRequest> requests) {
-    InetSocketAddress peerAddress = requests.get(0).getPeerAddress();
-    if (peerAddress == null) {
-      return null;
-    }
-    for (int i = 1; i < requests.size(); i++) {
-      if (!peerAddress.equals(requests.get(i).getPeerAddress())) {
-        return null;
+  private static InetSocketAddress lastPeerAddress(List<JedisRequest> requests) {
+    for (int i = requests.size() - 1; i >= 0; i--) {
+      InetSocketAddress peerAddress = requests.get(i).getPeerAddress();
+      if (peerAddress != null) {
+        return peerAddress;
       }
     }
-    return peerAddress;
+    return null;
   }
 
   private static String batchOperationName(List<JedisRequest> requests, String prefix) {
