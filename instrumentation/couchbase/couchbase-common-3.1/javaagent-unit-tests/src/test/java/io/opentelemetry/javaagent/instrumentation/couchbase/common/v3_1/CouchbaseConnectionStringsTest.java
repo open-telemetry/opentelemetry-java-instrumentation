@@ -6,19 +6,32 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.couchbase.client.core.util.ConnectionString;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class CouchbaseConnectionStringsTest {
 
-  @Test
-  void loneSeedKeepsItsHostAndPort() {
-    CouchbaseServerTarget target = CouchbaseConnectionStrings.target("couchbase://node:11210");
+  @ParameterizedTest
+  @MethodSource("defaultPortConnectionStrings")
+  void defaultPortIsOmitted(String connectionString) {
+    CouchbaseServerTarget target = CouchbaseConnectionStrings.target(connectionString);
 
     assertThat(target.getAddress()).isEqualTo("node");
-    assertThat(target.getPort()).isEqualTo(11210);
+    assertThat(target.getPort()).isNull();
+  }
+
+  private static Stream<Arguments> defaultPortConnectionStrings() {
+    return Stream.of(
+        argumentSet("implicit couchbase scheme", "node:11210"),
+        argumentSet("couchbase scheme", "couchbase://node:11210"),
+        argumentSet("couchbases scheme", "couchbases://node:11207"));
   }
 
   @Test
@@ -32,27 +45,37 @@ class CouchbaseConnectionStringsTest {
   }
 
   @Test
-  void severalSeedsKeepTheirOrderAndDuplicatesAndLoseThePort() {
+  void severalDefaultPortSeedsKeepTheirOrderAndDuplicates() {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target("couchbase://two.example,one.example:11210,two.example");
 
-    assertThat(target.getAddress()).isEqualTo("two.example,one.example:11210,two.example");
+    assertThat(target.getAddress()).isEqualTo("two.example,one.example,two.example");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void theSchemeIsStrippedFromSeveralSeeds() {
+  void severalSeedsWithTheSameNonDefaultPortUseServerPort() {
     CouchbaseServerTarget target =
-        CouchbaseConnectionStrings.target("couchbases://one.example,two.example");
+        CouchbaseConnectionStrings.target("couchbase://two.example:11211,one.example:11211");
 
-    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
+    assertThat(target.getAddress()).isEqualTo("two.example,one.example");
+    assertThat(target.getPort()).isEqualTo(11211);
   }
 
   @Test
-  void credentialsParametersAndBucketsAreStripped() {
+  void severalSeedsWithDifferentPortsKeepInlinePorts() {
+    CouchbaseServerTarget target =
+        CouchbaseConnectionStrings.target("couchbase://two.example:11211,one.example");
+
+    assertThat(target.getAddress()).isEqualTo("two.example:11211,one.example:11210");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void credentialsParametersBucketsAndFragmentsAreStripped() {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(
-            "couchbase://user@node.example/travel-sample?kv_timeout=5s");
+            "couchbase://user@node.example/travel-sample?kv_timeout=5s#anchor");
 
     assertThat(target.getAddress()).isEqualTo("node.example");
     assertThat(target.getPort()).isNull();
@@ -60,11 +83,12 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void ipv4SeedsAreReportedAsConfigured() {
-    assertThat(CouchbaseConnectionStrings.target("couchbase://192.0.2.1:11210").getAddress())
-        .isEqualTo("192.0.2.1");
+    CouchbaseServerTarget single = CouchbaseConnectionStrings.target("couchbase://192.0.2.1:11210");
+    assertThat(single.getAddress()).isEqualTo("192.0.2.1");
+    assertThat(single.getPort()).isNull();
     assertThat(
             CouchbaseConnectionStrings.target("couchbase://192.0.2.1,192.0.2.2:11210").getAddress())
-        .isEqualTo("192.0.2.1,192.0.2.2:11210");
+        .isEqualTo("192.0.2.1,192.0.2.2");
   }
 
   @Test
@@ -72,11 +96,11 @@ class CouchbaseConnectionStringsTest {
     CouchbaseServerTarget single =
         CouchbaseConnectionStrings.target("couchbase://[2001:db8::1]:11210");
     assertThat(single.getAddress()).isEqualTo("2001:db8::1");
-    assertThat(single.getPort()).isEqualTo(11210);
+    assertThat(single.getPort()).isNull();
     assertThat(
-            CouchbaseConnectionStrings.target("couchbase://[2001:db8::1]:11210,[2001:db8::2]")
+            CouchbaseConnectionStrings.target("couchbase://[2001:db8::1]:11211,[2001:db8::2]")
                 .getAddress())
-        .isEqualTo("[2001:db8::1]:11210,[2001:db8::2]");
+        .isEqualTo("[2001:db8::1]:11211,[2001:db8::2]:11210");
   }
 
   @Test

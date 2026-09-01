@@ -106,7 +106,7 @@ class CouchbaseClient316Test {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
-                      .hasName("get")
+                      .hasName(spanName())
                       .hasStatus(
                           StatusData.unset()) // later version of couchbase gives correct behavior
                       .hasAttributesSatisfyingExactly(
@@ -136,6 +136,10 @@ class CouchbaseClient316Test {
       return null;
     }
     return Long.valueOf(connectionString.substring(connectionString.lastIndexOf(':') + 1));
+  }
+
+  private static String spanName() {
+    return emitStableDatabaseSemconv() ? "get " + serverAddress() : "get";
   }
 
   private static <T> T oldOrExperimental(T value) {

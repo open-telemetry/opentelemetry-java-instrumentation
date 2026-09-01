@@ -46,7 +46,7 @@ public class CouchbaseServerTargets {
 
   @Nullable
   static CouchbaseServerTarget target(Set<SeedNode> seedNodes) {
-    CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder();
+    CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder("couchbase");
     Map<String, Set<Integer>> portsByAddress = new HashMap<>();
     for (SeedNode seedNode : seedNodes) {
       if (seedNode == null) {

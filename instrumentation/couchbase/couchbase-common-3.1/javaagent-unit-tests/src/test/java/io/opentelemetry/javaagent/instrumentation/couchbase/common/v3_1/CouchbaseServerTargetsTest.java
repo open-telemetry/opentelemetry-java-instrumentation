@@ -41,7 +41,7 @@ class CouchbaseServerTargetsTest {
             "KV port",
             SeedNode.create("node.example", Optional.of(11210), Optional.empty()),
             "node.example",
-            11210),
+            null),
         argumentSet(
             "cluster manager port",
             SeedNode.create("node.example", Optional.empty(), Optional.of(8091)),
@@ -55,14 +55,14 @@ class CouchbaseServerTargetsTest {
   }
 
   @Test
-  void registeredConnectionStringTargetTakesPrecedenceOverDirectFallback() {
+  void dnsSrvTargetTakesPrecedenceOverDirectSeeds() {
     Set<SeedNode> seedNodes =
         new LinkedHashSet<>(
             asList(
                 SeedNode.create("two.example", Optional.empty(), Optional.empty()),
                 SeedNode.create("one.example", Optional.empty(), Optional.empty())));
     CouchbaseServerTarget connectionStringTarget =
-        CouchbaseConnectionStrings.target("couchbase://two.example,one.example");
+        CouchbaseConnectionStrings.target("couchbases://cluster.example");
     assertThat(connectionStringTarget).isNotNull();
 
     Core core = mock(Core.class);
@@ -70,6 +70,8 @@ class CouchbaseServerTargetsTest {
     CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes);
 
     assertThat(CouchbaseServerTargets.get(core)).isSameAs(connectionStringTarget);
+    assertThat(connectionStringTarget.getAddress()).isEqualTo("cluster.example");
+    assertThat(connectionStringTarget.getPort()).isNull();
   }
 
   @ParameterizedTest

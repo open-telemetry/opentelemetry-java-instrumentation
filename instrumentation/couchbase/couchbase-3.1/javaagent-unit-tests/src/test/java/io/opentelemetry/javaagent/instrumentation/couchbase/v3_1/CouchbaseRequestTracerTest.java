@@ -33,9 +33,12 @@ class CouchbaseRequestTracerTest {
     Method method =
         span.getClass()
             .getDeclaredMethod(
-                "setConfiguredTarget", RequestSpan.class, CouchbaseServerTarget.class);
+                "setConfiguredTarget",
+                String.class,
+                RequestSpan.class,
+                CouchbaseServerTarget.class);
     method.setAccessible(true);
 
-    assertThatCode(() -> method.invoke(null, delegate, target)).doesNotThrowAnyException();
+    assertThatCode(() -> method.invoke(null, "test", delegate, target)).doesNotThrowAnyException();
   }
 }

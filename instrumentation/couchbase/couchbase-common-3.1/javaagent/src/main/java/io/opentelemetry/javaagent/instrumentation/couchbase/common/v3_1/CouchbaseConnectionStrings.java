@@ -33,7 +33,8 @@ public class CouchbaseConnectionStrings {
       return null;
     }
     try {
-      CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder();
+      CouchbaseServerTarget.Builder target =
+          CouchbaseServerTarget.builder(connectionString.scheme().toString());
       for (ConnectionString.UnresolvedSocket seed : connectionString.hosts()) {
         if (seed == null) {
           target.addSeed(null, 0);

@@ -101,7 +101,7 @@ class CouchbaseClient34Test {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   span.hasKind(CLIENT)
-                      .hasName("get")
+                      .hasName(spanName())
                       .hasStatus(StatusData.error())
                       .hasAttributesSatisfyingExactly(
                           equalTo(maybeStable(DB_SYSTEM), "couchbase"),
@@ -154,6 +154,10 @@ class CouchbaseClient34Test {
       return null;
     }
     return Long.valueOf(connectionString.substring(connectionString.lastIndexOf(':') + 1));
+  }
+
+  private static String spanName() {
+    return emitStableDatabaseSemconv() ? "get " + serverAddress() : "get";
   }
 
   private static <T> T oldOrExperimental(T value) {

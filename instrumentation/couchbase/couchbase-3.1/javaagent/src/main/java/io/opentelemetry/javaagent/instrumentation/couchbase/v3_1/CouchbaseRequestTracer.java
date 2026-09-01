@@ -63,7 +63,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     if (parent instanceof TranslatingRequestSpan) {
       unwrappedParent = ((TranslatingRequestSpan) parent).delegate;
     }
-    return new TranslatingRequestSpan(delegate.requestSpan(name, unwrappedParent));
+    return new TranslatingRequestSpan(name, delegate.requestSpan(name, unwrappedParent));
   }
 
   @Override
@@ -78,9 +78,11 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   private static final class TranslatingRequestSpan implements RequestSpan {
 
+    private final String name;
     private final RequestSpan delegate;
 
-    private TranslatingRequestSpan(RequestSpan delegate) {
+    private TranslatingRequestSpan(String name, RequestSpan delegate) {
+      this.name = name;
       this.delegate = delegate;
     }
 
@@ -152,21 +154,23 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       delegate.requestContext(requestContext);
       // the old conventions never described a server for Couchbase, and they are frozen
       if (emitStableDatabaseSemconv()) {
-        setConfiguredTarget(delegate, CouchbaseServerTargets.get(requestContext.core()));
+        setConfiguredTarget(name, delegate, CouchbaseServerTargets.get(requestContext.core()));
       }
     }
 
     private static void setConfiguredTarget(
-        RequestSpan span, @Nullable CouchbaseServerTarget target) {
+        String name, RequestSpan span, @Nullable CouchbaseServerTarget target) {
       if (target == null) {
         return;
       }
+      OpenTelemetryRequestSpan openTelemetrySpan = (OpenTelemetryRequestSpan) span;
+      openTelemetrySpan.span().updateName(name + " " + target.getAddress());
       span.setAttribute(SERVER_ADDRESS.getKey(), target.getAddress());
       Integer port = target.getPort();
       if (port != null) {
         // RequestSpan does not expose long attributes throughout the supported range, while the
         // shaded implementation does.
-        ((OpenTelemetryRequestSpan) span).setAttribute(SERVER_PORT.getKey(), port.longValue());
+        openTelemetrySpan.setAttribute(SERVER_PORT.getKey(), port.longValue());
       }
     }
 

@@ -117,7 +117,7 @@ class CouchbaseClient31Test {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
-                      .hasName("get")
+                      .hasName(spanName())
                       .hasStatus(
                           StatusData.unset()) // later version of couchbase gives correct behavior
                       .hasAttributesSatisfyingExactly(
@@ -141,6 +141,10 @@ class CouchbaseClient31Test {
     String[] endpoints = {seedAddress + ":" + kvPort, seedAddress + ":" + clusterManagerPort};
     Arrays.sort(endpoints);
     return String.join(",", endpoints);
+  }
+
+  private static String spanName() {
+    return emitStableDatabaseSemconv() ? "get " + serverAddress() : "get";
   }
 
   private static <T> T oldOrExperimental(T value) {
