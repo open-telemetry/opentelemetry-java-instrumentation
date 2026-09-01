@@ -164,6 +164,28 @@ class MongoConfiguredTargetTest {
   }
 
   @Test
+  void mixedUnixSocketAndTcpListenerOmitsTheStableTarget() {
+    ClusterId clusterId = new ClusterId();
+    CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
+    CommandListener listener =
+        MongoTelemetry.create(OpenTelemetry.noop())
+            .createCommandListener(
+                asList(
+                    new ServerAddress("/tmp/mongodb-27017.sock"),
+                    new ServerAddress("configured.example", 27018)));
+
+    listener.commandStarted(event);
+
+    Attributes attributes = extractAttributes(event);
+
+    assertThat(attributes.get(SERVER_ADDRESS))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "db2.example");
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018L);
+    assertThat(attributes.get(NETWORK_PEER_ADDRESS)).isNull();
+    assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
+  }
+
+  @Test
   @SuppressWarnings("deprecation") // db.connection_string is part of the old semantic conventions
   void theOldConnectionStringKeepsDescribingTheServerThatAnswered() {
     ClusterId clusterId =

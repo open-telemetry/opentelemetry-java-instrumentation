@@ -62,13 +62,16 @@ public final class MongoServerTarget {
     List<String> hosts = new ArrayList<>(seeds.size());
     List<Integer> ports = new ArrayList<>(seeds.size());
     boolean hasSharedPort = true;
+    boolean hasUnixSocket = false;
     Integer sharedPort = null;
     for (ServerAddress seed : seeds) {
       String host = host(seed);
       if (host == null) {
         return null;
       }
-      Integer port = isUnixSocket(host) ? null : seed.getPort();
+      boolean unixSocket = isUnixSocket(host);
+      hasUnixSocket |= unixSocket;
+      Integer port = unixSocket ? null : seed.getPort();
       hosts.add(host);
       ports.add(port);
       if (hosts.size() == 1) {
@@ -76,6 +79,9 @@ public final class MongoServerTarget {
       } else if (!Objects.equals(sharedPort, port)) {
         hasSharedPort = false;
       }
+    }
+    if (seeds.size() > 1 && hasUnixSocket) {
+      return null;
     }
 
     List<String> addresses = new ArrayList<>(seeds.size());

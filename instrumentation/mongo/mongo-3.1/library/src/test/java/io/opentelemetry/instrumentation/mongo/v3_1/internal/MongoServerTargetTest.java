@@ -142,6 +142,26 @@ class MongoServerTargetTest {
   }
 
   @Test
+  void multipleUnixSocketSeedsAreNotReported() {
+    assertThat(
+            MongoServerTarget.seeds(
+                asList(
+                    new ServerAddress("/tmp/mongodb-27018.sock"),
+                    new ServerAddress("/tmp/mongodb-27017.sock"))))
+        .isNull();
+  }
+
+  @Test
+  void mixedUnixSocketAndTcpSeedsAreNotReported() {
+    assertThat(
+            MongoServerTarget.seeds(
+                asList(
+                    new ServerAddress("/tmp/mongodb-27017.sock"),
+                    new ServerAddress("db.example", 27018))))
+        .isNull();
+  }
+
+  @Test
   void hostnameEndingInSockIsNotTreatedAsAUnixSocket() {
     MongoServerTarget target =
         MongoServerTarget.seeds(singletonList(new ServerAddress("db.sock", 27018)));
