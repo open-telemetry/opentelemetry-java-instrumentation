@@ -33,12 +33,21 @@ class CouchbaseAttributesGetterTest {
   }
 
   @Test
-  void reportsThePortOfASingleConfiguredSeed() {
+  void omitsTheDefaultPortOfASingleConfiguredSeed() {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create("bucket", target("node.example", 11210), getClass(), "get");
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
-    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? 11210 : null);
+    assertThat(getter.getServerPort(request)).isNull();
+  }
+
+  @Test
+  void reportsANonDefaultPortOnlyInStableMode() {
+    CouchbaseRequestInfo request =
+        CouchbaseRequestInfo.create("bucket", target("node.example", 11211), getClass(), "get");
+
+    CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? 11211 : null);
   }
 
   @Test
@@ -143,7 +152,7 @@ class CouchbaseAttributesGetterTest {
   }
 
   private static CouchbaseServerTarget target(String host, int port) {
-    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder();
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbase");
     builder.addSeed(host, port);
     return builder.build();
   }
