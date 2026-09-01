@@ -33,7 +33,6 @@ import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands;
 import io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection;
 import io.lettuce.core.cluster.pubsub.api.reactive.RedisClusterPubSubReactiveCommands;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -70,7 +69,6 @@ class LettuceClusterClientTest {
   private static TestRedisCluster redisServer;
   private static StatefulRedisClusterConnection<String, String> connection;
   private static StatefulRedisClusterPubSubConnection<String, String> pubSubConnection;
-  private static String configuredTarget;
   private static String host;
   private static int port;
 
@@ -82,12 +80,10 @@ class LettuceClusterClientTest {
     host = redisServer.getHost();
     port = redisServer.getPort();
 
-    int unavailablePort = PortUtils.findOpenPort();
-    configuredTarget = host + ":" + unavailablePort + "," + host + ":" + port;
+    RedisURI invalidSeedUri = RedisURI.create("redis://invalid:6379");
+    invalidSeedUri.setHost("invalid,host");
     List<RedisURI> seedUris =
-        asList(
-            RedisURI.create("redis://" + host + ":" + unavailablePort),
-            RedisURI.create("redis://" + host + ":" + port));
+        asList(RedisURI.create("redis://" + host + ":" + port), invalidSeedUri);
     RedisClusterClient client = RedisClusterClient.create(seedUris);
     cleanup.deferAfterAll(() -> client.shutdown(0, 15, SECONDS));
 
@@ -98,7 +94,7 @@ class LettuceClusterClientTest {
   }
 
   @Test
-  void configuredSeedsAreUsedForSyncBatchReactiveAndPubSubCommands() throws Exception {
+  void invalidConfiguredSeedOmitsTargetForSyncBatchReactiveAndPubSubCommands() throws Exception {
     RedisAdvancedClusterCommands<String, String> syncCommands = connection.sync();
     assertThat(syncCommands.set("CLUSTER_COMMAND_KEY", "value")).isEqualTo("OK");
 
@@ -121,12 +117,10 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : host),
+                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
@@ -137,15 +131,10 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "PIPELINE SET " + configuredTarget
-                                : "PIPELINE SET")
+                    span.hasName("PIPELINE SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : host),
+                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
@@ -163,12 +152,10 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : null),
+                            equalTo(SERVER_ADDRESS, null),
                             equalTo(SERVER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
@@ -177,13 +164,10 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "PUBLISH " + configuredTarget : "PUBLISH")
+                    span.hasName("PUBLISH")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : null),
+                            equalTo(SERVER_ADDRESS, null),
                             equalTo(SERVER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),

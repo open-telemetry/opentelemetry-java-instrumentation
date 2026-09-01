@@ -39,12 +39,11 @@ public class LettuceServerTargets {
     List<String> endpoints = new ArrayList<>();
     for (Object redisUri : redisUris) {
       if (!(redisUri instanceof RedisURI)) {
+        endpoints.add(null);
         continue;
       }
       RedisServerTarget target = of((RedisURI) redisUri);
-      if (target != null) {
-        endpoints.add(render(target));
-      }
+      endpoints.add(target == null ? null : render(target));
     }
     return RedisServerTarget.ofEndpoints(endpoints);
   }
