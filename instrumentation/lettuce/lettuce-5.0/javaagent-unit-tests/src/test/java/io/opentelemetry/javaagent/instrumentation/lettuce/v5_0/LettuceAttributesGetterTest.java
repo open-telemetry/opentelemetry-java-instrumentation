@@ -46,7 +46,7 @@ class LettuceAttributesGetterTest {
   @Test
   void batchWithoutTargetUsesSelectedAddressOnlyForLegacySemconv() {
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(singletonList(command()), SELECTED_ADDRESS, null, null);
+        LettuceBatchRequest.create(singletonList(command()), SELECTED_ADDRESS, null, null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
