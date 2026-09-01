@@ -55,8 +55,11 @@ class TransactionInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(TransactionBuilder transactionBuilder) {
         Queue<Operation<?, ?>> operations = transactionBuilder.operations().result();
-        ServerEndpoint endpoint = TRANSACTION_ENDPOINT.get(transactionBuilder);
         Object client = TRANSACTION_CLIENT.get(transactionBuilder);
+        ServerEndpoint endpoint = TRANSACTION_ENDPOINT.get(transactionBuilder);
+        if (emitStableDatabaseSemconv()) {
+          endpoint = ServerEndpoint.create(client);
+        }
         RedisServerTarget serverTarget =
             emitStableDatabaseSemconv() ? RediscalaServerTargets.get(client) : null;
         RediscalaRequest request =

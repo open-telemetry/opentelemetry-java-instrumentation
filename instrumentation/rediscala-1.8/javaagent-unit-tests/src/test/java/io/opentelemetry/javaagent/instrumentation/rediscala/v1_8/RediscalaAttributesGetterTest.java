@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class RediscalaAttributesGetterTest {
 
@@ -22,29 +24,38 @@ class RediscalaAttributesGetterTest {
 
   @Test
   void requestWithoutTargetUsesSelectedEndpointOnlyForLegacySemconv() {
-    RediscalaRequest request = request(null);
+    RediscalaRequest request = request(null, SELECTED_PORT);
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? null : SELECTED_HOST);
     assertThat(getter.getServerPort(request))
         .isEqualTo(emitStableDatabaseSemconv() ? null : SELECTED_PORT);
+    assertThat(getter.getNetworkPeerAddress(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? SELECTED_HOST : null);
+    assertThat(getter.getNetworkPeerPort(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? SELECTED_PORT : null);
   }
 
-  @Test
-  void requestWithTargetUsesConfiguredTargetOnlyForStableSemconv() {
+  @ParameterizedTest
+  @ValueSource(ints = {6379, 6381})
+  void requestWithTargetSeparatesConfiguredServerFromSelectedNetworkPeer(int selectedPort) {
     RedisServerTarget target = RedisServerTarget.ofHostAndPort("configured-node", 6380);
-    RediscalaRequest request = request(target);
+    RediscalaRequest request = request(target, selectedPort);
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? "configured-node" : SELECTED_HOST);
     assertThat(getter.getServerPort(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? 6380 : SELECTED_PORT);
+        .isEqualTo(emitStableDatabaseSemconv() ? 6380 : selectedPort);
+    assertThat(getter.getNetworkPeerAddress(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? SELECTED_HOST : null);
+    assertThat(getter.getNetworkPeerPort(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? selectedPort : null);
   }
 
-  private static RediscalaRequest request(RedisServerTarget target) {
+  private static RediscalaRequest request(RedisServerTarget target, int selectedPort) {
     RediscalaRequest request = mock(RediscalaRequest.class);
     when(request.getHost()).thenReturn(SELECTED_HOST);
-    when(request.getPort()).thenReturn(SELECTED_PORT);
+    when(request.getPort()).thenReturn(selectedPort);
     when(request.getServerTarget()).thenReturn(target);
     return request;
   }

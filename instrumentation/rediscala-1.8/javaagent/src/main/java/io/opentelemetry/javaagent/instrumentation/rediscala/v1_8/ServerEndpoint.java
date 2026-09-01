@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
+import javax.annotation.Nullable;
 import redis.RedisClientActorLike;
+import redis.SentinelMonitoredRedisClient;
 import scala.Option;
 
 public class ServerEndpoint {
@@ -15,6 +17,18 @@ public class ServerEndpoint {
 
   public static ServerEndpoint create(RedisClientActorLike client) {
     return new ServerEndpoint(client.host(), client.port(), databaseIndex(client));
+  }
+
+  @Nullable
+  public static ServerEndpoint create(Object client) {
+    if (client instanceof RedisClientActorLike) {
+      return create((RedisClientActorLike) client);
+    }
+    if (client instanceof SentinelMonitoredRedisClient) {
+      RedisClientActorLike redisClient = ((SentinelMonitoredRedisClient) client).redisClient();
+      return redisClient != null ? create(redisClient) : null;
+    }
+    return null;
   }
 
   private ServerEndpoint(String host, int port, int databaseIndex) {
