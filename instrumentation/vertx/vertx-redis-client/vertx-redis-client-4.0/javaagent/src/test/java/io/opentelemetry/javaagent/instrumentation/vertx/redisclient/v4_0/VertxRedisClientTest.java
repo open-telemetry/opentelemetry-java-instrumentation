@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -19,6 +20,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
@@ -55,6 +57,7 @@ import java.net.InetAddress;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -325,7 +328,7 @@ class VertxRedisClientTest {
   }
 
   @Test
-  void dynamicClientUsesSelectedEndpoint() throws Exception {
+  void dynamicClientOmitsTransientEndpoints() throws Exception {
     assumeTrue(isVertx5() && emitStableDatabaseSemconv());
 
     Object selectedOptions = redisStandaloneConnectOptions("redis://" + host + ":" + port);
@@ -358,7 +361,15 @@ class VertxRedisClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasAttribute(equalTo(SERVER_ADDRESS, host))));
+                span ->
+                    span.hasName("GET")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "GET dynamic-client"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port))));
   }
 
   private static Object redisStandaloneConnectOptions(String connectionString)
@@ -368,6 +379,51 @@ class VertxRedisClientTest {
     optionsClass.getMethod("setConnectionString", String.class).invoke(options, connectionString);
     optionsClass.getMethod("setProtocolNegotiation", boolean.class).invoke(options, false);
     return options;
+  }
+
+  @Test
+  void concurrentClientsKeepDistinctConfiguredTargets() throws Exception {
+    assumeTrue(emitStableDatabaseSemconv());
+    String secondHost = host.toUpperCase(Locale.ROOT);
+    assumeTrue(!secondHost.equals(host));
+
+    Redis firstClient = Redis.createClient(vertx, "redis://" + host + ":" + port);
+    Redis secondClient = Redis.createClient(vertx, "redis://" + secondHost + ":" + port);
+    cleanup.deferCleanup(firstClient::close);
+    cleanup.deferCleanup(secondClient::close);
+
+    CompletableFuture<?> first =
+        firstClient
+            .send(Request.cmd(Command.SET).arg("first-client").arg("value"))
+            .toCompletionStage()
+            .toCompletableFuture();
+    CompletableFuture<?> second =
+        secondClient
+            .send(Request.cmd(Command.SET).arg("second-client").arg("value"))
+            .toCompletionStage()
+            .toCompletableFuture();
+    CompletableFuture.allOf(first, second).get(30, SECONDS);
+
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              List<SpanData> spans =
+                  testing.spans().stream()
+                      .filter(span -> span.getName().startsWith("SET "))
+                      .collect(toList());
+              assertThat(spans).hasSize(2);
+              assertThat(spans)
+                  .extracting(span -> span.getAttributes().get(SERVER_ADDRESS))
+                  .containsExactlyInAnyOrder(host, secondHost);
+              assertThat(spans)
+                  .allSatisfy(
+                      span -> {
+                        assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
+                        assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
+                            .isEqualTo(Long.valueOf(port));
+                      });
+            });
   }
 
   @Test
@@ -397,13 +453,11 @@ class VertxRedisClientTest {
                       .collect(toList());
               assertThat(spans).isNotEmpty();
               for (SpanData span : spans) {
-                // Vert.x 5 builds the connection from the endpoint it selected, so it records that
-                // endpoint rather than the sentinel group the client was configured with
-                boolean expectLogicalTarget = emitStableDatabaseSemconv() && !isVertx5();
                 assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                    .isEqualTo(expectLogicalTarget ? host + ":" + port + "/themaster" : host);
+                    .isEqualTo(
+                        emitStableDatabaseSemconv() ? host + ":" + port + "/themaster" : host);
                 assertThat(span.getAttributes().get(SERVER_PORT))
-                    .isEqualTo(expectLogicalTarget ? null : Long.valueOf(port));
+                    .isEqualTo(emitStableDatabaseSemconv() ? null : Long.valueOf(port));
                 assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
                 assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
                     .isEqualTo(Long.valueOf(port));
@@ -490,33 +544,27 @@ class VertxRedisClientTest {
 
   private static AttributeAssertion[] redisSpanAttributes(
       String operationName, String queryText, Long batchSize) {
-    // not testing database/dup
-    if (emitStableDatabaseSemconv()) {
-      return new AttributeAssertion[] {
-        equalTo(DB_SYSTEM_NAME, REDIS),
-        equalTo(DB_QUERY_TEXT, queryText),
-        equalTo(DB_OPERATION_NAME, operationName),
-        equalTo(DB_NAMESPACE, "1"),
-        equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
-        equalTo(SERVER_ADDRESS, host),
-        equalTo(SERVER_PORT, port),
-        equalTo(maybeStablePeerService(), "test-peer-service"),
-        equalTo(NETWORK_PEER_PORT, port),
-        equalTo(NETWORK_PEER_ADDRESS, ip)
-      };
-    } else {
-      return new AttributeAssertion[] {
-        equalTo(DB_SYSTEM, REDIS),
-        equalTo(DB_STATEMENT, queryText),
-        equalTo(DB_OPERATION, operationName),
-        equalTo(DB_REDIS_DATABASE_INDEX, 1),
-        equalTo(SERVER_ADDRESS, host),
-        equalTo(SERVER_PORT, port),
-        equalTo(maybeStablePeerService(), "test-peer-service"),
-        equalTo(NETWORK_PEER_PORT, port),
-        equalTo(NETWORK_PEER_ADDRESS, ip)
-      };
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    if (emitOldDatabaseSemconv()) {
+      assertions.add(equalTo(DB_SYSTEM, REDIS));
+      assertions.add(equalTo(DB_STATEMENT, queryText));
+      assertions.add(equalTo(DB_OPERATION, operationName));
+      assertions.add(equalTo(DB_REDIS_DATABASE_INDEX, 1));
     }
+    if (emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(DB_SYSTEM_NAME, REDIS));
+      assertions.add(equalTo(DB_QUERY_TEXT, queryText));
+      assertions.add(equalTo(DB_OPERATION_NAME, operationName));
+      assertions.add(equalTo(DB_NAMESPACE, "1"));
+      assertions.add(equalTo(DB_OPERATION_BATCH_SIZE, batchSize));
+      assertions.add(equalTo(DB_NAME, emitOldDatabaseSemconv() ? "1" : null));
+    }
+    assertions.add(equalTo(SERVER_ADDRESS, host));
+    assertions.add(equalTo(SERVER_PORT, port));
+    assertions.add(equalTo(maybeStablePeerService(), "test-peer-service"));
+    assertions.add(equalTo(NETWORK_PEER_PORT, port));
+    assertions.add(equalTo(NETWORK_PEER_ADDRESS, ip));
+    return assertions.toArray(new AttributeAssertion[0]);
   }
 
   private static class BatchScenario {
