@@ -62,7 +62,7 @@ public final class ProtobufContext {
   public static Context decode(byte[] message) {
     try {
       return read(ByteBuffer.wrap(message));
-    } catch (BufferUnderflowException | IllegalArgumentException | IllegalStateException e) {
+    } catch (BufferUnderflowException | IllegalArgumentException | IllegalStateException ignored) {
       return null;
     }
   }
