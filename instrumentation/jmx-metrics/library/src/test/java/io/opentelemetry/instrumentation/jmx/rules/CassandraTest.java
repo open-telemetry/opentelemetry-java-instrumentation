@@ -39,7 +39,7 @@ class CassandraTest extends TargetSystemTest {
 
   @Test
   void testCassandraMetrics() {
-    Collection<String> yamlFiles = getAllRuleFilesForSystem("experimental-cassandra");
+    Collection<String> yamlFiles = getAllRuleFilesForSystem("cassandra");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());

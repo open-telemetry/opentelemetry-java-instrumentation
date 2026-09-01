@@ -54,17 +54,6 @@ public class InternalMetricsDefinitions {
       String system, boolean includeStable, boolean includeUnstable) {
     Set<String> result = new HashSet<>();
 
-    // preserve compatibility with existing rules until we rename them
-    switch (system) {
-      case "cassandra":
-      case "kafka-broker":
-      case "kafka-connect":
-        system = "experimental-" + system;
-        break;
-      default:
-        // intentionally empty
-    }
-
     String stablePath = String.format("jmx/rules/%s.yaml", system);
     if (includeStable && classLoader.getResource(stablePath) != null) {
       result.add(stablePath);

@@ -29,6 +29,7 @@ import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -122,7 +123,7 @@ class KafkaConnectTest extends TargetSystemTest {
 
   @Test
   void metricsAreReportedFromKafkaConnectContainer() throws Exception {
-    List<String> yamlFiles = singletonList("experimental-kafka-connect.yaml");
+    Collection<String> yamlFiles = getAllRuleFilesForSystem("kafka-connect");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());

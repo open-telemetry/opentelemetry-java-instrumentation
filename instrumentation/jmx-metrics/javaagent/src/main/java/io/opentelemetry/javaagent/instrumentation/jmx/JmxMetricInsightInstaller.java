@@ -66,16 +66,17 @@ public class JmxMetricInsightInstaller implements AgentListener {
         }
         jmx.addUnstableMetrics(builder.build());
 
-        List<String> metricsInclude = config.get("metrics")
-            .getScalarList("include", String.class, emptyList());
-        List<String> metricsExclude = config.get("metrics")
-            .getScalarList("exclude", String.class, emptyList());
+        List<String> metricsInclude =
+            config.get("metrics").getScalarList("include", String.class, emptyList());
+        List<String> metricsExclude =
+            config.get("metrics").getScalarList("exclude", String.class, emptyList());
         if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
-          jmx.setMetrics(IncludeExclude.builder()
-              .setIncluded(metricsInclude)
-              .setExcluded(metricsExclude).build());
+          jmx.setMetrics(
+              IncludeExclude.builder()
+                  .setIncluded(metricsInclude)
+                  .setExcluded(metricsExclude)
+                  .build());
         }
-
 
       } else {
         // pre-v3 compatibility
