@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 import com.clickhouse.client.ClickHouseException;
 import com.clickhouse.client.ClickHouseNode;
 import com.clickhouse.client.ClickHouseNodes;
+import com.clickhouse.client.ClickHouseProtocol;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseRequestAccess;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -107,20 +108,42 @@ public class ClickHouseClientV1Singletons {
         return UNCONFIGURED;
       }
       if (nodes.size() == 1) {
-        return create(nodes.iterator().next());
+        return createConfiguredNode(nodes.iterator().next());
       }
 
-      List<String> addresses = new ArrayList<>(nodes.size());
+      List<NodeTarget> targets = new ArrayList<>(nodes.size());
+      boolean allDefaultPorts = true;
+      boolean commonNonDefaultPort = true;
+      Integer commonPort = null;
       for (ClickHouseNode node : nodes) {
         String host = sanitizeHost(node.getHost());
         if (host == null) {
           return UNCONFIGURED;
         }
-        StringBuilder address = new StringBuilder();
-        appendAddress(address, host, node.getPort());
-        addresses.add(address.toString());
+        boolean defaultPort = isDefaultPort(node);
+        targets.add(new NodeTarget(host, node.getPort()));
+        if (defaultPort) {
+          commonNonDefaultPort = false;
+        } else {
+          allDefaultPorts = false;
+          if (commonPort == null) {
+            commonPort = node.getPort();
+          } else if (!commonPort.equals(node.getPort())) {
+            commonNonDefaultPort = false;
+          }
+        }
       }
-      return new ServerTarget(null, null, String.join(",", addresses));
+
+      StringBuilder addressGroup = new StringBuilder();
+      boolean inlinePorts = !allDefaultPorts && !commonNonDefaultPort;
+      for (NodeTarget target : targets) {
+        if (addressGroup.length() > 0) {
+          addressGroup.append(',');
+        }
+        appendAddress(addressGroup, target.host, inlinePorts ? target.port : null);
+      }
+      return new ServerTarget(
+          null, commonNonDefaultPort ? commonPort : null, addressGroup.toString());
     }
 
     private static ServerTarget create(ClickHouseNode node) {
@@ -128,13 +151,30 @@ public class ClickHouseClientV1Singletons {
       return host == null ? UNCONFIGURED : new ServerTarget(host, node.getPort(), null);
     }
 
-    private static void appendAddress(StringBuilder addressGroup, String host, int port) {
+    private static ServerTarget createConfiguredNode(ClickHouseNode node) {
+      String host = sanitizeHost(node.getHost());
+      return host == null
+          ? UNCONFIGURED
+          : new ServerTarget(host, isDefaultPort(node) ? null : node.getPort(), null);
+    }
+
+    private static boolean isDefaultPort(ClickHouseNode node) {
+      ClickHouseProtocol protocol = node.getProtocol();
+      int defaultPort =
+          node.getConfig().isSsl() ? protocol.getDefaultSecurePort() : protocol.getDefaultPort();
+      return defaultPort > 0 && node.getPort() == defaultPort;
+    }
+
+    private static void appendAddress(
+        StringBuilder addressGroup, String host, @Nullable Integer port) {
       if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
         addressGroup.append('[').append(host).append(']');
       } else {
         addressGroup.append(host);
       }
-      addressGroup.append(':').append(port);
+      if (port != null) {
+        addressGroup.append(':').append(port);
+      }
     }
 
     @Nullable
@@ -186,6 +226,16 @@ public class ClickHouseClientV1Singletons {
         }
       }
       return host;
+    }
+  }
+
+  private static class NodeTarget {
+    private final String host;
+    private final int port;
+
+    private NodeTarget(String host, int port) {
+      this.host = host;
+      this.port = port;
     }
   }
 

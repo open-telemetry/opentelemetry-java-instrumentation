@@ -10,6 +10,7 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
+import static io.r2dbc.spi.ConnectionFactoryOptions.SSL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 import static java.util.stream.Collectors.toList;
 
@@ -18,6 +19,7 @@ import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -50,17 +52,29 @@ public final class DbExecution {
 
   // R2DBC driver identifier → stable semconv db.system.name value
   private static final Map<String, String> DRIVER_TO_SYSTEM_NAME = buildDriverToSystemName();
+  private static final Map<String, Integer> DRIVER_TO_DEFAULT_PORT = buildDriverToDefaultPort();
 
   private static Map<String, String> buildDriverToSystemName() {
     Map<String, String> map = new HashMap<>();
-    map.put("postgresql", POSTGRESQL);
-    map.put("mysql", MYSQL);
-    map.put("mariadb", MARIADB);
+    map.put(POSTGRESQL, POSTGRESQL);
+    map.put(MYSQL, MYSQL);
+    map.put(MARIADB, MARIADB);
     map.put("mssql", MICROSOFT_SQL_SERVER);
     map.put("oracle", ORACLE_DB);
     map.put("db2", IBM_DB2);
-    map.put("clickhouse", CLICKHOUSE);
+    map.put(CLICKHOUSE, CLICKHOUSE);
     map.put("h2", H2DATABASE);
+    return map;
+  }
+
+  private static Map<String, Integer> buildDriverToDefaultPort() {
+    Map<String, Integer> map = new HashMap<>();
+    map.put(POSTGRESQL, 5432);
+    map.put(MYSQL, 3306);
+    map.put(MARIADB, 3306);
+    map.put("mssql", 1433);
+    map.put("oracle", 1521);
+    map.put("db2", 50000);
     return map;
   }
 
@@ -96,7 +110,9 @@ public final class DbExecution {
         factoryOptions.hasOption(DRIVER) ? (String) factoryOptions.getValue(DRIVER) : null;
     String protocol =
         factoryOptions.hasOption(PROTOCOL) ? (String) factoryOptions.getValue(PROTOCOL) : null;
-    this.systemName = resolveDbSystemName(driver, protocol);
+    String resolvedDriver = resolveDriver(driver, protocol);
+    String resolvedProtocol = resolveProtocol(driver, protocol);
+    this.systemName = resolveDbSystemName(resolvedDriver);
     this.serverAddress =
         factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
     this.serverPort =
@@ -105,7 +121,14 @@ public final class DbExecution {
         isUnixDomainSocket(serverAddress)
             ? sanitizeUnixDomainSocket(serverAddress)
             : isServerAddressGroupCandidate(serverAddress)
-                ? new ServerTarget(sanitizeServerAddressGroup(serverAddress, serverPort), null)
+                ? sanitizeServerAddressGroup(
+                    serverAddress,
+                    serverPort,
+                    resolveDefaultPort(
+                        resolvedDriver,
+                        resolvedProtocol,
+                        factoryOptions.hasOption(SSL)
+                            && Boolean.TRUE.equals(factoryOptions.getValue(SSL))))
                 : sanitizeServerTarget(serverAddress, serverPort);
     this.configuredServerAddress = configuredServerTarget.address;
     this.configuredServerPort = configuredServerTarget.port;
@@ -176,49 +199,58 @@ public final class DbExecution {
     return serverAddress != null && serverAddress.indexOf(',') >= 0;
   }
 
-  @Nullable
-  private static String sanitizeServerAddressGroup(
-      @Nullable String serverAddress, @Nullable Integer serverPort) {
+  private static ServerTarget sanitizeServerAddressGroup(
+      @Nullable String serverAddress, @Nullable Integer serverPort, @Nullable Integer defaultPort) {
     if (serverAddress == null
         || serverAddress.indexOf('/') >= 0
         || serverAddress.indexOf('?') >= 0
         || serverAddress.indexOf('#') >= 0
         || (serverPort != null && !isPort(serverPort))) {
-      return null;
+      return ServerTarget.EMPTY;
     }
 
     int firstComma = serverAddress.indexOf(',');
     int userInfoEnd = serverAddress.indexOf('@');
     if (userInfoEnd > firstComma
         || (userInfoEnd >= 0 && userInfoEnd != serverAddress.lastIndexOf('@'))) {
-      return null;
+      return ServerTarget.EMPTY;
     }
 
     String hostList = stripUserInfo(serverAddress);
     String[] hosts = hostList.split(",", -1);
 
-    StringBuilder group = new StringBuilder();
+    List<ServerTarget> targets = new ArrayList<>(hosts.length);
+    Integer commonPort = null;
+    boolean samePort = true;
     for (String host : hosts) {
       String trimmed = host.trim();
       if (!isValidHostPort(trimmed)) {
-        return null;
+        return ServerTarget.EMPTY;
       }
+      ServerTarget target = sanitizeServerTarget(trimmed, serverPort);
+      if (target.address == null) {
+        return ServerTarget.EMPTY;
+      }
+      Integer effectivePort = target.port != null ? target.port : defaultPort;
+      targets.add(new ServerTarget(target.address, effectivePort));
+      if (effectivePort == null) {
+        samePort = false;
+      } else if (commonPort == null) {
+        commonPort = effectivePort;
+      } else if (!commonPort.equals(effectivePort)) {
+        samePort = false;
+      }
+    }
+
+    StringBuilder group = new StringBuilder();
+    for (ServerTarget target : targets) {
       if (group.length() > 0) {
         group.append(',');
       }
-      if (isUnbracketedIpv6(trimmed)) {
-        group.append('[').append(trimmed).append(']');
-        if (serverPort != null) {
-          group.append(':').append(serverPort);
-        }
-      } else {
-        group.append(trimmed);
-        if (serverPort != null && !hasPort(trimmed)) {
-          group.append(':').append(serverPort);
-        }
-      }
+      appendAddress(group, target.address, samePort ? null : target.port);
     }
-    return group.toString();
+    Integer port = samePort && !commonPort.equals(defaultPort) ? commonPort : null;
+    return new ServerTarget(group.toString(), port);
   }
 
   private static String stripUserInfo(String serverAddress) {
@@ -261,6 +293,18 @@ public final class DbExecution {
           host.substring(0, firstColon), Integer.valueOf(host.substring(firstColon + 1)));
     }
     return new ServerTarget(host, serverPort);
+  }
+
+  private static void appendAddress(
+      StringBuilder addressGroup, String host, @Nullable Integer port) {
+    if (isUnbracketedIpv6(host)) {
+      addressGroup.append('[').append(host).append(']');
+    } else {
+      addressGroup.append(host);
+    }
+    if (port != null) {
+      addressGroup.append(':').append(port);
+    }
   }
 
   private static boolean isValidHostPort(String value) {
@@ -418,10 +462,6 @@ public final class DbExecution {
     return !host.startsWith("[") && host.indexOf(':') != host.lastIndexOf(':');
   }
 
-  private static boolean hasPort(String host) {
-    return host.startsWith("[") ? host.indexOf("]:") > 0 : host.indexOf(':') >= 0;
-  }
-
   public String getSystemName() {
     return systemName;
   }
@@ -467,11 +507,64 @@ public final class DbExecution {
     this.context = context;
   }
 
-  private static String resolveDbSystemName(@Nullable String driver, @Nullable String protocol) {
-    // Use PROTOCOL when DRIVER is "pool" (r2dbc-pool wraps the real driver in PROTOCOL),
-    // otherwise use DRIVER directly.
-    String rawDriver = "pool".equals(driver) && protocol != null ? protocol : driver;
-    return rawDriver != null ? DRIVER_TO_SYSTEM_NAME.getOrDefault(rawDriver, OTHER_SQL) : OTHER_SQL;
+  @Nullable
+  private static String resolveDriver(@Nullable String driver, @Nullable String protocol) {
+    if (!"pool".equals(driver) || protocol == null) {
+      return driver;
+    }
+    int separator = protocol.indexOf(':');
+    return separator < 0 ? protocol : protocol.substring(0, separator);
+  }
+
+  @Nullable
+  private static String resolveProtocol(@Nullable String driver, @Nullable String protocol) {
+    if (!"pool".equals(driver) || protocol == null) {
+      return protocol;
+    }
+    int separator = protocol.indexOf(':');
+    return separator < 0 ? null : protocol.substring(separator + 1);
+  }
+
+  @Nullable
+  private static Integer resolveDefaultPort(
+      @Nullable String driver, @Nullable String protocol, boolean ssl) {
+    if (CLICKHOUSE.equals(driver)) {
+      return resolveClickHouseDefaultPort(protocol, ssl);
+    }
+    if ("h2".equals(driver) && "tcp".equals(protocol)) {
+      return 9092;
+    }
+    return DRIVER_TO_DEFAULT_PORT.get(driver);
+  }
+
+  @Nullable
+  private static Integer resolveClickHouseDefaultPort(@Nullable String protocol, boolean ssl) {
+    if (protocol == null || "http".equals(protocol)) {
+      return ssl ? 8443 : 8123;
+    }
+    if ("https".equals(protocol)) {
+      return 8443;
+    }
+    if ("native".equals(protocol) || "tcp".equals(protocol)) {
+      return ssl ? 9440 : 9000;
+    }
+    if ("tcps".equals(protocol)) {
+      return 9440;
+    }
+    if ("mysql".equals(protocol)) {
+      return 9004;
+    }
+    if ("postgres".equals(protocol) || "postgresql".equals(protocol) || "pgsql".equals(protocol)) {
+      return 9005;
+    }
+    if ("grpc".equals(protocol) || "grpcs".equals(protocol)) {
+      return 9100;
+    }
+    return null;
+  }
+
+  private static String resolveDbSystemName(@Nullable String driver) {
+    return driver != null ? DRIVER_TO_SYSTEM_NAME.getOrDefault(driver, OTHER_SQL) : OTHER_SQL;
   }
 
   private static class ServerTarget {

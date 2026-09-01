@@ -76,7 +76,7 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   @Override
   public Integer getServerPort(ClickHouseDbRequest request) {
     if (emitStableDatabaseSemconv()) {
-      return request.getServerAddressGroup() == null ? request.getConfiguredPort() : null;
+      return request.getConfiguredPort();
     }
     return request.getPort();
   }

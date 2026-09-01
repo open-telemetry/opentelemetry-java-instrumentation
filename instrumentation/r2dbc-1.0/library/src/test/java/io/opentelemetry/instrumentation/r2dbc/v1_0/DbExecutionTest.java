@@ -167,19 +167,143 @@ class DbExecutionTest {
   }
 
   @Test
-  void dbExecutionGivesEveryHostOfAProgrammaticListThePort() {
+  void dbExecutionExtractsACommonNonDefaultPort() {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
             .option(ConnectionFactoryOptions.DRIVER, "mariadb")
             .option(ConnectionFactoryOptions.HOST, "host1,host2")
-            .option(ConnectionFactoryOptions.PORT, 3306)
+            .option(ConnectionFactoryOptions.PORT, 3307)
             .build();
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
     assertThat(dbExecution.getServerAddress()).isEqualTo("host1,host2");
-    assertThat(dbExecution.getServerPort()).isEqualTo(3306);
-    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1:3306,host2:3306");
+    assertThat(dbExecution.getServerPort()).isEqualTo(3307);
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1,host2");
+    assertThat(dbExecution.getConfiguredServerPort()).isEqualTo(3307);
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "postgresql, 5432",
+    "mysql, 3306",
+    "mariadb, 3306",
+    "mssql, 1433",
+    "oracle, 1521",
+    "db2, 50000",
+    "clickhouse, 8123"
+  })
+  void dbExecutionOmitsKnownDefaultPorts(String driver, int defaultPort) {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, driver)
+            .option(ConnectionFactoryOptions.HOST, "host1:" + defaultPort + ",host2")
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1,host2");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @Test
+  void dbExecutionUsesTheWrappedDriverProtocolDefaultPort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "pool")
+            .option(ConnectionFactoryOptions.PROTOCOL, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, "host1:5432,host2")
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1,host2");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "http, false, 8123",
+    "http, true, 8443",
+    "tcp, false, 9000",
+    "tcp, true, 9440",
+    "mysql, false, 9004",
+    "postgresql, false, 9005",
+    "grpc, false, 9100"
+  })
+  void dbExecutionUsesClickHouseProtocolAndSslDefaultPorts(
+      String protocol, boolean ssl, int defaultPort) {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "clickhouse")
+            .option(ConnectionFactoryOptions.PROTOCOL, protocol)
+            .option(ConnectionFactoryOptions.SSL, ssl)
+            .option(ConnectionFactoryOptions.HOST, "host1:" + defaultPort + ",host2")
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1,host2");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @Test
+  void dbExecutionUsesNestedPoolProtocolDefaults() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "pool")
+            .option(ConnectionFactoryOptions.PROTOCOL, "clickhouse:http")
+            .option(ConnectionFactoryOptions.HOST, "host1:8123,host2")
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getSystemName()).isEqualTo("clickhouse");
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1,host2");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @Test
+  void dbExecutionUsesH2TcpDefaultPort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "h2")
+            .option(ConnectionFactoryOptions.PROTOCOL, "tcp")
+            .option(ConnectionFactoryOptions.HOST, "host1:9092,host2")
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1,host2");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @Test
+  void dbExecutionDoesNotGuessAnUnknownDriverDefaultPort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "unknown")
+            .option(ConnectionFactoryOptions.HOST, "host1:1234,2001:db8::2")
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1:1234,[2001:db8::2]");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @Test
+  void dbExecutionDoesNotGuessAnUnknownClickHouseProtocolDefaultPort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "clickhouse")
+            .option(ConnectionFactoryOptions.PROTOCOL, "custom")
+            .option(ConnectionFactoryOptions.HOST, "host1:8123,host2")
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1:8123,host2");
     assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
@@ -200,7 +324,7 @@ class DbExecutionTest {
   }
 
   @Test
-  void dbExecutionBracketsUnbracketedIpv6HostsBeforeAddingThePort() {
+  void dbExecutionBracketsUnbracketedIpv6HostsWhenOmittingDefaultPorts() {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
             .option(ConnectionFactoryOptions.DRIVER, "postgresql")
@@ -210,8 +334,8 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.getConfiguredServerAddress())
-        .isEqualTo("[2001:db8::1]:5432,[2001:db8::2]:5432");
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("[2001:db8::1],[2001:db8::2]");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
   @Test
@@ -240,7 +364,8 @@ class DbExecutionTest {
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
     assertThat(dbExecution.getConfiguredServerAddress())
-        .isEqualTo("host2:5432,[2001:db8::2]:5432,host1:5432,host2:5432");
+        .isEqualTo("host2,[2001:db8::2],host1,host2");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
   @Test

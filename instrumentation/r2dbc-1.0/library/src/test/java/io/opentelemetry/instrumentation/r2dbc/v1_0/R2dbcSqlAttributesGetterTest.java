@@ -109,7 +109,7 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @Test
-  void multiHostOptionsKeepThePortInTheTargetInStableSemconv() {
+  void multiHostOptionsOmitTheKnownDefaultPortInStableSemconv() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
@@ -120,12 +120,27 @@ class R2dbcSqlAttributesGetterTest {
                 .build());
 
     if (emitStableDatabaseSemconv()) {
-      assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1:3306,host2:3306");
+      assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
       assertThat(getter.getServerPort(dbExecution)).isNull();
     } else {
       assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
       assertThat(getter.getServerPort(dbExecution)).isEqualTo(3306);
     }
+  }
+
+  @Test
+  void multiHostOptionsExtractACommonNonDefaultPortInStableSemconv() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "mariadb")
+                .option(ConnectionFactoryOptions.HOST, "host1,host2")
+                .option(ConnectionFactoryOptions.PORT, 3307)
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(3307);
   }
 
   @Test

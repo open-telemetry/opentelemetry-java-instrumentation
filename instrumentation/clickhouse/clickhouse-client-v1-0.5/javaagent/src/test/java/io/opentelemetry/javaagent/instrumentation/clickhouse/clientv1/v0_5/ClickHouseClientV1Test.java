@@ -591,7 +591,11 @@ class ClickHouseClientV1Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasKind(SpanKind.CLIENT)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "select test_table"
+                                : "SELECT " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
@@ -610,13 +614,54 @@ class ClickHouseClientV1Test {
   }
 
   @Test
+  void testConfiguredNodeDefaultsOmitPortsAcrossProtocolAndSslVariants() throws Exception {
+    ClickHouseRequest<?> request =
+        requestWithNodes(
+            ImmutableList.of(
+                ClickHouseNode.of("http://http.example"),
+                ClickHouseNode.of("https://https.example"),
+                ClickHouseNode.of("tcp://tcp.example"),
+                ClickHouseNode.of("tcps://tcps.example")));
+
+    assertThat(ClickHouseClientV1Singletons.serverAddressGroup(request))
+        .isEqualTo("http.example,https.example,tcp.example,tcps.example");
+    assertThat(ClickHouseClientV1Singletons.serverPort(request)).isNull();
+  }
+
+  @Test
+  void testConfiguredNodesExtractCommonNonDefaultPort() throws Exception {
+    ClickHouseNode httpNode =
+        ClickHouseNode.builder(ClickHouseNode.of("http://http.example")).port(12345).build();
+    ClickHouseNode tcpNode =
+        ClickHouseNode.builder(ClickHouseNode.of("tcp://tcp.example"))
+            .host("2001:db8::2")
+            .port(12345)
+            .build();
+    ClickHouseRequest<?> request = requestWithNodes(ImmutableList.of(httpNode, tcpNode));
+
+    assertThat(ClickHouseClientV1Singletons.serverAddressGroup(request))
+        .isEqualTo("http.example,[2001:db8::2]");
+    assertThat(ClickHouseClientV1Singletons.serverPort(request)).isEqualTo(12345);
+  }
+
+  @Test
+  void testConfiguredNodesInlineMixedPorts() throws Exception {
+    ClickHouseNode httpNode = ClickHouseNode.of("http://http.example");
+    ClickHouseNode httpsNode = ClickHouseNode.of("https://https.example:9444");
+    ClickHouseRequest<?> request = requestWithNodes(ImmutableList.of(httpNode, httpsNode));
+
+    assertThat(ClickHouseClientV1Singletons.serverAddressGroup(request))
+        .isEqualTo("http.example:8123,https.example:9444");
+    assertThat(ClickHouseClientV1Singletons.serverPort(request)).isNull();
+  }
+
+  @Test
   void testConfiguredNodeOrderPreservesPriorityAndDuplicates() throws Exception {
     ClickHouseNode ipv6Node = ClickHouseNode.builder(server).host("2001:db8::2").build();
     ClickHouseNodes nodes = createNodes(ImmutableList.of(ipv6Node, server, ipv6Node));
     nodes.update(ipv6Node, ClickHouseNode.Status.FAULTY);
-    String ipv6Address = "[2001:db8::2]:" + port;
-    String hostAddress = host + ":" + port;
-    String addressGroup = ipv6Address + "," + hostAddress + "," + ipv6Address;
+    String ipv6Address = "[2001:db8::2]";
+    String addressGroup = ipv6Address + "," + host + "," + ipv6Address;
 
     ClickHouseResponse response =
         client
@@ -636,9 +681,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -721,7 +764,7 @@ class ClickHouseClientV1Test {
         ClickHouseNode.builder(server).host("user:secret@configured.example").build();
     ClickHouseNodes nodes = createNodes(ImmutableList.of(server, credentialNode));
     nodes.update(credentialNode, ClickHouseNode.Status.FAULTY);
-    String addressGroup = host + ":" + port + ",configured.example:" + port;
+    String addressGroup = host + ",configured.example";
 
     ClickHouseResponse response =
         client
@@ -741,9 +784,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -923,5 +964,10 @@ class ClickHouseClientV1Test {
         ClickHouseNodes.class.getDeclaredConstructor(Collection.class);
     constructor.setAccessible(true);
     return constructor.newInstance(nodes);
+  }
+
+  private static ClickHouseRequest<?> requestWithNodes(Collection<ClickHouseNode> nodes)
+      throws Exception {
+    return client.read(createNodes(nodes));
   }
 }
