@@ -9,7 +9,9 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.typesafe.config.Config;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pekko.actor.AbstractActor;
 import org.apache.pekko.actor.ActorRef;
@@ -21,6 +23,11 @@ import org.junit.jupiter.api.Test;
 class PekkoClassicRemoteTest extends AbstractPekkoRemoteTest {
 
   private static final int MAXIMUM_FRAME_SIZE = 32000;
+
+  // latches keyed by the probe id the message carries, so that a message which arrives after its
+  // probe already timed out counts against its own probe and not against whichever probe runs next
+  private final ConcurrentHashMap<String, CountDownLatch> received = new ConcurrentHashMap<>();
+  private final AtomicInteger probeIds = new AtomicInteger();
 
   @Override
   protected Config remoteConfig() {
@@ -38,7 +45,7 @@ class PekkoClassicRemoteTest extends AbstractPekkoRemoteTest {
    * message as well as on the configured frame size.
    */
   @Test
-  void doesNotStopAMessageThatOnlyJustFitsFromBeingDelivered() throws InterruptedException {
+  void doesNotStopAMessageThatOnlyJustFitsFromBeingDelivered() {
     Config config =
         parseConfig(
             "pekko.remote.artery.enabled = off\n"
@@ -51,7 +58,6 @@ class PekkoClassicRemoteTest extends AbstractPekkoRemoteTest {
     ActorSystem sender = ActorSystem.create("size-sender", config);
     ActorSystem receiver = ActorSystem.create("size-receiver", config);
     try {
-      AtomicReference<CountDownLatch> received = new AtomicReference<>();
       receiver.actorOf(Props.create(CountingActor.class, received), "counter");
       String path =
           ((ExtendedActorSystem) receiver).provider().getDefaultAddress() + "/user/counter";
@@ -62,7 +68,7 @@ class PekkoClassicRemoteTest extends AbstractPekkoRemoteTest {
       int high = MAXIMUM_FRAME_SIZE;
       while (low < high) {
         int size = (low + high + 1) / 2;
-        if (delivers(sender, path, received, size, 2000)) {
+        if (delivers(sender, path, size, 2000)) {
           low = size;
         } else {
           high = size - 1;
@@ -73,8 +79,7 @@ class PekkoClassicRemoteTest extends AbstractPekkoRemoteTest {
       // the same size, this time with a context that the codec would want to append
       int justFits = low;
       AtomicReference<Boolean> delivered = new AtomicReference<>();
-      testing.runWithSpan(
-          "parent", () -> delivered.set(delivers(sender, path, received, justFits, 30_000)));
+      testing.runWithSpan("parent", () -> delivered.set(delivers(sender, path, justFits, 30_000)));
       assertThat(delivered.get()).isTrue();
     } finally {
       sender.terminate();
@@ -82,16 +87,18 @@ class PekkoClassicRemoteTest extends AbstractPekkoRemoteTest {
     }
   }
 
-  private static boolean delivers(
-      ActorSystem sender,
-      String path,
-      AtomicReference<CountDownLatch> received,
-      int size,
-      long timeoutMillis) {
+  /**
+   * Sends a message of the given size and reports whether it arrived within the timeout. The
+   * message starts with an id that ties it to its own latch. The id takes up part of the requested
+   * size rather than adding to it, which keeps the size honest where it matters: the sizes probed
+   * near the frame limit are far larger than the id.
+   */
+  private boolean delivers(ActorSystem sender, String path, int size, long timeoutMillis) {
+    String id = "probe-" + probeIds.incrementAndGet() + ":";
     CountDownLatch latch = new CountDownLatch(1);
-    received.set(latch);
-    StringBuilder message = new StringBuilder(size);
-    for (int i = 0; i < size; i++) {
+    received.put(id, latch);
+    StringBuilder message = new StringBuilder(Math.max(size, id.length())).append(id);
+    while (message.length() < size) {
       message.append('x');
     }
     sender.actorSelection(path).tell(message.toString(), ActorRef.noSender());
@@ -100,20 +107,33 @@ class PekkoClassicRemoteTest extends AbstractPekkoRemoteTest {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new AssertionError(e);
+    } finally {
+      received.remove(id);
     }
   }
 
   /** Counts messages without recording a span, this test is about delivery rather than tracing. */
   public static class CountingActor extends AbstractActor {
-    private final AtomicReference<CountDownLatch> received;
+    private final ConcurrentHashMap<String, CountDownLatch> received;
 
-    public CountingActor(AtomicReference<CountDownLatch> received) {
+    public CountingActor(ConcurrentHashMap<String, CountDownLatch> received) {
       this.received = received;
     }
 
     @Override
     public Receive createReceive() {
-      return receiveBuilder().match(String.class, message -> received.get().countDown()).build();
+      return receiveBuilder().match(String.class, this::countDown).build();
+    }
+
+    private void countDown(String message) {
+      int idEnd = message.indexOf(':');
+      if (idEnd < 0) {
+        return;
+      }
+      CountDownLatch latch = received.get(message.substring(0, idEnd + 1));
+      if (latch != null) {
+        latch.countDown();
+      }
     }
   }
 }

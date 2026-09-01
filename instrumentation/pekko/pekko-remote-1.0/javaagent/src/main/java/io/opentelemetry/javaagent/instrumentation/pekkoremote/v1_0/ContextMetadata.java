@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -16,6 +17,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -37,10 +39,16 @@ import javax.annotation.Nullable;
  */
 public final class ContextMetadata {
 
+  private static final Logger logger = Logger.getLogger(ContextMetadata.class.getName());
+
   private static final byte VERSION = 1;
   // messages share the artery frame with the metadata, don't let a large context eat into the
   // space that is available for the message itself
-  private static final int MAX_SIZE = 4 * 1024;
+  private static final int MAX_BYTES = 4 * 1024;
+  // the limits that the rmi and thrift context propagation use, modeled on tomcat's
+  // maxHeaderCount and maxHttpHeaderSize; the size is counted in characters
+  private static final int MAX_CONTEXT_ENTRIES = 100;
+  private static final int MAX_CONTEXT_SIZE = 8 * 1024;
 
   private static final TextMapSetter<Map<String, String>> setter = ContextMetadata::put;
   private static final TextMapGetter<Map<String, String>> getter =
@@ -69,6 +77,13 @@ public final class ContextMetadata {
     if (fields.isEmpty()) {
       return;
     }
+    if (fields.size() > MAX_CONTEXT_ENTRIES) {
+      logger.log(
+          FINE,
+          "Not propagating context, {0} entries exceeds the maximum of {1}",
+          new Object[] {fields.size(), MAX_CONTEXT_ENTRIES});
+      return;
+    }
 
     int startPosition = buffer.position();
     try {
@@ -78,7 +93,7 @@ public final class ContextMetadata {
         writeString(buffer, field.getKey());
         writeString(buffer, field.getValue());
       }
-      if (buffer.position() - startPosition > MAX_SIZE) {
+      if (buffer.position() - startPosition > MAX_BYTES) {
         // rewind, pekko treats writing nothing as "this instrument has no metadata"
         buffer.position(startPosition);
       }
@@ -87,6 +102,12 @@ public final class ContextMetadata {
     }
   }
 
+  /**
+   * Reads the context back, null when there is none. The bytes were sent by another node, which
+   * does not necessarily run this version or run the agent in good faith, so nothing about them is
+   * trusted: input that goes over the limits or does not fit its own length fields is reported as
+   * no context rather than thrown at pekko.
+   */
   @Nullable
   public static Context read(ByteBuffer buffer) {
     if (buffer.get() != VERSION) {
@@ -96,10 +117,30 @@ public final class ContextMetadata {
     if (count <= 0) {
       return null;
     }
+    if (count > MAX_CONTEXT_ENTRIES) {
+      logger.log(
+          FINE,
+          "Ignoring context metadata, {0} entries exceeds the maximum of {1}",
+          new Object[] {count, MAX_CONTEXT_ENTRIES});
+      return null;
+    }
+    int size = 0;
     Map<String, String> fields = new HashMap<>();
     for (int i = 0; i < count; i++) {
       String key = readString(buffer);
-      fields.put(key, readString(buffer));
+      String value = key == null ? null : readString(buffer);
+      if (key == null || value == null) {
+        return null;
+      }
+      size += key.length() + value.length();
+      if (size > MAX_CONTEXT_SIZE) {
+        logger.log(
+            FINE,
+            "Ignoring context metadata larger than the maximum of {0} characters",
+            MAX_CONTEXT_SIZE);
+        return null;
+      }
+      fields.put(key, value);
     }
     return GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
@@ -112,8 +153,17 @@ public final class ContextMetadata {
     buffer.put(bytes);
   }
 
+  /** Reads a length prefixed string, null when the length does not fit what remains. */
+  @Nullable
   private static String readString(ByteBuffer buffer) {
-    byte[] bytes = new byte[buffer.getShort()];
+    if (buffer.remaining() < 2) {
+      return null;
+    }
+    int length = buffer.getShort();
+    if (length < 0 || length > buffer.remaining()) {
+      return null;
+    }
+    byte[] bytes = new byte[length];
     buffer.get(bytes);
     return new String(bytes, UTF_8);
   }
