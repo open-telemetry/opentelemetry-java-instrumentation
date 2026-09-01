@@ -29,6 +29,7 @@ import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.ClientBuilderBase;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {
@@ -52,13 +53,16 @@ public class VertxSqlClientSingletons {
       VirtualField.find(SqlClientBase.class, VertxSqlClientDataProvider.class);
 
   private static final Cache<Object, VertxSqlClientData> connectionDataCache = Cache.weak();
-  private static final Cache<Throwable, VertxSqlClientData> connectionFailureDataCache =
-      Cache.weak();
   private static final Cache<Object, ConnectionDataListener> commandDataListenerCache =
+      Cache.weak();
+  private static final Cache<Future<?>, VertxSqlClientDataCapture> supplierFutureDataCaptureCache =
       Cache.weak();
 
   private static final VirtualField<Pool, VertxSqlClientDataCapture> POOL_DATA_CAPTURE =
       VirtualField.find(Pool.class, VertxSqlClientDataCapture.class);
+
+  private static final VirtualField<Promise<?>, VertxSqlClientDataCapture> PROMISE_DATA_CAPTURE =
+      VirtualField.find(Promise.class, VertxSqlClientDataCapture.class);
 
   private static final VirtualField<ClientBuilderBase<?>, List<SqlConnectOptions>>
       BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
@@ -217,8 +221,25 @@ public class VertxSqlClientSingletons {
     };
   }
 
-  public static ConnectionAttempt createConnectionAttempt(Object connectionFactory) {
-    return new ConnectionAttempt(getDbSystemNameFromClassName(connectionFactory));
+  public static Supplier<Future<SqlConnectOptions>> wrapConnectOptionsSupplier(
+      Supplier<Future<SqlConnectOptions>> supplier, VertxSqlClientDataCapture dataCapture) {
+    return () -> {
+      Future<SqlConnectOptions> future = supplier.get();
+      if (future != null) {
+        supplierFutureDataCaptureCache.put(future, dataCapture);
+      }
+      return future;
+    };
+  }
+
+  public static ConnectionAttempt createConnectionAttempt(
+      Object connectionFactory, Future<SqlConnectOptions> connectOptionsFuture) {
+    VertxSqlClientDataCapture dataCapture =
+        supplierFutureDataCaptureCache.get(connectOptionsFuture);
+    if (dataCapture != null) {
+      supplierFutureDataCaptureCache.remove(connectOptionsFuture);
+    }
+    return new ConnectionAttempt(getDbSystemNameFromClassName(connectionFactory), dataCapture);
   }
 
   public static Future<SqlConnectOptions> captureConnectionAttempt(
@@ -241,8 +262,8 @@ public class VertxSqlClientSingletons {
           if (data != null) {
             if (result.succeeded()) {
               cacheConnectionData(result.result(), data);
-            } else {
-              connectionFailureDataCache.put(result.cause(), data);
+            } else if (connectionAttempt.dataCapture != null) {
+              connectionAttempt.dataCapture.addFailureData(result.cause(), data);
             }
           }
           return copyResult(result);
@@ -279,17 +300,19 @@ public class VertxSqlClientSingletons {
     return null;
   }
 
-  @Nullable
-  private static VertxSqlClientData getConnectionFailureData(Throwable throwable) {
-    return connectionFailureDataCache.get(throwable);
+  public static void setPromiseDataCapture(
+      Promise<?> promise, @Nullable VertxSqlClientDataCapture dataCapture) {
+    PROMISE_DATA_CAPTURE.set(promise, dataCapture);
   }
 
   public static void updateConnectionFailureData(
       Promise<?> promise, @Nullable Throwable throwable) {
-    if (throwable == null) {
+    VertxSqlClientDataCapture dataCapture = PROMISE_DATA_CAPTURE.get(promise);
+    PROMISE_DATA_CAPTURE.set(promise, null);
+    if (throwable == null || dataCapture == null) {
       return;
     }
-    VertxSqlClientData data = getConnectionFailureData(throwable);
+    VertxSqlClientData data = dataCapture.takeFailureData(throwable);
     if (data == null) {
       return;
     }
@@ -362,10 +385,12 @@ public class VertxSqlClientSingletons {
 
   public static class ConnectionAttempt {
     private final String dbSystem;
+    @Nullable private final VertxSqlClientDataCapture dataCapture;
     @Nullable private volatile VertxSqlClientData data;
 
-    private ConnectionAttempt(String dbSystem) {
+    private ConnectionAttempt(String dbSystem, @Nullable VertxSqlClientDataCapture dataCapture) {
       this.dbSystem = dbSystem;
+      this.dataCapture = dataCapture;
     }
 
     private void capture(SqlConnectOptions connectOptions) {

@@ -12,11 +12,16 @@ import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
+import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.SqlConnectOptions;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -40,12 +45,28 @@ class DriverInstrumentation implements TypeInstrumentation {
         named("newPool")
             .and(not(isStatic()))
             .and(takesArguments(6))
+            .and(takesArgument(1, named("java.util.function.Supplier")))
             .and(returns(named("io.vertx.sqlclient.Pool"))),
         getClass().getName() + "$NewPoolAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class NewPoolAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(
+        @Advice.This Object driver,
+        @Advice.Argument(value = 1, readOnly = false)
+            Supplier<Future<SqlConnectOptions>> connectOptionsSupplier) {
+      VertxSqlClientDataCapture dataCapture = VertxSqlClientSingletons.getBuildingDataCapture();
+      if (dataCapture != null) {
+        String dbSystem = getDbSystemNameFromClassName(driver);
+        dataCapture.setDbSystem(dbSystem);
+        connectOptionsSupplier =
+            VertxSqlClientSingletons.wrapConnectOptionsSupplier(
+                connectOptionsSupplier, dataCapture);
+      }
+    }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object driver, @Advice.Return @Nullable Pool pool) {

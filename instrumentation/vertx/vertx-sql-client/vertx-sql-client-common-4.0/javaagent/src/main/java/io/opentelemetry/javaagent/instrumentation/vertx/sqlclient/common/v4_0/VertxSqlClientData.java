@@ -16,7 +16,8 @@ public class VertxSqlClientData implements VertxSqlClientDataProvider {
   public static VertxSqlClientData fromConnectOptions(
       SqlConnectOptions connectOptions, @Nullable String dbSystem) {
     SqlConnectOptions copiedOptions = new SqlConnectOptions(connectOptions);
-    return new VertxSqlClientData(copiedOptions, dbSystem, VertxSqlAddressGroup.of(copiedOptions));
+    return new VertxSqlClientData(
+        copiedOptions, dbSystem, VertxSqlAddressGroup.of(copiedOptions, dbSystem));
   }
 
   public VertxSqlClientData(

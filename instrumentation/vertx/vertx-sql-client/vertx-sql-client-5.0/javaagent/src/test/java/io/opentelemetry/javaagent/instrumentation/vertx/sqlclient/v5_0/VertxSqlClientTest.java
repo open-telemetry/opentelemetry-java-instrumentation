@@ -603,8 +603,12 @@ class VertxSqlClientTest {
       int secondPort,
       String statement,
       Throwable error) {
-    List<String> addresses = asList(firstHost + ":" + firstPort, secondHost + ":" + secondPort);
-    Collections.sort(addresses);
+    boolean samePort = firstPort == secondPort;
+    String stableAddress =
+        samePort
+            ? firstHost + "," + secondHost
+            : firstHost + ":" + firstPort + "," + secondHost + ":" + secondPort;
+    Long stablePort = samePort && firstPort != 5432 ? Long.valueOf(firstPort) : null;
     Consumer<SpanDataAssert> operationSpan =
         span ->
             span.hasKind(SpanKind.CLIENT)
@@ -622,10 +626,10 @@ class VertxSqlClientTest {
                         maybeStablePeerService(),
                         emitStableDatabaseSemconv() ? null : "test-peer-service"),
                     equalTo(
-                        SERVER_ADDRESS,
-                        emitStableDatabaseSemconv() ? String.join(",", addresses) : firstHost),
+                        SERVER_ADDRESS, emitStableDatabaseSemconv() ? stableAddress : firstHost),
                     equalTo(
-                        SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(firstPort)),
+                        SERVER_PORT,
+                        emitStableDatabaseSemconv() ? stablePort : Long.valueOf(firstPort)),
                     equalTo(
                         ERROR_TYPE,
                         emitStableDatabaseSemconv() && error != null

@@ -62,7 +62,7 @@ class ConnectionFactoryInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 1, readOnly = false)
             Future<SqlConnectOptions> connectOptionsFuture) {
       ConnectionAttempt connectionAttempt =
-          VertxSqlClientSingletons.createConnectionAttempt(connectionFactory);
+          VertxSqlClientSingletons.createConnectionAttempt(connectionFactory, connectOptionsFuture);
       connectOptionsFuture =
           VertxSqlClientSingletons.captureConnectionAttempt(
               connectOptionsFuture, connectionAttempt);

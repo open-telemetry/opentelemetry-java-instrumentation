@@ -30,7 +30,7 @@ public class VertxSqlClientRequest {
     this.parameterizedQuery = parameterizedQuery;
     this.dbSystemName = dbSystemName;
     this.operationBatchSize = operationBatchSize;
-    this.addressGroup = addressGroup;
+    this.addressGroup = addressGroup != null ? addressGroup.withDbSystem(dbSystemName) : null;
   }
 
   public boolean setConnectionData(VertxSqlClientData data) {
@@ -38,7 +38,12 @@ public class VertxSqlClientRequest {
       return false;
     }
     sqlConnectOptions = data.getConnectOptions();
-    addressGroup = data.getAddressGroup();
+    VertxSqlAddressGroup dataAddressGroup = data.getAddressGroup();
+    String dataDbSystem = data.getDbSystem();
+    addressGroup =
+        dataAddressGroup != null
+            ? dataAddressGroup.withDbSystem(dataDbSystem != null ? dataDbSystem : dbSystemName)
+            : null;
     connectionDataUpdated = true;
     return true;
   }

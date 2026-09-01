@@ -154,6 +154,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
                 batchSize,
                 Context.current(),
                 dataCapture);
+        VertxSqlClientSingletons.setPromiseDataCapture(promiseInternal, dataCapture);
         if (dataCapture != null) {
           String dbSystem = dataCapture.getDbSystem();
           if (dbSystem == null || !isKnownDbSystem(dbSystem)) {
