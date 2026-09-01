@@ -160,8 +160,11 @@ class Jedis40ClientTest {
                             equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "SET" : null),
                             equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "SET" : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(SERVER_ADDRESS, configuredHost),
-                            equalTo(SERVER_PORT, configuredPort),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? configuredHost : host),
+                            equalTo(
+                                SERVER_PORT, emitStableDatabaseSemconv() ? configuredPort : port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
