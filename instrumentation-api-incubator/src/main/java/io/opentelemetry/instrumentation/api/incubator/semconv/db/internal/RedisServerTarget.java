@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 public final class RedisServerTarget {
 
   private static final int DEFAULT_PORT = 6379;
+  private static final int MAX_ENDPOINT_LIST_LENGTH = 255;
 
   private final String address;
   @Nullable private final Integer port;
@@ -86,9 +87,13 @@ public final class RedisServerTarget {
     if (unordered) {
       Collections.sort(rendered);
     }
+    String address = renderEndpointList(rendered);
+    if (address == null) {
+      return null;
+    }
     Integer port =
         !mixedPorts && commonPort != null && commonPort != DEFAULT_PORT ? commonPort : null;
-    return new RedisServerTarget(String.join(",", rendered), port);
+    return new RedisServerTarget(address, port);
   }
 
   @Nullable
@@ -137,10 +142,29 @@ public final class RedisServerTarget {
       return ofLogicalName(logicalName);
     }
     Collections.sort(rendered);
-    if (!isSafeLogicalName(logicalName)) {
-      return new RedisServerTarget(String.join(",", rendered), null);
+    String address = renderEndpointList(rendered);
+    if (address == null) {
+      return ofLogicalName(logicalName);
     }
-    return new RedisServerTarget(String.join(",", rendered) + "/" + logicalName, null);
+    if (!isSafeLogicalName(logicalName)) {
+      return new RedisServerTarget(address, null);
+    }
+    return new RedisServerTarget(address + "/" + logicalName, null);
+  }
+
+  @Nullable
+  private static String renderEndpointList(List<String> endpoints) {
+    int length = endpoints.size() - 1;
+    for (String endpoint : endpoints) {
+      length += endpoint.length();
+    }
+    while (!endpoints.isEmpty() && length > MAX_ENDPOINT_LIST_LENGTH) {
+      length -= endpoints.remove(endpoints.size() - 1).length();
+      if (!endpoints.isEmpty()) {
+        length--;
+      }
+    }
+    return endpoints.isEmpty() ? null : String.join(",", endpoints);
   }
 
   private static boolean isSafeLogicalName(String value) {
