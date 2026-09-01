@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -27,7 +29,7 @@ public class SpymemcachedServerTarget {
     int commonPort = -1;
     boolean hasMixedPorts = false;
     for (InetSocketAddress node : nodes) {
-      String host = node == null ? null : clean(node.getHostString());
+      String host = node == null ? null : sanitizeHost(node.getHostString());
       if (host == null || node.getPort() <= 0) {
         return null;
       }
@@ -76,14 +78,54 @@ public class SpymemcachedServerTarget {
   }
 
   @Nullable
-  private static String clean(@Nullable String host) {
+  private static String sanitizeHost(@Nullable String host) {
     if (host == null) {
       return null;
     }
     String cleaned = host.trim();
-    if (cleaned.startsWith("[") && cleaned.endsWith("]")) {
+    boolean bracketed = cleaned.startsWith("[") && cleaned.endsWith("]");
+    if (bracketed) {
       cleaned = cleaned.substring(1, cleaned.length() - 1).trim();
     }
-    return cleaned.isEmpty() ? null : cleaned;
+    if (cleaned.isEmpty() || cleaned.startsWith("[") || cleaned.endsWith("]")) {
+      return null;
+    }
+
+    if (cleaned.indexOf(':') >= 0) {
+      return isSafeIpv6Host(cleaned) ? cleaned : null;
+    }
+    if (bracketed) {
+      return null;
+    }
+    for (int i = 0; i < cleaned.length(); i++) {
+      char c = cleaned.charAt(i);
+      if (!Character.isLetterOrDigit(c) && c != '-' && c != '.' && c != '_') {
+        return null;
+      }
+    }
+    return cleaned;
+  }
+
+  private static boolean isSafeIpv6Host(String host) {
+    int zoneSeparator = host.indexOf('%');
+    String address = zoneSeparator < 0 ? host : host.substring(0, zoneSeparator);
+    if (address.isEmpty() || (zoneSeparator >= 0 && host.indexOf('%', zoneSeparator + 1) >= 0)) {
+      return false;
+    }
+    try {
+      new URI("http", null, address, -1, null, null, null);
+    } catch (URISyntaxException ignored) {
+      return false;
+    }
+    if (zoneSeparator < 0 || zoneSeparator == host.length() - 1) {
+      return zoneSeparator < 0;
+    }
+    for (int i = zoneSeparator + 1; i < host.length(); i++) {
+      char c = host.charAt(i);
+      if (!Character.isLetterOrDigit(c) && c != '-' && c != '.' && c != '_' && c != '~') {
+        return false;
+      }
+    }
+    return true;
   }
 }

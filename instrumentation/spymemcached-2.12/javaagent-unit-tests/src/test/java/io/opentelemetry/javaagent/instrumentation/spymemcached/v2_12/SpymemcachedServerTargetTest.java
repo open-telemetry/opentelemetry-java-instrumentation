@@ -10,7 +10,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -128,6 +130,15 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
+  void ipv6ZoneIdentifiersArePreserved() {
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(singletonList(node("fe80::1%eth0.100", 11211)));
+
+    assertThat(target.getAddress()).isEqualTo("fe80::1%eth0.100");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void ipv6NodesAreBracketedInMultiNodeTargets() {
     SpymemcachedServerTarget target =
         SpymemcachedServerTarget.create(
@@ -143,6 +154,35 @@ class SpymemcachedServerTargetTest {
         SpymemcachedServerTarget.create(singletonList(node("  cache.example  ", 11211)));
 
     assertThat(target.getAddress()).isEqualTo("cache.example");
+  }
+
+  @Test
+  void unsafeHostsDropTheNodeList() {
+    assertThat(SpymemcachedServerTarget.create(singletonList(node("user:password@cache", 11211))))
+        .isNull();
+    assertThat(SpymemcachedServerTarget.create(singletonList(node("cache.example,other", 11211))))
+        .isNull();
+    assertThat(SpymemcachedServerTarget.create(singletonList(node("cache.example/path", 11211))))
+        .isNull();
+    assertThat(SpymemcachedServerTarget.create(singletonList(node("cache.example?token=x", 11211))))
+        .isNull();
+    assertThat(SpymemcachedServerTarget.create(singletonList(node("cache.example#token", 11211))))
+        .isNull();
+    assertThat(SpymemcachedServerTarget.create(singletonList(node("cache example", 11211))))
+        .isNull();
+    assertThat(SpymemcachedServerTarget.create(singletonList(node("abc:def", 11211)))).isNull();
+    assertThat(SpymemcachedServerTarget.create(singletonList(node("fe80::1%eth0,other", 11211))))
+        .isNull();
+  }
+
+  @Test
+  void unsafeResolvedHostnameDropsTheNodeList() throws UnknownHostException {
+    InetAddress address =
+        InetAddress.getByAddress("user:password@cache.example", new byte[] {127, 0, 0, 1});
+
+    assertThat(
+            SpymemcachedServerTarget.create(singletonList(new InetSocketAddress(address, 11211))))
+        .isNull();
   }
 
   @Test
