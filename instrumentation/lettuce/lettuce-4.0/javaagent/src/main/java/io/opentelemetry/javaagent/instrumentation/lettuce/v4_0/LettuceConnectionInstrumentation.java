@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.lambdaworks.redis.ConnectionBuilder;
 import com.lambdaworks.redis.RedisChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
@@ -66,9 +65,7 @@ class LettuceConnectionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
-        @Advice.Argument(0) ChannelHandlerContext context,
-        @Advice.Argument(1) Object message,
-        @Advice.Argument(2) ChannelPromise promise) {
+        @Advice.Argument(0) ChannelHandlerContext context, @Advice.Argument(1) Object message) {
       SocketAddress address = context.channel().remoteAddress();
       if (!(address instanceof InetSocketAddress)) {
         return;
