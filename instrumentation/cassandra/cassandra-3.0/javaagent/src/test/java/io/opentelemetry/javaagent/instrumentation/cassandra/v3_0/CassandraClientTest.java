@@ -256,6 +256,14 @@ class CassandraClientTest {
     assertConfiguredTarget(multiContactPointCluster, expectedAddress, null);
   }
 
+  @Test
+  void emptyConfiguredContactPointDropsTarget() {
+    Cluster emptyContactPointCluster =
+        Cluster.builder().addContactPoints(cassandra.getHost(), "").withPort(cassandraPort).build();
+
+    assertConfiguredTarget(emptyContactPointCluster, null, null);
+  }
+
   private static void assertConfiguredTarget(
       Cluster configuredCluster, String expectedAddress, Integer expectedPort) {
     cleanup.deferCleanup(configuredCluster);

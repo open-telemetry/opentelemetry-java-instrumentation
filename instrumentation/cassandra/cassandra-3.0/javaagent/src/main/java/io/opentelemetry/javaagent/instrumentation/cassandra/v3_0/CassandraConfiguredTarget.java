@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 public class CassandraConfiguredTarget {
 
   private static final int DEFAULT_PORT = 9042;
+  private static final int MAX_ADDRESS_LENGTH = 255;
 
   private final String address;
   @Nullable private final Integer port;
@@ -91,12 +92,31 @@ public class CassandraConfiguredTarget {
 
     if (commonPort) {
       hostTokens.sort(String::compareTo);
-      return new CassandraConfiguredTarget(
-          String.join(",", hostTokens), firstPort == DEFAULT_PORT ? null : firstPort);
+      String address = joinWithinLimit(hostTokens);
+      return address == null
+          ? null
+          : new CassandraConfiguredTarget(address, firstPort == DEFAULT_PORT ? null : firstPort);
     }
 
     endpointTokens.sort(String::compareTo);
-    return new CassandraConfiguredTarget(String.join(",", endpointTokens), null);
+    String address = joinWithinLimit(endpointTokens);
+    return address == null ? null : new CassandraConfiguredTarget(address, null);
+  }
+
+  @Nullable
+  private static String joinWithinLimit(List<String> tokens) {
+    StringBuilder result = new StringBuilder();
+    for (String token : tokens) {
+      int separatorLength = result.length() == 0 ? 0 : 1;
+      if (result.length() + separatorLength + token.length() > MAX_ADDRESS_LENGTH) {
+        break;
+      }
+      if (separatorLength != 0) {
+        result.append(',');
+      }
+      result.append(token);
+    }
+    return result.length() == 0 ? null : result.toString();
   }
 
   private static int resolvePort(ContactPoint point, int configuredPort) {
@@ -185,13 +205,14 @@ public class CassandraConfiguredTarget {
 
     private void add(@Nullable Object value) {
       if (value == null) {
+        valid = false;
         return;
       }
       if (value instanceof String) {
         String host = sanitizeHost((String) value);
         if (host != null) {
           points.add(new ContactPoint(host, null));
-        } else if (!((String) value).isEmpty()) {
+        } else {
           valid = false;
         }
       } else if (value instanceof InetSocketAddress) {

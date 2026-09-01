@@ -12,6 +12,7 @@ import com.datastax.driver.core.EndPoint;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 class CassandraConfiguredContactPointsTest {
@@ -115,6 +116,59 @@ class CassandraConfiguredContactPointsTest {
   }
 
   @Test
+  void limitsDefaultPortListAtEndpointBoundary() {
+    String first = repeat('a', 245);
+    CassandraConfiguredTarget firstTarget =
+        CassandraConfiguredTarget.create(asList("cccc", "bbbb", first, "bbbb"), 9042);
+    CassandraConfiguredTarget secondTarget =
+        CassandraConfiguredTarget.create(asList("bbbb", first, "bbbb", "cccc"), 9042);
+
+    String expectedAddress = first + ",bbbb,bbbb";
+    assertThat(expectedAddress).hasSize(255);
+    assertThat(firstTarget).isNotNull();
+    assertThat(secondTarget).isNotNull();
+    assertThat(firstTarget.getAddress()).isEqualTo(expectedAddress);
+    assertThat(secondTarget.getAddress()).isEqualTo(expectedAddress);
+    assertThat(firstTarget.getPort()).isNull();
+    assertThat(secondTarget.getPort()).isNull();
+  }
+
+  @Test
+  void limitsSharedNonDefaultPortListAtEndpointBoundary() {
+    String first = repeat('a', 255);
+    CassandraConfiguredTarget target = CassandraConfiguredTarget.create(asList("z", first), 9142);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(first);
+    assertThat(target.getPort()).isEqualTo(9142);
+    assertThat(CassandraConfiguredTarget.create(repeat('a', 256), 9142)).isNull();
+  }
+
+  @Test
+  void limitsMixedPortListAtEndpointBoundaryWithoutSplittingIpv6() throws UnknownHostException {
+    InetAddress ipv6 =
+        InetAddress.getByAddress(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1});
+    InetSocketAddress ipv6Address = new InetSocketAddress(ipv6, 9042);
+    String ipv6Token = "[0:0:0:0:0:0:0:1]:9042";
+    String otherHost = repeat('a', 255 - ipv6Token.length() - 1 - ":9142".length());
+    InetSocketAddress otherAddress = InetSocketAddress.createUnresolved(otherHost, 9142);
+    InetSocketAddress overflow = InetSocketAddress.createUnresolved("z", 9142);
+    CassandraConfiguredTarget firstTarget =
+        CassandraConfiguredTarget.create(asList(overflow, otherAddress, ipv6Address), 9042);
+    CassandraConfiguredTarget secondTarget =
+        CassandraConfiguredTarget.create(asList(ipv6Address, overflow, otherAddress), 9042);
+
+    String expectedAddress = ipv6Token + ',' + otherHost + ":9142";
+    assertThat(expectedAddress).hasSize(255);
+    assertThat(firstTarget).isNotNull();
+    assertThat(secondTarget).isNotNull();
+    assertThat(firstTarget.getAddress()).isEqualTo(expectedAddress);
+    assertThat(secondTarget.getAddress()).isEqualTo(expectedAddress);
+    assertThat(firstTarget.getPort()).isNull();
+    assertThat(secondTarget.getPort()).isNull();
+  }
+
+  @Test
   void unsafeUnresolvedHostDropsEntireTarget() throws UnknownHostException {
     InetSocketAddress reachable =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 9042);
@@ -138,5 +192,11 @@ class CassandraConfiguredContactPointsTest {
 
     assertThat(target).isNull();
     assertThat(CassandraConfiguredTarget.create("db.example", 0)).isNull();
+  }
+
+  private static String repeat(char value, int count) {
+    char[] result = new char[count];
+    Arrays.fill(result, value);
+    return new String(result);
   }
 }
