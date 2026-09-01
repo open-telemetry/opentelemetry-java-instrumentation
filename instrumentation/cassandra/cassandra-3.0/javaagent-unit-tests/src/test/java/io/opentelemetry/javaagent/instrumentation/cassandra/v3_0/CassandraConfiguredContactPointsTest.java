@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.datastax.driver.core.EndPoint;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -111,6 +112,23 @@ class CassandraConfiguredContactPointsTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("[0:0:0:0:0:0:0:1]:9042,db.example:9142");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void unsafeUnresolvedHostDropsEntireTarget() throws UnknownHostException {
+    InetSocketAddress reachable =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 9042);
+    InetSocketAddress unsafe = InetSocketAddress.createUnresolved("user:password@db.example", 9042);
+
+    assertThat(CassandraConfiguredTarget.create(asList(reachable, unsafe), 9042)).isNull();
+  }
+
+  @Test
+  void unsupportedEndPointDropsEntireTarget() {
+    EndPoint customEndPoint = () -> new InetSocketAddress(InetAddress.getLoopbackAddress(), 9042);
+
+    assertThat(CassandraConfiguredTarget.create(asList("db.example", customEndPoint), 9042))
+        .isNull();
   }
 
   @Test
