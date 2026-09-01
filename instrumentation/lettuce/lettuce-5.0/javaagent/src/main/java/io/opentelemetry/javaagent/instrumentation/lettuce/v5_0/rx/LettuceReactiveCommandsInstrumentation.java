@@ -55,7 +55,6 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @AssignReturned.ToArguments(@ToArgument(0))
     public static <K, V, T> LettuceReactiveCommandSupplier<K, V, T> wrapCommandSupplier(
-        @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       return new LettuceReactiveCommandSupplier<>(supplier);
     }
@@ -80,7 +79,6 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @AssignReturned.ToArguments(@ToArgument(0))
     public static <K, V, T> LettuceReactiveCommandSupplier<K, V, T> wrapCommandSupplier(
-        @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       return new LettuceReactiveCommandSupplier<>(supplier);
     }
