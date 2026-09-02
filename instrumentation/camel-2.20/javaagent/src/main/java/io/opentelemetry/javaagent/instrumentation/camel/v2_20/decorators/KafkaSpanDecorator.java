@@ -30,6 +30,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelDirection;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
@@ -81,6 +82,7 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
     }
   }
 
+  @Nullable
   @Override
   public String getDestinationPartitionId(Exchange exchange) {
     Integer partition = exchange.getIn().getHeader(PARTITION, Integer.class);
