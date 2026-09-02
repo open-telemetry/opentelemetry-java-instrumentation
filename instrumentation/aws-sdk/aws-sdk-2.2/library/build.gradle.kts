@@ -64,6 +64,15 @@ testing {
         implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
     }
+
+    register<JvmTestSuite>("testRdsData") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        val version = baseVersion("2.5.54").orLatest()
+        implementation("software.amazon.awssdk:rdsdata:$version")
+      }
+    }
   }
 }
 
@@ -115,10 +124,19 @@ tasks {
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
   }
 
+  val testRdsDataStableSemconv = register<Test>("testRdsDataStableSemconv") {
+    val testRdsDataSourceSet = sourceSets["testRdsData"]
+    testClassesDirs = testRdsDataSourceSet.output.classesDirs
+    classpath = testRdsDataSourceSet.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
     dependsOn(
       testing.suites,
       testStableSemconv,
+      testRdsDataStableSemconv,
       testMessagingPreview,
       testBothSemconv,
       testCoreOnlyStableSemconv,
