@@ -96,18 +96,18 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void sharedNonDefaultPortIsSeparatedFromIpv4AndIpv6Addresses() {
+  void sharedNonDefaultPortStaysInIpv4AndIpv6Addresses() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("::1", 9200, "https"), new HttpHost("192.0.2.1", 9200, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("192.0.2.1,[::1]");
-    assertThat(target.getPort()).isEqualTo(9200);
+    assertThat(target.getAddress()).isEqualTo("192.0.2.1:9200,[::1]:9200");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void mixedHttpAndHttpsDefaultPortsStayInTheAddressList() {
+  void mixedHttpAndHttpsDefaultPortsAreOmitted() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(
             asList(
@@ -115,7 +115,7 @@ class ElasticsearchServerTargetTest {
                 new HttpHost("plain.example", 80, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("plain.example:80,secure.example:443");
+    assertThat(target.getAddress()).isEqualTo("plain.example,secure.example");
     assertThat(target.getPort()).isNull();
   }
 
@@ -145,59 +145,60 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void duplicateEndpointsAtAddressLimitArePreserved() {
-    String host = repeat("a", 127);
-
+  void fiveEndpointsAreKeptAfterSorting() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(
-            asList(new HttpHost(host, 9200, "http"), new HttpHost(host, 9200, "http")));
+            asList(
+                new HttpHost("h5", 80, "http"),
+                new HttpHost("h1", 80, "http"),
+                new HttpHost("h3", 80, "http"),
+                new HttpHost("h2", 80, "http"),
+                new HttpHost("h4", 80, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo(host + "," + host).hasSize(255);
-    assertThat(target.getPort()).isEqualTo(9200);
+    assertThat(target.getAddress()).isEqualTo("h1,h2,h3,h4,h5");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void endpointsBeyondAddressLimitAreOmittedWholeAfterSorting() {
-    HttpHost ipv6 = new HttpHost("::1", -1, "http");
-    HttpHost longHost = new HttpHost(repeat("b", 240), 9200, "http");
-    HttpHost omittedHost = new HttpHost("z.example", 9201, "http");
-
+  void endpointsAfterFirstFiveAreOmittedAfterSorting() {
     ElasticsearchServerTarget first =
-        ElasticsearchServerTarget.of(asList(omittedHost, longHost, ipv6));
+        ElasticsearchServerTarget.of(
+            asList(
+                new HttpHost("h6", 80, "http"),
+                new HttpHost("h2", 80, "http"),
+                new HttpHost("h4", 80, "http"),
+                new HttpHost("h1", 80, "http"),
+                new HttpHost("h5", 80, "http"),
+                new HttpHost("h3", 80, "http")));
     ElasticsearchServerTarget second =
-        ElasticsearchServerTarget.of(asList(ipv6, omittedHost, longHost));
+        ElasticsearchServerTarget.of(
+            asList(
+                new HttpHost("h3", 80, "http"),
+                new HttpHost("h5", 80, "http"),
+                new HttpHost("h1", 80, "http"),
+                new HttpHost("h4", 80, "http"),
+                new HttpHost("h2", 80, "http"),
+                new HttpHost("h6", 80, "http")));
 
     assertThat(first).isNotNull();
     assertThat(second).isNotNull();
-    assertThat(first.getAddress())
-        .isEqualTo("[::1]:80," + repeat("b", 240) + ":9200")
-        .hasSize(254)
-        .doesNotContain("z.example");
+    assertThat(first.getAddress()).isEqualTo("h1,h2,h3,h4,h5");
     assertThat(second.getAddress()).isEqualTo(first.getAddress());
     assertThat(first.getPort()).isNull();
     assertThat(second.getPort()).isNull();
   }
 
   @Test
-  void firstEndpointThatExceedsAddressLimitHasNoTarget() {
-    String hostAtLimit = repeat("a", 255);
-    String hostOverLimit = repeat("a", 256);
+  void endpointLengthDoesNotLimitTarget() {
+    String host = repeat("a", 256);
 
     ElasticsearchServerTarget target =
-        ElasticsearchServerTarget.of(singletonList(new HttpHost(hostAtLimit, 9200, "http")));
+        ElasticsearchServerTarget.of(singletonList(new HttpHost(host, 9200, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo(hostAtLimit).hasSize(255);
-    assertThat(
-            ElasticsearchServerTarget.of(singletonList(new HttpHost(hostOverLimit, 9200, "http"))))
-        .isNull();
-    assertThat(
-            ElasticsearchServerTarget.of(
-                asList(
-                    new HttpHost("z.example", 9200, "http"),
-                    new HttpHost(hostOverLimit, 9200, "http"))))
-        .isNull();
+    assertThat(target.getAddress()).isEqualTo(host).hasSize(256);
+    assertThat(target.getPort()).isEqualTo(9200);
   }
 
   @Test
@@ -207,8 +208,8 @@ class ElasticsearchServerTargetTest {
             asList(new HttpHost("h1", 9200, "http"), new HttpHost("h2", 9200, "https")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1,h2");
-    assertThat(target.getPort()).isEqualTo(9200);
+    assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9200");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -218,24 +219,24 @@ class ElasticsearchServerTargetTest {
             asList(new HttpHost("::1", 9200, "http"), new HttpHost("[fe80::1]", 9200, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1],[fe80::1]");
-    assertThat(target.getPort()).isEqualTo(9200);
+    assertThat(target.getAddress()).isEqualTo("[::1]:9200,[fe80::1]:9200");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
   void credentialsPathQueryAndFragmentAreRemoved() {
     List<HttpHost> hosts =
         asList(
-            new HttpHost("user:secret@h1", 9200, "https"),
-            new HttpHost("h2/prefix", 9200, "https"),
-            new HttpHost("h3?token=secret", 9200, "https"),
-            new HttpHost("h4#secret", 9200, "https"));
+            new HttpHost("user:secret@h1", 443, "https"),
+            new HttpHost("h2/prefix", 443, "https"),
+            new HttpHost("h3?token=secret", 443, "https"),
+            new HttpHost("h4#secret", 443, "https"));
 
     ElasticsearchServerTarget target = ElasticsearchServerTarget.of(hosts);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("h1,h2,h3,h4");
-    assertThat(target.getPort()).isEqualTo(9200);
+    assertThat(target.getPort()).isNull();
     assertThat(target.getAddress()).doesNotContain("secret");
   }
 

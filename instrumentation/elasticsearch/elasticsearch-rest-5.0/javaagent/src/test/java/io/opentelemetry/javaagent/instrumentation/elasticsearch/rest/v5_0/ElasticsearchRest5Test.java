@@ -335,14 +335,20 @@ class ElasticsearchRest5Test {
   }
 
   private static String hostList() {
-    return httpHost.getHostName() + "," + httpHost.getHostName();
+    return httpHost.getHostName()
+        + ":"
+        + httpHost.getPort()
+        + ","
+        + httpHost.getHostName()
+        + ":"
+        + httpHost.getPort();
   }
 
   private static void assertConfiguredTarget(String hostList) {
     testing.waitAndAssertTraces(
         trace ->
             assertThat(trace.getSpan(0))
-                .hasName(emitStableDatabaseSemconv() ? hostList + ":" + httpHost.getPort() : "GET")
+                .hasName(emitStableDatabaseSemconv() ? hostList : "GET")
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
                     equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
@@ -355,7 +361,9 @@ class ElasticsearchRest5Test {
                     equalTo(
                         SERVER_ADDRESS,
                         emitStableDatabaseSemconv() ? hostList : httpHost.getHostName()),
-                    equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort())),
+                    equalTo(
+                        SERVER_PORT,
+                        emitStableDatabaseSemconv() ? null : Long.valueOf(httpHost.getPort())),
                     equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
   }
 }

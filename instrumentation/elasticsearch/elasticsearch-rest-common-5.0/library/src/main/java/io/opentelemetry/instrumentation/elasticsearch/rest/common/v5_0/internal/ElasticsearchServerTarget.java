@@ -18,7 +18,7 @@ import org.apache.http.HttpHost;
  */
 public class ElasticsearchServerTarget {
 
-  private static final int MAX_ADDRESS_LENGTH = 255;
+  private static final int MAX_ENDPOINTS = 5;
 
   private final String address;
   @Nullable private final Integer port;
@@ -34,10 +34,7 @@ public class ElasticsearchServerTarget {
       if (host == null) {
         return null;
       }
-      String address = joinEndpointsWithinLimit(singletonList(host));
-      if (address == null) {
-        return null;
-      }
+      String address = joinFirstEndpoints(singletonList(host));
       int port = normalizedPort(httpHost);
       return new ElasticsearchServerTarget(address, port >= 0 ? port : null);
     }
@@ -52,9 +49,6 @@ public class ElasticsearchServerTarget {
   @Nullable
   private static ElasticsearchServerTarget renderGroup(List<HttpHost> hosts) {
     List<String> addresses = new ArrayList<>(hosts.size());
-    List<Integer> effectivePorts = new ArrayList<>(hosts.size());
-    int sharedPort = effectivePort(hosts.get(0));
-    boolean portsMatch = true;
     boolean allPortsAreDefault = true;
     for (HttpHost httpHost : hosts) {
       String host = sanitizeHost(httpHost.getHostName());
@@ -62,43 +56,32 @@ public class ElasticsearchServerTarget {
         return null;
       }
       int port = effectivePort(httpHost);
-      if (port != sharedPort) {
-        portsMatch = false;
-      }
       if (port != defaultPort(httpHost)) {
         allPortsAreDefault = false;
       }
       addresses.add(host);
-      effectivePorts.add(port);
     }
     List<String> endpoints = new ArrayList<>(hosts.size());
     for (int i = 0; i < hosts.size(); i++) {
-      endpoints.add(renderHostAndPort(addresses.get(i), portsMatch ? -1 : effectivePorts.get(i)));
+      endpoints.add(
+          renderHostAndPort(
+              addresses.get(i), allPortsAreDefault ? -1 : effectivePort(hosts.get(i))));
     }
     endpoints.sort(String::compareTo);
-    String address = joinEndpointsWithinLimit(endpoints);
-    if (address == null) {
-      return null;
-    }
-    return new ElasticsearchServerTarget(
-        address, portsMatch && sharedPort >= 0 && !allPortsAreDefault ? sharedPort : null);
+    String address = joinFirstEndpoints(endpoints);
+    return new ElasticsearchServerTarget(address, null);
   }
 
-  @Nullable
-  private static String joinEndpointsWithinLimit(List<String> endpoints) {
+  private static String joinFirstEndpoints(List<String> endpoints) {
     StringBuilder address = new StringBuilder();
-    for (String endpoint : endpoints) {
-      int separatorLength = address.length() == 0 ? 0 : 1;
-      int available = MAX_ADDRESS_LENGTH - address.length() - separatorLength;
-      if (endpoint.length() > available) {
-        break;
-      }
-      if (separatorLength != 0) {
+    int endpointCount = Math.min(endpoints.size(), MAX_ENDPOINTS);
+    for (int i = 0; i < endpointCount; i++) {
+      if (i != 0) {
         address.append(',');
       }
-      address.append(endpoint);
+      address.append(endpoints.get(i));
     }
-    return address.length() == 0 ? null : address.toString();
+    return address.toString();
   }
 
   private static int normalizedPort(HttpHost httpHost) {
