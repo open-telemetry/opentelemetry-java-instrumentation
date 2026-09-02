@@ -206,7 +206,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
 
     List<RedisURI> redisUris =
         asList(RedisURI.create(embeddedDbUri), RedisURI.create(embeddedDbUri));
-    String configuredTarget = host + "," + host + ":" + port;
+    String configuredTarget = host + ":" + port + "," + host + ":" + port;
     StatefulRedisMasterSlaveConnection<String, String> masterSlaveConnection =
         MasterSlave.connect(redisClient, StringCodec.UTF8, redisUris);
     cleanup.deferCleanup(masterSlaveConnection);
@@ -233,8 +233,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host + "," + host),
-                            equalTo(SERVER_PORT, port),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
+                            equalTo(SERVER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(maybeStable(DB_STATEMENT), "SET MASTER_SLAVE_COMMAND_KEY ?"),
@@ -245,8 +245,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("PIPELINE SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host + "," + host),
-                            equalTo(SERVER_PORT, port),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
+                            equalTo(SERVER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
