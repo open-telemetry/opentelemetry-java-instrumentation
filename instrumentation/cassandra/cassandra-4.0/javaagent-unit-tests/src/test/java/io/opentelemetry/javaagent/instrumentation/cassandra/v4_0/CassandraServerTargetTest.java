@@ -266,6 +266,16 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void sessionRejectsMalformedProgrammaticContactPointHost() {
+    configureContactPoints(emptyList());
+    when(session.getContext()).thenReturn(context);
+    Set<EndPoint> programmaticContactPoints =
+        singleton(new DefaultEndPoint(InetSocketAddress.createUnresolved("user:password", 9042)));
+
+    assertThat(CassandraServerTarget.of(session, programmaticContactPoints)).isNull();
+  }
+
+  @Test
   void sessionIncludesLongEndpointNames() {
     configureContactPoints(singletonList(repeat('a', 251) + ":9042"));
     when(session.getContext()).thenReturn(context);

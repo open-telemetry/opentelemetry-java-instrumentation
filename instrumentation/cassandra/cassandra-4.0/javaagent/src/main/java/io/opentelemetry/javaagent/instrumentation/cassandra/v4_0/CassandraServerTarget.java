@@ -51,7 +51,7 @@ class CassandraServerTarget {
           return null;
         }
         InetSocketAddress inetAddress = (InetSocketAddress) address;
-        if (!isSafeHost(inetAddress.getHostString()) || !validPort(inetAddress.getPort())) {
+        if (!isValidHost(inetAddress.getHostString()) || !validPort(inetAddress.getPort())) {
           return null;
         }
         contactPoints.add(
