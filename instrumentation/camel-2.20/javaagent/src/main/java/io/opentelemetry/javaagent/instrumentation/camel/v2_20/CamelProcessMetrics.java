@@ -15,12 +15,15 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveTelemetry;
 import javax.annotation.Nullable;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
@@ -29,6 +32,8 @@ class CamelProcessMetrics {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.camel-2.20";
   private static final String STATE_PROPERTY = CamelProcessMetrics.class.getName() + ".state";
+  private static final ContextKey<Boolean> RECORD_CONSUMED_MESSAGES =
+      ContextKey.named("camel-record-consumed-messages");
   private static final Meter meter = createMeter();
   private static final AttributesExtractor<CamelRequest, Void> attributesExtractor =
       MessagingAttributesExtractor.create(new CamelMessagingAttributesGetter(), PROCESS, "process");
@@ -47,8 +52,15 @@ class CamelProcessMetrics {
     return meterBuilder.build();
   }
 
+  static OperationMetrics consumedMessages() {
+    return meter ->
+        new ConsumedMessagesListener(MessagingConsumerMetrics.getConsumedMessages().create(meter));
+  }
+
   static void start(Route route, Context parentContext, CamelRequest request) {
-    boolean recordConsumedMessages = !hasConsumedMessages(parentContext);
+    boolean recordConsumedMessages =
+        !hasConsumedMessages(parentContext)
+            && !JmsReceiveTelemetry.wasRecorded(request.getExchange().getIn());
     boolean recordProcessDuration = !hasProcessDuration(parentContext);
     if (!recordConsumedMessages && !recordProcessDuration) {
       return;
@@ -95,6 +107,32 @@ class CamelProcessMetrics {
     }
     if (state.recordProcessDuration) {
       processDuration.onEnd(state.context, endAttributes, endNanos);
+    }
+  }
+
+  private static final class ConsumedMessagesListener implements OperationListener {
+
+    private final OperationListener delegate;
+
+    private ConsumedMessagesListener(OperationListener delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+      if (hasConsumedMessages(context)) {
+        return context;
+      }
+      return delegate
+          .onStart(context, startAttributes, startNanos)
+          .with(RECORD_CONSUMED_MESSAGES, true);
+    }
+
+    @Override
+    public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+      if (Boolean.TRUE.equals(context.get(RECORD_CONSUMED_MESSAGES))) {
+        delegate.onEnd(context, endAttributes, endNanos);
+      }
     }
   }
 

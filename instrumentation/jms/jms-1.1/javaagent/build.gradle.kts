@@ -24,6 +24,8 @@ muzzle {
 dependencies {
   implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
 
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+
   compileOnly("javax.jms:jms-api:1.1-rev-1")
 
   testImplementation("org.apache.activemq:activemq-client:5.16.5")

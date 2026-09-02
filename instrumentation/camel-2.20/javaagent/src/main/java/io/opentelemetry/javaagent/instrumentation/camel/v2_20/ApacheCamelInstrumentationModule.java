@@ -23,6 +23,7 @@ public class ApacheCamelInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new CamelContextInstrumentation(),
+        new JmsMessageInstrumentation(),
         new KafkaFetchRecordsInstrumentation(),
         new SendProcessorInstrumentation());
   }

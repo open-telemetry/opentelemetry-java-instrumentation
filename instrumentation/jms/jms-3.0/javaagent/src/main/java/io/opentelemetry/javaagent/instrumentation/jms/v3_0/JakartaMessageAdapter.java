@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
+import static io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveTelemetry.markRecorded;
+import static io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveTelemetry.wasRecorded;
+
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import jakarta.jms.Destination;
@@ -16,9 +18,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class JakartaMessageAdapter implements MessageAdapter {
-
-  private static final VirtualField<Message, Boolean> RECEIVE_TELEMETRY_RECORDED =
-      VirtualField.find(Message.class, Boolean.class);
 
   public static MessageAdapter create(Message message) {
     return new JakartaMessageAdapter(message);
@@ -77,11 +76,11 @@ public class JakartaMessageAdapter implements MessageAdapter {
 
   @Override
   public boolean wasReceiveTelemetryRecorded() {
-    return Boolean.TRUE.equals(RECEIVE_TELEMETRY_RECORDED.get(message));
+    return wasRecorded(message);
   }
 
   @Override
   public void markReceiveTelemetryRecorded() {
-    RECEIVE_TELEMETRY_RECORDED.set(message, Boolean.TRUE);
+    markRecorded(message);
   }
 }

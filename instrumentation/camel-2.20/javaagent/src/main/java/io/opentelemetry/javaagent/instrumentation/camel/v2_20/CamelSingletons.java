@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.markConsumedMessages;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -15,7 +16,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveTelemetry;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
@@ -90,7 +91,12 @@ class CamelSingletons {
     }
     if (operationType == PROCESS && emitStableMessagingSemconv()) {
       builder.addOperationMetrics(MessagingProcessMetrics.get());
-      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+      builder.addContextCustomizer(
+          (context, request, startAttributes) ->
+              JmsReceiveTelemetry.wasRecorded(request.getExchange().getIn())
+                  ? markConsumedMessages(context)
+                  : context);
+      builder.addOperationMetrics(CamelProcessMetrics.consumedMessages());
       return MessagingProcessInstrumenterFactory.create(
           builder,
           CamelPropagationUtil.messagingPropagator(),

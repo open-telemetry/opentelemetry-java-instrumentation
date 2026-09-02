@@ -85,15 +85,19 @@ public class CamelMessagingMetricsAssertions {
         destination,
         processErrorType,
         processDestinationPartitionId);
-    assertCounter(
-        testing,
-        "messaging.client.consumed.messages",
-        "Number of messages that were delivered to the application.",
-        "process",
-        system,
-        destination,
-        processErrorType,
-        processDestinationPartitionId);
+    if (system.equals("jms")) {
+      assertConsumedMessageCount(testing, system, destination, 1);
+    } else {
+      assertCounter(
+          testing,
+          "messaging.client.consumed.messages",
+          "Number of messages that were delivered to the application.",
+          "process",
+          system,
+          destination,
+          processErrorType,
+          processDestinationPartitionId);
+    }
     assertNoDeprecatedMetrics(testing);
     if (system.equals("jms") || system.equals("kafka")) {
       assertNoDuplicateMessagingMetrics(testing, system, destination);
@@ -291,6 +295,22 @@ public class CamelMessagingMetricsAssertions {
         testing, "messaging.client.consumed.messages", "process", system, destination);
     assertNoDuplicateMessagingMetric(
         testing, "messaging.process.duration", "process", system, destination);
+  }
+
+  private static void assertConsumedMessageCount(
+      InstrumentationExtension testing, String system, String destination, long expectedCount) {
+    long count =
+        testing.metrics().stream()
+            .filter(metric -> metric.getName().equals("messaging.client.consumed.messages"))
+            .flatMap(metric -> metric.getLongSumData().getPoints().stream())
+            .filter(
+                point ->
+                    system.equals(point.getAttributes().get(MESSAGING_SYSTEM))
+                        && destination.equals(
+                            point.getAttributes().get(MESSAGING_DESTINATION_NAME)))
+            .mapToLong(point -> point.getValue())
+            .sum();
+    assertThat(count).isEqualTo(expectedCount);
   }
 
   private static void assertNoDuplicateMessagingMetric(

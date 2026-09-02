@@ -19,6 +19,7 @@ dependencies {
   compileOnly("org.apache.camel:camel-core:$camelversion")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
 
   // without adding this dependency, javadoc fails:
