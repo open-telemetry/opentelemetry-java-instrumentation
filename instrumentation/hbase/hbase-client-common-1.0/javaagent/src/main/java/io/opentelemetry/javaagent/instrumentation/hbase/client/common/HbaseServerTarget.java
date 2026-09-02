@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,7 +49,6 @@ public class HbaseServerTarget {
   private static final int DEFAULT_ZK_CLIENT_PORT = 2181;
   private static final String DEFAULT_ZK_ZNODE_PARENT = "/hbase";
   private static final int DEFAULT_MASTER_PORT = 16000;
-  private static final int MAX_MASTER_ENDPOINTS = 5;
 
   private static final boolean SUPPORTS_CLIENT_ZK_CONFIG =
       hasHbaseConstant("CLIENT_ZOOKEEPER_QUORUM");
@@ -236,10 +237,26 @@ public class HbaseServerTarget {
     if (defaultPort == null) {
       return null;
     }
-    List<String> masters = canonicalEndpoints(masterAddresses(configuration), defaultPort);
-    return masters == null
-        ? null
-        : String.join(",", masters.subList(0, Math.min(masters.size(), MAX_MASTER_ENDPOINTS)));
+    String configuredMasters = masterAddresses(configuration);
+    if (configuredMasters == null) {
+      return null;
+    }
+
+    DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort).setPortAlwaysInline(true);
+    for (String configuredMaster : configuredMasters.split(",", -1)) {
+      String endpoint = canonicalEndpoint(configuredMaster, defaultPort);
+      if (endpoint == null) {
+        return null;
+      }
+      int portSeparator = endpoint.lastIndexOf(':');
+      Integer port = parsePort(endpoint.substring(portSeparator + 1));
+      if (port == null) {
+        return null;
+      }
+      builder.addEndpoint(endpoint.substring(0, portSeparator), port);
+    }
+    DbServerTarget target = builder.build();
+    return target == null ? null : target.getAddress();
   }
 
   @Nullable
@@ -262,25 +279,6 @@ public class HbaseServerTarget {
       return DEFAULT_MASTER_PORT;
     }
     return parsePort(configuredPort);
-  }
-
-  @Nullable
-  private static List<String> canonicalEndpoints(
-      @Nullable String configuredEndpoints, @Nullable Integer defaultPort) {
-    if (configuredEndpoints == null) {
-      return null;
-    }
-
-    List<String> endpoints = new ArrayList<>();
-    for (String configuredEndpoint : configuredEndpoints.split(",", -1)) {
-      String endpoint = canonicalEndpoint(configuredEndpoint, defaultPort);
-      if (endpoint == null) {
-        return null;
-      }
-      endpoints.add(endpoint);
-    }
-    endpoints.sort(String::compareTo);
-    return endpoints;
   }
 
   @Nullable
