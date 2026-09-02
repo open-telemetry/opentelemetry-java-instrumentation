@@ -81,7 +81,7 @@ class AwsSpanAssertions {
         String destinationName = spanName.substring(0, operationSeparator);
         String operationName = spanName.substring(operationSeparator + 1);
         expectedSpanName =
-            ("publish".equals(operationName) ? "send" : operationName) + " " + destinationName;
+            (operationName.equals("publish") ? "send" : operationName) + " " + destinationName;
       }
     }
 

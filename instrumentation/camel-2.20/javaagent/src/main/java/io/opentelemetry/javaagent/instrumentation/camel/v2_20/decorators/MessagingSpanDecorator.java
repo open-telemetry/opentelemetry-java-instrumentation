@@ -63,7 +63,7 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
     if (!spanContextPropagated) {
       return false;
     }
-    return !"ironmq".equals(component)
+    return !component.equals("ironmq")
         || Boolean.parseBoolean(
             toQueryParameters(endpoint.getEndpointUri()).get("preserveHeaders"));
   }
@@ -127,7 +127,7 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
   }
 
   public String getStableDestination(Exchange exchange, Endpoint endpoint) {
-    if (!"rabbitmq".equals(component)) {
+    if (!component.equals("rabbitmq")) {
       return getDestination(exchange, endpoint);
     }
 

@@ -114,7 +114,7 @@ final class CamelPropagationUtil {
       }
       Map<String, Object> headers = request.getExchange().getIn().getHeaders();
       Object value =
-          "X-Amzn-Trace-Id".equals(key) ? headers.get("AWSTraceHeader") : headers.get(key);
+          key.equals("X-Amzn-Trace-Id") ? headers.get("AWSTraceHeader") : headers.get(key);
       return value == null ? null : value.toString();
     }
   }
