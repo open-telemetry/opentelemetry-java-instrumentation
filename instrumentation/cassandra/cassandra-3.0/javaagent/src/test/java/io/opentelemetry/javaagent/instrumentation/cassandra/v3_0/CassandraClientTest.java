@@ -42,6 +42,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Cluster;
@@ -795,6 +797,48 @@ class CassandraClientTest {
                                 ERROR_TYPE,
                                 emitStableDatabaseSemconv()
                                     ? SyntaxError.class.getName()
+                                    : null))));
+  }
+
+  @Test
+  void failureWithoutCoordinatorUsesConfiguredTargetOnlyForStableSemconv() {
+    Cluster configuredCluster =
+        Cluster.builder().addContactPoint("LOCALHOST").withPort(4242).build();
+    cleanup.deferCleanup(configuredCluster);
+    Session delegate = mock(Session.class);
+    when(delegate.getCluster()).thenReturn(configuredCluster);
+    RuntimeException failure = new RuntimeException("failed before execution");
+    when(delegate.execute("invalid")).thenThrow(failure);
+    Session session = new TracingSession(delegate);
+
+    assertThatThrownBy(() -> session.execute("invalid")).isSameAs(failure);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "LOCALHOST:4242" : "DB Query")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(failure)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "LOCALHOST" : null),
+                            satisfies(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? val -> val.isEqualTo(4242)
+                                    : val -> val.isNull()),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(maybeStable(DB_STATEMENT), "invalid"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? RuntimeException.class.getName()
                                     : null))));
   }
 
