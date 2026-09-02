@@ -92,7 +92,7 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void severalContactPointsExtractASharedNonDefaultPort() throws UnknownHostException {
+  void severalContactPointsInlineASharedNonDefaultPort() throws UnknownHostException {
     if (!emitStableDatabaseSemconv()) {
       when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
     }
@@ -101,8 +101,9 @@ class CassandraEndpointAttributesTest {
         serverAttributes(target(asList("node1.example.com:9142", "node2.example.com:9142")));
 
     if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com,node2.example.com");
-      assertThat(attributes.get(SERVER_PORT)).isEqualTo(9142L);
+      assertThat(attributes.get(SERVER_ADDRESS))
+          .isEqualTo("node1.example.com:9142,node2.example.com:9142");
+      assertThat(attributes.get(SERVER_PORT)).isNull();
     } else {
       assertCoordinatorIsServer(attributes);
     }

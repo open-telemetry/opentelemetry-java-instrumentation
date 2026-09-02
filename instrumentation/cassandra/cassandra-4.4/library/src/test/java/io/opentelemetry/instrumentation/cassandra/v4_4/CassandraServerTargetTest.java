@@ -101,13 +101,13 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void severalContactPointsExtractASharedNonDefaultPort() {
+  void severalContactPointsInlineASharedNonDefaultPort() {
     CassandraServerTarget target =
         CassandraServerTarget.of(asList("node1.example.com:9142", "10.0.0.5:9142"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("10.0.0.5,node1.example.com");
-    assertThat(target.getPort()).isEqualTo(9142);
+    assertThat(target.getAddress()).isEqualTo("10.0.0.5:9142,node1.example.com:9142");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -155,8 +155,9 @@ class CassandraServerTargetTest {
     assertThat(defaultPortTarget.getAddress()).isEqualTo("node1.example.com,node2.example.com");
     assertThat(defaultPortTarget.getPort()).isNull();
     assertThat(nonDefaultPortTarget).isNotNull();
-    assertThat(nonDefaultPortTarget.getAddress()).isEqualTo("node1.example.com,node2.example.com");
-    assertThat(nonDefaultPortTarget.getPort()).isEqualTo(9142);
+    assertThat(nonDefaultPortTarget.getAddress())
+        .isEqualTo("node1.example.com:9142,node2.example.com:9142");
+    assertThat(nonDefaultPortTarget.getPort()).isNull();
   }
 
   @Test
@@ -222,26 +223,46 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void endpointListMayReachTheExactAddressLimit() {
-    String first = repeat('a', 127);
-    String second = repeat('b', 127);
+  void fiveEndpointsAreAllIncludedWithoutALengthLimit() {
+    String first = repeat('a', 60);
+    String second = repeat('b', 60);
+    String third = repeat('c', 60);
+    String fourth = repeat('d', 60);
+    String fifth = repeat('e', 60);
 
     CassandraServerTarget target =
-        CassandraServerTarget.of(asList(first + ":9042", second + ":9042"));
+        CassandraServerTarget.of(
+            asList(
+                fifth + ":9042",
+                third + ":9042",
+                first + ":9042",
+                fourth + ":9042",
+                second + ":9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo(first + "," + second).hasSize(255);
+    assertThat(target.getAddress())
+        .isEqualTo(String.join(",", first, second, third, fourth, fifth))
+        .hasSize(304);
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void endpointListStopsBeforeAnOverflowingCompleteEndpoint() {
-    String first = repeat('a', 250);
-
-    CassandraServerTarget target = CassandraServerTarget.of(asList("b:9142", first + ":9042"));
+  void onlyTheFirstFiveOrderedEndpointsAreIncluded() {
+    CassandraServerTarget target =
+        CassandraServerTarget.of(
+            asList(
+                "node6.example.com:9042",
+                "node3.example.com:9042",
+                "node1.example.com:9042",
+                "node5.example.com:9142",
+                "node2.example.com:9042",
+                "node4.example.com:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo(first + ":9042").hasSize(255);
+    assertThat(target.getAddress())
+        .isEqualTo(
+            "node1.example.com:9042,node2.example.com:9042,node3.example.com:9042,"
+                + "node4.example.com:9042,node5.example.com:9142");
     assertThat(target.getPort()).isNull();
   }
 
@@ -392,16 +413,6 @@ class CassandraServerTargetTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("duplicate.example.com,duplicate.example.com");
     assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void sessionHasNoTargetWhenTheFirstRenderedEndpointCannotFit() {
-    configureContactPoints(singletonList(repeat('a', 251) + ":9042"));
-    when(session.getContext()).thenReturn(context);
-    Set<EndPoint> programmaticContactPoints =
-        singleton(new DefaultEndPoint(InetSocketAddress.createUnresolved("b.example.com", 9142)));
-
-    assertThat(CassandraServerTarget.of(session, programmaticContactPoints)).isNull();
   }
 
   @Test
