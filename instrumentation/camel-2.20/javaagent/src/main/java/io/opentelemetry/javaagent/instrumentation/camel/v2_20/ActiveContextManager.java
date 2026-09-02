@@ -124,17 +124,17 @@ public class ActiveContextManager {
       this.parent = parent;
     }
 
-    private synchronized void capture(ContextWithScope contextWithScope) {
+    private void capture(ContextWithScope contextWithScope) {
       scopes.add(contextWithScope);
     }
 
-    private synchronized void addActivated(ContextWithScope contextWithScope) {
+    private void addActivated(ContextWithScope contextWithScope) {
       if (!complete) {
         scopes.add(0, contextWithScope);
       }
     }
 
-    private synchronized void finish(boolean closeScopes) {
+    private void finish(boolean closeScopes) {
       complete = true;
       if (closeScopes) {
         for (ContextWithScope contextWithScope : scopes) {
@@ -143,7 +143,7 @@ public class ActiveContextManager {
       }
     }
 
-    private synchronized boolean isComplete() {
+    private boolean isComplete() {
       return complete;
     }
   }
@@ -187,7 +187,7 @@ public class ActiveContextManager {
       }
     }
 
-    synchronized void closeScope() {
+    void closeScope() {
       if (scope != null && Thread.currentThread() == scopeOwner) {
         scope.close();
         scope = null;

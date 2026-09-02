@@ -154,22 +154,16 @@ public final class MessagingConsumerMetrics implements OperationListener {
         consumedMessagesCounter != null
             && recordsConsumedMessages(operationType)
             && !MessagingMetricsState.hasConsumedMessages(context);
-    Context contextWithState =
-        context.with(
-            MESSAGING_CONSUMER_METRICS_STATE,
-            new AutoValue_MessagingConsumerMetrics_State(
-                startAttributes,
-                startNanos,
-                recordClientOperationDuration,
-                recordConsumedMessages));
     if (recordClientOperationDuration) {
-      contextWithState =
-          MessagingMetricsState.markClientOperationDuration(contextWithState, operationType);
+      context = MessagingMetricsState.markClientOperationDuration(context, operationType);
     }
     if (recordConsumedMessages) {
-      contextWithState = MessagingMetricsState.markConsumedMessages(contextWithState);
+      context = MessagingMetricsState.markConsumedMessages(context);
     }
-    return contextWithState;
+    return context.with(
+        MESSAGING_CONSUMER_METRICS_STATE,
+        new AutoValue_MessagingConsumerMetrics_State(
+            startAttributes, startNanos, recordClientOperationDuration, recordConsumedMessages));
   }
 
   @Override

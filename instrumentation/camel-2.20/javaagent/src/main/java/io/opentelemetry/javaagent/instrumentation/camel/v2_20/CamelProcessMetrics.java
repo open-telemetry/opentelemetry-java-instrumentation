@@ -47,17 +47,15 @@ class CamelProcessMetrics {
     return meterBuilder.build();
   }
 
-  static Context withConsumedMessagesClaim(Context context, CamelRequest request) {
-    Object message = request.getExchange().getIn();
-    return hasConsumedMessages(message) ? markConsumedMessages(context) : context;
-  }
-
   static void start(Route route, Context parentContext, CamelRequest request) {
     AttributesBuilder attributes = Attributes.builder();
     attributesExtractor.onStart(attributes, parentContext, request);
     Attributes startAttributes = attributes.build();
     long startNanos = System.nanoTime();
-    Context metricsContext = withConsumedMessagesClaim(parentContext, request);
+    Context metricsContext =
+        hasConsumedMessages(request.getExchange().getIn())
+            ? markConsumedMessages(parentContext)
+            : parentContext;
     metricsContext = consumedMessages.onStart(metricsContext, startAttributes, startNanos);
     metricsContext = processDuration.onStart(metricsContext, startAttributes, startNanos);
     request

@@ -133,19 +133,16 @@ public final class MessagingProducerMetrics implements OperationListener {
         sentMessagesCounter != null
             && MessagingOperationType.SEND.value().equals(operationType)
             && !MessagingMetricsState.hasSentMessages(context);
-    Context contextWithState =
-        context.with(
-            MESSAGING_PRODUCER_METRICS_STATE,
-            new AutoValue_MessagingProducerMetrics_State(
-                startAttributes, startNanos, recordClientOperationDuration, recordSentMessages));
     if (recordClientOperationDuration) {
-      contextWithState =
-          MessagingMetricsState.markClientOperationDuration(contextWithState, operationType);
+      context = MessagingMetricsState.markClientOperationDuration(context, operationType);
     }
     if (recordSentMessages) {
-      contextWithState = MessagingMetricsState.markSentMessages(contextWithState);
+      context = MessagingMetricsState.markSentMessages(context);
     }
-    return contextWithState;
+    return context.with(
+        MESSAGING_PRODUCER_METRICS_STATE,
+        new AutoValue_MessagingProducerMetrics_State(
+            startAttributes, startNanos, recordClientOperationDuration, recordSentMessages));
   }
 
   @Override
