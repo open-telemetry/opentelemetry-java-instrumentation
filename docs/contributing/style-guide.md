@@ -96,17 +96,6 @@ methods.
 
 ### `final` keyword usage
 
-**Classes**: Declare public classes `final` where possible, but only in public API code.
-
-The following are **not** public API — do not add `final` to classes there:
-
-- `javaagent/src/main/` — internal implementation detail, even when classes are `public` for
-  service loading or cross-package access
-- `.internal` packages
-- Test code — `src/test/` directories and modules whose directory name starts or ends with
-  `testing` or `tests` (e.g., `testing/`, `testing-common/`, `quarkus-2.0-testing/`,
-  `smoke-tests/`)
-
 **Methods**: Declare `final` only in non-final public API classes.
 
 **Fields**: Declare `final` where possible.
