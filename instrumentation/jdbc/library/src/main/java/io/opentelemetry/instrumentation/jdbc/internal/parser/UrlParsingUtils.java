@@ -323,7 +323,9 @@ public final class UrlParsingUtils {
   }
 
   private static boolean isEndpointAuthority(String authority) {
-    return hasValidHostPorts(authority) || sanitizeHostList(authority) != null;
+    return hasValidHostPorts(authority)
+        || isSingleEndpointAuthority(authority)
+        || sanitizeHostList(authority) != null;
   }
 
   private static boolean isSingleEndpointAuthority(String authority) {
