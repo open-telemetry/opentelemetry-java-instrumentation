@@ -268,6 +268,19 @@ class CassandraClientTest {
     assertConfiguredTarget(emptyContactPointCluster, null, null);
   }
 
+  @Test
+  void exceptionalPartialContactPointMutationDropsTarget() {
+    Cluster.Builder builder = Cluster.builder();
+    String[] contactPoints = {"127.0.0.2", null};
+    assertThatThrownBy(() -> builder.addContactPoints(contactPoints))
+        .isInstanceOf(NullPointerException.class);
+
+    Cluster configuredCluster =
+        builder.addContactPoint(cassandra.getHost()).withPort(cassandraPort).build();
+
+    assertConfiguredTarget(configuredCluster, null, null);
+  }
+
   private static void assertConfiguredTarget(
       Cluster configuredCluster, String expectedAddress, Integer expectedPort) {
     cleanup.deferCleanup(configuredCluster);

@@ -34,12 +34,20 @@ public class CassandraConfiguredTarget {
   }
 
   public static void capture(Cluster.Builder builder, Object[] arguments) {
+    getOrCreateContactPoints(builder).add(arguments);
+  }
+
+  public static void invalidate(Cluster.Builder builder) {
+    getOrCreateContactPoints(builder).valid = false;
+  }
+
+  private static ContactPoints getOrCreateContactPoints(Cluster.Builder builder) {
     ContactPoints contactPoints = VirtualFields.BUILDER_CONTACT_POINTS.get(builder);
     if (contactPoints == null) {
       contactPoints = new ContactPoints();
       VirtualFields.BUILDER_CONTACT_POINTS.set(builder, contactPoints);
     }
-    contactPoints.add(arguments);
+    return contactPoints;
   }
 
   public static void store(Cluster.Builder builder, Cluster cluster, int configuredPort) {

@@ -49,8 +49,12 @@ class CassandraBuilderInstrumentation implements TypeInstrumentation {
         @Advice.AllArguments Object[] arguments,
         @Advice.Enter CallDepth callDepth,
         @Advice.Thrown @Nullable Throwable throwable) {
-      if (callDepth.decrementAndGet() == 0 && throwable == null && emitStableDatabaseSemconv()) {
-        CassandraConfiguredTarget.capture(builder, arguments);
+      if (callDepth.decrementAndGet() == 0 && emitStableDatabaseSemconv()) {
+        if (throwable == null) {
+          CassandraConfiguredTarget.capture(builder, arguments);
+        } else {
+          CassandraConfiguredTarget.invalidate(builder);
+        }
       }
     }
   }
