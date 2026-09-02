@@ -241,6 +241,22 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getHost()).isEqualTo("h1");
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "jdbc:mariadb:failover://h1" + "?sessionVariables=email='user@example.com',sql_mode=ANSI",
+        "jdbc:mariadb:failover://address=(host=h1)"
+            + "?sessionVariables=email='user@example.com',sql_mode=ANSI"
+      })
+  void atInMariaDbSingletonQueryPreservesOrdinaryParsing(String url) {
+    DbInfo dbInfo = parse(url, null);
+
+    assertThat(dbInfo.isMultiTarget()).isFalse();
+    assertThat(dbInfo.getServerAddressGroup()).isNull();
+    assertThat(dbInfo.getHost()).isEqualTo("h1");
+    assertThat(dbInfo.getServerPort()).isEqualTo(3306);
+  }
+
   @Test
   void atInMariaDbAddressBlockQueryWithoutDatabaseDoesNotDisableConfiguredTargetParsing() {
     DbInfo dbInfo =
