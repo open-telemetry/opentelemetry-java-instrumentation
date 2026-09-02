@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.ContextHolder;
@@ -46,6 +47,11 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("io.netty.channel.Channel"))),
         getClass().getName() + "$SendAdvice");
     transformer.applyAdviceToMethod(
+        isPrivate()
+            .and(named("addCommonResponseHandlers"))
+            .and(takesArgument(0, named("io.netty.channel.ChannelPipeline"))),
+        getClass().getName() + "$AddCommonResponseHandlersAdvice");
+    transformer.applyAdviceToMethod(
         named("connect").and(takesArgument(0, named("ratpack.exec.Downstream"))),
         getClass().getName() + "$ConnectDownstreamAdvice");
     transformer.applyAdviceToMethod(
@@ -57,9 +63,20 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
   public static class SendAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void injectChannelAttribute(
+    public static void onEnter(
         @Advice.FieldValue("execution") Execution execution, @Advice.Argument(1) Channel channel) {
       RatpackSingletons.propagateContextToChannel(execution, channel);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AddCommonResponseHandlersAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.FieldValue("execution") Execution execution,
+        @Advice.Argument(0) ChannelPipeline pipeline) {
+      RatpackSingletons.captureProtocolVersion(execution, pipeline.channel());
     }
   }
 

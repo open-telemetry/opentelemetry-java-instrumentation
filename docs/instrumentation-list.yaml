@@ -116,6 +116,14 @@ definitions:
             type: boolean
             description: Whether this rule overrides an already-applied template.
             default: false
+    messaging.batch-send.message-creation-spans.enabled:
+      name: otel.instrumentation.messaging.batch-send.message-creation-spans.enabled
+      declarative_name: java.common.messaging.batch_send.message_creation_spans.enabled
+      description: Provides the default for whether to create a producer span for
+        each eligible message in a batch send when stable messaging semantic conventions
+        are enabled. An instrumentation-specific setting takes precedence.
+      type: boolean
+      default: true
     messaging.capture-headers:
       name: otel.instrumentation.messaging.experimental.capture-headers
       declarative_name: java.common.messaging.capture_headers/development
@@ -179,6 +187,14 @@ definitions:
       description: Flush timeout in milliseconds.
       type: int
       default: 10000
+    otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled:
+      name: otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
+      declarative_name: java.aws_sdk.batch_send.message_creation_spans.enabled
+      description: Determines whether to create a producer span for each eligible
+        message in an SQS batch send when stable messaging semantic conventions are
+        enabled. Overrides `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled`.
+      type: boolean
+      default: true
     otel.instrumentation.aws-sdk.experimental-record-individual-http-error:
       name: otel.instrumentation.aws-sdk.experimental-record-individual-http-error
       declarative_name: java.aws_sdk.record_individual_http_error/development
@@ -310,7 +326,7 @@ definitions:
       name: otel.instrumentation.elasticsearch.capture-search-query
       declarative_name: java.elasticsearch.capture_search_query
       description: |
-        Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
+        Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this to capture or omit search query bodies. Under v3-preview and in 3.0, the setting is ignored and search query bodies are always captured. Sanitization remains separately configurable with otel.instrumentation.elasticsearch.query-sanitization.enabled.
       type: boolean
       default: false
     otel.instrumentation.elasticsearch.experimental-span-attributes-4728abdb:
@@ -334,6 +350,13 @@ definitions:
         Enable the capture of the experimental span attributes `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.write.routing`, `elasticsearch.request.write.type`, `elasticsearch.response.status`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version`.
       type: boolean
       default: false
+    otel.instrumentation.elasticsearch.query-sanitization.enabled:
+      name: otel.instrumentation.elasticsearch.query-sanitization.enabled
+      declarative_name: java.elasticsearch.query_sanitization.enabled
+      description: |
+        Enables sanitization of the captured search query bodies. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+      type: boolean
+      default: true
     otel.instrumentation.executors.include:
       name: otel.instrumentation.executors.include
       declarative_name: java.executors.include
@@ -1075,7 +1098,14 @@ definitions:
       name: otel.instrumentation.opensearch.capture-search-query
       declarative_name: java.opensearch.capture_search_query
       description: |
-        Enable the capture of sanitized search query bodies. Search queries may contain personal or sensitive information.
+        Deprecated and will be removed in 3.0, when search query bodies are always captured. There is no replacement. Until then, set this to false to disable capture. Search queries may contain personal or sensitive information.
+      type: boolean
+      default: true
+    otel.instrumentation.opensearch.query-sanitization.enabled:
+      name: otel.instrumentation.opensearch.query-sanitization.enabled
+      declarative_name: java.opensearch.query_sanitization.enabled
+      description: |
+        Enables sanitization of captured search query bodies. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled. When disabled, bodies are captured verbatim and may contain personal or sensitive information.
       type: boolean
       default: true
     otel.instrumentation.opentelemetry-annotations.exclude-methods:
@@ -4214,6 +4244,21 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.consumed.messages-83bc8813:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.consumed.messages-bda2d99f:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -4305,6 +4350,28 @@ definitions:
       unit: s
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.client.operation.duration-df200871:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -5081,6 +5148,10 @@ libraries:
         type: LONG
       - name: http.route
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: network.protocol.version
         type: STRING
       - name: server.address
@@ -5130,6 +5201,10 @@ libraries:
         type: LONG
       - name: http.route
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: network.protocol.version
         type: STRING
       - name: server.address
@@ -5178,7 +5253,7 @@ libraries:
 - name: apache-commons-pool-2.0
   display_name: Apache Commons Pool
   description: |
-    This instrumentation enables object pool metrics for Apache Commons Pool GenericObjectPool and GenericKeyedObjectPool instances.
+    This instrumentation enables object pool metrics for Apache Commons Pool GenericObjectPool and GenericKeyedObjectPool instances. When Apache DBCP instrumentation is enabled, metrics for the GenericObjectPool backing an Apache DBCP BasicDataSource are excluded because the DBCP instrumentation already reports database connection pool metrics for it.
   library_link: https://commons.apache.org/proper/commons-pool/
   disabled_by_default: true
   source_path: instrumentation/apache-commons-pool-2.0
@@ -6512,9 +6587,11 @@ libraries:
   - com.amazonaws:aws-java-sdk-core:[1.10.33,)
   - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
   configuration_refs:
+  - messaging.batch-send.message-creation-spans.enabled
   - messaging.capture-headers
   - messaging.headers.excluded
   - messaging.headers.included
+  - otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
   - otel.instrumentation.aws-sdk.experimental-span-attributes-f30ad240
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -6885,9 +6962,11 @@ libraries:
   - software.amazon.awssdk:sns:[2.2.0,)
   - software.amazon.awssdk:sqs:[2.2.0,)
   configuration_refs:
+  - messaging.batch-send.message-creation-spans.enabled
   - messaging.capture-headers
   - messaging.headers.excluded
   - messaging.headers.included
+  - otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
   - otel.instrumentation.aws-sdk.experimental-record-individual-http-error
   - otel.instrumentation.aws-sdk.experimental-span-attributes-0c4c01de
   - otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
@@ -6963,6 +7042,8 @@ libraries:
         type: STRING
       - name: gen_ai.request.stop_sequences
         type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
       - name: gen_ai.request.temperature
         type: DOUBLE
       - name: gen_ai.request.top_p
@@ -8553,8 +8634,10 @@ libraries:
   - org.elasticsearch.client:elasticsearch-rest-client:[5.0,6.4)
   - org.elasticsearch.client:rest:[5.0,6.4)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - http.known-methods
   - otel.instrumentation.elasticsearch.capture-search-query
+  - otel.instrumentation.elasticsearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -8601,8 +8684,10 @@ libraries:
   javaagent_target_versions:
   - org.elasticsearch.client:elasticsearch-rest-client:[6.4,7.0)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - http.known-methods
   - otel.instrumentation.elasticsearch.capture-search-query
+  - otel.instrumentation.elasticsearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -8650,8 +8735,10 @@ libraries:
   javaagent_target_versions:
   - org.elasticsearch.client:elasticsearch-rest-client:[7.0,)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - http.known-methods
   - otel.instrumentation.elasticsearch.capture-search-query
+  - otel.instrumentation.elasticsearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -12299,6 +12386,11 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:connect-api:[2.6.0,)
+  telemetry:
+  - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-83bc8813
+    - messaging.process.duration-5301bc21
 - name: kafka-streams-0.11
   display_name: Apache Kafka Streams
   description: This instrumentation enables messaging spans for Kafka Streams processing.
@@ -14309,18 +14401,6 @@ libraries:
         type: STRING
       - name: gen_ai.request.encoding_formats
         type: STRING_ARRAY
-      - name: gen_ai.request.model
-        type: STRING
-      - name: gen_ai.response.model
-        type: STRING
-      - name: gen_ai.usage.input_tokens
-        type: LONG
-    - span_kind: INTERNAL
-      attributes:
-      - name: gen_ai.operation.name
-        type: STRING
-      - name: gen_ai.provider.name
-        type: STRING
       - name: gen_ai.request.frequency_penalty
         type: DOUBLE
       - name: gen_ai.request.max_tokens
@@ -14333,6 +14413,8 @@ libraries:
         type: LONG
       - name: gen_ai.request.stop_sequences
         type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
       - name: gen_ai.request.temperature
         type: DOUBLE
       - name: gen_ai.request.top_p
@@ -14363,7 +14445,9 @@ libraries:
   javaagent_target_versions:
   - org.opensearch.client:opensearch-java:[3.0,)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - otel.instrumentation.opensearch.capture-search-query
+  - otel.instrumentation.opensearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -14623,6 +14707,10 @@ libraries:
         type: LONG
       - name: http.route
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: network.protocol.version
         type: STRING
       - name: server.address
@@ -14993,7 +15081,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.operation.duration-df200871
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
@@ -15491,7 +15579,7 @@ libraries:
         type: STRING
   - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15504,6 +15592,8 @@ libraries:
       - name: http.response.status_code
         type: LONG
       - name: http.route
+        type: STRING
+      - name: network.protocol.version
         type: STRING
       - name: peer.service
         type: STRING
@@ -15515,7 +15605,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=service.peer
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15528,6 +15618,8 @@ libraries:
       - name: http.response.status_code
         type: LONG
       - name: http.route
+        type: STRING
+      - name: network.protocol.version
         type: STRING
       - name: server.address
         type: STRING
@@ -17456,7 +17548,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17466,6 +17558,8 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: network.protocol.version
+        type: STRING
       - name: peer.service
         type: STRING
       - name: server.address
@@ -17492,7 +17586,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=service.peer
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17502,6 +17596,8 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: network.protocol.version
+        type: STRING
       - name: server.address
         type: STRING
       - name: server.port

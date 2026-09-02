@@ -23,7 +23,7 @@ dependencies {
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:4.36.0")
+  implementation("com.google.protobuf:protobuf-java-util:4.36.1")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
@@ -61,6 +61,7 @@ tasks {
 
     val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
     val skipOpenJ9SmokeTests = (findProperty("skipOpenJ9SmokeTests") as String?) == "true"
+    systemProperty("reducedAppServerTests", findProperty("reducedAppServerTests") == "true")
     if (smokeTestSuite != null) {
       val suite = suites[smokeTestSuite]
       if (suite != null) {

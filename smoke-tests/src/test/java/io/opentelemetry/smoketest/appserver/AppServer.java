@@ -18,4 +18,6 @@ import java.lang.annotation.Target;
   String version();
 
   String jdk();
+
+  boolean inReducedMatrix() default false;
 }

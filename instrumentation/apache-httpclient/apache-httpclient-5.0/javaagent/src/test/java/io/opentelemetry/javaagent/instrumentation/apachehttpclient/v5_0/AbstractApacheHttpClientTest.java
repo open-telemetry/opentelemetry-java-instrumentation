@@ -35,12 +35,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    // unopened port or non routable address; or timeout
-    // circular redirects don't report protocol information as well
-    if ("http://localhost:61/".equals(uri.toString())
-        || "https://192.0.2.1/".equals(uri.toString())
-        || uri.getPath().endsWith("/read-timeout")
-        || uri.getPath().endsWith("/circular-redirect")) {
+    if (uri.getPath().endsWith("/circular-redirect")) {
       attributes.remove(NETWORK_PROTOCOL_VERSION);
     }
     return attributes;

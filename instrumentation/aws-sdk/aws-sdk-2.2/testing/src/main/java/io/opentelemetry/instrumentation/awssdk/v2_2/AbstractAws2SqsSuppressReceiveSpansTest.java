@@ -190,8 +190,49 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
 
     assertThat(response.messages()).hasSize(3);
 
-    // +2: 3 messages, 2x traceparent, 1x not injected due to too many attrs
-    assertThat(totalAttrs).isEqualTo(18 + (isSqsAttributeInjectionEnabled() ? 2 : 0));
+    assertThat(totalAttrs).isEqualTo(10 + (isSqsAttributeInjectionEnabled() ? 3 : 0));
+
+    if (emitStableMessagingSemconv() && canInjectBatchCreationContext()) {
+      List<SpanData> createSpans = new ArrayList<>();
+      List<Consumer<TraceAssert>> stableTraceAsserts = new ArrayList<>();
+      stableTraceAsserts.add(
+          trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)));
+      for (int i = 0; i < 3; i++) {
+        stableTraceAsserts.add(
+            trace -> {
+              SpanData createSpan = trace.getSpan(0);
+              createSpans.add(createSpan);
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("create testSdkSqs")
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                              equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                              equalTo(MESSAGING_OPERATION_NAME, "create"),
+                              equalTo(
+                                  MESSAGING_OPERATION, emitOldMessagingSemconv() ? "create" : null),
+                              equalTo(MESSAGING_OPERATION_TYPE, "create")),
+                  span -> processSpan(span, createSpan, createSpan));
+            });
+      }
+      stableTraceAsserts.add(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      publishSpan(span, queueUrl, "SendMessageBatch", 3L)
+                          .hasLinksSatisfying(
+                              links ->
+                                  assertThat(links)
+                                      .extracting(link -> link.getSpanContext().getSpanId())
+                                      .containsExactlyInAnyOrder(
+                                          createSpans.get(0).getSpanId(),
+                                          createSpans.get(1).getSpanId(),
+                                          createSpans.get(2).getSpanId()))));
+      getTesting().waitAndAssertTraces(stableTraceAsserts);
+      return;
+    }
 
     List<Consumer<TraceAssert>> traceAsserts =
         new ArrayList<>(
@@ -203,13 +244,16 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                           singletonList(
                               span -> publishSpan(span, queueUrl, "SendMessageBatch", 3L)));
 
-                  for (int i = 0; i <= (isXrayInjectionEnabled() ? 2 : 1); i++) {
+                  int propagatedMessages =
+                      isXrayInjectionEnabled() || isSqsAttributeInjectionEnabled() ? 3 : 0;
+                  for (int i = 0; i < propagatedMessages; i++) {
                     spanAsserts.add(span -> processSpan(span, trace.getSpan(0)));
                   }
                   trace.hasSpansSatisfyingExactly(spanAsserts);
                 }));
 
-    if (!isXrayInjectionEnabled()) {
+    int propagatedMessages = isXrayInjectionEnabled() || isSqsAttributeInjectionEnabled() ? 3 : 0;
+    for (int i = propagatedMessages; i < 3; i++) {
       traceAsserts.add(
           trace ->
               trace.hasSpansSatisfyingExactly(

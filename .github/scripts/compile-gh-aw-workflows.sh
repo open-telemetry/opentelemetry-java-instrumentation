@@ -16,7 +16,7 @@
 # (e.g. added or removed actions) that strict mode otherwise refuses. It does not affect which
 # actions the compiler generates, so the output still matches what the CI check produces.
 
-gh extension install github/gh-aw --pin v0.86.2
+gh extension install github/gh-aw --pin v0.87.10
 
 gh aw validate --no-check-update
 
