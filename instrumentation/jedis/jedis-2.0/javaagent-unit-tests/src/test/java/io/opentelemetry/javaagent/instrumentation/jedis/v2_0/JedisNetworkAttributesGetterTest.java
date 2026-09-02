@@ -15,11 +15,13 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import redis.clients.jedis.Connection;
+import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.Transaction;
 
@@ -168,6 +170,58 @@ class JedisNetworkAttributesGetterTest {
   }
 
   @Test
+  void failedPipelineSendUsesConnectedPeerAddress() {
+    InetSocketAddress first = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
+    InetSocketAddress second = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380);
+    MutableConnection connection = new MutableConnection(connectedSocket(first));
+    Pipeline pipeline = new Pipeline();
+
+    JedisPipelineContext.enter(pipeline);
+    try {
+      JedisConnectionInstrumentation.AdviceScope firstScope =
+          JedisConnectionInstrumentation.SendCommandNoArgsAdvice.onEnter(
+              connection, Protocol.Command.GET);
+      JedisConnectionInstrumentation.SendCommandNoArgsAdvice.stopSpan(null, firstScope);
+
+      connection.setSocket(connectedSocket(second));
+      JedisConnectionInstrumentation.AdviceScope failedScope =
+          JedisConnectionInstrumentation.SendCommandNoArgsAdvice.onEnter(
+              connection, Protocol.Command.GET);
+      JedisConnectionInstrumentation.SendCommandNoArgsAdvice.stopSpan(
+          new RuntimeException("send failed"), failedScope);
+    } finally {
+      JedisPipelineContext.exit();
+    }
+
+    List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
+    assertThat(JedisRequest.createPipeline(requests).getPeerAddress()).isEqualTo(second);
+  }
+
+  @ParameterizedTest
+  @MethodSource("unreliableSockets")
+  void failedTransactionSendKeepsEarlierPeerAddress(Socket unreliableSocket) {
+    InetSocketAddress first = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
+    JedisRequest queuedRequest = requestWithPeer(first);
+    queuedRequest.capturePeerAddress();
+    JedisRequest transactionRequest =
+        JedisRequest.createTransaction(singletonList(queuedRequest), null);
+    MutableConnection connection = new MutableConnection(unreliableSocket);
+
+    JedisPipelineContext.enterTransactionFraming(transactionRequest);
+    try {
+      JedisConnectionInstrumentation.AdviceScope failedScope =
+          JedisConnectionInstrumentation.SendCommandNoArgsAdvice.onEnter(
+              connection, Protocol.Command.EXEC);
+      JedisConnectionInstrumentation.SendCommandNoArgsAdvice.stopSpan(
+          new RuntimeException("send failed"), failedScope);
+    } finally {
+      JedisPipelineContext.exitTransactionFraming();
+    }
+
+    assertThat(transactionRequest.getPeerAddress()).isEqualTo(first);
+  }
+
+  @Test
   void ordinaryCommandDoesNotBecomeTransactionFramingRequest() {
     JedisRequest request =
         requestWithPeer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379));
@@ -270,31 +324,55 @@ class JedisNetworkAttributesGetterTest {
   }
 
   private static JedisRequest requestWithPeer(InetSocketAddress peerAddress) {
-    Socket socket =
+    return JedisRequest.create(
+        new MutableConnection(connectedSocket(peerAddress)), Protocol.Command.GET);
+  }
+
+  private static Socket connectedSocket(InetSocketAddress peerAddress) {
+    return new Socket() {
+      @Override
+      public SocketAddress getRemoteSocketAddress() {
+        return peerAddress;
+      }
+
+      @Override
+      public boolean isConnected() {
+        return true;
+      }
+    };
+  }
+
+  private static Stream<Socket> unreliableSockets() {
+    Socket unconnectedSocket =
         new Socket() {
           @Override
           public SocketAddress getRemoteSocketAddress() {
-            return peerAddress;
-          }
-
-          @Override
-          public boolean isConnected() {
-            return true;
+            return new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380);
           }
         };
-    Connection connection =
-        new Connection() {
-          @Override
-          public Socket getSocket() {
-            return socket;
-          }
-        };
-    return JedisRequest.create(connection, Protocol.Command.GET);
+    return Stream.of(null, unconnectedSocket);
   }
 
   private static Stream<InetAddress> resolvedAddresses() throws UnknownHostException {
     return Stream.of(
         InetAddress.getByAddress(new byte[] {127, 0, 0, 1}),
         InetAddress.getByAddress(new byte[16]));
+  }
+
+  private static class MutableConnection extends Connection {
+    private Socket socket;
+
+    private MutableConnection(Socket socket) {
+      this.socket = socket;
+    }
+
+    @Override
+    public Socket getSocket() {
+      return socket;
+    }
+
+    private void setSocket(Socket socket) {
+      this.socket = socket;
+    }
   }
 }
