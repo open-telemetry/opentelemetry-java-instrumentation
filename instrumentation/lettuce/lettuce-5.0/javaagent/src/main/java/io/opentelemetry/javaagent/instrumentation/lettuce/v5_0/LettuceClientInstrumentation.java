@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_ADDRESS;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_DATABASE_INDEX;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.connectInstrumenter;
@@ -17,6 +19,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.lettuce.core.ConnectionFuture;
+import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.opentelemetry.context.Context;
@@ -45,10 +48,21 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
             .and(nameEndsWith("Async"))
             .and(takesArgument(1, named("io.lettuce.core.RedisURI"))),
         getClass().getName() + "$ConnectAdvice");
+    // Every Lettuce 5.0.x release in this module's Muzzle range has exactly one private
+    // connectStatefulAsync method returning ConnectionFuture. Under v3-preview this module also
+    // handles Lettuce 5.1+, where that method remains unique through the latest tested version, but
+    // its parameter layout changes: Lettuce 5.1-5.3 adds a codec before the Endpoint, Lettuce 6
+    // removes that codec, and Lettuce 7 adds a trailing argument.
+    //
+    // Match the stable method name, visibility, and return type instead of argument positions.
+    // AttachEndpointAdvice finds RedisChannelHandler, DefaultEndpoint, and RedisURI at runtime. It
+    // returns without changes unless both DefaultEndpoint and RedisURI are present. This prevents
+    // an unrelated future overload from changing endpoint metadata when its arguments do not have
+    // the expected structure.
     transformer.applyAdviceToMethod(
-        named("connectStatefulAsync")
-            .and(takesArgument(1, named("io.lettuce.core.protocol.DefaultEndpoint")))
-            .and(takesArgument(2, named("io.lettuce.core.RedisURI"))),
+        isPrivate()
+            .and(named("connectStatefulAsync"))
+            .and(returns(named("io.lettuce.core.ConnectionFuture"))),
         getClass().getName() + "$AttachEndpointAdvice");
   }
 
@@ -56,13 +70,38 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
   public static class AttachEndpointAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.Argument(1) DefaultEndpoint endpoint, @Advice.Argument(2) RedisURI redisUri) {
-      ENDPOINT_DATABASE_INDEX.set(endpoint, redisUri.getDatabase());
+    public static void onEnter(@Advice.AllArguments Object[] arguments) {
+      DefaultEndpoint endpoint = null;
+      RedisChannelHandler<?, ?> connection = null;
+      RedisURI redisUri = null;
+
+      for (Object argument : arguments) {
+        if (argument instanceof DefaultEndpoint) {
+          endpoint = (DefaultEndpoint) argument;
+        } else if (argument instanceof RedisChannelHandler) {
+          connection = (RedisChannelHandler<?, ?>) argument;
+        } else if (argument instanceof RedisURI) {
+          redisUri = (RedisURI) argument;
+        }
+      }
+
+      if (endpoint == null || redisUri == null) {
+        return;
+      }
+
+      int databaseIndex = redisUri.getDatabase();
+      ENDPOINT_DATABASE_INDEX.set(endpoint, databaseIndex);
+      if (connection != null) {
+        CONNECTION_DATABASE_INDEX.set(connection, databaseIndex);
+      }
+
       String host = redisUri.getHost();
       if (host != null) {
-        ENDPOINT_ADDRESS.set(
-            endpoint, InetSocketAddress.createUnresolved(host, redisUri.getPort()));
+        InetSocketAddress address = InetSocketAddress.createUnresolved(host, redisUri.getPort());
+        ENDPOINT_ADDRESS.set(endpoint, address);
+        if (connection != null) {
+          CONNECTION_ADDRESS.set(connection, address);
+        }
       }
     }
   }
