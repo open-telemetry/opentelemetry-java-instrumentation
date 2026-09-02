@@ -38,37 +38,36 @@ public class JmxMetricInsightInstaller implements AgentListener {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
 
-    if (config.getBoolean("enabled", true)) {
-      JmxTelemetryBuilder jmx =
-          JmxTelemetry.builder(GlobalOpenTelemetry.get())
-              .beanDiscoveryDelay(
-                  Duration.ofMillis(
-                      config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
-
-      config.getScalarList("config", String.class, emptyList()).stream()
-          .map(Paths::get)
-          .forEach(path -> addFileRules(path, jmx));
-
-      config
-          .get("target")
-          .getScalarList("system", String.class, emptyList())
-          .forEach(target -> addClasspathRules(target, jmx));
-
-      // include/exclude metrics by name
-      List<String> metricsInclude =
-          config.get("metrics").getScalarList("included", String.class, emptyList());
-      List<String> metricsExclude =
-          config.get("metrics").getScalarList("excluded", String.class, emptyList());
-      if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
-        jmx.setMetrics(
-            IncludeExclude.builder()
-                .setIncluded(metricsInclude)
-                .setExcluded(metricsExclude)
-                .build());
-      }
-
-      jmx.build().start();
+    if (!config.getBoolean("enabled", true)) {
+      return;
     }
+
+    JmxTelemetryBuilder jmx =
+        JmxTelemetry.builder(GlobalOpenTelemetry.get())
+            .beanDiscoveryDelay(
+                Duration.ofMillis(
+                    config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
+
+    config.getScalarList("config", String.class, emptyList()).stream()
+        .map(Paths::get)
+        .forEach(path -> addFileRules(path, jmx));
+
+    config
+        .get("target")
+        .getScalarList("system", String.class, emptyList())
+        .forEach(target -> addClasspathRules(target, jmx));
+
+    // include/exclude metrics by name
+    List<String> metricsInclude =
+        config.get("metrics").getScalarList("included", String.class, emptyList());
+    List<String> metricsExclude =
+        config.get("metrics").getScalarList("excluded", String.class, emptyList());
+    if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
+      jmx.setMetrics(
+          IncludeExclude.builder().setIncluded(metricsInclude).setExcluded(metricsExclude).build());
+    }
+
+    jmx.build().start();
   }
 
   private static void addFileRules(Path path, JmxTelemetryBuilder builder) {
