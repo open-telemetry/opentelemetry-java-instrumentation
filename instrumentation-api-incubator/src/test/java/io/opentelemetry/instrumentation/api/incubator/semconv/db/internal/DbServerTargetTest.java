@@ -7,17 +7,58 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class DbServerTargetTest {
 
   private static final int DEFAULT_PORT = 9042;
+
+  @ParameterizedTest
+  @MethodSource("unixSocketPaths")
+  void unixSocketPreservesAcceptedPathAndHasNoPort(String path) {
+    DbServerTarget target = DbServerTarget.unixSocket(path);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(path);
+    assertThat(target.getPort()).isNull();
+  }
+
+  private static Stream<Arguments> unixSocketPaths() {
+    return Stream.of(
+        argumentSet("typical path", "/var/run/postgresql/.s.PGSQL.5432"),
+        argumentSet("path with spaces", "/var/run/database socket "),
+        argumentSet("path with URI punctuation", "/var/run/db:5432;socket"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("invalidUnixSocketPaths")
+  void unixSocketRejectsInvalidPath(String path) {
+    assertThat(DbServerTarget.unixSocket(path)).isNull();
+  }
+
+  private static Stream<Arguments> invalidUnixSocketPaths() {
+    return Stream.of(
+        argumentSet("null", (String) null),
+        argumentSet("empty", ""),
+        argumentSet("root only", "/"),
+        argumentSet("relative", "var/run/database.sock"),
+        argumentSet("comma", "/var/run/database,sock"),
+        argumentSet("equals", "/var/run/database=sock"),
+        argumentSet("percent", "/var/run/database%sock"),
+        argumentSet("at sign", "/var/run/database@sock"),
+        argumentSet("question mark", "/var/run/database?sock"),
+        argumentSet("fragment", "/var/run/database#sock"));
+  }
 
   @Test
   void singleEndpointOnDefaultPortReportsNoPort() {

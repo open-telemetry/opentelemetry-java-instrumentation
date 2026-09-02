@@ -30,6 +30,27 @@ public class DbServerTarget {
     return new DbServerTargetBuilder(defaultPort);
   }
 
+  /**
+   * Returns a target for an already-extracted Unix socket path, or {@code null} when the path is
+   * invalid. Accepted paths are preserved verbatim and are not parsed as URIs or connection
+   * strings.
+   */
+  @Nullable
+  public static DbServerTarget unixSocket(@Nullable String path) {
+    if (path == null
+        || path.length() <= 1
+        || path.charAt(0) != '/'
+        || path.indexOf(',') >= 0
+        || path.indexOf('=') >= 0
+        || path.indexOf('%') >= 0
+        || path.indexOf('@') >= 0
+        || path.indexOf('?') >= 0
+        || path.indexOf('#') >= 0) {
+      return null;
+    }
+    return new DbServerTarget(path, null);
+  }
+
   DbServerTarget(String address, @Nullable Integer port) {
     this.address = address;
     this.port = port;
