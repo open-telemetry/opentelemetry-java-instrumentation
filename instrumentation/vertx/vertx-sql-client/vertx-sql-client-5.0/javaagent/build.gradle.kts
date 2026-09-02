@@ -15,6 +15,18 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
+sourceSets {
+  test {
+    java.srcDir(
+      if (otelProps.testLatestDeps) {
+        "src/testVersion5_1/java"
+      } else {
+        "src/testVersion5_0/java"
+      },
+    )
+  }
+}
+
 dependencies {
   val version = "5.0.0"
   library("io.vertx:vertx-sql-client:$version")

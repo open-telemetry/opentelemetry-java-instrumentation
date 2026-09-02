@@ -47,12 +47,9 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.vertx.core.Completable;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.net.NetClientOptions;
 import io.vertx.oracleclient.OracleBuilder;
 import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.pgclient.PgBuilder;
@@ -68,7 +65,6 @@ import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
-import io.vertx.sqlclient.spi.ConnectionFactory;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -912,25 +908,8 @@ class VertxSqlClientTest {
     return driver(options -> Future.failedFuture(failure));
   }
 
-  private static PgDriver driver(
-      Function<PgConnectOptions, Future<SqlConnection>> connectionProvider) {
-    return new PgDriver() {
-      @Override
-      public ConnectionFactory<PgConnectOptions> createConnectionFactory(
-          Vertx vertx, NetClientOptions transportOptions) {
-        return new ConnectionFactory<PgConnectOptions>() {
-          @Override
-          public Future<SqlConnection> connect(Context context, PgConnectOptions options) {
-            return connectionProvider.apply(options);
-          }
-
-          @Override
-          public void close(Completable<Void> completion) {
-            completion.succeed();
-          }
-        };
-      }
-    };
+  private static PgDriver driver(Function<PgConnectOptions, Future<?>> connectionProvider) {
+    return TestPgDriver.create(connectionProvider);
   }
 
   private static void assertOracleConnectFailure(TraceAssert trace, Throwable error) {

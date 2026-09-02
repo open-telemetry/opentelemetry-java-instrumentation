@@ -21,6 +21,7 @@ import io.vertx.sqlclient.SqlConnectOptions;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -56,27 +57,28 @@ class ConnectionFactoryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(value = 1, index = 0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static ConnectionAttempt onEnter(
+    public static Object[] onEnter(
         @Advice.This Object connectionFactory,
-        @Advice.Argument(value = 1, readOnly = false)
-            Future<SqlConnectOptions> connectOptionsFuture) {
+        @Advice.Argument(1) Future<SqlConnectOptions> connectOptionsFuture) {
+      Future<SqlConnectOptions> result = connectOptionsFuture;
       ConnectionAttempt connectionAttempt =
           VertxSqlClientSingletons.createConnectionAttempt(connectionFactory, connectOptionsFuture);
       if (connectionAttempt != null) {
-        connectOptionsFuture =
+        result =
             VertxSqlClientSingletons.captureConnectionAttempt(
                 connectOptionsFuture, connectionAttempt);
       }
-      return connectionAttempt;
+      return new Object[] {result, connectionAttempt};
     }
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<?> onExit(
-        @Advice.Return Future<?> future,
-        @Advice.Enter @Nullable ConnectionAttempt connectionAttempt) {
+        @Advice.Return Future<?> future, @Advice.Enter @Nullable Object[] enterState) {
+      ConnectionAttempt connectionAttempt =
+          enterState != null ? (ConnectionAttempt) enterState[1] : null;
       return connectionAttempt != null
           ? wrapContext(VertxSqlClientSingletons.attachConnectionData(future, connectionAttempt))
           : future;

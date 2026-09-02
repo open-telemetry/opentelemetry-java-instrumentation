@@ -24,6 +24,8 @@ import io.vertx.sqlclient.SqlConnectOptions;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -53,19 +55,21 @@ class DriverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class NewPoolAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
+    public static Supplier<Future<SqlConnectOptions>> onEnter(
         @Advice.This Object driver,
-        @Advice.Argument(value = 1, readOnly = false)
-            Supplier<Future<SqlConnectOptions>> connectOptionsSupplier) {
+        @Advice.Argument(1) Supplier<Future<SqlConnectOptions>> connectOptionsSupplier) {
+      Supplier<Future<SqlConnectOptions>> result = connectOptionsSupplier;
       VertxSqlClientDataCapture dataCapture = VertxSqlClientSingletons.getBuildingDataCapture();
       if (dataCapture != null) {
         String dbSystem = getDbSystemNameFromClassName(driver);
         dataCapture.setDbSystem(dbSystem);
-        connectOptionsSupplier =
+        result =
             VertxSqlClientSingletons.wrapConnectOptionsSupplier(
                 connectOptionsSupplier, dataCapture);
       }
+      return result;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
