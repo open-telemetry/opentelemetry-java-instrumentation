@@ -129,6 +129,7 @@ class JdbcConnectionUrlParserTest {
         "jdbc:h2:tcp://h1:8082,h2:8083/db",
         "jdbc:sqlserver://;failoverPartner=h2",
         "jdbc:sqlserver://h1;failoverPartner=unexpected=value",
+        "jdbc:sqlserver://h1:1444;failoverPartner=h2\\instance2",
         "jdbc:oracle:thin:@//h1,unexpected=value/service",
         "jdbc:oracle:thin:@ldap://ldap1:389,ldap2:389/cn=oraclecontext",
         "jdbc:oracle:thin:@(description=(address=(host=h1)(port=1521))"

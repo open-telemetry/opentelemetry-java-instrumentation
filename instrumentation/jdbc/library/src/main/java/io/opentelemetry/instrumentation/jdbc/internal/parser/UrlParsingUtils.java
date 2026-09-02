@@ -491,17 +491,27 @@ public final class UrlParsingUtils {
     List<String> entries = splitHostList(sanitized);
     List<HostPort> endpoints = new ArrayList<>();
     boolean hasNonDefaultPort = false;
+    boolean hasUnknownPort = false;
     for (String entry : entries) {
       HostPort endpoint = extractSanitizedHostPort(entry);
       if (endpoint.host().startsWith("/")) {
         return new ServerAddressGroup(joinFirstEndpoints(entries));
       }
-      Integer effectivePort =
-          endpoint.port() != null || defaultPort == null ? endpoint.port() : defaultPort;
+      Integer effectivePort = endpoint.port();
+      if (effectivePort == null && defaultPort != null) {
+        if (endpoint.host().indexOf('\\') >= 0) {
+          hasUnknownPort = true;
+        } else {
+          effectivePort = defaultPort;
+        }
+      }
       endpoints.add(new HostPort(endpoint.host(), effectivePort, endpoint.ipv6Address()));
-      if (defaultPort != null && !defaultPort.equals(effectivePort)) {
+      if (defaultPort != null && effectivePort != null && !defaultPort.equals(effectivePort)) {
         hasNonDefaultPort = true;
       }
+    }
+    if (hasNonDefaultPort && hasUnknownPort) {
+      return null;
     }
 
     StringBuilder address = new StringBuilder();
