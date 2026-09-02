@@ -96,6 +96,8 @@ methods.
 
 ### `final` keyword usage
 
+**Classes**: Declare public API classes `final` where possible.
+
 **Methods**: Declare `final` only in non-final public API classes.
 
 **Fields**: Declare `final` where possible.

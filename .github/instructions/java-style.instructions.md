@@ -9,6 +9,7 @@ Follow `docs/contributing/style-guide.md`.
 - **Visibility**: principle of least access. Use the most restrictive modifier
   that still works. Static fields should be `private` unless they are
   constant-like with a `SCREAMING_SNAKE_CASE` name.
+- **`final` on classes**: declare public API classes `final` where possible.
 - **`final` on parameters and local variables**: never declare them `final`.
 - **Null comparisons**: use `value == null` / `value != null`, not
   `null == value` / `null != value`. Applies to Java, Kotlin, and Scala.
