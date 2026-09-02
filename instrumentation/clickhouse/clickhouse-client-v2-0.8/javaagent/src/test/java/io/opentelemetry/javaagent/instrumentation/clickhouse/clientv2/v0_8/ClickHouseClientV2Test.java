@@ -772,7 +772,7 @@ class ClickHouseClientV2Test {
                 "http://host3.example:8123",
                 "http://host4.example:8123",
                 "http://host5.example:8123",
-                "http://host6.example=invalid:8123"));
+                "http://host6.example:not-a-port"));
 
     assertServerInfo(endpoints, null, null, null);
   }

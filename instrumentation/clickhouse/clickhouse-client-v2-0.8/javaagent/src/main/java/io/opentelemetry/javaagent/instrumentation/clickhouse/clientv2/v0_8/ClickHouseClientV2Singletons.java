@@ -221,7 +221,9 @@ public class ClickHouseClientV2Singletons {
         authorityStart = userInfoEnd + 1;
       }
       String authority = endpoint.substring(authorityStart, authorityEnd);
-      if (authority.indexOf('=') >= 0 || hasUnsafePercentEscape(authority)) {
+      if (authority.indexOf('=') >= 0
+          || hasUnsafePercentEscape(authority)
+          || !hasValidPortSyntax(authority)) {
         return null;
       }
       String address = endpointAddress(authority);
@@ -229,6 +231,43 @@ public class ClickHouseClientV2Singletons {
         return null;
       }
       return new EndpointTarget(scheme, address, endpointPort(authority));
+    }
+
+    private static boolean hasValidPortSyntax(String authority) {
+      if (authority.startsWith("[")) {
+        int bracketEnd = authority.indexOf(']');
+        if (bracketEnd <= 1 || authority.indexOf(']', bracketEnd + 1) >= 0) {
+          return false;
+        }
+        String rest = authority.substring(bracketEnd + 1);
+        return rest.isEmpty() || (rest.startsWith(":") && isPort(rest.substring(1)));
+      }
+      if (authority.indexOf('[') >= 0 || authority.indexOf(']') >= 0) {
+        return false;
+      }
+      int firstColon = authority.indexOf(':');
+      int lastColon = authority.lastIndexOf(':');
+      return firstColon < 0
+          || firstColon != lastColon
+          || (firstColon > 0 && isPort(authority.substring(firstColon + 1)));
+    }
+
+    private static boolean isPort(String value) {
+      if (value.isEmpty()) {
+        return false;
+      }
+      int port = 0;
+      for (int i = 0; i < value.length(); i++) {
+        char c = value.charAt(i);
+        if (c < '0' || c > '9') {
+          return false;
+        }
+        port = port * 10 + c - '0';
+        if (port > 65535) {
+          return false;
+        }
+      }
+      return true;
     }
 
     private static boolean hasUnsafePercentEscape(String authority) {
