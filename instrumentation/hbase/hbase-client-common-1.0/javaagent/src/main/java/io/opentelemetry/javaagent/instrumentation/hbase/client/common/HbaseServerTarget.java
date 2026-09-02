@@ -47,6 +47,7 @@ public class HbaseServerTarget {
   private static final int DEFAULT_ZK_CLIENT_PORT = 2181;
   private static final String DEFAULT_ZK_ZNODE_PARENT = "/hbase";
   private static final int DEFAULT_MASTER_PORT = 16000;
+  private static final int MAX_MASTER_ENDPOINTS = 5;
 
   private static final boolean SUPPORTS_CLIENT_ZK_CONFIG =
       hasHbaseConstant("CLIENT_ZOOKEEPER_QUORUM");
@@ -236,7 +237,9 @@ public class HbaseServerTarget {
       return null;
     }
     List<String> masters = canonicalEndpoints(masterAddresses(configuration), defaultPort);
-    return masters == null ? null : String.join(",", masters);
+    return masters == null
+        ? null
+        : String.join(",", masters.subList(0, Math.min(masters.size(), MAX_MASTER_ENDPOINTS)));
   }
 
   @Nullable

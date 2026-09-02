@@ -69,6 +69,15 @@ class HbaseServerTargetTest {
   }
 
   @Test
+  void preservesZooKeeperQuorumsLargerThanFive() {
+    Configuration configuration = new Configuration(false);
+    configuration.set("hbase.zookeeper.quorum", "zk-g,zk-c,zk-a,zk-b,zk-c,zk-e,zk-d");
+
+    assertThat(HbaseServerTarget.from(configuration))
+        .isEqualTo("zk-g,zk-c,zk-a,zk-b,zk-c,zk-e,zk-d:2181:/hbase");
+  }
+
+  @Test
   void preservesZooKeeperIpv6OrderAndDuplicates() {
     Configuration configuration = new Configuration(false);
     configuration.set("hbase.zookeeper.quorum", "2001:db8::2,[2001:db8::1],2001:db8::2");
@@ -128,6 +137,18 @@ class HbaseServerTargetTest {
         .isEqualTo("master-a:17000,master-b:16001,master-b:16001,master-c:17000");
     assertThat(HbaseServerTarget.from(firstConfiguration, false, true, false))
         .isEqualTo("master-a:16000,master-b:16001,master-b:16001,master-c:16000");
+  }
+
+  @Test
+  void capsCanonicalMasterRegistryEndpointsAtFive() {
+    Configuration configuration = new Configuration(false);
+    configuration.set(REGISTRY_KEY, MASTER_REGISTRY);
+    configuration.set(
+        "hbase.masters", "master-f,master-c,master-a,master-b,master-c,master-e,master-d");
+    configuration.set("hbase.master.port", "17000");
+
+    assertThat(HbaseServerTarget.from(configuration, false, true, true))
+        .isEqualTo("master-a:17000,master-b:17000,master-c:17000,master-c:17000,master-d:17000");
   }
 
   @Test
