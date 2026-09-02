@@ -12,8 +12,8 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo.Node;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
@@ -70,7 +70,7 @@ final class CouchbaseAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    CouchbaseServerTarget target = couchbaseRequest.getServerTarget();
+    DbServerTarget target = couchbaseRequest.getServerTarget();
     return target == null ? null : target.getAddress();
   }
 
@@ -80,7 +80,7 @@ final class CouchbaseAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    CouchbaseServerTarget target = couchbaseRequest.getServerTarget();
+    DbServerTarget target = couchbaseRequest.getServerTarget();
     // a target that names several seeds already carries the port of each of them
     return target == null ? null : target.getPort();
   }

@@ -6,7 +6,6 @@ dependencies {
   testImplementation(project(":instrumentation-api-incubator"))
   testImplementation(project(":javaagent-extension-api"))
   testImplementation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
-  testImplementation(project(":instrumentation:couchbase:couchbase-common:javaagent"))
   testImplementation(project(":instrumentation:couchbase:couchbase-common-2.0:javaagent"))
   testImplementation("com.couchbase.client:java-client:2.5.0")
 }
