@@ -440,7 +440,7 @@ public final class UrlParsingUtils {
       return null;
     }
     String addressHost = hostMatcher.group(1).trim();
-    if (addressHost.isEmpty()) {
+    if (!isValidHostPort(addressHost)) {
       return null;
     }
     StringBuilder sanitized = new StringBuilder("address=(host=");
@@ -474,7 +474,7 @@ public final class UrlParsingUtils {
     int colon = value.lastIndexOf(':');
     return colon < 0
         || value.indexOf(':') != colon
-        || parsePort(value.substring(colon + 1)) != null;
+        || (colon > 0 && parsePort(value.substring(colon + 1)) != null);
   }
 
   @Nullable
