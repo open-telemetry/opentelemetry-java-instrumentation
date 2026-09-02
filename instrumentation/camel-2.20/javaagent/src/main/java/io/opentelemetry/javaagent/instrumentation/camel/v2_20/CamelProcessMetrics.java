@@ -48,10 +48,12 @@ class CamelProcessMetrics {
     return meterBuilder.build();
   }
 
-  static boolean wasConsumedMessageCounted(CamelRequest request) {
+  static Context withConsumedMessagesClaim(Context context, CamelRequest request) {
     Object message = request.getExchange().getIn();
     return JmsReceiveTelemetry.wasRecorded(message)
-        || KafkaClientsConsumerProcessTracing.wasConsumedMessageCounted(message);
+            || KafkaClientsConsumerProcessTracing.wasConsumedMessageCounted(message)
+        ? markConsumedMessages(context)
+        : context;
   }
 
   static void start(Route route, Context parentContext, CamelRequest request) {
@@ -59,8 +61,7 @@ class CamelProcessMetrics {
     attributesExtractor.onStart(attributes, parentContext, request);
     Attributes startAttributes = attributes.build();
     long startNanos = System.nanoTime();
-    Context metricsContext =
-        wasConsumedMessageCounted(request) ? markConsumedMessages(parentContext) : parentContext;
+    Context metricsContext = withConsumedMessagesClaim(parentContext, request);
     metricsContext = consumedMessages.onStart(metricsContext, startAttributes, startNanos);
     metricsContext = processDuration.onStart(metricsContext, startAttributes, startNanos);
     request

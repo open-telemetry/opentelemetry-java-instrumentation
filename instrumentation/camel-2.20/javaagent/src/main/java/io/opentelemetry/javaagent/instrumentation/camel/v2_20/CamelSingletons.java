@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.markConsumedMessages;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -93,9 +92,7 @@ class CamelSingletons {
       builder.addOperationMetrics(MessagingProcessMetrics.get());
       builder.addContextCustomizer(
           (context, request, startAttributes) ->
-              CamelProcessMetrics.wasConsumedMessageCounted(request)
-                  ? markConsumedMessages(context)
-                  : context);
+              CamelProcessMetrics.withConsumedMessagesClaim(context, request));
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
       return MessagingProcessInstrumenterFactory.create(
           builder,
