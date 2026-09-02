@@ -90,6 +90,7 @@ public class ClickHouseClientV1Singletons {
 
   private static class ServerTarget {
 
+    private static final int MAX_ENDPOINTS = 5;
     private static final ServerTarget UNCONFIGURED = new ServerTarget(null, null, null);
 
     @Nullable private final String address;
@@ -111,39 +112,27 @@ public class ClickHouseClientV1Singletons {
         return createConfiguredNode(nodes.iterator().next());
       }
 
-      List<NodeTarget> targets = new ArrayList<>(nodes.size());
-      boolean allDefaultPorts = true;
-      boolean commonNonDefaultPort = true;
-      Integer commonPort = null;
+      List<NodeTarget> targets = new ArrayList<>(Math.min(nodes.size(), MAX_ENDPOINTS));
+      boolean hasNonDefaultPort = false;
       for (ClickHouseNode node : nodes) {
         String host = sanitizeHost(node.getHost());
         if (host == null) {
           return UNCONFIGURED;
         }
-        boolean defaultPort = isDefaultPort(node);
-        targets.add(new NodeTarget(host, node.getPort()));
-        if (defaultPort) {
-          commonNonDefaultPort = false;
-        } else {
-          allDefaultPorts = false;
-          if (commonPort == null) {
-            commonPort = node.getPort();
-          } else if (!commonPort.equals(node.getPort())) {
-            commonNonDefaultPort = false;
-          }
+        if (targets.size() < MAX_ENDPOINTS) {
+          targets.add(new NodeTarget(host, node.getPort()));
         }
+        hasNonDefaultPort |= !isDefaultPort(node);
       }
 
       StringBuilder addressGroup = new StringBuilder();
-      boolean inlinePorts = !allDefaultPorts && !commonNonDefaultPort;
       for (NodeTarget target : targets) {
         if (addressGroup.length() > 0) {
           addressGroup.append(',');
         }
-        appendAddress(addressGroup, target.host, inlinePorts ? target.port : null);
+        appendAddress(addressGroup, target.host, hasNonDefaultPort ? target.port : null);
       }
-      return new ServerTarget(
-          null, commonNonDefaultPort ? commonPort : null, addressGroup.toString());
+      return new ServerTarget(null, null, addressGroup.toString());
     }
 
     private static ServerTarget create(ClickHouseNode node) {

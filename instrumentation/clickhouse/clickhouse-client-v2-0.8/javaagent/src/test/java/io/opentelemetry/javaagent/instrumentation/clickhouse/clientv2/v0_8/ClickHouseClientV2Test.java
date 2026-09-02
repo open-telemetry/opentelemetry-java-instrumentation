@@ -49,6 +49,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -558,7 +559,7 @@ class ClickHouseClientV2Test {
             .build();
     cleanup.deferCleanup(client);
 
-    List<String> endpoints = new ArrayList<>(asList(host, secondHost));
+    List<String> endpoints = new ArrayList<>(asList(host + ":" + port, secondHost + ":" + port));
     endpoints.sort(String::compareTo);
     String addressGroup = String.join(",", endpoints);
     String firstEndpoint = client.getEndpoints().iterator().next();
@@ -584,9 +585,7 @@ class ClickHouseClientV2Test {
                                 emitStableDatabaseSemconv() ? addressGroup : legacyAddress),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(port)
-                                    : Long.valueOf(legacyPort)),
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(legacyPort)),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv() ? peerAddress : null),
@@ -698,7 +697,7 @@ class ClickHouseClientV2Test {
   }
 
   @Test
-  void testConfiguredEndpointsExtractCommonNonDefaultPort() throws Exception {
+  void testConfiguredEndpointsInlineSharedNonDefaultPort() throws Exception {
     Client testClient =
         new Client.Builder()
             .addEndpoint("http://host2.example:9123")
@@ -708,7 +707,7 @@ class ClickHouseClientV2Test {
             .build();
     cleanup.deferCleanup(testClient);
 
-    assertServerInfo(testClient, null, 9123, "host1.example,host2.example");
+    assertServerInfo(testClient, null, null, "host1.example:9123,host2.example:9123");
   }
 
   @Test
@@ -723,6 +722,59 @@ class ClickHouseClientV2Test {
     cleanup.deferCleanup(testClient);
 
     assertServerInfo(testClient, null, null, "[2001:db8::1]:9443,host.example:8123");
+  }
+
+  @Test
+  void testConfiguredEndpointsIncludeAtMostFiveEndpoints() throws Exception {
+    Set<String> fiveEndpoints =
+        new HashSet<>(
+            asList(
+                "http://host5.example:8123",
+                "http://host3.example:8123",
+                "http://host1.example:8123",
+                "http://host4.example:8123",
+                "http://host2.example:8123"));
+    Set<String> sixEndpoints = new HashSet<>(fiveEndpoints);
+    sixEndpoints.add("http://host6.example:8123");
+    String expected = "host1.example,host2.example,host3.example,host4.example,host5.example";
+
+    assertServerInfo(fiveEndpoints, null, null, expected);
+    assertServerInfo(sixEndpoints, null, null, expected);
+  }
+
+  @Test
+  void testConfiguredEndpointsUsePortModeFromAllEndpoints() throws Exception {
+    Set<String> endpoints =
+        new HashSet<>(
+            asList(
+                "http://host1.example:8123",
+                "http://host2.example:8123",
+                "http://host3.example:8123",
+                "http://host4.example:8123",
+                "http://host5.example:8123",
+                "http://host6.example:9123"));
+
+    assertServerInfo(
+        endpoints,
+        null,
+        null,
+        "host1.example:8123,host2.example:8123,host3.example:8123,"
+            + "host4.example:8123,host5.example:8123");
+  }
+
+  @Test
+  void testConfiguredEndpointsValidateEndpointsAfterTheLimit() throws Exception {
+    Set<String> endpoints =
+        new HashSet<>(
+            asList(
+                "http://host1.example:8123",
+                "http://host2.example:8123",
+                "http://host3.example:8123",
+                "http://host4.example:8123",
+                "http://host5.example:8123",
+                "http://host6.example=invalid:8123"));
+
+    assertServerInfo(endpoints, null, null, null);
   }
 
   @Test
@@ -1022,7 +1074,19 @@ class ClickHouseClientV2Test {
 
   private static void assertServerInfo(
       Client client, String address, Integer port, String addressGroup) throws Exception {
-    Object serverInfo = serverInfo(client);
+    assertServerInfo(serverInfo(client), address, port, addressGroup);
+  }
+
+  private static void assertServerInfo(
+      Set<String> endpoints, String address, Integer port, String addressGroup) throws Exception {
+    Class<?> serverInfoClass = serverInfo(client).getClass();
+    Method of = serverInfoClass.getDeclaredMethod("of", Set.class);
+    of.setAccessible(true);
+    assertServerInfo(of.invoke(null, endpoints), address, port, addressGroup);
+  }
+
+  private static void assertServerInfo(
+      Object serverInfo, String address, Integer port, String addressGroup) throws Exception {
     Class<?> serverInfoClass = serverInfo.getClass();
     assertThat(serverInfoClass.getMethod("getAddress").invoke(serverInfo)).isEqualTo(address);
     assertThat(serverInfoClass.getMethod("getPort").invoke(serverInfo)).isEqualTo(port);

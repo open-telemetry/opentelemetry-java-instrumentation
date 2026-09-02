@@ -79,6 +79,7 @@ public class ClickHouseClientV2Singletons {
 
   public static class ServerInfo {
 
+    private static final int MAX_ENDPOINTS = 5;
     private static final ServerInfo EMPTY = new ServerInfo(null, null, null);
 
     @Nullable private final String address;
@@ -124,41 +125,27 @@ public class ClickHouseClientV2Singletons {
 
       // Endpoint iteration order is unspecified, so canonicalize the configured target.
       List<EndpointTarget> sanitized = new ArrayList<>(endpoints.size());
-      boolean allDefaultPorts = true;
-      boolean commonNonDefaultPort = true;
-      Integer commonPort = null;
+      boolean hasNonDefaultPort = false;
       for (String endpoint : endpoints) {
         EndpointTarget sanitizedEndpoint = sanitizeEndpoint(endpoint);
         if (sanitizedEndpoint == null) {
           return EMPTY;
         }
         sanitized.add(sanitizedEndpoint);
-        if (sanitizedEndpoint.isDefaultPort()) {
-          commonNonDefaultPort = false;
-        } else {
-          allDefaultPorts = false;
-          if (sanitizedEndpoint.port == null) {
-            commonNonDefaultPort = false;
-          } else if (commonPort == null) {
-            commonPort = sanitizedEndpoint.port;
-          } else if (!commonPort.equals(sanitizedEndpoint.port)) {
-            commonNonDefaultPort = false;
-          }
-        }
+        hasNonDefaultPort |= !sanitizedEndpoint.isDefaultPort();
       }
-      boolean inlinePorts = !allDefaultPorts && !commonNonDefaultPort;
+      boolean inlinePorts = hasNonDefaultPort;
       sanitized.sort(
           (left, right) -> left.render(inlinePorts).compareTo(right.render(inlinePorts)));
 
       StringBuilder addressGroup = new StringBuilder();
-      for (EndpointTarget endpoint : sanitized) {
+      for (int i = 0; i < Math.min(sanitized.size(), MAX_ENDPOINTS); i++) {
         if (addressGroup.length() > 0) {
           addressGroup.append(',');
         }
-        addressGroup.append(endpoint.render(inlinePorts));
+        addressGroup.append(sanitized.get(i).render(inlinePorts));
       }
-      return new ServerInfo(
-          null, commonNonDefaultPort ? commonPort : null, addressGroup.toString());
+      return new ServerInfo(null, null, addressGroup.toString());
     }
 
     public static ServerInfo ofCurrentEndpoint(Set<String> endpoints) {
@@ -293,11 +280,19 @@ public class ClickHouseClientV2Singletons {
     }
 
     private boolean isDefaultPort() {
-      if (port == null || scheme == null) {
-        return false;
+      Integer defaultPort = defaultPort();
+      return defaultPort != null && (port == null || defaultPort.equals(port));
+    }
+
+    @Nullable
+    private Integer defaultPort() {
+      if ("http".equalsIgnoreCase(scheme)) {
+        return 8123;
       }
-      return ("http".equalsIgnoreCase(scheme) && port == 8123)
-          || ("https".equalsIgnoreCase(scheme) && port == 8443);
+      if ("https".equalsIgnoreCase(scheme)) {
+        return 8443;
+      }
+      return null;
     }
 
     private String render(boolean includePort) {
@@ -307,8 +302,9 @@ public class ClickHouseClientV2Singletons {
       } else {
         rendered.append(address);
       }
-      if (includePort && port != null) {
-        rendered.append(':').append(port);
+      Integer renderedPort = port != null ? port : defaultPort();
+      if (includePort && renderedPort != null) {
+        rendered.append(':').append(renderedPort);
       }
       return rendered.toString();
     }

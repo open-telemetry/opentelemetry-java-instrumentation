@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class DbExecution {
+  private static final int MAX_ENDPOINTS = 5;
   // copied from DbAttributes.DbSystemNameValues
   private static final String POSTGRESQL = "postgresql";
   // copied from DbAttributes.DbSystemNameValues
@@ -217,9 +218,8 @@ public final class DbExecution {
     String hostList = stripUserInfo(serverAddress);
     String[] hosts = hostList.split(",", -1);
 
-    List<ServerTarget> targets = new ArrayList<>(hosts.length);
-    Integer commonPort = null;
-    boolean samePort = true;
+    List<ServerTarget> targets = new ArrayList<>(Math.min(hosts.length, MAX_ENDPOINTS));
+    boolean hasNonDefaultPort = false;
     for (String host : hosts) {
       String trimmed = host.trim();
       if (!isValidHostPort(trimmed)) {
@@ -230,14 +230,11 @@ public final class DbExecution {
         return ServerTarget.EMPTY;
       }
       Integer effectivePort = target.port != null ? target.port : defaultPort;
-      targets.add(new ServerTarget(target.address, effectivePort));
-      if (effectivePort == null) {
-        samePort = false;
-      } else if (commonPort == null) {
-        commonPort = effectivePort;
-      } else if (!commonPort.equals(effectivePort)) {
-        samePort = false;
+      if (targets.size() < MAX_ENDPOINTS) {
+        targets.add(new ServerTarget(target.address, effectivePort));
       }
+      hasNonDefaultPort |=
+          effectivePort != null && (defaultPort == null || !defaultPort.equals(effectivePort));
     }
 
     StringBuilder group = new StringBuilder();
@@ -245,10 +242,9 @@ public final class DbExecution {
       if (group.length() > 0) {
         group.append(',');
       }
-      appendAddress(group, target.address, samePort ? null : target.port);
+      appendAddress(group, target.address, hasNonDefaultPort ? target.port : null);
     }
-    Integer port = samePort && !commonPort.equals(defaultPort) ? commonPort : null;
-    return new ServerTarget(group.toString(), port);
+    return new ServerTarget(group.toString(), null);
   }
 
   private static String stripUserInfo(String serverAddress) {

@@ -702,7 +702,7 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testConfiguredNodesExtractCommonNonDefaultPort() throws Exception {
+  void testConfiguredNodesInlineSharedNonDefaultPort() throws Exception {
     ClickHouseNode httpNode =
         ClickHouseNode.builder(ClickHouseNode.of("http://http.example")).port(12345).build();
     ClickHouseNode tcpNode =
@@ -712,8 +712,8 @@ class ClickHouseClientV1Test {
             .build();
     ClickHouseRequest<?> request = requestWithNodes(ImmutableList.of(httpNode, tcpNode));
 
-    assertThat(serverAddressGroup(request)).isEqualTo("http.example,[2001:db8::2]");
-    assertThat(serverPort(request)).isEqualTo(12345);
+    assertThat(serverAddressGroup(request)).isEqualTo("http.example:12345,[2001:db8::2]:12345");
+    assertThat(serverPort(request)).isNull();
   }
 
   @Test
@@ -727,12 +727,73 @@ class ClickHouseClientV1Test {
   }
 
   @Test
+  void testConfiguredNodesIncludeAtMostFiveEndpoints() throws Exception {
+    ClickHouseNode first = ClickHouseNode.of("http://host1.example");
+    ClickHouseNode second = ClickHouseNode.of("http://host2.example");
+    ClickHouseNode third = ClickHouseNode.of("http://host3.example");
+    ClickHouseNode fourth = ClickHouseNode.of("http://host4.example");
+    ClickHouseNode fifth = ClickHouseNode.of("http://host5.example");
+    ClickHouseNode sixth = ClickHouseNode.of("http://host6.example");
+    String expected = "host1.example,host2.example,host3.example,host4.example,host5.example";
+
+    assertThat(
+            serverAddressGroup(
+                requestWithNodes(ImmutableList.of(first, second, third, fourth, fifth))))
+        .isEqualTo(expected);
+    assertThat(
+            serverAddressGroup(
+                requestWithNodes(ImmutableList.of(first, second, third, fourth, fifth, sixth))))
+        .isEqualTo(expected);
+  }
+
+  @Test
+  void testConfiguredNodesUsePortModeFromAllEndpoints() throws Exception {
+    ClickHouseNode nonDefaultSixth =
+        ClickHouseNode.builder(ClickHouseNode.of("http://host6.example")).port(9123).build();
+    ClickHouseRequest<?> request =
+        requestWithNodes(
+            ImmutableList.of(
+                ClickHouseNode.of("http://host1.example"),
+                ClickHouseNode.of("http://host2.example"),
+                ClickHouseNode.of("http://host3.example"),
+                ClickHouseNode.of("http://host4.example"),
+                ClickHouseNode.of("http://host5.example"),
+                nonDefaultSixth));
+
+    assertThat(serverAddressGroup(request))
+        .isEqualTo(
+            "host1.example:8123,host2.example:8123,host3.example:8123,"
+                + "host4.example:8123,host5.example:8123");
+    assertThat(serverPort(request)).isNull();
+  }
+
+  @Test
+  void testConfiguredNodesValidateEndpointsAfterTheLimit() throws Exception {
+    ClickHouseNode invalidSixth =
+        ClickHouseNode.builder(ClickHouseNode.of("http://host6.example"))
+            .host("invalid.example/path")
+            .build();
+    ClickHouseRequest<?> request =
+        requestWithNodes(
+            ImmutableList.of(
+                ClickHouseNode.of("http://host1.example"),
+                ClickHouseNode.of("http://host2.example"),
+                ClickHouseNode.of("http://host3.example"),
+                ClickHouseNode.of("http://host4.example"),
+                ClickHouseNode.of("http://host5.example"),
+                invalidSixth));
+
+    assertThat(serverAddressGroup(request)).isNull();
+    assertThat(serverPort(request)).isNull();
+  }
+
+  @Test
   void testConfiguredNodeOrderPreservesPriorityAndDuplicates() throws Exception {
     ClickHouseNode ipv6Node = ClickHouseNode.builder(server).host("2001:db8::2").build();
     ClickHouseNodes nodes = createNodes(ImmutableList.of(ipv6Node, server, ipv6Node));
     nodes.update(ipv6Node, ClickHouseNode.Status.FAULTY);
-    String ipv6Address = "[2001:db8::2]";
-    String addressGroup = ipv6Address + "," + host + "," + ipv6Address;
+    String ipv6Address = "[2001:db8::2]:" + port;
+    String addressGroup = ipv6Address + "," + host + ":" + port + "," + ipv6Address;
 
     ClickHouseResponse response =
         client
@@ -752,7 +813,9 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
-                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -850,7 +913,7 @@ class ClickHouseClientV1Test {
         ClickHouseNode.builder(server).host("user:secret@configured.example").build();
     ClickHouseNodes nodes = createNodes(ImmutableList.of(server, credentialNode));
     nodes.update(credentialNode, ClickHouseNode.Status.FAULTY);
-    String addressGroup = host + ",configured.example";
+    String addressGroup = host + ":" + port + ",configured.example:" + port;
 
     ClickHouseResponse response =
         client
@@ -870,7 +933,9 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
-                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(

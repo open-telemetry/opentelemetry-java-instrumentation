@@ -129,7 +129,7 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @Test
-  void multiHostOptionsExtractACommonNonDefaultPortInStableSemconv() {
+  void multiHostOptionsInlineASharedNonDefaultPortInStableSemconv() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
@@ -139,8 +139,10 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.PORT, 3307)
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
-    assertThat(getter.getServerPort(dbExecution)).isEqualTo(3307);
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? "host1:3307,host2:3307" : "host1,host2");
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 3307);
   }
 
   @Test
