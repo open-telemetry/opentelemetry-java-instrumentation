@@ -47,8 +47,14 @@ public class JedisServerTargets {
     }
     List<String> endpoints = new ArrayList<>(nodes.size());
     for (Object node : nodes) {
-      endpoints.add(
-          node instanceof String ? RedisServerTarget.normalizeHostAndPort((String) node) : null);
+      if (node instanceof String) {
+        endpoints.add(RedisServerTarget.normalizeHostAndPort((String) node));
+      } else if (node != null
+          && node.getClass().getName().equals("redis.clients.jedis.HostAndPort")) {
+        endpoints.add(RedisServerTarget.normalizeHostAndPort(node.toString()));
+      } else {
+        endpoints.add(null);
+      }
     }
     return endpoints;
   }
