@@ -19,6 +19,8 @@ import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -274,8 +276,11 @@ final class CassandraServerTarget {
     } else if (host.indexOf('[') >= 0 || host.indexOf(']') >= 0) {
       return null;
     }
+    if (!isValidHost(host)) {
+      return null;
+    }
     Integer port = port(contactPoint.substring(separator + 1));
-    return isSafeHost(host) && port != null ? new CassandraServerTarget(host, port) : null;
+    return port == null ? null : new CassandraServerTarget(host, port);
   }
 
   @Nullable
@@ -305,6 +310,21 @@ final class CassandraServerTarget {
       }
     }
     return true;
+  }
+
+  private static boolean isValidHost(String host) {
+    if (!isSafeHost(host)) {
+      return false;
+    }
+    if (host.indexOf(':') < 0) {
+      return true;
+    }
+    try {
+      new URI("cassandra", null, host, DEFAULT_PORT, null, null, null);
+      return true;
+    } catch (URISyntaxException ignored) {
+      return false;
+    }
   }
 
   private static boolean validPort(int port) {
