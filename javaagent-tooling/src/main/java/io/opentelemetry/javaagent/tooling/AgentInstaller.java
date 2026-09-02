@@ -187,7 +187,6 @@ public class AgentInstaller {
     }
     logger.log(FINE, "Installed {0} extension(s)", numberOfLoadedExtensions);
 
-    agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
     // eagerly initialize context storage before any instrumentation is active, so that its lazy
     // initialization cannot happen while an instrumented method holds a class loader lock that
     // the initializing thread needs, see
@@ -195,6 +194,8 @@ public class AgentInstaller {
     // note that this also finalizes the storage - ContextStorage.addWrapper() calls made after
     // this point are ignored
     ContextStorage.get();
+
+    agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
     ClassFileTransformer transformer = agentBuilder.installOn(inst);
     LambdaTransformer lambdaTransformer;
     if (JavaModule.isSupported()) {
