@@ -91,7 +91,7 @@ class ConfiguredTargetTest {
   }
 
   @Test
-  void configuredServersUsingACommonNonDefaultPortUseServerPort() {
+  void configuredServersUsingACommonNonDefaultPortEmbedEveryPort() {
     Region<Object, Object> region =
         createRegion(
             "shared-port-servers",
@@ -102,15 +102,14 @@ class ConfiguredTargetTest {
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, "127.0.0.1,127.0.0.2", 40405L));
+    testing.waitAndAssertTraces(operation(region, "127.0.0.1:40405,127.0.0.2:40405", null));
     assertDurationMetric(
         testing,
         "io.opentelemetry.geode-1.4",
         DB_SYSTEM_NAME,
         DB_COLLECTION_NAME,
         DB_OPERATION_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        SERVER_ADDRESS);
   }
 
   @Test

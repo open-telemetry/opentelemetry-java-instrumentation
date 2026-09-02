@@ -37,6 +37,7 @@ class GeodeServerTarget {
   static class Builder {
 
     private static final int DEFAULT_SERVER_PORT = 40404;
+    private static final int MAX_SERVER_ENDPOINTS = 5;
     private static final int MAX_PORT = 65535;
 
     private final List<Endpoint> servers = new ArrayList<>();
@@ -92,20 +93,20 @@ class GeodeServerTarget {
         return null;
       }
 
-      int commonPort = servers.get(0).port;
-      boolean portsMatch = true;
-      for (int i = 1; i < servers.size(); i++) {
-        if (servers.get(i).port != commonPort) {
-          portsMatch = false;
+      if (servers.size() == 1) {
+        Endpoint server = servers.get(0);
+        Integer port = server.port == DEFAULT_SERVER_PORT ? null : server.port;
+        return new GeodeServerTarget(render(servers, false), port);
+      }
+
+      boolean includePorts = false;
+      for (Endpoint server : servers) {
+        if (server.port != DEFAULT_SERVER_PORT) {
+          includePorts = true;
           break;
         }
       }
-
-      if (portsMatch) {
-        Integer port = commonPort == DEFAULT_SERVER_PORT ? null : commonPort;
-        return new GeodeServerTarget(render(servers, false), port);
-      }
-      return new GeodeServerTarget(render(servers, true), null);
+      return new GeodeServerTarget(render(servers, includePorts, MAX_SERVER_ENDPOINTS), null);
     }
 
     @Nullable
@@ -130,12 +131,16 @@ class GeodeServerTarget {
     }
 
     private static String render(List<Endpoint> endpoints, boolean includePort) {
+      return render(endpoints, includePort, endpoints.size());
+    }
+
+    private static String render(List<Endpoint> endpoints, boolean includePort, int maxEndpoints) {
       List<String> rendered = new ArrayList<>(endpoints.size());
       for (Endpoint endpoint : endpoints) {
         rendered.add(endpoint.render(includePort));
       }
       rendered.sort(String::compareTo);
-      return String.join(",", rendered);
+      return String.join(",", rendered.subList(0, Math.min(maxEndpoints, rendered.size())));
     }
 
     private static String render(String host, int port) {

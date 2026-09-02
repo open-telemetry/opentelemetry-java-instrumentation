@@ -50,7 +50,7 @@ class GeodeServerTargetTest {
   }
 
   @Test
-  void serversOnACommonNonDefaultPortUseServerPortAndKeepDuplicates() {
+  void serversOnACommonNonDefaultPortEmbedEveryPortAndKeepDuplicates() {
     GeodeServerTarget.Builder first = GeodeServerTarget.builder();
     first.addServer("two.example", 40405);
     first.addServer("one.example", 40405);
@@ -62,10 +62,10 @@ class GeodeServerTargetTest {
     second.addServer("one.example", 40405);
 
     assertThat(first.build().getAddress())
-        .isEqualTo("one.example,two.example,two.example")
+        .isEqualTo("one.example:40405,two.example:40405,two.example:40405")
         .isEqualTo(second.build().getAddress());
-    assertThat(first.build().getPort()).isEqualTo(40405);
-    assertThat(second.build().getPort()).isEqualTo(40405);
+    assertThat(first.build().getPort()).isNull();
+    assertThat(second.build().getPort()).isNull();
   }
 
   @Test
@@ -76,6 +76,52 @@ class GeodeServerTargetTest {
 
     GeodeServerTarget target = builder.build();
     assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:40404,two.example:40405");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void fiveServersAreAllReported() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addServer("e.example", 40404);
+    builder.addServer("d.example", 40404);
+    builder.addServer("a.example", 40404);
+    builder.addServer("c.example", 40404);
+    builder.addServer("b.example", 40404);
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("a.example,b.example,c.example,d.example,e.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void sixServersAreSortedBeforeTheFirstFiveAreReported() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addServer("z.example", 40404);
+    builder.addServer("e.example", 40404);
+    builder.addServer("d.example", 40404);
+    builder.addServer("c.example", 40404);
+    builder.addServer("b.example", 40404);
+    builder.addServer("a.example", 40404);
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("a.example,b.example,c.example,d.example,e.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void nonDefaultPortAfterTheFirstFiveChangesTheCompleteListPortMode() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addServer("a.example", 40404);
+    builder.addServer("b.example", 40404);
+    builder.addServer("c.example", 40404);
+    builder.addServer("d.example", 40404);
+    builder.addServer("e.example", 40404);
+    builder.addServer("z.example", 40405);
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress())
+        .isEqualTo(
+            "a.example:40404,b.example:40404,c.example:40404," + "d.example:40404,e.example:40404");
     assertThat(target.getPort()).isNull();
   }
 
@@ -145,6 +191,25 @@ class GeodeServerTargetTest {
   }
 
   @Test
+  void locatorDiscoveryListsAreNotLimitedToFiveEndpoints() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addLocator("z.example", 10334);
+    builder.addLocator("e.example", 10334);
+    builder.addLocator("d.example", 10334);
+    builder.addLocator("c.example", 10334);
+    builder.addLocator("b.example", 10334);
+    builder.addLocator("a.example", 10334);
+    builder.setServerGroup("orders");
+
+    GeodeServerTarget target = builder.build();
+    assertThat(target.getAddress())
+        .isEqualTo(
+            "a.example:10334,b.example:10334,c.example:10334,d.example:10334,"
+                + "e.example:10334,z.example:10334/orders");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void explicitServersArePreferredOverLocatorDiscovery() {
     GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
     builder.addLocator("locator.example", 10334);
@@ -168,6 +233,19 @@ class GeodeServerTargetTest {
     outOfRange.addServer("one.example", 0);
 
     assertThat(outOfRange.build()).isNull();
+  }
+
+  @Test
+  void invalidServerAfterTheFirstFiveDropsTheCompleteList() {
+    GeodeServerTarget.Builder builder = GeodeServerTarget.builder();
+    builder.addServer("one.example", 40404);
+    builder.addServer("two.example", 40404);
+    builder.addServer("three.example", 40404);
+    builder.addServer("four.example", 40404);
+    builder.addServer("five.example", 40404);
+    builder.addServer("  ", 40404);
+
+    assertThat(builder.build()).isNull();
   }
 
   @Test
