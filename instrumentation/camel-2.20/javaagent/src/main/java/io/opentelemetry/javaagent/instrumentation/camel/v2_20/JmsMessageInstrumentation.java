@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveTelemetry.copy;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -18,11 +17,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class JmsMessageInstrumentation implements TypeInstrumentation {
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.apache.camel.component.jms.JmsMessage");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

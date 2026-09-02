@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.copyConsumedMessageCounted;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -20,11 +19,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.camel.Exchange;
 
 class KafkaEndpointInstrumentation implements TypeInstrumentation {
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.apache.camel.component.kafka.KafkaEndpoint");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
