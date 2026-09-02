@@ -9,38 +9,37 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pekko.http.javadsl.model.HttpResponse;
+import org.apache.pekko.http.scaladsl.model.ErrorInfo;
 
 /**
- * The request failed to parse, so it is described by whatever the parser had read before it gave
- * up. Anything it never got to is reported as unknown.
+ * The request failed to parse and nothing of it was recovered, so only the response side is
+ * described.
  */
 class PekkoHttpParsingErrorAttributesGetter
-    implements HttpServerAttributesGetter<PekkoHttpParsingError, HttpResponse> {
+    implements HttpServerAttributesGetter<ErrorInfo, HttpResponse> {
 
   @Nullable
   @Override
-  public String getHttpRequestMethod(PekkoHttpParsingError request) {
-    return request.method();
+  public String getHttpRequestMethod(ErrorInfo request) {
+    return null;
   }
 
   @Override
-  public List<String> getHttpRequestHeader(PekkoHttpParsingError request, String name) {
+  public List<String> getHttpRequestHeader(ErrorInfo request, String name) {
     return emptyList();
   }
 
   @Override
   public Integer getHttpResponseStatusCode(
-      PekkoHttpParsingError request, HttpResponse response, @Nullable Throwable error) {
+      ErrorInfo request, HttpResponse response, @Nullable Throwable error) {
     return response.status().intValue();
   }
 
   @Override
-  public List<String> getHttpResponseHeader(
-      PekkoHttpParsingError request, HttpResponse response, String name) {
+  public List<String> getHttpResponseHeader(ErrorInfo request, HttpResponse response, String name) {
     return response
         .getHeader(name)
         .map(header -> singletonList(header.value()))
@@ -49,26 +48,19 @@ class PekkoHttpParsingErrorAttributesGetter
 
   @Nullable
   @Override
-  public String getUrlScheme(PekkoHttpParsingError request) {
+  public String getUrlScheme(ErrorInfo request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getUrlPath(PekkoHttpParsingError request) {
-    return request.path();
+  public String getUrlPath(ErrorInfo request) {
+    return null;
   }
 
   @Nullable
   @Override
-  public String getUrlQuery(PekkoHttpParsingError request) {
-    return request.query();
-  }
-
-  @Nullable
-  @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
-      PekkoHttpParsingError request, @Nullable HttpResponse response) {
-    return request.peerAddress();
+  public String getUrlQuery(ErrorInfo request) {
+    return null;
   }
 }
