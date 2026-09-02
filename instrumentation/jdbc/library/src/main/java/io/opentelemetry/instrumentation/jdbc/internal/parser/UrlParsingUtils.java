@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -509,10 +511,33 @@ public final class UrlParsingUtils {
 
     List<String> entries = splitHostList(sanitized);
     List<HostPort> endpoints = new ArrayList<>();
-    boolean hasNonDefaultPort = false;
-    boolean hasUnknownPort = false;
+    boolean hasSpecialTarget = defaultPort == null;
     for (String entry : entries) {
       HostPort endpoint = extractSanitizedHostPort(entry);
+      endpoints.add(endpoint);
+      if (endpoint.host().startsWith("/") || endpoint.host().indexOf('\\') >= 0) {
+        hasSpecialTarget = true;
+      }
+    }
+    if (!hasSpecialTarget) {
+      DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort).setSorted(false);
+      for (HostPort endpoint : endpoints) {
+        builder.addEndpoint(endpoint.host(), endpoint.port() == null ? -1 : endpoint.port());
+      }
+      DbServerTarget target = builder.build();
+      return target == null ? null : new ServerAddressGroup(target.getAddress());
+    }
+
+    return renderSpecialServerAddressGroup(entries, endpoints, defaultPort);
+  }
+
+  @Nullable
+  private static ServerAddressGroup renderSpecialServerAddressGroup(
+      List<String> entries, List<HostPort> endpoints, @Nullable Integer defaultPort) {
+    boolean hasNonDefaultPort = false;
+    boolean hasUnknownPort = false;
+    for (int i = 0; i < endpoints.size(); i++) {
+      HostPort endpoint = endpoints.get(i);
       if (endpoint.host().startsWith("/")) {
         return new ServerAddressGroup(joinFirstEndpoints(entries));
       }
@@ -524,7 +549,7 @@ public final class UrlParsingUtils {
           effectivePort = defaultPort;
         }
       }
-      endpoints.add(new HostPort(endpoint.host(), effectivePort, endpoint.ipv6Address()));
+      endpoints.set(i, new HostPort(endpoint.host(), effectivePort, endpoint.ipv6Address()));
       if (defaultPort != null && effectivePort != null && !defaultPort.equals(effectivePort)) {
         hasNonDefaultPort = true;
       }
