@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 final class CassandraServerTarget {
 
   private static final int DEFAULT_PORT = 9042;
-  private static final int MAX_ADDRESS_LENGTH = 255;
+  private static final int MAX_ENDPOINTS = 5;
 
   private final String address;
   @Nullable private final Integer port;
@@ -165,44 +165,28 @@ final class CassandraServerTarget {
     if (contactPoints.isEmpty()) {
       return null;
     }
+    if (contactPoints.size() == 1) {
+      CassandraServerTarget contactPoint = contactPoints.get(0);
+      return new CassandraServerTarget(
+          contactPoint.address, contactPoint.port == DEFAULT_PORT ? null : contactPoint.port);
+    }
 
-    int commonPort = contactPoints.get(0).port;
-    boolean allPortsEqual = true;
+    boolean allPortsDefault = true;
     List<String> hosts = new ArrayList<>(contactPoints.size());
     List<String> endpoints = new ArrayList<>(contactPoints.size());
     for (CassandraServerTarget contactPoint : contactPoints) {
-      allPortsEqual &= contactPoint.port == commonPort;
+      allPortsDefault &= contactPoint.port == DEFAULT_PORT;
       hosts.add(contactPoint.address);
       endpoints.add(contactPoint.asContactPoint());
     }
 
-    if (allPortsEqual) {
-      hosts.sort(String::compareTo);
-      String address = joinWithinLimit(hosts);
-      return address == null
-          ? null
-          : new CassandraServerTarget(address, commonPort == DEFAULT_PORT ? null : commonPort);
-    }
-
-    endpoints.sort(String::compareTo);
-    String address = joinWithinLimit(endpoints);
-    return address == null ? null : new CassandraServerTarget(address, null);
+    List<String> renderedEndpoints = allPortsDefault ? hosts : endpoints;
+    renderedEndpoints.sort(String::compareTo);
+    return new CassandraServerTarget(joinFirstEndpoints(renderedEndpoints), null);
   }
 
-  @Nullable
-  private static String joinWithinLimit(List<String> values) {
-    StringBuilder result = new StringBuilder();
-    for (String value : values) {
-      int separatorLength = result.length() == 0 ? 0 : 1;
-      if (value.length() > MAX_ADDRESS_LENGTH - result.length() - separatorLength) {
-        break;
-      }
-      if (separatorLength != 0) {
-        result.append(',');
-      }
-      result.append(value);
-    }
-    return result.length() == 0 ? null : result.toString();
+  private static String joinFirstEndpoints(List<String> endpoints) {
+    return String.join(",", endpoints.subList(0, Math.min(endpoints.size(), MAX_ENDPOINTS)));
   }
 
   private static boolean matches(
