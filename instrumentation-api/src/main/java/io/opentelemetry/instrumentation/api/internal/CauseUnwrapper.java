@@ -28,8 +28,6 @@ import java.util.function.Predicate;
  */
 public final class CauseUnwrapper {
 
-  private CauseUnwrapper() {}
-
   /**
    * Repeatedly replaces {@code error} with {@code nextCause.apply(error)} while {@code
    * shouldUnwrap.test(error)} returns {@code true}, and returns the last value reached.
@@ -75,4 +73,6 @@ public final class CauseUnwrapper {
   public static Throwable rootCause(Throwable error) {
     return unwrap(error, unused -> true);
   }
+
+  private CauseUnwrapper() {}
 }
