@@ -273,7 +273,7 @@ targets:
       target: ':instrumentation:rediscala-1.8:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:resilience4j-circuitbreaker-0.15:javaagent'
+      target: ':instrumentation:resilience4j-circuitbreaker-2.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:resources:library'
