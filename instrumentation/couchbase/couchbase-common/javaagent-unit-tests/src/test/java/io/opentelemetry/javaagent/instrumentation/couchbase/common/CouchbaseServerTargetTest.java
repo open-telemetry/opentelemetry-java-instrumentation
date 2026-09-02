@@ -32,6 +32,36 @@ class CouchbaseServerTargetTest {
   }
 
   @Test
+  void httpSingleSeedOmitsTheDefaultPort() {
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("HTTP");
+    builder.addSeed("node.example", 8091);
+
+    CouchbaseServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("node.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void httpSingleSeedKeepsANonDefaultPort() {
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("http");
+    builder.addSeed("node.example", 8092);
+
+    CouchbaseServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("node.example");
+    assertThat(target.getPort()).isEqualTo(8092);
+  }
+
+  @Test
+  void unqualifiedHttpSeedUsesTheSchemeDefaultPort() {
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("http");
+    builder.addSeed("cluster.example", 0);
+
+    CouchbaseServerTarget target = builder.build();
+    assertThat(target.getAddress()).isEqualTo("cluster.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void unqualifiedSeedUsesTheSchemeDefaultPort() {
     CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbases");
     builder.addSeed("cluster.example", 0);

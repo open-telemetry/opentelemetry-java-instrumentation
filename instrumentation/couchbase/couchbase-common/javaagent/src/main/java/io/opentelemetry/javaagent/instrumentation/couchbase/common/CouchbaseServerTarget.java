@@ -13,6 +13,7 @@ public class CouchbaseServerTarget {
 
   private static final int COUCHBASE_DEFAULT_PORT = 11210;
   private static final int COUCHBASES_DEFAULT_PORT = 11207;
+  private static final int HTTP_DEFAULT_PORT = 8091;
   private static final int MAX_ENDPOINTS = 5;
 
   private final String address;
@@ -28,6 +29,8 @@ public class CouchbaseServerTarget {
       defaultPort = COUCHBASE_DEFAULT_PORT;
     } else if ("couchbases".equalsIgnoreCase(scheme)) {
       defaultPort = COUCHBASES_DEFAULT_PORT;
+    } else if ("http".equalsIgnoreCase(scheme)) {
+      defaultPort = HTTP_DEFAULT_PORT;
     }
     return builderWithDefaultPort(defaultPort);
   }
