@@ -22,10 +22,6 @@ import javax.annotation.Nullable;
 @AutoValue
 abstract class CassandraRequest {
 
-  static CassandraRequest create(Session session, String queryText, boolean parameterizedQuery) {
-    return create(session, queryText, parameterizedQuery, null);
-  }
-
   static CassandraRequest create(
       Session session,
       String queryText,
@@ -35,17 +31,9 @@ abstract class CassandraRequest {
         session, singleton(queryText), parameterizedQuery, null, null, null, configuredTarget);
   }
 
-  static CassandraRequest create(Session session, String queryText) {
-    return create(session, queryText, null);
-  }
-
   static CassandraRequest create(
       Session session, String queryText, @Nullable CassandraConfiguredTarget configuredTarget) {
     return create(session, singleton(queryText), false, null, null, null, configuredTarget);
-  }
-
-  static CassandraRequest create(Session session, Statement statement) {
-    return create(session, statement, null);
   }
 
   static CassandraRequest create(
