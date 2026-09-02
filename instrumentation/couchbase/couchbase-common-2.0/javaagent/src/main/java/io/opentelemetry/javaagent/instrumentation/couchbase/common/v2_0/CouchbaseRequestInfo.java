@@ -13,7 +13,7 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +40,7 @@ public abstract class CouchbaseRequestInfo {
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket,
-      @Nullable CouchbaseServerTarget serverTarget,
+      @Nullable DbServerTarget serverTarget,
       Class<?> declaringClass,
       String methodName) {
     String operation =
@@ -52,7 +52,7 @@ public abstract class CouchbaseRequestInfo {
 
   @SuppressWarnings("deprecation") // using deprecated old semconv operation
   public static CouchbaseRequestInfo create(
-      @Nullable String bucket, @Nullable CouchbaseServerTarget serverTarget, Object query) {
+      @Nullable String bucket, @Nullable DbServerTarget serverTarget, Object query) {
     SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
     SqlQuery sqlQueryWithSummary =
         emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
@@ -94,7 +94,7 @@ public abstract class CouchbaseRequestInfo {
   public abstract boolean isMethodCall();
 
   @Nullable
-  public abstract CouchbaseServerTarget getServerTarget();
+  public abstract DbServerTarget getServerTarget();
 
   // Each subscription needs independent mutable node state.
   public Supplier<CouchbaseRequestInfo> copySupplier() {

@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0;
 
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -16,8 +17,12 @@ import javax.annotation.Nullable;
 // because 2.5.7 through 2.7.7 drop seeds that fail DNS resolution from hosts.
 public class CouchbaseConnectionStrings {
 
+  private static final int COUCHBASE_DEFAULT_PORT = 11210;
+  private static final int COUCHBASES_DEFAULT_PORT = 11207;
+  private static final int HTTP_DEFAULT_PORT = 8091;
+
   @Nullable
-  public static CouchbaseServerTarget target(@Nullable Object connectionString) {
+  public static DbServerTarget target(@Nullable Object connectionString) {
     if (connectionString == null) {
       return null;
     }
@@ -27,8 +32,8 @@ public class CouchbaseConnectionStrings {
       if (seeds == null) {
         return null;
       }
-      CouchbaseServerTarget.Builder target =
-          CouchbaseServerTarget.builder(scheme(type, connectionString));
+      DbServerTargetBuilder target =
+          DbServerTarget.builder(defaultPort(scheme(type, connectionString)));
       for (Object seed : seeds) {
         addSeed(target, seed);
       }
@@ -38,6 +43,19 @@ public class CouchbaseConnectionStrings {
       // conventions report the contacted node later.
       return null;
     }
+  }
+
+  private static int defaultPort(@Nullable String scheme) {
+    if ("couchbase".equalsIgnoreCase(scheme)) {
+      return COUCHBASE_DEFAULT_PORT;
+    }
+    if ("couchbases".equalsIgnoreCase(scheme)) {
+      return COUCHBASES_DEFAULT_PORT;
+    }
+    if ("http".equalsIgnoreCase(scheme)) {
+      return HTTP_DEFAULT_PORT;
+    }
+    return -1;
   }
 
   @Nullable
@@ -63,30 +81,53 @@ public class CouchbaseConnectionStrings {
     return value == null ? null : value.toString();
   }
 
-  private static void addSeed(CouchbaseServerTarget.Builder target, @Nullable Object seed)
+  private static void addSeed(DbServerTargetBuilder target, @Nullable Object seed)
       throws ReflectiveOperationException {
     if (seed == null) {
-      target.addSeed(null, 0);
+      target.addEndpoint(null, -1);
       return;
     }
     if (seed instanceof InetSocketAddress) {
       InetSocketAddress address = (InetSocketAddress) seed;
       // getHostString never triggers a reverse lookup, unlike getHostName
-      target.addSeed(address.getHostString(), address.getPort());
+      target.addEndpoint(cleanHost(address.getHostString()), configuredPort(address.getPort()));
       return;
     }
     Class<?> type = seed.getClass();
     Method hostname = method(type, "hostname");
     Method port = method(type, "port");
     if (hostname == null || port == null) {
-      target.addSeed(null, 0);
+      target.addEndpoint(null, -1);
       return;
     }
     Object host = hostname.invoke(seed);
     Object value = port.invoke(seed);
-    target.addSeed(
-        host == null ? null : host.toString(),
-        value instanceof Number ? ((Number) value).intValue() : 0);
+    target.addEndpoint(
+        cleanHost(host == null ? null : host.toString()),
+        configuredPort(value instanceof Number ? ((Number) value).intValue() : 0));
+  }
+
+  private static int configuredPort(int port) {
+    return port > 0 ? port : -1;
+  }
+
+  @Nullable
+  private static String cleanHost(@Nullable String host) {
+    if (host == null) {
+      return null;
+    }
+    // Older parsers retain credentials and connection-string suffixes in the seed host.
+    String cleaned = truncateAt(truncateAt(truncateAt(host.trim(), '/'), '?'), '#');
+    int credentialsEnd = cleaned.lastIndexOf('@');
+    if (credentialsEnd >= 0) {
+      cleaned = cleaned.substring(credentialsEnd + 1);
+    }
+    return cleaned;
+  }
+
+  private static String truncateAt(String host, char separator) {
+    int index = host.indexOf(separator);
+    return index < 0 ? host : host.substring(0, index);
   }
 
   @Nullable

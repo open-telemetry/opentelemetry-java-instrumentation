@@ -11,7 +11,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.core.utils.ConnectionString;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.InetSocketAddress;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void omitsTheCouchbaseDefaultPort() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(ConnectionString.create("couchbase://node:11210"));
 
     assertThat(target.getAddress()).isEqualTo("node");
@@ -29,7 +29,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void omitsTheCouchbasesDefaultPort() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(ConnectionString.create("couchbases://node:11207"));
 
     assertThat(target.getAddress()).isEqualTo("node");
@@ -38,7 +38,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void keepsSharedCouchbasesNonDefaultPortsInline() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(
             ConnectionString.create("couchbases://two.example:11208,one.example:11208"));
 
@@ -48,7 +48,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void keepsDifferentCouchbasesPortsInline() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(
             ConnectionString.create("couchbases://two.example:11208,one.example"));
 
@@ -58,7 +58,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void readsSeveralSeedsInNormalizedOrder() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(
             ConnectionString.create("couchbases://two.example,one.example"));
 
@@ -68,7 +68,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void stripsCredentialsFromAConnectionStringTheDriverParsed() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(ConnectionString.create("couchbase://user@node.example"));
 
     assertThat(target.getAddress()).isEqualTo("node.example");
@@ -76,7 +76,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void readsTheSeedsOfTheDriver20Shape() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
                 asList(
@@ -89,7 +89,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void keepsCommonNonDefaultPortsInline() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
                 asList(
@@ -102,7 +102,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void keepsDifferentPortsInline() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
                 asList(
@@ -115,7 +115,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void prefersTheConfiguredSeedsOverTheResolvedOnes() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(
             new ResolvedSeedListConnectionString(
                 asList(
@@ -128,12 +128,12 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void readsTheSeedsOfTheDriver27Shape() {
-    CouchbaseServerTarget target =
+    DbServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
                 asList(new Seed("node.example", 0), new Seed("2001:db8::1", 11207)), "COUCHBASES"));
 
-    assertThat(target.getAddress()).isEqualTo("[2001:db8::1],node.example");
+    assertThat(target.getAddress()).isEqualTo("2001:db8::1,node.example");
     assertThat(target.getPort()).isNull();
   }
 

@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
@@ -151,9 +151,7 @@ class CouchbaseAttributesGetterTest {
     assertThat(copy.getNode()).isNull();
   }
 
-  private static CouchbaseServerTarget target(String host, int port) {
-    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbase");
-    builder.addSeed(host, port);
-    return builder.build();
+  private static DbServerTarget target(String host, int port) {
+    return DbServerTarget.builder(11210).addEndpoint(host, port > 0 ? port : -1).build();
   }
 }
