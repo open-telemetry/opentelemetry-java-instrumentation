@@ -55,6 +55,13 @@ instrumentation/development:
       # Flush timeout in milliseconds.
       flush_timeout: 10000
     aws_sdk:
+      batch_send:
+        message_creation_spans:
+          # Determines whether to create a producer span for each eligible message in an SQS batch
+          # send when stable messaging semantic conventions are enabled. Overrides
+          # `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled`.
+          enabled: true
+
       # Enables the experimental span attributes `aws.agent`, `aws.queue.name`,
       # `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
       experimental_span_attributes/development: false
@@ -152,6 +159,13 @@ instrumentation/development:
         # list of attribute keys.
         resource_attributes: []
       messaging:
+        batch_send:
+          message_creation_spans:
+            # Provides the default for whether to create a producer span for each eligible message
+            # in a batch send when stable messaging semantic conventions are enabled. An
+            # instrumentation-specific setting takes precedence.
+            enabled: true
+
         # Deprecated: use `otel.instrumentation.messaging.experimental.headers.included` instead. A
         # comma-separated list of header names to capture as span attributes. It does not support
         # glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
