@@ -163,6 +163,15 @@ public final class UrlParsingUtils {
     }
   }
 
+  private static void appendServerAddress(
+      StringBuilder builder, String host, @Nullable Integer port) {
+    if (port == null) {
+      builder.append(host);
+      return;
+    }
+    appendHostPort(builder, host, port);
+  }
+
   /**
    * Extract parameters from a JDBC URL.
    *
@@ -520,7 +529,7 @@ public final class UrlParsingUtils {
       if (address.length() > 0) {
         address.append(',');
       }
-      appendHostPort(
+      appendServerAddress(
           address,
           endpoint.host(),
           defaultPort == null || hasNonDefaultPort ? endpoint.port() : null);

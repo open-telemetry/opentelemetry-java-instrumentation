@@ -2190,7 +2190,7 @@ class JdbcConnectionUrlParserTest {
             .setOldSystem("mssql")
             .setHost("2001:db8::1")
             .setPort(1433)
-            .setServerAddressGroup("[2001:db8::1],[2001:db8::2]")
+            .setServerAddressGroup("2001:db8::1,2001:db8::2")
             .build(),
         // an ADDRESS_LIST is optional, a DESCRIPTION may hold the addresses directly
         arg("jdbc:oracle:thin:@(description=(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
@@ -2284,6 +2284,10 @@ class JdbcConnectionUrlParserTest {
             "PostgreSQL default ports",
             "jdbc:postgresql://pg.host1,pg.host2:5432/pgdb",
             "pg.host1,pg.host2"),
+        argumentSet(
+            "PostgreSQL IPv6 default ports",
+            "jdbc:postgresql://[2001:db8::1],[2001:db8::2]/pgdb",
+            "2001:db8::1,2001:db8::2"),
         argumentSet(
             "PostgreSQL mixed IPv6 ports",
             "jdbc:postgresql://[2001:db8::1],[2001:db8::2]:15432/pgdb",
