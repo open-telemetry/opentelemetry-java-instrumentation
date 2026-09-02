@@ -13,11 +13,46 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class DbServerTargetTest {
 
   private static final int DEFAULT_PORT = 9042;
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "/var/run/postgresql/.s.PGSQL.5432",
+        "/tmp/db socket ",
+        "//host/share/database.sock"
+      })
+  void validUnixSocketPathIsPreserved(String path) {
+    DbServerTarget target = DbServerTarget.unixSocket(path);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(path);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(
+      strings = {
+        "",
+        "/",
+        "tmp/database.sock",
+        " /tmp/database.sock",
+        "/tmp/db,sock",
+        "/tmp/db=sock",
+        "/tmp/db%sock",
+        "/tmp/db@sock",
+        "/tmp/db?sock",
+        "/tmp/db#sock"
+      })
+  void invalidUnixSocketPathIsRejected(String path) {
+    assertThat(DbServerTarget.unixSocket(path)).isNull();
+  }
 
   @Test
   void singleEndpointOnDefaultPortReportsNoPort() {
