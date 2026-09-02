@@ -14,7 +14,7 @@ final class NatsSubject {
 
   static final String ACK_OPERATION_NAME = "ack";
   static final String NAK_OPERATION_NAME = "nak";
-  static final String IN_PROGRESS_OPERATION_NAME = "inProgress";
+  static final String IN_PROGRESS_OPERATION_NAME = "in-progress";
   static final String TERM_OPERATION_NAME = "term";
 
   static boolean isJetStreamSettlement(String subject) {

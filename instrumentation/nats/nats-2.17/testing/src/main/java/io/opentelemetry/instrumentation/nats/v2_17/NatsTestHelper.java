@@ -98,7 +98,7 @@ class NatsTestHelper {
   private static boolean isSettlementOperation(String operation) {
     return operation.equals("ack")
         || operation.equals("nak")
-        || operation.equals("inProgress")
+        || operation.equals("in-progress")
         || operation.equals("term");
   }
 

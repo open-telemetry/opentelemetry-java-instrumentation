@@ -134,7 +134,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
                     span -> span.hasName("parent").hasNoParent(),
                     settlementSpan(trace, firstAckSubject, "+ACK", "ack", clientId),
                     settlementSpan(trace, secondAckSubject, "-NAK", "nak", clientId),
-                    settlementSpan(trace, thirdAckSubject, "+WPI", "inProgress", clientId),
+                    settlementSpan(trace, thirdAckSubject, "+WPI", "in-progress", clientId),
                     settlementSpan(trace, fourthAckSubject, "+TERM", "term", clientId)));
   }
 
