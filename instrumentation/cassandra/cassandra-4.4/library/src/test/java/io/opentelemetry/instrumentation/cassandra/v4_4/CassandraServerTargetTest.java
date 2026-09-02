@@ -31,6 +31,7 @@ import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -126,6 +127,23 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void explicitContactPointAddressesApplySinglePortRules() {
+    CassandraServerTarget defaultPortTarget =
+        CassandraServerTarget.ofAddresses(
+            singletonList(InetSocketAddress.createUnresolved("node.example.com", 9042)));
+    CassandraServerTarget nonDefaultPortTarget =
+        CassandraServerTarget.ofAddresses(
+            singletonList(InetSocketAddress.createUnresolved("node.example.com", 9142)));
+
+    assertThat(defaultPortTarget).isNotNull();
+    assertThat(defaultPortTarget.getAddress()).isEqualTo("node.example.com");
+    assertThat(defaultPortTarget.getPort()).isNull();
+    assertThat(nonDefaultPortTarget).isNotNull();
+    assertThat(nonDefaultPortTarget.getAddress()).isEqualTo("node.example.com");
+    assertThat(nonDefaultPortTarget.getPort()).isEqualTo(9142);
+  }
+
+  @Test
   void explicitContactPointAddressesBecomeTheTarget() {
     CassandraServerTarget target =
         CassandraServerTarget.ofAddresses(
@@ -158,6 +176,30 @@ class CassandraServerTargetTest {
     assertThat(nonDefaultPortTarget.getAddress())
         .isEqualTo("node1.example.com:9142,node2.example.com:9142");
     assertThat(nonDefaultPortTarget.getPort()).isNull();
+  }
+
+  @Test
+  void explicitContactPointAddressesIncludeAtMostFiveOrderedEndpoints() {
+    List<InetSocketAddress> fiveContactPoints =
+        asList(
+            InetSocketAddress.createUnresolved("node5.example.com", 9042),
+            InetSocketAddress.createUnresolved("node3.example.com", 9042),
+            InetSocketAddress.createUnresolved("node1.example.com", 9042),
+            InetSocketAddress.createUnresolved("node4.example.com", 9042),
+            InetSocketAddress.createUnresolved("node2.example.com", 9042));
+    List<InetSocketAddress> sixContactPoints = new ArrayList<>(fiveContactPoints);
+    sixContactPoints.add(InetSocketAddress.createUnresolved("node6.example.com", 9042));
+
+    CassandraServerTarget fiveEndpointTarget = CassandraServerTarget.ofAddresses(fiveContactPoints);
+    CassandraServerTarget sixEndpointTarget = CassandraServerTarget.ofAddresses(sixContactPoints);
+
+    assertThat(fiveEndpointTarget).isNotNull();
+    assertThat(fiveEndpointTarget.getAddress())
+        .isEqualTo(
+            "node1.example.com,node2.example.com,node3.example.com,node4.example.com,"
+                + "node5.example.com");
+    assertThat(sixEndpointTarget).isNotNull();
+    assertThat(sixEndpointTarget.getAddress()).isEqualTo(fiveEndpointTarget.getAddress());
   }
 
   @Test
