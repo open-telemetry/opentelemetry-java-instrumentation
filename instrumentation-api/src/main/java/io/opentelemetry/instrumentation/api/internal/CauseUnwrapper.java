@@ -26,7 +26,7 @@ import java.util.function.Predicate;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class CauseUnwrapper {
+public class CauseUnwrapper {
 
   /**
    * Repeatedly replaces {@code error} with {@code nextCause.apply(error)} while {@code
