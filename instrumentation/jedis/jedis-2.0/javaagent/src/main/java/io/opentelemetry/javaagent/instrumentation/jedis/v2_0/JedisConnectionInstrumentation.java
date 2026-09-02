@@ -95,7 +95,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       if (JedisPipelineContext.inTransactionFraming()) {
         // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI batch
         // span rather than getting their own spans. Keep the request until method exit so a
-        // successful EXEC socket can become the transaction's last observed peer.
+        // connected EXEC socket observed at method exit can become the transaction's last peer.
         return new AdviceScope(null, null, request, null);
       }
       Context parentContext = Context.current();
@@ -117,9 +117,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     public void end(@Nullable Throwable throwable) {
       try {
-        if (throwable == null) {
-          request.capturePeerAddress();
-        }
+        request.capturePeerAddress();
         JedisPipelineContext.captureTransactionFramingPeer(request);
       } finally {
         Context context = this.context;
