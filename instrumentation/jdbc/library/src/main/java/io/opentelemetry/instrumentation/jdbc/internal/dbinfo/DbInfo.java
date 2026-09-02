@@ -59,9 +59,6 @@ public abstract class DbInfo {
   @Nullable
   public abstract String getServerAddressGroup();
 
-  @Nullable
-  public abstract Integer getServerAddressGroupPort();
-
   public abstract boolean isMultiTarget();
 
   @Nullable
@@ -106,7 +103,6 @@ public abstract class DbInfo {
         .serverAddress(getServerAddress())
         .serverPort(getServerPort())
         .serverAddressGroup(getServerAddressGroup())
-        .serverAddressGroupPort(getServerAddressGroupPort())
         .multiTarget(isMultiTarget());
   }
 
@@ -141,8 +137,6 @@ public abstract class DbInfo {
     public abstract Builder serverPort(Integer serverPort);
 
     public abstract Builder serverAddressGroup(String serverAddressGroup);
-
-    public abstract Builder serverAddressGroupPort(Integer serverAddressGroupPort);
 
     public abstract Builder multiTarget(boolean multiTarget);
 

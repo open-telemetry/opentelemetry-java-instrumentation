@@ -126,8 +126,8 @@ class JdbcTelemetryTest {
         argumentSet(
             "shared non-default port",
             "jdbc:postgresql://pg.host1:15432,pg.host2:15432/dbname",
-            "pg.host1,pg.host2",
-            15432L),
+            "pg.host1:15432,pg.host2:15432",
+            null),
         argumentSet(
             "mixed ports",
             "jdbc:postgresql://pg.host1:5432,pg.host2:15432/dbname",
@@ -152,7 +152,9 @@ class JdbcTelemetryTest {
                 span -> span.hasName("parent"),
                 span ->
                     span.hasName(
-                        emitStableDatabaseSemconv() ? "pg.host1,pg.host2:15432" : "DB Query")));
+                        emitStableDatabaseSemconv()
+                            ? "pg.host1:15432,pg.host2:15432"
+                            : "DB Query")));
   }
 
   @ParameterizedTest

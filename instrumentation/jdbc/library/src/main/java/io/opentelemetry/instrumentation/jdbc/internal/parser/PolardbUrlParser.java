@@ -29,6 +29,6 @@ public final class PolardbUrlParser implements JdbcUrlParser {
 
     ctx.applyUserProperty();
 
-    GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx);
+    GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx, DEFAULT_PORT);
   }
 }

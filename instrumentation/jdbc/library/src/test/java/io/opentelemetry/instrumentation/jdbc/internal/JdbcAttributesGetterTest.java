@@ -92,20 +92,19 @@ class JdbcAttributesGetterTest {
   }
 
   @Test
-  void groupTargetReplacesHostAndPortOnlyInStableSemconv() {
+  void groupTargetReplacesHostAndOmitsPortOnlyInStableSemconv() {
     DbInfo dbInfo =
         DbInfo.builder()
             .dbSystemName(MARIADB)
             .serverAddress("h1")
             .serverPort(3306)
-            .serverAddressGroup("h1,h2")
-            .serverAddressGroupPort(15432)
+            .serverAddressGroup("h1:15432,h2:15432")
             .build();
     DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
 
     if (emitStableDatabaseSemconv()) {
-      assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1,h2");
-      assertThat(attributesGetter.getServerPort(request)).isEqualTo(15432);
+      assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1:15432,h2:15432");
+      assertThat(attributesGetter.getServerPort(request)).isNull();
     } else {
       assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1");
       assertThat(attributesGetter.getServerPort(request)).isEqualTo(3306);
