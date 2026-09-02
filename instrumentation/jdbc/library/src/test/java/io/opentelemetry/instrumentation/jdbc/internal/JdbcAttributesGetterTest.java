@@ -148,6 +148,11 @@ class JdbcAttributesGetterTest {
             "h1",
             1433),
         argumentSet(
+            "SQL Server named instance with unknown port",
+            "jdbc:sqlserver://h1:1444;failoverPartner=h2\\instance2",
+            "h1",
+            1444),
+        argumentSet(
             "malformed Oracle Easy Connect list",
             "jdbc:oracle:thin:@//h1,unexpected=value/service",
             "h1",
