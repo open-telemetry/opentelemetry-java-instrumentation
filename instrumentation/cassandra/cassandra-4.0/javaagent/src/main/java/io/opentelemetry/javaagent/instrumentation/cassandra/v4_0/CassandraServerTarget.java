@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 class CassandraServerTarget {
 
   private static final int DEFAULT_PORT = 9042;
-  private static final int MAX_ADDRESS_LENGTH = 255;
+  private static final int MAX_ENDPOINTS = 5;
 
   private final String address;
   @Nullable private final Integer port;
@@ -97,43 +97,30 @@ class CassandraServerTarget {
       return null;
     }
 
-    int commonPort = contactPoints.get(0).port;
-    boolean allPortsEqual = true;
-    List<String> hosts = new ArrayList<>(contactPoints.size());
-    List<String> endpoints = new ArrayList<>(contactPoints.size());
+    if (contactPoints.size() == 1) {
+      CassandraServerTarget contactPoint = contactPoints.get(0);
+      return new CassandraServerTarget(
+          contactPoint.address, contactPoint.port == DEFAULT_PORT ? null : contactPoint.port);
+    }
+
+    boolean includePorts = false;
     for (CassandraServerTarget contactPoint : contactPoints) {
-      allPortsEqual &= contactPoint.port == commonPort;
-      hosts.add(contactPoint.address);
-      endpoints.add(contactPoint.asContactPoint());
+      includePorts |= contactPoint.port != DEFAULT_PORT;
     }
 
-    if (allPortsEqual) {
-      hosts.sort(String::compareTo);
-      String address = joinWithinLimit(hosts);
-      return address == null
-          ? null
-          : new CassandraServerTarget(address, commonPort == DEFAULT_PORT ? null : commonPort);
+    List<String> values = new ArrayList<>(contactPoints.size());
+    for (CassandraServerTarget contactPoint : contactPoints) {
+      values.add(includePorts ? contactPoint.asContactPoint() : contactPoint.address);
     }
-
-    endpoints.sort(String::compareTo);
-    String address = joinWithinLimit(endpoints);
-    return address == null ? null : new CassandraServerTarget(address, null);
-  }
-
-  @Nullable
-  private static String joinWithinLimit(List<String> values) {
+    values.sort(String::compareTo);
     StringBuilder result = new StringBuilder();
-    for (String value : values) {
-      int separatorLength = result.length() == 0 ? 0 : 1;
-      if (value.length() > MAX_ADDRESS_LENGTH - result.length() - separatorLength) {
-        break;
-      }
-      if (separatorLength != 0) {
+    for (int i = 0; i < Math.min(values.size(), MAX_ENDPOINTS); i++) {
+      if (i != 0) {
         result.append(',');
       }
-      result.append(value);
+      result.append(values.get(i));
     }
-    return result.length() == 0 ? null : result.toString();
+    return new CassandraServerTarget(result.toString(), null);
   }
 
   @Nullable
