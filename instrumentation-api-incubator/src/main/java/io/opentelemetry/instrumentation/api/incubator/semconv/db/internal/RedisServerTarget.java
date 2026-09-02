@@ -71,30 +71,7 @@ public final class RedisServerTarget {
       return directTarget(parsed.get(0));
     }
 
-    Integer commonPort = parsed.get(0).effectivePort();
-    boolean mixedPorts = false;
-    for (int i = 1; i < parsed.size(); i++) {
-      Integer port = parsed.get(i).effectivePort();
-      if (commonPort == null ? port != null : !commonPort.equals(port)) {
-        mixedPorts = true;
-        break;
-      }
-    }
-
-    boolean includePorts = mixedPorts || (commonPort != null && commonPort != DEFAULT_PORT);
-    List<String> rendered = new ArrayList<>(parsed.size());
-    for (Endpoint endpoint : parsed) {
-      rendered.add(
-          includePorts ? endpoint.renderWithEffectivePort() : endpoint.renderWithoutPort());
-    }
-    if (unordered) {
-      Collections.sort(rendered);
-    }
-    String address = renderEndpointList(rendered);
-    if (address == null) {
-      return null;
-    }
-    return new RedisServerTarget(address, null);
+    return networkTarget(parsed, unordered);
   }
 
   @Nullable
@@ -112,6 +89,10 @@ public final class RedisServerTarget {
         unrepresentable = true;
         continue;
       }
+      if (sharedTarget(value) == null) {
+        unrepresentable = true;
+        continue;
+      }
       parsed.add(value);
       hasSocket |= value.socket;
     }
@@ -122,9 +103,51 @@ public final class RedisServerTarget {
     return parsed;
   }
 
+  @Nullable
   private static RedisServerTarget directTarget(Endpoint endpoint) {
-    Integer port = endpoint.port != null && endpoint.port != DEFAULT_PORT ? endpoint.port : null;
-    return new RedisServerTarget(endpoint.renderWithoutPort(), port);
+    return fromSharedTarget(sharedTarget(endpoint));
+  }
+
+  @Nullable
+  private static RedisServerTarget networkTarget(List<Endpoint> endpoints, boolean unordered) {
+    int maxEndpoints = Math.min(MAX_ENDPOINTS, endpoints.size());
+    while (maxEndpoints > 0) {
+      DbServerTarget target = buildNetworkTarget(endpoints, unordered, maxEndpoints);
+      if (target == null) {
+        return null;
+      }
+      if (target.getAddress().length() <= MAX_ENDPOINT_LIST_LENGTH) {
+        return fromSharedTarget(target);
+      }
+      maxEndpoints--;
+    }
+    return null;
+  }
+
+  @Nullable
+  private static DbServerTarget buildNetworkTarget(
+      List<Endpoint> endpoints, boolean unordered, int maxEndpoints) {
+    DbServerTargetBuilder builder =
+        DbServerTarget.builder(DEFAULT_PORT).setSorted(unordered).setMaxEndpoints(maxEndpoints);
+    for (Endpoint endpoint : endpoints) {
+      builder.addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port);
+    }
+    return builder.build();
+  }
+
+  @Nullable
+  private static DbServerTarget sharedTarget(Endpoint endpoint) {
+    if (endpoint.socket) {
+      return DbServerTarget.unixSocket(endpoint.host);
+    }
+    return DbServerTarget.builder(DEFAULT_PORT)
+        .addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port)
+        .build();
+  }
+
+  @Nullable
+  private static RedisServerTarget fromSharedTarget(@Nullable DbServerTarget target) {
+    return target == null ? null : new RedisServerTarget(target.getAddress(), target.getPort());
   }
 
   @Nullable
@@ -417,25 +440,6 @@ public final class RedisServerTarget {
         port = port * 10 + (c - '0');
       }
       return port <= 65535 ? port : null;
-    }
-
-    @Nullable
-    Integer effectivePort() {
-      return socket ? null : port != null ? port : DEFAULT_PORT;
-    }
-
-    String renderWithoutPort() {
-      return host;
-    }
-
-    String renderWithEffectivePort() {
-      if (socket) {
-        return host;
-      }
-      StringBuilder builder = new StringBuilder();
-      appendHost(builder, host, true);
-      builder.append(':').append(effectivePort());
-      return builder.toString();
     }
 
     String renderConfigured() {
