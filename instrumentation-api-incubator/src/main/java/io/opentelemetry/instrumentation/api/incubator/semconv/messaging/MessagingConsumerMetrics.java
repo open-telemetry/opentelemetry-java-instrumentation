@@ -154,10 +154,12 @@ public final class MessagingConsumerMetrics implements OperationListener {
         consumedMessagesCounter != null
             && recordsConsumedMessages(operationType)
             && !MessagingMetricsState.hasConsumedMessages(context);
-    if (recordClientOperationDuration) {
+    if (recordClientOperationDuration
+        && MessagingMetricsState.isNestedMetricsDeduplicationEnabled(context)) {
       context = MessagingMetricsState.markClientOperationDuration(context, operationType);
     }
-    if (recordConsumedMessages) {
+    if (recordConsumedMessages
+        && MessagingMetricsState.isNestedMetricsDeduplicationEnabled(context)) {
       context = MessagingMetricsState.markConsumedMessages(context);
     }
     return context.with(

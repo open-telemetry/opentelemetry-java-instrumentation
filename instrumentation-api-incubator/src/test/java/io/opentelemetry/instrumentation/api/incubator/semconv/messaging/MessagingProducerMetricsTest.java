@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.enableNestedMetricsDeduplication;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasClientOperationDuration;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasSentMessages;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
@@ -73,14 +74,15 @@ class MessagingProducerMetricsTest {
             .build();
 
     Context parent =
-        Context.root()
-            .with(
-                Span.wrap(
-                    SpanContext.create(
-                        "ff01020304050600ff0a0b0c0d0e0f00",
-                        "090a0b0c0d0e0f00",
-                        TraceFlags.getSampled(),
-                        TraceState.getDefault())));
+        enableNestedMetricsDeduplication(
+            Context.root()
+                .with(
+                    Span.wrap(
+                        SpanContext.create(
+                            "ff01020304050600ff0a0b0c0d0e0f00",
+                            "090a0b0c0d0e0f00",
+                            TraceFlags.getSampled(),
+                            TraceState.getDefault()))));
 
     Context context = listener.onStart(parent, requestAttributes, nanos(100));
     assertThat(hasClientOperationDuration(context, "send")).isEqualTo(emitStableMessagingSemconv());
@@ -201,7 +203,8 @@ class MessagingProducerMetricsTest {
             .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)
             .build();
 
-    Context outerContext = outer.onStart(Context.root(), attributes, nanos(100));
+    Context outerContext =
+        outer.onStart(enableNestedMetricsDeduplication(Context.root()), attributes, nanos(100));
     Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
     inner.onEnd(innerContext, Attributes.empty(), nanos(200));
     outer.onEnd(outerContext, Attributes.empty(), nanos(250));
@@ -213,6 +216,36 @@ class MessagingProducerMetricsTest {
           .extracting(MetricData::getName)
           .containsExactlyInAnyOrder(
               "messaging.client.operation.duration", "messaging.client.sent.messages");
+    } else {
+      assertThat(metrics).isEmpty();
+    }
+  }
+
+  @Test
+  void nestedProducerOperationsRecordIndependentlyByDefault() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener outer =
+        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("outer"));
+    OperationListener inner =
+        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("inner"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)
+            .build();
+
+    Context outerContext = outer.onStart(Context.root(), attributes, nanos(100));
+    Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
+    inner.onEnd(innerContext, Attributes.empty(), nanos(200));
+    outer.onEnd(outerContext, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
+          .containsExactlyInAnyOrder("outer", "outer", "inner", "inner");
     } else {
       assertThat(metrics).isEmpty();
     }

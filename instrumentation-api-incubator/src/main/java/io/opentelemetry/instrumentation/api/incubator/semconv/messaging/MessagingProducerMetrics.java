@@ -133,10 +133,11 @@ public final class MessagingProducerMetrics implements OperationListener {
         sentMessagesCounter != null
             && MessagingOperationType.SEND.value().equals(operationType)
             && !MessagingMetricsState.hasSentMessages(context);
-    if (recordClientOperationDuration) {
+    if (recordClientOperationDuration
+        && MessagingMetricsState.isNestedMetricsDeduplicationEnabled(context)) {
       context = MessagingMetricsState.markClientOperationDuration(context, operationType);
     }
-    if (recordSentMessages) {
+    if (recordSentMessages && MessagingMetricsState.isNestedMetricsDeduplicationEnabled(context)) {
       context = MessagingMetricsState.markSentMessages(context);
     }
     return context.with(

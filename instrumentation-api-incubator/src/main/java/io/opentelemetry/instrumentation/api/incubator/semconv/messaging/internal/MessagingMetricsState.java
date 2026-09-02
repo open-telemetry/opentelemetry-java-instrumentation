@@ -17,6 +17,8 @@ import javax.annotation.Nullable;
  */
 public class MessagingMetricsState {
 
+  private static final ContextKey<Boolean> DEDUPLICATE_NESTED_METRICS =
+      ContextKey.named("messaging-deduplicate-nested-metrics");
   private static final ContextKey<Boolean> CREATE_CLIENT_OPERATION_DURATION =
       ContextKey.named("messaging-create-client-operation-duration-metrics");
   private static final ContextKey<Boolean> SEND_CLIENT_OPERATION_DURATION =
@@ -31,6 +33,14 @@ public class MessagingMetricsState {
       ContextKey.named("messaging-consumed-messages-metrics");
   private static final ContextKey<Boolean> PROCESS_DURATION =
       ContextKey.named("messaging-process-duration-metrics");
+
+  public static Context enableNestedMetricsDeduplication(Context context) {
+    return context.with(DEDUPLICATE_NESTED_METRICS, true);
+  }
+
+  public static boolean isNestedMetricsDeduplicationEnabled(Context context) {
+    return Boolean.TRUE.equals(context.get(DEDUPLICATE_NESTED_METRICS));
+  }
 
   public static boolean hasClientOperationDuration(
       Context context, @Nullable String operationType) {

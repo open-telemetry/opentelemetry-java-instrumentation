@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.enableNestedMetricsDeduplication;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.markConsumedMessages;
 import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.hasConsumedMessages;
 
@@ -52,10 +53,11 @@ class CamelProcessMetrics {
     attributesExtractor.onStart(attributes, parentContext, request);
     Attributes startAttributes = attributes.build();
     long startNanos = System.nanoTime();
-    Context metricsContext =
+    Context metricsContext = enableNestedMetricsDeduplication(parentContext);
+    metricsContext =
         hasConsumedMessages(request.getExchange().getIn())
-            ? markConsumedMessages(parentContext)
-            : parentContext;
+            ? markConsumedMessages(metricsContext)
+            : metricsContext;
     metricsContext = consumedMessages.onStart(metricsContext, startAttributes, startNanos);
     metricsContext = processDuration.onStart(metricsContext, startAttributes, startNanos);
     request

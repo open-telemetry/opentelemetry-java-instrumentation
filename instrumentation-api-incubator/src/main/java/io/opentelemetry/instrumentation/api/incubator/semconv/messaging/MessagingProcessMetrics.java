@@ -59,6 +59,7 @@ public final class MessagingProcessMetrics implements OperationListener {
             new AutoValue_MessagingProcessMetrics_State(
                 startAttributes, startNanos, recordProcessDuration));
     return recordProcessDuration
+            && MessagingMetricsState.isNestedMetricsDeduplicationEnabled(contextWithState)
         ? MessagingMetricsState.markProcessDuration(contextWithState)
         : contextWithState;
   }

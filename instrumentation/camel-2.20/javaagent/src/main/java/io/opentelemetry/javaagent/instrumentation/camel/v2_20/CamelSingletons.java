@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.enableNestedMetricsDeduplication;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.markConsumedMessages;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.hasConsumedMessages;
@@ -85,6 +86,8 @@ class CamelSingletons {
           exposeSpanKey
               ? attributesExtractor
               : new KeylessAttributesExtractor(attributesExtractor));
+      builder.addContextCustomizer(
+          (context, request, startAttributes) -> enableNestedMetricsDeduplication(context));
     }
 
     if (operationType == SEND) {

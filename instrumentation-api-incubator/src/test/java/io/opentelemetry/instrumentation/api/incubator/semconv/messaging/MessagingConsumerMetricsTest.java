@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.enableNestedMetricsDeduplication;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasClientOperationDuration;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasConsumedMessages;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
@@ -71,7 +72,9 @@ class MessagingConsumerMetricsTest {
                 emitStableMessagingSemconv() ? IllegalStateException.class.getName() : null)
             .build();
 
-    Context context = listener.onStart(Context.root(), requestAttributes, nanos(100));
+    Context context =
+        listener.onStart(
+            enableNestedMetricsDeduplication(Context.root()), requestAttributes, nanos(100));
     assertThat(hasClientOperationDuration(context, "receive"))
         .isEqualTo(emitStableMessagingSemconv());
     assertThat(hasConsumedMessages(context)).isEqualTo(emitStableMessagingSemconv());
@@ -200,7 +203,8 @@ class MessagingConsumerMetricsTest {
             .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
             .build();
 
-    Context outerContext = outer.onStart(Context.root(), attributes, nanos(100));
+    Context outerContext =
+        outer.onStart(enableNestedMetricsDeduplication(Context.root()), attributes, nanos(100));
     Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
     inner.onEnd(innerContext, Attributes.empty(), nanos(200));
     outer.onEnd(outerContext, Attributes.empty(), nanos(250));
@@ -220,6 +224,36 @@ class MessagingConsumerMetricsTest {
                   assertThat(metric)
                       .hasLongSumSatisfying(
                           sum -> sum.hasPointsSatisfying(point -> point.hasValue(3))));
+    } else {
+      assertThat(metrics).isEmpty();
+    }
+  }
+
+  @Test
+  void nestedReceiveOperationsRecordIndependentlyByDefault() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener outer =
+        MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("outer"));
+    OperationListener inner =
+        MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("inner"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .build();
+
+    Context outerContext = outer.onStart(Context.root(), attributes, nanos(100));
+    Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
+    inner.onEnd(innerContext, Attributes.empty(), nanos(200));
+    outer.onEnd(outerContext, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
+          .containsExactlyInAnyOrder("outer", "outer", "inner", "inner");
     } else {
       assertThat(metrics).isEmpty();
     }
