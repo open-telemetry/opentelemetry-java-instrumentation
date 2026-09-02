@@ -76,6 +76,12 @@ tasks {
         "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testConnectingToSupplierCapturesTheSuppliedOptions",
       )
       includeTestsMatching(
+        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testConnectingToServerListReportsTheWholeConfiguredTarget",
+      )
+      includeTestsMatching(
+        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testConnectingToServerListWithUnixSocketOmitsStableTarget",
+      )
+      includeTestsMatching(
         "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testOracleSupplierConnectFailureCapturesSuppliedOptions",
       )
     }

@@ -747,31 +747,52 @@ class VertxSqlClientTest {
             : inlinePorts
                 ? firstHost + ":" + firstPort + "," + secondHost + ":" + secondPort
                 : firstHost + "," + secondHost;
-    Consumer<SpanDataAssert> operationSpan =
-        span ->
-            span.hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(
-                        maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                    equalTo(maybeStable(DB_NAME), DB),
-                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                    equalTo(maybeStable(DB_STATEMENT), statement),
-                    equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
-                    equalTo(
-                        maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
-                    equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
-                    equalTo(
-                        maybeStablePeerService(),
-                        emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                    equalTo(
-                        SERVER_ADDRESS, emitStableDatabaseSemconv() ? stableAddress : firstHost),
-                    equalTo(
-                        SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(firstPort)),
-                    equalTo(
-                        ERROR_TYPE,
-                        emitStableDatabaseSemconv() && error != null
-                            ? error.getClass().getName()
-                            : null));
+    Consumer<SpanDataAssert> operationSpan;
+    if (emitOldDatabaseSemconv() && emitStableDatabaseSemconv()) {
+      operationSpan =
+          span ->
+              span.hasKind(SpanKind.CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(maybeStable(DB_SYSTEM), POSTGRESQL),
+                      equalTo(maybeStable(DB_NAME), DB),
+                      equalTo(maybeStable(DB_STATEMENT), statement),
+                      equalTo(DB_QUERY_SUMMARY, "select test"),
+                      equalTo(DB_NAME, DB),
+                      equalTo(DB_USER, USER_DB),
+                      equalTo(DB_STATEMENT, statement),
+                      equalTo(DB_OPERATION, "SELECT"),
+                      equalTo(DB_SQL_TABLE, "test"),
+                      equalTo(SERVER_ADDRESS, stableAddress),
+                      equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
+    } else {
+      operationSpan =
+          span ->
+              span.hasKind(SpanKind.CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                      equalTo(maybeStable(DB_NAME), DB),
+                      equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                      equalTo(maybeStable(DB_STATEMENT), statement),
+                      equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
+                      equalTo(
+                          maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                      equalTo(
+                          maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
+                      equalTo(
+                          maybeStablePeerService(),
+                          emitStableDatabaseSemconv() ? null : "test-peer-service"),
+                      equalTo(
+                          SERVER_ADDRESS, emitStableDatabaseSemconv() ? stableAddress : firstHost),
+                      equalTo(
+                          SERVER_PORT,
+                          emitStableDatabaseSemconv() ? null : Long.valueOf(firstPort)),
+                      equalTo(
+                          ERROR_TYPE,
+                          emitStableDatabaseSemconv() && error != null
+                              ? error.getClass().getName()
+                              : null));
+    }
     if (error == null) {
       trace.hasSpansSatisfyingExactly(operationSpan);
     } else {
