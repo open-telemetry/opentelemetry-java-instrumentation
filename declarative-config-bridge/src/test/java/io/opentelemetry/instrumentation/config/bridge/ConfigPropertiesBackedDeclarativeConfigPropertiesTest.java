@@ -94,8 +94,7 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
   @Test
   void testJmxMetricsIncludeExcludeMapping() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.jmx.metrics.included", "jvm.*,kafka.*");
+    DeclarativeConfigProperties config = createConfig("otel.jmx.metrics.included", "jvm.*,kafka.*");
 
     assertThat(
             config
