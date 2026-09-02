@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.mongodb.ConnectionString;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterSettings;
-import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 class MongoServerTargetTest {
@@ -52,14 +51,14 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void sharedCustomPortIsReportedSeparately() {
+  void sharedCustomPortIsIncludedInEveryAddress() {
     MongoServerTarget target =
         MongoServerTarget.seeds(
             asList(
                 new ServerAddress("db2.example", 27018), new ServerAddress("db1.example", 27018)));
 
-    assertThat(target.getAddress()).isEqualTo("db1.example,db2.example");
-    assertThat(target.getPort()).isEqualTo(27018);
+    assertThat(target.getAddress()).isEqualTo("db1.example:27018,db2.example:27018");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -74,7 +73,7 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void duplicateSeedsArePreserved() {
+  void duplicateSeedsAreRemoved() {
     MongoServerTarget target =
         MongoServerTarget.seeds(
             asList(
@@ -82,49 +81,41 @@ class MongoServerTargetTest {
                 new ServerAddress("db1.example", 27017),
                 new ServerAddress("db1.example", 27017)));
 
-    assertThat(target.getAddress())
-        .isEqualTo("db1.example:27017,db1.example:27017,db2.example:27018");
+    assertThat(target.getAddress()).isEqualTo("db1.example:27017,db2.example:27018");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void endpointListAtTheLengthLimitIsReportedCompletely() {
-    String first = host('a', 127);
-    String second = host('b', 127);
-
-    MongoServerTarget target =
-        MongoServerTarget.seeds(
-            asList(new ServerAddress(second, 27017), new ServerAddress(first, 27017)));
-
-    assertThat(target.getAddress()).isEqualTo(first + "," + second).hasSize(255);
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void completeEndpointsAreRemovedFromTheEndAtTheLengthLimit() {
-    String first = host('a', 127);
-    String second = host('b', 127);
-    String third = host('c', 127);
-
+  void fiveConfiguredSeedsAreReported() {
     MongoServerTarget target =
         MongoServerTarget.seeds(
             asList(
-                new ServerAddress(third, 27017),
-                new ServerAddress(first, 27017),
-                new ServerAddress(second, 27017)));
+                new ServerAddress("db5.example", 27017),
+                new ServerAddress("db3.example", 27017),
+                new ServerAddress("db1.example", 27017),
+                new ServerAddress("db4.example", 27017),
+                new ServerAddress("db2.example", 27017)));
 
-    assertThat(target.getAddress()).isEqualTo(first + "," + second).hasSize(255);
+    assertThat(target.getAddress())
+        .isEqualTo("db1.example,db2.example,db3.example,db4.example,db5.example");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void targetIsOmittedWhenTheFirstCompleteEndpointDoesNotFit() {
-    String host = host('a', 250);
+  void onlyTheFirstFiveConfiguredSeedsAreReported() {
+    MongoServerTarget target =
+        MongoServerTarget.seeds(
+            asList(
+                new ServerAddress("db6.example", 27017),
+                new ServerAddress("db5.example", 27017),
+                new ServerAddress("db4.example", 27017),
+                new ServerAddress("db3.example", 27017),
+                new ServerAddress("db2.example", 27017),
+                new ServerAddress("db1.example", 27017)));
 
-    assertThat(
-            MongoServerTarget.seeds(
-                asList(new ServerAddress(host, 27017), new ServerAddress("z", 27018))))
-        .isNull();
+    assertThat(target.getAddress())
+        .isEqualTo("db1.example,db2.example,db3.example,db4.example,db5.example");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -155,13 +146,13 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void severalIpv6SeedsWithASharedPortAreNotBracketed() {
+  void severalIpv6SeedsWithASharedCustomPortIncludeEveryPort() {
     MongoServerTarget target =
         MongoServerTarget.seeds(
             asList(bracketedSeed("fe80::1", 27018), bracketedSeed("::1", 27018)));
 
-    assertThat(target.getAddress()).isEqualTo("::1,fe80::1");
-    assertThat(target.getPort()).isEqualTo(27018);
+    assertThat(target.getAddress()).isEqualTo("[::1]:27018,[fe80::1]:27018");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -320,14 +311,5 @@ class MongoServerTargetTest {
         return host;
       }
     };
-  }
-
-  private static String host(char value, int length) {
-    char[] characters = new char[length];
-    Arrays.fill(characters, value);
-    for (int i = 63; i < length; i += 64) {
-      characters[i] = '.';
-    }
-    return new String(characters);
   }
 }

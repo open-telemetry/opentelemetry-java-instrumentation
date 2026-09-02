@@ -35,7 +35,6 @@ import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.bson.BsonDocument;
@@ -106,6 +105,16 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
+  void singleCustomPortIsReportedSeparately() {
+    try (ConfiguredClient client =
+        createClient(singletonList(new ServerAddress("db1.example", 27018)))) {
+      runCommand(client);
+    }
+
+    assertFindSpan("db1.example", 27018L);
+  }
+
+  @Test
   void severalMaterializedDefaultPortsAreNotReported() {
     try (ConfiguredClient client =
         createClient(
@@ -119,7 +128,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void sharedCustomPortIsReportedSeparately() {
+  void sharedCustomPortIsIncludedInEveryAddress() {
     try (ConfiguredClient client =
         createClient(
             asList(
@@ -128,11 +137,11 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("db1.example,db2.example", 27018L);
+    assertFindSpan("db1.example:27018,db2.example:27018", null);
   }
 
   @Test
-  void duplicateConfiguredSeedsArePreserved() {
+  void duplicateConfiguredSeedsAreRemoved() {
     try (ConfiguredClient client =
         createClient(
             asList(
@@ -142,37 +151,40 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("db1.example:27017,db1.example:27017,db2.example:27018", null);
+    assertFindSpan("db1.example:27017,db2.example:27018", null);
   }
 
   @Test
-  void configuredSeedListIsLimitedToCompleteEndpoints() {
-    String first = host('a', 127);
-    String second = host('b', 127);
-    String third = host('c', 127);
-
+  void fiveConfiguredSeedsAreReported() {
     try (ConfiguredClient client =
         createClient(
             asList(
-                new ServerAddress(third, 27017),
-                new ServerAddress(first, 27017),
-                new ServerAddress(second, 27017)))) {
+                new ServerAddress("db5.example", 27017),
+                new ServerAddress("db3.example", 27017),
+                new ServerAddress("db1.example", 27017),
+                new ServerAddress("db4.example", 27017),
+                new ServerAddress("db2.example", 27017)))) {
       runCommand(client);
     }
 
-    assertFindSpan(first + "," + second, null);
+    assertFindSpan("db1.example,db2.example,db3.example,db4.example,db5.example", null);
   }
 
   @Test
-  void configuredTargetIsOmittedWhenTheFirstEndpointDoesNotFit() {
-    String host = host('a', 250);
-
+  void onlyTheFirstFiveConfiguredSeedsAreReported() {
     try (ConfiguredClient client =
-        createClient(asList(new ServerAddress(host, 27017), new ServerAddress("z", 27018)))) {
+        createClient(
+            asList(
+                new ServerAddress("db6.example", 27017),
+                new ServerAddress("db5.example", 27017),
+                new ServerAddress("db4.example", 27017),
+                new ServerAddress("db3.example", 27017),
+                new ServerAddress("db2.example", 27017),
+                new ServerAddress("db1.example", 27017)))) {
       runCommand(client);
     }
 
-    assertFindSpan(null, null);
+    assertFindSpan("db1.example,db2.example,db3.example,db4.example,db5.example", null);
   }
 
   @Test
@@ -216,7 +228,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "listDatabases db1.example,db2.example:27018"
+                                    ? "listDatabases db1.example:27018,db2.example:27018"
                                     : "listDatabases")
                             .hasKind(CLIENT)));
   }
@@ -236,15 +248,6 @@ public abstract class AbstractMongoConfiguredTargetTest {
         commandStartedEvent(requestId, connectionDescription, databaseName, commandName, command));
     listener.commandSucceeded(
         commandSucceededEvent(requestId, connectionDescription, commandName, new BsonDocument()));
-  }
-
-  private static String host(char value, int length) {
-    char[] characters = new char[length];
-    Arrays.fill(characters, value);
-    for (int i = 63; i < length; i += 64) {
-      characters[i] = '.';
-    }
-    return new String(characters);
   }
 
   @SuppressWarnings("deprecation")

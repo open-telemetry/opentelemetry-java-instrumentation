@@ -70,6 +70,18 @@ class MongoConfiguredTargetTest {
   }
 
   @Test
+  void configuredSingleCustomSeedReportsTheConfiguredPort() {
+    ClusterId clusterId =
+        configuredCluster(
+            MongoServerTarget.seeds(singletonList(new ServerAddress("db1.example", 28017))));
+    CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
+
+    assertThat(getter.getServerAddress(event))
+        .isEqualTo(emitStableDatabaseSemconv() ? "db1.example" : "db2.example");
+    assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? 28017 : 27018);
+  }
+
+  @Test
   void configuredTargetIsStableAcrossSelectedServers() {
     ClusterId clusterId =
         configuredCluster(

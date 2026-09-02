@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 public final class MongoServerTarget {
 
   private static final int DEFAULT_PORT = 27017;
-  private static final int MAX_ENDPOINT_LIST_LENGTH = 255;
+  private static final int MAX_ENDPOINTS = 5;
   private static final String SRV_SCHEME = "mongodb+srv://";
 
   // the driver reports its default port for socket paths, but the port is not part of the target
@@ -62,9 +62,8 @@ public final class MongoServerTarget {
 
     List<String> hosts = new ArrayList<>(seeds.size());
     List<Integer> ports = new ArrayList<>(seeds.size());
-    boolean hasSharedPort = true;
+    boolean hasNonDefaultPort = false;
     boolean hasUnixSocket = false;
-    Integer sharedPort = null;
     for (ServerAddress seed : seeds) {
       String host = host(seed);
       if (host == null) {
@@ -73,41 +72,44 @@ public final class MongoServerTarget {
       boolean unixSocket = isUnixSocket(host);
       hasUnixSocket |= unixSocket;
       Integer port = unixSocket ? null : seed.getPort();
-      hosts.add(host);
-      ports.add(port);
-      if (hosts.size() == 1) {
-        sharedPort = port;
-      } else if (!Objects.equals(sharedPort, port)) {
-        hasSharedPort = false;
+      if (!containsEndpoint(hosts, ports, host, port)) {
+        hosts.add(host);
+        ports.add(port);
+        hasNonDefaultPort |= port != null && port != DEFAULT_PORT;
       }
     }
     if (seeds.size() > 1 && hasUnixSocket) {
       return null;
     }
 
+    boolean multipleEndpoints = hosts.size() > 1;
+    boolean includePorts = multipleEndpoints && hasNonDefaultPort;
     List<String> addresses = new ArrayList<>(seeds.size());
     for (int i = 0; i < hosts.size(); i++) {
-      addresses.add(hasSharedPort ? hosts.get(i) : endpoint(hosts.get(i), ports.get(i)));
+      addresses.add(includePorts ? endpoint(hosts.get(i), ports.get(i)) : hosts.get(i));
     }
     Collections.sort(addresses, String::compareTo);
 
     StringBuilder address = new StringBuilder();
-    for (String value : addresses) {
-      int separatorLength = address.length() == 0 ? 0 : 1;
-      if (address.length() + separatorLength + value.length() > MAX_ENDPOINT_LIST_LENGTH) {
-        break;
-      }
-      if (separatorLength != 0) {
+    int endpointCount = Math.min(addresses.size(), MAX_ENDPOINTS);
+    for (int i = 0; i < endpointCount; i++) {
+      if (address.length() != 0) {
         address.append(',');
       }
-      address.append(value);
+      address.append(addresses.get(i));
     }
-    if (address.length() == 0) {
-      return null;
-    }
-    Integer port =
-        hasSharedPort && sharedPort != null && sharedPort != DEFAULT_PORT ? sharedPort : null;
+    Integer port = !multipleEndpoints && hasNonDefaultPort ? ports.get(0) : null;
     return new MongoServerTarget(address.toString(), port);
+  }
+
+  private static boolean containsEndpoint(
+      List<String> hosts, List<Integer> ports, String host, @Nullable Integer port) {
+    for (int i = 0; i < hosts.size(); i++) {
+      if (hosts.get(i).equals(host) && Objects.equals(ports.get(i), port)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private MongoServerTarget(String address, @Nullable Integer port) {
