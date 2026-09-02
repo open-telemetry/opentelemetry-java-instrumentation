@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.enableNestedMetricsDeduplication;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.markConsumedMessages;
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.hasConsumedMessages;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.claim;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier.isClaimed;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -53,10 +55,10 @@ class CamelProcessMetrics {
     attributesExtractor.onStart(attributes, parentContext, request);
     Attributes startAttributes = attributes.build();
     long startNanos = System.nanoTime();
-    Context metricsContext = enableNestedMetricsDeduplication(parentContext);
+    Context metricsContext = enable(parentContext);
     metricsContext =
-        hasConsumedMessages(request.getExchange().getIn())
-            ? markConsumedMessages(metricsContext)
+        isClaimed(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
+            ? claim(metricsContext, RECEIVE, CONSUMED_MESSAGES)
             : metricsContext;
     metricsContext = consumedMessages.onStart(metricsContext, startAttributes, startNanos);
     metricsContext = processDuration.onStart(metricsContext, startAttributes, startNanos);

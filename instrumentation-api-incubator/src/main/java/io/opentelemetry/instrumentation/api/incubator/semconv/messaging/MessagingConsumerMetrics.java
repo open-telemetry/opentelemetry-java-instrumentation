@@ -22,7 +22,8 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -46,6 +47,10 @@ public final class MessagingConsumerMetrics implements OperationListener {
       AttributeKey.stringKey("messaging.operation.type");
   private static final ContextKey<MessagingConsumerMetrics.State> MESSAGING_CONSUMER_METRICS_STATE =
       ContextKey.named("messaging-consumer-metrics-state");
+  // the consumed messages counter answers "has this delivered message been counted yet", so the
+  // receive operation owns the claim even when a process operation is the one recording it
+  private static final MessagingOperationType CONSUMED_MESSAGES_OWNER =
+      MessagingOperationType.RECEIVE;
   private static final Logger logger = Logger.getLogger(MessagingConsumerMetrics.class.getName());
 
   private final boolean supportsStableSemconv;
@@ -145,22 +150,27 @@ public final class MessagingConsumerMetrics implements OperationListener {
     if (!enabled) {
       return context;
     }
-    String operationType = startAttributes.get(MESSAGING_OPERATION_TYPE);
+    MessagingOperationType operationType =
+        MessagingOperationType.fromValue(startAttributes.get(MESSAGING_OPERATION_TYPE));
     boolean recordClientOperationDuration =
         clientOperationDurationHistogram != null
-            && recordsClientOperationDuration(operationType)
-            && !MessagingMetricsState.hasClientOperationDuration(context, operationType);
+            && operationType != MessagingOperationType.PROCESS
+            && !MessagingTelemetryState.isClaimed(
+                context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
     boolean recordConsumedMessages =
         consumedMessagesCounter != null
-            && recordsConsumedMessages(operationType)
-            && !MessagingMetricsState.hasConsumedMessages(context);
-    if (recordClientOperationDuration
-        && MessagingMetricsState.isNestedMetricsDeduplicationEnabled(context)) {
-      context = MessagingMetricsState.markClientOperationDuration(context, operationType);
+            && (consumedMessagesOnly || operationType == MessagingOperationType.RECEIVE)
+            && !MessagingTelemetryState.isClaimed(
+                context, CONSUMED_MESSAGES_OWNER, MessagingTelemetrySignal.CONSUMED_MESSAGES);
+    if (recordClientOperationDuration) {
+      context =
+          MessagingTelemetryState.claimIfEnabled(
+              context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
     }
-    if (recordConsumedMessages
-        && MessagingMetricsState.isNestedMetricsDeduplicationEnabled(context)) {
-      context = MessagingMetricsState.markConsumedMessages(context);
+    if (recordConsumedMessages) {
+      context =
+          MessagingTelemetryState.claimIfEnabled(
+              context, CONSUMED_MESSAGES_OWNER, MessagingTelemetrySignal.CONSUMED_MESSAGES);
     }
     return context.with(
         MESSAGING_CONSUMER_METRICS_STATE,
@@ -217,14 +227,6 @@ public final class MessagingConsumerMetrics implements OperationListener {
         consumedMessagesCounter.add(consumedMessagesCount, filteredAttributes, context);
       }
     }
-  }
-
-  private boolean recordsConsumedMessages(@Nullable String operationType) {
-    return consumedMessagesOnly || MessagingOperationType.RECEIVE.value().equals(operationType);
-  }
-
-  private static boolean recordsClientOperationDuration(@Nullable String operationType) {
-    return !MessagingOperationType.PROCESS.value().equals(operationType);
   }
 
   private static long getConsumedMessagesCount(

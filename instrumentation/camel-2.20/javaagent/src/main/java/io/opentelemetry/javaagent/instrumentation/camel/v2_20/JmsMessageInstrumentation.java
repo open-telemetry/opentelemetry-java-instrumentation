@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.copyConsumedMessages;
+import static io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier.replace;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -39,7 +39,9 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Object camelMessage, @Advice.Argument(0) Object jmsMessage) {
-      copyConsumedMessages(jmsMessage, camelMessage);
+      // a Camel message is refilled when its JMS message is swapped, so what it carried before must
+      // not survive
+      replace(jmsMessage, camelMessage);
     }
   }
 }

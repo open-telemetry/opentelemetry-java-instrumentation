@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.enableNestedMetricsDeduplication;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasClientOperationDuration;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasSentMessages;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CLIENT_OPERATION_DURATION;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SENT_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.isClaimed;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -74,7 +76,7 @@ class MessagingProducerMetricsTest {
             .build();
 
     Context parent =
-        enableNestedMetricsDeduplication(
+        enable(
             Context.root()
                 .with(
                     Span.wrap(
@@ -85,8 +87,9 @@ class MessagingProducerMetricsTest {
                             TraceState.getDefault()))));
 
     Context context = listener.onStart(parent, requestAttributes, nanos(100));
-    assertThat(hasClientOperationDuration(context, "send")).isEqualTo(emitStableMessagingSemconv());
-    assertThat(hasSentMessages(context)).isEqualTo(emitStableMessagingSemconv());
+    assertThat(isClaimed(context, SEND, CLIENT_OPERATION_DURATION))
+        .isEqualTo(emitStableMessagingSemconv());
+    assertThat(isClaimed(context, SEND, SENT_MESSAGES)).isEqualTo(emitStableMessagingSemconv());
     listener.onEnd(context, responseAttributes, nanos(250));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
@@ -203,8 +206,7 @@ class MessagingProducerMetricsTest {
             .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)
             .build();
 
-    Context outerContext =
-        outer.onStart(enableNestedMetricsDeduplication(Context.root()), attributes, nanos(100));
+    Context outerContext = outer.onStart(enable(Context.root()), attributes, nanos(100));
     Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
     inner.onEnd(innerContext, Attributes.empty(), nanos(200));
     outer.onEnd(outerContext, Attributes.empty(), nanos(250));

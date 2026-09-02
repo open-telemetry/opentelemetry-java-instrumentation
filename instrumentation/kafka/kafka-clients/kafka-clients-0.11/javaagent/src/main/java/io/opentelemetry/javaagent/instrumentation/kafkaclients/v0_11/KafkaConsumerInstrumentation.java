@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.markConsumedMessages;
+import static io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier.claim;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -104,8 +106,10 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
         for (ConsumerRecord<?, ?> record : records) {
           KafkaConsumerContextUtil.set(record, consumerContext);
+          // the receive span covers the whole batch rather than this record, so only the counter
+          // is claimed here
           if (receiveOperationStarted && emitStableMessagingSemconv()) {
-            markConsumedMessages(record);
+            claim(record, RECEIVE, CONSUMED_MESSAGES);
           }
         }
       } finally {

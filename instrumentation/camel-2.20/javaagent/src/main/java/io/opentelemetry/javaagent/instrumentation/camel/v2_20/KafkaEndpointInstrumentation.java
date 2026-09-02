@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.copyConsumedMessages;
+import static io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier.merge;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -41,7 +41,8 @@ class KafkaEndpointInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Argument(0) Object record, @Advice.Return @Nullable Exchange exchange) {
       if (exchange != null) {
-        copyConsumedMessages(record, exchange.getIn());
+        // the exchange is freshly created for this record, so nothing it could keep is stale
+        merge(record, exchange.getIn());
       }
     }
   }

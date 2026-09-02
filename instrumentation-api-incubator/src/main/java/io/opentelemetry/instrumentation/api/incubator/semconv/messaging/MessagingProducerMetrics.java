@@ -21,7 +21,8 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -125,20 +126,26 @@ public final class MessagingProducerMetrics implements OperationListener {
     if (!enabled) {
       return context;
     }
-    String operationType = startAttributes.get(MESSAGING_OPERATION_TYPE);
+    MessagingOperationType operationType =
+        MessagingOperationType.fromValue(startAttributes.get(MESSAGING_OPERATION_TYPE));
     boolean recordClientOperationDuration =
         clientOperationDurationHistogram != null
-            && !MessagingMetricsState.hasClientOperationDuration(context, operationType);
+            && !MessagingTelemetryState.isClaimed(
+                context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
     boolean recordSentMessages =
         sentMessagesCounter != null
-            && MessagingOperationType.SEND.value().equals(operationType)
-            && !MessagingMetricsState.hasSentMessages(context);
-    if (recordClientOperationDuration
-        && MessagingMetricsState.isNestedMetricsDeduplicationEnabled(context)) {
-      context = MessagingMetricsState.markClientOperationDuration(context, operationType);
+            && operationType == MessagingOperationType.SEND
+            && !MessagingTelemetryState.isClaimed(
+                context, MessagingOperationType.SEND, MessagingTelemetrySignal.SENT_MESSAGES);
+    if (recordClientOperationDuration) {
+      context =
+          MessagingTelemetryState.claimIfEnabled(
+              context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
     }
-    if (recordSentMessages && MessagingMetricsState.isNestedMetricsDeduplicationEnabled(context)) {
-      context = MessagingMetricsState.markSentMessages(context);
+    if (recordSentMessages) {
+      context =
+          MessagingTelemetryState.claimIfEnabled(
+              context, MessagingOperationType.SEND, MessagingTelemetrySignal.SENT_MESSAGES);
     }
     return context.with(
         MESSAGING_PRODUCER_METRICS_STATE,

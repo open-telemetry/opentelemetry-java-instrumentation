@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.hasConsumedMessages;
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.markConsumedMessages;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
+import static io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier.claim;
+import static io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier.isClaimed;
 
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
@@ -75,12 +78,17 @@ public class JavaxMessageAdapter implements MessageAdapter {
   }
 
   @Override
-  public boolean wasReceiveTelemetryRecorded() {
-    return hasConsumedMessages(message);
+  public boolean wereConsumedMessagesRecorded() {
+    return isClaimed(message, RECEIVE, CONSUMED_MESSAGES);
   }
 
   @Override
-  public void markReceiveTelemetryRecorded() {
-    markConsumedMessages(message);
+  public void markReceiveSpanRecorded() {
+    claim(message, RECEIVE, SPAN);
+  }
+
+  @Override
+  public void markConsumedMessagesRecorded() {
+    claim(message, RECEIVE, CONSUMED_MESSAGES);
   }
 }

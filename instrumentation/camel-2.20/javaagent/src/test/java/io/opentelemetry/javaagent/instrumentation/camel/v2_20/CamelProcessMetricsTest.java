@@ -109,7 +109,7 @@ class CamelProcessMetricsTest {
 
   @ParameterizedTest
   @MethodSource("partialOwnership")
-  void recordsOnlyUnclaimedMetric(String markerMethod, String expectedMetric)
+  void recordsOnlyUnclaimedMetric(String operation, String signal, String expectedMetric)
       throws ReflectiveOperationException {
     Exchange exchange = new DefaultExchange(new DefaultCamelContext());
     Endpoint endpoint = mock(Endpoint.class);
@@ -118,11 +118,17 @@ class CamelProcessMetricsTest {
     Class<?> contextClass =
         Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.Context");
     Object parentContext = contextClass.getMethod("root").invoke(null);
-    Class<?> metricsStateClass =
-        Class.forName(
-            "io.opentelemetry.javaagent.shaded.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState");
+    Class<?> telemetryStateClass = shadedApiClass("messaging.internal.MessagingTelemetryState");
+    Class<?> operationTypeClass = shadedApiClass("messaging.MessagingOperationType");
+    Class<?> signalClass = shadedApiClass("messaging.internal.MessagingTelemetrySignal");
     parentContext =
-        metricsStateClass.getMethod(markerMethod, contextClass).invoke(null, parentContext);
+        telemetryStateClass
+            .getMethod("claim", contextClass, operationTypeClass, signalClass)
+            .invoke(
+                null,
+                parentContext,
+                enumConstant(operationTypeClass, operation),
+                enumConstant(signalClass, signal));
 
     Class<?> singletonsClass = camelHelperClass("CamelSingletons");
     Object decorator =
@@ -171,12 +177,19 @@ class CamelProcessMetricsTest {
     return Stream.of(
         argumentSet(
             "consumed messages already owned",
-            "markConsumedMessages",
+            "RECEIVE",
+            "CONSUMED_MESSAGES",
             "messaging.process.duration"),
         argumentSet(
             "process duration already owned",
-            "markProcessDuration",
+            "PROCESS",
+            "PROCESS_DURATION",
             "messaging.client.consumed.messages"));
+  }
+
+  private static Class<?> shadedApiClass(String name) throws ReflectiveOperationException {
+    return Class.forName(
+        "io.opentelemetry.javaagent.shaded.instrumentation.api.incubator.semconv." + name);
   }
 
   private static Class<?> camelHelperClass(String simpleName) throws ReflectiveOperationException {

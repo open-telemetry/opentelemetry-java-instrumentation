@@ -29,9 +29,12 @@ public interface MessageAdapter {
   @Nullable
   String getJmsMessageId() throws Exception;
 
-  /** Tells whether receive telemetry was already recorded for this message. */
-  boolean wasReceiveTelemetryRecorded();
+  /** Tells whether the consumed messages metric was already recorded for this message. */
+  boolean wereConsumedMessagesRecorded();
 
-  /** Remembers that receive telemetry was recorded for this message. */
-  void markReceiveTelemetryRecorded();
+  /** Remembers that a receive span was recorded for this message. */
+  void markReceiveSpanRecorded();
+
+  /** Remembers that the consumed messages metric was recorded for this message. */
+  void markConsumedMessagesRecorded();
 }

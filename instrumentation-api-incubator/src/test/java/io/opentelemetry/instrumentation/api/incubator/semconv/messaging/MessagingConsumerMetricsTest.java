@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.enableNestedMetricsDeduplication;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasClientOperationDuration;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasConsumedMessages;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CLIENT_OPERATION_DURATION;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.isClaimed;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -72,12 +74,11 @@ class MessagingConsumerMetricsTest {
                 emitStableMessagingSemconv() ? IllegalStateException.class.getName() : null)
             .build();
 
-    Context context =
-        listener.onStart(
-            enableNestedMetricsDeduplication(Context.root()), requestAttributes, nanos(100));
-    assertThat(hasClientOperationDuration(context, "receive"))
+    Context context = listener.onStart(enable(Context.root()), requestAttributes, nanos(100));
+    assertThat(isClaimed(context, RECEIVE, CLIENT_OPERATION_DURATION))
         .isEqualTo(emitStableMessagingSemconv());
-    assertThat(hasConsumedMessages(context)).isEqualTo(emitStableMessagingSemconv());
+    assertThat(isClaimed(context, RECEIVE, CONSUMED_MESSAGES))
+        .isEqualTo(emitStableMessagingSemconv());
     listener.onEnd(context, responseAttributes, nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
@@ -203,8 +204,7 @@ class MessagingConsumerMetricsTest {
             .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
             .build();
 
-    Context outerContext =
-        outer.onStart(enableNestedMetricsDeduplication(Context.root()), attributes, nanos(100));
+    Context outerContext = outer.onStart(enable(Context.root()), attributes, nanos(100));
     Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
     inner.onEnd(innerContext, Attributes.empty(), nanos(200));
     outer.onEnd(outerContext, Attributes.empty(), nanos(250));
@@ -423,7 +423,7 @@ class MessagingConsumerMetricsTest {
             .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null)
             .build();
     Context context = listener.onStart(Context.root(), attributes, nanos(100));
-    assertThat(hasConsumedMessages(context)).isFalse();
+    assertThat(isClaimed(context, RECEIVE, CONSUMED_MESSAGES)).isFalse();
     listener.onEnd(context, Attributes.empty(), nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();

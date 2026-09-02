@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.enableNestedMetricsDeduplication;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasProcessDuration;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.isClaimed;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -52,9 +54,10 @@ class MessagingProcessMetricsTest {
             .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null)
             .build();
 
-    Context root = enableNestedMetricsDeduplication(Context.root());
+    Context root = enable(Context.root());
     Context context = listener.onStart(root, attributes, nanos(100));
-    assertThat(hasProcessDuration(context)).isEqualTo(emitStableMessagingSemconv());
+    assertThat(isClaimed(context, PROCESS, PROCESS_DURATION))
+        .isEqualTo(emitStableMessagingSemconv());
     Attributes endAttributes =
         Attributes.builder()
             .put(
@@ -106,8 +109,7 @@ class MessagingProcessMetricsTest {
             .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null)
             .build();
 
-    Context outerContext =
-        outer.onStart(enableNestedMetricsDeduplication(Context.root()), attributes, nanos(100));
+    Context outerContext = outer.onStart(enable(Context.root()), attributes, nanos(100));
     Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
     inner.onEnd(innerContext, Attributes.empty(), nanos(200));
     outer.onEnd(outerContext, Attributes.empty(), nanos(250));

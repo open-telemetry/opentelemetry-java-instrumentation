@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.enableNestedMetricsDeduplication;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.markConsumedMessages;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.claim;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.hasConsumedMessages;
+import static io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier.isClaimed;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -86,8 +88,7 @@ class CamelSingletons {
           exposeSpanKey
               ? attributesExtractor
               : new KeylessAttributesExtractor(attributesExtractor));
-      builder.addContextCustomizer(
-          (context, request, startAttributes) -> enableNestedMetricsDeduplication(context));
+      builder.addContextCustomizer((context, request, startAttributes) -> enable(context));
     }
 
     if (operationType == SEND) {
@@ -97,8 +98,8 @@ class CamelSingletons {
       builder.addOperationMetrics(MessagingProcessMetrics.get());
       builder.addContextCustomizer(
           (context, request, startAttributes) ->
-              hasConsumedMessages(request.getExchange().getIn())
-                  ? markConsumedMessages(context)
+              isClaimed(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
+                  ? claim(context, RECEIVE, CONSUMED_MESSAGES)
                   : context);
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
       return MessagingProcessInstrumenterFactory.create(
