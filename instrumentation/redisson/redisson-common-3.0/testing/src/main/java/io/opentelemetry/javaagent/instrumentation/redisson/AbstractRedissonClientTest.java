@@ -283,8 +283,7 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void configuredServerTarget() {
     String aliasHost = host.equals(ip) ? "localhost" : ip;
-    String configuredSpanTarget = host + "," + aliasHost + ":" + port;
-    String configuredServerAddress = host + "," + aliasHost;
+    String configuredServerAddress = host + ":" + port + "," + aliasHost + ":" + port;
 
     Config config = new Config();
     config
@@ -296,9 +295,9 @@ public abstract class AbstractRedissonClientTest {
       assertConfiguredTarget(
           configuredClient,
           "configured-target",
-          configuredSpanTarget,
           configuredServerAddress,
-          port,
+          configuredServerAddress,
+          null,
           host);
     } finally {
       configuredClient.shutdown();
