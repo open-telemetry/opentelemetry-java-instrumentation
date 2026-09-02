@@ -7,8 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.CONSUMED_MESSAGES;
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.markClaim;
+import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.markConsumedMessages;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -106,7 +105,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         for (ConsumerRecord<?, ?> record : records) {
           KafkaConsumerContextUtil.set(record, consumerContext);
           if (receiveOperationStarted && emitStableMessagingSemconv()) {
-            markClaim(record, CONSUMED_MESSAGES);
+            markConsumedMessages(record);
           }
         }
       } finally {

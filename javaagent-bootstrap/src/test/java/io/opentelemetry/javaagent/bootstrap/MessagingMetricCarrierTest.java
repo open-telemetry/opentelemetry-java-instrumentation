@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.CONSUMED_MESSAGES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
@@ -13,24 +12,24 @@ import org.junit.jupiter.api.Test;
 class MessagingMetricCarrierTest {
 
   @Test
-  void storesAndCopiesClaims() {
+  void storesAndCopiesConsumedMessages() {
     Object source = new Object();
     Object target = new Object();
 
-    MessagingMetricCarrier.markClaim(source, CONSUMED_MESSAGES);
-    MessagingMetricCarrier.copyClaims(source, target);
+    MessagingMetricCarrier.markConsumedMessages(source);
+    MessagingMetricCarrier.copyConsumedMessages(source, target);
 
-    assertThat(MessagingMetricCarrier.hasClaim(source, CONSUMED_MESSAGES)).isTrue();
-    assertThat(MessagingMetricCarrier.hasClaim(target, CONSUMED_MESSAGES)).isTrue();
+    assertThat(MessagingMetricCarrier.hasConsumedMessages(source)).isTrue();
+    assertThat(MessagingMetricCarrier.hasConsumedMessages(target)).isTrue();
   }
 
   @Test
-  void clearsTargetClaimsWhenSourceHasNone() {
+  void clearsTargetWhenSourceHasNoConsumedMessages() {
     Object target = new Object();
-    MessagingMetricCarrier.markClaim(target, CONSUMED_MESSAGES);
+    MessagingMetricCarrier.markConsumedMessages(target);
 
-    MessagingMetricCarrier.copyClaims(new Object(), target);
+    MessagingMetricCarrier.copyConsumedMessages(new Object(), target);
 
-    assertThat(MessagingMetricCarrier.hasClaim(target, CONSUMED_MESSAGES)).isFalse();
+    assertThat(MessagingMetricCarrier.hasConsumedMessages(target)).isFalse();
   }
 }

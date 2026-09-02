@@ -7,8 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.markConsumedMessages;
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.CONSUMED_MESSAGES;
-import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.hasClaim;
+import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.hasConsumedMessages;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -50,7 +49,7 @@ class CamelProcessMetrics {
 
   static Context withConsumedMessagesClaim(Context context, CamelRequest request) {
     Object message = request.getExchange().getIn();
-    return hasClaim(message, CONSUMED_MESSAGES) ? markConsumedMessages(context) : context;
+    return hasConsumedMessages(message) ? markConsumedMessages(context) : context;
   }
 
   static void start(Route route, Context parentContext, CamelRequest request) {

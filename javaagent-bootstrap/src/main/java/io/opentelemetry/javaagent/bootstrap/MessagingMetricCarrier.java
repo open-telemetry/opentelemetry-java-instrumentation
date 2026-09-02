@@ -7,40 +7,30 @@ package io.opentelemetry.javaagent.bootstrap;
 
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 
-/** Stores messaging metric claims on carriers across instrumentation and thread boundaries. */
+/** Stores the consumed-message metric claim across instrumentation and thread boundaries. */
 public final class MessagingMetricCarrier {
 
-  public static final Claim CONSUMED_MESSAGES = new Claim();
+  private static final Cache<Object, Boolean> consumedMessages = Cache.weak();
 
-  private static final Claim[] CLAIMS = {CONSUMED_MESSAGES};
-
-  public static boolean hasClaim(Object carrier, Claim claim) {
-    return carrier != null && Boolean.TRUE.equals(claim.claimedCarriers.get(carrier));
+  public static boolean hasConsumedMessages(Object carrier) {
+    return carrier != null && Boolean.TRUE.equals(consumedMessages.get(carrier));
   }
 
-  public static void markClaim(Object carrier, Claim claim) {
+  public static void markConsumedMessages(Object carrier) {
     if (carrier != null) {
-      claim.claimedCarriers.put(carrier, Boolean.TRUE);
+      consumedMessages.put(carrier, Boolean.TRUE);
     }
   }
 
-  public static void copyClaims(Object source, Object target) {
+  public static void copyConsumedMessages(Object source, Object target) {
     if (target == null) {
       return;
     }
-    for (Claim claim : CLAIMS) {
-      if (hasClaim(source, claim)) {
-        markClaim(target, claim);
-      } else {
-        claim.claimedCarriers.remove(target);
-      }
+    if (hasConsumedMessages(source)) {
+      markConsumedMessages(target);
+    } else {
+      consumedMessages.remove(target);
     }
-  }
-
-  public static final class Claim {
-    private final Cache<Object, Boolean> claimedCarriers = Cache.weak();
-
-    private Claim() {}
   }
 
   private MessagingMetricCarrier() {}
