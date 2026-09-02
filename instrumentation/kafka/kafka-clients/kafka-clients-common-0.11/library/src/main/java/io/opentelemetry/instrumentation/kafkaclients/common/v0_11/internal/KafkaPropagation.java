@@ -6,9 +6,17 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.record.RecordBatch;
@@ -32,6 +40,36 @@ public final class KafkaPropagation {
   public static boolean shouldPropagate(ApiVersions apiVersions) {
     return !HAS_MAX_USABLE_PRODUCE_MAGIC
         || maxUsableProduceMagic(apiVersions) >= RecordBatch.MAGIC_VALUE_V2;
+  }
+
+  public static boolean propagatesSpanContext(TextMapPropagator propagator) {
+    SpanContext expected =
+        SpanContext.create(
+            "00000000000000000000000000000001",
+            "0000000000000001",
+            TraceFlags.getSampled(),
+            TraceState.getDefault());
+    Map<String, String> carrier = new HashMap<>();
+    propagator.inject(Context.root().with(Span.wrap(expected)), carrier, Map::put);
+    Context extracted =
+        propagator.extract(
+            Context.root(),
+            carrier,
+            new TextMapGetter<Map<String, String>>() {
+              @Override
+              public Iterable<String> keys(Map<String, String> carrier) {
+                return carrier.keySet();
+              }
+
+              @Nullable
+              @Override
+              public String get(@Nullable Map<String, String> carrier, String key) {
+                return carrier == null ? null : carrier.get(key);
+              }
+            });
+    SpanContext actual = Span.fromContext(extracted).getSpanContext();
+    return expected.getTraceId().equals(actual.getTraceId())
+        && expected.getSpanId().equals(actual.getSpanId());
   }
 
   @NoMuzzle

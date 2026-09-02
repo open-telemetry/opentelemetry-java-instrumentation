@@ -5,14 +5,21 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
@@ -97,6 +104,112 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("client")
                 .getScalarList("request_captured_headers", String.class))
         .containsExactly("header1", "header2");
+  }
+
+  @Test
+  void testComponentConfigDoesNotUseInstrumentationSpecialCases() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("component.general.http.client.request-captured-headers", "component-header");
+    properties.put(
+        "otel.instrumentation.http.client.capture-request-headers", "instrumentation-header");
+    properties.put("component.java.jmx.discovery.delay", "42");
+    properties.put("otel.jmx.discovery.delay", "30s");
+    properties.put(
+        "otel.instrumentation.common.peer-service-mapping", "1.2.3.4=InstrumentationService");
+
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createComponentProperties(
+            DefaultConfigProperties.createFromMap(properties), "component.");
+
+    assertThat(
+            config
+                .getStructured("general")
+                .getStructured("http")
+                .getStructured("client")
+                .getScalarList("request_captured_headers", String.class))
+        .containsExactly("component-header");
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("discovery")
+                .getLong("delay"))
+        .isEqualTo(42L);
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructuredList("service_peer_mapping"))
+        .isNull();
+  }
+
+  @Test
+  void testMessagingHeadersSelectorMapping() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.messaging.experimental.headers.included", "a,b");
+    properties.put("otel.instrumentation.messaging.experimental.headers.excluded", "c");
+    properties.put("otel.instrumentation.messaging.experimental.capture-headers", "legacy");
+
+    DeclarativeConfigProperties messaging =
+        DeclarativeConfigBridge.createInstrumentationConfig(
+                DefaultConfigProperties.createFromMap(properties))
+            .getInstrumentationConfig()
+            .getStructured("java")
+            .getStructured("common")
+            .getStructured("messaging");
+
+    assertThat(
+            messaging.getStructured("headers/development").getScalarList("included", String.class))
+        .containsExactly("a", "b");
+    assertThat(
+            messaging.getStructured("headers/development").getScalarList("excluded", String.class))
+        .containsExactly("c");
+    assertThat(messaging.getScalarList("capture_headers/development", String.class))
+        .containsExactly("legacy");
+  }
+
+  @Test
+  void testMessagingBatchSendMessageCreationSpansMapping() {
+    DeclarativeConfigProperties config =
+        createConfig(
+            "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("messaging")
+                .getStructured("batch_send")
+                .getStructured("message_creation_spans")
+                .getBoolean("enabled"))
+        .isFalse();
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchSendMessageCreationSpansCases")
+  void testBatchSendMessageCreationSpansPrecedence(
+      Map<String, String> properties, boolean expected) {
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(properties));
+
+    boolean common =
+        config
+            .getStructured("java")
+            .getStructured("common")
+            .getStructured("messaging")
+            .getStructured("batch_send")
+            .getStructured("message_creation_spans")
+            .getBoolean("enabled", true);
+    boolean aws =
+        config
+            .getStructured("java")
+            .getStructured("aws_sdk")
+            .getStructured("batch_send")
+            .getStructured("message_creation_spans")
+            .getBoolean("enabled", common);
+
+    assertThat(aws).isEqualTo(expected);
   }
 
   @Test
@@ -312,6 +425,31 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("producer_propagation")
                 .getBoolean("enabled"))
         .isNull();
+  }
+
+  private static Stream<Arguments> batchSendMessageCreationSpansCases() {
+    Map<String, String> awsTrueCommonFalse = new HashMap<>();
+    awsTrueCommonFalse.put(
+        "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled", "false");
+    awsTrueCommonFalse.put(
+        "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled", "true");
+
+    Map<String, String> awsFalseCommonTrue = new HashMap<>();
+    awsFalseCommonTrue.put(
+        "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled", "true");
+    awsFalseCommonTrue.put(
+        "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled", "false");
+
+    return Stream.of(
+        argumentSet("default", emptyMap(), true),
+        argumentSet(
+            "common fallback",
+            singletonMap(
+                "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled",
+                "false"),
+            false),
+        argumentSet("AWS true overrides common false", awsTrueCommonFalse, true),
+        argumentSet("AWS false overrides common true", awsFalseCommonTrue, false));
   }
 
   private static DeclarativeConfigProperties createConfig(String key, String value) {

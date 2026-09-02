@@ -4,7 +4,7 @@ on:
     types: [created]
 
 permissions:
-  pull-requests: write # zizmor: ignore[excessive-permissions]
+  pull-requests: write # zizmor: ignore[excessive-permissions] Required to add the requested PR label.
 
 jobs:
   auto-label:

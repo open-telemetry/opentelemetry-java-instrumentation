@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -35,13 +34,7 @@ public final class R2dbcSqlAttributesGetter
 
   @Override
   public SqlDialect getSqlDialect(DbExecution request) {
-    // the underlying database is unknown, use the safer default that sanitizes double-quoted
-    // fragments as string literals (note that this can lead to incorrect summarization
-    // for databases that do use double quotes as identifiers)
-    //
-    // TODO do better in
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16251
-    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+    return fromDbSystemName(request.getSystemName());
   }
 
   @Deprecated // to be removed in 3.0
@@ -65,14 +58,14 @@ public final class R2dbcSqlAttributesGetter
 
   @Override
   public Collection<String> getRawQueryTexts(DbExecution request) {
+    return request.getRawQueryTexts();
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  public Collection<String> getRawQueryTextsForOldSemconv(DbExecution request) {
     Collection<String> rawQueryTexts = request.getRawQueryTexts();
-    // In old-only mode, join multi-query batches into a single query to preserve the legacy
-    // db.statement and db.operation extraction behavior. In database/dup mode, favor stable
-    // multi-query batch attributes because the shared SQL extractor can only use one raw query
-    // collection.
-    return emitStableDatabaseSemconv() || rawQueryTexts.size() == 1
-        ? rawQueryTexts
-        : singleton(join(";\n", rawQueryTexts));
+    return rawQueryTexts.size() == 1 ? rawQueryTexts : singleton(join(";\n", rawQueryTexts));
   }
 
   private static String join(String delimiter, Collection<String> collection) {
@@ -89,9 +82,7 @@ public final class R2dbcSqlAttributesGetter
   @Override
   @Nullable
   public Long getDbOperationBatchSize(DbExecution request) {
-    // Batch size is a stable database semconv signal. Keep it hidden from old-only mode so legacy
-    // extraction does not start treating existing requests as batches.
-    return emitStableDatabaseSemconv() ? request.getBatchSize() : null;
+    return request.getBatchSize();
   }
 
   @Nullable

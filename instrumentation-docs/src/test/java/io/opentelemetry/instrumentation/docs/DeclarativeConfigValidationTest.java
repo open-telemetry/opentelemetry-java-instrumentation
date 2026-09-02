@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.docs;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
+import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigBridge;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.DeclarativeSchema;
@@ -41,6 +41,12 @@ class DeclarativeConfigValidationTest {
 
   private static final Path INSTRUMENTATION_DIR = Paths.get("../instrumentation");
 
+  // Declarative names that were published under an earlier spelling. The bridge keeps them in
+  // SPECIAL_MAPPINGS so existing configuration files keep working, but metadata.yaml must declare
+  // the name from the declarative configuration schema.
+  private static final Map<String, String> DEPRECATED_DECLARATIVE_NAMES =
+      Map.of("general.semconv_stability.opt_in", "general.stability_opt_in_list");
+
   @Test
   void validateDeclarativeNames() throws IOException {
     List<ValidationResult> results = new ArrayList<>();
@@ -59,6 +65,9 @@ class DeclarativeConfigValidationTest {
             // Structured-list schemas are validated structurally, even for declarative-only configs
             // (those without a flat property name, such as url_template_rules).
             validateStructuredListSchema(metadataFile, config, errors);
+
+            // Deprecated spellings stay resolvable at runtime, but must not be declared here.
+            validateNotDeprecated(metadataFile, config, errors);
 
             // The flat -> declarative round-trip needs a flat system property to drive the bridge.
             // Declarative-only configs (no name) are skipped here.
@@ -98,6 +107,24 @@ class DeclarativeConfigValidationTest {
     }
   }
 
+  private static void validateNotDeprecated(
+      Path metadataFile, ConfigurationOption config, List<String> errors) {
+    if (config.declarativeName() == null) {
+      return;
+    }
+    String replacement = DEPRECATED_DECLARATIVE_NAMES.get(config.declarativeName());
+    if (replacement != null) {
+      errors.add(
+          String.format(
+              Locale.ROOT,
+              "Deprecated declarative_name in %s: '%s' is kept in the bridge for backwards"
+                  + " compatibility only; use '%s' instead.",
+              metadataFile,
+              config.declarativeName(),
+              replacement));
+    }
+  }
+
   private static ValidationResult validateConfig(Path metadataFile, ConfigurationOption config) {
     String flatProperty = config.name();
     String declarativePath = config.declarativeName();
@@ -118,7 +145,8 @@ class DeclarativeConfigValidationTest {
     DefaultConfigProperties configProperties = DefaultConfigProperties.createFromMap(properties);
 
     DeclarativeConfigProperties declarativeConfig =
-        ConfigPropertiesBackedConfigProvider.create(configProperties).getInstrumentationConfig();
+        DeclarativeConfigBridge.createInstrumentationConfig(configProperties)
+            .getInstrumentationConfig();
 
     Object retrievedValue =
         navigateAndGetValue(declarativeConfig, declarativePath, type, structuredList);

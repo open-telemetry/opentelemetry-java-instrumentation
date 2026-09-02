@@ -14,6 +14,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
@@ -109,6 +111,8 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            satisfies(SERVER_ADDRESS, serverAddress()),
+                            satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()))));
   }
@@ -165,6 +169,8 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            satisfies(SERVER_ADDRESS, serverAddress()),
+                            satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(
@@ -183,6 +189,8 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            satisfies(SERVER_ADDRESS, serverAddress()),
+                            satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(
@@ -225,9 +233,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.startsWith("SELECT mockrow")),
                             equalTo(
@@ -235,6 +241,8 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            satisfies(SERVER_ADDRESS, serverAddress()),
+                            satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(

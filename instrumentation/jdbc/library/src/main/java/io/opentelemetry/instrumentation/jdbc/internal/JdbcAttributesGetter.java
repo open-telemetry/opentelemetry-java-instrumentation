@@ -5,17 +5,13 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static java.util.Arrays.asList;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -23,41 +19,6 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
-
-  // Databases where double quotes are exclusively identifiers and cannot be string literals.
-  private static final Set<String> DOUBLE_QUOTES_FOR_IDENTIFIERS_SYSTEM_NAMES =
-      new HashSet<>(
-          asList(
-              // "A string constant in SQL is an arbitrary sequence of characters
-              // bounded by single quotes (')"
-              // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS
-              "postgresql",
-              // "Text, character, and string literals are always surrounded
-              // by single quotation marks."
-              // https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/Literals.html
-              "oracle.db",
-              // "A sequence of characters that starts and ends with a string delimiter,
-              // which is an apostrophe (')"
-              // https://www.ibm.com/docs/en/db2/12.1?topic=elements-constants
-              "ibm.db2",
-              // "Single quotation marks delimit character strings."
-              // "Double quotation marks delimit special identifiers"
-              // https://db.apache.org/derby/docs/10.17/ref/rrefsqlj28468.html
-              "derby",
-              // "names of objects are enclosed in double-quotes"
-              // (double quotes are exclusively for identifiers; follows SQL standard strictly)
-              // https://hsqldb.org/doc/2.0/guide/sqlgeneral-chapt.html
-              "hsqldb",
-              // <string_literal> ::= <single_quote>[<any_character>...]<single_quote>
-              // <special_identifier> ::= <double_quotes><any_character>...<double_quotes>
-              // https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-sql-reference-guide/sql-notation-conventions
-              "sap.hana",
-              // "String literals must be enclosed in single quotes.
-              // Double quotes are not supported."
-              // https://clickhouse.com/docs/en/sql-reference/syntax#string
-              "clickhouse",
-              // PostgreSQL-compatible fork, inherits PG string literal rules
-              "polardb"));
 
   @Override
   public String getDbSystemName(DbRequest request) {
@@ -99,13 +60,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Override
   public SqlDialect getSqlDialect(DbRequest request) {
-    String systemName = request.getDbInfo().getDbSystemName();
-    if (systemName != null && DOUBLE_QUOTES_FOR_IDENTIFIERS_SYSTEM_NAMES.contains(systemName)) {
-      return DOUBLE_QUOTES_ARE_IDENTIFIERS;
-    }
-    // default to treating double-quoted tokens as string literals for safety, ensuring that
-    // potentially sensitive values are not captured
-    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+    return fromDbSystemName(request.getDbInfo().getDbSystemName());
   }
 
   @Override
@@ -123,7 +78,16 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   public String getErrorType(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
-      return Integer.toString(((SQLException) error).getErrorCode());
+      SQLException sqlException = (SQLException) error;
+      int errorCode = sqlException.getErrorCode();
+      if (errorCode != 0) {
+        return Integer.toString(errorCode);
+      }
+      String sqlState = sqlException.getSQLState();
+      if (sqlState == null || sqlState.isEmpty() || sqlState.equals("00000")) {
+        return null;
+      }
+      return sqlState;
     }
     return null;
   }

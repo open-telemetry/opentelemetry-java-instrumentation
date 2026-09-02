@@ -15,7 +15,6 @@ import static org.mockito.Mockito.withSettings;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.exporter.otlp.internal.OtlpSpanExporterProvider;
-import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.AutoConfigureListener;
@@ -82,14 +81,23 @@ class OpenTelemetryAutoConfigurationTest {
       "when Application Context DOES NOT contain OpenTelemetry bean should initialize openTelemetry")
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner
+        .withPropertyValues("otel.instrumentation.common.default-enabled=false")
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .run(
-            context ->
-                assertThat(context)
-                    .hasBean("openTelemetry")
-                    .hasBean("otelProperties")
-                    .getBean("configProvider")
-                    .isInstanceOf(ConfigPropertiesBackedConfigProvider.class));
+            context -> {
+              assertThat(context)
+                  .hasBean("openTelemetry")
+                  .hasBean("otelProperties")
+                  .hasBean("configProvider");
+              ConfigProvider configProvider = context.getBean(ConfigProvider.class);
+              assertThat(
+                      configProvider
+                          .getInstrumentationConfig()
+                          .getStructured("java")
+                          .getStructured("common")
+                          .getBoolean("default_enabled"))
+                  .isFalse();
+            });
   }
 
   @Test

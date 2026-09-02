@@ -23,6 +23,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkReques
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.request;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.response;
 
+import io.opentelemetry.api.common.AttributeKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -51,113 +52,112 @@ enum AwsSdkRequest {
   BatchGetItem(
       DYNAMODB,
       "dynamodb.model.BatchGetItemRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "RequestItems"),
-      response(stringArrayKey("aws.dynamodb.consumed_capacity"), "ConsumedCapacity")),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "RequestItems"),
+      response(AttributeKeys.AWS_DYNAMODB_CONSUMED_CAPACITY, "ConsumedCapacity")),
   BatchWriteItem(
       DYNAMODB,
       "dynamodb.model.BatchWriteItemRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "RequestItems"),
-      response(stringArrayKey("aws.dynamodb.consumed_capacity"), "ConsumedCapacity"),
-      response(stringKey("aws.dynamodb.item_collection_metrics"), "ItemCollectionMetrics")),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "RequestItems"),
+      response(AttributeKeys.AWS_DYNAMODB_CONSUMED_CAPACITY, "ConsumedCapacity"),
+      response(AttributeKeys.AWS_DYNAMODB_ITEM_COLLECTION_METRICS, "ItemCollectionMetrics")),
   CreateTable(
       DYNAMODB,
       "dynamodb.model.CreateTableRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "TableName"),
-      request(stringArrayKey("aws.dynamodb.global_secondary_indexes"), "GlobalSecondaryIndexes"),
-      request(stringArrayKey("aws.dynamodb.local_secondary_indexes"), "LocalSecondaryIndexes"),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "TableName"),
+      request(AttributeKeys.AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES, "GlobalSecondaryIndexes"),
+      request(AttributeKeys.AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES, "LocalSecondaryIndexes"),
       request(
-          doubleKey("aws.dynamodb.provisioned_read_capacity"),
+          AttributeKeys.AWS_DYNAMODB_PROVISIONED_READ_CAPACITY,
           "ProvisionedThroughput.ReadCapacityUnits"),
       request(
-          doubleKey("aws.dynamodb.provisioned_write_capacity"),
+          AttributeKeys.AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY,
           "ProvisionedThroughput.WriteCapacityUnits"),
-      response(stringArrayKey("aws.dynamodb.consumed_capacity"), "ConsumedCapacity"),
-      response(stringKey("aws.dynamodb.item_collection_metrics"), "ItemCollectionMetrics")),
+      response(AttributeKeys.AWS_DYNAMODB_CONSUMED_CAPACITY, "ConsumedCapacity"),
+      response(AttributeKeys.AWS_DYNAMODB_ITEM_COLLECTION_METRICS, "ItemCollectionMetrics")),
   DeleteItem(
       DYNAMODB,
       "dynamodb.model.DeleteItemRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "TableName"),
-      response(stringArrayKey("aws.dynamodb.consumed_capacity"), "ConsumedCapacity"),
-      response(stringKey("aws.dynamodb.item_collection_metrics"), "ItemCollectionMetrics")),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "TableName"),
+      response(AttributeKeys.AWS_DYNAMODB_CONSUMED_CAPACITY, "ConsumedCapacity"),
+      response(AttributeKeys.AWS_DYNAMODB_ITEM_COLLECTION_METRICS, "ItemCollectionMetrics")),
   DeleteTable(
       DYNAMODB,
       "dynamodb.model.DeleteTableRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "TableName")),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "TableName")),
   DescribeTable(
       DYNAMODB,
       "dynamodb.model.DescribeTableRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "TableName")),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "TableName")),
   GetItem(
       DYNAMODB,
       "dynamodb.model.GetItemRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "TableName"),
-      request(stringKey("aws.dynamodb.projection"), "ProjectionExpression"),
-      request(booleanKey("aws.dynamodb.consistent_read"), "ConsistentRead"),
-      response(stringArrayKey("aws.dynamodb.consumed_capacity"), "ConsumedCapacity")),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "TableName"),
+      request(AttributeKeys.AWS_DYNAMODB_PROJECTION, "ProjectionExpression"),
+      request(AttributeKeys.AWS_DYNAMODB_CONSISTENT_READ, "ConsistentRead"),
+      response(AttributeKeys.AWS_DYNAMODB_CONSUMED_CAPACITY, "ConsumedCapacity")),
   ListTables(
       DYNAMODB,
       "dynamodb.model.ListTablesRequest",
-      request(stringKey("aws.dynamodb.exclusive_start_table"), "ExclusiveStartTableName"),
-      response(longKey("aws.dynamodb.table_count"), "TableNames"),
-      request(longKey("aws.dynamodb.limit"), "Limit")),
+      request(AttributeKeys.AWS_DYNAMODB_EXCLUSIVE_START_TABLE, "ExclusiveStartTableName"),
+      response(AttributeKeys.AWS_DYNAMODB_TABLE_COUNT, "TableNames"),
+      request(AttributeKeys.AWS_DYNAMODB_LIMIT, "Limit")),
   PutItem(
       DYNAMODB,
       "dynamodb.model.PutItemRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "TableName"),
-      response(stringArrayKey("aws.dynamodb.consumed_capacity"), "ConsumedCapacity"),
-      response(stringKey("aws.dynamodb.item_collection_metrics"), "ItemCollectionMetrics")),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "TableName"),
+      response(AttributeKeys.AWS_DYNAMODB_CONSUMED_CAPACITY, "ConsumedCapacity"),
+      response(AttributeKeys.AWS_DYNAMODB_ITEM_COLLECTION_METRICS, "ItemCollectionMetrics")),
   Query(
       DYNAMODB,
       "dynamodb.model.QueryRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "TableName"),
-      request(stringArrayKey("aws.dynamodb.attributes_to_get"), "AttributesToGet"),
-      request(booleanKey("aws.dynamodb.consistent_read"), "ConsistentRead"),
-      request(stringKey("aws.dynamodb.index_name"), "IndexName"),
-      request(longKey("aws.dynamodb.limit"), "Limit"),
-      request(stringKey("aws.dynamodb.projection"), "ProjectionExpression"),
-      request(booleanKey("aws.dynamodb.scan_forward"), "ScanIndexForward"),
-      request(stringKey("aws.dynamodb.select"), "Select"),
-      response(stringArrayKey("aws.dynamodb.consumed_capacity"), "ConsumedCapacity")),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "TableName"),
+      request(AttributeKeys.AWS_DYNAMODB_ATTRIBUTES_TO_GET, "AttributesToGet"),
+      request(AttributeKeys.AWS_DYNAMODB_CONSISTENT_READ, "ConsistentRead"),
+      request(AttributeKeys.AWS_DYNAMODB_INDEX_NAME, "IndexName"),
+      request(AttributeKeys.AWS_DYNAMODB_LIMIT, "Limit"),
+      request(AttributeKeys.AWS_DYNAMODB_PROJECTION, "ProjectionExpression"),
+      request(AttributeKeys.AWS_DYNAMODB_SCAN_FORWARD, "ScanIndexForward"),
+      request(AttributeKeys.AWS_DYNAMODB_SELECT, "Select"),
+      response(AttributeKeys.AWS_DYNAMODB_CONSUMED_CAPACITY, "ConsumedCapacity")),
   Scan(
       DYNAMODB,
       "dynamodb.model.ScanRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "TableName"),
-      request(stringArrayKey("aws.dynamodb.attributes_to_get"), "AttributesToGet"),
-      request(booleanKey("aws.dynamodb.consistent_read"), "ConsistentRead"),
-      request(stringKey("aws.dynamodb.index_name"), "IndexName"),
-      request(longKey("aws.dynamodb.limit"), "Limit"),
-      request(stringKey("aws.dynamodb.projection"), "ProjectionExpression"),
-      request(longKey("aws.dynamodb.segment"), "Segment"),
-      request(stringKey("aws.dynamodb.select"), "Select"),
-      request(longKey("aws.dynamodb.total_segments"), "TotalSegments"),
-      response(stringArrayKey("aws.dynamodb.consumed_capacity"), "ConsumedCapacity"),
-      response(longKey("aws.dynamodb.count"), "Count"),
-      response(longKey("aws.dynamodb.scanned_count"), "ScannedCount")),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "TableName"),
+      request(AttributeKeys.AWS_DYNAMODB_ATTRIBUTES_TO_GET, "AttributesToGet"),
+      request(AttributeKeys.AWS_DYNAMODB_CONSISTENT_READ, "ConsistentRead"),
+      request(AttributeKeys.AWS_DYNAMODB_INDEX_NAME, "IndexName"),
+      request(AttributeKeys.AWS_DYNAMODB_LIMIT, "Limit"),
+      request(AttributeKeys.AWS_DYNAMODB_PROJECTION, "ProjectionExpression"),
+      request(AttributeKeys.AWS_DYNAMODB_SEGMENT, "Segment"),
+      request(AttributeKeys.AWS_DYNAMODB_SELECT, "Select"),
+      request(AttributeKeys.AWS_DYNAMODB_TOTAL_SEGMENTS, "TotalSegments"),
+      response(AttributeKeys.AWS_DYNAMODB_CONSUMED_CAPACITY, "ConsumedCapacity"),
+      response(AttributeKeys.AWS_DYNAMODB_COUNT, "Count"),
+      response(AttributeKeys.AWS_DYNAMODB_SCANNED_COUNT, "ScannedCount")),
   UpdateItem(
       DYNAMODB,
       "dynamodb.model.UpdateItemRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "TableName"),
-      response(stringArrayKey("aws.dynamodb.consumed_capacity"), "ConsumedCapacity"),
-      response(stringKey("aws.dynamodb.item_collection_metrics"), "ItemCollectionMetrics")),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "TableName"),
+      response(AttributeKeys.AWS_DYNAMODB_CONSUMED_CAPACITY, "ConsumedCapacity"),
+      response(AttributeKeys.AWS_DYNAMODB_ITEM_COLLECTION_METRICS, "ItemCollectionMetrics")),
   UpdateTable(
       DYNAMODB,
       "dynamodb.model.UpdateTableRequest",
-      request(stringArrayKey("aws.dynamodb.table_names"), "TableName"),
-      request(stringArrayKey("aws.dynamodb.attribute_definitions"), "AttributeDefinitions"),
+      request(AttributeKeys.AWS_DYNAMODB_TABLE_NAMES, "TableName"),
+      request(AttributeKeys.AWS_DYNAMODB_ATTRIBUTE_DEFINITIONS, "AttributeDefinitions"),
       request(
-          stringArrayKey("aws.dynamodb.global_secondary_index_updates"),
-          "GlobalSecondaryIndexUpdates"),
+          AttributeKeys.AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES, "GlobalSecondaryIndexUpdates"),
       request(
-          doubleKey("aws.dynamodb.provisioned_read_capacity"),
+          AttributeKeys.AWS_DYNAMODB_PROVISIONED_READ_CAPACITY,
           "ProvisionedThroughput.ReadCapacityUnits"),
       request(
-          doubleKey("aws.dynamodb.provisioned_write_capacity"),
+          AttributeKeys.AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY,
           "ProvisionedThroughput.WriteCapacityUnits"),
-      response(stringArrayKey("aws.dynamodb.consumed_capacity"), "ConsumedCapacity")),
+      response(AttributeKeys.AWS_DYNAMODB_CONSUMED_CAPACITY, "ConsumedCapacity")),
   ConverseRequest(
       BEDROCK_RUNTIME,
       "bedrockruntime.model.ConverseRequest",
-      request(stringKey("gen_ai.request.model"), "modelId")),
+      request(AttributeKeys.GEN_AI_REQUEST_MODEL, "modelId")),
   ExecuteStatementRequest(RDS_DATA, "rdsdata.model.ExecuteStatementRequest"),
   BatchExecuteStatementRequest(RDS_DATA, "rdsdata.model.BatchExecuteStatementRequest");
 
@@ -200,5 +200,54 @@ enum AwsSdkRequest {
 
   AwsSdkRequestType type() {
     return type;
+  }
+
+  private static class AttributeKeys {
+    // copied from AwsIncubatingAttributes
+    private static final AttributeKey<List<String>> AWS_DYNAMODB_ATTRIBUTES_TO_GET =
+        stringArrayKey("aws.dynamodb.attributes_to_get");
+    private static final AttributeKey<List<String>> AWS_DYNAMODB_ATTRIBUTE_DEFINITIONS =
+        stringArrayKey("aws.dynamodb.attribute_definitions");
+    private static final AttributeKey<Boolean> AWS_DYNAMODB_CONSISTENT_READ =
+        booleanKey("aws.dynamodb.consistent_read");
+    private static final AttributeKey<List<String>> AWS_DYNAMODB_CONSUMED_CAPACITY =
+        stringArrayKey("aws.dynamodb.consumed_capacity");
+    private static final AttributeKey<Long> AWS_DYNAMODB_COUNT = longKey("aws.dynamodb.count");
+    private static final AttributeKey<String> AWS_DYNAMODB_EXCLUSIVE_START_TABLE =
+        stringKey("aws.dynamodb.exclusive_start_table");
+    private static final AttributeKey<List<String>> AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES =
+        stringArrayKey("aws.dynamodb.global_secondary_indexes");
+    private static final AttributeKey<List<String>> AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES =
+        stringArrayKey("aws.dynamodb.global_secondary_index_updates");
+    private static final AttributeKey<String> AWS_DYNAMODB_INDEX_NAME =
+        stringKey("aws.dynamodb.index_name");
+    private static final AttributeKey<String> AWS_DYNAMODB_ITEM_COLLECTION_METRICS =
+        stringKey("aws.dynamodb.item_collection_metrics");
+    private static final AttributeKey<Long> AWS_DYNAMODB_LIMIT = longKey("aws.dynamodb.limit");
+    private static final AttributeKey<List<String>> AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES =
+        stringArrayKey("aws.dynamodb.local_secondary_indexes");
+    private static final AttributeKey<String> AWS_DYNAMODB_PROJECTION =
+        stringKey("aws.dynamodb.projection");
+    private static final AttributeKey<Double> AWS_DYNAMODB_PROVISIONED_READ_CAPACITY =
+        doubleKey("aws.dynamodb.provisioned_read_capacity");
+    private static final AttributeKey<Double> AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY =
+        doubleKey("aws.dynamodb.provisioned_write_capacity");
+    private static final AttributeKey<Long> AWS_DYNAMODB_SCANNED_COUNT =
+        longKey("aws.dynamodb.scanned_count");
+    private static final AttributeKey<Boolean> AWS_DYNAMODB_SCAN_FORWARD =
+        booleanKey("aws.dynamodb.scan_forward");
+    private static final AttributeKey<Long> AWS_DYNAMODB_SEGMENT = longKey("aws.dynamodb.segment");
+    private static final AttributeKey<String> AWS_DYNAMODB_SELECT =
+        stringKey("aws.dynamodb.select");
+    private static final AttributeKey<Long> AWS_DYNAMODB_TABLE_COUNT =
+        longKey("aws.dynamodb.table_count");
+    private static final AttributeKey<List<String>> AWS_DYNAMODB_TABLE_NAMES =
+        stringArrayKey("aws.dynamodb.table_names");
+    private static final AttributeKey<Long> AWS_DYNAMODB_TOTAL_SEGMENTS =
+        longKey("aws.dynamodb.total_segments");
+
+    // copied from GenAiIncubatingAttributes
+    private static final AttributeKey<String> GEN_AI_REQUEST_MODEL =
+        stringKey("gen_ai.request.model");
   }
 }

@@ -139,6 +139,10 @@ listOf(shadowModule, shadowMuzzleTooling, shadowMuzzleBootstrap).forEach { task 
     filesMatching("META-INF/services/**") {
       duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
+    // avoid warning about duplicate kotlin module files being silently dropped
+    filesMatching("META-INF/*.kotlin_module") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
     // Merge any AWS SDK service files that may be present (too bad they didn't just use normal
     // service loader...)
     mergeServiceFiles("software/amazon/awssdk/global/handlers")

@@ -9,23 +9,55 @@ permissions:
 
 jobs:
   crawl:
+    outputs:
+      success: ${{ steps.doc-site-audit.outputs.success }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Set up gradle
-        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
 
       - name: Run instrumentation analyzer (identify any module changes)
         run: ./gradlew :instrumentation-docs:runAnalysis
 
       - name: Run doc site audit
-        run: ./gradlew :instrumentation-docs:docSiteAudit
+        id: doc-site-audit
+        run: |
+          set -euo pipefail
+          ./gradlew :instrumentation-docs:docSiteAudit
+          audit_result=$(cat instrumentation-docs/build/audit-result)
+          case "$audit_result" in
+            clean)
+              echo "success=true" >> "$GITHUB_OUTPUT"
+              ;;
+            drift)
+              echo "success=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unexpected documentation audit result: $audit_result" >&2
+              exit 1
+              ;;
+          esac
+
+  documentation-drift-notification:
+    permissions:
+      contents: read
+      issues: write
+    needs:
+      - crawl
+    if: ${{ needs.crawl.result == 'success' }}
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.crawl.outputs.success == 'true' }}
+      title: "Documentation sync needed: opentelemetry.io site out of sync"
 
   workflow-notification:
     permissions:
@@ -37,4 +69,3 @@ jobs:
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.crawl.result == 'success' }}
-      title: "Documentation sync needed: opentelemetry.io site out of sync"

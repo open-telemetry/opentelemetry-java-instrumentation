@@ -6,10 +6,10 @@
 package io.opentelemetry.smoketest.appserver;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_VERSION;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -50,6 +50,10 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
 
     var jdk = appServer.jdk();
     isWindows = TestContainerManager.useWindowsContainers();
+
+    // In reduced app-server mode (PR builds), only run a representative subset of the full matrix.
+    // The full matrix runs on merge to main.
+    assumeTrue(appServer.inReducedMatrix() || !Boolean.getBoolean("reducedAppServerTests"));
 
     // ibm-semeru-runtimes doesn't publish windows images
     // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
@@ -164,7 +168,7 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
                 .hasEventsSatisfyingExactly(
                     event ->
                         event.hasAttributesSatisfying(
-                            equalTo(stringKey("exception.message"), "This is expected"))));
+                            equalTo(EXCEPTION_MESSAGE, "This is expected"))));
   }
 
   @Test

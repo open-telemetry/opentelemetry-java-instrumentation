@@ -123,6 +123,15 @@ class SqlClientAttributesExtractorTest {
     }
   }
 
+  static class TestOldSemconvMultiAttributesGetter extends TestMultiAttributesGetter {
+
+    @Deprecated
+    @Override
+    public Collection<String> getRawQueryTextsForOldSemconv(Map<String, Object> map) {
+      return singleton(read(map, "db.query.text.old"));
+    }
+  }
+
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void shouldExtractAllAttributes() {
@@ -455,6 +464,52 @@ class SqlClientAttributesExtractorTest {
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldExtractSemconvSpecificMultiQueryBatchAttributes() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.namespace", "potatoes");
+    request.put(
+        "db.query.texts", asList("INSERT INTO potato VALUES(1)", "INSERT INTO potato VALUES(2)"));
+    request.put("db.query.text.old", "INSERT INTO potato VALUES(1);\nINSERT INTO potato VALUES(2)");
+    request.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.create(new TestOldSemconvMultiAttributesGetter());
+
+    // when
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onStart(attributes, Context.root(), request);
+
+    // then
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DB_NAME, "potatoes"),
+              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?); INSERT INTO potato VALUES(?)"),
+              entry(DB_OPERATION, "INSERT"),
+              entry(DB_SQL_TABLE, "potato"),
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
+    } else if (emitOldDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DB_NAME, "potatoes"),
+              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?); INSERT INTO potato VALUES(?)"),
+              entry(DB_OPERATION, "INSERT"),
+              entry(DB_SQL_TABLE, "potato"));
+    } else if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
+    }
   }
 
   @Test

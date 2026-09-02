@@ -6,12 +6,25 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import javax.annotation.Nullable;
 
-class RabbitChannelNetAttributesGetter implements NetworkAttributesGetter<ChannelAndMethod, Void> {
+class RabbitChannelNetAttributesGetter
+    implements NetworkAttributesGetter<ChannelAndMethod, Void>,
+        ServerAttributesGetter<ChannelAndMethod> {
+
+  @Override
+  public String getServerAddress(ChannelAndMethod channelAndMethod) {
+    return channelAndMethod.getChannel().getConnection().getAddress().getHostAddress();
+  }
+
+  @Override
+  public Integer getServerPort(ChannelAndMethod channelAndMethod) {
+    return channelAndMethod.getChannel().getConnection().getPort();
+  }
 
   @Nullable
   @Override

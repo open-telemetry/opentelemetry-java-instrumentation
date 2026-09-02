@@ -21,7 +21,6 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfoBuilder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -138,8 +137,8 @@ public class EmittedScopeParser {
    * @return set of all unique scopes found in scope files
    */
   public static Set<EmittedScope.Scope> getScopesFromFiles(
-      String rootDir, String instrumentationDirectory) {
-    Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
+      Path rootDir, String instrumentationDirectory) {
+    Path telemetryDir = rootDir.resolve(instrumentationDirectory).resolve(".telemetry");
 
     Set<EmittedScope.Scope> allScopes = new HashSet<>();
 
@@ -149,7 +148,7 @@ public class EmittedScopeParser {
             .filter(path -> path.getFileName().toString().startsWith("scope-"))
             .forEach(
                 path -> {
-                  String content = FileManager.readFileToString(path.toString());
+                  String content = FileManager.readFileToString(path);
                   if (content != null) {
                     EmittedScope parsed;
                     try {

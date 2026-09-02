@@ -13,4 +13,9 @@ class RedissonAsyncClientTest extends AbstractRedissonAsyncClientTest {
   protected boolean useRedisProtocol() {
     return true;
   }
+
+  @Override
+  protected boolean hasDatabaseIndex() {
+    return true;
+  }
 }

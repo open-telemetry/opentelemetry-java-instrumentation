@@ -43,24 +43,24 @@ Sample failure captured from Develocity (truncated):
 
 {recent_section}{per_day_section}
 Goals:
-1. Diagnose the root cause of flakiness from the sample failure(s) and the
-   test source. Common causes include unbounded waits, fixed-duration sleeps,
-   shared mutable state across tests, executor/IO-reactor reuse, missing
-   cleanup, and gRPC `Context` cancellation propagating into deferred work.
-   Look at related helper files referenced from the test (such as
-   `AbstractGrpcTest.java` for gRPC tests).
+1. Diagnose the root cause of flakiness from the sample failure(s), the test
+   source, related implementation and helper files, and recent commits. Do not
+   assume the test is faulty. If the flakiness began after an instrumentation
+   change, inspect that change and fix the implementation when it caused the
+   failure.
 2. If multiple scan links are listed above, open at least two of them via
    their build-scan URLs to confirm the failure mode is consistent before
    committing to a fix.
-3. Apply a minimal, surgical fix to the test or its helper. Do NOT rewrite
-   unrelated code. Do NOT add new dependencies.
+3. Apply a minimal, surgical fix to the test, its helper, or the instrumentation
+   implementation. Do NOT rewrite unrelated code. Do NOT add new dependencies.
 4. Preserve the test's original intent and assertions. If the test was
    regression-tracking a specific issue, keep that coverage.
 5. If the fix needs `await` calls, prefer assertions on the boolean return
    value of `CountDownLatch.await(...)` over ignoring it; prefer Awaitility
    helpers already used elsewhere in the test for polling.
 6. Do not disable the test, do not add `@Disabled`, and do not lower coverage
-   by deleting assertions.
+   by deleting assertions, accepting missing telemetry, or serializing a
+   concurrency test.
 
 Output protocol:
 - Apply the fix to the working tree (do not produce JSON output).

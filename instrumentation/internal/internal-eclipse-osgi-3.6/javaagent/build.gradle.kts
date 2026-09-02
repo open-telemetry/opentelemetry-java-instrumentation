@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 // this instrumentation applies to the class 'org.eclipse.osgi.internal.loader.BundleLoader'

@@ -32,7 +32,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
 
-class WeaverContainer extends GenericContainer<WeaverContainer> {
+public class WeaverContainer extends GenericContainer<WeaverContainer> {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -43,7 +43,7 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
   @Nullable private JsonNode result = null;
 
   WeaverContainer(Path registryRoot, String... registryFiles) {
-    super("otel/weaver:v0.24.2");
+    super("otel/weaver:v0.25.1");
 
     super.withExposedPorts(OTLP_PORT, ADMIN_PORT);
     super.waitingFor(Wait.forListeningPorts(OTLP_PORT, ADMIN_PORT));

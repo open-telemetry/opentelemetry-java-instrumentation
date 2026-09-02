@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestInstrumenterFactory;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
@@ -88,6 +89,7 @@ public final class ElasticsearchRest7TelemetryBuilder {
    * ElasticsearchRest7TelemetryBuilder}.
    */
   public ElasticsearchRest7Telemetry build() {
+    boolean captureSearchQuery = SemconvStability.v3Preview(openTelemetry);
     Instrumenter<ElasticsearchRestRequest, Response> instrumenter =
         ElasticsearchRestInstrumenterFactory.create(
             openTelemetry,
@@ -95,7 +97,9 @@ public final class ElasticsearchRest7TelemetryBuilder {
             attributesExtractors,
             spanNameExtractorCustomizer,
             knownMethods,
-            false);
+            HttpConstants.SENSITIVE_QUERY_PARAMETERS,
+            captureSearchQuery,
+            captureSearchQuery ? new JacksonElasticsearchQuerySanitizer() : null);
 
     return new ElasticsearchRest7Telemetry(instrumenter);
   }

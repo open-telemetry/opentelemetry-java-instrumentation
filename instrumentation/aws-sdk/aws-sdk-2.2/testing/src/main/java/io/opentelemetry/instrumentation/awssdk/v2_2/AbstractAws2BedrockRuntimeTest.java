@@ -7,11 +7,13 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MAX_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STOP_SEQUENCES;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_TEMPERATURE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_TOP_P;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
@@ -30,7 +32,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.within;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.SpanContext;
@@ -88,14 +89,11 @@ import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 
 // TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
 // is resolved.
-@SuppressWarnings("OtelDeprecatedApiUsage")
+@SuppressWarnings("deprecation")
 public abstract class AbstractAws2BedrockRuntimeTest {
   protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
 
   private static final String API_URL = "https://bedrock-runtime.us-east-1.amazonaws.com";
-
-  protected static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
-
   @RegisterExtension static final RecordingExtension recording = new RecordingExtension(API_URL);
 
   protected abstract InstrumentationExtension getTesting();
@@ -1002,6 +1000,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
@@ -1233,6 +1232,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 10),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
@@ -1359,6 +1359,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 5),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
@@ -1585,6 +1586,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 100),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
@@ -1901,6 +1903,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 100),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
@@ -2435,6 +2438,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,
@@ -3109,6 +3113,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 165),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
@@ -3330,6 +3335,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 558),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 58),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
@@ -4021,6 +4027,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 144),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
@@ -4217,6 +4224,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 601),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 145),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
