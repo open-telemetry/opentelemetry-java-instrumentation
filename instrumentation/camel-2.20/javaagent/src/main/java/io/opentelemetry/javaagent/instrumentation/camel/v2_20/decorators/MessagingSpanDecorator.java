@@ -126,6 +126,7 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
     }
   }
 
+  @Nullable
   public String getStableDestination(Exchange exchange, Endpoint endpoint) {
     if (!component.equals("rabbitmq")) {
       return getDestination(exchange, endpoint);
