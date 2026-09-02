@@ -60,6 +60,7 @@ final class CamelPropagationUtil {
     for (String field : GlobalOpenTelemetry.getPropagators().getTextMapPropagator().fields()) {
       exchangeHeaders.remove(field);
     }
+    exchangeHeaders.remove("AWSTraceHeader");
   }
 
   static TextMapPropagator messagingPropagator() {
