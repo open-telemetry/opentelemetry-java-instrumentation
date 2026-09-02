@@ -37,13 +37,13 @@ class CouchbaseConnectionStringsTest {
   }
 
   @Test
-  void movesASharedCouchbasesNonDefaultPortToServerPort() {
+  void keepsSharedCouchbasesNonDefaultPortsInline() {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(
             ConnectionString.create("couchbases://two.example:11208,one.example:11208"));
 
-    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
-    assertThat(target.getPort()).isEqualTo(11208);
+    assertThat(target.getAddress()).isEqualTo("one.example:11208,two.example:11208");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -88,7 +88,7 @@ class CouchbaseConnectionStringsTest {
   }
 
   @Test
-  void movesACommonNonDefaultPortToServerPort() {
+  void keepsCommonNonDefaultPortsInline() {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
@@ -96,8 +96,8 @@ class CouchbaseConnectionStringsTest {
                     InetSocketAddress.createUnresolved("two.example", 11211),
                     InetSocketAddress.createUnresolved("one.example", 11211))));
 
-    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
-    assertThat(target.getPort()).isEqualTo(11211);
+    assertThat(target.getAddress()).isEqualTo("one.example:11211,two.example:11211");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
