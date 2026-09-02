@@ -116,6 +116,14 @@ definitions:
             type: boolean
             description: Whether this rule overrides an already-applied template.
             default: false
+    messaging.batch-send.message-creation-spans.enabled:
+      name: otel.instrumentation.messaging.batch-send.message-creation-spans.enabled
+      declarative_name: java.common.messaging.batch_send.message_creation_spans.enabled
+      description: Provides the default for whether to create a producer span for
+        each eligible message in a batch send when stable messaging semantic conventions
+        are enabled. An instrumentation-specific setting takes precedence.
+      type: boolean
+      default: true
     messaging.capture-headers:
       name: otel.instrumentation.messaging.experimental.capture-headers
       declarative_name: java.common.messaging.capture_headers/development
@@ -179,6 +187,14 @@ definitions:
       description: Flush timeout in milliseconds.
       type: int
       default: 10000
+    otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled:
+      name: otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
+      declarative_name: java.aws_sdk.batch_send.message_creation_spans.enabled
+      description: Determines whether to create a producer span for each eligible
+        message in an SQS batch send when stable messaging semantic conventions are
+        enabled. Overrides `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled`.
+      type: boolean
+      default: true
     otel.instrumentation.aws-sdk.experimental-record-individual-http-error:
       name: otel.instrumentation.aws-sdk.experimental-record-individual-http-error
       declarative_name: java.aws_sdk.record_individual_http_error/development
@@ -4228,6 +4244,21 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.consumed.messages-83bc8813:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.consumed.messages-bda2d99f:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -6556,9 +6587,11 @@ libraries:
   - com.amazonaws:aws-java-sdk-core:[1.10.33,)
   - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
   configuration_refs:
+  - messaging.batch-send.message-creation-spans.enabled
   - messaging.capture-headers
   - messaging.headers.excluded
   - messaging.headers.included
+  - otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
   - otel.instrumentation.aws-sdk.experimental-span-attributes-f30ad240
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -6929,9 +6962,11 @@ libraries:
   - software.amazon.awssdk:sns:[2.2.0,)
   - software.amazon.awssdk:sqs:[2.2.0,)
   configuration_refs:
+  - messaging.batch-send.message-creation-spans.enabled
   - messaging.capture-headers
   - messaging.headers.excluded
   - messaging.headers.included
+  - otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
   - otel.instrumentation.aws-sdk.experimental-record-individual-http-error
   - otel.instrumentation.aws-sdk.experimental-span-attributes-0c4c01de
   - otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
@@ -7007,6 +7042,8 @@ libraries:
         type: STRING
       - name: gen_ai.request.stop_sequences
         type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
       - name: gen_ai.request.temperature
         type: DOUBLE
       - name: gen_ai.request.top_p
@@ -12349,6 +12386,11 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:connect-api:[2.6.0,)
+  telemetry:
+  - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-83bc8813
+    - messaging.process.duration-5301bc21
 - name: kafka-streams-0.11
   display_name: Apache Kafka Streams
   description: This instrumentation enables messaging spans for Kafka Streams processing.
@@ -14371,6 +14413,8 @@ libraries:
         type: LONG
       - name: gen_ai.request.stop_sequences
         type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
       - name: gen_ai.request.temperature
         type: DOUBLE
       - name: gen_ai.request.top_p
