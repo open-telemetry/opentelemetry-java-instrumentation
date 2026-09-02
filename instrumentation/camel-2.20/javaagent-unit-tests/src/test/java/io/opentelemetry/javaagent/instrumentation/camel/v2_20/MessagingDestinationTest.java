@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
 import java.util.stream.Stream;
 import org.apache.camel.Endpoint;
@@ -25,7 +27,8 @@ class MessagingDestinationTest {
 
   @ParameterizedTest
   @MethodSource("destinations")
-  void stableDestination(String component, String endpointUri, String expectedDestination) {
+  void stableDestination(
+      String component, String endpointUri, String expectedDestination, boolean expectedTemporary) {
     Endpoint endpoint = mock(Endpoint.class);
     when(endpoint.getEndpointUri()).thenReturn(endpointUri);
 
@@ -39,15 +42,26 @@ class MessagingDestinationTest {
 
     assertThat(request.getMessagingDestination())
         .isEqualTo(emitStableMessagingSemconv() ? expectedDestination : null);
+    CamelMessagingAttributesGetter attributesGetter = new CamelMessagingAttributesGetter();
+    assertThat(attributesGetter.isTemporaryDestination(request))
+        .isEqualTo(emitStableMessagingSemconv() && expectedTemporary);
+    if (emitStableMessagingSemconv()) {
+      assertThat(MessagingSpanNameExtractor.create(attributesGetter, SEND, "send").extract(request))
+          .isEqualTo(expectedTemporary ? "send" : "send " + expectedDestination);
+    }
   }
 
   private static Stream<Arguments> destinations() {
     return Stream.of(
-        argumentSet("JMS queue", "jms", "jms:queue:myQueue", "myQueue"),
-        argumentSet("JMS topic", "jms", "jms:topic:myTopic", "myTopic"),
-        argumentSet("AMQP queue", "amqp", "amqp:queue:myQueue", "myQueue"),
-        argumentSet("AMQP topic", "amqp", "amqp:topic:myTopic", "myTopic"),
-        argumentSet("legacy AMQP alias queue", "ampq", "ampq:queue:myQueue", "myQueue"));
+        argumentSet("JMS queue", "jms", "jms:queue:myQueue", "myQueue", false),
+        argumentSet("JMS topic", "jms", "jms:topic:myTopic", "myTopic", false),
+        argumentSet("JMS temporary queue", "jms", "jms:temp-queue:reply", "reply", true),
+        argumentSet("JMS temporary topic", "jms", "jms:temp-topic:reply", "reply", true),
+        argumentSet("AMQP queue", "amqp", "amqp:queue:myQueue", "myQueue", false),
+        argumentSet("AMQP topic", "amqp", "amqp:topic:myTopic", "myTopic", false),
+        argumentSet("AMQP temporary queue", "amqp", "amqp:temp-queue:reply", "reply", true),
+        argumentSet("AMQP temporary topic", "amqp", "amqp:temp-topic:reply", "reply", true),
+        argumentSet("legacy AMQP alias queue", "ampq", "ampq:queue:myQueue", "myQueue", false));
   }
 
   @ParameterizedTest

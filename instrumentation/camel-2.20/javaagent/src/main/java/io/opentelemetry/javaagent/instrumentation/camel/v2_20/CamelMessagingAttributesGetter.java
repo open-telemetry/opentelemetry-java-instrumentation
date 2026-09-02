@@ -32,7 +32,7 @@ final class CamelMessagingAttributesGetter
 
   @Override
   public boolean isTemporaryDestination(CamelRequest request) {
-    return false;
+    return request.isMessagingDestinationTemporary();
   }
 
   @Override

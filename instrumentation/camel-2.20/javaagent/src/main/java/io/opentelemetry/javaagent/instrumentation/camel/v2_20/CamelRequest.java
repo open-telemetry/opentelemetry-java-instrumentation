@@ -27,15 +27,18 @@ abstract class CamelRequest {
     String messagingDestination = null;
     String messagingDestinationPartitionId = null;
     String messagingSendOperationName = null;
+    boolean messagingDestinationTemporary = false;
     boolean messagingSpanContextPropagated = false;
     if (spanDecorator instanceof MessagingSpanDecorator) {
       MessagingSpanDecorator messagingSpanDecorator = (MessagingSpanDecorator) spanDecorator;
       messagingSystem = messagingSpanDecorator.getSystem();
       if (emitStableMessagingSemconv()) {
+        String stableMessagingDestination =
+            messagingSpanDecorator.getStableDestination(exchange, endpoint, camelDirection);
         messagingDestination =
-            normalizeStableMessagingDestination(
-                messagingSystem,
-                messagingSpanDecorator.getStableDestination(exchange, endpoint, camelDirection));
+            normalizeStableMessagingDestination(messagingSystem, stableMessagingDestination);
+        messagingDestinationTemporary =
+            isTemporaryStableMessagingDestination(messagingSystem, stableMessagingDestination);
         messagingDestinationPartitionId =
             messagingSpanDecorator.getDestinationPartitionId(exchange);
       }
@@ -52,6 +55,7 @@ abstract class CamelRequest {
         messagingDestination,
         messagingDestinationPartitionId,
         messagingSendOperationName,
+        messagingDestinationTemporary,
         messagingSpanContextPropagated);
   }
 
@@ -59,9 +63,8 @@ abstract class CamelRequest {
   private static String normalizeStableMessagingDestination(
       String messagingSystem, @Nullable String messagingDestination) {
     // the amqp component is the jms component with an amqp connection factory, so both use the
-    // [queue:|topic:]destinationName endpoint syntax
-    if (messagingDestination == null
-        || (!messagingSystem.equals("jms") && !messagingSystem.equals("amqp"))) {
+    // [queue:|topic:|temp-queue:|temp-topic:]destinationName endpoint syntax
+    if (messagingDestination == null || !isJmsMessagingSystem(messagingSystem)) {
       return messagingDestination;
     }
     if (messagingDestination.startsWith("queue:")) {
@@ -70,7 +73,25 @@ abstract class CamelRequest {
     if (messagingDestination.startsWith("topic:")) {
       return messagingDestination.substring("topic:".length());
     }
+    if (messagingDestination.startsWith("temp-queue:")) {
+      return messagingDestination.substring("temp-queue:".length());
+    }
+    if (messagingDestination.startsWith("temp-topic:")) {
+      return messagingDestination.substring("temp-topic:".length());
+    }
     return messagingDestination;
+  }
+
+  private static boolean isTemporaryStableMessagingDestination(
+      String messagingSystem, @Nullable String messagingDestination) {
+    return messagingDestination != null
+        && isJmsMessagingSystem(messagingSystem)
+        && (messagingDestination.startsWith("temp-queue:")
+            || messagingDestination.startsWith("temp-topic:"));
+  }
+
+  private static boolean isJmsMessagingSystem(String messagingSystem) {
+    return messagingSystem.equals("jms") || messagingSystem.equals("amqp");
   }
 
   abstract SpanDecorator getSpanDecorator();
@@ -98,6 +119,8 @@ abstract class CamelRequest {
 
   @Nullable
   abstract String getMessagingSendOperationName();
+
+  abstract boolean isMessagingDestinationTemporary();
 
   abstract boolean isMessagingSpanContextPropagated();
 }
