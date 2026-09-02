@@ -294,7 +294,7 @@ final class CassandraServerTarget {
     } else if (host.indexOf('[') >= 0 || host.indexOf(']') >= 0) {
       return null;
     }
-    return isSafeHost(host) && validPort(address.getPort())
+    return isValidHost(host) && validPort(address.getPort())
         ? new CassandraServerTarget(host, address.getPort())
         : null;
   }

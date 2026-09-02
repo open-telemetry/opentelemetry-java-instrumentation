@@ -251,6 +251,10 @@ class CassandraServerTargetTest {
             CassandraServerTarget.ofAddresses(
                 singletonList(InetSocketAddress.createUnresolved("[::1", 9042))))
         .isNull();
+    assertThat(
+            CassandraServerTarget.ofAddresses(
+                singletonList(InetSocketAddress.createUnresolved("not:ipv6", 9042))))
+        .isNull();
   }
 
   @Test
