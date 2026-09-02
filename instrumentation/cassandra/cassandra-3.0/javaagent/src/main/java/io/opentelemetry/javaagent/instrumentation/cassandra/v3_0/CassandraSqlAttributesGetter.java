@@ -46,6 +46,20 @@ final class CassandraSqlAttributesGetter
     return request.getBatchSize();
   }
 
+  @Override
+  @Nullable
+  public String getServerAddress(CassandraRequest request) {
+    CassandraConfiguredTarget configuredTarget = request.getConfiguredTarget();
+    return configuredTarget == null ? null : configuredTarget.getAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(CassandraRequest request) {
+    CassandraConfiguredTarget configuredTarget = request.getConfiguredTarget();
+    return configuredTarget == null ? null : configuredTarget.getPort();
+  }
+
   @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(

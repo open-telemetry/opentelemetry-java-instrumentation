@@ -761,7 +761,10 @@ class CassandraClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "cassandra" : "DB Query")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? cassandraHost + ":" + cassandraPort
+                                : "DB Query")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
