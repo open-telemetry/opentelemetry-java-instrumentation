@@ -113,13 +113,14 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void serverListDoesNotReportPartialEndpoint()
+  void serverListReportsCompleteLongEndpoint()
       throws InterruptedException, ExecutionException, TimeoutException {
     PgConnectOptions first = connectOptions().setPort(port);
-    PgConnectOptions second = connectOptions().setHost(hostOfLength(250)).setPort(port + 1);
+    String secondHost = hostOfLength(250);
+    PgConnectOptions second = connectOptions().setHost(secondHost).setPort(port + 1);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
 
-    assertServerListTarget(pool, host + ":" + port);
+    assertServerListTarget(pool, host + ":" + port + "," + secondHost + ":" + (port + 1));
   }
 
   @Test

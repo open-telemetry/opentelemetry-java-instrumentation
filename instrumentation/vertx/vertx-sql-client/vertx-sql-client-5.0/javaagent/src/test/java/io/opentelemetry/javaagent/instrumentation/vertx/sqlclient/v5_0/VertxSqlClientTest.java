@@ -740,15 +740,13 @@ class VertxSqlClientTest {
       String statement,
       Throwable error) {
     boolean hasUnixSocket = firstHost.startsWith("/") || secondHost.startsWith("/");
-    boolean samePort = firstPort == secondPort;
+    boolean inlinePorts = firstPort != 5432 || secondPort != 5432;
     String stableAddress =
         hasUnixSocket
             ? null
-            : samePort
-                ? firstHost + "," + secondHost
-                : firstHost + ":" + firstPort + "," + secondHost + ":" + secondPort;
-    Long stablePort =
-        !hasUnixSocket && samePort && firstPort != 5432 ? Long.valueOf(firstPort) : null;
+            : inlinePorts
+                ? firstHost + ":" + firstPort + "," + secondHost + ":" + secondPort
+                : firstHost + "," + secondHost;
     Consumer<SpanDataAssert> operationSpan =
         span ->
             span.hasKind(SpanKind.CLIENT)
@@ -768,8 +766,7 @@ class VertxSqlClientTest {
                     equalTo(
                         SERVER_ADDRESS, emitStableDatabaseSemconv() ? stableAddress : firstHost),
                     equalTo(
-                        SERVER_PORT,
-                        emitStableDatabaseSemconv() ? stablePort : Long.valueOf(firstPort)),
+                        SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(firstPort)),
                     equalTo(
                         ERROR_TYPE,
                         emitStableDatabaseSemconv() && error != null

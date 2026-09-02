@@ -52,7 +52,7 @@ class VertxSqlAddressGroupTest {
   }
 
   @Test
-  void extractsSharedNonDefaultPortWhilePreservingOrderAndDuplicates() {
+  void inlinesSharedNonDefaultPortWhilePreservingOrderAndDuplicates() {
     VertxSqlAddressGroup addressGroup =
         VertxSqlAddressGroup.of(
             asList(
@@ -61,12 +61,13 @@ class VertxSqlAddressGroupTest {
                 new SqlConnectOptions().setHost("db-b.example").setPort(15432)),
             "postgresql");
 
-    assertThat(addressGroup.getAddress()).isEqualTo("db-b.example,db-a.example,db-b.example");
-    assertThat(addressGroup.getPort()).isEqualTo(15432);
+    assertThat(addressGroup.getAddress())
+        .isEqualTo("db-b.example:15432,db-a.example:15432,db-b.example:15432");
+    assertThat(addressGroup.getPort()).isNull();
   }
 
   @Test
-  void extractsSharedNonDefaultPortWithoutBracketingIpv6() {
+  void inlinesSharedNonDefaultPortAndBracketsIpv6() {
     VertxSqlAddressGroup addressGroup =
         VertxSqlAddressGroup.of(
             asList(
@@ -74,8 +75,8 @@ class VertxSqlAddressGroupTest {
                 new SqlConnectOptions().setHost("[2001:db8::1]").setPort(6432)),
             "postgresql");
 
-    assertThat(addressGroup.getAddress()).isEqualTo("db.example,2001:db8::1");
-    assertThat(addressGroup.getPort()).isEqualTo(6432);
+    assertThat(addressGroup.getAddress()).isEqualTo("db.example:6432,[2001:db8::1]:6432");
+    assertThat(addressGroup.getPort()).isNull();
   }
 
   @Test
@@ -138,56 +139,90 @@ class VertxSqlAddressGroupTest {
   }
 
   @Test
-  void keepsCompleteEndpointListAt255Characters() {
-    String firstHost = hostOfLength(250);
+  void includesExactlyFiveEndpoints() {
     VertxSqlAddressGroup addressGroup =
         VertxSqlAddressGroup.of(
             asList(
-                new SqlConnectOptions().setHost(firstHost).setPort(1234),
-                new SqlConnectOptions().setHost("db.example").setPort(1234)),
-            "other_sql");
+                new SqlConnectOptions().setHost("db-1.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-2.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-3.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-4.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-5.example").setPort(5432)),
+            "postgresql");
 
-    assertThat(addressGroup.getAddress()).isEqualTo(firstHost + ":1234");
+    assertThat(addressGroup.getAddress())
+        .isEqualTo("db-1.example,db-2.example,db-3.example,db-4.example,db-5.example");
     assertThat(addressGroup.getPort()).isNull();
   }
 
   @Test
-  void omitsAddressAndPortWhenFirstRenderedEndpointExceeds255Characters() {
+  void includesOnlyTheFirstFiveOfSixEndpoints() {
     VertxSqlAddressGroup addressGroup =
         VertxSqlAddressGroup.of(
             asList(
-                new SqlConnectOptions().setHost(hostOfLength(251)).setPort(1234),
-                new SqlConnectOptions().setHost("db.example").setPort(1234)),
-            "other_sql");
+                new SqlConnectOptions().setHost("db-1.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-2.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-3.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-4.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-5.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-6.example").setPort(5432)),
+            "postgresql");
+
+    assertThat(addressGroup.getAddress())
+        .isEqualTo("db-1.example,db-2.example,db-3.example,db-4.example,db-5.example");
+    assertThat(addressGroup.getPort()).isNull();
+  }
+
+  @Test
+  void positionSixNonDefaultPortControlsFormatting() {
+    VertxSqlAddressGroup addressGroup =
+        VertxSqlAddressGroup.of(
+            asList(
+                new SqlConnectOptions().setHost("db-1.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-2.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-3.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-4.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-5.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-6.example").setPort(6432)),
+            "postgresql");
+
+    assertThat(addressGroup.getAddress())
+        .isEqualTo(
+            "db-1.example:5432,db-2.example:5432,db-3.example:5432,"
+                + "db-4.example:5432,db-5.example:5432");
+    assertThat(addressGroup.getPort()).isNull();
+  }
+
+  @Test
+  void rejectsInvalidEndpointAtPositionSix() {
+    assertThat(
+            VertxSqlAddressGroup.of(
+                asList(
+                    new SqlConnectOptions().setHost("db-1.example").setPort(5432),
+                    new SqlConnectOptions().setHost("db-2.example").setPort(5432),
+                    new SqlConnectOptions().setHost("db-3.example").setPort(5432),
+                    new SqlConnectOptions().setHost("db-4.example").setPort(5432),
+                    new SqlConnectOptions().setHost("db-5.example").setPort(5432),
+                    new SqlConnectOptions().setHost("invalid host").setPort(5432)),
+                "postgresql"))
+        .isNull();
+  }
+
+  @Test
+  void omitsAddressAndPortForUnixDomainSocketAtPositionSix() {
+    VertxSqlAddressGroup addressGroup =
+        VertxSqlAddressGroup.of(
+            asList(
+                new SqlConnectOptions().setHost("db-1.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-2.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-3.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-4.example").setPort(5432),
+                new SqlConnectOptions().setHost("db-5.example").setPort(5432),
+                new SqlConnectOptions().setHost("/var/run/postgres").setPort(5432)),
+            "postgresql");
 
     assertThat(addressGroup.getAddress()).isNull();
     assertThat(addressGroup.getPort()).isNull();
-  }
-
-  @Test
-  void doesNotAppendPartialEndpoint() {
-    VertxSqlAddressGroup addressGroup =
-        VertxSqlAddressGroup.of(
-            asList(
-                new SqlConnectOptions().setHost("primary.example").setPort(5432),
-                new SqlConnectOptions().setHost(hostOfLength(250)).setPort(15432)),
-            "postgresql");
-
-    assertThat(addressGroup.getAddress()).isEqualTo("primary.example:5432");
-    assertThat(addressGroup.getPort()).isNull();
-  }
-
-  @Test
-  void preservesSharedPortWhenEndpointListIsTruncated() {
-    VertxSqlAddressGroup addressGroup =
-        VertxSqlAddressGroup.of(
-            asList(
-                new SqlConnectOptions().setHost("primary.example").setPort(6432),
-                new SqlConnectOptions().setHost(hostOfLength(250)).setPort(6432)),
-            "postgresql");
-
-    assertThat(addressGroup.getAddress()).isEqualTo("primary.example");
-    assertThat(addressGroup.getPort()).isEqualTo(6432);
   }
 
   @Test
@@ -221,13 +256,5 @@ class VertxSqlAddressGroupTest {
             VertxSqlAddressGroup.of(
                 new SqlConnectOptions().setHost(host).setPort(5432), "postgresql"))
         .isNull();
-  }
-
-  private static String hostOfLength(int length) {
-    StringBuilder host = new StringBuilder(length);
-    for (int i = 0; i < length; i++) {
-      host.append('a');
-    }
-    return host.toString();
   }
 }

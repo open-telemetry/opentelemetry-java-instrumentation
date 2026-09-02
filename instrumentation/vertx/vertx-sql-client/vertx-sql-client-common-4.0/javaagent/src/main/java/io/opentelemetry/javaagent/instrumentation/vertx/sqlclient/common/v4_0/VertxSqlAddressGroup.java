@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 
 public class VertxSqlAddressGroup {
 
-  private static final int MAX_ENDPOINT_LIST_LENGTH = 255;
+  private static final int MAX_ENDPOINTS = 5;
 
   private final List<Endpoint> endpoints;
   @Nullable private final String address;
@@ -85,39 +85,25 @@ public class VertxSqlAddressGroup {
       }
     }
 
-    Integer commonPort = null;
-    boolean samePort = defaultPort != null;
+    boolean inlinePorts = defaultPort == null;
     for (Endpoint endpoint : endpoints) {
       Integer effectivePort = endpoint.port != null ? endpoint.port : defaultPort;
-      if (effectivePort == null) {
-        samePort = false;
-      } else if (commonPort == null) {
-        commonPort = effectivePort;
-      } else if (!commonPort.equals(effectivePort)) {
-        samePort = false;
+      if (effectivePort != null && !effectivePort.equals(defaultPort)) {
+        inlinePorts = true;
       }
     }
 
     StringBuilder value = new StringBuilder();
-    for (Endpoint endpoint : endpoints) {
-      int endpointStart = value.length();
-      if (endpointStart > 0) {
+    for (int i = 0; i < endpoints.size() && i < MAX_ENDPOINTS; i++) {
+      Endpoint endpoint = endpoints.get(i);
+      if (i > 0) {
         value.append(',');
       }
       Integer effectivePort = endpoint.port != null ? endpoint.port : defaultPort;
-      appendHostPort(value, endpoint.host, samePort ? null : effectivePort);
-      if (value.length() > MAX_ENDPOINT_LIST_LENGTH) {
-        value.setLength(endpointStart);
-        break;
-      }
-    }
-    if (value.length() == 0) {
-      address = null;
-      port = null;
-      return;
+      appendHostPort(value, endpoint.host, inlinePorts ? effectivePort : null);
     }
     address = value.toString();
-    port = samePort && !commonPort.equals(defaultPort) ? commonPort : null;
+    port = null;
   }
 
   public VertxSqlAddressGroup withDbSystem(@Nullable String dbSystem) {
