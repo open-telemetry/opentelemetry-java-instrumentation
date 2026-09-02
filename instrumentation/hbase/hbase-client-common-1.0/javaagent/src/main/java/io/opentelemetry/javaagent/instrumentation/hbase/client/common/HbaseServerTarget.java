@@ -249,15 +249,7 @@ public class HbaseServerTarget {
     if (configuredHostname != null && !configuredHostname.isEmpty()) {
       return configuredHostname + ":" + configuration.getInt(MASTER_PORT_KEY, DEFAULT_MASTER_PORT);
     }
-    try {
-      Method getMasterAddr =
-          Class.forName(MASTER_REGISTRY, false, HbaseServerTarget.class.getClassLoader())
-              .getDeclaredMethod("getMasterAddr", Configuration.class);
-      getMasterAddr.setAccessible(true);
-      return (String) getMasterAddr.invoke(null, configuration);
-    } catch (ReflectiveOperationException | SecurityException | LinkageError ignored) {
-      return null;
-    }
+    return null;
   }
 
   @Nullable
