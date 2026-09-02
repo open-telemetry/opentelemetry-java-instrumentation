@@ -20,15 +20,15 @@ public class DecoratorRegistry {
   private static Map<String, SpanDecorator> loadDecorators() {
     Map<String, SpanDecorator> result = new HashMap<>();
     result.put("ahc", new HttpSpanDecorator());
-    registerMessaging(result, "ampq", "amqp");
+    result.put("ampq", MessagingSpanDecorator.create("ampq", "amqp"));
     if (emitStableMessagingSemconv()) {
-      registerMessaging(result, "amqp");
+      result.put("amqp", MessagingSpanDecorator.create("amqp"));
     }
     result.put("aws-s3", new S3SpanDecorator());
-    registerMessaging(result, "aws-sns", "aws.sns");
-    registerMessaging(result, "aws-sqs", "aws_sqs", false);
-    registerMessaging(result, "cometd");
-    registerMessaging(result, "cometds", "cometd");
+    result.put("aws-sns", MessagingSpanDecorator.create("aws-sns", "aws.sns"));
+    result.put("aws-sqs", MessagingSpanDecorator.create("aws-sqs", "aws_sqs", false));
+    result.put("cometd", MessagingSpanDecorator.create("cometd"));
+    result.put("cometds", MessagingSpanDecorator.create("cometds", "cometd"));
     result.put("cql", new DbSpanDecorator("cql", DbSystemNameIncubatingValues.CASSANDRA));
     result.put("direct", new InternalSpanDecorator());
     result.put("direct-vm", new InternalSpanDecorator());
@@ -42,62 +42,29 @@ public class DecoratorRegistry {
     result.put("http4", new Http4SpanDecorator());
     result.put("https4", new Https4SpanDecorator());
     result.put("http", new HttpSpanDecorator());
-    registerMessaging(result, "ironmq");
+    result.put("ironmq", MessagingSpanDecorator.create("ironmq"));
     result.put("jdbc", new DbSpanDecorator("jdbc", DbSystemNameIncubatingValues.OTHER_SQL));
     result.put("jetty", new HttpSpanDecorator());
-    registerMessaging(result, "jms");
+    result.put("jms", MessagingSpanDecorator.create("jms"));
     result.put("kafka", new KafkaSpanDecorator());
     result.put("log", new LogSpanDecorator());
     result.put("mongodb", new DbSpanDecorator("mongodb", DbSystemNameIncubatingValues.MONGODB));
-    registerMessaging(result, "mqtt", "mqtt", false);
+    result.put("mqtt", MessagingSpanDecorator.create("mqtt", "mqtt", false));
     result.put("netty-http4", new HttpSpanDecorator());
     result.put("netty-http", new HttpSpanDecorator());
-    registerMessaging(result, "paho", "mqtt", false);
-    registerMessagingWithSendOperation(result, "rabbitmq", "publish");
+    result.put("paho", MessagingSpanDecorator.create("paho", "mqtt", false));
+    result.put("rabbitmq", MessagingSpanDecorator.create("rabbitmq", "rabbitmq", true, "publish"));
     result.put("restlet", new HttpSpanDecorator());
     result.put("rest", new RestSpanDecorator());
     result.put("seda", new InternalSpanDecorator());
     result.put("servlet", new HttpSpanDecorator());
-    registerMessaging(result, "sjms", "jms");
+    result.put("sjms", MessagingSpanDecorator.create("sjms", "jms"));
     result.put("sql", new DbSpanDecorator("sql", DbSystemNameIncubatingValues.OTHER_SQL));
-    registerMessaging(result, "stomp");
+    result.put("stomp", MessagingSpanDecorator.create("stomp"));
     result.put("timer", new TimerSpanDecorator());
     result.put("undertow", new HttpSpanDecorator());
     result.put("vm", new InternalSpanDecorator());
     return result;
-  }
-
-  private static void registerMessaging(
-      Map<String, SpanDecorator> decorators,
-      String component,
-      String system,
-      boolean spanContextPropagated) {
-    registerMessaging(decorators, component, system, spanContextPropagated, "send");
-  }
-
-  private static void registerMessaging(
-      Map<String, SpanDecorator> decorators,
-      String component,
-      String system,
-      boolean spanContextPropagated,
-      String sendOperationName) {
-    decorators.put(
-        component,
-        new MessagingSpanDecorator(component, system, spanContextPropagated, sendOperationName));
-  }
-
-  private static void registerMessaging(
-      Map<String, SpanDecorator> decorators, String component, String system) {
-    registerMessaging(decorators, component, system, true);
-  }
-
-  private static void registerMessaging(Map<String, SpanDecorator> decorators, String component) {
-    registerMessaging(decorators, component, component);
-  }
-
-  private static void registerMessagingWithSendOperation(
-      Map<String, SpanDecorator> decorators, String component, String sendOperationName) {
-    registerMessaging(decorators, component, component, true, sendOperationName);
   }
 
   public SpanDecorator forComponent(String component) {

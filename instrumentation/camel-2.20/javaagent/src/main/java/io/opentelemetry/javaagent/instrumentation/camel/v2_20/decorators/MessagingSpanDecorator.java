@@ -43,11 +43,29 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
   private final boolean spanContextPropagated;
   private final String sendOperationName;
 
+  static MessagingSpanDecorator create(String component) {
+    return create(component, component);
+  }
+
+  static MessagingSpanDecorator create(String component, String system) {
+    return create(component, system, true);
+  }
+
+  static MessagingSpanDecorator create(
+      String component, String system, boolean spanContextPropagated) {
+    return new MessagingSpanDecorator(component, system, spanContextPropagated);
+  }
+
+  static MessagingSpanDecorator create(
+      String component, String system, boolean spanContextPropagated, String sendOperationName) {
+    return new MessagingSpanDecorator(component, system, spanContextPropagated, sendOperationName);
+  }
+
   MessagingSpanDecorator(String component, String system, boolean spanContextPropagated) {
     this(component, system, spanContextPropagated, "send");
   }
 
-  MessagingSpanDecorator(
+  private MessagingSpanDecorator(
       String component, String system, boolean spanContextPropagated, String sendOperationName) {
     this.component = component;
     this.system = system;

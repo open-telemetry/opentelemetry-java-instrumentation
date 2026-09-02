@@ -22,7 +22,7 @@ class MessagingMessageIdTest {
   @ParameterizedTest
   @MethodSource("jmsComponents")
   void jmsMessageId(String component, String system, boolean legacyMessageIdExpected) {
-    MessagingSpanDecorator decorator = new MessagingSpanDecorator(component, system, true);
+    MessagingSpanDecorator decorator = MessagingSpanDecorator.create(component, system);
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
     when(exchange.getIn()).thenReturn(message);
