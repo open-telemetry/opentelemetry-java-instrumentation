@@ -9,11 +9,11 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -131,7 +131,6 @@ public abstract class AbstractAws2RdsDataTest {
         "SELECT * FROM customers WHERE email = ?",
         "SELECT",
         "customers",
-        "SELECT * FROM customers WHERE email = ?",
         "SELECT customers",
         null);
     assertSqlDurationMetric();
@@ -153,7 +152,7 @@ public abstract class AbstractAws2RdsDataTest {
 
     assertRequestPath("/Execute");
     assertSqlSpan(
-        "ExecuteStatement", "/Execute", sql, "SELECT", "customers", sql, "SELECT customers", null);
+        "ExecuteStatement", "/Execute", sql, "SELECT", "customers", "SELECT customers", null);
     assertSqlDurationMetric();
   }
 
@@ -190,7 +189,6 @@ public abstract class AbstractAws2RdsDataTest {
         sql,
         "INSERT",
         "customers",
-        sql,
         isBatch ? "BATCH INSERT customers" : "INSERT customers",
         isBatch ? (long) parameterSetCount : null);
     assertSqlDurationMetric();
@@ -219,7 +217,6 @@ public abstract class AbstractAws2RdsDataTest {
                           sql,
                           "SELECT",
                           "missing_customers",
-                          sql,
                           "SELECT missing_customers",
                           null);
                       if (emitStableDatabaseSemconv()) {
@@ -274,10 +271,9 @@ public abstract class AbstractAws2RdsDataTest {
   private void assertSqlSpan(
       String operation,
       String path,
-      String legacyStatement,
+      String queryText,
       String legacyOperation,
       String legacyTable,
-      String stableQueryText,
       String stableQuerySummary,
       Long batchSize) {
     getTesting()
@@ -289,10 +285,9 @@ public abstract class AbstractAws2RdsDataTest {
                           commonAttributes(operation, path, 200, REQUEST_ID);
                       addDatabaseAttributes(
                           attributes,
-                          legacyStatement,
+                          queryText,
                           legacyOperation,
                           legacyTable,
-                          stableQueryText,
                           stableQuerySummary,
                           batchSize);
                       span.hasName(
@@ -308,50 +303,37 @@ public abstract class AbstractAws2RdsDataTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void addDatabaseAttributes(
       List<AttributeAssertion> attributes,
-      String legacyStatement,
+      String queryText,
       String legacyOperation,
       String legacyTable,
-      String stableQueryText,
       String stableQuerySummary,
       Long batchSize) {
-    if (emitStableDatabaseSemconv()) {
-      attributes.add(equalTo(DB_SYSTEM_NAME, "other_sql"));
-      attributes.add(equalTo(DB_NAMESPACE, DATABASE));
-      attributes.add(equalTo(DB_QUERY_TEXT, stableQueryText));
-      attributes.add(equalTo(DB_QUERY_SUMMARY, stableQuerySummary));
-      if (batchSize != null) {
-        attributes.add(equalTo(DB_OPERATION_BATCH_SIZE, batchSize));
-      }
-    } else {
-      attributes.add(equalTo(DB_SYSTEM, "other_sql"));
-      attributes.add(equalTo(DB_NAME, DATABASE));
-      attributes.add(equalTo(DB_STATEMENT, legacyStatement));
-      attributes.add(equalTo(DB_OPERATION, legacyOperation));
-      attributes.add(equalTo(DB_SQL_TABLE, legacyTable));
-    }
+    attributes.addAll(
+        asList(
+            equalTo(maybeStable(DB_SYSTEM), "other_sql"),
+            equalTo(maybeStable(DB_NAME), DATABASE),
+            equalTo(maybeStable(DB_STATEMENT), queryText),
+            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? stableQuerySummary : null),
+            equalTo(
+                maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : legacyOperation),
+            equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : legacyTable),
+            equalTo(DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? batchSize : null)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> commonAttributes(
       String operation, String path, Integer statusCode, String requestId) {
-    List<AttributeAssertion> attributes =
-        new ArrayList<>(
-            asList(
-                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                equalTo(SERVER_PORT, server.httpPort()),
-                equalTo(URL_FULL, server.httpUri() + path),
-                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                equalTo(RPC_SYSTEM, "aws-api"),
-                equalTo(RPC_SERVICE, AWS_SERVICE),
-                equalTo(RPC_METHOD, operation),
-                equalTo(stringKey("aws.agent"), "java-aws-sdk")));
-    if (statusCode != null) {
-      attributes.add(equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode));
-    }
-    if (requestId != null) {
-      attributes.add(equalTo(AWS_REQUEST_ID, requestId));
-    }
-    return attributes;
+    return new ArrayList<>(asList(
+        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+        equalTo(SERVER_PORT, server.httpPort()),
+        equalTo(URL_FULL, server.httpUri() + path),
+        equalTo(HTTP_REQUEST_METHOD, "POST"),
+        equalTo(RPC_SYSTEM, "aws-api"),
+        equalTo(RPC_SERVICE, AWS_SERVICE),
+        equalTo(RPC_METHOD, operation),
+        equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+        equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode != null ? statusCode.longValue() : null),
+        equalTo(AWS_REQUEST_ID, requestId)));
   }
 
   private void assertSqlDurationMetric() {
