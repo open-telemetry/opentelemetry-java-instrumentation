@@ -30,7 +30,6 @@ public final class ParseContext {
   @Nullable private String host;
   @Nullable private Integer port;
   @Nullable private String serverAddressGroup;
-  @Nullable private Integer serverAddressGroupPort;
   private boolean multiTarget;
   @Nullable private String user;
   @Nullable private String databaseName;
@@ -121,7 +120,6 @@ public final class ParseContext {
       return;
     }
     this.serverAddressGroup = serverAddressGroup.address();
-    this.serverAddressGroupPort = serverAddressGroup.port();
     multiTarget = true;
   }
 
@@ -357,7 +355,7 @@ public final class ParseContext {
     }
     builder.dbConnectionString(buildShortUrl(type, subtype, host, port));
     if (serverAddressGroup != null) {
-      builder.serverAddressGroup(serverAddressGroup).serverAddressGroupPort(serverAddressGroupPort);
+      builder.serverAddressGroup(serverAddressGroup);
     }
     return builder.build();
   }

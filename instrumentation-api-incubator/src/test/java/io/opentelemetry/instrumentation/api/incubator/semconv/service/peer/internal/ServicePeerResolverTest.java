@@ -109,20 +109,6 @@ class ServicePeerResolverTest {
   }
 
   @Test
-  void configuredTargetCanMatchACommonPort() {
-    String target = "node1,node2";
-    ServicePeerResolver r = createResolver(mapping(target + ":15432", "cluster", null));
-
-    AttributesBuilder attrs = Attributes.builder();
-    r.resolve(target, 15432, () -> null, attrs::put);
-    assertName("cluster", attrs.build());
-
-    attrs = Attributes.builder();
-    r.resolve(target, null, () -> null, attrs::put);
-    assertThat(attrs.build().isEmpty()).isTrue();
-  }
-
-  @Test
   void opaqueConfiguredTargetDoesNotAlsoMatchItsDriverName() {
     String target =
         "oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=h1)(PORT=1521))"

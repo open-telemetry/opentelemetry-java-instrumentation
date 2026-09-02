@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 public final class UrlParsingUtils {
 
   private static final Logger logger = Logger.getLogger(UrlParsingUtils.class.getName());
+  private static final int MAX_SERVER_ADDRESS_ENDPOINTS = 5;
 
   // Source: Regular Expressions Cookbook 2nd edition - 8.17.
   // Matches Standard, Mixed or Compressed notation in a wider body of text
@@ -370,9 +371,22 @@ public final class UrlParsingUtils {
     if (lastAt < authorityStart || lastAt < authorityEnd) {
       return false;
     }
+    if (isAtInQueryParameter(jdbcUrl, authorityEnd, lastAt)
+        || isAtInSemicolonParameter(jdbcUrl, authorityEnd, lastAt)) {
+      return false;
+    }
     int targetEnd = indexOfAny(jdbcUrl, lastAt + 1, '/', '?', '#', '&', ';');
     targetEnd = targetEnd < 0 ? jdbcUrl.length() : targetEnd;
     return splitHostList(jdbcUrl.substring(lastAt + 1, targetEnd)).size() > 1;
+  }
+
+  private static boolean isAtInSemicolonParameter(String url, int authorityEnd, int at) {
+    int parameterStart = Math.max(url.lastIndexOf(';', at), url.lastIndexOf('&', at));
+    if (parameterStart < authorityEnd) {
+      return false;
+    }
+    int equals = url.indexOf('=', parameterStart + 1);
+    return equals > parameterStart && equals < at;
   }
 
   // IPv6 brackets and address=(...) blocks may contain commas.
@@ -470,36 +484,49 @@ public final class UrlParsingUtils {
   public static ServerAddressGroup parseServerAddressGroup(
       String authority, @Nullable Integer defaultPort) {
     String sanitized = sanitizeHostList(authority);
-    if (sanitized == null || defaultPort == null) {
-      return sanitized == null ? null : new ServerAddressGroup(sanitized, null);
+    if (sanitized == null) {
+      return null;
     }
 
+    List<String> entries = splitHostList(sanitized);
     List<HostPort> endpoints = new ArrayList<>();
-    Integer commonPort = null;
-    boolean samePort = true;
-    for (String entry : splitHostList(sanitized)) {
+    boolean hasNonDefaultPort = false;
+    for (String entry : entries) {
       HostPort endpoint = extractSanitizedHostPort(entry);
-      if (endpoint.host().indexOf('\\') >= 0 || endpoint.host().startsWith("/")) {
-        return new ServerAddressGroup(sanitized, null);
+      if (endpoint.host().startsWith("/")) {
+        return new ServerAddressGroup(joinFirstEndpoints(entries));
       }
-      Integer effectivePort = endpoint.port() != null ? endpoint.port() : defaultPort;
+      Integer effectivePort =
+          endpoint.port() != null || defaultPort == null ? endpoint.port() : defaultPort;
       endpoints.add(new HostPort(endpoint.host(), effectivePort, endpoint.ipv6Address()));
-      if (commonPort == null) {
-        commonPort = effectivePort;
-      } else if (!commonPort.equals(effectivePort)) {
-        samePort = false;
+      if (defaultPort != null && !defaultPort.equals(effectivePort)) {
+        hasNonDefaultPort = true;
       }
     }
 
     StringBuilder address = new StringBuilder();
-    for (HostPort endpoint : endpoints) {
+    for (int i = 0; i < endpoints.size() && i < MAX_SERVER_ADDRESS_ENDPOINTS; i++) {
+      HostPort endpoint = endpoints.get(i);
       if (address.length() > 0) {
         address.append(',');
       }
-      appendHostPort(address, endpoint.host(), samePort ? null : endpoint.port());
+      appendHostPort(
+          address,
+          endpoint.host(),
+          defaultPort == null || hasNonDefaultPort ? endpoint.port() : null);
     }
-    Integer port = samePort && !defaultPort.equals(commonPort) ? commonPort : null;
-    return new ServerAddressGroup(address.toString(), port);
+    return new ServerAddressGroup(address.toString());
+  }
+
+  private static String joinFirstEndpoints(List<String> entries) {
+    StringBuilder address = new StringBuilder();
+    for (int i = 0; i < entries.size() && i < MAX_SERVER_ADDRESS_ENDPOINTS; i++) {
+      if (address.length() > 0) {
+        address.append(',');
+      }
+      address.append(entries.get(i));
+    }
+    return address.toString();
   }
 
   private static HostPort extractSanitizedHostPort(String entry) {
@@ -522,20 +549,13 @@ public final class UrlParsingUtils {
    */
   public static final class ServerAddressGroup {
     private final String address;
-    @Nullable private final Integer port;
 
-    private ServerAddressGroup(String address, @Nullable Integer port) {
+    private ServerAddressGroup(String address) {
       this.address = address;
-      this.port = port;
     }
 
     public String address() {
       return address;
-    }
-
-    @Nullable
-    public Integer port() {
-      return port;
     }
   }
 

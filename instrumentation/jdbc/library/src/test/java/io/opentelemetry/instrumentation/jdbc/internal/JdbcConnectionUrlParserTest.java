@@ -104,6 +104,24 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getServerPort()).isEqualTo(5432);
   }
 
+  @Test
+  void commaAfterAtInFinalQueryParameterDoesNotMarkSingletonAsMultiTarget() {
+    DbInfo dbInfo = parse("jdbc:postgresql://pg.host:5432/db?password=prefix@domain,suffix", null);
+
+    assertThat(dbInfo.isMultiTarget()).isFalse();
+    assertThat(dbInfo.getServerAddress()).isEqualTo("pg.host");
+    assertThat(dbInfo.getServerPort()).isEqualTo(5432);
+  }
+
+  @Test
+  void commaAfterAtInSqlServerPropertyDoesNotMarkSingletonAsMultiTarget() {
+    DbInfo dbInfo = parse("jdbc:sqlserver://ss.host;password=prefix@domain,suffix", null);
+
+    assertThat(dbInfo.isMultiTarget()).isFalse();
+    assertThat(dbInfo.getServerAddress()).isEqualTo("ss.host");
+    assertThat(dbInfo.getServerPort()).isEqualTo(1433);
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {
@@ -1012,8 +1030,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(info.getServerAddress()).isEqualTo("2001:db8::1");
     assertThat(info.getServerPort()).isEqualTo(2521);
     assertThat(info.getDbNamespace()).isEqualTo("orclsn");
-    assertThat(info.getServerAddressGroup()).isEqualTo("[2001:db8::1],[2001:db8::2]");
-    assertThat(info.getServerAddressGroupPort()).isEqualTo(2521);
+    assertThat(info.getServerAddressGroup()).isEqualTo("[2001:db8::1]:2521,[2001:db8::2]:2521");
   }
 
   private static Stream<Arguments> oracleArguments() {
@@ -2156,7 +2173,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(1433)
             .setNamespace("instance1|ssdb")
             .setName("instance1")
-            .setServerAddressGroup("ss.host1:1433,ss.host2\\instance2")
+            .setServerAddressGroup("ss.host1,ss.host2\\instance2")
             .build(),
         arg("jdbc:sqlserver://ss.host1;instanceName=instance1;failoverPartner=ss.host2")
             .setShortUrl("sqlserver://ss.host1:1433")
@@ -2261,72 +2278,108 @@ class JdbcConnectionUrlParserTest {
         argumentSet(
             "PostgreSQL shared non-default port",
             "jdbc:postgresql://pg.host1:15432,pg.host2:15432/pgdb",
-            "pg.host1,pg.host2",
-            15432),
+            "pg.host1:15432,pg.host2:15432"),
         argumentSet(
             "PostgreSQL default ports",
             "jdbc:postgresql://pg.host1,pg.host2:5432/pgdb",
-            "pg.host1,pg.host2",
-            null),
+            "pg.host1,pg.host2"),
         argumentSet(
             "PostgreSQL mixed IPv6 ports",
             "jdbc:postgresql://[2001:db8::1],[2001:db8::2]:15432/pgdb",
-            "[2001:db8::1]:5432,[2001:db8::2]:15432",
-            null),
+            "[2001:db8::1]:5432,[2001:db8::2]:15432"),
         argumentSet(
             "MySQL address blocks on default ports",
             "jdbc:mysql:replication://address=(host=source.host)(port=3306),"
                 + "address=(host=replica.host)/mydb",
-            "source.host,replica.host",
-            null),
+            "source.host,replica.host"),
         argumentSet(
             "MariaDB shared non-default port",
             "jdbc:mariadb:failover://mdb.host1:13306,mdb.host2:13306/mdbdb",
-            "mdb.host1,mdb.host2",
-            13306),
+            "mdb.host1:13306,mdb.host2:13306"),
         argumentSet(
             "SQL Server shared non-default port",
             "jdbc:sqlserver://primary.host:1444;failoverPartner=partner.host:1444",
-            "primary.host,partner.host",
-            1444),
+            "primary.host:1444,partner.host:1444"),
         argumentSet(
             "Oracle shared non-default port",
             "jdbc:oracle:thin:@(description="
                 + "(address=(protocol=tcp)(host=orcl.host1)(port=2521))"
                 + "(address=(protocol=tcp)(host=orcl.host2)(port=2521))"
                 + "(connect_data=(service_name=orclsn)))",
-            "orcl.host1,orcl.host2",
-            2521),
+            "orcl.host1:2521,orcl.host2:2521"),
         argumentSet(
             "Oracle Easy Connect default ports",
             "jdbc:oracle:thin:@//orcl.host1,orcl.host2/orclsn",
-            "orcl.host1,orcl.host2",
-            null),
+            "orcl.host1,orcl.host2"),
         argumentSet(
             "Oracle Easy Connect shared non-default port",
             "jdbc:oracle:thin:@tcps://orcl.host1:2521,orcl.host2:2521/orclsn",
-            "orcl.host1,orcl.host2",
-            2521),
+            "orcl.host1:2521,orcl.host2:2521"),
         argumentSet(
             "Oracle Easy Connect mixed IPv6 ports",
             "jdbc:oracle:thin:@//[2001:db8::1],[2001:db8::2]:2521/orclsn",
-            "[2001:db8::1]:1521,[2001:db8::2]:2521",
-            null),
+            "[2001:db8::1]:1521,[2001:db8::2]:2521"),
         argumentSet(
             "unknown database default keeps explicit ports",
             "jdbc:unknown://unknown.host1:1234,unknown.host2:1234/db",
-            "unknown.host1:1234,unknown.host2:1234",
-            null));
+            "unknown.host1:1234,unknown.host2:1234"),
+        argumentSet(
+            "unknown database address blocks become endpoints",
+            "jdbc:unknown://address=(host=unknown.host1)(port=1234),"
+                + "address=(host=unknown.host2)(port=1234)/db",
+            "unknown.host1:1234,unknown.host2:1234"),
+        argumentSet(
+            "PolarDB default ports",
+            "jdbc:polardb://polardb.host1:1521,polardb.host2/db",
+            "polardb.host1,polardb.host2"));
   }
 
   @ParameterizedTest
   @MethodSource("normalizedServerAddressGroupArguments")
-  void normalizesServerAddressGroupPorts(
-      String url, String expectedServerAddressGroup, Integer expectedServerAddressGroupPort) {
+  void normalizesServerAddressGroupPorts(String url, String expectedServerAddressGroup) {
     DbInfo dbInfo = parse(url, null);
 
     assertThat(dbInfo.getServerAddressGroup()).isEqualTo(expectedServerAddressGroup);
-    assertThat(dbInfo.getServerAddressGroupPort()).isEqualTo(expectedServerAddressGroupPort);
+  }
+
+  private static Stream<Arguments> limitedServerAddressGroupArguments() {
+    return Stream.of(
+        argumentSet(
+            "exactly five PostgreSQL endpoints",
+            "jdbc:postgresql://h1,h2,h3,h4,h5/db",
+            "h1,h2,h3,h4,h5"),
+        argumentSet(
+            "six PostgreSQL endpoints", "jdbc:postgresql://h1,h2,h3,h4,h5,h6/db", "h1,h2,h3,h4,h5"),
+        argumentSet(
+            "non-default MariaDB port after the fifth endpoint",
+            "jdbc:mariadb:failover://h1,h2,h3,h4,h5,h6:13306/db",
+            "h1:3306,h2:3306,h3:3306,h4:3306,h5:3306"),
+        argumentSet(
+            "six Oracle address blocks",
+            "jdbc:oracle:thin:@(description=(address_list="
+                + "(address=(host=h1)(port=1521))"
+                + "(address=(host=h2)(port=1521))"
+                + "(address=(host=h3)(port=1521))"
+                + "(address=(host=h4)(port=1521))"
+                + "(address=(host=h5)(port=1521))"
+                + "(address=(host=h6)(port=1521)))"
+                + "(connect_data=(service_name=orclsn)))",
+            "h1,h2,h3,h4,h5"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("limitedServerAddressGroupArguments")
+  void limitsServerAddressGroupAfterInspectingTheCompleteList(
+      String url, String expectedServerAddressGroup) {
+    assertThat(parse(url, null).getServerAddressGroup()).isEqualTo(expectedServerAddressGroup);
+  }
+
+  @Test
+  void invalidEndpointAfterTheFifthEndpointFailsClosed() {
+    DbInfo dbInfo = parse("jdbc:postgresql://h1,h2,h3,h4,h5,unexpected=value/db", null);
+
+    assertThat(dbInfo.isMultiTarget()).isTrue();
+    assertThat(dbInfo.getServerAddressGroup()).isNull();
   }
 
   @ParameterizedTest
@@ -2374,7 +2427,6 @@ class JdbcConnectionUrlParserTest {
     assertThat(info.getServerAddress()).isEqualTo(expected.getServerAddress());
     assertThat(info.getServerPort()).isEqualTo(expected.getServerPort());
     assertThat(info.getServerAddressGroup()).isEqualTo(expected.getServerAddressGroup());
-    assertThat(info.getServerAddressGroupPort()).isEqualTo(expected.getServerAddressGroupPort());
     assertThat(info.isMultiTarget()).isEqualTo(expected.isMultiTarget());
     assertThat(info.getDbUser()).isEqualTo(expected.getDbUser());
     assertThat(info.getDbNamespace()).isEqualTo(expected.getDbNamespace());
@@ -2406,7 +2458,6 @@ class JdbcConnectionUrlParserTest {
               .serverAddress(builder.host)
               .serverPort(builder.port)
               .serverAddressGroup(builder.serverAddressGroup)
-              .serverAddressGroupPort(builder.serverAddressGroupPort)
               .multiTarget(builder.multiTarget || builder.serverAddressGroup != null)
               .build();
     }
@@ -2429,7 +2480,6 @@ class JdbcConnectionUrlParserTest {
     String namespace;
     String name;
     String serverAddressGroup;
-    Integer serverAddressGroupPort;
     boolean multiTarget;
 
     ParseTestArgumentBuilder(String url) {
@@ -2491,11 +2541,6 @@ class JdbcConnectionUrlParserTest {
 
     ParseTestArgumentBuilder setServerAddressGroup(String serverAddressGroup) {
       this.serverAddressGroup = serverAddressGroup;
-      return this;
-    }
-
-    ParseTestArgumentBuilder setServerAddressGroupPort(int serverAddressGroupPort) {
-      this.serverAddressGroupPort = serverAddressGroupPort;
       return this;
     }
 

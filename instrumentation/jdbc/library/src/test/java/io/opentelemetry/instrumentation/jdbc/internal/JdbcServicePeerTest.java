@@ -86,27 +86,6 @@ class JdbcServicePeerTest {
     }
   }
 
-  @Test
-  void commonPortGroupTargetCanBeMatchedExactly() {
-    String target = "pg.host1,pg.host2";
-    DbRequest request =
-        request(
-            DbInfo.builder()
-                .dbSystemName(POSTGRESQL)
-                .serverAddress("localhost")
-                .serverPort(5432)
-                .serverAddressGroup(target)
-                .serverAddressGroupPort(15432)
-                .build());
-
-    if (emitStableDatabaseSemconv()) {
-      assertThat(resolve(request, target + ":15432"))
-          .containsOnly(entry(maybeStablePeerService(), "myService"));
-    } else {
-      assertThat(resolve(request, target + ":15432")).isEmpty();
-    }
-  }
-
   private static DbRequest request(DbInfo dbInfo) {
     return DbRequest.create(dbInfo, "SELECT 1", false);
   }
