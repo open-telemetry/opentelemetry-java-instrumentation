@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -16,10 +17,10 @@ import org.apache.geode.cache.client.PoolManager;
 // Public because advice may be inlined into Geode classes in a different package.
 public class GeodeServerTargets {
 
-  private static final VirtualField<PoolFactory, GeodeServerTarget.Builder> CONFIGURED_TARGETS =
-      VirtualField.find(PoolFactory.class, GeodeServerTarget.Builder.class);
-  private static final VirtualField<Pool, GeodeServerTarget> POOL_TARGETS =
-      VirtualField.find(Pool.class, GeodeServerTarget.class);
+  private static final VirtualField<PoolFactory, GeodeServerTargetBuilder> CONFIGURED_TARGETS =
+      VirtualField.find(PoolFactory.class, GeodeServerTargetBuilder.class);
+  private static final VirtualField<Pool, DbServerTarget> POOL_TARGETS =
+      VirtualField.find(Pool.class, DbServerTarget.class);
 
   public static void addServer(PoolFactory poolFactory, @Nullable String host, int port) {
     builder(poolFactory).addServer(host, port);
@@ -38,7 +39,7 @@ public class GeodeServerTargets {
   }
 
   public static void copyConfiguration(PoolFactory poolFactory, Pool sourcePool) {
-    GeodeServerTarget.Builder builder = builder(poolFactory);
+    GeodeServerTargetBuilder builder = builder(poolFactory);
     builder.reset();
     builder.setServerGroup(sourcePool.getServerGroup());
     for (InetSocketAddress server : sourcePool.getServers()) {
@@ -57,15 +58,15 @@ public class GeodeServerTargets {
   }
 
   @Nullable
-  static GeodeServerTarget get(Region<?, ?> region) {
+  static DbServerTarget get(Region<?, ?> region) {
     Pool pool = PoolManager.find(region);
     return pool == null ? null : POOL_TARGETS.get(pool);
   }
 
-  private static GeodeServerTarget.Builder builder(PoolFactory poolFactory) {
-    GeodeServerTarget.Builder builder = CONFIGURED_TARGETS.get(poolFactory);
+  private static GeodeServerTargetBuilder builder(PoolFactory poolFactory) {
+    GeodeServerTargetBuilder builder = CONFIGURED_TARGETS.get(poolFactory);
     if (builder == null) {
-      builder = GeodeServerTarget.builder();
+      builder = new GeodeServerTargetBuilder();
       CONFIGURED_TARGETS.set(poolFactory, builder);
     }
     return builder;

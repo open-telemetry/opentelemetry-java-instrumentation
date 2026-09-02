@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
+  testImplementation(project(":instrumentation-api-incubator"))
   testImplementation(project(":instrumentation:geode-1.4:javaagent"))
 }

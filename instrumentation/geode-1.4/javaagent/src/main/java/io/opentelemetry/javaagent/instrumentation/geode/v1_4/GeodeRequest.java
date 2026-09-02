@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import javax.annotation.Nullable;
 import org.apache.geode.cache.Region;
 
@@ -31,5 +32,5 @@ abstract class GeodeRequest {
   abstract String getQueryText();
 
   @Nullable
-  abstract GeodeServerTarget getServerTarget();
+  abstract DbServerTarget getServerTarget();
 }

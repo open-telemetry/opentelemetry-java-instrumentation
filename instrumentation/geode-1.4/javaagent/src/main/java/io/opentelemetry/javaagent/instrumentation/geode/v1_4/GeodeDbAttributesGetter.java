@@ -12,6 +12,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
@@ -87,7 +88,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     if (!emitStableDatabaseSemconv()) {
       return GeodeServerAddress.get(request.getRegion()).address();
     }
-    GeodeServerTarget target = request.getServerTarget();
+    DbServerTarget target = request.getServerTarget();
     return target == null ? null : target.getAddress();
   }
 
@@ -97,7 +98,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     if (!emitStableDatabaseSemconv()) {
       return GeodeServerAddress.get(request.getRegion()).port();
     }
-    GeodeServerTarget target = request.getServerTarget();
+    DbServerTarget target = request.getServerTarget();
     return target == null ? null : target.getPort();
   }
 }
