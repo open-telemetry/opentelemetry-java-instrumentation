@@ -24,7 +24,7 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
      -jar myapp.jar
 ```
 
-Starting with 3.0, the stable pre-defined metrics are always enabled by default, the non-stable metrics are opt-in using the `otel.jmx.experimental.include` property. For example:
+Starting with 3.0, the stable pre-defined metrics are always enabled by default, the non-stable metrics are opt-in using the `otel.jmx.experimental.included` property. For example:
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
@@ -540,5 +540,5 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 - metrics definitions must be split between stable and unstable metrics with the following convention:
   - `xxx.yaml` : stable metrics for `xxx` target system, where `xxx` is identifier for system
   - `xxx_unstable.yaml` : non-stable (experimental, development, ...) metrics for `xxx` target system, where `xxx` is identifier for system
-  - following this convention allows to automatically load stable metrics and provide per-system opt-in for unstable metrics with `otel.jmx.metrics.experimental.include` configuration option.
+  - following this convention allows to automatically load stable metrics and provide per-system opt-in for unstable metrics with `otel.jmx.experimental.included` configuration option.
   - metric promotion to stable should be done by moving definitions from `xxx_unstable.yaml` to `xxx.yaml` and updating the stability of the metrics definitions in the `model` subfolder.

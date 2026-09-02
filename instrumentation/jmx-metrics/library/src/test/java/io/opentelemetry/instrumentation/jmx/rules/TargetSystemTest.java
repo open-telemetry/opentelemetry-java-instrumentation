@@ -199,7 +199,7 @@ public class TargetSystemTest {
    */
   protected Map<String, String> otelConfigPropertiesExperimentalOptIn(String experimentalInclude) {
     Map<String, String> config = commonOtelConfig();
-    config.put("otel.jmx.experimental.include", experimentalInclude);
+    config.put("otel.jmx.experimental.included", experimentalInclude);
     // v3 preview, not necessary anymore after 3.0 release
     config.put("otel.instrumentation.common.v3-preview", "true");
     return config;

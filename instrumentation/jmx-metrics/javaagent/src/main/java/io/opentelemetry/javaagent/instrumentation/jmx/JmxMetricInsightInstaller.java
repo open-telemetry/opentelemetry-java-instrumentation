@@ -14,7 +14,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.api.config.IncludeExcludeBuilder;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
@@ -60,7 +59,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
     if (!systemsConfig.isEmpty()) {
       logger.log(
           WARNING,
-          "'otel.jmx.target.system' is deprecated and will be removed in 3.x. Use 'otel.jmx.experimental.include' with v3 preview instead.");
+          "'otel.jmx.target.system' is deprecated and will be removed in 3.x. Use 'otel.jmx.experimental.included' with v3 preview instead.");
     }
 
     boolean v3Preview = AgentCommonConfig.get().isV3Preview();
@@ -70,12 +69,10 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
       List<String> unstableInclude =
           config.get("experimental").getScalarList("included", String.class, emptyList());
-      IncludeExcludeBuilder builder = IncludeExclude.builder();
       if (!unstableInclude.isEmpty()) {
         // only include explicitly opted-in, others will be excluded
-        builder.setIncluded(unstableInclude);
+        jmx.addUnstableMetrics(IncludeExclude.builder().setIncluded(unstableInclude).build());
       }
-      jmx.addUnstableMetrics(builder.build());
 
     } else {
       // pre-v3 compatibility
@@ -107,8 +104,10 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
       // Using the same filter to include both the stable and unstable metrics allowing to load
       // all embedded metrics definitions per system.
-      IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
-      jmx.addStableMetrics(systems).addUnstableMetrics(systems);
+      if (!systemsConfig.isEmpty()) {
+        IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
+        jmx.addStableMetrics(systems).addUnstableMetrics(systems);
+      }
     }
 
     // include/exclude metrics by name
