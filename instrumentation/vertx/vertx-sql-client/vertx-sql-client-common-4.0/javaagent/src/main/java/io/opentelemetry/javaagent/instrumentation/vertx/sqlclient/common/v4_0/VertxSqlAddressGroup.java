@@ -62,18 +62,11 @@ public class VertxSqlAddressGroup {
     Integer defaultPort = defaultPort(dbSystem);
     if (endpoints.size() == 1) {
       Endpoint endpoint = endpoints.get(0);
-      if (endpoint.unixSocket) {
-        address = endpoint.host;
-        port = null;
-      } else if (defaultPort == null) {
-        StringBuilder value = new StringBuilder();
-        appendHostPort(value, endpoint.host, endpoint.port);
-        address = value.toString();
-        port = null;
-      } else {
-        address = endpoint.host;
-        port = endpoint.port != null && !endpoint.port.equals(defaultPort) ? endpoint.port : null;
-      }
+      address = endpoint.host;
+      port =
+          !endpoint.unixSocket && endpoint.port != null && !endpoint.port.equals(defaultPort)
+              ? endpoint.port
+              : null;
       return;
     }
 

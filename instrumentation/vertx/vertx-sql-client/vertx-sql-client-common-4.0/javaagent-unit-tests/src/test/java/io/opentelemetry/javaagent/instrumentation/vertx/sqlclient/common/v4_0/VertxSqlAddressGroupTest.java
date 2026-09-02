@@ -111,8 +111,8 @@ class VertxSqlAddressGroupTest {
         VertxSqlAddressGroup.of(
             new SqlConnectOptions().setHost("discovery.example").setPort(1234), "other_sql");
 
-    assertThat(addressGroup.getAddress()).isEqualTo("discovery.example:1234");
-    assertThat(addressGroup.getPort()).isNull();
+    assertThat(addressGroup.getAddress()).isEqualTo("discovery.example");
+    assertThat(addressGroup.getPort()).isEqualTo(1234);
   }
 
   @Test
