@@ -39,6 +39,7 @@ import reactor.core.publisher.Mono;
 
 public final class CouchbaseRequestTracer implements RequestTracer {
 
+  private static final String COUCHBASE_COLLECTION_NAME = "couchbase.collection.name";
   private static final String DB_COUCHBASE_COLLECTION = "db.couchbase.collection";
   private static final String NET_PEER_NAME = "net.peer.name";
   private static final String NET_PEER_PORT = "net.peer.port";
@@ -189,7 +190,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
           || key.equals("db.query.summary")) {
         return key;
       }
-      if (key.equals(DB_COUCHBASE_COLLECTION)) {
+      if (key.equals(COUCHBASE_COLLECTION_NAME) || key.equals(DB_COUCHBASE_COLLECTION)) {
         return DB_COLLECTION_NAME.getKey();
       }
       if (key.equals(DB_NAME.getKey())) {

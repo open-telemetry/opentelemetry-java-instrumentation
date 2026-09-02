@@ -13,12 +13,17 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -28,7 +33,9 @@ import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.ClusterOptions;
 import com.couchbase.client.java.Collection;
+import com.couchbase.client.java.env.ClusterEnvironment;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -37,11 +44,14 @@ import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.Couchbas
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -115,6 +125,54 @@ class CouchbaseClient34Test {
                           equalTo(SERVER_ADDRESS, serverAddress()),
                           equalTo(SERVER_PORT, serverPort()));
                 },
+                span -> span.hasName("dispatch_to_server")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"DATABASE", "DATABASE_DUP"})
+  void latestCollectionNameUsesStableSemconv(String conventionName)
+      throws ReflectiveOperationException {
+    assumeTrue(testLatestDeps() && emitStableDatabaseSemconv() && !EXPERIMENTAL_ATTRIBUTES);
+
+    ClusterEnvironment.Builder environmentBuilder = ClusterEnvironment.builder();
+    Class<?> conventionClass =
+        Class.forName("com.couchbase.client.core.cnc.tracing.ObservabilitySemanticConvention");
+    Object convention =
+        conventionClass.getMethod("valueOf", String.class).invoke(null, conventionName);
+    environmentBuilder
+        .getClass()
+        .getMethod("observabilitySemanticConventions", List.class)
+        .invoke(environmentBuilder, singletonList(convention));
+    ClusterEnvironment environment = environmentBuilder.build();
+    cleanup.deferCleanup(environment::shutdown);
+    Cluster latestCluster =
+        Cluster.connect(
+            connectionString,
+            ClusterOptions.clusterOptions(couchbase.getUsername(), couchbase.getPassword())
+                .environment(environment));
+    cleanup.deferCleanup(latestCluster::disconnect);
+    Bucket bucket = latestCluster.bucket("test");
+    Collection latestCollection = bucket.defaultCollection();
+    bucket.waitUntilReady(Duration.ofSeconds(30));
+
+    try {
+      latestCollection.get("id");
+    } catch (DocumentNotFoundException ignored) {
+      // Expected
+    }
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("get _default")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "couchbase"),
+                            equalTo(DB_NAMESPACE, "test"),
+                            equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_COLLECTION_NAME, "_default"),
+                            equalTo(SERVER_ADDRESS, serverAddress()),
+                            equalTo(SERVER_PORT, serverPort())),
                 span -> span.hasName("dispatch_to_server")));
   }
 
