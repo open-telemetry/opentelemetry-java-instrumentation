@@ -128,8 +128,8 @@ class VertxRedisServerTargetsTest {
                 .addConnectionString("redis://node2:7000")
                 .addConnectionString("redis://node1:7000"));
 
-    assertThat(target.getAddress()).isEqualTo("node1,node2");
-    assertThat(target.getPort()).isEqualTo(7000);
+    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7000");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test

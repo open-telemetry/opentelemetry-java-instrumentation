@@ -120,8 +120,8 @@ class VertxRedisServerTargetsTest {
                 .addConnectionString("redis://node2:7000")
                 .addConnectionString("redis://node1:7000"));
 
-    assertThat(target.getAddress()).isEqualTo("node1,node2");
-    assertThat(target.getPort()).isEqualTo(7000);
+    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7000");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -168,8 +168,8 @@ class VertxRedisServerTargetsTest {
                 .addConnectionString("redis://z-master:6380")
                 .addConnectionString("redis://a-replica:6380"));
 
-    assertThat(target.getAddress()).isEqualTo("z-master,a-replica");
-    assertThat(target.getPort()).isEqualTo(6380);
+    assertThat(target.getAddress()).isEqualTo("z-master:6380,a-replica:6380");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -180,8 +180,8 @@ class VertxRedisServerTargetsTest {
                 .addConnectionString("redis://z-master:6380")
                 .addConnectionString("redis://a-replica:6380"));
 
-    assertThat(target.getAddress()).isEqualTo("z-master,a-replica");
-    assertThat(target.getPort()).isEqualTo(6380);
+    assertThat(target.getAddress()).isEqualTo("z-master:6380,a-replica:6380");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
