@@ -27,7 +27,7 @@ public class AwsLambdaFunctionInstrumenter {
 
   private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
   private static final String GET_XRAY_TRACE_ID_METHOD = "getXrayTraceId";
-  private static final ClassValue<MethodHandleHolder> GET_XRAY_TRACE_ID =
+  private static final ClassValue<MethodHandleHolder> getXrayTraceIdMethodHandleCache =
       new ClassValue<MethodHandleHolder>() {
         @Override
         protected MethodHandleHolder computeValue(Class<?> type) {
@@ -93,7 +93,8 @@ public class AwsLambdaFunctionInstrumenter {
     if (awsContext == null) {
       return null;
     }
-    MethodHandle getXrayTraceId = GET_XRAY_TRACE_ID.get(awsContext.getClass()).methodHandle;
+    MethodHandle getXrayTraceId =
+        getXrayTraceIdMethodHandleCache.get(awsContext.getClass()).methodHandle;
     if (getXrayTraceId == null) {
       return null;
     }
@@ -136,7 +137,7 @@ public class AwsLambdaFunctionInstrumenter {
   }
 
   private static class MethodHandleHolder {
-    @Nullable final MethodHandle methodHandle;
+    @Nullable private final MethodHandle methodHandle;
 
     private MethodHandleHolder(@Nullable MethodHandle methodHandle) {
       this.methodHandle = methodHandle;
