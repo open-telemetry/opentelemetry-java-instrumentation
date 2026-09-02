@@ -5,10 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
+import com.mongodb.UnixServerAddress;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.connection.ClusterSettings;
@@ -102,6 +105,29 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
     runCommand(createClient(settings, clusterId));
 
     assertFindSpan("mongodb+srv://cluster0.example.invalid", null);
+  }
+
+  @Test
+  void relativeUnixSocketIsReportedAsTheStableTarget() {
+    try (ConfiguredClient client =
+        createClient(singletonList(new UnixServerAddress("mongodb.sock")))) {
+      runCommand(client);
+    }
+
+    assertFindSpan("mongodb.sock", null);
+  }
+
+  @Test
+  void relativeUnixSocketInSeedListOmitsTheStableTarget() {
+    try (ConfiguredClient client =
+        createClient(
+            asList(
+                new UnixServerAddress("mongodb.sock"),
+                new ServerAddress("configured.example", 27017)))) {
+      runCommand(client);
+    }
+
+    assertFindSpan(null, null);
   }
 
   private static Method srvHostSetter() {

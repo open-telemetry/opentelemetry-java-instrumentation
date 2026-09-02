@@ -23,6 +23,7 @@ public final class MongoServerTarget {
   private static final int DEFAULT_PORT = 27017;
   private static final int MAX_ENDPOINTS = 5;
   private static final String SRV_SCHEME = "mongodb+srv://";
+  private static final String UNIX_SERVER_ADDRESS_CLASS = "com.mongodb.UnixServerAddress";
 
   // the driver reports its default port for socket paths, but the port is not part of the target
   private static final String UNIX_SOCKET_SUFFIX = ".sock";
@@ -36,7 +37,7 @@ public final class MongoServerTarget {
       return null;
     }
     String host = sanitizeSrvHost(srvHost);
-    return host.isEmpty() || !isSafeHost(host)
+    return host.isEmpty() || !isSafeHost(host, false)
         ? null
         : new MongoServerTarget(SRV_SCHEME + host, null);
   }
@@ -69,7 +70,7 @@ public final class MongoServerTarget {
       if (host == null) {
         return null;
       }
-      boolean unixSocket = isUnixSocket(host);
+      boolean unixSocket = isUnixSocket(seed, host);
       hasUnixSocket |= unixSocket;
       Integer port = unixSocket ? null : seed.getPort();
       if (!containsEndpoint(hosts, ports, host, port)) {
@@ -133,7 +134,7 @@ public final class MongoServerTarget {
       return null;
     }
     String host = stripBrackets(seed.getHost());
-    return host.isEmpty() || !isSafeHost(host) ? null : host;
+    return host.isEmpty() || !isSafeHost(host, isUnixSocket(seed, host)) ? null : host;
   }
 
   // server.address uses the host without URI brackets around IPv6 literals
@@ -159,10 +160,9 @@ public final class MongoServerTarget {
     return credentialsSeparator < 0 ? host : host.substring(credentialsSeparator + 1);
   }
 
-  private static boolean isSafeHost(String host) {
-    if (isUnixSocket(host)) {
-      return host.startsWith("/")
-          && host.indexOf('@') < 0
+  private static boolean isSafeHost(String host, boolean unixSocket) {
+    if (unixSocket) {
+      return host.indexOf('@') < 0
           && host.indexOf('%') < 0
           && host.indexOf('=') < 0
           && host.indexOf('?') < 0
@@ -237,8 +237,9 @@ public final class MongoServerTarget {
         || decoded == '=';
   }
 
-  private static boolean isUnixSocket(String host) {
-    return host.startsWith("/") && host.endsWith(UNIX_SOCKET_SUFFIX);
+  private static boolean isUnixSocket(ServerAddress seed, String host) {
+    return seed.getClass().getName().equals(UNIX_SERVER_ADDRESS_CLASS)
+        || (host.startsWith("/") && host.endsWith(UNIX_SOCKET_SUFFIX));
   }
 
   public String getAddress() {
