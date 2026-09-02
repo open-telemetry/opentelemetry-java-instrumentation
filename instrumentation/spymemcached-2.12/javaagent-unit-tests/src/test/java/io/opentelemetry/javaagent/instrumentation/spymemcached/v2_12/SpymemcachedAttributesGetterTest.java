@@ -33,14 +33,14 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
-  void sharedCustomPortIsReportedSeparatelyInStableTelemetry() {
+  void customPortsStayInlineInStableMultiEndpointTelemetry() {
     SpymemcachedRequest request =
         request(asList(node("one.example", 11212), node("two.example", 11212)));
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
     assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "one.example,two.example" : null);
-    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? 11212 : null);
+        .isEqualTo(emitStableDatabaseSemconv() ? "one.example:11212,two.example:11212" : null);
+    assertThat(getter.getServerPort(request)).isNull();
   }
 
   @Test

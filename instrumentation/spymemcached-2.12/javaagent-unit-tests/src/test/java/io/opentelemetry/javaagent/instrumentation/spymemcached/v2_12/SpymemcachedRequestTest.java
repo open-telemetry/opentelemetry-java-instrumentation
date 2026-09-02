@@ -82,9 +82,13 @@ class SpymemcachedRequestTest {
 
     Attributes result = attributes.build();
     assertThat(result.get(SERVER_ADDRESS))
-        .isEqualTo(emitStableDatabaseSemconv() ? "one.example,two.example" : "selected.example");
-    assertThat(result.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? 11212L : 11213L);
-    assertThat(request.getServerTarget().getAddress()).isEqualTo("one.example,two.example");
+        .isEqualTo(
+            emitStableDatabaseSemconv()
+                ? "one.example:11212,two.example:11212"
+                : "selected.example");
+    assertThat(result.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 11213L);
+    assertThat(request.getServerTarget().getAddress())
+        .isEqualTo("one.example:11212,two.example:11212");
   }
 
   @Test

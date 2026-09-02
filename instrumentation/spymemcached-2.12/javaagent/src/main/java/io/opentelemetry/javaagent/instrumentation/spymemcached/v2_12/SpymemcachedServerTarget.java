@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 public class SpymemcachedServerTarget {
 
   private static final int DEFAULT_PORT = 11211;
-  private static final int MAX_ADDRESS_LENGTH = 255;
+  private static final int MAX_ENDPOINT_COUNT = 5;
 
   private final String address;
   @Nullable private final Integer port;
@@ -27,34 +27,26 @@ public class SpymemcachedServerTarget {
     }
     List<String> hosts = new ArrayList<>(nodes.size());
     List<Integer> ports = new ArrayList<>(nodes.size());
-    int commonPort = -1;
-    boolean hasMixedPorts = false;
+    boolean hasNonDefaultPort = false;
     for (InetSocketAddress node : nodes) {
       String host = node == null ? null : sanitizeHost(node.getHostString());
       if (host == null || node.getPort() <= 0) {
         return null;
       }
-      if (commonPort == -1) {
-        commonPort = node.getPort();
-      } else if (commonPort != node.getPort()) {
-        hasMixedPorts = true;
-      }
+      hasNonDefaultPort |= node.getPort() != DEFAULT_PORT;
       hosts.add(host);
       ports.add(node.getPort());
     }
 
-    if (hasMixedPorts) {
+    if (nodes.size() > 1 && hasNonDefaultPort) {
       List<String> endpoints = new ArrayList<>(hosts.size());
       for (int i = 0; i < hosts.size(); i++) {
         endpoints.add(endpoint(hosts.get(i), ports.get(i)));
       }
-      String address = joinEndpoints(endpoints);
-      return address == null ? null : new SpymemcachedServerTarget(address, null);
+      return new SpymemcachedServerTarget(joinEndpoints(endpoints), null);
     }
-    String address = joinEndpoints(hosts);
-    return address == null
-        ? null
-        : new SpymemcachedServerTarget(address, commonPort == DEFAULT_PORT ? null : commonPort);
+    return new SpymemcachedServerTarget(
+        joinEndpoints(hosts), hasNonDefaultPort ? ports.get(0) : null);
   }
 
   private SpymemcachedServerTarget(String address, @Nullable Integer port) {
@@ -81,20 +73,16 @@ public class SpymemcachedServerTarget {
     return endpoint.append(':').append(port).toString();
   }
 
-  @Nullable
   private static String joinEndpoints(List<String> endpoints) {
     StringBuilder address = new StringBuilder();
-    for (String endpoint : endpoints) {
-      int separatorLength = address.length() == 0 ? 0 : 1;
-      if (address.length() + separatorLength + endpoint.length() > MAX_ADDRESS_LENGTH) {
-        break;
-      }
-      if (separatorLength != 0) {
+    int endpointCount = Math.min(endpoints.size(), MAX_ENDPOINT_COUNT);
+    for (int i = 0; i < endpointCount; i++) {
+      if (address.length() != 0) {
         address.append(',');
       }
-      address.append(endpoint);
+      address.append(endpoints.get(i));
     }
-    return address.length() == 0 ? null : address.toString();
+    return address.toString();
   }
 
   @Nullable

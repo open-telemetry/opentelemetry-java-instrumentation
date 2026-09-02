@@ -14,7 +14,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -49,13 +48,13 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
-  void sharedCustomPortIsReportedSeparately() {
+  void customPortsStayInlineInAList() {
     SpymemcachedServerTarget target =
         SpymemcachedServerTarget.create(
             asList(node("one.example", 11212), node("two.example", 11212)));
 
-    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
-    assertThat(target.getPort()).isEqualTo(11212);
+    assertThat(target.getAddress()).isEqualTo("one.example:11212,two.example:11212");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -88,37 +87,55 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
-  void endpointListAtLengthLimitIsPreserved() {
-    String first = repeated("a", 127);
-    String second = repeated("b", 127);
-
+  void fiveEndpointsArePreserved() {
     SpymemcachedServerTarget target =
         SpymemcachedServerTarget.create(
-            asList(node(first, 11211), node(second, 11211), node("overflow", 11211)));
+            asList(
+                node("one.example", 11211),
+                node("two.example", 11211),
+                node("three.example", 11211),
+                node("four.example", 11211),
+                node("five.example", 11211)));
 
-    assertThat(target.getAddress()).isEqualTo(first + "," + second);
-    assertThat(target.getAddress()).hasSize(255);
+    assertThat(target.getAddress())
+        .isEqualTo("one.example,two.example,three.example,four.example,five.example");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void endpointListOverflowRemovesCompleteEndpointsFromTheEnd() {
-    String first = repeated("a", 247);
-
+  void sixthEndpointIsOmitted() {
     SpymemcachedServerTarget target =
         SpymemcachedServerTarget.create(
-            asList(node(first, 11211), node("two.example", 11212), node("three.example", 11211)));
+            asList(
+                node("one.example", 11211),
+                node("two.example", 11211),
+                node("three.example", 11211),
+                node("four.example", 11211),
+                node("five.example", 11211),
+                node("six.example", 11211)));
 
-    assertThat(target.getAddress()).isEqualTo(first + ":11211");
+    assertThat(target.getAddress())
+        .isEqualTo("one.example,two.example,three.example,four.example,five.example");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void firstEndpointThatExceedsLengthLimitHasNoTarget() {
-    assertThat(
-            SpymemcachedServerTarget.create(
-                asList(node(repeated("a", 250), 11211), node("two.example", 11212))))
-        .isNull();
+  void customPortOnSixthEndpointKeepsIncludedDefaultPortsInline() {
+    SpymemcachedServerTarget target =
+        SpymemcachedServerTarget.create(
+            asList(
+                node("one.example", 11211),
+                node("two.example", 11211),
+                node("three.example", 11211),
+                node("four.example", 11211),
+                node("five.example", 11211),
+                node("six.example", 11212)));
+
+    assertThat(target.getAddress())
+        .isEqualTo(
+            "one.example:11211,two.example:11211,three.example:11211,"
+                + "four.example:11211,five.example:11211");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -131,6 +148,16 @@ class SpymemcachedServerTargetTest {
   void nodeThatCannotBeNamedDropsTheNodeList() {
     assertThat(
             SpymemcachedServerTarget.create(asList(node("one.example", 11211), node("  ", 11212))))
+        .isNull();
+    assertThat(
+            SpymemcachedServerTarget.create(
+                asList(
+                    node("one.example", 11211),
+                    node("two.example", 11211),
+                    node("three.example", 11211),
+                    node("four.example", 11211),
+                    node("five.example", 11211),
+                    node("  ", 11211))))
         .isNull();
     assertThat(SpymemcachedServerTarget.create(singletonList(node("one.example", 0)))).isNull();
     assertThat(SpymemcachedServerTarget.create(asList(node("one.example", 11211), null))).isNull();
@@ -155,13 +182,13 @@ class SpymemcachedServerTargetTest {
   }
 
   @Test
-  void ipv6NodesWithASharedPortDoNotNeedBrackets() {
+  void ipv6NodesWithCustomPortsAreBracketed() {
     SpymemcachedServerTarget target =
         SpymemcachedServerTarget.create(
             asList(node("2001:db8::1", 11212), node("2001:db8::2", 11212)));
 
-    assertThat(target.getAddress()).isEqualTo("2001:db8::1,2001:db8::2");
-    assertThat(target.getPort()).isEqualTo(11212);
+    assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:11212,[2001:db8::2]:11212");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -236,9 +263,5 @@ class SpymemcachedServerTargetTest {
 
   private static InetSocketAddress node(String host, int port) {
     return InetSocketAddress.createUnresolved(host, port);
-  }
-
-  private static String repeated(String value, int count) {
-    return String.join("", Collections.nCopies(count, value));
   }
 }

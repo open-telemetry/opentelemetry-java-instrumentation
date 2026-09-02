@@ -1137,14 +1137,14 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent", () -> assertThat(memcached.get(key("test-several-nodes"))).isNull());
 
-    String address = configuredAddress(memcachedAddress, memcachedLiteralAddress);
-    String target = address + ":" + memcachedAddress.getPort();
+    String address =
+        configuredEndpoint(memcachedAddress) + "," + configuredEndpoint(memcachedLiteralAddress);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
-                    span.hasName(spanName("get", target))
+                    span.hasName(spanName("get", address))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -1163,7 +1163,11 @@ class SpymemcachedTest {
                                         memcachedLiteralAddress.getHostString());
                                   }
                                 }),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(memcachedAddress.getPort())),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
 
     assertDurationMetric(
@@ -1171,8 +1175,7 @@ class SpymemcachedTest {
         "io.opentelemetry.spymemcached-2.12",
         DB_SYSTEM_NAME,
         maybeStable(DB_OPERATION),
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        SERVER_ADDRESS);
   }
 
   @Test
@@ -1216,15 +1219,8 @@ class SpymemcachedTest {
     return emitStableDatabaseSemconv() ? operation + " " + target : operation;
   }
 
-  private static String configuredAddress(InetSocketAddress... nodes) {
-    StringBuilder target = new StringBuilder();
-    for (InetSocketAddress node : nodes) {
-      if (target.length() > 0) {
-        target.append(',');
-      }
-      target.append(node.getHostString());
-    }
-    return target.toString();
+  private static String configuredEndpoint(InetSocketAddress node) {
+    return node.getHostString() + ":" + node.getPort();
   }
 
   private static String stableServerAddress() {
