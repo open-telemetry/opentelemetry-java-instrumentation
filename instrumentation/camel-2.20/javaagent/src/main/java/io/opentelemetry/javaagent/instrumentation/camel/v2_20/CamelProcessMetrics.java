@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.markConsumedMessages;
+import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.CONSUMED_MESSAGES;
+import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.hasClaim;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -20,8 +22,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveTelemetry;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import javax.annotation.Nullable;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
@@ -50,10 +50,7 @@ class CamelProcessMetrics {
 
   static Context withConsumedMessagesClaim(Context context, CamelRequest request) {
     Object message = request.getExchange().getIn();
-    return JmsReceiveTelemetry.wasRecorded(message)
-            || KafkaClientsConsumerProcessTracing.wasConsumedMessageCounted(message)
-        ? markConsumedMessages(context)
-        : context;
+    return hasClaim(message, CONSUMED_MESSAGES) ? markConsumedMessages(context) : context;
   }
 
   static void start(Route route, Context parentContext, CamelRequest request) {

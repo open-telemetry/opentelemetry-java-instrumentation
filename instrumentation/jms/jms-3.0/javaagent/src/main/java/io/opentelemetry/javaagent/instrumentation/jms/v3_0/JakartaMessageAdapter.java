@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
-import static io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveTelemetry.markRecorded;
-import static io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveTelemetry.wasRecorded;
+import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.CONSUMED_MESSAGES;
+import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.hasClaim;
+import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.markClaim;
 
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
@@ -76,11 +77,11 @@ public class JakartaMessageAdapter implements MessageAdapter {
 
   @Override
   public boolean wasReceiveTelemetryRecorded() {
-    return wasRecorded(message);
+    return hasClaim(message, CONSUMED_MESSAGES);
   }
 
   @Override
   public void markReceiveTelemetryRecorded() {
-    markRecorded(message);
+    markClaim(message, CONSUMED_MESSAGES);
   }
 }

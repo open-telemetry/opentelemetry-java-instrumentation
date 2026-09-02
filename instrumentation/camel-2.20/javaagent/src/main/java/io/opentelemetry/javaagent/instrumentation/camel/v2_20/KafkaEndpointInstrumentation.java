@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.copyConsumedMessageCounted;
+import static io.opentelemetry.javaagent.bootstrap.MessagingMetricCarrier.copyClaims;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -41,7 +41,7 @@ class KafkaEndpointInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Argument(0) Object record, @Advice.Return @Nullable Exchange exchange) {
       if (exchange != null) {
-        copyConsumedMessageCounted(record, exchange.getIn());
+        copyClaims(record, exchange.getIn());
       }
     }
   }
