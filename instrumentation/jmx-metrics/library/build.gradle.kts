@@ -1,5 +1,7 @@
 import java.time.Duration
 
+import java.time.Duration
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -49,6 +51,9 @@ tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     timeout.set(Duration.ofMinutes(30))
+
+    // This suite starts multiple real target systems, including Trino.
+    timeout.set(Duration.ofMinutes(20))
 
     // the base agent only contains the agent machinery and the internal instrumentations that it
     // requires, the JMX instrumentation is added on top of it. Using the full agent would capture
