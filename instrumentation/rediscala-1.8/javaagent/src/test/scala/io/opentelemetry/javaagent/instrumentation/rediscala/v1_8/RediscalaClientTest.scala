@@ -306,7 +306,9 @@ class RediscalaClientTest {
     try {
       val result = pool.set("immutable-pool-target", "value")
       Await.result(result, Duration("3 second"))
-      assertConfiguredTargetSpan(hosts.sorted.mkString(","), port)
+      assertConfiguredTargetSpan(
+        hosts.sorted.map(serverHost => s"$serverHost:$port").mkString(",")
+      )
     } finally {
       pool.stop()
     }
@@ -351,8 +353,9 @@ class RediscalaClientTest {
         val result = cluster.get[String]("cluster-target")
         assertThat(Await.result(result, Duration("3 second")).isEmpty).isTrue
         assertConfiguredTargetSpan(
-          hosts.sorted.mkString(","),
-          clusterPort.longValue(),
+          hosts.sorted
+            .map(serverHost => s"$serverHost:$clusterPort")
+            .mkString(","),
           operationName = "GET"
         )
       } finally {
@@ -384,8 +387,12 @@ class RediscalaClientTest {
       val result = client.set("master-slaves-target", "value")
       Await.result(result, Duration("3 second"))
       assertConfiguredTargetSpan(
-        (master.host +: slaves.map(_.host).sorted).mkString(","),
-        port
+        (s"${master.host}:${master.port}" +:
+          slaves.map(server => s"${server.host}:${server.port}").sorted)
+          .mkString(","),
+        networkPeerAddress = host,
+        networkPeerPort = port,
+        databaseIndex = defaultDbIndex.toString
       )
     } finally {
       client.masterClient.stop()
@@ -394,7 +401,6 @@ class RediscalaClientTest {
   }
 
   @Test def testMasterSlavesTransactionUsesConfiguredTarget(): Unit = {
-    assumeTrue(emitStableDatabaseSemconv())
     val master = RedisServer(host, port.intValue())
     val slaves = Seq(
       RedisServer(host, port.intValue()),
@@ -415,9 +421,15 @@ class RediscalaClientTest {
       transaction.set("master-slaves-transaction-target", "value")
       Await.result(transaction.exec(), Duration("3 second"))
       assertConfiguredTargetSpan(
-        (master.host +: slaves.map(_.host).sorted).mkString(","),
-        port,
-        operationName = "MULTI SET"
+        if (emitStableDatabaseSemconv())
+          (s"${master.host}:${master.port}" +:
+            slaves.map(server => s"${server.host}:${server.port}").sorted)
+            .mkString(",")
+        else null,
+        operationName = "MULTI SET",
+        networkPeerAddress = host,
+        networkPeerPort = port,
+        databaseIndex = namespace(defaultDbIndex)
       )
     } finally {
       client.masterClient.stop()
@@ -425,27 +437,39 @@ class RediscalaClientTest {
     }
   }
 
+  @Test def testSentinelMasterSlavesTransactionSeparatesConfiguredTargetFromNetworkPeer()
+      : Unit = {
+    val sentinelHosts = Seq(alternateHost(sentinelHost), sentinelHost)
+    val client = createSentinelMasterSlavesClient(sentinelHosts)
+    try {
+      val transaction = client.multi()
+      transaction.set("sentinel-master-slaves-transaction-peer", "value")
+      Await.result(transaction.exec(), Duration("10 second"))
+      assertConfiguredTargetSpan(
+        if (emitStableDatabaseSemconv()) sentinelTarget(sentinelHosts)
+        else null,
+        operationName = "MULTI SET",
+        networkPeerAddress = host,
+        networkPeerPort = port,
+        databaseIndex = namespace(defaultDbIndex)
+      )
+    } finally {
+      client.stop()
+    }
+  }
+
   @Test def testSentinelMasterSlavesCommandUsesConfiguredTarget(): Unit = {
     assumeTrue(emitStableDatabaseSemconv())
     val sentinelHosts = Seq(alternateHost(sentinelHost), sentinelHost)
-    val client =
-      classOf[SentinelMonitoredRedisClientMasterSlaves].getConstructors
-        .find(_.getParameterCount == 4)
-        .get
-        .newInstance(
-          sentinelHosts.map((_, sentinelPort.intValue())),
-          "mymaster",
-          system,
-          RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
-        )
-        .asInstanceOf[SentinelMonitoredRedisClientMasterSlaves]
+    val client = createSentinelMasterSlavesClient(sentinelHosts)
     try {
       val result = client.set("sentinel-target", "value")
       Await.result(result, Duration("10 second"))
       assertConfiguredTargetSpan(
-        sentinelHosts.sorted
-          .map(serverHost => s"$serverHost:$sentinelPort")
-          .mkString(",") + "/mymaster"
+        sentinelTarget(sentinelHosts),
+        networkPeerAddress = host,
+        networkPeerPort = port,
+        databaseIndex = defaultDbIndex.toString
       )
     } finally {
       client.stop()
@@ -522,8 +546,10 @@ class RediscalaClientTest {
         Duration("3 second")
       )
       assertConfiguredTargetSpan(
-        Seq(first, second).map(_.host).sorted.mkString(","),
-        port
+        Seq(first, second)
+          .map(server => s"${server.host}:${server.port}")
+          .sorted
+          .mkString(",")
       )
 
       pool.removeServer(first)
@@ -908,6 +934,20 @@ class RediscalaClientTest {
       .newInstance(arguments: _*)
       .asInstanceOf[SentinelMonitoredRedisClient]
   }
+
+  private def createSentinelMasterSlavesClient(
+      sentinelHosts: Seq[String]
+  ): SentinelMonitoredRedisClientMasterSlaves =
+    classOf[SentinelMonitoredRedisClientMasterSlaves].getConstructors
+      .find(_.getParameterCount == 4)
+      .get
+      .newInstance(
+        sentinelHosts.map((_, sentinelPort.intValue())),
+        "mymaster",
+        system,
+        RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
+      )
+      .asInstanceOf[SentinelMonitoredRedisClientMasterSlaves]
 
   private def sentinelTarget(sentinelHosts: Seq[String]): String =
     sentinelHosts.sorted
