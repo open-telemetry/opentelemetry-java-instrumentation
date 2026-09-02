@@ -227,7 +227,7 @@ class CassandraClientTest {
   }
 
   @Test
-  void multipleConfiguredContactPointsWithSharedPortAreStableTarget() {
+  void multipleConfiguredContactPointsWithSharedNonDefaultPortAreStableTarget() {
     Cluster multiContactPointCluster =
         Cluster.builder()
             .addContactPoints(cassandra.getHost(), "127.0.0.2")
@@ -235,8 +235,10 @@ class CassandraClientTest {
             .build();
 
     String expectedAddress =
-        Stream.of(cassandraHost, "127.0.0.2").sorted(String::compareTo).collect(joining(","));
-    assertConfiguredTarget(multiContactPointCluster, expectedAddress, cassandraPort);
+        Stream.of(cassandraHost + ":" + cassandraPort, "127.0.0.2:" + cassandraPort)
+            .sorted(String::compareTo)
+            .collect(joining(","));
+    assertConfiguredTarget(multiContactPointCluster, expectedAddress, null);
   }
 
   @Test

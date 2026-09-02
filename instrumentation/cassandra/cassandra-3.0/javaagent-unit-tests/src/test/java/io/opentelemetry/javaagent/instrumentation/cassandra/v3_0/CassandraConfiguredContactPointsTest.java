@@ -28,6 +28,15 @@ class CassandraConfiguredContactPointsTest {
   }
 
   @Test
+  void extractsConfiguredNonDefaultPortFromSingleHostTarget() {
+    CassandraConfiguredTarget target = CassandraConfiguredTarget.create("db.example", 9142);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("db.example");
+    assertThat(target.getPort()).isEqualTo(9142);
+  }
+
+  @Test
   void omitsMaterializedDefaultPortFromSingleHostTarget() {
     CassandraConfiguredTarget target =
         CassandraConfiguredTarget.create(
@@ -51,15 +60,15 @@ class CassandraConfiguredContactPointsTest {
   }
 
   @Test
-  void extractsSharedNonDefaultPortFromMultipleContactPoints() {
+  void inlinesSharedNonDefaultPortForMultipleContactPoints() {
     CassandraConfiguredTarget target =
         CassandraConfiguredTarget.create(
             asList("second.example", InetSocketAddress.createUnresolved("first.example", 9142)),
             9142);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("first.example,second.example");
-    assertThat(target.getPort()).isEqualTo(9142);
+    assertThat(target.getAddress()).isEqualTo("first.example:9142,second.example:9142");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -116,15 +125,15 @@ class CassandraConfiguredContactPointsTest {
   }
 
   @Test
-  void limitsDefaultPortListAtEndpointBoundary() {
-    String first = repeat('a', 245);
+  void includesFiveSortedEndpointsWithoutLengthLimit() {
+    String first = repeat('a', 256);
     CassandraConfiguredTarget firstTarget =
-        CassandraConfiguredTarget.create(asList("cccc", "bbbb", first, "bbbb"), 9042);
+        CassandraConfiguredTarget.create(asList("eeee", "dddd", first, "cccc", "bbbb"), 9042);
     CassandraConfiguredTarget secondTarget =
-        CassandraConfiguredTarget.create(asList("bbbb", first, "bbbb", "cccc"), 9042);
+        CassandraConfiguredTarget.create(asList("bbbb", first, "dddd", "eeee", "cccc"), 9042);
 
-    String expectedAddress = first + ",bbbb,bbbb";
-    assertThat(expectedAddress).hasSize(255);
+    String expectedAddress = first + ",bbbb,cccc,dddd,eeee";
+    assertThat(expectedAddress).hasSizeGreaterThan(255);
     assertThat(firstTarget).isNotNull();
     assertThat(secondTarget).isNotNull();
     assertThat(firstTarget.getAddress()).isEqualTo(expectedAddress);
@@ -134,32 +143,39 @@ class CassandraConfiguredContactPointsTest {
   }
 
   @Test
-  void limitsSharedNonDefaultPortListAtEndpointBoundary() {
-    String first = repeat('a', 255);
-    CassandraConfiguredTarget target = CassandraConfiguredTarget.create(asList("z", first), 9142);
+  void limitsDefaultPortListToFirstFiveAfterSorting() {
+    CassandraConfiguredTarget firstTarget =
+        CassandraConfiguredTarget.create(
+            asList("f.example", "b.example", "e.example", "a.example", "d.example", "c.example"),
+            9042);
+    CassandraConfiguredTarget secondTarget =
+        CassandraConfiguredTarget.create(
+            asList("c.example", "d.example", "a.example", "e.example", "b.example", "f.example"),
+            9042);
 
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo(first);
-    assertThat(target.getPort()).isEqualTo(9142);
-    assertThat(CassandraConfiguredTarget.create(repeat('a', 256), 9142)).isNull();
+    String expectedAddress = "a.example,b.example,c.example,d.example,e.example";
+    assertThat(firstTarget).isNotNull();
+    assertThat(secondTarget).isNotNull();
+    assertThat(firstTarget.getAddress()).isEqualTo(expectedAddress);
+    assertThat(secondTarget.getAddress()).isEqualTo(expectedAddress);
+    assertThat(firstTarget.getPort()).isNull();
+    assertThat(secondTarget.getPort()).isNull();
   }
 
   @Test
-  void limitsMixedPortListAtEndpointBoundaryWithoutSplittingIpv6() throws UnknownHostException {
-    InetAddress ipv6 =
-        InetAddress.getByAddress(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1});
-    InetSocketAddress ipv6Address = new InetSocketAddress(ipv6, 9042);
-    String ipv6Token = "[0:0:0:0:0:0:0:1]:9042";
-    String otherHost = repeat('a', 255 - ipv6Token.length() - 1 - ":9142".length());
-    InetSocketAddress otherAddress = InetSocketAddress.createUnresolved(otherHost, 9142);
-    InetSocketAddress overflow = InetSocketAddress.createUnresolved("z", 9142);
+  void nonDefaultPortOutsideFirstFiveInlinesAllIncludedPorts() {
+    InetSocketAddress nonDefault = InetSocketAddress.createUnresolved("z.example", 9142);
     CassandraConfiguredTarget firstTarget =
-        CassandraConfiguredTarget.create(asList(overflow, otherAddress, ipv6Address), 9042);
+        CassandraConfiguredTarget.create(
+            asList("e.example", "d.example", nonDefault, "c.example", "b.example", "a.example"),
+            9042);
     CassandraConfiguredTarget secondTarget =
-        CassandraConfiguredTarget.create(asList(ipv6Address, overflow, otherAddress), 9042);
+        CassandraConfiguredTarget.create(
+            asList("a.example", "b.example", "c.example", nonDefault, "d.example", "e.example"),
+            9042);
 
-    String expectedAddress = ipv6Token + ',' + otherHost + ":9142";
-    assertThat(expectedAddress).hasSize(255);
+    String expectedAddress =
+        "a.example:9042,b.example:9042,c.example:9042,d.example:9042,e.example:9042";
     assertThat(firstTarget).isNotNull();
     assertThat(secondTarget).isNotNull();
     assertThat(firstTarget.getAddress()).isEqualTo(expectedAddress);
@@ -188,6 +204,15 @@ class CassandraConfiguredContactPointsTest {
   @Test
   void nullContactPointDropsEntireTarget() {
     assertThat(CassandraConfiguredTarget.create(asList("db.example", null), 9042)).isNull();
+  }
+
+  @Test
+  void invalidContactPointAfterFirstFiveDropsEntireTarget() {
+    assertThat(
+            CassandraConfiguredTarget.create(
+                asList("a.example", "b.example", "c.example", "d.example", "e.example", null),
+                9042))
+        .isNull();
   }
 
   @Test

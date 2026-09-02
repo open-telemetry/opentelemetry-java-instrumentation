@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 public class CassandraConfiguredTarget {
 
   private static final int DEFAULT_PORT = 9042;
-  private static final int MAX_ADDRESS_LENGTH = 255;
+  private static final int MAX_ENDPOINTS = 5;
 
   private final String address;
   @Nullable private final Integer port;
@@ -76,8 +76,7 @@ public class CassandraConfiguredTarget {
       return null;
     }
 
-    int firstPort = resolvePort(points.get(0), configuredPort);
-    boolean commonPort = true;
+    boolean hasNonDefaultPort = false;
     List<String> hostTokens = new ArrayList<>(points.size());
     List<String> endpointTokens = new ArrayList<>(points.size());
     for (ContactPoint point : points) {
@@ -85,38 +84,34 @@ public class CassandraConfiguredTarget {
       if (!validPort(port)) {
         return null;
       }
-      commonPort &= port == firstPort;
+      hasNonDefaultPort |= port != DEFAULT_PORT;
       hostTokens.add(point.host);
       endpointTokens.add(formatHost(point.host) + ':' + port);
     }
 
-    if (commonPort) {
+    if (points.size() == 1) {
+      int port = resolvePort(points.get(0), configuredPort);
+      return new CassandraConfiguredTarget(points.get(0).host, port == DEFAULT_PORT ? null : port);
+    }
+
+    if (!hasNonDefaultPort) {
       hostTokens.sort(String::compareTo);
-      String address = joinWithinLimit(hostTokens);
-      return address == null
-          ? null
-          : new CassandraConfiguredTarget(address, firstPort == DEFAULT_PORT ? null : firstPort);
+      return new CassandraConfiguredTarget(joinFirstEndpoints(hostTokens), null);
     }
 
     endpointTokens.sort(String::compareTo);
-    String address = joinWithinLimit(endpointTokens);
-    return address == null ? null : new CassandraConfiguredTarget(address, null);
+    return new CassandraConfiguredTarget(joinFirstEndpoints(endpointTokens), null);
   }
 
-  @Nullable
-  private static String joinWithinLimit(List<String> tokens) {
+  private static String joinFirstEndpoints(List<String> tokens) {
     StringBuilder result = new StringBuilder();
-    for (String token : tokens) {
-      int separatorLength = result.length() == 0 ? 0 : 1;
-      if (result.length() + separatorLength + token.length() > MAX_ADDRESS_LENGTH) {
-        break;
-      }
-      if (separatorLength != 0) {
+    for (int i = 0; i < Math.min(tokens.size(), MAX_ENDPOINTS); i++) {
+      if (i != 0) {
         result.append(',');
       }
-      result.append(token);
+      result.append(tokens.get(i));
     }
-    return result.length() == 0 ? null : result.toString();
+    return result.toString();
   }
 
   private static int resolvePort(ContactPoint point, int configuredPort) {
