@@ -326,6 +326,11 @@ public final class UrlParsingUtils {
     return hasValidHostPorts(authority) || sanitizeHostList(authority) != null;
   }
 
+  private static boolean isSingleEndpointAuthority(String authority) {
+    List<String> endpoints = splitHostList(stripUserInfo(authority));
+    return endpoints.size() == 1 && sanitizeHostEntry(endpoints.get(0)) != null;
+  }
+
   private static boolean isAtInQueryParameter(String url, int authorityEnd, int at) {
     int queryStart = url.indexOf('?', authorityEnd);
     if (queryStart < 0 || queryStart > at) {
@@ -340,7 +345,10 @@ public final class UrlParsingUtils {
     if (equals < parameterStart || equals > at) {
       return false;
     }
-    if (queryStart > authorityEnd) {
+    int protocol = url.indexOf("://");
+    int authorityStart = protocol < 0 ? 0 : protocol + 3;
+    if (queryStart > authorityEnd
+        || isSingleEndpointAuthority(url.substring(authorityStart, authorityEnd))) {
       return true;
     }
     int parameterEnd = indexOfAny(url, at + 1, '&', '#');
