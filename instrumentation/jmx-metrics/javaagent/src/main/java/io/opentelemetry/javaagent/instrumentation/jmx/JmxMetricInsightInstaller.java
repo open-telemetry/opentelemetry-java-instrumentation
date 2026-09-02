@@ -53,27 +53,21 @@ public class JmxMetricInsightInstaller implements AgentListener {
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
 
-      List<String> unstableInclude =
-          config.get("experimental").getScalarList("included", String.class, emptyList());
-
       // otel.jmx.target.system support will be removed in v3
       List<String> systemsConfig =
           config.get("target").getScalarList("system", String.class, emptyList());
       if (!systemsConfig.isEmpty()) {
         logger.log(
             WARNING,
-            "'otel.jmx.target.system' is deprecated and will be removed in future versions. Use 'otel.jmx.experimental.include' instead.");
-        if (!unstableInclude.isEmpty()) {
-          logger.log(
-              WARNING,
-              "both 'otel.jmx.target.system' and 'otel.jmx.experimental.include' are set, 'otel.jmx.experimental.include' will take precedence.");
-        }
+            "'otel.jmx.target.system' is deprecated and will be removed in 3.x. Use 'otel.jmx.experimental.include' with v3 preview instead.");
       }
 
       if (v3Preview) {
         // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
         jmx.addStableMetrics(IncludeExclude.builder().setExcluded("jvm").build());
 
+        List<String> unstableInclude =
+            config.get("experimental").getScalarList("included", String.class, emptyList());
         IncludeExcludeBuilder builder = IncludeExclude.builder();
         if (!unstableInclude.isEmpty()) {
           // only include explicitly opted-in, others will be excluded
