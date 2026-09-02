@@ -323,17 +323,18 @@ public abstract class AbstractAws2RdsDataTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> commonAttributes(
       String operation, String path, Integer statusCode, String requestId) {
-    return new ArrayList<>(asList(
-        equalTo(SERVER_ADDRESS, "127.0.0.1"),
-        equalTo(SERVER_PORT, server.httpPort()),
-        equalTo(URL_FULL, server.httpUri() + path),
-        equalTo(HTTP_REQUEST_METHOD, "POST"),
-        equalTo(RPC_SYSTEM, "aws-api"),
-        equalTo(RPC_SERVICE, AWS_SERVICE),
-        equalTo(RPC_METHOD, operation),
-        equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-        equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode != null ? statusCode.longValue() : null),
-        equalTo(AWS_REQUEST_ID, requestId)));
+    return new ArrayList<>(
+        asList(
+            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+            equalTo(SERVER_PORT, server.httpPort()),
+            equalTo(URL_FULL, server.httpUri() + path),
+            equalTo(HTTP_REQUEST_METHOD, "POST"),
+            equalTo(RPC_SYSTEM, "aws-api"),
+            equalTo(RPC_SERVICE, AWS_SERVICE),
+            equalTo(RPC_METHOD, operation),
+            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode != null ? statusCode.longValue() : null),
+            equalTo(AWS_REQUEST_ID, requestId)));
   }
 
   private void assertSqlDurationMetric() {
