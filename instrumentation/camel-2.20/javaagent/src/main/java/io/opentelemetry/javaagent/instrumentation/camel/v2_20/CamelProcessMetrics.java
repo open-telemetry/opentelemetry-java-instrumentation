@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveTelemetry;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import javax.annotation.Nullable;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
@@ -57,10 +58,15 @@ class CamelProcessMetrics {
         new ConsumedMessagesListener(MessagingConsumerMetrics.getConsumedMessages().create(meter));
   }
 
+  static boolean wasConsumedMessageCounted(CamelRequest request) {
+    Object message = request.getExchange().getIn();
+    return JmsReceiveTelemetry.wasRecorded(message)
+        || KafkaClientsConsumerProcessTracing.wasConsumedMessageCounted(message);
+  }
+
   static void start(Route route, Context parentContext, CamelRequest request) {
     boolean recordConsumedMessages =
-        !hasConsumedMessages(parentContext)
-            && !JmsReceiveTelemetry.wasRecorded(request.getExchange().getIn());
+        !hasConsumedMessages(parentContext) && !wasConsumedMessageCounted(request);
     boolean recordProcessDuration = !hasProcessDuration(parentContext);
     if (!recordConsumedMessages && !recordProcessDuration) {
       return;

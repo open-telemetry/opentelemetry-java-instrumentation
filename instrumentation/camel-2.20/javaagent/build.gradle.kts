@@ -108,6 +108,20 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
   }
 
+  val testStableSemconvWithReceiveTelemetry =
+    register<Test>("testStableSemconvWithReceiveTelemetry") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+
+      jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+      jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+      filter {
+        includeTestsMatching("*KafkaCamelTest")
+      }
+    }
+
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -143,6 +157,7 @@ tasks {
   check {
     dependsOn(
       testStableSemconv,
+      testStableSemconvWithReceiveTelemetry,
       testBothSemconv,
       testExperimental,
       testV3Preview,

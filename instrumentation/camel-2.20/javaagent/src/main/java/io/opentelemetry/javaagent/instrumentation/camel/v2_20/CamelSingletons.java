@@ -27,7 +27,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveTelemetry;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
@@ -93,7 +92,7 @@ class CamelSingletons {
       builder.addOperationMetrics(MessagingProcessMetrics.get());
       builder.addContextCustomizer(
           (context, request, startAttributes) ->
-              JmsReceiveTelemetry.wasRecorded(request.getExchange().getIn())
+              CamelProcessMetrics.wasConsumedMessageCounted(request)
                   ? markConsumedMessages(context)
                   : context);
       builder.addOperationMetrics(CamelProcessMetrics.consumedMessages());

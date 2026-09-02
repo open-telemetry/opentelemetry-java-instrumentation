@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.markConsumedMessageCounted;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -103,6 +104,9 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
         for (ConsumerRecord<?, ?> record : records) {
           KafkaConsumerContextUtil.set(record, consumerContext);
+          if (receiveOperationStarted && emitStableMessagingSemconv()) {
+            markConsumedMessageCounted(record);
+          }
         }
       } finally {
         KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);

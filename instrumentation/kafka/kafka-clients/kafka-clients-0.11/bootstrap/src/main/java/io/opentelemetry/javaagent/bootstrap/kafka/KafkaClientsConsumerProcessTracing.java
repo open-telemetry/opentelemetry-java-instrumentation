@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.kafka;
 
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.function.BooleanSupplier;
 
 // Classes used by multiple instrumentations should be in a bootstrap module to ensure that all
@@ -12,6 +13,7 @@ import java.util.function.BooleanSupplier;
 // contains an instrumentation that uses them, so instrumentations in different class loaders will
 // have separate copies of helper classes.
 public final class KafkaClientsConsumerProcessTracing {
+  private static final Cache<Object, Boolean> CONSUMED_MESSAGE_COUNTED = Cache.weak();
   private static final ThreadLocal<Boolean> wrappingEnabled = ThreadLocal.withInitial(() -> true);
 
   public static boolean setWrappingEnabled(boolean enabled) {
@@ -26,6 +28,22 @@ public final class KafkaClientsConsumerProcessTracing {
 
   public static BooleanSupplier getWrappingEnabledSupplier() {
     return KafkaClientsConsumerProcessTracing::isWrappingEnabled;
+  }
+
+  public static void markConsumedMessageCounted(Object message) {
+    CONSUMED_MESSAGE_COUNTED.put(message, Boolean.TRUE);
+  }
+
+  public static void copyConsumedMessageCounted(Object source, Object target) {
+    if (source != null && wasConsumedMessageCounted(source)) {
+      markConsumedMessageCounted(target);
+    } else {
+      CONSUMED_MESSAGE_COUNTED.remove(target);
+    }
+  }
+
+  public static boolean wasConsumedMessageCounted(Object message) {
+    return Boolean.TRUE.equals(CONSUMED_MESSAGE_COUNTED.get(message));
   }
 
   private KafkaClientsConsumerProcessTracing() {}

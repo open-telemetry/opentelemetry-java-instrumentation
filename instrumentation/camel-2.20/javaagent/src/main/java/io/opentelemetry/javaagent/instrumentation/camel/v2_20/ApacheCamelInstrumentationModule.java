@@ -24,6 +24,7 @@ public class ApacheCamelInstrumentationModule extends InstrumentationModule {
     return asList(
         new CamelContextInstrumentation(),
         new JmsMessageInstrumentation(),
+        new KafkaEndpointInstrumentation(),
         new KafkaFetchRecordsInstrumentation(),
         new SendProcessorInstrumentation());
   }

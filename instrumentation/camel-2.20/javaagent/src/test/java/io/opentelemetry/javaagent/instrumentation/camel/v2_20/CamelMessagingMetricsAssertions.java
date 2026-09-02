@@ -85,7 +85,7 @@ public class CamelMessagingMetricsAssertions {
         destination,
         processErrorType,
         processDestinationPartitionId);
-    if (system.equals("jms")) {
+    if (system.equals("jms") || system.equals("kafka")) {
       assertConsumedMessageCount(testing, system, destination, 1);
     } else {
       assertCounter(
