@@ -85,6 +85,26 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void bareIpv6ContactPointsWithoutAPortAreIgnored() {
+    assertThat(CassandraServerTarget.of(singletonList("::1"))).isNull();
+    assertThat(CassandraServerTarget.of(singletonList("2001:db8::1"))).isNull();
+  }
+
+  @Test
+  void unbracketedIpv6ContactPointsWithAPortAreAccepted() {
+    CassandraServerTarget target = CassandraServerTarget.of(singletonList("2001:db8::1:9042"));
+    CassandraServerTarget trailingDoubleColonTarget =
+        CassandraServerTarget.of(singletonList("2001:db8:::9142"));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("2001:db8::1");
+    assertThat(target.getPort()).isNull();
+    assertThat(trailingDoubleColonTarget).isNotNull();
+    assertThat(trailingDoubleColonTarget.getAddress()).isEqualTo("2001:db8::");
+    assertThat(trailingDoubleColonTarget.getPort()).isEqualTo(9142);
+  }
+
+  @Test
   void contactPointWithoutAPortIsIgnored() {
     CassandraServerTarget target = CassandraServerTarget.of(singletonList("cassandra.example.com"));
 
