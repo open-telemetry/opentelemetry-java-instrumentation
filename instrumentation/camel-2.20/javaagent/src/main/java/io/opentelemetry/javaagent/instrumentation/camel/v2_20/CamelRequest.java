@@ -34,7 +34,8 @@ abstract class CamelRequest {
       if (emitStableMessagingSemconv()) {
         messagingDestination =
             normalizeStableMessagingDestination(
-                messagingSystem, messagingSpanDecorator.getStableDestination(exchange, endpoint));
+                messagingSystem,
+                messagingSpanDecorator.getStableDestination(exchange, endpoint, camelDirection));
         messagingDestinationPartitionId =
             messagingSpanDecorator.getDestinationPartitionId(exchange);
       }

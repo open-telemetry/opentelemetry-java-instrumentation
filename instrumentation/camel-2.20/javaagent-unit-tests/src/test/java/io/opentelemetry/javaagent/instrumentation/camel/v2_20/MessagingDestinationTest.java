@@ -53,6 +53,7 @@ class MessagingDestinationTest {
   @ParameterizedTest
   @MethodSource("rabbitMqDestinations")
   void stableRabbitMqDestination(
+      CamelDirection camelDirection,
       String endpointUri,
       String headerExchange,
       String headerRoutingKey,
@@ -70,8 +71,8 @@ class MessagingDestinationTest {
             new DecoratorRegistry().forComponent("rabbitmq"),
             exchange,
             endpoint,
-            CamelDirection.OUTBOUND,
-            SpanKind.PRODUCER);
+            camelDirection,
+            camelDirection == CamelDirection.OUTBOUND ? SpanKind.PRODUCER : SpanKind.CONSUMER);
 
     assertThat(request.getMessagingDestination())
         .isEqualTo(emitStableMessagingSemconv() ? expectedDestination : null);
@@ -80,22 +81,53 @@ class MessagingDestinationTest {
   private static Stream<Arguments> rabbitMqDestinations() {
     return Stream.of(
         argumentSet(
-            "endpoint exchange and routing key",
-            "rabbitmq:localhost:5672/orders?routingKey=created",
+            "outbound queue is ignored",
+            CamelDirection.OUTBOUND,
+            "rabbitmq:localhost:5672/orders?routingKey=created&queue=workers",
             null,
             null,
             "orders:created"),
         argumentSet(
-            "header exchange and routing key override endpoint",
+            "outbound headers override endpoint",
+            CamelDirection.OUTBOUND,
             "rabbitmq:localhost:5672/orders?routingKey=created",
             "priority-orders",
             "priority-created",
             "priority-orders:priority-created"),
         argumentSet(
-            "bridge endpoint ignores headers",
+            "outbound bridge endpoint ignores headers",
+            CamelDirection.OUTBOUND,
             "rabbitmq:localhost:5672/orders?routingKey=created&bridgeEndpoint=true",
             "priority-orders",
             "priority-created",
-            "orders:created"));
+            "orders:created"),
+        argumentSet(
+            "inbound queue is included",
+            CamelDirection.INBOUND,
+            "rabbitmq:localhost:5672/orders?routingKey=created&queue=workers",
+            "orders",
+            "created",
+            "orders:created:workers"),
+        argumentSet(
+            "inbound queue matching routing key is not duplicated",
+            CamelDirection.INBOUND,
+            "rabbitmq:localhost:5672/orders?routingKey=workers&queue=workers",
+            "orders",
+            "workers",
+            "orders:workers"),
+        argumentSet(
+            "inbound bridge endpoint does not ignore headers",
+            CamelDirection.INBOUND,
+            "rabbitmq:localhost:5672/orders?routingKey=created&queue=workers&bridgeEndpoint=true",
+            "priority-orders",
+            "priority-created",
+            "priority-orders:priority-created:workers"),
+        argumentSet(
+            "empty inbound destination",
+            CamelDirection.INBOUND,
+            "rabbitmq:localhost:5672/",
+            null,
+            null,
+            null));
   }
 }

@@ -145,13 +145,16 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
   }
 
   @Nullable
-  public String getStableDestination(Exchange exchange, Endpoint endpoint) {
+  public String getStableDestination(
+      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
     if (!component.equals("rabbitmq")) {
       return getDestination(exchange, endpoint);
     }
 
     Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
-    boolean bridgeEndpoint = Boolean.parseBoolean(queryParameters.get("bridgeEndpoint"));
+    boolean outbound = camelDirection == CamelDirection.OUTBOUND;
+    boolean bridgeEndpoint =
+        outbound && Boolean.parseBoolean(queryParameters.get("bridgeEndpoint"));
     String exchangeName = exchange.getIn().getHeader("rabbitmq.EXCHANGE_NAME", String.class);
     if (exchangeName == null || bridgeEndpoint) {
       String endpointDestination = stripSchemeAndOptions(endpoint);
@@ -167,7 +170,16 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
     StringBuilder destination = new StringBuilder();
     appendDestinationPart(destination, exchangeName);
     appendDestinationPart(destination, routingKey);
-    return destination.length() == 0 ? "amq.default" : destination.toString();
+    if (!outbound) {
+      String queue = queryParameters.get("queue");
+      if (queue != null && !queue.equals(routingKey)) {
+        appendDestinationPart(destination, queue);
+      }
+    }
+    if (destination.length() == 0) {
+      return outbound ? "amq.default" : null;
+    }
+    return destination.toString();
   }
 
   private static void appendDestinationPart(StringBuilder destination, @Nullable String part) {
