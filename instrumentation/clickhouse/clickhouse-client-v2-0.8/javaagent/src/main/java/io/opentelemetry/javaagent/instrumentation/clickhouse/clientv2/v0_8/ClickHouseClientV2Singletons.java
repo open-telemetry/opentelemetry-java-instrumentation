@@ -148,7 +148,7 @@ public class ClickHouseClientV2Singletons {
       return new ServerInfo(null, null, addressGroup.toString());
     }
 
-    public static ServerInfo ofCurrentEndpoint(Set<String> endpoints) {
+    private static ServerInfo ofCurrentEndpoint(Set<String> endpoints) {
       if (endpoints.isEmpty()) {
         return EMPTY;
       }
