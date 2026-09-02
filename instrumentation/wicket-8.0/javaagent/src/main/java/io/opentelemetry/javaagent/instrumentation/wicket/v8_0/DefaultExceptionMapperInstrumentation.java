@@ -39,8 +39,6 @@ class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
       Span serverSpan = LocalRootSpan.fromContextOrNull(Java8BytecodeBridge.currentContext());
       if (serverSpan != null) {
         // unwrap exception
-        // this must be delegated to a helper class: advice is inlined into the instrumented class,
-        // where the synthetic lambda methods of this class would not be accessible
         Throwable throwable = WicketErrorUnwrapper.unwrap(exception);
         // as we don't create a span for wicket we record exception on server span
         serverSpan.recordException(throwable);

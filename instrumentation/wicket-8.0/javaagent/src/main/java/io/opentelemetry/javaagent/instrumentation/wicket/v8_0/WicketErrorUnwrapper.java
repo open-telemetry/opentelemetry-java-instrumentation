@@ -14,10 +14,6 @@ public class WicketErrorUnwrapper {
   /**
    * Unwraps the wicket-specific wrapper exceptions from {@code error} to find the error that
    * actually caused the failure.
-   *
-   * <p>This lives in a helper class rather than in the advice itself because advice bodies are
-   * inlined into the instrumented class, and inlined code cannot reference the synthetic lambda
-   * methods that the compiler would generate for the predicate below.
    */
   public static Throwable unwrap(Throwable error) {
     return CauseUnwrapper.unwrap(error, WicketErrorUnwrapper::isWrapperException);
