@@ -218,16 +218,14 @@ class KafkaConnectTest extends TargetSystemTest {
   }
 
   private JmxConfig loadKafkaConnectConfig() throws Exception {
-    InternalMetricsDefinitions definitions = new InternalMetricsDefinitions(        getClass()
-        .getClassLoader());
+    InternalMetricsDefinitions definitions =
+        new InternalMetricsDefinitions(getClass().getClassLoader());
 
     Set<String> rules = definitions.getRulesForSystem("kafka-connect", true, true);
     assertThat(rules).hasSize(1);
 
     try (InputStream input =
-        getClass()
-            .getClassLoader()
-            .getResourceAsStream(rules.stream().findFirst().get())) {
+        getClass().getClassLoader().getResourceAsStream(rules.stream().findFirst().get())) {
       assertThat(input).isNotNull();
       return RuleParser.get().loadConfig(input);
     }
