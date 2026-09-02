@@ -233,6 +233,10 @@ public class DbServerTargetBuilder {
         return false;
       }
     }
+    int ipv4Start = literal.lastIndexOf(':') + 1;
+    if (literal.indexOf('.') >= 0 && !isIpv4Literal(literal.substring(ipv4Start))) {
+      return false;
+    }
     try {
       // URI parses a bracketed literal without resolving any name
       return new URI("db://[" + literal + "]").getHost() != null;
