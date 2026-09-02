@@ -130,9 +130,17 @@ Examples that may remain uppercase include:
 - literal strings, numbers, and booleans that behave like module constants
 - immutable value objects that are treated as fixed constants after initialization, such as
   `Duration` timeouts, intervals, or deadlines
-- semantic keys and handles such as `AttributeKey`, `ContextKey`, `VirtualField`,
-  `MethodHandle`, and `Pattern`
 - canonical singleton or sentinel fields named `INSTANCE`, `EMPTY`, or `NOOP`
+
+Semantic key and handle types such as `AttributeKey`, `ContextKey`, `VirtualField`, `MethodHandle`,
+and `Pattern` identify a fixed, well-known slot or pattern rather than a mutable collaborator, so
+`static final` fields of these types are good candidates for uppercase names.
+
+`VirtualField` handles are a specific case where this is required: a `static final VirtualField`
+field **must** use an uppercase name, regardless of visibility (`private` or `public`) and
+regardless of the fact that `VirtualField.find(...)` creates the handle at runtime rather than at
+compile time. The runtime-created origin does not make it a mutable collaborator — it still
+identifies one fixed, well-known storage slot for the lifetime of the class.
 
 Private `static final` arrays of constant or immutable values should also use uppercase names when
 the array is not exposed outside the class and is not mutated after initialization. Even though Java

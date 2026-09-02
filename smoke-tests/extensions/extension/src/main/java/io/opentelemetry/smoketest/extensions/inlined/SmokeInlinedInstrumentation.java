@@ -75,7 +75,7 @@ class SmokeInlinedInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Object target, @Advice.Argument(1) Integer value) {
-      VirtualFieldHelper.field.set(target, value);
+      VirtualFieldHelper.VALUE.set(target, value);
     }
   }
 
@@ -85,7 +85,7 @@ class SmokeInlinedInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     @AssignReturned.ToReturned
     public static Integer onExit(@Advice.Argument(0) Object target) {
-      return VirtualFieldHelper.field.get(target);
+      return VirtualFieldHelper.VALUE.get(target);
     }
   }
 
@@ -105,7 +105,7 @@ class SmokeInlinedInstrumentation implements TypeInstrumentation {
   }
 
   public static class VirtualFieldHelper {
-    public static final VirtualField<Object, Integer> field =
+    public static final VirtualField<Object, Integer> VALUE =
         VirtualField.find(Object.class, Integer.class);
 
     private VirtualFieldHelper() {}

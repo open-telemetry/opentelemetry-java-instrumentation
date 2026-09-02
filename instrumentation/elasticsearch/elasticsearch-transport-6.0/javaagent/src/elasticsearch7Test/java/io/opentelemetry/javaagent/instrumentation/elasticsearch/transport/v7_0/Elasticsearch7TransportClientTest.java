@@ -26,4 +26,9 @@ class Elasticsearch7TransportClientTest extends AbstractElasticsearch6TransportC
   protected String getPutMappingActionName() {
     return testLatestDeps() ? "AutoPutMappingAction" : "PutMappingAction";
   }
+
+  @Override
+  protected String getPutMappingWireActionName() {
+    return testLatestDeps() ? "indices:admin/mapping/auto_put" : "indices:admin/mapping/put";
+  }
 }

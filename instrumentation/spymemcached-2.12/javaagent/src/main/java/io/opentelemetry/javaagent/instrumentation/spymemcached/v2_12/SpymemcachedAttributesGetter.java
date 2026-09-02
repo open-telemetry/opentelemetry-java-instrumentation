@@ -31,6 +31,12 @@ class SpymemcachedAttributesGetter
 
   @Override
   public String getDbOperationName(SpymemcachedRequest spymemcachedRequest) {
+    return spymemcachedRequest.getStableOperationName();
+  }
+
+  @Override
+  @SuppressWarnings("deprecation") // old database semconv still use db.operation
+  public String getDbOperation(SpymemcachedRequest spymemcachedRequest) {
     return spymemcachedRequest.getOperationName();
   }
 }

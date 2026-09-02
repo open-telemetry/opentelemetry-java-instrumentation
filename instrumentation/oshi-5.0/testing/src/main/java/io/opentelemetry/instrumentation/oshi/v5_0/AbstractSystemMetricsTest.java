@@ -7,16 +7,12 @@ package io.opentelemetry.instrumentation.oshi.v5_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.OtherIncubatingAttributes.STATE;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // uses the deprecated scopeName() bridge
 public abstract class AbstractSystemMetricsTest {
-
-  private static final AttributeKey<String> STATE = AttributeKey.stringKey("state");
-
   protected abstract void registerMetrics();
 
   protected abstract InstrumentationExtension testing();
@@ -29,6 +25,7 @@ public abstract class AbstractSystemMetricsTest {
   protected abstract String scopeName();
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv and scopeName() bridge
   void test() {
     // when
     registerMetrics();

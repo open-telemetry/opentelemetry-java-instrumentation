@@ -4,10 +4,10 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.40.0")
+  implementation("com.linecorp.armeria:armeria-junit5:1.41.0")
   implementation("com.google.errorprone:error_prone_annotations")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
-  implementation("com.google.protobuf:protobuf-java-util:4.35.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.36.1")
   implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   // we'll replace caffeine shaded in armeria with a later version that doesn't use Unsafe. Caffeine
@@ -72,6 +72,10 @@ tasks {
     mergeServiceFiles()
     // mergeServiceFiles requires that duplicate strategy is set to include
     filesMatching("META-INF/services/**") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+    // avoid warning about duplicate kotlin module files being silently dropped
+    filesMatching("META-INF/*.kotlin_module") {
       duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
     // exclude caffeine shaded in armeria

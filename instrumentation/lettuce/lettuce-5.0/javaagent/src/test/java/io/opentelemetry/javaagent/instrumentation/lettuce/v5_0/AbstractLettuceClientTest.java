@@ -14,7 +14,9 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.function.BiConsumer;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,12 @@ abstract class AbstractLettuceClientTest {
 
   protected static boolean connectionTelemetryEnabled() {
     return Boolean.getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled");
+  }
+
+  protected String expectedConnectionRefusedMessagePattern(int port) {
+    String windowsGetsockopt = OS.WINDOWS.isCurrentOs() ? "getsockopt: " : "";
+    String address = windowsGetsockopt + host + "/" + ip + ":" + port;
+    return "Connection refused(?: \\(connect failed\\))?: " + Pattern.quote(address);
   }
 
   protected void withIsolatedContainer(

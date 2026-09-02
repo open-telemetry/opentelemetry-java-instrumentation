@@ -1,0 +1,79 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
+
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.attachPreparedStatementData;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
+
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
+import io.vertx.core.Future;
+import io.vertx.sqlclient.PreparedStatement;
+import io.vertx.sqlclient.SqlConnectOptions;
+import io.vertx.sqlclient.impl.SqlClientBase;
+import io.vertx.sqlclient.impl.SqlConnectionBase;
+import javax.annotation.Nullable;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("io.vertx.sqlclient.impl.SqlConnectionBase");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        named("prepare").and(returns(named("io.vertx.core.Future"))),
+        getClass().getName() + "$PrepareAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class PrepareAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static CallDepth onEnter() {
+      CallDepth callDepth = CallDepth.forClass(SqlConnectionBase.class);
+      callDepth.getAndIncrement();
+      return callDepth;
+    }
+
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static Future<PreparedStatement> onExit(
+        @Advice.This SqlClientBase<?> sqlClientBase,
+        @Advice.Return Future<PreparedStatement> future,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter CallDepth callDepth) {
+      // prepare(String) delegates to prepare(String, PrepareOptions) in newer versions, only the
+      // outermost call should attach the prepared statement data
+      if (callDepth.decrementAndGet() > 0 || throwable != null) {
+        return future;
+      }
+
+      SqlConnectOptions connectOptions =
+          VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
+      String dbSystem = null;
+      if (connectOptions != null) {
+        dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
+        if (dbSystem == null) {
+          dbSystem = getDbSystemNameFromClassName(connectOptions);
+        }
+      }
+      return wrapContext(
+          attachPreparedStatementData(future, new VertxSqlClientData(connectOptions, dbSystem)));
+    }
+  }
+}

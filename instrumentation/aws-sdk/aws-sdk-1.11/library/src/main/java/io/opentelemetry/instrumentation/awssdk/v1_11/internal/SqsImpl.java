@@ -5,20 +5,32 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Collections.emptyList;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
+import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.lang.reflect.Field;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -78,8 +90,9 @@ public final class SqsImpl {
               timer.now());
     }
 
+    Context processParentContext = emitStableMessagingSemconv() ? parentContext : receiveContext;
     addTracing(
-        receiveMessageResult, request, response, consumerProcessInstrumenter, receiveContext);
+        receiveMessageResult, request, response, consumerProcessInstrumenter, processParentContext);
   }
 
   @Nullable private static final Field messagesField = getMessagesField();
@@ -100,7 +113,7 @@ public final class SqsImpl {
       Request<?> request,
       Response<?> response,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
-      @Nullable Context receiveContext) {
+      @Nullable Context processParentContext) {
     if (messagesField == null) {
       return;
     }
@@ -114,21 +127,121 @@ public final class SqsImpl {
               consumerProcessInstrumenter,
               request,
               response,
-              receiveContext));
+              processParentContext));
     } catch (IllegalAccessException ignored) {
       // should not happen, we call setAccessible on the field
     }
   }
 
-  static boolean beforeMarshalling(AmazonWebServiceRequest rawRequest) {
+  static AmazonWebServiceRequest beforeMarshalling(
+      AmazonWebServiceRequest rawRequest,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
+      boolean messageCreateSpansEnabled) {
     if (rawRequest instanceof ReceiveMessageRequest) {
       ReceiveMessageRequest request = (ReceiveMessageRequest) rawRequest;
       if (!request.getAttributeNames().contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE)) {
         request.withAttributeNames(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
       }
-      return true;
+      return request;
     }
-    return false;
+    if (rawRequest instanceof SendMessageBatchRequest && emitStableMessagingSemconv()) {
+      return injectBatchCreationContexts(
+          (SendMessageBatchRequest) rawRequest,
+          producerCreateInstrumenter,
+          messageCreateSpansEnabled);
+    }
+    return rawRequest;
+  }
+
+  private static SendMessageBatchRequest injectBatchCreationContexts(
+      SendMessageBatchRequest request,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
+      boolean messageCreateSpansEnabled) {
+    if (!messageCreateSpansEnabled || !SqsMessageSystemAttributeAccess.isAvailable()) {
+      return request;
+    }
+
+    SendMessageBatchRequest preparedRequest = request.clone();
+    List<SendMessageBatchRequestEntry> preparedEntries = new ArrayList<>();
+    // Start each message creation span in a separate trace while preserving other context values.
+    Context parentContext = Context.current().with(Span.getInvalid());
+    for (SendMessageBatchRequestEntry entry : request.getEntries()) {
+      String traceHeader = SqsMessageSystemAttributeAccess.getTraceHeader(entry);
+      if (traceHeader != null) {
+        preparedEntries.add(entry.clone());
+        continue;
+      }
+
+      SqsCreateRequest createRequest =
+          new SqsCreateRequest(
+              request.getQueueUrl(), stringMessageAttributes(entry.getMessageAttributes()));
+      if (!producerCreateInstrumenter.shouldStart(parentContext, createRequest)) {
+        preparedEntries.add(entry.clone());
+        continue;
+      }
+      Instant timestamp = Instant.now();
+      Context creationContext =
+          InstrumenterUtil.startAndEnd(
+              producerCreateInstrumenter,
+              parentContext,
+              createRequest,
+              null,
+              null,
+              timestamp,
+              timestamp);
+      // A no-op tracer can pass shouldStart() but return a context with an invalid span.
+      if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
+        preparedEntries.add(entry.clone());
+        continue;
+      }
+      SendMessageBatchRequestEntry preparedEntry =
+          SqsMessageSystemAttributeAccess.withTraceHeader(
+              entry, SqsParentContext.toTraceHeader(creationContext));
+      if (preparedEntry == null) {
+        throw new IllegalStateException("Could not inject the SQS message creation context");
+      }
+      preparedEntries.add(preparedEntry);
+    }
+    preparedRequest.setEntries(preparedEntries);
+    return preparedRequest;
+  }
+
+  private static Map<String, String> stringMessageAttributes(
+      Map<String, MessageAttributeValue> messageAttributes) {
+    Map<String, String> values = new HashMap<>();
+    messageAttributes.forEach((name, value) -> values.put(name, value.getStringValue()));
+    return values;
+  }
+
+  static boolean isBatchRequest(Request<?> request) {
+    return request.getOriginalRequest() instanceof SendMessageBatchRequest;
+  }
+
+  static List<Context> getBatchMessageContexts(Request<?> request) {
+    AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
+    if (!(originalRequest instanceof SendMessageBatchRequest)) {
+      return emptyList();
+    }
+    List<Context> contexts = new ArrayList<>();
+    SendMessageBatchRequest batchRequest = (SendMessageBatchRequest) originalRequest;
+    for (SendMessageBatchRequestEntry entry : batchRequest.getEntries()) {
+      Context context =
+          SqsParentContext.ofTraceHeader(SqsMessageSystemAttributeAccess.getTraceHeader(entry));
+      if (Span.fromContext(context).getSpanContext().isValid()) {
+        contexts.add(context);
+      }
+    }
+    return contexts;
+  }
+
+  @Nullable
+  static Long getBatchMessageCount(Request<?> request) {
+    if (request.getOriginalRequest() instanceof SendMessageBatchRequest) {
+      return (long) ((SendMessageBatchRequest) request.getOriginalRequest()).getEntries().size();
+    } else if (request.getOriginalRequest() instanceof DeleteMessageBatchRequest) {
+      return (long) ((DeleteMessageBatchRequest) request.getOriginalRequest()).getEntries().size();
+    }
+    return null;
   }
 
   @Nullable
@@ -142,6 +255,15 @@ public final class SqsImpl {
       }
     }
     return null;
+  }
+
+  static Collection<String> getMessageAttributeNames(Request<?> request) {
+    if (request.getOriginalRequest() instanceof SendMessageRequest) {
+      // the request is owned by the caller, so its attribute names are snapshotted
+      return new ArrayList<>(
+          ((SendMessageRequest) request.getOriginalRequest()).getMessageAttributes().keySet());
+    }
+    return emptyList();
   }
 
   @Nullable

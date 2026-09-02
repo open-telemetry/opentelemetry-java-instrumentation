@@ -37,7 +37,7 @@ jobs:
       - name: Find top flaky test
         id: select
         env:
-          DEVELOCITY_URL: https://develocity.opentelemetry.io
+          DEVELOCITY_URL: https://community.develocity.cloud
         run: |
           python .github/scripts/flaky-test-remediation/1-select-flaky-test.py
 
@@ -80,6 +80,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0  # Copilot inspects recent commits while diagnosing the flake
           # zizmor: ignore[artipacked] Credentials are required by the branch push below.
           persist-credentials: true
 
@@ -87,13 +88,13 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
           cache-read-only: true
 
@@ -181,6 +182,7 @@ jobs:
           ARTIFACT_URL: ${{ steps.upload-fix-diagnostics.outputs.artifact-url }}
           PR_HEAD: ${{ steps.branch.outputs.name }}
           PR_BASE: main
+          PR_DRAFT: "true"
         run: python .github/scripts/flaky-test-remediation/3-open-pr.py
 
       - name: Check out progress branch
