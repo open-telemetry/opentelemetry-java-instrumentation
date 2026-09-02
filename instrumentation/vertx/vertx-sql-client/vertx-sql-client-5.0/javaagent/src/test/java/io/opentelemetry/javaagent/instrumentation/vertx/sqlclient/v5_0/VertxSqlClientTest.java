@@ -78,6 +78,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -404,23 +405,31 @@ class VertxSqlClientTest {
   }
 
   @Test
-  void testConcurrentSupplierPoolQueriesCanShareOnePendingFuture() throws Exception {
+  void testConcurrentSupplierPoolsCanShareOnePendingFuture() throws Exception {
     AtomicInteger calls = new AtomicInteger();
     Promise<SqlConnectOptions> suppliedOptions = Promise.promise();
-    Pool supplierPool =
+    Supplier<Future<SqlConnectOptions>> supplier =
+        () -> {
+          calls.incrementAndGet();
+          return suppliedOptions.future();
+        };
+    Pool firstSupplierPool =
         PgBuilder.pool()
             .using(vertx)
-            .connectingTo(
-                () -> {
-                  calls.incrementAndGet();
-                  return suppliedOptions.future();
-                })
-            .with(new PoolOptions().setMaxSize(2))
+            .connectingTo(supplier)
+            .with(new PoolOptions().setMaxSize(1))
             .build();
-    cleanup.deferCleanup(supplierPool::close);
+    cleanup.deferCleanup(firstSupplierPool::close);
+    Pool secondSupplierPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(supplier)
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(secondSupplierPool::close);
 
-    Future<?> firstResult = supplierPool.query("select * from test").execute();
-    Future<?> secondResult = supplierPool.query("select * from test").execute();
+    Future<?> firstResult = firstSupplierPool.query("select * from test").execute();
+    Future<?> secondResult = secondSupplierPool.query("select * from test").execute();
     suppliedOptions.complete(connectOptions());
     Future.all(firstResult, secondResult)
         .toCompletionStage()
