@@ -18,22 +18,24 @@ import scala.Option;
 class ServerEndpointTest {
 
   @Test
-  void extractsMasterSlavesMasterClient() {
+  void extractsMasterSlavesMasterClientOnlyWhenRequested() {
     RedisClient masterClient = masterClient();
     RedisClientMasterSlaves client = mock(RedisClientMasterSlaves.class);
     when(client.masterClient()).thenReturn(masterClient);
 
-    assertEndpoint(ServerEndpoint.create(client));
+    assertEndpoint(ServerEndpoint.create(client, true));
+    assertThat(ServerEndpoint.create(client, false)).isNull();
   }
 
   @Test
-  void extractsSentinelMasterSlavesMasterClient() {
+  void extractsSentinelMasterSlavesMasterClientOnlyWhenRequested() {
     RedisClient masterClient = masterClient();
     SentinelMonitoredRedisClientMasterSlaves client =
         mock(SentinelMonitoredRedisClientMasterSlaves.class);
     when(client.masterClient()).thenReturn(masterClient);
 
-    assertEndpoint(ServerEndpoint.create(client));
+    assertEndpoint(ServerEndpoint.create(client, true));
+    assertThat(ServerEndpoint.create(client, false)).isNull();
   }
 
   private static RedisClient masterClient() {

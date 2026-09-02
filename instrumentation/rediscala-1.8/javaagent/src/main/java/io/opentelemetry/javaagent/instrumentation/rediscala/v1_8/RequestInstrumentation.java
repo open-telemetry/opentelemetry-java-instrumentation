@@ -81,7 +81,7 @@ class RequestInstrumentation implements TypeInstrumentation {
 
         ServerEndpoint endpoint = null;
         if (emitStableDatabaseSemconv()) {
-          endpoint = ServerEndpoint.create(action);
+          endpoint = ServerEndpoint.create(action, cmd.isMasterOnly());
         } else if (action instanceof RedisClientActorLike) {
           endpoint = ServerEndpoint.create((RedisClientActorLike) action);
         }
