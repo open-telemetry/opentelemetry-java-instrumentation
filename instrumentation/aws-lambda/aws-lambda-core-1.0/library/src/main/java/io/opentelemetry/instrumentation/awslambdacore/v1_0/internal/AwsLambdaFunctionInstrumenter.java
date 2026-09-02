@@ -126,7 +126,7 @@ public class AwsLambdaFunctionInstrumenter {
     try {
       return MethodHandles.publicLookup()
           .findVirtual(type, GET_XRAY_TRACE_ID_METHOD, MethodType.methodType(String.class));
-    } catch (NoSuchMethodException | IllegalAccessException | SecurityException e) {
+    } catch (NoSuchMethodException | IllegalAccessException | SecurityException ignored) {
       return null;
     }
   }
