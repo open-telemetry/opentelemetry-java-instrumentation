@@ -161,7 +161,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   }
 
   @Test
-  void sharedNonDefaultPortIsReportedSeparately() {
+  void sharedNonDefaultPortIsIncludedWithEachAddress() {
     TransportClient addressListClient = connectedClient();
     ElasticsearchTransportServerTargets.update(
         addressListClient,
@@ -171,7 +171,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
     clusterHealth(addressListClient);
 
-    assertConfiguredTarget(configuredAddressListWithSharedPort(), 9400L);
+    assertConfiguredTarget(configuredAddressListWithSharedNonDefaultPort(), null);
   }
 
   @Test
@@ -237,6 +237,10 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
   private String configuredAddressListWithSharedPort() {
     return getAddress() + "," + DOWN_HOST;
+  }
+
+  private String configuredAddressListWithSharedNonDefaultPort() {
+    return getAddress() + ":9400," + DOWN_HOST + ":9400";
   }
 
   private static TransportClient connectedClient() {
