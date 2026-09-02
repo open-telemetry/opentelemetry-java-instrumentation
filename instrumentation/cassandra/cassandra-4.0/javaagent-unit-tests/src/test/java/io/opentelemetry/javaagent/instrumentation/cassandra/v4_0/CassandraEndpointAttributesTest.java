@@ -24,6 +24,7 @@ import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -208,7 +209,7 @@ class CassandraEndpointAttributesTest {
     }
   }
 
-  private Attributes serverAttributes(CassandraServerTarget serverTarget) {
+  private Attributes serverAttributes(DbServerTarget serverTarget) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, "SELECT 1");
     AttributesBuilder startAttributes = Attributes.builder();
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
@@ -221,7 +222,7 @@ class CassandraEndpointAttributesTest {
         .build();
   }
 
-  private static CassandraServerTarget target(List<String> contactPoints) {
+  private static DbServerTarget target(List<String> contactPoints) {
     return CassandraServerTarget.of(contactPoints);
   }
 

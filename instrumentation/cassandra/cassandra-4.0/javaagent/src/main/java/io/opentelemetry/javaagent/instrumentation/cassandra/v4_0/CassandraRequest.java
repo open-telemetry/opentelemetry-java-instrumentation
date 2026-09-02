@@ -15,6 +15,7 @@ import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.cql.Statement;
 import com.datastax.oss.driver.api.core.session.Session;
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,12 +25,12 @@ import javax.annotation.Nullable;
 abstract class CassandraRequest {
 
   static CassandraRequest create(
-      Session session, @Nullable CassandraServerTarget serverTarget, String queryText) {
+      Session session, @Nullable DbServerTarget serverTarget, String queryText) {
     return create(session, serverTarget, singleton(queryText), false, null, null);
   }
 
   static CassandraRequest create(
-      Session session, @Nullable CassandraServerTarget serverTarget, Statement<?> statement) {
+      Session session, @Nullable DbServerTarget serverTarget, Statement<?> statement) {
     if (statement instanceof BatchStatement) {
       return create(session, serverTarget, (BatchStatement) statement);
     }
@@ -43,9 +44,7 @@ abstract class CassandraRequest {
   }
 
   private static CassandraRequest create(
-      Session session,
-      @Nullable CassandraServerTarget serverTarget,
-      BatchStatement batchStatement) {
+      Session session, @Nullable DbServerTarget serverTarget, BatchStatement batchStatement) {
     List<String> queryTexts = new ArrayList<>();
     List<Boolean> mixedParameterizedQueries = null;
     boolean allQueriesParameterized = true;
@@ -86,7 +85,7 @@ abstract class CassandraRequest {
 
   private static CassandraRequest create(
       Session session,
-      @Nullable CassandraServerTarget serverTarget,
+      @Nullable DbServerTarget serverTarget,
       Collection<String> queryTexts,
       boolean allQueriesParameterized,
       @Nullable List<Boolean> mixedParameterizedQueries,
@@ -126,7 +125,7 @@ abstract class CassandraRequest {
   abstract Session getSession();
 
   @Nullable
-  abstract CassandraServerTarget getServerTarget();
+  abstract DbServerTarget getServerTarget();
 
   abstract Collection<String> getQueryTexts();
 
