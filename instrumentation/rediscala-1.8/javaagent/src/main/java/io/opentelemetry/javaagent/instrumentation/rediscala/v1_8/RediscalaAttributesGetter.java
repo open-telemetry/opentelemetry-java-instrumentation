@@ -82,12 +82,12 @@ class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaReq
   @Nullable
   @Override
   public String getNetworkPeerAddress(RediscalaRequest request, @Nullable Void unused) {
-    return emitStableDatabaseSemconv() ? request.getHost() : null;
+    return null;
   }
 
   @Nullable
   @Override
   public Integer getNetworkPeerPort(RediscalaRequest request, @Nullable Void unused) {
-    return emitStableDatabaseSemconv() ? request.getPort() : null;
+    return null;
   }
 }

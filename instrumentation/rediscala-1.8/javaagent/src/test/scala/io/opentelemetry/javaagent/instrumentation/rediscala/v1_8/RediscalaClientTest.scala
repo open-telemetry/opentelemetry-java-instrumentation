@@ -188,8 +188,8 @@ class RediscalaClientTest {
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), "SET"),
                   equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
-                  equalTo(NETWORK_PEER_ADDRESS, stablePeerAddress(host)),
-                  equalTo(NETWORK_PEER_PORT, stablePeerPort(port)),
+                  equalTo(NETWORK_PEER_ADDRESS, null),
+                  equalTo(NETWORK_PEER_PORT, null),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -204,8 +204,6 @@ class RediscalaClientTest {
       DB_SYSTEM_NAME,
       DB_OPERATION_NAME,
       DB_NAMESPACE,
-      NETWORK_PEER_ADDRESS,
-      NETWORK_PEER_PORT,
       SERVER_ADDRESS,
       SERVER_PORT
     )
@@ -270,11 +268,8 @@ class RediscalaClientTest {
                     equalTo(maybeStable(DB_SYSTEM), REDIS),
                     equalTo(maybeStable(DB_OPERATION), "MULTI SET"),
                     equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
-                    equalTo(
-                      NETWORK_PEER_ADDRESS,
-                      stablePeerAddress(reconnectHost)
-                    ),
-                    equalTo(NETWORK_PEER_PORT, stablePeerPort(port)),
+                    equalTo(NETWORK_PEER_ADDRESS, null),
+                    equalTo(NETWORK_PEER_PORT, null),
                     equalTo(
                       SERVER_ADDRESS,
                       if (emitStableDatabaseSemconv()) reconnectHost else host
@@ -390,8 +385,6 @@ class RediscalaClientTest {
         (s"${master.host}:${master.port}" +:
           slaves.map(server => s"${server.host}:${server.port}").sorted)
           .mkString(","),
-        networkPeerAddress = host,
-        networkPeerPort = port,
         databaseIndex = defaultDbIndex.toString
       )
     } finally {
@@ -427,8 +420,6 @@ class RediscalaClientTest {
             .mkString(",")
         else null,
         operationName = "MULTI SET",
-        networkPeerAddress = host,
-        networkPeerPort = port,
         databaseIndex = namespace(defaultDbIndex)
       )
     } finally {
@@ -483,8 +474,6 @@ class RediscalaClientTest {
         if (emitStableDatabaseSemconv()) sentinelTarget(sentinelHosts)
         else null,
         operationName = "MULTI SET",
-        networkPeerAddress = host,
-        networkPeerPort = port,
         databaseIndex = namespace(defaultDbIndex)
       )
     } finally {
@@ -519,8 +508,6 @@ class RediscalaClientTest {
       Await.result(result, Duration("10 second"))
       assertConfiguredTargetSpan(
         sentinelTarget(sentinelHosts),
-        networkPeerAddress = host,
-        networkPeerPort = port,
         databaseIndex = defaultDbIndex.toString
       )
     } finally {
@@ -538,8 +525,6 @@ class RediscalaClientTest {
       assertConfiguredTargetSpan(
         if (emitStableDatabaseSemconv()) sentinelTarget(sentinelHosts)
         else null,
-        networkPeerAddress = host,
-        networkPeerPort = port,
         databaseIndex =
           if (emitStableDatabaseSemconv()) defaultDbIndex.toString else null
       )
@@ -560,8 +545,6 @@ class RediscalaClientTest {
       assertConfiguredTargetSpan(
         sentinelTarget(sentinelHosts),
         operationName = "MULTI SET",
-        networkPeerAddress = host,
-        networkPeerPort = port,
         databaseIndex = defaultDbIndex.toString
       )
     } finally {
@@ -656,8 +639,8 @@ class RediscalaClientTest {
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), "SET"),
                   equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
-                  equalTo(NETWORK_PEER_ADDRESS, stablePeerAddress(host)),
-                  equalTo(NETWORK_PEER_PORT, stablePeerPort(port)),
+                  equalTo(NETWORK_PEER_ADDRESS, null),
+                  equalTo(NETWORK_PEER_PORT, null),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -673,8 +656,8 @@ class RediscalaClientTest {
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), "GET"),
                   equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
-                  equalTo(NETWORK_PEER_ADDRESS, stablePeerAddress(host)),
-                  equalTo(NETWORK_PEER_PORT, stablePeerPort(port)),
+                  equalTo(NETWORK_PEER_ADDRESS, null),
+                  equalTo(NETWORK_PEER_PORT, null),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -776,11 +759,8 @@ class RediscalaClientTest {
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), operationName),
                   equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
-                  equalTo(
-                    NETWORK_PEER_ADDRESS,
-                    stablePeerAddress(serverAddress)
-                  ),
-                  equalTo(NETWORK_PEER_PORT, stablePeerPort(serverPort)),
+                  equalTo(NETWORK_PEER_ADDRESS, null),
+                  equalTo(NETWORK_PEER_PORT, null),
                   equalTo(SERVER_ADDRESS, serverAddress),
                   equalTo(SERVER_PORT, serverPort)
                 )
@@ -823,8 +803,8 @@ class RediscalaClientTest {
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), scenario.operationName),
                   equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
-                  equalTo(NETWORK_PEER_ADDRESS, stablePeerAddress(host)),
-                  equalTo(NETWORK_PEER_PORT, stablePeerPort(port)),
+                  equalTo(NETWORK_PEER_ADDRESS, null),
+                  equalTo(NETWORK_PEER_PORT, null),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port),
                   equalTo(
@@ -871,8 +851,8 @@ class RediscalaClientTest {
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), "SET"),
                   equalTo(DB_NAMESPACE, namespace(nonDefaultDbIndex)),
-                  equalTo(NETWORK_PEER_ADDRESS, stablePeerAddress(host)),
-                  equalTo(NETWORK_PEER_PORT, stablePeerPort(port)),
+                  equalTo(NETWORK_PEER_ADDRESS, null),
+                  equalTo(NETWORK_PEER_PORT, null),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -887,8 +867,6 @@ class RediscalaClientTest {
       DB_SYSTEM_NAME,
       DB_OPERATION_NAME,
       DB_NAMESPACE,
-      NETWORK_PEER_ADDRESS,
-      NETWORK_PEER_PORT,
       SERVER_ADDRESS,
       SERVER_PORT
     )
@@ -927,8 +905,8 @@ class RediscalaClientTest {
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), "MULTI SET"),
                   equalTo(DB_NAMESPACE, namespace(nonDefaultDbIndex)),
-                  equalTo(NETWORK_PEER_ADDRESS, stablePeerAddress(host)),
-                  equalTo(NETWORK_PEER_PORT, stablePeerPort(port)),
+                  equalTo(NETWORK_PEER_ADDRESS, null),
+                  equalTo(NETWORK_PEER_PORT, null),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port),
                   equalTo(
@@ -947,8 +925,6 @@ class RediscalaClientTest {
       DB_SYSTEM_NAME,
       DB_OPERATION_NAME,
       DB_NAMESPACE,
-      NETWORK_PEER_ADDRESS,
-      NETWORK_PEER_PORT,
       SERVER_ADDRESS,
       SERVER_PORT
     )
@@ -956,12 +932,6 @@ class RediscalaClientTest {
 
   private def namespace(databaseIndex: Int): String =
     if (emitStableDatabaseSemconv()) databaseIndex.toString else null
-
-  private def stablePeerAddress(value: String): String =
-    if (emitStableDatabaseSemconv()) value else null
-
-  private def stablePeerPort(value: JLong): JLong =
-    if (emitStableDatabaseSemconv()) value else null
 
   private def createSentinelClient(
       sentinelHosts: Seq[String]
@@ -1015,8 +985,6 @@ class RediscalaClientTest {
       serverAddress: String,
       serverPort: JLong = null,
       operationName: String = "SET",
-      networkPeerAddress: String = null,
-      networkPeerPort: JLong = null,
       databaseIndex: String = null
   ): Unit =
     await().untilAsserted(new ThrowingRunnable {
@@ -1044,11 +1012,8 @@ class RediscalaClientTest {
             equalTo(maybeStable(DB_SYSTEM), REDIS),
             equalTo(maybeStable(DB_OPERATION), operationName),
             equalTo(DB_NAMESPACE, databaseIndex),
-            equalTo(
-              NETWORK_PEER_ADDRESS,
-              stablePeerAddress(networkPeerAddress)
-            ),
-            equalTo(NETWORK_PEER_PORT, stablePeerPort(networkPeerPort)),
+            equalTo(NETWORK_PEER_ADDRESS, null),
+            equalTo(NETWORK_PEER_PORT, null),
             equalTo(SERVER_ADDRESS, serverAddress),
             equalTo(SERVER_PORT, serverPort)
           )

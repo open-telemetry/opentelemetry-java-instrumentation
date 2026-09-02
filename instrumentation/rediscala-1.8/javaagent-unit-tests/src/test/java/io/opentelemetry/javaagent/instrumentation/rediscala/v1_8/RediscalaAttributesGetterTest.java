@@ -23,22 +23,20 @@ class RediscalaAttributesGetterTest {
   private final RediscalaAttributesGetter getter = new RediscalaAttributesGetter();
 
   @Test
-  void requestWithoutTargetUsesSelectedEndpointOnlyForLegacySemconv() {
+  void requestWithoutTargetOmitsStableNetworkPeer() {
     RediscalaRequest request = request(null, SELECTED_PORT);
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? null : SELECTED_HOST);
     assertThat(getter.getServerPort(request))
         .isEqualTo(emitStableDatabaseSemconv() ? null : SELECTED_PORT);
-    assertThat(getter.getNetworkPeerAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? SELECTED_HOST : null);
-    assertThat(getter.getNetworkPeerPort(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? SELECTED_PORT : null);
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   @ParameterizedTest
   @ValueSource(ints = {6379, 6381})
-  void requestWithTargetSeparatesConfiguredServerFromSelectedNetworkPeer(int selectedPort) {
+  void requestWithTargetOmitsStableNetworkPeer(int selectedPort) {
     RedisServerTarget target = RedisServerTarget.ofHostAndPort("configured-node", 6380);
     RediscalaRequest request = request(target, selectedPort);
 
@@ -46,10 +44,8 @@ class RediscalaAttributesGetterTest {
         .isEqualTo(emitStableDatabaseSemconv() ? "configured-node" : SELECTED_HOST);
     assertThat(getter.getServerPort(request))
         .isEqualTo(emitStableDatabaseSemconv() ? 6380 : selectedPort);
-    assertThat(getter.getNetworkPeerAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? SELECTED_HOST : null);
-    assertThat(getter.getNetworkPeerPort(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? selectedPort : null);
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   private static RediscalaRequest request(RedisServerTarget target, int selectedPort) {
