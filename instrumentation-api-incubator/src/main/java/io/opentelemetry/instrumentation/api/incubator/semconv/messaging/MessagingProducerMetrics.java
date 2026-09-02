@@ -21,6 +21,7 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -124,9 +125,27 @@ public final class MessagingProducerMetrics implements OperationListener {
     if (!enabled) {
       return context;
     }
-    return context.with(
-        MESSAGING_PRODUCER_METRICS_STATE,
-        new AutoValue_MessagingProducerMetrics_State(startAttributes, startNanos));
+    String operationType = startAttributes.get(MESSAGING_OPERATION_TYPE);
+    boolean recordClientOperationDuration =
+        clientOperationDurationHistogram != null
+            && !MessagingMetricsState.hasClientOperationDuration(context, operationType);
+    boolean recordSentMessages =
+        sentMessagesCounter != null
+            && MessagingOperationType.SEND.value().equals(operationType)
+            && !MessagingMetricsState.hasSentMessages(context);
+    Context contextWithState =
+        context.with(
+            MESSAGING_PRODUCER_METRICS_STATE,
+            new AutoValue_MessagingProducerMetrics_State(
+                startAttributes, startNanos, recordClientOperationDuration, recordSentMessages));
+    if (recordClientOperationDuration) {
+      contextWithState =
+          MessagingMetricsState.markClientOperationDuration(contextWithState, operationType);
+    }
+    if (recordSentMessages) {
+      contextWithState = MessagingMetricsState.markSentMessages(contextWithState);
+    }
+    return contextWithState;
   }
 
   @Override
@@ -158,11 +177,10 @@ public final class MessagingProducerMetrics implements OperationListener {
         clientOperationDurationHistogram != null || sentMessagesCounter != null
             ? MessagingMetricsAdvice.filterAttributes(attributes)
             : attributes;
-    if (clientOperationDurationHistogram != null) {
+    if (clientOperationDurationHistogram != null && state.recordClientOperationDuration()) {
       clientOperationDurationHistogram.record(duration, filteredAttributes, context);
     }
-    if (sentMessagesCounter != null
-        && MessagingOperationType.SEND.value().equals(attributes.get(MESSAGING_OPERATION_TYPE))) {
+    if (sentMessagesCounter != null && state.recordSentMessages()) {
       Long batchMessageCount = attributes.get(MESSAGING_BATCH_MESSAGE_COUNT);
       long sentMessagesCount = batchMessageCount == null ? 1 : batchMessageCount;
       if (sentMessagesCount > 0) {
@@ -198,6 +216,10 @@ public final class MessagingProducerMetrics implements OperationListener {
     abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
+
+    abstract boolean recordClientOperationDuration();
+
+    abstract boolean recordSentMessages();
   }
 
   private enum Variant {

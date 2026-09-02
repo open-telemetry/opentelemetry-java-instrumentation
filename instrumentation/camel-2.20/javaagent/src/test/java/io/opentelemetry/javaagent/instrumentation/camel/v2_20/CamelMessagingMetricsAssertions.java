@@ -131,6 +131,10 @@ public class CamelMessagingMetricsAssertions {
         errorType,
         null);
     assertNoDeprecatedMetrics(testing);
+    assertNoDuplicateMessagingMetric(
+        testing, "messaging.client.sent.messages", "send", system, destination);
+    assertNoDuplicateMessagingMetric(
+        testing, "messaging.client.operation.duration", "send", system, destination);
   }
 
   public static void assertProcessMetrics(

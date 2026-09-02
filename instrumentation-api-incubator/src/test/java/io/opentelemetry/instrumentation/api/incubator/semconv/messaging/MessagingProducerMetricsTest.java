@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasClientOperationDuration;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasSentMessages;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -81,6 +83,8 @@ class MessagingProducerMetricsTest {
                         TraceState.getDefault())));
 
     Context context = listener.onStart(parent, requestAttributes, nanos(100));
+    assertThat(hasClientOperationDuration(context, "send")).isEqualTo(emitStableMessagingSemconv());
+    assertThat(hasSentMessages(context)).isEqualTo(emitStableMessagingSemconv());
     listener.onEnd(context, responseAttributes, nanos(250));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
@@ -178,6 +182,73 @@ class MessagingProducerMetricsTest {
                                               equalTo(MESSAGING_DESTINATION_PARTITION_ID, "1"),
                                               equalTo(SERVER_ADDRESS, "localhost"),
                                               equalTo(SERVER_PORT, 6650)))));
+    }
+  }
+
+  @Test
+  void outerOperationOwnsNestedStableMetrics() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener outer =
+        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("outer"));
+    OperationListener inner =
+        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("inner"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "kafka")
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)
+            .build();
+
+    Context outerContext = outer.onStart(Context.root(), attributes, nanos(100));
+    Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
+    inner.onEnd(innerContext, Attributes.empty(), nanos(200));
+    outer.onEnd(outerContext, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .allMatch(metric -> metric.getInstrumentationScopeInfo().getName().equals("outer"))
+          .extracting(MetricData::getName)
+          .containsExactlyInAnyOrder(
+              "messaging.client.operation.duration", "messaging.client.sent.messages");
+    } else {
+      assertThat(metrics).isEmpty();
+    }
+  }
+
+  @Test
+  void completedOperationDoesNotSuppressSibling() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener listener =
+        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("test"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "kafka")
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)
+            .build();
+
+    Context first = listener.onStart(Context.root(), attributes, nanos(100));
+    listener.onEnd(first, Attributes.empty(), nanos(150));
+    Context second = listener.onStart(Context.root(), attributes, nanos(200));
+    listener.onEnd(second, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .filteredOn(metric -> metric.getName().equals("messaging.client.sent.messages"))
+          .singleElement()
+          .satisfies(
+              metric ->
+                  assertThat(metric)
+                      .hasLongSumSatisfying(
+                          sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
+    } else {
+      assertThat(metrics).isEmpty();
     }
   }
 

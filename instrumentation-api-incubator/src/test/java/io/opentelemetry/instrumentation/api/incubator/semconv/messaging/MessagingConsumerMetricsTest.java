@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasClientOperationDuration;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasConsumedMessages;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
@@ -71,6 +72,8 @@ class MessagingConsumerMetricsTest {
             .build();
 
     Context context = listener.onStart(Context.root(), requestAttributes, nanos(100));
+    assertThat(hasClientOperationDuration(context, "receive"))
+        .isEqualTo(emitStableMessagingSemconv());
     assertThat(hasConsumedMessages(context)).isEqualTo(emitStableMessagingSemconv());
     listener.onEnd(context, responseAttributes, nanos(300));
 
@@ -177,6 +180,83 @@ class MessagingConsumerMetricsTest {
                                               equalTo(
                                                   MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
                                                   "subscription")))));
+    }
+  }
+
+  @Test
+  void outerReceiveOwnsNestedStableMetrics() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener outer =
+        MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("outer"));
+    OperationListener inner =
+        MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("inner"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "kafka")
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
+            .build();
+
+    Context outerContext = outer.onStart(Context.root(), attributes, nanos(100));
+    Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
+    inner.onEnd(innerContext, Attributes.empty(), nanos(200));
+    outer.onEnd(outerContext, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .allMatch(metric -> metric.getInstrumentationScopeInfo().getName().equals("outer"))
+          .extracting(MetricData::getName)
+          .containsExactlyInAnyOrder(
+              "messaging.client.operation.duration", "messaging.client.consumed.messages");
+      assertThat(metrics)
+          .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
+          .singleElement()
+          .satisfies(
+              metric ->
+                  assertThat(metric)
+                      .hasLongSumSatisfying(
+                          sum -> sum.hasPointsSatisfying(point -> point.hasValue(3))));
+    } else {
+      assertThat(metrics).isEmpty();
+    }
+  }
+
+  @Test
+  void distinctClientOperationTypesOwnTheirDurations() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener receive =
+        MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("receive"));
+    OperationListener settle =
+        MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("settle"));
+    Attributes receiveAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .build();
+    Attributes settleAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "settle" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "settle" : null)
+            .build();
+
+    Context receiveContext = receive.onStart(Context.root(), receiveAttributes, nanos(100));
+    Context settleContext = settle.onStart(receiveContext, settleAttributes, nanos(150));
+    settle.onEnd(settleContext, Attributes.empty(), nanos(200));
+    receive.onEnd(receiveContext, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
+          .containsExactlyInAnyOrder("receive", "settle");
+    } else {
+      assertThat(metrics).isEmpty();
     }
   }
 

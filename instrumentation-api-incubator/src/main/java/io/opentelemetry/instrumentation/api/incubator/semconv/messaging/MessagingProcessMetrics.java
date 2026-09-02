@@ -52,10 +52,15 @@ public final class MessagingProcessMetrics implements OperationListener {
     if (processDurationHistogram == null) {
       return context;
     }
-    return MessagingMetricsState.markProcessDuration(
+    boolean recordProcessDuration = !MessagingMetricsState.hasProcessDuration(context);
+    Context contextWithState =
         context.with(
             MESSAGING_PROCESS_METRICS_STATE,
-            new AutoValue_MessagingProcessMetrics_State(startAttributes, startNanos)));
+            new AutoValue_MessagingProcessMetrics_State(
+                startAttributes, startNanos, recordProcessDuration));
+    return recordProcessDuration
+        ? MessagingMetricsState.markProcessDuration(contextWithState)
+        : contextWithState;
   }
 
   @Override
@@ -72,11 +77,13 @@ public final class MessagingProcessMetrics implements OperationListener {
       return;
     }
 
-    Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
-    processDurationHistogram.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_S,
-        MessagingMetricsAdvice.filterAttributes(attributes),
-        context);
+    if (state.recordProcessDuration()) {
+      Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
+      processDurationHistogram.record(
+          (endNanos - state.startTimeNanos()) / NANOS_PER_S,
+          MessagingMetricsAdvice.filterAttributes(attributes),
+          context);
+    }
   }
 
   private static DoubleHistogram buildProcessDuration(Meter meter) {
@@ -95,5 +102,7 @@ public final class MessagingProcessMetrics implements OperationListener {
     abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
+
+    abstract boolean recordProcessDuration();
   }
 }

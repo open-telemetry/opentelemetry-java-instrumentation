@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
@@ -95,7 +96,7 @@ class CamelSingletons {
               CamelProcessMetrics.wasConsumedMessageCounted(request)
                   ? markConsumedMessages(context)
                   : context);
-      builder.addOperationMetrics(CamelProcessMetrics.consumedMessages());
+      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
       return MessagingProcessInstrumenterFactory.create(
           builder,
           CamelPropagationUtil.messagingPropagator(),

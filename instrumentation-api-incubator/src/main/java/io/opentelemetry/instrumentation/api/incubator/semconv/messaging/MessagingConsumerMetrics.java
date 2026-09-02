@@ -145,14 +145,31 @@ public final class MessagingConsumerMetrics implements OperationListener {
     if (!enabled) {
       return context;
     }
+    String operationType = startAttributes.get(MESSAGING_OPERATION_TYPE);
+    boolean recordClientOperationDuration =
+        clientOperationDurationHistogram != null
+            && recordsClientOperationDuration(operationType)
+            && !MessagingMetricsState.hasClientOperationDuration(context, operationType);
+    boolean recordConsumedMessages =
+        consumedMessagesCounter != null
+            && recordsConsumedMessages(operationType)
+            && !MessagingMetricsState.hasConsumedMessages(context);
     Context contextWithState =
         context.with(
             MESSAGING_CONSUMER_METRICS_STATE,
-            new AutoValue_MessagingConsumerMetrics_State(startAttributes, startNanos));
-    return consumedMessagesCounter != null
-            && recordsConsumedMessages(startAttributes.get(MESSAGING_OPERATION_TYPE))
-        ? MessagingMetricsState.markConsumedMessages(contextWithState)
-        : contextWithState;
+            new AutoValue_MessagingConsumerMetrics_State(
+                startAttributes,
+                startNanos,
+                recordClientOperationDuration,
+                recordConsumedMessages));
+    if (recordClientOperationDuration) {
+      contextWithState =
+          MessagingMetricsState.markClientOperationDuration(contextWithState, operationType);
+    }
+    if (recordConsumedMessages) {
+      contextWithState = MessagingMetricsState.markConsumedMessages(contextWithState);
+    }
+    return contextWithState;
   }
 
   @Override
@@ -186,8 +203,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
         clientOperationDurationHistogram != null || consumedMessagesCounter != null
             ? MessagingMetricsAdvice.filterAttributes(attributes)
             : attributes;
-    if (clientOperationDurationHistogram != null
-        && !MessagingOperationType.PROCESS.value().equals(operationType)) {
+    if (clientOperationDurationHistogram != null && state.recordClientOperationDuration()) {
       clientOperationDurationHistogram.record(duration, filteredAttributes, context);
     }
 
@@ -198,7 +214,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
         receiveMessageCount.add(receiveMessagesCount, attributes, context);
       }
     }
-    if (consumedMessagesCounter != null && recordsConsumedMessages(operationType)) {
+    if (consumedMessagesCounter != null && state.recordConsumedMessages()) {
       long consumedMessagesCount =
           getConsumedMessagesCount(attributes, batchMessageCount, consumedMessagesOnly);
       if (consumedMessagesCount > 0) {
@@ -209,6 +225,10 @@ public final class MessagingConsumerMetrics implements OperationListener {
 
   private boolean recordsConsumedMessages(@Nullable String operationType) {
     return consumedMessagesOnly || MessagingOperationType.RECEIVE.value().equals(operationType);
+  }
+
+  private static boolean recordsClientOperationDuration(@Nullable String operationType) {
+    return !MessagingOperationType.PROCESS.value().equals(operationType);
   }
 
   private static long getConsumedMessagesCount(
@@ -256,6 +276,10 @@ public final class MessagingConsumerMetrics implements OperationListener {
     abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
+
+    abstract boolean recordClientOperationDuration();
+
+    abstract boolean recordConsumedMessages();
   }
 
   private enum Variant {

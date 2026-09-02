@@ -23,7 +23,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import java.util.Collection;
 import org.junit.jupiter.api.Test;
 
 class MessagingProcessMetricsTest {
@@ -87,6 +89,36 @@ class MessagingProcessMetricsTest {
                                             equalTo(
                                                 ERROR_TYPE,
                                                 IllegalStateException.class.getName())))));
+  }
+
+  @Test
+  void outerOperationOwnsNestedProcessDuration() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener outer = MessagingProcessMetrics.get().create(meterProvider.get("outer"));
+    OperationListener inner = MessagingProcessMetrics.get().create(meterProvider.get("inner"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "kafka")
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null)
+            .build();
+
+    Context outerContext = outer.onStart(Context.root(), attributes, nanos(100));
+    Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
+    inner.onEnd(innerContext, Attributes.empty(), nanos(200));
+    outer.onEnd(outerContext, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .allMatch(metric -> metric.getInstrumentationScopeInfo().getName().equals("outer"))
+          .extracting(MetricData::getName)
+          .containsExactly("messaging.process.duration");
+    } else {
+      assertThat(metrics).isEmpty();
+    }
   }
 
   private static long nanos(int millis) {
