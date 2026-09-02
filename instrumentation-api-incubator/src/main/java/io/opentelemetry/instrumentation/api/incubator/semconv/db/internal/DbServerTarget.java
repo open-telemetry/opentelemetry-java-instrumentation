@@ -31,10 +31,9 @@ public class DbServerTarget {
   }
 
   /**
-   * Returns a target for an already-extracted Unix socket {@code path}, or {@code null} when it
-   * cannot be represented safely.
-   *
-   * <p>This method does not parse URIs or connection strings. Accepted paths are preserved exactly.
+   * Returns a target for an already-extracted Unix socket path, or {@code null} when the path is
+   * invalid. Accepted paths are preserved verbatim and are not parsed as URIs or connection
+   * strings.
    */
   @Nullable
   public static DbServerTarget unixSocket(@Nullable String path) {
