@@ -9,21 +9,21 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 
 public final class JmsReceiveTelemetry {
 
-  private static final Cache<Object, Boolean> RECEIVE_TELEMETRY_RECORDED = Cache.weak();
+  private static final Cache<Object, Boolean> receiveTelemetryRecorded = Cache.weak();
 
   public static boolean wasRecorded(Object message) {
-    return Boolean.TRUE.equals(RECEIVE_TELEMETRY_RECORDED.get(message));
+    return Boolean.TRUE.equals(receiveTelemetryRecorded.get(message));
   }
 
   public static void markRecorded(Object message) {
-    RECEIVE_TELEMETRY_RECORDED.put(message, Boolean.TRUE);
+    receiveTelemetryRecorded.put(message, Boolean.TRUE);
   }
 
   public static void copy(Object source, Object target) {
     if (source != null && wasRecorded(source)) {
       markRecorded(target);
     } else {
-      RECEIVE_TELEMETRY_RECORDED.remove(target);
+      receiveTelemetryRecorded.remove(target);
     }
   }
 
