@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import java.lang.reflect.InvocationTargetException;
 import org.apache.wicket.WicketRuntimeException;
 
-public final class WicketErrorUnwrapper {
+public class WicketErrorUnwrapper {
 
   /**
    * Unwraps the wicket-specific wrapper exceptions from {@code error} to find the error that
