@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import com.datastax.driver.core.Cluster;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -19,15 +19,6 @@ import javax.annotation.Nullable;
 public class CassandraConfiguredTarget {
 
   private static final int DEFAULT_PORT = 9042;
-  private static final int MAX_ENDPOINTS = 5;
-
-  private final String address;
-  @Nullable private final Integer port;
-
-  private CassandraConfiguredTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
 
   public static void capture(Cluster.Builder builder, Object[] arguments) {
     getOrCreateContactPoints(builder).add(arguments);
@@ -47,7 +38,7 @@ public class CassandraConfiguredTarget {
   }
 
   public static void store(Cluster.Builder builder, Cluster cluster, int configuredPort) {
-    CassandraConfiguredTarget target =
+    DbServerTarget target =
         create(VirtualFields.BUILDER_CONTACT_POINTS.get(builder), configuredPort);
     if (target != null) {
       VirtualFields.CLUSTER_TARGET.set(cluster, target);
@@ -55,141 +46,32 @@ public class CassandraConfiguredTarget {
   }
 
   @Nullable
-  static CassandraConfiguredTarget get(Cluster cluster) {
+  static DbServerTarget get(Cluster cluster) {
     return VirtualFields.CLUSTER_TARGET.get(cluster);
   }
 
   @Nullable
-  static CassandraConfiguredTarget create(Object contactPoints, int configuredPort) {
+  static DbServerTarget create(Object contactPoints, int configuredPort) {
     ContactPoints captured = new ContactPoints();
     captured.add(contactPoints);
     return create(captured, configuredPort);
   }
 
   @Nullable
-  private static CassandraConfiguredTarget create(
-      @Nullable ContactPoints contactPoints, int configuredPort) {
-    if (contactPoints == null || !validPort(configuredPort)) {
-      return null;
-    }
-    if (!contactPoints.valid) {
-      return null;
-    }
-    List<ContactPoint> points = contactPoints.points;
-    if (points.isEmpty()) {
+  private static DbServerTarget create(@Nullable ContactPoints contactPoints, int configuredPort) {
+    if (contactPoints == null || !contactPoints.valid) {
       return null;
     }
 
-    boolean hasNonDefaultPort = false;
-    List<String> hostTokens = new ArrayList<>(points.size());
-    List<String> endpointTokens = new ArrayList<>(points.size());
-    for (ContactPoint point : points) {
-      int port = resolvePort(point, configuredPort);
-      if (!validPort(port)) {
-        return null;
-      }
-      hasNonDefaultPort |= port != DEFAULT_PORT;
-      hostTokens.add(point.host);
-      endpointTokens.add(formatHost(point.host) + ':' + port);
+    DbServerTargetBuilder targetBuilder = DbServerTarget.builder(DEFAULT_PORT).setSorted(false);
+    for (ContactPoint point : contactPoints.points) {
+      targetBuilder.addEndpoint(
+          point.host, point.port == null ? configuredPort : point.port.intValue());
     }
-
-    if (points.size() == 1) {
-      int port = resolvePort(points.get(0), configuredPort);
-      return new CassandraConfiguredTarget(points.get(0).host, port == DEFAULT_PORT ? null : port);
-    }
-
-    if (!hasNonDefaultPort) {
-      hostTokens.sort(String::compareTo);
-      return new CassandraConfiguredTarget(joinFirstEndpoints(hostTokens), null);
-    }
-
-    endpointTokens.sort(String::compareTo);
-    return new CassandraConfiguredTarget(joinFirstEndpoints(endpointTokens), null);
+    return targetBuilder.build();
   }
 
-  private static String joinFirstEndpoints(List<String> tokens) {
-    StringBuilder result = new StringBuilder();
-    for (int i = 0; i < Math.min(tokens.size(), MAX_ENDPOINTS); i++) {
-      if (i != 0) {
-        result.append(',');
-      }
-      result.append(tokens.get(i));
-    }
-    return result.toString();
-  }
-
-  private static int resolvePort(ContactPoint point, int configuredPort) {
-    return point.port == null ? configuredPort : point.port;
-  }
-
-  private static boolean validPort(int port) {
-    return port > 0 && port <= 65535;
-  }
-
-  private static String formatHost(String host) {
-    return host.indexOf(':') >= 0 && !host.startsWith("[") ? '[' + host + ']' : host;
-  }
-
-  @Nullable
-  private static String sanitizeHost(@Nullable String host) {
-    if (host == null) {
-      return null;
-    }
-    String cleaned = host.trim();
-    boolean bracketed = cleaned.startsWith("[") && cleaned.endsWith("]");
-    if (bracketed) {
-      cleaned = cleaned.substring(1, cleaned.length() - 1).trim();
-    }
-    if (cleaned.isEmpty() || cleaned.startsWith("[") || cleaned.endsWith("]")) {
-      return null;
-    }
-
-    if (cleaned.indexOf(':') >= 0) {
-      return isSafeIpv6Host(cleaned) ? cleaned : null;
-    }
-    if (bracketed) {
-      return null;
-    }
-    for (int i = 0; i < cleaned.length(); i++) {
-      char c = cleaned.charAt(i);
-      if (!Character.isLetterOrDigit(c) && c != '-' && c != '.' && c != '_') {
-        return null;
-      }
-    }
-    return cleaned;
-  }
-
-  private static boolean isSafeIpv6Host(String host) {
-    int zoneSeparator = host.indexOf('%');
-    String address = zoneSeparator < 0 ? host : host.substring(0, zoneSeparator);
-    if (address.isEmpty() || (zoneSeparator >= 0 && host.indexOf('%', zoneSeparator + 1) >= 0)) {
-      return false;
-    }
-    try {
-      new URI("http", null, address, -1, null, null, null);
-    } catch (URISyntaxException ignored) {
-      return false;
-    }
-    if (zoneSeparator < 0 || zoneSeparator == host.length() - 1) {
-      return zoneSeparator < 0;
-    }
-    for (int i = zoneSeparator + 1; i < host.length(); i++) {
-      char c = host.charAt(i);
-      if (!Character.isLetterOrDigit(c) && c != '-' && c != '.' && c != '_' && c != '~') {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  String getAddress() {
-    return address;
-  }
-
-  @Nullable
-  Integer getPort() {
-    return port;
-  }
+  private CassandraConfiguredTarget() {}
 
   private static class ContactPoints {
     private final List<ContactPoint> points = new ArrayList<>();
@@ -201,20 +83,10 @@ public class CassandraConfiguredTarget {
         return;
       }
       if (value instanceof String) {
-        String host = sanitizeHost((String) value);
-        if (host != null) {
-          points.add(new ContactPoint(host, null));
-        } else {
-          valid = false;
-        }
+        points.add(new ContactPoint((String) value, null));
       } else if (value instanceof InetSocketAddress) {
         InetSocketAddress address = (InetSocketAddress) value;
-        String host = sanitizeHost(address.getHostString());
-        if (host != null) {
-          points.add(new ContactPoint(host, address.getPort()));
-        } else {
-          valid = false;
-        }
+        points.add(new ContactPoint(address.getHostString(), address.getPort()));
       } else if (value instanceof InetAddress) {
         points.add(new ContactPoint(((InetAddress) value).getHostAddress(), null));
       } else if (value instanceof Iterable) {
@@ -245,7 +117,7 @@ public class CassandraConfiguredTarget {
   private static class VirtualFields {
     private static final VirtualField<Cluster.Builder, ContactPoints> BUILDER_CONTACT_POINTS =
         VirtualField.find(Cluster.Builder.class, ContactPoints.class);
-    private static final VirtualField<Cluster, CassandraConfiguredTarget> CLUSTER_TARGET =
-        VirtualField.find(Cluster.class, CassandraConfiguredTarget.class);
+    private static final VirtualField<Cluster, DbServerTarget> CLUSTER_TARGET =
+        VirtualField.find(Cluster.class, DbServerTarget.class);
   }
 }

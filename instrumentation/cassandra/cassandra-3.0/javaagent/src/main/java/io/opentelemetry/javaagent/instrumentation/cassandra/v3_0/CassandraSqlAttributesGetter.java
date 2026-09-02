@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDiale
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -49,14 +50,14 @@ final class CassandraSqlAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CassandraRequest request) {
-    CassandraConfiguredTarget configuredTarget = request.getConfiguredTarget();
+    DbServerTarget configuredTarget = request.getConfiguredTarget();
     return configuredTarget == null ? null : configuredTarget.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(CassandraRequest request) {
-    CassandraConfiguredTarget configuredTarget = request.getConfiguredTarget();
+    DbServerTarget configuredTarget = request.getConfiguredTarget();
     return configuredTarget == null ? null : configuredTarget.getPort();
   }
 

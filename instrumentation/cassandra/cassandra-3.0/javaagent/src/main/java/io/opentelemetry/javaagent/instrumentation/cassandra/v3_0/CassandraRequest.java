@@ -14,6 +14,7 @@ import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,18 +27,18 @@ abstract class CassandraRequest {
       Session session,
       String queryText,
       boolean parameterizedQuery,
-      @Nullable CassandraConfiguredTarget configuredTarget) {
+      @Nullable DbServerTarget configuredTarget) {
     return create(
         session, singleton(queryText), parameterizedQuery, null, null, null, configuredTarget);
   }
 
   static CassandraRequest create(
-      Session session, String queryText, @Nullable CassandraConfiguredTarget configuredTarget) {
+      Session session, String queryText, @Nullable DbServerTarget configuredTarget) {
     return create(session, singleton(queryText), false, null, null, null, configuredTarget);
   }
 
   static CassandraRequest create(
-      Session session, Statement statement, @Nullable CassandraConfiguredTarget configuredTarget) {
+      Session session, Statement statement, @Nullable DbServerTarget configuredTarget) {
     if (statement instanceof BatchStatement) {
       return create(session, (BatchStatement) statement, configuredTarget);
     }
@@ -52,9 +53,7 @@ abstract class CassandraRequest {
   }
 
   private static CassandraRequest create(
-      Session session,
-      BatchStatement batchStatement,
-      @Nullable CassandraConfiguredTarget configuredTarget) {
+      Session session, BatchStatement batchStatement, @Nullable DbServerTarget configuredTarget) {
     List<String> queryTexts = new ArrayList<>();
     List<Boolean> mixedParameterizedQueries = null;
     boolean allQueriesParameterized = true;
@@ -101,7 +100,7 @@ abstract class CassandraRequest {
       @Nullable List<Boolean> mixedParameterizedQueries,
       @Nullable Long batchSize,
       @Nullable Statement statement,
-      @Nullable CassandraConfiguredTarget configuredTarget) {
+      @Nullable DbServerTarget configuredTarget) {
     QueryOptions queryOptions = session.getCluster().getConfiguration().getQueryOptions();
     String consistencyLevel =
         (statement == null || statement.getConsistencyLevel() == null)
@@ -178,5 +177,5 @@ abstract class CassandraRequest {
   abstract boolean isIdempotent();
 
   @Nullable
-  abstract CassandraConfiguredTarget getConfiguredTarget();
+  abstract DbServerTarget getConfiguredTarget();
 }

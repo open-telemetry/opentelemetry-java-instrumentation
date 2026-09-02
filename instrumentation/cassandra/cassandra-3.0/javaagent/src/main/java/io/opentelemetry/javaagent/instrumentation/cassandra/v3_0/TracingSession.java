@@ -20,19 +20,20 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.util.Map;
 import javax.annotation.Nullable;
 
 public class TracingSession implements Session {
 
   private final Session session;
-  @Nullable private final CassandraConfiguredTarget configuredTarget;
+  @Nullable private final DbServerTarget configuredTarget;
 
   public TracingSession(Session session) {
     this(session, CassandraConfiguredTarget.get(session.getCluster()));
   }
 
-  private TracingSession(Session session, @Nullable CassandraConfiguredTarget configuredTarget) {
+  private TracingSession(Session session, @Nullable DbServerTarget configuredTarget) {
     this.session = session;
     this.configuredTarget = configuredTarget;
   }
