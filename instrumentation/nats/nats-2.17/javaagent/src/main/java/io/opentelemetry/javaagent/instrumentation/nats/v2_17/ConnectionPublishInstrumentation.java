@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.publishInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.settleInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -17,6 +19,7 @@ import io.nats.client.Message;
 import io.nats.client.impl.Headers;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsMessageWritableHeaders;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -132,11 +135,17 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final NatsRequest request;
+      private final Instrumenter<NatsRequest, NatsRequest> instrumenter;
       private final Context context;
       private final Scope scope;
 
-      private AdviceScope(NatsRequest request, Context context, Scope scope) {
+      private AdviceScope(
+          NatsRequest request,
+          Instrumenter<NatsRequest, NatsRequest> instrumenter,
+          Context context,
+          Scope scope) {
         this.request = request;
+        this.instrumenter = instrumenter;
         this.context = context;
         this.scope = scope;
       }
@@ -144,16 +153,20 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(NatsRequest natsRequest) {
         Context parentContext = Context.current();
-        if (!publishInstrumenter().shouldStart(parentContext, natsRequest)) {
+        Instrumenter<NatsRequest, NatsRequest> instrumenter =
+            emitStableMessagingSemconv() && natsRequest.isJetStreamSettlement()
+                ? settleInstrumenter()
+                : publishInstrumenter();
+        if (!instrumenter.shouldStart(parentContext, natsRequest)) {
           return null;
         }
-        Context context = publishInstrumenter().start(parentContext, natsRequest);
-        return new AdviceScope(natsRequest, context, context.makeCurrent());
+        Context context = instrumenter.start(parentContext, natsRequest);
+        return new AdviceScope(natsRequest, instrumenter, context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        publishInstrumenter().end(context, request, null, throwable);
+        instrumenter.end(context, request, null, throwable);
       }
     }
 

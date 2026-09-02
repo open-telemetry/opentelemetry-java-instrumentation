@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,8 +40,15 @@ public class JmxMetricInsightInstaller implements AgentListener {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
 
-    if (!config.getBoolean("enabled", true)) {
-      return;
+    boolean v3Preview = AgentCommonConfig.get().isV3Preview();
+    if (v3Preview) {
+      if (!AgentDistributionConfig.get().isInstrumentationEnabled("jmx")) {
+        return;
+      }
+    } else {
+      if (!config.getBoolean("enabled", true)) {
+        return;
+      }
     }
 
     JmxTelemetryBuilder jmx =
@@ -62,7 +70,6 @@ public class JmxMetricInsightInstaller implements AgentListener {
           "'otel.jmx.target.system' is deprecated and will be removed in 3.x. Use 'otel.jmx.experimental.included' with v3 preview instead.");
     }
 
-    boolean v3Preview = AgentCommonConfig.get().isV3Preview();
     if (v3Preview) {
       // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
       jmx.addStableMetrics(IncludeExclude.builder().setExcluded("jvm").build());
