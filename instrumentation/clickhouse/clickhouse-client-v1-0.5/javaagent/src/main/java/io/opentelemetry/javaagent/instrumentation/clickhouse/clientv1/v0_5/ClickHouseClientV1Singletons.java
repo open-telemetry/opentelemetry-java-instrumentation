@@ -137,7 +137,9 @@ public class ClickHouseClientV1Singletons {
 
     private static ServerTarget create(ClickHouseNode node) {
       String host = sanitizeHost(node.getHost());
-      return host == null ? UNCONFIGURED : new ServerTarget(host, node.getPort(), null);
+      return host == null
+          ? UNCONFIGURED
+          : new ServerTarget(host, isDefaultPort(node) ? null : node.getPort(), null);
     }
 
     private static ServerTarget createConfiguredNode(ClickHouseNode node) {

@@ -701,6 +701,29 @@ class ClickHouseClientV1Test {
     assertThat(serverPort(request)).isNull();
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "http://http.example",
+        "https://https.example",
+        "tcp://tcp.example",
+        "tcps://tcps.example"
+      })
+  void testDirectNodeDefaultPortsAreOmitted(String nodeUrl) throws Exception {
+    ClickHouseRequest<?> request = client.read(ClickHouseNode.of(nodeUrl));
+
+    assertThat(serverPort(request)).isNull();
+  }
+
+  @Test
+  void testDirectNodeNonDefaultPortIsPreserved() throws Exception {
+    ClickHouseNode node =
+        ClickHouseNode.builder(ClickHouseNode.of("http://http.example")).port(12345).build();
+    ClickHouseRequest<?> request = client.read(node);
+
+    assertThat(serverPort(request)).isEqualTo(12345);
+  }
+
   @Test
   void testConfiguredNodesInlineSharedNonDefaultPort() throws Exception {
     ClickHouseNode httpNode =
