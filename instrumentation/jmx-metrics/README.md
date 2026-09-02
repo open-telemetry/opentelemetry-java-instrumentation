@@ -536,3 +536,9 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 - when a metric represents a percentile, use the `.pXX` suffix where `XX` is the percentile value, for example:
   - `request.duration.p50` for the 50th percentile (median)
   - `request.duration.p99` for the 99th percentile
+- metrics definitions should have a semantic-convention compliant registry definition in the `model` subfolder, those definitions should be verified with weaver live-check when testing with real target systems.
+- metrics definitions must be split between stable and unstable metrics with the following convention:
+  - `xxx.yaml` : stable metrics for `xxx` target system, where `xxx` is identifier for system
+  - `xxx_unstable.yaml` : non-stable (experimental, development, ...) metrics for `xxx` target system, where `xxx` is identifier for system
+  - following this convention allows to automatically load stable metrics and provide per-system opt-in for unstable metrics with `otel.jmx.metrics.experimental.include` configuration option.
+  - metric promotion to stable should be done by moving definitions from `xxx_unstable.yaml` to `xxx.yaml` and updating the stability of the metrics definitions in the `model` subfolder.
