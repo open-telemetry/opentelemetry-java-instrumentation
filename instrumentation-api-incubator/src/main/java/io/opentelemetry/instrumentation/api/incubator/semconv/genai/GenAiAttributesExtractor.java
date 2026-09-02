@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
@@ -41,6 +42,8 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
   private static final AttributeKey<Long> GEN_AI_REQUEST_SEED = longKey("gen_ai.request.seed");
   private static final AttributeKey<List<String>> GEN_AI_REQUEST_STOP_SEQUENCES =
       stringArrayKey("gen_ai.request.stop_sequences");
+  private static final AttributeKey<Boolean> GEN_AI_REQUEST_STREAM =
+      booleanKey("gen_ai.request.stream");
   private static final AttributeKey<Double> GEN_AI_REQUEST_TEMPERATURE =
       doubleKey("gen_ai.request.temperature");
   private static final AttributeKey<Double> GEN_AI_REQUEST_TOP_K =
@@ -73,6 +76,9 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(GEN_AI_OPERATION_NAME, getter.getOperationName(request));
     attributes.put(GEN_AI_PROVIDER_NAME, getter.getSystem(request));
     attributes.put(GEN_AI_REQUEST_MODEL, getter.getRequestModel(request));
+    if (getter.isRequestStreaming(request)) {
+      attributes.put(GEN_AI_REQUEST_STREAM, true);
+    }
     attributes.put(GEN_AI_REQUEST_SEED, getter.getRequestSeed(request));
     attributes.put(GEN_AI_REQUEST_ENCODING_FORMATS, getter.getRequestEncodingFormats(request));
     attributes.put(GEN_AI_REQUEST_FREQUENCY_PENALTY, getter.getRequestFrequencyPenalty(request));
