@@ -437,6 +437,40 @@ class RediscalaClientTest {
     }
   }
 
+  @Test def testMasterSlavesReplicaCommandOmitsNetworkPeer(): Unit = {
+    assumeTrue(emitStableDatabaseSemconv())
+    val master = RedisServer(host, port.intValue())
+    val slaves = Seq(
+      RedisServer(host, port.intValue()),
+      RedisServer(alternateHost(host), port.intValue())
+    )
+    val client = classOf[RedisClientMasterSlaves].getConstructors
+      .find(_.getParameterCount == 4)
+      .get
+      .newInstance(
+        master,
+        slaves,
+        system,
+        RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
+      )
+      .asInstanceOf[RedisClientMasterSlaves]
+    try {
+      Await.result(
+        client.get[String]("master-slaves-replica-target"),
+        Duration("3 second")
+      )
+      assertConfiguredTargetSpan(
+        (s"${master.host}:${master.port}" +:
+          slaves.map(server => s"${server.host}:${server.port}").sorted)
+          .mkString(","),
+        operationName = "GET"
+      )
+    } finally {
+      client.masterClient.stop()
+      client.slavesClients.stop()
+    }
+  }
+
   @Test def testSentinelMasterSlavesTransactionSeparatesConfiguredTargetFromNetworkPeer()
       : Unit = {
     val sentinelHosts = Seq(alternateHost(sentinelHost), sentinelHost)
@@ -452,6 +486,24 @@ class RediscalaClientTest {
         networkPeerAddress = host,
         networkPeerPort = port,
         databaseIndex = namespace(defaultDbIndex)
+      )
+    } finally {
+      client.stop()
+    }
+  }
+
+  @Test def testSentinelMasterSlavesReplicaCommandOmitsNetworkPeer(): Unit = {
+    assumeTrue(emitStableDatabaseSemconv())
+    val sentinelHosts = Seq(alternateHost(sentinelHost), sentinelHost)
+    val client = createSentinelMasterSlavesClient(sentinelHosts)
+    try {
+      Await.result(
+        client.get[String]("sentinel-master-slaves-replica-target"),
+        Duration("10 second")
+      )
+      assertConfiguredTargetSpan(
+        sentinelTarget(sentinelHosts),
+        operationName = "GET"
       )
     } finally {
       client.stop()

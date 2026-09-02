@@ -39,6 +39,11 @@ public class ServerEndpoint {
 
   @Nullable
   public static ServerEndpoint create(Object client) {
+    return create(client, true);
+  }
+
+  @Nullable
+  public static ServerEndpoint create(Object client, boolean useMasterClient) {
     if (client instanceof RedisClientActorLike) {
       return create((RedisClientActorLike) client);
     }
@@ -46,10 +51,12 @@ public class ServerEndpoint {
       RedisClientActorLike redisClient = ((SentinelMonitoredRedisClient) client).redisClient();
       return redisClient != null ? create(redisClient) : null;
     }
-    if (client instanceof RedisClientMasterSlaves) {
+    if (useMasterClient && client instanceof RedisClientMasterSlaves) {
       return create(((RedisClientMasterSlaves) client).masterClient());
     }
-    if (SENTINEL_MASTER_SLAVES_CLASS != null && SENTINEL_MASTER_SLAVES_CLASS.isInstance(client)) {
+    if (useMasterClient
+        && SENTINEL_MASTER_SLAVES_CLASS != null
+        && SENTINEL_MASTER_SLAVES_CLASS.isInstance(client)) {
       return createMasterClient(client);
     }
     return null;
