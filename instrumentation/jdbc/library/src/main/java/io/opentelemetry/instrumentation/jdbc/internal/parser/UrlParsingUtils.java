@@ -387,7 +387,7 @@ public final class UrlParsingUtils {
     }
 
     int lastAt = jdbcUrl.lastIndexOf('@');
-    if (lastAt < authorityStart || lastAt < authorityEnd) {
+    if (lastAt < authorityEnd) {
       return false;
     }
     if (isAtInQueryParameter(jdbcUrl, authorityEnd, lastAt)
