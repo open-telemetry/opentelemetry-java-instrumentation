@@ -17,14 +17,15 @@ import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
-final class RdsDataSqlAttributesGetter
+class RdsDataSqlAttributesGetter
     implements SqlClientAttributesGetter<ExecutionAttributes, Response> {
 
-  private static final String DB_SYSTEM_NAME = "other_sql";
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String OTHER_SQL = "other_sql";
 
   @Override
   public String getDbSystemName(ExecutionAttributes request) {
-    return DB_SYSTEM_NAME;
+    return OTHER_SQL;
   }
 
   @Override
@@ -62,22 +63,11 @@ final class RdsDataSqlAttributesGetter
   @Override
   @Nullable
   public Long getDbOperationBatchSize(ExecutionAttributes request) {
-    SdkRequest sdkRequest = sdkRequest(request);
-    if (!sdkRequest.getValueForField("parameterSets", Object.class).isPresent()) {
-      return null;
+    Object parameterSets =
+        sdkRequest(request).getValueForField("parameterSets", Object.class).orElse(null);
+    if (parameterSets instanceof List) {
+      return (long) ((List<?>) parameterSets).size();
     }
-    return (long) getListField(sdkRequest, "parameterSets").size();
-  }
-
-  @Override
-  @Nullable
-  public String getServerAddress(ExecutionAttributes request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Integer getServerPort(ExecutionAttributes request) {
     return null;
   }
 
