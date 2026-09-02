@@ -57,6 +57,8 @@ class ThriftTBaseAsyncProcessorInstrumentation implements TypeInstrumentation {
           (ServerInProtocolDecorator) fb.getInputProtocol();
       ServerOutProtocolDecorator serverOutProtocolDecorator =
           (ServerOutProtocolDecorator) fb.getOutputProtocol();
+
+      serverInProtocolDecorator.closeScope();
       if (serverInProtocolDecorator.isOneway()
           || serverOutProtocolDecorator.hasException()
           || throwable != null) {

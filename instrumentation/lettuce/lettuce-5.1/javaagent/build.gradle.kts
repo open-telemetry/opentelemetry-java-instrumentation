@@ -35,6 +35,13 @@ testing {
         implementation(project(":instrumentation:lettuce:lettuce-5.1:testing"))
       }
     }
+    register<JvmTestSuite>("testLettuce60") {
+      dependencies {
+        implementation("io.lettuce:lettuce-core:6.0.2.RELEASE")
+        implementation("org.testcontainers:testcontainers")
+        implementation(project(":instrumentation:lettuce:lettuce-5.1:testing"))
+      }
+    }
   }
 }
 

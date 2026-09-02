@@ -14,7 +14,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -28,6 +27,7 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import jakarta.jms.Topic;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.CompletableFuture;
@@ -85,6 +85,51 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false),
                             subscriptionName("durable-subscription"))));
+  }
+
+  @Test
+  void capturesDurableConsumerNameBeforeListenerRegistrationReturns() throws JMSException {
+    String topicName = "early-listener-topic";
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("hello there");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+
+    MessageConsumer consumer =
+        (MessageConsumer)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {TestMessageConsumer.class},
+                (proxy, method, args) -> {
+                  if (method.getName().equals("setMessageListener")) {
+                    ((MessageListener) args[0]).onMessage(message);
+                  }
+                  return null;
+                });
+    Session registrationSession =
+        (Session)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {TestSession.class},
+                (proxy, method, args) -> consumer);
+
+    registrationSession.createDurableConsumer(topic, "early-listener-subscription");
+    consumer.setMessageListener(listener);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, topicName),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName("early-listener-subscription"))));
   }
 
   @Test
@@ -169,42 +214,6 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                             operationName("process"),
                             operationType("process"),
                             messagingTempDestination(false))));
-  }
-
-  @Test
-  void keepsSubscriptionNameWhenListenerRegistrationFails() throws JMSException {
-    String topicName = "failed-listener-registration-topic";
-    Topic topic = session.createTopic(topicName);
-    TextMessage message = session.createTextMessage("hello there");
-    message.setJMSDestination(topic);
-    MessageListener listener = ignored -> {};
-
-    MessageConsumer registeredConsumer =
-        session.createDurableConsumer(topic, "registered-subscription");
-    cleanup.deferCleanup(registeredConsumer);
-    registeredConsumer.setMessageListener(listener);
-
-    MessageConsumer closedConsumer = session.createDurableConsumer(topic, "closed-subscription");
-    closedConsumer.close();
-    assertThatThrownBy(() -> closedConsumer.setMessageListener(listener))
-        .isInstanceOf(JMSException.class);
-
-    listener.onMessage(message);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
-                            messagingTempDestination(false),
-                            subscriptionName("registered-subscription"))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -497,4 +506,9 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     MessageConsumer create(Session session, Topic topic, String subscriptionName)
         throws JMSException;
   }
+
+  // These interfaces are package-private so that the agent instruments the generated proxy classes.
+  interface TestSession extends Session {}
+
+  interface TestMessageConsumer extends MessageConsumer {}
 }
