@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
@@ -48,7 +49,7 @@ class CassandraBuilderInstrumentation implements TypeInstrumentation {
         @Advice.AllArguments Object[] arguments,
         @Advice.Enter CallDepth callDepth,
         @Advice.Thrown @Nullable Throwable throwable) {
-      if (callDepth.decrementAndGet() == 0 && throwable == null) {
+      if (callDepth.decrementAndGet() == 0 && throwable == null && emitStableDatabaseSemconv()) {
         CassandraConfiguredTarget.capture(builder, arguments);
       }
     }
@@ -62,7 +63,9 @@ class CassandraBuilderInstrumentation implements TypeInstrumentation {
         @Advice.This Cluster.Builder builder,
         @Advice.FieldValue("port") int port,
         @Advice.Return Cluster cluster) {
-      CassandraConfiguredTarget.store(builder, cluster, port);
+      if (emitStableDatabaseSemconv()) {
+        CassandraConfiguredTarget.store(builder, cluster, port);
+      }
     }
   }
 }
