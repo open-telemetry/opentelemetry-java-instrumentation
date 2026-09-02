@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
@@ -49,7 +50,7 @@ class SpymemcachedAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    SpymemcachedServerTarget target = spymemcachedRequest.getServerTarget();
+    DbServerTarget target = spymemcachedRequest.getServerTarget();
     return target == null ? null : target.getAddress();
   }
 
@@ -59,7 +60,7 @@ class SpymemcachedAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    SpymemcachedServerTarget target = spymemcachedRequest.getServerTarget();
+    DbServerTarget target = spymemcachedRequest.getServerTarget();
     return target == null ? null : target.getPort();
   }
 }
