@@ -18,6 +18,7 @@ import com.datastax.oss.driver.api.core.cql.Statement;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,7 @@ final class TracingCqlSession {
   static CqlSession wrapSession(CqlSession session, Set<EndPoint> programmaticContactPoints) {
     // the driver configuration can be reloaded, so read the configured target once, here, and keep
     // that snapshot for the life of the session
-    CassandraServerTarget serverTarget =
+    DbServerTarget serverTarget =
         emitStableDatabaseSemconv()
             ? CassandraServerTarget.of(session, programmaticContactPoints)
             : null;
@@ -74,7 +75,7 @@ final class TracingCqlSession {
   }
 
   private static ResultSet execute(
-      CqlSession session, @Nullable CassandraServerTarget serverTarget, String query) {
+      CqlSession session, @Nullable DbServerTarget serverTarget, String query) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, query);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
@@ -89,7 +90,7 @@ final class TracingCqlSession {
   }
 
   private static ResultSet execute(
-      CqlSession session, @Nullable CassandraServerTarget serverTarget, Statement<?> statement) {
+      CqlSession session, @Nullable DbServerTarget serverTarget, Statement<?> statement) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, statement);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
@@ -104,13 +105,13 @@ final class TracingCqlSession {
   }
 
   private static CompletionStage<AsyncResultSet> executeAsync(
-      CqlSession session, @Nullable CassandraServerTarget serverTarget, Statement<?> statement) {
+      CqlSession session, @Nullable DbServerTarget serverTarget, Statement<?> statement) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, statement);
     return executeAsync(request, () -> session.executeAsync(statement));
   }
 
   private static CompletionStage<AsyncResultSet> executeAsync(
-      CqlSession session, @Nullable CassandraServerTarget serverTarget, String query) {
+      CqlSession session, @Nullable DbServerTarget serverTarget, String query) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, query);
     return executeAsync(request, () -> session.executeAsync(query));
   }
