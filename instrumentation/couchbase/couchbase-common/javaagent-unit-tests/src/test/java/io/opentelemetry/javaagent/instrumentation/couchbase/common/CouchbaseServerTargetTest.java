@@ -68,14 +68,14 @@ class CouchbaseServerTargetTest {
   }
 
   @Test
-  void severalSeedsWithTheSameNonDefaultPortUseServerPort() {
+  void severalSeedsWithTheSameNonDefaultPortKeepInlinePorts() {
     CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbase");
     builder.addSeed("two.example", 11211);
     builder.addSeed("one.example", 11211);
 
     CouchbaseServerTarget target = builder.build();
-    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
-    assertThat(target.getPort()).isEqualTo(11211);
+    assertThat(target.getAddress()).isEqualTo("one.example:11211,two.example:11211");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -98,6 +98,63 @@ class CouchbaseServerTargetTest {
 
     CouchbaseServerTarget target = builder.build();
     assertThat(target.getAddress()).isEqualTo("one.example,two.example,two.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void rendersExactlyFiveSeeds() {
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbase");
+    builder.addSeed("five.example", 11210);
+    builder.addSeed("four.example", 11210);
+    builder.addSeed("one.example", 11210);
+    builder.addSeed("three.example", 11210);
+    builder.addSeed("two.example", 11210);
+
+    assertThat(builder.build().getAddress())
+        .isEqualTo("five.example,four.example,one.example,three.example,two.example");
+  }
+
+  @Test
+  void rendersTheFirstFiveOfSixOrderedSeeds() {
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbase");
+    builder.addSeed("f.example", 11210);
+    builder.addSeed("e.example", 11210);
+    builder.addSeed("d.example", 11210);
+    builder.addSeed("c.example", 11210);
+    builder.addSeed("b.example", 11210);
+    builder.addSeed("a.example", 11210);
+
+    assertThat(builder.build().getAddress())
+        .isEqualTo("a.example,b.example,c.example,d.example,e.example");
+  }
+
+  @Test
+  void invalidSixthSeedDropsTheTarget() {
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbase");
+    builder.addSeed("a.example", 11210);
+    builder.addSeed("b.example", 11210);
+    builder.addSeed("c.example", 11210);
+    builder.addSeed("d.example", 11210);
+    builder.addSeed("e.example", 11210);
+    builder.addSeed(null, 11210);
+
+    assertThat(builder.build()).isNull();
+  }
+
+  @Test
+  void nonDefaultPortOnSixthSeedControlsPortRendering() {
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbase");
+    builder.addSeed("a.example", 11210);
+    builder.addSeed("b.example", 11210);
+    builder.addSeed("c.example", 11210);
+    builder.addSeed("d.example", 11210);
+    builder.addSeed("e.example", 11210);
+    builder.addSeed("z.example", 11211);
+
+    CouchbaseServerTarget target = builder.build();
+    assertThat(target.getAddress())
+        .isEqualTo(
+            "a.example:11210,b.example:11210,c.example:11210,d.example:11210,e.example:11210");
     assertThat(target.getPort()).isNull();
   }
 
@@ -158,15 +215,15 @@ class CouchbaseServerTargetTest {
 
   @Test
   void builtTargetDoesNotFollowLaterSeeds() {
-    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder();
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbase");
     builder.addSeed("one.example", 11210);
 
     CouchbaseServerTarget target = builder.build();
     builder.addSeed("two.example", 11210);
 
     assertThat(target.getAddress()).isEqualTo("one.example");
-    assertThat(target.getPort()).isEqualTo(11210);
+    assertThat(target.getPort()).isNull();
     assertThat(builder.build().getAddress()).isEqualTo("one.example,two.example");
-    assertThat(builder.build().getPort()).isEqualTo(11210);
+    assertThat(builder.build().getPort()).isNull();
   }
 }

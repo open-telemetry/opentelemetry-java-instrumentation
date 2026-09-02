@@ -13,6 +13,7 @@ public class CouchbaseServerTarget {
 
   private static final int COUCHBASE_DEFAULT_PORT = 11210;
   private static final int COUCHBASES_DEFAULT_PORT = 11207;
+  private static final int MAX_ENDPOINTS = 5;
 
   private final String address;
   @Nullable private final Integer port;
@@ -76,30 +77,41 @@ public class CouchbaseServerTarget {
       if (!complete || hosts.isEmpty()) {
         return null;
       }
-      int commonPort = effectivePort(ports.get(0));
-      boolean mixedPorts = false;
-      for (int port : ports) {
-        if (effectivePort(port) != commonPort) {
-          mixedPorts = true;
-          break;
+      boolean multipleEndpoints = hosts.size() > 1;
+      boolean inlinePorts = false;
+      if (multipleEndpoints) {
+        for (int port : ports) {
+          if (effectivePort(port) != defaultPort) {
+            inlinePorts = true;
+            break;
+          }
         }
       }
-      List<String> endpoints = new ArrayList<>(hosts.size());
+      List<String> endpoints = new ArrayList<>(Math.min(hosts.size(), MAX_ENDPOINTS));
       for (int i = 0; i < hosts.size(); i++) {
         StringBuilder endpoint = new StringBuilder();
         appendSeed(
-            endpoint, hosts.get(i), mixedPorts ? effectivePort(ports.get(i)) : 0, hosts.size() > 1);
+            endpoint,
+            hosts.get(i),
+            inlinePorts ? effectivePort(ports.get(i)) : 0,
+            multipleEndpoints);
         endpoints.add(endpoint.toString());
       }
       endpoints.sort(String::compareTo);
       StringBuilder group = new StringBuilder();
-      for (String endpoint : endpoints) {
+      for (int i = 0; i < endpoints.size() && i < MAX_ENDPOINTS; i++) {
         if (group.length() > 0) {
           group.append(',');
         }
-        group.append(endpoint);
+        group.append(endpoints.get(i));
       }
-      Integer port = !mixedPorts && commonPort > 0 && commonPort != defaultPort ? commonPort : null;
+      Integer port = null;
+      if (!multipleEndpoints) {
+        int effectivePort = effectivePort(ports.get(0));
+        if (effectivePort > 0 && effectivePort != defaultPort) {
+          port = effectivePort;
+        }
+      }
       return new CouchbaseServerTarget(group.toString(), port);
     }
 
