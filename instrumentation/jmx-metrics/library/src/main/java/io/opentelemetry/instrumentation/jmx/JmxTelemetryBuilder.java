@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /** Builder for {@link JmxTelemetry} */
 public final class JmxTelemetryBuilder {
@@ -42,8 +43,8 @@ public final class JmxTelemetryBuilder {
   private final Set<String> registeredHandlers = new HashSet<>();
   private IncludeExclude metrics = IncludeExclude.builder().build();
 
-  private IncludeExclude stableMetricsSystemFilter = IncludeExclude.builder().build();
-  private IncludeExclude unstableMetricsSystemFilter = IncludeExclude.builder().build();
+  @Nullable private IncludeExclude stableMetricsSystemFilter = null;
+  @Nullable private IncludeExclude unstableMetricsSystemFilter = null;
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -125,7 +126,8 @@ public final class JmxTelemetryBuilder {
   /**
    * Configure loading embedded stable metrics definitions for the specified systems.
    *
-   * @param systemFilter system name filter
+   * @param systemFilter system name filter, use {@code IncludeExclude.builder().build()} to include
+   *     all.
    * @return this
    */
   @CanIgnoreReturnValue
@@ -137,7 +139,8 @@ public final class JmxTelemetryBuilder {
   /**
    * Configure loading embedded unstable metrics definitions for the specified systems.
    *
-   * @param systemFilter system name filter
+   * @param systemFilter system name filter, use {@code IncludeExclude.builder().build()} to include
+   *     all.
    * @return this
    */
   @CanIgnoreReturnValue
@@ -158,32 +161,18 @@ public final class JmxTelemetryBuilder {
     return this;
   }
 
-  public JmxTelemetry build() {
-    if (!stableMetricsSystemFilter.isEmpty() || !unstableMetricsSystemFilter.isEmpty()) {
-      InternalMetricsDefinitions internalMetrics = new InternalMetricsDefinitions(classLoader);
-      InternalMetricsDefinitions.getSupportedSystems()
-          .forEach(
-              system -> {
-                boolean includeStable =
-                    !stableMetricsSystemFilter.isEmpty()
-                        && stableMetricsSystemFilter.matches(system);
-                boolean includeUnstable =
-                    !unstableMetricsSystemFilter.isEmpty()
-                        && unstableMetricsSystemFilter.matches(system);
-                Set<String> rules =
-                    internalMetrics.getRulesForSystem(system, includeStable, includeUnstable);
-                for (String path : rules) {
-                  logger.log(FINE, "loading embedded JMX rules from {0}", path);
-                  try (InputStream input = classLoader.getResourceAsStream(path)) {
-                    if (input != null) {
-                      addRules(input);
-                    }
-                  } catch (IOException e) {
-                    throw new IllegalStateException(
-                        "Unable to load embedded JMX rules from: " + path, e);
-                  }
-                }
-              });
+  // package private for testing
+  JmxTelemetry build(InternalMetricsDefinitions metricsDefinitions) {
+    Set<String> rulesToLoad = getInternalRulesToLoad(metricsDefinitions);
+    for (String path : rulesToLoad) {
+      logger.log(FINE, "loading embedded JMX rules from {0}", path);
+      try (InputStream input = classLoader.getResourceAsStream(path)) {
+        if (input != null) {
+          addRules(input);
+        }
+      } catch (IOException e) {
+        throw new IllegalStateException("Unable to load embedded JMX rules from: " + path, e);
+      }
     }
 
     HandlerRegistry handlerRegistry = new HandlerRegistry();
@@ -211,5 +200,29 @@ public final class JmxTelemetryBuilder {
 
     return new JmxTelemetry(
         openTelemetry, discoveryDelayMs, metricConfiguration, handlerRegistry, effectiveMetrics);
+  }
+
+  public JmxTelemetry build() {
+    return build(new InternalMetricsDefinitions(classLoader));
+  }
+
+  // package-private for testing
+  Set<String> getInternalRulesToLoad(InternalMetricsDefinitions internalMetrics) {
+    Set<String> rulesToLoad = new HashSet<>();
+    if (stableMetricsSystemFilter != null || unstableMetricsSystemFilter != null) {
+      internalMetrics
+          .getSupportedSystems()
+          .forEach(
+              system -> {
+                boolean includeStable =
+                    stableMetricsSystemFilter != null && stableMetricsSystemFilter.matches(system);
+                boolean includeUnstable =
+                    unstableMetricsSystemFilter != null
+                        && unstableMetricsSystemFilter.matches(system);
+                rulesToLoad.addAll(
+                    internalMetrics.getRulesForSystem(system, includeStable, includeUnstable));
+              });
+    }
+    return rulesToLoad;
   }
 }

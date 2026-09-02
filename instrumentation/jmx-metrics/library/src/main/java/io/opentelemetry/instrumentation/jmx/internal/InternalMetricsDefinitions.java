@@ -38,7 +38,8 @@ public class InternalMetricsDefinitions {
     this.classLoader = classLoader;
   }
 
-  public static Set<String> getSupportedSystems() {
+  // intentionally not static for easier testing
+  public Set<String> getSupportedSystems() {
     return SUPPORTED_SYSTEMS;
   }
 

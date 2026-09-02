@@ -22,8 +22,6 @@ import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -81,6 +79,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
     } else {
       // pre-v3 compatibility
+      InternalMetricsDefinitions metricsDefinitions =
+          new InternalMetricsDefinitions(JmxMetricInsightInstaller.class.getClassLoader());
 
       // mapping of 'experimental-' deprecated prefix in target system
       systemsConfig =
@@ -95,13 +95,13 @@ public class JmxMetricInsightInstaller implements AgentListener {
       // warn about unsupported systems
       systemsConfig.forEach(
           system -> {
-            if (!InternalMetricsDefinitions.getSupportedSystems().contains(system)) {
+            if (!metricsDefinitions.getSupportedSystems().contains(system)) {
               logger.log(
                   WARNING,
                   "JMX target system "
                       + system
                       + " is not supported. Supported systems are: "
-                      + InternalMetricsDefinitions.getSupportedSystems());
+                      + metricsDefinitions.getSupportedSystems());
             }
           });
 
@@ -118,10 +118,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
         config.get("metrics").getScalarList("excluded", String.class, emptyList());
     if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
       jmx.setMetrics(
-          IncludeExclude.builder()
-              .setIncluded(metricsInclude)
-              .setExcluded(metricsExclude)
-              .build());
+          IncludeExclude.builder().setIncluded(metricsInclude).setExcluded(metricsExclude).build());
     }
 
     jmx.build().start();

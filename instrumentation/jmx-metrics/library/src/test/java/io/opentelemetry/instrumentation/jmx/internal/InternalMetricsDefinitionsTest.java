@@ -32,7 +32,8 @@ class InternalMetricsDefinitionsTest {
 
   @Test
   void supportedSystems() throws IOException {
-    assertThat(InternalMetricsDefinitions.getSupportedSystems())
+    InternalMetricsDefinitions definitions = new InternalMetricsDefinitions(CLASS_LOADER);
+    assertThat(definitions.getSupportedSystems())
         .containsExactlyInAnyOrder(
             "activemq",
             "camel",
@@ -45,10 +46,8 @@ class InternalMetricsDefinitionsTest {
             "tomcat",
             "wildfly");
 
-    InternalMetricsDefinitions definitions = new InternalMetricsDefinitions(CLASS_LOADER);
-
     Set<String> allRules = new HashSet<>();
-    for (String system : InternalMetricsDefinitions.getSupportedSystems()) {
+    for (String system : definitions.getSupportedSystems()) {
       Set<String> rulesForSystem = definitions.getRulesForSystem(system, true, true);
       assertThat(rulesForSystem).isNotEmpty();
       allRules.addAll(rulesForSystem);

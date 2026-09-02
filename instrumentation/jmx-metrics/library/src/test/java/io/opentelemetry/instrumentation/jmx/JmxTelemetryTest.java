@@ -7,15 +7,18 @@ package io.opentelemetry.instrumentation.jmx;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -79,18 +82,91 @@ class JmxTelemetryTest {
   }
 
   @Test
-  void includeStableAndUnstableBySystem() {
+  void includeBothStableAndUnstableBySystem() {
     // allows to provide a fallback to include embedded metrics per-system
     IncludeExclude includeInclude = IncludeExclude.builder().setIncluded("jvm-test").build();
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             .addStableMetrics(includeInclude)
             .addUnstableMetrics(includeInclude);
-    JmxTelemetry telemetry = builder.build();
+
+    stableUnstableTest(builder, "jmx/rules/jvm-test.yaml", "jmx/rules/jvm-test_unstable.yaml");
+  }
+
+  @Test
+  void includeAllStableMetrics() {
+    JmxTelemetryBuilder builder =
+        JmxTelemetry.builder(OpenTelemetry.noop())
+            .addStableMetrics(IncludeExclude.builder().build());
+
+    JmxTelemetry telemetry = stableUnstableTest(builder, "jmx/rules/jvm-test.yaml");
+    assertThat(telemetry.getMetrics().getIncluded())
+        .containsExactlyInAnyOrder("jvm.memory.committed", "jvm.memory.used", "jvm.thread.count");
+  }
+
+  @Test
+  void includeAllUnstableMetrics() {
+    JmxTelemetryBuilder builder =
+        JmxTelemetry.builder(OpenTelemetry.noop())
+            .addUnstableMetrics(IncludeExclude.builder().build());
+
+    JmxTelemetry telemetry = stableUnstableTest(builder, "jmx/rules/jvm-test_unstable.yaml");
+    assertThat(telemetry.getMetrics().getIncluded())
+        .containsExactlyInAnyOrder(
+            "jvm.thread.file_descriptor.limit", "jvm.thread.file_descriptor.count");
+  }
+
+  @Test
+  void includeEveryMetric() {
+    JmxTelemetryBuilder builder =
+        JmxTelemetry.builder(OpenTelemetry.noop())
+            .addStableMetrics(IncludeExclude.builder().build())
+            .addUnstableMetrics(IncludeExclude.builder().build());
+
+    JmxTelemetry telemetry =
+        stableUnstableTest(builder, "jmx/rules/jvm-test.yaml", "jmx/rules/jvm-test_unstable.yaml");
+    assertThat(telemetry.getMetrics().getIncluded())
+        .containsExactlyInAnyOrder(
+            "jvm.thread.file_descriptor.limit",
+            "jvm.thread.file_descriptor.count",
+            "jvm.memory.committed",
+            "jvm.memory.used",
+            "jvm.thread.count");
+  }
+
+  @Test
+  void includeNothingByDefault() {
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    JmxTelemetry telemetry = stableUnstableTest(builder);
+    assertThat(telemetry.getMetrics().getIncluded()).isEmpty();
+  }
+
+  private static JmxTelemetry stableUnstableTest(
+      JmxTelemetryBuilder builder, String... expectedRules) {
+    TestMetricsDefinitions metricsDefinitions = new TestMetricsDefinitions();
+    assertThat(builder.getInternalRulesToLoad(metricsDefinitions))
+        .containsExactlyInAnyOrder(expectedRules);
+
+    JmxTelemetry telemetry = builder.build(metricsDefinitions);
     assertThat(telemetry).isNotNull();
 
-    // all the jvm metrics should be included
-    assertThat(telemetry.getMetrics().getIncluded()).allMatch(m -> m.startsWith("jvm."));
+    if (expectedRules.length > 0) {
+      // all the jvm metrics should be included
+      assertThat(telemetry.getMetrics().getIncluded()).allMatch(m -> m.startsWith("jvm."));
+    }
+    return telemetry;
+  }
+
+  private static class TestMetricsDefinitions extends InternalMetricsDefinitions {
+
+    private TestMetricsDefinitions() {
+      super(JmxTelemetryTest.class.getClassLoader());
+    }
+
+    @Override
+    public Set<String> getSupportedSystems() {
+      return singleton("jvm-test");
+    }
   }
 
   private static InputStream classpathRules(String path) {
