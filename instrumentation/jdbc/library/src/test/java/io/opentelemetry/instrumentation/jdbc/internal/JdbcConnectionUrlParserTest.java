@@ -228,6 +228,8 @@ class JdbcConnectionUrlParserTest {
   @Test
   void malformedHostEntriesAreExcludedFromConfiguredTargets() {
     assertThat(sanitizeHostList("h1:3306,unexpected=value")).isNull();
+    assertThat(sanitizeHostList("address=(host=h1),address=(host=unexpected=value)")).isNull();
+    assertThat(sanitizeHostList("h1:5432,:5433")).isNull();
   }
 
   @Test
