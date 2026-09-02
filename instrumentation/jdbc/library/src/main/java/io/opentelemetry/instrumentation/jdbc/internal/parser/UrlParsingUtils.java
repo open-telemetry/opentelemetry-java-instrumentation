@@ -138,7 +138,7 @@ public final class UrlParsingUtils {
     return url.toString();
   }
 
-  public static void appendTypePrefix(
+  private static void appendTypePrefix(
       StringBuilder builder, String type, @Nullable String subtype) {
     builder.append(type);
     builder.append(':');
