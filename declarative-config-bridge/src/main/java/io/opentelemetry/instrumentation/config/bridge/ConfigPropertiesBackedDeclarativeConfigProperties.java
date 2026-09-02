@@ -98,7 +98,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.servlet.javascript_snippet/development", "otel.experimental.javascript-snippet");
     // jmx properties don't have an "instrumentation" segment
-    SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
+    SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled"); // TODO: remove in v3
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
     // otel.jmx.discovery.delay also has a dedicated branch in getLong() that reads it as a
     // Duration and falls back to otel.metric.export.interval; this mapping is here only to keep

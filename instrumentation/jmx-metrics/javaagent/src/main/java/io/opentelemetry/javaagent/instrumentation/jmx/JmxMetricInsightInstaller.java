@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,8 +39,15 @@ public class JmxMetricInsightInstaller implements AgentListener {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
 
-    if (!config.getBoolean("enabled", true)) {
-      return;
+    boolean v3Preview = AgentCommonConfig.get().isV3Preview();
+    if (v3Preview) {
+      if (!AgentDistributionConfig.get().isInstrumentationEnabled("jmx")) {
+        return;
+      }
+    } else {
+      if (!config.getBoolean("enabled", true)) {
+        return;
+      }
     }
 
     JmxTelemetryBuilder jmx =
