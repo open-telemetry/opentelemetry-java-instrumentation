@@ -1,6 +1,6 @@
 import java.time.Duration
 
-import java.time.Duration
+import java.time.Duration as JavaDuration
 
 plugins {
   id("otel.library-instrumentation")
@@ -53,7 +53,7 @@ tasks {
     timeout.set(Duration.ofMinutes(30))
 
     // This suite starts multiple real target systems, including Trino.
-    timeout.set(Duration.ofMinutes(20))
+    timeout.set(JavaDuration.ofMinutes(20))
 
     // the base agent only contains the agent machinery and the internal instrumentations that it
     // requires, the JMX instrumentation is added on top of it. Using the full agent would capture
