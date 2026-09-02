@@ -90,10 +90,8 @@ class CamelSingletons {
     }
     if (emitStableMessagingSemconv()) {
       return builder.buildInstrumenter(
-          operationType == SEND
-              ? MessagingSpanKindExtractor.create(
-                  operationType, CamelRequest::isMessagingSpanContextPropagated)
-              : MessagingSpanKindExtractor.create(operationType));
+          MessagingSpanKindExtractor.create(
+              operationType, CamelRequest::isMessagingSpanContextPropagated));
     }
     return builder.buildInstrumenter(CamelRequest::getSpanKind);
   }
