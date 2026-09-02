@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
-final class NatsRequestMessagingAttributesGetter
+class NatsRequestMessagingAttributesGetter
     implements MessagingAttributesGetter<NatsRequest, Object> {
 
   private final boolean boundJetStreamAckDestination;
