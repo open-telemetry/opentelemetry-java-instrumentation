@@ -24,7 +24,7 @@ class CamelTest extends TargetSystemTest {
 
   @Test
   void testCollectedMetrics() {
-    Collection<String> yamlFiles = getAllRuleFilesForSystem("camel");
+    Collection<String> yamlFiles = getAllRulesForSystem("camel");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());

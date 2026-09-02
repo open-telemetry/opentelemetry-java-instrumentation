@@ -328,7 +328,7 @@ public class TargetSystemTest {
             });
   }
 
-  protected static Set<String> getAllRuleFilesForSystem(String system) {
+  protected static Set<String> getAllRulesForSystem(String system) {
     InternalMetricsDefinitions definitions =
         new InternalMetricsDefinitions(TargetSystemTest.class.getClassLoader());
     Set<String> rules = definitions.getRulesForSystem(system, true, true);

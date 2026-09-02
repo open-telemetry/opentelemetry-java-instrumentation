@@ -27,7 +27,7 @@ class ActiveMqTest extends TargetSystemTest {
 
   @Test
   void activemqTest() {
-    Collection<String> yamlFiles = getAllRuleFilesForSystem("activemq");
+    Collection<String> yamlFiles = getAllRulesForSystem("activemq");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());

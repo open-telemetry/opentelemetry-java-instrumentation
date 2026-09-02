@@ -35,7 +35,7 @@ class KafkaBrokerTest extends TargetSystemTest {
   }
 
   private void doTest(String image, String zookeeperImage) {
-    Collection<String> yamlFiles = getAllRuleFilesForSystem("kafka-broker");
+    Collection<String> yamlFiles = getAllRulesForSystem("kafka-broker");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());

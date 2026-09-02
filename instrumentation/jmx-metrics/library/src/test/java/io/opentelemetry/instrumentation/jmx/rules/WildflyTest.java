@@ -36,7 +36,7 @@ class WildflyTest extends TargetSystemTest {
       })
   void testWildflyMetrics(String dockerImage) {
 
-    Collection<String> yamlFiles = getAllRuleFilesForSystem("wildfly");
+    Collection<String> yamlFiles = getAllRulesForSystem("wildfly");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());

@@ -32,7 +32,7 @@ class HadoopTest extends TargetSystemTest {
 
   @Test
   void testMetrics_Hadoop2x() throws IOException {
-    Collection<String> yamlFiles = getAllRuleFilesForSystem("hadoop");
+    Collection<String> yamlFiles = getAllRulesForSystem("hadoop");
 
     // Hadoop startup script does not propagate env vars to launched hadoop daemons,
     // so all the env vars needs to be embedded inside the hadoop-env.sh file
@@ -92,7 +92,7 @@ class HadoopTest extends TargetSystemTest {
 
   @Test
   void testMetrics_Hadoop3x() throws IOException {
-    Collection<String> yamlFiles = getAllRuleFilesForSystem("hadoop");
+    Collection<String> yamlFiles = getAllRulesForSystem("hadoop");
 
     // Hadoop startup script does not propagate env vars to launched hadoop daemons,
     // so all the env vars needs to be embedded inside the hadoop-env.sh file

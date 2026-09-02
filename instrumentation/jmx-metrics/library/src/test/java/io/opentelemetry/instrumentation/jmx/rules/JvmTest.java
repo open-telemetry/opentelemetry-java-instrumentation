@@ -34,7 +34,7 @@ class JvmTest extends TargetSystemTest {
       })
   void testJvmMetrics(String image) {
     // file-based setup for JVM metrics as embedded metrics are disabled for instrumentation
-    Set<String> yamlFiles = getAllRuleFilesForSystem("jvm");
+    Set<String> yamlFiles = getAllRulesForSystem("jvm");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());

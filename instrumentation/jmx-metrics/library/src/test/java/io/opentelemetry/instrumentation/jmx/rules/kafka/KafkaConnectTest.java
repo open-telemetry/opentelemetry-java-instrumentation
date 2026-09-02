@@ -13,6 +13,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
@@ -123,7 +124,7 @@ class KafkaConnectTest extends TargetSystemTest {
 
   @Test
   void metricsAreReportedFromKafkaConnectContainer() throws Exception {
-    Collection<String> yamlFiles = getAllRuleFilesForSystem("kafka-connect");
+    Collection<String> yamlFiles = getAllRulesForSystem("kafka-connect");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
@@ -217,10 +218,16 @@ class KafkaConnectTest extends TargetSystemTest {
   }
 
   private JmxConfig loadKafkaConnectConfig() throws Exception {
+    InternalMetricsDefinitions definitions = new InternalMetricsDefinitions(        getClass()
+        .getClassLoader());
+
+    Set<String> rules = definitions.getRulesForSystem("kafka-connect", true, true);
+    assertThat(rules).hasSize(1);
+
     try (InputStream input =
         getClass()
             .getClassLoader()
-            .getResourceAsStream("jmx/rules/experimental-kafka-connect.yaml")) {
+            .getResourceAsStream(rules.stream().findFirst().get())) {
       assertThat(input).isNotNull();
       return RuleParser.get().loadConfig(input);
     }

@@ -47,7 +47,7 @@ class TomcatTest extends TargetSystemTest {
       yamlFiles = emptyList();
       config = otelConfigPropertiesExperimentalOptIn("tomca*");
     } else {
-      yamlFiles.addAll(getAllRuleFilesForSystem("tomcat"));
+      yamlFiles.addAll(getAllRulesForSystem("tomcat"));
       config = otelConfigProperties(yamlFiles);
     }
 

@@ -30,7 +30,7 @@ class JettyTest extends TargetSystemTest {
   @ValueSource(ints = {9, 10, 11, 12})
   void testCollectedMetrics(int jettyMajorVersion) {
 
-    Collection<String> yamlFiles = getAllRuleFilesForSystem("jetty");
+    Collection<String> yamlFiles = getAllRulesForSystem("jetty");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
