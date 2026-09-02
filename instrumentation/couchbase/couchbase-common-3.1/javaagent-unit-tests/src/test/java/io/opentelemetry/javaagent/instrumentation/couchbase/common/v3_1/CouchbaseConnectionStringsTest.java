@@ -35,13 +35,19 @@ class CouchbaseConnectionStringsTest {
   }
 
   @Test
-  void hostThatResolvesThroughDnsSrvIsNamedByItself() {
+  void dnsSrvIdentityPreservesSchemeAndIsSanitized() {
     ConnectionString connectionString = ConnectionString.create("couchbases://cluster.example");
     assertThat(connectionString.isValidDnsSrv()).isTrue();
 
     CouchbaseServerTarget target = CouchbaseConnectionStrings.target(connectionString);
-    assertThat(target.getAddress()).isEqualTo("cluster.example");
+    assertThat(target.getAddress()).isEqualTo("couchbases://cluster.example");
     assertThat(target.getPort()).isNull();
+
+    CouchbaseServerTarget sanitized =
+        CouchbaseConnectionStrings.target(
+            "couchbases://user@cluster.example/travel-sample?kv_timeout=5s#anchor");
+    assertThat(sanitized.getAddress()).isEqualTo("couchbases://cluster.example");
+    assertThat(sanitized.getPort()).isNull();
   }
 
   @Test
@@ -54,12 +60,12 @@ class CouchbaseConnectionStringsTest {
   }
 
   @Test
-  void severalSeedsWithTheSameNonDefaultPortUseServerPort() {
+  void severalSeedsWithTheSameNonDefaultPortKeepInlinePorts() {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target("couchbase://two.example:11211,one.example:11211");
 
-    assertThat(target.getAddress()).isEqualTo("two.example,one.example");
-    assertThat(target.getPort()).isEqualTo(11211);
+    assertThat(target.getAddress()).isEqualTo("two.example:11211,one.example:11211");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -72,12 +78,46 @@ class CouchbaseConnectionStringsTest {
   }
 
   @Test
-  void credentialsParametersBucketsAndFragmentsAreStripped() {
+  void exactlyFiveSeedsArePreserved() {
+    CouchbaseServerTarget target =
+        CouchbaseConnectionStrings.target(
+            "couchbase://five.example,four.example,one.example,three.example,two.example");
+
+    assertThat(target.getAddress())
+        .isEqualTo("five.example,four.example,one.example,three.example,two.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void firstFiveOfSixSeedsArePreserved() {
+    CouchbaseServerTarget target =
+        CouchbaseConnectionStrings.target(
+            "couchbase://six.example,five.example,four.example,three.example,two.example,one.example");
+
+    assertThat(target.getAddress())
+        .isEqualTo("six.example,five.example,four.example,three.example,two.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void nonDefaultSixthSeedControlsPortRendering() {
+    CouchbaseServerTarget target =
+        CouchbaseConnectionStrings.target(
+            "couchbase://one.example,two.example,three.example,four.example,five.example,six.example:11211");
+
+    assertThat(target.getAddress())
+        .isEqualTo(
+            "one.example:11210,two.example:11210,three.example:11210,four.example:11210,five.example:11210");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void credentialsParametersBucketsAndFragmentsAreStrippedFromDnsSrvIdentity() {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target(
             "couchbase://user@node.example/travel-sample?kv_timeout=5s#anchor");
 
-    assertThat(target.getAddress()).isEqualTo("node.example");
+    assertThat(target.getAddress()).isEqualTo("couchbase://node.example");
     assertThat(target.getPort()).isNull();
   }
 

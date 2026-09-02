@@ -23,6 +23,16 @@ class CouchbaseSpanNameTest {
   }
 
   @Test
+  void serviceDiscoveryIdentityIsUsedUnchanged() {
+    CouchbaseSpanName spanName = new CouchbaseSpanName("ping");
+
+    spanName.captureServerTarget(
+        CouchbaseServerTarget.forServiceDiscovery("couchbases", "cluster.example"));
+
+    assertThat(spanName.spanName()).isEqualTo("ping couchbases://cluster.example");
+  }
+
+  @Test
   void scopedQueryUsesNamespace() {
     CouchbaseSpanName spanName = new CouchbaseSpanName("query");
     spanName.captureAttribute("db.namespace", "bucket");

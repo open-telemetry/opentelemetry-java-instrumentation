@@ -70,7 +70,7 @@ class CouchbaseServerTargetsTest {
     CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, null);
 
     assertThat(CouchbaseServerTargets.get(core)).isSameAs(connectionStringTarget);
-    assertThat(connectionStringTarget.getAddress()).isEqualTo("cluster.example");
+    assertThat(connectionStringTarget.getAddress()).isEqualTo("couchbases://cluster.example");
     assertThat(connectionStringTarget.getPort()).isNull();
   }
 
@@ -94,6 +94,26 @@ class CouchbaseServerTargetsTest {
     return Stream.of(
         argumentSet("forward insertion", one, oneWithAnotherManagerPort, two),
         argumentSet("reverse insertion", two, oneWithAnotherManagerPort, one));
+  }
+
+  @Test
+  void nonDefaultSixthDirectEndpointControlsPortRenderingBeforeLimit() {
+    Set<SeedNode> seedNodes =
+        new LinkedHashSet<>(
+            asList(
+                SeedNode.create("e.example", Optional.of(11210), Optional.empty()),
+                SeedNode.create("d.example", Optional.of(11210), Optional.empty()),
+                SeedNode.create("c.example", Optional.of(11210), Optional.empty()),
+                SeedNode.create("b.example", Optional.of(11210), Optional.empty()),
+                SeedNode.create("a.example", Optional.of(11210), Optional.empty()),
+                SeedNode.create("z.example", Optional.of(11211), Optional.empty())));
+
+    CouchbaseServerTarget target = CouchbaseServerTargets.target(seedNodes, false);
+
+    assertThat(target.getAddress())
+        .isEqualTo(
+            "a.example:11210,b.example:11210,c.example:11210,d.example:11210,e.example:11210");
+    assertThat(target.getPort()).isNull();
   }
 
   @ParameterizedTest
