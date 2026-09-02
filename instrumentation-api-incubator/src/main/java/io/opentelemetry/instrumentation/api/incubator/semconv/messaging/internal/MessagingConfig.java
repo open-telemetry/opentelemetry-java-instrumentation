@@ -10,10 +10,11 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
+import io.opentelemetry.instrumentation.api.internal.SystemProperty;
+import javax.annotation.Nullable;
 
 /**
- * Resolves the common messaging header selector, shared by every messaging instrumentation so that
- * precedence and deprecation warnings are uniform.
+ * Resolves common and instrumentation-specific messaging configuration.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -51,6 +52,53 @@ public final class MessagingConfig {
     IncludeExclude selector =
         SelectorConfig.resolve(messagingConfig, "messaging", "headers", systemPropertyFallback);
     return selector == null ? NONE : selector;
+  }
+
+  public static boolean isBatchSendMessageCreationSpansEnabled(
+      OpenTelemetry openTelemetry, String instrumentationName) {
+    return isBatchSendMessageCreationSpansEnabled(openTelemetry, instrumentationName, false);
+  }
+
+  /**
+   * Returns whether an instrumentation should emit a creation span for each message in a batch
+   * send.
+   *
+   * @param systemPropertyFallback whether to fall back to flat system properties when declarative
+   *     configuration does not contain a value. This is needed by library instrumentation entry
+   *     points that have no programmatic configuration surface.
+   */
+  public static boolean isBatchSendMessageCreationSpansEnabled(
+      OpenTelemetry openTelemetry, String instrumentationName, boolean systemPropertyFallback) {
+    Boolean enabled =
+        getBatchSendMessageCreationSpansEnabled(
+            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName));
+    if (enabled == null && systemPropertyFallback) {
+      enabled =
+          SystemProperty.getBoolean(
+              "otel.instrumentation."
+                  + instrumentationName.replace('_', '-')
+                  + ".batch-send.message-creation-spans.enabled");
+    }
+    if (enabled != null) {
+      return enabled;
+    }
+
+    enabled =
+        getBatchSendMessageCreationSpansEnabled(
+            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
+                .get("messaging"));
+    if (enabled == null && systemPropertyFallback) {
+      enabled =
+          SystemProperty.getBoolean(
+              "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled");
+    }
+    return enabled != null ? enabled : true;
+  }
+
+  @Nullable
+  private static Boolean getBatchSendMessageCreationSpansEnabled(
+      DeclarativeConfigProperties config) {
+    return config.get("batch_send").get("message_creation_spans").getBoolean("enabled");
   }
 
   private MessagingConfig() {}

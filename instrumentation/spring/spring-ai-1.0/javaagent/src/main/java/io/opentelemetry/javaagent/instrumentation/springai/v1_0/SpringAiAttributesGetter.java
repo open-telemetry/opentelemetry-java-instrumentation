@@ -36,6 +36,11 @@ class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest,
   }
 
   @Override
+  public boolean isRequestStreaming(SpringAiRequest request) {
+    return request.streaming();
+  }
+
+  @Override
   public Long getRequestSeed(SpringAiRequest request) {
     return null;
   }

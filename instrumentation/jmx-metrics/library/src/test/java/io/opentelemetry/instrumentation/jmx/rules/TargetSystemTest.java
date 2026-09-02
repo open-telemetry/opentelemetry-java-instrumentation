@@ -59,7 +59,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.MountableFile;
 
 /** Base class for testing YAML metric definitions with a real target system */
-class TargetSystemTest {
+public class TargetSystemTest {
 
   private static final Logger logger = LoggerFactory.getLogger(TargetSystemTest.class);
   private static final Logger targetSystemLogger = LoggerFactory.getLogger("targetSystem");
@@ -113,7 +113,7 @@ class TargetSystemTest {
    *
    * @param registryFile registry file to include
    */
-  void startWeaverValidation(
+  protected void startWeaverValidation(
       String registryFile, Consumer<WeaverContainer.WeaverValidationResult> weaverMetricsVerify) {
 
     Path registryRoot = Paths.get(System.getProperty("io.opentelemetry.registry.path"));
@@ -304,8 +304,12 @@ class TargetSystemTest {
   }
 
   protected void verifyMetrics(MetricsVerifier metricsVerifier) {
+    verifyMetrics(metricsVerifier, Duration.ofSeconds(60));
+  }
+
+  protected void verifyMetrics(MetricsVerifier metricsVerifier, Duration timeout) {
     await()
-        .atMost(Duration.ofSeconds(60))
+        .atMost(timeout)
         .pollInterval(Duration.ofSeconds(1))
         .untilAsserted(
             () -> {

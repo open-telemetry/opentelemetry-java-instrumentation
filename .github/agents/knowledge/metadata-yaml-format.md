@@ -5,6 +5,12 @@
 - Use when: reviewing or creating `metadata.yaml` files, converting config names
 - Review focus: declarative_name format, examples guidelines, special mappings, config validation
 
+## General
+
+- General enabled/disabled configs for an instrumentation module (example: `otel.instrumentation.apache-commons-pool.enabled`)
+  should not be defined within the configuration block. It will be assumed that modules are enabled
+  unless they contain `disabled_by_default: true`
+
 ## Entry Structure
 
 Each configuration entry includes:
@@ -49,7 +55,7 @@ placeholder would not be self-explanatory.
   declarative_type: structured_list
   declarative_schema:
     type: object
-    required: [peer, service_name]
+    required: [ peer, service_name ]
     properties:
       peer:
         type: string
@@ -71,7 +77,7 @@ placeholder would not be self-explanatory.
   declarative_type: structured_list
   declarative_schema:
     type: object
-    required: [pattern, template]
+    required: [ pattern, template ]
     properties:
       pattern:
         type: string
@@ -135,6 +141,7 @@ Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.ja
 | `otel.instrumentation.messaging.experimental.headers.included`                  | `java.common.messaging.headers/development.included`              |
 | `otel.instrumentation.messaging.experimental.headers.excluded`                  | `java.common.messaging.headers/development.excluded`              |
 | `otel.instrumentation.messaging.experimental.capture-headers`                   | `java.common.messaging.capture_headers/development`               |
+| `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled`      | `java.common.messaging.batch_send.message_creation_spans.enabled` |
 | `otel.instrumentation.genai.capture-message-content`                            | `java.common.gen_ai.capture_message_content`                      |
 | `otel.instrumentation.experimental.span-suppression-strategy`                   | `java.common.span_suppression_strategy/development`               |
 | `otel.instrumentation.opentelemetry-annotations.exclude-methods`                | `java.opentelemetry_extension_annotations.exclude_methods`        |

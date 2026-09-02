@@ -1,7 +1,7 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "github>grafana/flint#v0.22.10",
+    "github>grafana/flint#v0.22.11",
     'config:best-practices',
     'helpers:pinGitHubActionDigestsToSemver',
     ':semanticCommits',
@@ -43,6 +43,15 @@
         '* 0-7 * * 2', // weekly, before 8am on Tuesday
       ],
       groupName: 'weekly update',
+    },
+    {
+      // keep the Gradle semconv dep and manifest.yaml updates in the same group,
+      // without the weekly schedule inherited from the custom.regex rule above
+      matchPackageNames: [
+        'io.opentelemetry.semconv:opentelemetry-semconv',
+      ],
+      groupName: 'opentelemetry semconv',
+      schedule: [],
     },
     {
       // gh-aw updates need a dedicated branch so CI can regenerate their workflow lockfiles
@@ -231,7 +240,7 @@
       groupName: 'graalvm buildtools packages',
       matchPackageNames: [
         'org.graalvm.buildtools:**',
-        'org.graalvm.buildtools.native',
+        'org.graalvm.buildtools.native:**',
       ],
     },
 
@@ -482,6 +491,18 @@
       ],
       matchStrings: [
         '"(?<depName>otel/weaver):(?<currentValue>[^"]+)"',
+      ],
+    },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'maven',
+      depNameTemplate: 'io.opentelemetry.semconv:opentelemetry-semconv',
+      managerFilePatterns: [
+        'instrumentation/jmx-metrics/model/manifest.yaml',
+      ],
+      matchStrings: [
+        'registry_path: https://github\\.com/open-telemetry/semantic-conventions@v(?<currentValue>[^\\[]+)\\[model\\]',
+        'schema_url: https://opentelemetry\\.io/schemas/(?<currentValue>[^\\s]+)',
       ],
     },
   ],

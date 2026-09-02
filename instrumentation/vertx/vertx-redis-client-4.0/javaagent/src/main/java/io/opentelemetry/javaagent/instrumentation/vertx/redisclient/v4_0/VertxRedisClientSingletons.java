@@ -30,9 +30,9 @@ public class VertxRedisClientSingletons {
   private static final Instrumenter<VertxRedisClientRequest, Void> instrumenter;
 
   private static final ThreadLocal<RedisURI> redisUriThreadLocal = new ThreadLocal<>();
-  private static final VirtualField<Command, String> commandNameField =
+  private static final VirtualField<Command, String> COMMAND_NAME =
       VirtualField.find(Command.class, String.class);
-  private static final VirtualField<RedisStandaloneConnection, RedisURI> redisUriField =
+  private static final VirtualField<RedisStandaloneConnection, RedisURI> REDIS_URI =
       VirtualField.find(RedisStandaloneConnection.class, RedisURI.class);
 
   static {
@@ -97,22 +97,22 @@ public class VertxRedisClientSingletons {
   }
 
   public static void setCommandName(Command command, String commandName) {
-    commandNameField.set(command, commandName);
+    COMMAND_NAME.set(command, commandName);
   }
 
   @Nullable
   public static String getCommandName(Command command) {
-    return commandNameField.get(command);
+    return COMMAND_NAME.get(command);
   }
 
   public static void setRedisUri(
       RedisStandaloneConnection connection, @Nullable RedisURI redisUri) {
-    redisUriField.set(connection, redisUri);
+    REDIS_URI.set(connection, redisUri);
   }
 
   @Nullable
   public static RedisURI getRedisUri(RedisStandaloneConnection connection) {
-    return redisUriField.get(connection);
+    return REDIS_URI.get(connection);
   }
 
   private VertxRedisClientSingletons() {}

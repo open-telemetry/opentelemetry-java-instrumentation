@@ -73,7 +73,7 @@ class ChatModelInstrumentation implements TypeInstrumentation {
         this.request = request;
       }
 
-      public static AdviceScope start(Object chatModel, Prompt prompt) {
+      public static AdviceScope start(Object chatModel, Prompt prompt, boolean streaming) {
         CallDepth callDepth = CallDepth.forClass(ChatModel.class);
         if (callDepth.getAndIncrement() > 0
             || shouldSuppressNestedChatModelInstrumentation(Context.current())) {
@@ -85,7 +85,7 @@ class ChatModelInstrumentation implements TypeInstrumentation {
         Scope scope = null;
         boolean completed = false;
         try {
-          request = SpringAiRequest.create(prompt, chatModel);
+          request = SpringAiRequest.create(prompt, chatModel, streaming);
           Context parentContext = Context.current();
           if (!instrumenter().shouldStart(parentContext, request)) {
             AdviceScope adviceScope = new AdviceScope(callDepth, null, null, null);
@@ -158,7 +158,7 @@ class ChatModelInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Object chatModel, @Advice.Argument(0) Prompt prompt) {
-      return AdviceScope.start(chatModel, prompt);
+      return AdviceScope.start(chatModel, prompt, false);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -212,14 +212,15 @@ class ChatModelInstrumentation implements TypeInstrumentation {
         return publisher;
       }
       if (throwable != null) {
-        CallAdvice.AdviceScope callAdviceScope = CallAdvice.AdviceScope.start(chatModel, prompt);
+        CallAdvice.AdviceScope callAdviceScope =
+            CallAdvice.AdviceScope.start(chatModel, prompt, true);
         callAdviceScope.end(null, throwable);
         return publisher;
       }
       if (publisher == null) {
         return publisher;
       }
-      return SpringAiStreamTracing.wrap(publisher, SpringAiRequest.create(prompt, chatModel));
+      return SpringAiStreamTracing.wrap(publisher, SpringAiRequest.create(prompt, chatModel, true));
     }
   }
 }

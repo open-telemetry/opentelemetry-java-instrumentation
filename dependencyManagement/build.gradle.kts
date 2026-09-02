@@ -7,7 +7,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.65.0"
 val otelZipkinVersion = "1.64.0" // last published version, remove with Zipkin support in 3.0
-val otelContribVersion = "1.59.0-alpha"
+val otelContribVersion = "1.60.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -86,7 +86,7 @@ val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.13.8",
+  "com.uber.nullaway:nullaway:0.14.1",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
   "commons-codec:commons-codec:1.22.1",

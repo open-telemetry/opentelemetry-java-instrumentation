@@ -288,6 +288,8 @@ readonly INSTRUMENTATIONS=(
   "redisson:redisson-3.0:javaagent:testStableSemconv"
   "redisson:redisson-3.17:javaagent:test"
   "redisson:redisson-3.17:javaagent:testStableSemconv"
+  "redisson:redisson-metrics-3.18:javaagent:test"
+  "redisson:redisson-metrics-3.18:javaagent:testStableSemconv"
   "redisson:redisson-metrics-3.26:javaagent:test"
   "redisson:redisson-metrics-3.26:javaagent:testStableSemconv"
   "restlet:restlet-1.1:library:test"
@@ -414,6 +416,8 @@ readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
   "kafka:kafka-streams-0.11:javaagent:testMessagingPreview"
   "lettuce:lettuce-5.1:javaagent:test"
   "lettuce:lettuce-5.1:javaagent:testStableSemconv"
+  "redisson:redisson-metrics-3.18:javaagent:test"
+  "redisson:redisson-metrics-3.18:javaagent:testStableSemconv"
   "redisson:redisson-metrics-3.26:javaagent:test"
   "redisson:redisson-metrics-3.26:javaagent:testStableSemconv"
 )

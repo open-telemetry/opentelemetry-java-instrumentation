@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_PRESENCE_PENALTY;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STOP_SEQUENCES;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_TEMPERATURE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_TOP_K;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_TOP_P;
@@ -99,7 +100,7 @@ class ChatModelTest {
 
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
     assertCurrentSpanContext(chatModel.getLastSpanContext(), spanContext);
-    assertTraces("test");
+    assertTraces("test", false);
     assertMetrics();
     assertMessageEvents(spanContext);
   }
@@ -110,7 +111,7 @@ class ChatModelTest {
 
     testing.runWithSpan("parent", () -> chatModel.call(prompt()));
 
-    assertTraces("test");
+    assertTraces("test", false);
   }
 
   @Test
@@ -119,7 +120,7 @@ class ChatModelTest {
 
     testing.runWithSpan("parent", () -> chatModel.call(prompt()));
 
-    assertTraces("test");
+    assertTraces("test", false);
   }
 
   @Test
@@ -213,7 +214,7 @@ class ChatModelTest {
 
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
     assertCurrentSpanContext(chatModel.getLastSpanContext(), spanContext);
-    assertTraces("test");
+    assertTraces("test", true);
     assertMessageEvents(spanContext);
   }
 
@@ -243,7 +244,7 @@ class ChatModelTest {
 
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
     assertCurrentSpanContext(delegate.getLastSpanContext(), spanContext);
-    assertTraces("test");
+    assertTraces("test", true);
     assertMetrics();
     assertMessageEvents(spanContext);
   }
@@ -295,6 +296,7 @@ class ChatModelTest {
                             equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
                             equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
                             equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
+                            equalTo(GEN_AI_REQUEST_STREAM, true),
                             equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
                             equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
                             equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
@@ -600,7 +602,7 @@ class ChatModelTest {
     assertThatThrownBy(() -> testing.runWithSpan("parent", () -> chatModel.call(prompt())))
         .isSameAs(error);
 
-    assertErrorTrace(error);
+    assertErrorTrace(error, false);
   }
 
   @Test
@@ -612,7 +614,7 @@ class ChatModelTest {
             () -> testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast()))
         .isSameAs(error);
 
-    assertErrorTrace(error);
+    assertErrorTrace(error, true);
   }
 
   @Test
@@ -623,7 +625,7 @@ class ChatModelTest {
     assertThatThrownBy(() -> testing.runWithSpan("parent", () -> chatModel.stream(prompt())))
         .isSameAs(error);
 
-    assertErrorTrace(error);
+    assertErrorTrace(error, true);
   }
 
   @Test
@@ -636,7 +638,7 @@ class ChatModelTest {
     assertThatThrownBy(() -> testing.runWithSpan("parent", () -> chatModel.stream(prompt())))
         .isSameAs(error);
 
-    assertErrorTrace(error);
+    assertErrorTrace(error, true);
   }
 
   @Test
@@ -862,7 +864,7 @@ class ChatModelTest {
         .doesNotContain("\"type\":\"uri\"");
   }
 
-  private static void assertTraces(String provider) {
+  private static void assertTraces(String provider, boolean streaming) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -879,6 +881,7 @@ class ChatModelTest {
                             equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
                             equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
                             equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
+                            equalTo(GEN_AI_REQUEST_STREAM, streaming ? true : null),
                             equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
                             equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
                             equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
@@ -901,7 +904,7 @@ class ChatModelTest {
                                         + "\"}],\"finish_reason\":\"stop\"}]")))));
   }
 
-  private static void assertErrorTrace(IllegalStateException error) {
+  private static void assertErrorTrace(IllegalStateException error, boolean streaming) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -925,6 +928,7 @@ class ChatModelTest {
                             equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
                             equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
                             equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
+                            equalTo(GEN_AI_REQUEST_STREAM, streaming ? true : null),
                             equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
                             equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
                             equalTo(GEN_AI_REQUEST_TOP_P, 0.5),

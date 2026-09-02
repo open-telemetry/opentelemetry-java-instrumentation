@@ -16,18 +16,21 @@ public class SpringAiRequest {
   private final Prompt prompt;
   @Nullable private final ChatOptions defaultOptions;
   private final String provider;
+  private final boolean streaming;
 
-  public static SpringAiRequest create(Prompt prompt, Object chatModel) {
+  public static SpringAiRequest create(Prompt prompt, Object chatModel, boolean streaming) {
     ChatOptions defaultOptions =
         chatModel instanceof ChatModel model ? model.getDefaultOptions() : null;
     return new SpringAiRequest(
-        prompt, defaultOptions, providerName(chatModel.getClass().getName()));
+        prompt, defaultOptions, providerName(chatModel.getClass().getName()), streaming);
   }
 
-  private SpringAiRequest(Prompt prompt, @Nullable ChatOptions defaultOptions, String provider) {
+  private SpringAiRequest(
+      Prompt prompt, @Nullable ChatOptions defaultOptions, String provider, boolean streaming) {
     this.prompt = prompt;
     this.defaultOptions = defaultOptions;
     this.provider = provider;
+    this.streaming = streaming;
   }
 
   public Prompt prompt() {
@@ -36,6 +39,10 @@ public class SpringAiRequest {
 
   public String provider() {
     return provider;
+  }
+
+  public boolean streaming() {
+    return streaming;
   }
 
   @Nullable

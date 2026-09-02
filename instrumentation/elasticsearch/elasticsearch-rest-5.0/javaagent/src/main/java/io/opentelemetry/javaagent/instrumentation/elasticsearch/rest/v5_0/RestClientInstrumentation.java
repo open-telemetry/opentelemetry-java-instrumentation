@@ -23,6 +23,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.http.HttpEntity;
 import org.elasticsearch.client.ResponseListener;
 
 class RestClientInstrumentation implements TypeInstrumentation {
@@ -87,10 +88,12 @@ class RestClientInstrumentation implements TypeInstrumentation {
     public static Object[] onEnter(
         @Advice.Argument(0) String method,
         @Advice.Argument(1) String endpoint,
+        @Advice.Argument(3) @Nullable HttpEntity httpEntity,
         @Advice.Argument(5) ResponseListener originalResponseListener) {
       ResponseListener responseListener = originalResponseListener;
 
-      ElasticsearchRestRequest request = ElasticsearchRestRequest.create(method, endpoint);
+      ElasticsearchRestRequest request =
+          ElasticsearchRestRequest.create(method, endpoint, null, httpEntity);
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, responseListener};

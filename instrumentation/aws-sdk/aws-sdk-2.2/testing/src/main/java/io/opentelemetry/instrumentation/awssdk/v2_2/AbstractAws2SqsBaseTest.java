@@ -60,6 +60,7 @@ import software.amazon.awssdk.services.sqs.model.QueueDoesNotExistException;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -126,6 +127,20 @@ public abstract class AbstractAws2SqsBaseTest {
         "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging");
   }
 
+  protected boolean canInjectBatchCreationContext() {
+    return isSqsAttributeInjectionEnabled()
+        || (isXrayInjectionEnabled() && supportsMessageSystemAttributes());
+  }
+
+  protected static boolean supportsMessageSystemAttributes() {
+    try {
+      SendMessageBatchRequestEntry.class.getMethod("messageSystemAttributesAsStrings");
+      return true;
+    } catch (NoSuchMethodException ignored) {
+      return false;
+    }
+  }
+
   @BeforeAll
   void setUp() {
     sqs = SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
@@ -151,10 +166,9 @@ public abstract class AbstractAws2SqsBaseTest {
             .queueUrl(queueUrl)
             .entries(
                 e -> e.messageBody("e1").id("i1"),
-                // 8 attributes, injection always possible
-                e -> e.messageBody("e2").id("i2").messageAttributes(dummyMessageAttributes(8)),
-                // 10 attributes, injection with custom propagator never possible
-                e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(10)))
+                // 5 attributes leave room for X-Ray and composite configured propagation
+                e -> e.messageBody("e2").id("i2").messageAttributes(dummyMessageAttributes(5)),
+                e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(5)))
             .build();
     sendMessageBatchRequest = batch;
   }
@@ -306,7 +320,12 @@ public abstract class AbstractAws2SqsBaseTest {
   SpanDataAssert publishSpan(
       SpanDataAssert span, String queueUrl, String rpcMethod, Long batchMessageCount) {
     return span.hasName(emitStableMessagingSemconv() ? "send testSdkSqs" : "testSdkSqs publish")
-        .hasKind(SpanKind.PRODUCER)
+        .hasKind(
+            emitStableMessagingSemconv()
+                    && batchMessageCount != null
+                    && canInjectBatchCreationContext()
+                ? SpanKind.CLIENT
+                : SpanKind.PRODUCER)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),

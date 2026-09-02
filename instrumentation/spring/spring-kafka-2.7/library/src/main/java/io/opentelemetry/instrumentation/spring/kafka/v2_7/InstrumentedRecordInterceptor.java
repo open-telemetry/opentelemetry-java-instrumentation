@@ -20,7 +20,7 @@ import org.springframework.kafka.listener.RecordInterceptor;
 
 final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, V> {
 
-  private static final VirtualField<ConsumerRecord<?, ?>, State<KafkaProcessRequest>> stateField =
+  private static final VirtualField<ConsumerRecord<?, ?>, State<KafkaProcessRequest>> RECORD_STATE =
       VirtualField.find(ConsumerRecord.class, State.class);
   private static final ThreadLocal<ThreadState> threadLocalState = new ThreadLocal<>();
 
@@ -56,7 +56,7 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
     if (processInstrumenter.shouldStart(parentContext, request)) {
       Context context = processInstrumenter.start(parentContext, request);
       Scope scope = context.makeCurrent();
-      stateField.set(record, State.create(request, context, scope));
+      RECORD_STATE.set(record, State.create(request, context, scope));
     }
   }
 
@@ -100,8 +100,8 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   }
 
   private void end(ConsumerRecord<K, V> record, @Nullable Throwable error) {
-    State<KafkaProcessRequest> state = stateField.get(record);
-    stateField.set(record, null);
+    State<KafkaProcessRequest> state = RECORD_STATE.get(record);
+    RECORD_STATE.set(record, null);
     if (state != null) {
       KafkaProcessRequest request = state.request();
       state.scope().close();

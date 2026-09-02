@@ -2,6 +2,40 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
+  ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
+- Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query
+  bodies by default under v3-preview; outside v3-preview, capture defaults remain unchanged. The
+  javaagent also sanitizes explicitly enabled capture by default, replacing literal values with `?`
+  while preserving the query structure. Javaagent sanitization can be disabled with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled=false`.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
+- Remove the deprecated `HostIdResource.REGISTRY_QUERY` in favor of the absolute-path `reg.exe` lookup used by
+  `HostIdResource`. ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
+
+### 🚫 Deprecations
+
+- Deprecate `otel.instrumentation.opensearch.capture-search-query`. There is no replacement.
+- Deprecate `otel.instrumentation.elasticsearch.capture-search-query` There is no replacement.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
+
+## Version 2.31.1 (2026-08-23)
+
+This release targets the OpenTelemetry SDK 1.65.0.
+
+Note that many artifacts have the `-alpha` suffix attached to their version
+number, reflecting that they will continue to have breaking changes. Please see
+[VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning)
+for more details.
+
+### 🛠️ Bug fixes
+
+- Restore stable semantic convention APIs to the compile classpaths of the Spring Boot
+  autoconfigure and starter artifacts.
+  ([#19754](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19754))
+
 ## Version 2.31.0 (2026-08-20)
 
 This release targets the OpenTelemetry SDK 1.65.0.

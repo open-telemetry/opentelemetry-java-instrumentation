@@ -55,6 +55,12 @@ class TracedWithSpan {
   }
 
   @WithSpan
+  <T> String withGenericSpanAttributes(
+      @SpanAttribute("value") T value, @SpanAttribute("values") T[] values) {
+    return String.valueOf(value);
+  }
+
+  @WithSpan
   CompletionStage<String> completionStage(CompletableFuture<String> future) {
     return future;
   }
