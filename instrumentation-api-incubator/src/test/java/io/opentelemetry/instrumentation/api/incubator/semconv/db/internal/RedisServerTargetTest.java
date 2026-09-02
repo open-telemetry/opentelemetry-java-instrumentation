@@ -208,9 +208,9 @@ class RedisServerTargetTest {
 
   @Test
   void discoveryEndpointListDropsCompleteSortedEndpointsFromTheEndAt255Characters() {
-    String first = String.join("", nCopies(80, "a"));
-    String second = String.join("", nCopies(80, "b"));
-    String third = String.join("", nCopies(80, "c"));
+    String first = String.join(".", nCopies(2, String.join("", nCopies(40, "a"))));
+    String second = String.join(".", nCopies(2, String.join("", nCopies(40, "b"))));
+    String third = String.join(".", nCopies(2, String.join("", nCopies(40, "c"))));
 
     RedisServerTarget target =
         RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
@@ -240,7 +240,13 @@ class RedisServerTargetTest {
 
   @Test
   void discoveryEndpointListNeverCutsAnEndpoint() {
-    String endpoint = String.join("", nCopies(256, "a"));
+    String endpoint =
+        String.join(
+            ".",
+            String.join("", nCopies(63, "a")),
+            String.join("", nCopies(63, "a")),
+            String.join("", nCopies(63, "a")),
+            String.join("", nCopies(61, "a")));
 
     RedisServerTarget target =
         RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
@@ -310,9 +316,9 @@ class RedisServerTargetTest {
 
   @Test
   void orderedEndpointListDropsCompleteEndpointsFromTheEndAt255Characters() {
-    String first = String.join("", nCopies(120, "b"));
-    String second = String.join("", nCopies(120, "a"));
-    String third = String.join("", nCopies(120, "c"));
+    String first = String.join(".", nCopies(2, String.join("", nCopies(60, "b"))));
+    String second = String.join(".", nCopies(2, String.join("", nCopies(60, "a"))));
+    String third = String.join(".", nCopies(2, String.join("", nCopies(60, "c"))));
 
     RedisServerTarget target =
         RedisServerTarget.ofEndpoints(asList(first + ":6379", second + ":6379", third + ":6379"));
@@ -349,9 +355,9 @@ class RedisServerTargetTest {
 
   @Test
   void unorderedEndpointListSortsBeforeDroppingCompleteEndpoints() {
-    String first = String.join("", nCopies(120, "a"));
-    String second = String.join("", nCopies(120, "b"));
-    String third = String.join("", nCopies(120, "c"));
+    String first = String.join(".", nCopies(2, String.join("", nCopies(60, "a"))));
+    String second = String.join(".", nCopies(2, String.join("", nCopies(60, "b"))));
+    String third = String.join(".", nCopies(2, String.join("", nCopies(60, "c"))));
 
     RedisServerTarget target =
         RedisServerTarget.ofUnorderedEndpoints(
@@ -494,8 +500,12 @@ class RedisServerTargetTest {
         "localhost:",
         "localhost:-1",
         "localhost:6379x",
+        "localhost:0",
         "localhost:banana:extra",
         "node1,node2",
+        "-node:6379",
+        "node!:6379",
+        "127.00.0.1:6379",
         "redis://node one:6379",
         "redis://node\none:6379",
         "redis://node\bone:6379",
@@ -503,7 +513,10 @@ class RedisServerTargetTest {
         "1:2:3",
         "2001:db8::g",
         "::1]",
-        "[[::1]:6379"
+        "[[::1]:6379",
+        "/tmp/redis#1.sock",
+        "/tmp/redis?1.sock",
+        "redis-socket:///var/run/user@redis.sock"
       })
   void unusableEndpoint(String endpoint) {
     assertThat(RedisServerTarget.ofEndpoint(endpoint)).isNull();
@@ -533,8 +546,6 @@ class RedisServerTargetTest {
     "UNIX:///var/run/redis.sock, /var/run/redis.sock",
     "redis-socket://user:password@/var/run/redis.sock, /var/run/redis.sock",
     "/var/run/redis.sock, /var/run/redis.sock",
-    "/tmp/redis#1.sock, /tmp/redis#1.sock",
-    "/tmp/redis?1.sock, /tmp/redis?1.sock",
     "redis-socket:///var/run/redis.sock?db=1, /var/run/redis.sock",
     "redis-socket:///var/run/redis.sock#fragment, /var/run/redis.sock",
   })
@@ -567,9 +578,7 @@ class RedisServerTargetTest {
     assertThat(RedisServerTarget.ofEndpoint(passwordContainingAt))
         .extracting(RedisServerTarget::getAddress)
         .isEqualTo("/var/run/redis.sock");
-    assertThat(RedisServerTarget.ofEndpoint("redis-socket:///var/run/user@redis.sock"))
-        .extracting(RedisServerTarget::getAddress)
-        .isEqualTo("/var/run/user@redis.sock");
+    assertThat(RedisServerTarget.ofEndpoint("redis-socket:///var/run/user@redis.sock")).isNull();
   }
 
   @Test
