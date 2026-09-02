@@ -216,11 +216,15 @@ class CassandraConfiguredContactPointsTest {
   }
 
   @Test
-  void ignoresInvalidContactPointData() {
+  void invalidContactPointDataDropsEntireTarget() {
     CassandraConfiguredTarget target =
         CassandraConfiguredTarget.create(new Object[] {null, "", new Object()}, 9042);
 
     assertThat(target).isNull();
+  }
+
+  @Test
+  void invalidConfiguredPortDropsEntireTarget() {
     assertThat(CassandraConfiguredTarget.create("db.example", 0)).isNull();
   }
 

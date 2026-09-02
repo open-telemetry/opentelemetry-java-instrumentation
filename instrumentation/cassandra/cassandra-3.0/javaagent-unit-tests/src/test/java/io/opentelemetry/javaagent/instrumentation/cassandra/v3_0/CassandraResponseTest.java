@@ -96,7 +96,7 @@ class CassandraResponseTest {
   }
 
   @Test
-  void sniEndPointExceptionRecordsNothing() {
+  void sniEndPointExceptionDoesNotResolvePeerInStableMode() {
     UnavailableException exception =
         new UnavailableException(sniEndPoint(), ConsistencyLevel.ONE, 1, 0);
 
