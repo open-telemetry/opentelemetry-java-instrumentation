@@ -111,8 +111,8 @@ class ServicePeerResolverTest {
   @Test
   void opaqueConfiguredTargetDoesNotAlsoMatchItsDriverName() {
     String target =
-        "oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=h1)(PORT=1521))"
-            + "(ADDRESS=(PROTOCOL=tcp)(HOST=h2)(PORT=1521)))";
+        "oracle:thin:@(DESCRIPTION=( ADDRESS=(PROTOCOL=tcp)(HOST=h1)(PORT=1521))"
+            + "(ADDRESS = (PROTOCOL=tcp)(HOST=h2)(PORT=1521)))";
     ServicePeerResolver r = createResolver(mapping(target, "cluster", null));
 
     AttributesBuilder attrs = Attributes.builder();

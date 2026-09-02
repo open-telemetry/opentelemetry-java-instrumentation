@@ -20,11 +20,12 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -42,6 +43,8 @@ public class ServicePeerResolver {
       AttributeKey.stringKey("service.peer.name");
   private static final AttributeKey<String> SERVICE_PEER_NAMESPACE =
       AttributeKey.stringKey("service.peer.namespace");
+  private static final Pattern ADDRESS_ENTRY_PATTERN =
+      Pattern.compile("\\(\\s*address\\s*=", Pattern.CASE_INSENSITIVE);
 
   private static final Comparator<ServiceMatcher> matcherComparator =
       nullsFirst(
@@ -109,9 +112,11 @@ public class ServicePeerResolver {
         return true;
       }
     }
-    String lowercasePeer = peer.toLowerCase(Locale.ROOT);
-    int firstAddress = lowercasePeer.indexOf("(address=");
-    return firstAddress >= 0 && lowercasePeer.indexOf("(address=", firstAddress + 1) >= 0;
+    Matcher addressMatcher = ADDRESS_ENTRY_PATTERN.matcher(peer);
+    if (!addressMatcher.find()) {
+      return false;
+    }
+    return addressMatcher.find();
   }
 
   public boolean isEmpty() {
