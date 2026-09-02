@@ -13,11 +13,10 @@ public class VertxSqlClientData implements VertxSqlClientDataProvider {
   @Nullable private final String dbSystem;
   @Nullable private final VertxSqlAddressGroup addressGroup;
 
-  public static VertxSqlClientData fromConnectOptions(
+  public static VertxSqlClientData fromSuppliedConnectOptions(
       SqlConnectOptions connectOptions, @Nullable String dbSystem) {
     SqlConnectOptions copiedOptions = new SqlConnectOptions(connectOptions);
-    return new VertxSqlClientData(
-        copiedOptions, dbSystem, VertxSqlAddressGroup.of(copiedOptions, dbSystem));
+    return new VertxSqlClientData(copiedOptions, dbSystem, null);
   }
 
   public VertxSqlClientData(

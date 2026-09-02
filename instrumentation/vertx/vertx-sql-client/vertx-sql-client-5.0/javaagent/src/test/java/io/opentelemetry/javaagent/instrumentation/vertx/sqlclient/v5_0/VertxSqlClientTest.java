@@ -400,10 +400,7 @@ class VertxSqlClientTest {
     assertThat(calls).hasValue(2);
     List<String> expectedHosts = asList(host, alternateHost);
     Collections.sort(expectedHosts);
-    testing.waitAndAssertSortedTraces(
-        comparingRootSpanAttribute(SERVER_ADDRESS),
-        trace -> assertSupplierTarget(trace, expectedHosts.get(0)),
-        trace -> assertSupplierTarget(trace, expectedHosts.get(1)));
+    assertSupplierTargetTraces(expectedHosts);
   }
 
   @Test
@@ -546,6 +543,32 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testSupplierAddressDoesNotBecomeFallbackSpanName() {
+    RuntimeException failed = new RuntimeException("connection failed");
+    PgConnectOptions suppliedOptions =
+        new PgConnectOptions(connectOptions()).setDatabase("").setUser("");
+    Pool supplierPool =
+        ClientBuilder.pool(failingDriver(failed))
+            .using(vertx)
+            .connectingTo(() -> Future.succeededFuture(suppliedOptions))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    assertThatThrownBy(
+            () ->
+                supplierPool
+                    .query("")
+                    .execute()
+                    .toCompletionStage()
+                    .toCompletableFuture()
+                    .get(30, SECONDS))
+        .hasCause(failed);
+
+    testing.waitAndAssertTraces(trace -> assertSupplierFallbackFailure(trace, failed));
+  }
+
+  @Test
   void testConcurrentSupplierFailuresKeepTheirOptions() throws Exception {
     RuntimeException failed = new RuntimeException("connection failed");
     AtomicInteger calls = new AtomicInteger();
@@ -586,10 +609,16 @@ class VertxSqlClientTest {
     assertThat(calls).hasValue(2);
     List<String> expectedHosts = asList("first.example", host);
     Collections.sort(expectedHosts);
-    testing.waitAndAssertSortedTraces(
-        comparingRootSpanAttribute(SERVER_ADDRESS),
-        trace -> assertSupplierFailure(trace, failed, "other_sql", expectedHosts.get(0)),
-        trace -> assertSupplierFailure(trace, failed, "other_sql", expectedHosts.get(1)));
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertTraces(
+          trace -> assertSupplierFailure(trace, failed, "other_sql", expectedHosts.get(0)),
+          trace -> assertSupplierFailure(trace, failed, "other_sql", expectedHosts.get(1)));
+    } else {
+      testing.waitAndAssertSortedTraces(
+          comparingRootSpanAttribute(SERVER_ADDRESS),
+          trace -> assertSupplierFailure(trace, failed, "other_sql", expectedHosts.get(0)),
+          trace -> assertSupplierFailure(trace, failed, "other_sql", expectedHosts.get(1)));
+    }
   }
 
   @Test
@@ -869,9 +898,11 @@ class VertxSqlClientTest {
                       equalTo(DB_STATEMENT, "select * from test"),
                       equalTo(DB_OPERATION, "SELECT"),
                       equalTo(DB_SQL_TABLE, "test"),
-                      equalTo(maybeStablePeerService(), "test-peer-service"),
-                      equalTo(SERVER_ADDRESS, expectedHost),
-                      equalTo(SERVER_PORT, Long.valueOf(port))));
+                      equalTo(
+                          maybeStablePeerService(),
+                          emitStableDatabaseSemconv() ? null : "test-peer-service"),
+                      equalTo(SERVER_ADDRESS, null),
+                      equalTo(SERVER_PORT, null)));
       return;
     }
     trace.hasSpansSatisfyingExactly(
@@ -888,9 +919,24 @@ class VertxSqlClientTest {
                     equalTo(
                         maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
                     equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
-                    equalTo(maybeStablePeerService(), "test-peer-service"),
-                    equalTo(SERVER_ADDRESS, expectedHost),
-                    equalTo(SERVER_PORT, Long.valueOf(port))));
+                    equalTo(
+                        maybeStablePeerService(),
+                        emitStableDatabaseSemconv() ? null : "test-peer-service"),
+                    equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : expectedHost),
+                    equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port))));
+  }
+
+  private static void assertSupplierTargetTraces(List<String> expectedHosts) {
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertTraces(
+          trace -> assertSupplierTarget(trace, expectedHosts.get(0)),
+          trace -> assertSupplierTarget(trace, expectedHosts.get(1)));
+    } else {
+      testing.waitAndAssertSortedTraces(
+          comparingRootSpanAttribute(SERVER_ADDRESS),
+          trace -> assertSupplierTarget(trace, expectedHosts.get(0)),
+          trace -> assertSupplierTarget(trace, expectedHosts.get(1)));
+    }
   }
 
   private static void assertSupplierFailure(TraceAssert trace, RuntimeException error) {
@@ -904,9 +950,6 @@ class VertxSqlClientTest {
 
   private static void assertSupplierFailure(
       TraceAssert trace, RuntimeException error, String dbSystem, String expectedHost) {
-    boolean inlinePort =
-        expectedHost != null && emitStableDatabaseSemconv() && dbSystem.equals("other_sql");
-    String expectedAddress = inlinePort ? expectedHost + ":" + port : expectedHost;
     trace.hasSpansSatisfyingExactly(
         span ->
             span.hasName(
@@ -942,10 +985,73 @@ class VertxSqlClientTest {
                                 && !emitStableDatabaseSemconv()
                             ? "test-peer-service"
                             : null),
-                    equalTo(SERVER_ADDRESS, expectedAddress),
+                    equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : expectedHost),
                     equalTo(
                         SERVER_PORT,
-                        expectedHost != null && !inlinePort ? Long.valueOf(port) : null),
+                        expectedHost != null && !emitStableDatabaseSemconv()
+                            ? Long.valueOf(port)
+                            : null),
+                    equalTo(
+                        ERROR_TYPE,
+                        emitStableDatabaseSemconv() ? error.getClass().getName() : null)));
+  }
+
+  private static void assertSupplierFallbackFailure(TraceAssert trace, RuntimeException error) {
+    if (emitOldDatabaseSemconv() && emitStableDatabaseSemconv()) {
+      trace.hasSpansSatisfyingExactly(
+          span ->
+              span.hasName("<unspecified span name>")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasStatus(StatusData.error())
+                  .hasEventsSatisfyingExactly(
+                      event ->
+                          event
+                              .hasName("exception")
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                                  equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                                  satisfies(
+                                      EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(maybeStable(DB_SYSTEM), "other_sql"),
+                      equalTo(maybeStable(DB_NAME), ""),
+                      equalTo(maybeStable(DB_STATEMENT), ""),
+                      equalTo(DB_NAME, ""),
+                      equalTo(DB_USER, ""),
+                      equalTo(DB_STATEMENT, ""),
+                      equalTo(SERVER_ADDRESS, null),
+                      equalTo(SERVER_PORT, null),
+                      equalTo(ERROR_TYPE, error.getClass().getName())));
+      return;
+    }
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("<unspecified span name>")
+                .hasKind(SpanKind.CLIENT)
+                .hasStatus(StatusData.error())
+                .hasEventsSatisfyingExactly(
+                    event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                                equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? "other_sql" : null),
+                    equalTo(maybeStable(DB_NAME), ""),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : ""),
+                    equalTo(maybeStable(DB_STATEMENT), ""),
+                    equalTo(DB_QUERY_SUMMARY, null),
+                    equalTo(maybeStable(DB_OPERATION), null),
+                    equalTo(maybeStable(DB_SQL_TABLE), null),
+                    equalTo(
+                        maybeStablePeerService(),
+                        emitStableDatabaseSemconv() ? null : "test-peer-service"),
+                    equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
+                    equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
                     equalTo(
                         ERROR_TYPE,
                         emitStableDatabaseSemconv() ? error.getClass().getName() : null)));
@@ -985,9 +1091,9 @@ class VertxSqlClientTest {
                       equalTo(DB_STATEMENT, "select * from test"),
                       equalTo(DB_OPERATION, "SELECT"),
                       equalTo(DB_SQL_TABLE, "test"),
-                      equalTo(maybeStablePeerService(), "test-peer-service"),
-                      equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                      equalTo(SERVER_PORT, 1),
+                      equalTo(maybeStablePeerService(), null),
+                      equalTo(SERVER_ADDRESS, null),
+                      equalTo(SERVER_PORT, null),
                       equalTo(ERROR_TYPE, "66000")));
       return;
     }
@@ -1015,9 +1121,11 @@ class VertxSqlClientTest {
                     equalTo(
                         maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
                     equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
-                    equalTo(maybeStablePeerService(), "test-peer-service"),
-                    equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                    equalTo(SERVER_PORT, 1),
+                    equalTo(
+                        maybeStablePeerService(),
+                        emitStableDatabaseSemconv() ? null : "test-peer-service"),
+                    equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : "127.0.0.1"),
+                    equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(1)),
                     equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "66000" : null)));
   }
 

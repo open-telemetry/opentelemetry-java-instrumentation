@@ -382,7 +382,7 @@ public class VertxSqlClientSingletons {
     }
 
     private void capture(SqlConnectOptions connectOptions) {
-      data = VertxSqlClientData.fromConnectOptions(connectOptions, dbSystem);
+      data = VertxSqlClientData.fromSuppliedConnectOptions(connectOptions, dbSystem);
     }
 
     private void notifyConnectionDataListener(VertxSqlClientData data) {

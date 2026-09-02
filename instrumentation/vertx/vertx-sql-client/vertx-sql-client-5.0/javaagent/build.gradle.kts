@@ -84,6 +84,9 @@ tasks {
       includeTestsMatching(
         "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testOracleSupplierConnectFailureCapturesSuppliedOptions",
       )
+      includeTestsMatching(
+        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testSupplierAddressDoesNotBecomeFallbackSpanName",
+      )
     }
   }
 
