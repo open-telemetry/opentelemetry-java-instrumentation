@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
@@ -225,6 +226,9 @@ public class VertxSqlClientSingletons {
     return () -> {
       Future<SqlConnectOptions> future = supplier.get();
       if (future != null) {
+        Promise<SqlConnectOptions> invocationPromise = Promise.promise();
+        future.onComplete(invocationPromise);
+        future = invocationPromise.future();
         supplierFutureDataCaptureCache.put(future, dataCapture);
       }
       return future;

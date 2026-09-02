@@ -407,6 +407,35 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testConcurrentSupplierPoolQueriesCanShareOnePendingFuture() throws Exception {
+    AtomicInteger calls = new AtomicInteger();
+    Promise<SqlConnectOptions> suppliedOptions = Promise.promise();
+    Pool supplierPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(
+                () -> {
+                  calls.incrementAndGet();
+                  return suppliedOptions.future();
+                })
+            .with(new PoolOptions().setMaxSize(2))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    Future<?> firstResult = supplierPool.query("select * from test").execute();
+    Future<?> secondResult = supplierPool.query("select * from test").execute();
+    suppliedOptions.complete(connectOptions());
+    Future.all(firstResult, secondResult)
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    assertThat(calls).hasValue(2);
+    testing.waitAndAssertTraces(
+        VertxSqlClientTest::assertSupplierTarget, VertxSqlClientTest::assertSupplierTarget);
+  }
+
+  @Test
   void testSupplierCapturePreservesExceptions() {
     RuntimeException thrown = new RuntimeException("supplier failed");
     Pool throwingPool =
