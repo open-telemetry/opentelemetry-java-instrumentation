@@ -131,7 +131,7 @@ public final class JmxTelemetryBuilder {
    * @return this
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addStableMetrics(IncludeExclude systemFilter) {
+  public JmxTelemetryBuilder loadStableMetrics(IncludeExclude systemFilter) {
     this.stableMetricsSystemFilter = systemFilter;
     return this;
   }
@@ -144,7 +144,7 @@ public final class JmxTelemetryBuilder {
    * @return this
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addUnstableMetrics(IncludeExclude systemFilter) {
+  public JmxTelemetryBuilder loadUnstableMetrics(IncludeExclude systemFilter) {
     this.unstableMetricsSystemFilter = systemFilter;
     return this;
   }

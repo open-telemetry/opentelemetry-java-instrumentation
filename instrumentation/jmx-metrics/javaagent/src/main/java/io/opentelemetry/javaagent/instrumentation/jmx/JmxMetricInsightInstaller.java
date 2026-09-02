@@ -67,18 +67,18 @@ public class JmxMetricInsightInstaller implements AgentListener {
     if (!systemsConfig.isEmpty()) {
       logger.log(
           WARNING,
-          "'otel.jmx.target.system' is deprecated and will be removed in 3.x. Use 'otel.jmx.experimental.included' with v3 preview instead.");
+          "'otel.jmx.target.system' is deprecated and will be removed in 3.x.");
     }
 
     if (v3Preview) {
       // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
-      jmx.addStableMetrics(IncludeExclude.builder().setExcluded("jvm").build());
+      jmx.loadStableMetrics(IncludeExclude.builder().setExcluded("jvm").build());
 
       List<String> unstableInclude =
           config.get("experimental").getScalarList("included", String.class, emptyList());
       if (!unstableInclude.isEmpty()) {
         // only include explicitly opted-in, others will be excluded
-        jmx.addUnstableMetrics(IncludeExclude.builder().setIncluded(unstableInclude).build());
+        jmx.loadUnstableMetrics(IncludeExclude.builder().setIncluded(unstableInclude).build());
       }
 
     } else {
@@ -113,7 +113,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
       // all embedded metrics definitions per system.
       if (!systemsConfig.isEmpty()) {
         IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
-        jmx.addStableMetrics(systems).addUnstableMetrics(systems);
+        jmx.loadStableMetrics(systems).loadUnstableMetrics(systems);
       }
     }
 

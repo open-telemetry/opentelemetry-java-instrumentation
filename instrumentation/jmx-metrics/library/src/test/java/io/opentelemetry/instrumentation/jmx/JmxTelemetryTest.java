@@ -87,8 +87,8 @@ class JmxTelemetryTest {
     IncludeExclude includeInclude = IncludeExclude.builder().setIncluded("jvm-test").build();
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
-            .addStableMetrics(includeInclude)
-            .addUnstableMetrics(includeInclude);
+            .loadStableMetrics(includeInclude)
+            .loadUnstableMetrics(includeInclude);
 
     stableUnstableTest(builder, "jmx/rules/jvm-test.yaml", "jmx/rules/jvm-test_unstable.yaml");
   }
@@ -97,7 +97,7 @@ class JmxTelemetryTest {
   void includeAllStableMetrics() {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
-            .addStableMetrics(IncludeExclude.builder().build());
+            .loadStableMetrics(IncludeExclude.builder().build());
 
     JmxTelemetry telemetry = stableUnstableTest(builder, "jmx/rules/jvm-test.yaml");
     assertThat(telemetry.getMetrics().getIncluded())
@@ -108,7 +108,7 @@ class JmxTelemetryTest {
   void includeAllUnstableMetrics() {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
-            .addUnstableMetrics(IncludeExclude.builder().build());
+            .loadUnstableMetrics(IncludeExclude.builder().build());
 
     JmxTelemetry telemetry = stableUnstableTest(builder, "jmx/rules/jvm-test_unstable.yaml");
     assertThat(telemetry.getMetrics().getIncluded())
@@ -120,8 +120,8 @@ class JmxTelemetryTest {
   void includeEveryMetric() {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
-            .addStableMetrics(IncludeExclude.builder().build())
-            .addUnstableMetrics(IncludeExclude.builder().build());
+            .loadStableMetrics(IncludeExclude.builder().build())
+            .loadUnstableMetrics(IncludeExclude.builder().build());
 
     JmxTelemetry telemetry =
         stableUnstableTest(builder, "jmx/rules/jvm-test.yaml", "jmx/rules/jvm-test_unstable.yaml");
