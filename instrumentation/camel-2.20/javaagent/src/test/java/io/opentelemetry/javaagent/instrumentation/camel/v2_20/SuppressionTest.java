@@ -21,10 +21,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Camel does not use the semantic attributes extractors, so its spans do not claim any span key.
- * Under the {@code semconv} span suppression strategy the http client instrumentation nested inside
- * a Camel http producer is therefore not suppressed and emits its own span, while under the {@code
- * span-kind} strategy the Camel client span suppresses it.
+ * Camel http producer spans do not use the http semantic attributes extractor, so they do not claim
+ * the http client span key. Under the {@code semconv} span suppression strategy the http client
+ * instrumentation nested inside a Camel http producer is therefore not suppressed and emits its own
+ * span, while under the {@code span-kind} strategy the Camel client span suppresses it.
  */
 class SuppressionTest {
 
