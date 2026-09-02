@@ -42,10 +42,6 @@ class CassandraAttributesExtractor
   @Override
   public void onStart(AttributesBuilder attributes, Context context, CassandraRequest request) {
     if (emitStableDatabaseSemconv()) {
-      CassandraConfiguredTarget configuredTarget = request.getConfiguredTarget();
-      if (configuredTarget != null) {
-        configuredTarget.put(attributes);
-      }
       attributes.put(CASSANDRA_CONSISTENCY_LEVEL, request.getConsistencyLevel());
       attributes.put(CASSANDRA_PAGE_SIZE, request.getPageSize());
       attributes.put(CASSANDRA_QUERY_IDEMPOTENT, request.isIdempotent());

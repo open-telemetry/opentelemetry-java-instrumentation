@@ -5,11 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-
 import com.datastax.driver.core.Cluster;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Array;
 import java.net.InetAddress;
@@ -184,13 +180,6 @@ public class CassandraConfiguredTarget {
       }
     }
     return true;
-  }
-
-  void put(AttributesBuilder attributes) {
-    attributes.put(SERVER_ADDRESS, address);
-    if (port != null) {
-      attributes.put(SERVER_PORT, port);
-    }
   }
 
   String getAddress() {
