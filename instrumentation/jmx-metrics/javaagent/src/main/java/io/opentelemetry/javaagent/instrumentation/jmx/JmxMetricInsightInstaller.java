@@ -40,88 +40,89 @@ public class JmxMetricInsightInstaller implements AgentListener {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
 
-    boolean v3Preview = AgentCommonConfig.get().isV3Preview();
-
-    if (config.getBoolean("enabled", true)) {
-      JmxTelemetryBuilder jmx =
-          JmxTelemetry.builder(GlobalOpenTelemetry.get())
-              .beanDiscoveryDelay(
-                  Duration.ofMillis(
-                      config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
-
-      config.getScalarList("config", String.class, emptyList()).stream()
-          .map(Paths::get)
-          .forEach(path -> addFileRules(path, jmx));
-
-      // otel.jmx.target.system support will be removed in v3
-      List<String> systemsConfig =
-          config.get("target").getScalarList("system", String.class, emptyList());
-      if (!systemsConfig.isEmpty()) {
-        logger.log(
-            WARNING,
-            "'otel.jmx.target.system' is deprecated and will be removed in 3.x. Use 'otel.jmx.experimental.include' with v3 preview instead.");
-      }
-
-      if (v3Preview) {
-        // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
-        jmx.addStableMetrics(IncludeExclude.builder().setExcluded("jvm").build());
-
-        List<String> unstableInclude =
-            config.get("experimental").getScalarList("included", String.class, emptyList());
-        IncludeExcludeBuilder builder = IncludeExclude.builder();
-        if (!unstableInclude.isEmpty()) {
-          // only include explicitly opted-in, others will be excluded
-          builder.setIncluded(unstableInclude);
-        }
-        jmx.addUnstableMetrics(builder.build());
-
-      } else {
-        // pre-v3 compatibility
-
-        // mapping of 'experimental-' deprecated prefix in target system
-        systemsConfig =
-            systemsConfig.stream()
-                .map(
-                    s ->
-                        s.startsWith(EXPERIMENTAL_PREFIX)
-                            ? s.substring(EXPERIMENTAL_PREFIX.length())
-                            : s)
-                .collect(toList());
-
-        // warn about unsupported systems
-        systemsConfig.forEach(
-            system -> {
-              if (!InternalMetricsDefinitions.getSupportedSystems().contains(system)) {
-                logger.log(
-                    WARNING,
-                    "JMX target system "
-                        + system
-                        + " is not supported. Supported systems are: "
-                        + InternalMetricsDefinitions.getSupportedSystems());
-              }
-            });
-
-        // Using the same filter to include both the stable and unstable metrics allowing to load
-        // all embedded metrics definitions per system.
-        IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
-        jmx.addStableMetrics(systems).addUnstableMetrics(systems);
-      }
-
-      // include/exclude metrics by name
-      List<String> metricsInclude =
-          config.get("metrics").getScalarList("included", String.class, emptyList());
-      List<String> metricsExclude =
-          config.get("metrics").getScalarList("excluded", String.class, emptyList());
-      if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
-        jmx.setMetrics(
-            IncludeExclude.builder()
-                .setIncluded(metricsInclude)
-                .setExcluded(metricsExclude)
-                .build());
-      }
-
-      jmx.build().start();
+    if (!config.getBoolean("enabled", true)) {
+      return;
     }
+
+    JmxTelemetryBuilder jmx =
+        JmxTelemetry.builder(GlobalOpenTelemetry.get())
+            .beanDiscoveryDelay(
+                Duration.ofMillis(
+                    config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
+
+    config.getScalarList("config", String.class, emptyList()).stream()
+        .map(Paths::get)
+        .forEach(path -> addFileRules(path, jmx));
+
+    // otel.jmx.target.system support will be removed in v3
+    List<String> systemsConfig =
+        config.get("target").getScalarList("system", String.class, emptyList());
+    if (!systemsConfig.isEmpty()) {
+      logger.log(
+          WARNING,
+          "'otel.jmx.target.system' is deprecated and will be removed in 3.x. Use 'otel.jmx.experimental.include' with v3 preview instead.");
+    }
+
+    boolean v3Preview = AgentCommonConfig.get().isV3Preview();
+    if (v3Preview) {
+      // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
+      jmx.addStableMetrics(IncludeExclude.builder().setExcluded("jvm").build());
+
+      List<String> unstableInclude =
+          config.get("experimental").getScalarList("included", String.class, emptyList());
+      IncludeExcludeBuilder builder = IncludeExclude.builder();
+      if (!unstableInclude.isEmpty()) {
+        // only include explicitly opted-in, others will be excluded
+        builder.setIncluded(unstableInclude);
+      }
+      jmx.addUnstableMetrics(builder.build());
+
+    } else {
+      // pre-v3 compatibility
+
+      // mapping of 'experimental-' deprecated prefix in target system
+      systemsConfig =
+          systemsConfig.stream()
+              .map(
+                  s ->
+                      s.startsWith(EXPERIMENTAL_PREFIX)
+                          ? s.substring(EXPERIMENTAL_PREFIX.length())
+                          : s)
+              .collect(toList());
+
+      // warn about unsupported systems
+      systemsConfig.forEach(
+          system -> {
+            if (!InternalMetricsDefinitions.getSupportedSystems().contains(system)) {
+              logger.log(
+                  WARNING,
+                  "JMX target system "
+                      + system
+                      + " is not supported. Supported systems are: "
+                      + InternalMetricsDefinitions.getSupportedSystems());
+            }
+          });
+
+      // Using the same filter to include both the stable and unstable metrics allowing to load
+      // all embedded metrics definitions per system.
+      IncludeExclude systems = IncludeExclude.builder().setIncluded(systemsConfig).build();
+      jmx.addStableMetrics(systems).addUnstableMetrics(systems);
+    }
+
+    // include/exclude metrics by name
+    List<String> metricsInclude =
+        config.get("metrics").getScalarList("included", String.class, emptyList());
+    List<String> metricsExclude =
+        config.get("metrics").getScalarList("excluded", String.class, emptyList());
+    if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
+      jmx.setMetrics(
+          IncludeExclude.builder()
+              .setIncluded(metricsInclude)
+              .setExcluded(metricsExclude)
+              .build());
+    }
+
+    jmx.build().start();
   }
 
   private static void addFileRules(Path path, JmxTelemetryBuilder builder) {
