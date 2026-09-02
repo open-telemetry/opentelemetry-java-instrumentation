@@ -15,6 +15,8 @@ import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.session.Session;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -142,7 +144,22 @@ class CassandraServerTarget {
       return null;
     }
     Integer port = port(contactPoint.substring(separator + 1));
-    return isSafeHost(host) && port != null ? new CassandraServerTarget(host, port) : null;
+    return isValidHost(host) && port != null ? new CassandraServerTarget(host, port) : null;
+  }
+
+  private static boolean isValidHost(String host) {
+    if (!isSafeHost(host)) {
+      return false;
+    }
+    if (host.indexOf(':') < 0) {
+      return true;
+    }
+    try {
+      new URI("cassandra", null, host, DEFAULT_PORT, null, null, null);
+      return true;
+    } catch (URISyntaxException ignored) {
+      return false;
+    }
   }
 
   private static boolean isSafeHost(String host) {

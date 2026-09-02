@@ -181,6 +181,8 @@ class CassandraServerTargetTest {
     assertThat(CassandraServerTarget.of(singletonList("node.example.com:not-a-port"))).isNull();
     assertThat(CassandraServerTarget.of(singletonList("node.example.com:0"))).isNull();
     assertThat(CassandraServerTarget.of(singletonList("[::1:9042"))).isNull();
+    assertThat(CassandraServerTarget.of(singletonList("::1"))).isNull();
+    assertThat(CassandraServerTarget.of(singletonList("2001:db8::1"))).isNull();
     assertThat(CassandraServerTarget.of(singletonList("user:password@node.example.com:9042")))
         .isNull();
     assertThat(CassandraServerTarget.of(singletonList("node.example.com/path?token=secret:9042")))
