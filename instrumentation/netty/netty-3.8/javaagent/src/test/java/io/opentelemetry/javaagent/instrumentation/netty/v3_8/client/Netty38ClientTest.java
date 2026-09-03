@@ -149,9 +149,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
 
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
-          // unopened port or non routable address
-          if ("http://localhost:61/".equals(uri.toString())
-              || "http://192.0.2.1/".equals(uri.toString())) {
+          if (isFailedConnectUri(uri)) {
             return "CONNECT";
           }
           return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
@@ -172,9 +170,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
 
     optionsBuilder.setHttpAttributes(
         uri -> {
-          // unopened port or non routable address
-          if ("http://localhost:61/".equals(uri.toString())
-              || "http://192.0.2.1/".equals(uri.toString())) {
+          if (isFailedConnectUri(uri)) {
             return singleton(HTTP_REQUEST_METHOD);
           }
           Set<AttributeKey<?>> attributes =
@@ -187,11 +183,19 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
 
   @Override
   protected String expectedHttpRequestMethod(URI uri, String method) {
-    // unopened port or non routable address
-    if ("http://localhost:61/".equals(uri.toString())
-        || "http://192.0.2.1/".equals(uri.toString())) {
+    if (isFailedConnectUri(uri)) {
       return _OTHER;
     }
     return method;
+  }
+
+  @SuppressWarnings("MissingDefault")
+  private static boolean isFailedConnectUri(URI uri) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "http://192.0.2.1/": // non routable address
+        return true;
+    }
+    return false;
   }
 }
