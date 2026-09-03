@@ -23,7 +23,7 @@ public class ElasticsearchTransportServerTarget {
       return null;
     }
 
-    DbServerTargetBuilder builder = DbServerTarget.builder(DEFAULT_PORT);
+    DbServerTargetBuilder builder = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
     for (Endpoint endpoint : endpoints) {
       builder.addEndpoint(endpoint.host, endpoint.port);
     }

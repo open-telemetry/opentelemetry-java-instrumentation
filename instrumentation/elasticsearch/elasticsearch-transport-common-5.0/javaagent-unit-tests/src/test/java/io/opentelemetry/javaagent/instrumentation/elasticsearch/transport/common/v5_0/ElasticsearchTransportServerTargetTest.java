@@ -60,7 +60,7 @@ class ElasticsearchTransportServerTargetTest {
   }
 
   @Test
-  void mixedPortAddressGroupIsStableAcrossIpv4AndIpv6Permutations() {
+  void configuredTransportAddressOrderDoesNotChangeTarget() {
     ElasticsearchTransportServerTarget first =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("::1", 9301), new Endpoint("10.0.0.1", 9300)));
