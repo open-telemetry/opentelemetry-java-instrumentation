@@ -520,7 +520,7 @@ public final class UrlParsingUtils {
       }
     }
     if (!hasSpecialTarget) {
-      DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort).setSorted(false);
+      DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort);
       for (HostPort endpoint : endpoints) {
         builder.addEndpoint(endpoint.host(), endpoint.port() == null ? -1 : endpoint.port());
       }

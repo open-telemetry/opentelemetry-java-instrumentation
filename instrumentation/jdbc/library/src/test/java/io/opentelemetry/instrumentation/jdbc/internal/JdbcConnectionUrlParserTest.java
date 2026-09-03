@@ -2260,20 +2260,32 @@ class JdbcConnectionUrlParserTest {
             .build());
   }
 
-  private static Stream<Arguments> orderedServerAddressGroupArguments() {
+  private static Stream<Arguments> configuredOrderServerAddressGroupArguments() {
     return Stream.of(
         argumentSet(
             "reversed PostgreSQL targets with a duplicate",
             "jdbc:postgresql://pg.host2:5433,pg.host1:5432,pg.host2:5433/pgdb",
             "pg.host2:5433,pg.host1:5432,pg.host2:5433"),
         argumentSet(
+            "PostgreSQL target-server selection order",
+            "jdbc:postgresql://preferred.host,fallback.host/pgdb?targetServerType=primary",
+            "preferred.host,fallback.host"),
+        argumentSet(
+            "MariaDB failover targets",
+            "jdbc:mariadb:failover://primary.host:3306,secondary.host:3307/mdbdb",
+            "primary.host:3306,secondary.host:3307"),
+        argumentSet(
             "reversed MariaDB sequential targets",
             "jdbc:mariadb:sequential://mdb.host2:3307,mdb.host1:3306/mdbdb",
             "mdb.host2:3307,mdb.host1:3306"),
         argumentSet(
-            "MySQL replication target order",
-            "jdbc:mysql:replication://address=(host=replica.host)(port=3307),"
-                + "address=(host=source.host)(port=3306)/mydb",
+            "MariaDB replication targets",
+            "jdbc:mariadb:replication://primary.host:3306,replica.host:3307/mdbdb",
+            "primary.host:3306,replica.host:3307"),
+        argumentSet(
+            "MySQL configured replication roles",
+            "jdbc:mysql:replication://address=(host=replica.host)(port=3307)(type=REPLICA),"
+                + "address=(host=source.host)(port=3306)(type=SOURCE)/mydb",
             "replica.host:3307,source.host:3306"),
         argumentSet(
             "SQL Server principal and failover partner order",
@@ -2407,8 +2419,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   @ParameterizedTest
-  @MethodSource("orderedServerAddressGroupArguments")
-  void preservesOrderedServerAddressGroups(String url, String expectedServerAddressGroup) {
+  @MethodSource("configuredOrderServerAddressGroupArguments")
+  void preservesConfiguredServerAddressGroupOrder(String url, String expectedServerAddressGroup) {
     assertThat(parse(url, null).getServerAddressGroup()).isEqualTo(expectedServerAddressGroup);
   }
 
