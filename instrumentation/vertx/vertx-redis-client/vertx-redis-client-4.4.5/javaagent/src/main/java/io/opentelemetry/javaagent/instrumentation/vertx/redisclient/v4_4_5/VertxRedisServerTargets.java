@@ -138,9 +138,7 @@ public final class VertxRedisServerTargets {
   }
 
   public static void set(RedisURI redisUri, @Nullable RedisServerTarget target) {
-    if (target != null) {
-      TARGET_FIELD.set(redisUri, target);
-    }
+    TARGET_FIELD.set(redisUri, target);
   }
 
   public static void setConnectionTarget(RedisStandaloneConnection connection, RedisURI redisUri) {
