@@ -134,15 +134,13 @@ class ElasticsearchTransportServerTargetTest {
   }
 
   @Test
-  void longEndpointsArePreserved() {
+  void invalidEndpointLengthDropsTarget() {
     String longHost = repeat("a", 256);
 
     ElasticsearchTransportServerTarget target =
         ElasticsearchTransportServerTarget.of(singletonList(new Endpoint(longHost, 9300)));
 
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo(longHost);
-    assertThat(target.getPort()).isNull();
+    assertThat(target).isNull();
   }
 
   @Test
@@ -157,18 +155,18 @@ class ElasticsearchTransportServerTargetTest {
   }
 
   @Test
-  void literalIpv6AddressesKeepBracketsAndOmitTheDefaultPort() {
+  void literalIpv6AddressesOmitTheDefaultPort() {
     ElasticsearchTransportServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("::1", 9300), new Endpoint("[fe80::1]", 9300)));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1],[fe80::1]");
+    assertThat(target.getAddress()).isEqualTo("::1,fe80::1");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void credentialsPathQueryAndFragmentAreRemoved() {
+  void credentialsPathQueryAndFragmentHaveNoTarget() {
     List<Endpoint> endpoints =
         asList(
             new Endpoint("user:secret@h1", 9300),
@@ -176,12 +174,7 @@ class ElasticsearchTransportServerTargetTest {
             new Endpoint("h3?token=secret", 9300),
             new Endpoint("h4#secret", 9300));
 
-    ElasticsearchTransportServerTarget target = ElasticsearchTransportServerTarget.of(endpoints);
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1,h2,h3,h4");
-    assertThat(target.getPort()).isNull();
-    assertThat(target.getAddress()).doesNotContain("secret");
+    assertThat(ElasticsearchTransportServerTarget.of(endpoints)).isNull();
   }
 
   @Test
@@ -197,14 +190,11 @@ class ElasticsearchTransportServerTargetTest {
   }
 
   @Test
-  void credentialsAreRemovedFromOneAddress() {
-    ElasticsearchTransportServerTarget target =
-        ElasticsearchTransportServerTarget.of(
-            singletonList(new Endpoint("user:secret@es.example", 9301)));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("es.example");
-    assertThat(target.getPort()).isEqualTo(9301);
+  void credentialsHaveNoTarget() {
+    assertThat(
+            ElasticsearchTransportServerTarget.of(
+                singletonList(new Endpoint("user:secret@es.example", 9301))))
+        .isNull();
   }
 
   @Test
