@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jmx.internal;
 
 import static java.util.Arrays.asList;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -44,20 +46,28 @@ public class InternalMetricsDefinitions {
   }
 
   /**
-   * Get resource paths for rules for a given system
+   * Get resource paths for rules for a given system.
    *
    * @param system system identifier
    * @param includeStable whether to include stable rules
    * @param includeUnstable whether to include unstable rules
-   * @return collection of resource paths to load rules, empty if system is not supported
+   * @return collection of resource paths to load rules, empty if no embedded rules are available
+   *     (which means the system is not supported by embedded rules).
    */
   public Set<String> getRulesForSystem(
       String system, boolean includeStable, boolean includeUnstable) {
     Set<String> result = new HashSet<>();
 
     String stablePath = String.format("jmx/rules/%s.yaml", system);
-    if (includeStable && classLoader.getResource(stablePath) != null) {
-      result.add(stablePath);
+    if (includeStable) {
+      // testing with getResourceAsStream to ensure consistent behavior with loading
+      try (InputStream stream = classLoader.getResourceAsStream(stablePath)) {
+        if (stream != null) {
+          result.add(stablePath);
+        }
+      } catch (IOException e) {
+        throw new IllegalStateException("unable to load resource", e);
+      }
     }
 
     String unstablePath = String.format("jmx/rules/%s_unstable.yaml", system);

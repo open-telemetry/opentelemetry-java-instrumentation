@@ -42,8 +42,8 @@ OpenTelemetry openTelemetry = ...;
 
 JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
     // Configure loading embedded metric definitions (optional)
-  .addStableMetrics(IncludeExclude.builder().build()) // this will add all available stable metrics
-  .addUnstableMetrics(IncludeExclude.builder().setIncluded("kafka-*").build()) // this will opt-in for unstable metrics for "kafka-*" systems
+  .loadStableMetrics(IncludeExclude.builder().build()) // this will add all available stable metrics
+  .loadUnstableMetrics(IncludeExclude.builder().setIncluded("kafka-*").build()) // this will opt-in for unstable metrics for "kafka-*" systems
   // Load metrics from classpath resource (optional)
   .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("rules/tomcat.yaml"))
   // Load custom metrics by path (optional)
