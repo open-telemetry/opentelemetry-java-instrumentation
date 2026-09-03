@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.api.parallel.Resources;
 
+@ResourceLock("SelectorConfig.logger")
 class SelectorConfigTest {
 
   private static final String SELECTOR = "mdc-attributes";
