@@ -13,9 +13,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 /**
- * Keeps the optional JMS bridge in its own module because Muzzle validates library references at
- * {@link InstrumentationModule} scope. The core Camel module and Kafka bridge remain active when
- * the JMS API is absent.
+ * Muzzle evaluates all library references in an {@link InstrumentationModule} together. This module
+ * isolates the optional JMS references so the core Camel instrumentation can load without the JMS
+ * API.
  */
 @AutoService(InstrumentationModule.class)
 public class ApacheCamelJmsInstrumentationModule extends InstrumentationModule {
