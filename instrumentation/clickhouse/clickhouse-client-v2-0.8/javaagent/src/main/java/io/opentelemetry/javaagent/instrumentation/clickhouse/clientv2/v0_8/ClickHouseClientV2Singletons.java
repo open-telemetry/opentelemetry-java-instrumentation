@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
 import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.ServerException;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -73,13 +73,12 @@ public class ClickHouseClientV2Singletons {
     Class<?> selectedNodeClass = selectedNode.getClass();
     String host = (String) selectedNodeClass.getMethod("getHost").invoke(selectedNode);
     int port = (Integer) selectedNodeClass.getMethod("getPort").invoke(selectedNode);
-    EndpointTarget endpoint = ServerInfo.sanitizeEndpoint(host);
-    request.setPeer(endpoint == null ? null : endpoint.address, endpoint == null ? null : port);
+    DbServerTarget target = DbServerTarget.builder(port).addEndpoint(host, -1).build();
+    request.setPeer(target == null ? null : target.getAddress(), target == null ? null : port);
   }
 
   public static class ServerInfo {
 
-    private static final int MAX_ENDPOINTS = 5;
     private static final ServerInfo EMPTY = new ServerInfo(null, null, null);
 
     @Nullable private final String address;
@@ -111,41 +110,28 @@ public class ClickHouseClientV2Singletons {
     }
 
     static ServerInfo of(Set<String> endpoints) {
-      if (endpoints.isEmpty()) {
+      DbServerTargetBuilder builder = DbServerTarget.builder(-1);
+      boolean inlinePorts = false;
+      for (String endpoint : endpoints) {
+        EndpointTarget extracted = extractEndpoint(endpoint);
+        if (extracted == null) {
+          return EMPTY;
+        }
+        int defaultPort = extracted.defaultPort();
+        builder.addEndpoint(
+            extracted.address, extracted.port == null ? -1 : extracted.port, defaultPort);
+        inlinePorts |= extracted.port != null && extracted.port != defaultPort;
+      }
+      DbServerTarget target = builder.build();
+      if (target == null) {
         return EMPTY;
       }
-      if (endpoints.size() == 1) {
-        EndpointTarget endpoint = sanitizeEndpoint(endpoints.iterator().next());
-        if (endpoint == null) {
-          return EMPTY;
-        }
-        return new ServerInfo(
-            endpoint.address, endpoint.isDefaultPort() ? null : endpoint.port, null);
-      }
-
-      // Endpoint iteration order is unspecified, so canonicalize the configured target.
-      List<EndpointTarget> sanitized = new ArrayList<>(endpoints.size());
-      boolean hasNonDefaultPort = false;
-      for (String endpoint : endpoints) {
-        EndpointTarget sanitizedEndpoint = sanitizeEndpoint(endpoint);
-        if (sanitizedEndpoint == null) {
-          return EMPTY;
-        }
-        sanitized.add(sanitizedEndpoint);
-        hasNonDefaultPort |= !sanitizedEndpoint.isDefaultPort();
-      }
-      boolean inlinePorts = hasNonDefaultPort;
-      sanitized.sort(
-          (left, right) -> left.render(inlinePorts).compareTo(right.render(inlinePorts)));
-
-      StringBuilder addressGroup = new StringBuilder();
-      for (int i = 0; i < Math.min(sanitized.size(), MAX_ENDPOINTS); i++) {
-        if (addressGroup.length() > 0) {
-          addressGroup.append(',');
-        }
-        addressGroup.append(sanitized.get(i).render(inlinePorts));
-      }
-      return new ServerInfo(null, null, addressGroup.toString());
+      return endpoints.size() == 1
+          ? new ServerInfo(target.getAddress(), target.getPort(), null)
+          : new ServerInfo(
+              null,
+              null,
+              inlinePorts ? target.getAddress() : bracketIpv6Endpoints(target.getAddress()));
     }
 
     private static ServerInfo ofCurrentEndpoint(Set<String> endpoints) {
@@ -153,53 +139,23 @@ public class ClickHouseClientV2Singletons {
         return EMPTY;
       }
       String endpoint = endpoints.iterator().next();
-      EndpointTarget peer = sanitizeEndpoint(endpoint);
+      EndpointTarget extracted = extractEndpoint(endpoint);
+      DbServerTarget peer =
+          extracted == null
+              ? null
+              : DbServerTarget.builder(extracted.defaultPort())
+                  .addEndpoint(extracted.address, extracted.port == null ? -1 : extracted.port)
+                  .build();
       return new ServerInfo(
           UrlParser.getHost(endpoint),
           UrlParser.getPort(endpoint),
           null,
-          peer == null ? null : peer.address,
-          peer == null ? null : peer.port);
-    }
-
-    private static String endpointAddress(String endpoint) {
-      if (endpoint.startsWith("[")) {
-        int bracketEnd = endpoint.indexOf(']');
-        if (bracketEnd > 0) {
-          return endpoint.substring(1, bracketEnd);
-        }
-      }
-      int colon = endpoint.lastIndexOf(':');
-      return colon >= 0 && colon == endpoint.indexOf(':') ? endpoint.substring(0, colon) : endpoint;
+          peer == null ? null : peer.getAddress(),
+          extracted == null ? null : extracted.port);
     }
 
     @Nullable
-    private static Integer endpointPort(String endpoint) {
-      int portStart;
-      if (endpoint.startsWith("[")) {
-        int bracketEnd = endpoint.indexOf(']');
-        portStart =
-            bracketEnd >= 0
-                    && bracketEnd + 1 < endpoint.length()
-                    && endpoint.charAt(bracketEnd + 1) == ':'
-                ? bracketEnd + 2
-                : -1;
-      } else {
-        int colon = endpoint.lastIndexOf(':');
-        portStart = colon >= 0 && colon == endpoint.indexOf(':') ? colon + 1 : -1;
-      }
-      if (portStart < 0 || portStart == endpoint.length()) {
-        return null;
-      }
-      try {
-        return Integer.valueOf(endpoint.substring(portStart));
-      } catch (NumberFormatException ignored) {
-        return null;
-      }
-    }
-
-    @Nullable
-    private static EndpointTarget sanitizeEndpoint(String endpoint) {
+    private static EndpointTarget extractEndpoint(String endpoint) {
       String scheme = null;
       int authorityStart = endpoint.indexOf("://");
       if (authorityStart < 0) {
@@ -221,53 +177,67 @@ public class ClickHouseClientV2Singletons {
         authorityStart = userInfoEnd + 1;
       }
       String authority = endpoint.substring(authorityStart, authorityEnd);
-      if (authority.indexOf('=') >= 0
-          || hasUnsafePercentEscape(authority)
-          || !hasValidPortSyntax(authority)) {
+      if (authority.indexOf('=') >= 0 || hasUnsafePercentEscape(authority)) {
         return null;
       }
-      String address = endpointAddress(authority);
-      if (address.isEmpty()) {
-        return null;
-      }
-      return new EndpointTarget(scheme, address, endpointPort(authority));
-    }
-
-    private static boolean hasValidPortSyntax(String authority) {
       if (authority.startsWith("[")) {
         int bracketEnd = authority.indexOf(']');
         if (bracketEnd <= 1 || authority.indexOf(']', bracketEnd + 1) >= 0) {
-          return false;
+          return null;
         }
         String rest = authority.substring(bracketEnd + 1);
-        return rest.isEmpty() || (rest.startsWith(":") && isPort(rest.substring(1)));
+        Integer port =
+            rest.isEmpty() ? null : parsePort(rest.startsWith(":") ? rest.substring(1) : "");
+        return !rest.isEmpty() && port == null
+            ? null
+            : new EndpointTarget(scheme, authority.substring(1, bracketEnd), port);
       }
       if (authority.indexOf('[') >= 0 || authority.indexOf(']') >= 0) {
-        return false;
+        return null;
       }
       int firstColon = authority.indexOf(':');
       int lastColon = authority.lastIndexOf(':');
-      return firstColon < 0
-          || firstColon != lastColon
-          || (firstColon > 0 && isPort(authority.substring(firstColon + 1)));
+      if (firstColon >= 0 && firstColon == lastColon) {
+        Integer port = parsePort(authority.substring(firstColon + 1));
+        return firstColon == 0 || port == null
+            ? null
+            : new EndpointTarget(scheme, authority.substring(0, firstColon), port);
+      }
+      return new EndpointTarget(scheme, authority, null);
     }
 
-    private static boolean isPort(String value) {
+    @Nullable
+    private static Integer parsePort(String value) {
       if (value.isEmpty()) {
-        return false;
+        return null;
       }
       int port = 0;
       for (int i = 0; i < value.length(); i++) {
         char c = value.charAt(i);
         if (c < '0' || c > '9') {
-          return false;
+          return null;
         }
         port = port * 10 + c - '0';
         if (port > 65535) {
-          return false;
+          return null;
         }
       }
-      return true;
+      return port;
+    }
+
+    private static String bracketIpv6Endpoints(String addressGroup) {
+      StringBuilder result = new StringBuilder();
+      for (String endpoint : addressGroup.split(",", -1)) {
+        if (result.length() > 0) {
+          result.append(',');
+        }
+        if (endpoint.indexOf(':') >= 0) {
+          result.append('[').append(endpoint).append(']');
+        } else {
+          result.append(endpoint);
+        }
+      }
+      return result.toString();
     }
 
     private static boolean hasUnsafePercentEscape(String authority) {
@@ -318,34 +288,14 @@ public class ClickHouseClientV2Singletons {
       this.port = port;
     }
 
-    private boolean isDefaultPort() {
-      Integer defaultPort = defaultPort();
-      return defaultPort != null && (port == null || defaultPort.equals(port));
-    }
-
-    @Nullable
-    private Integer defaultPort() {
+    private int defaultPort() {
       if ("http".equalsIgnoreCase(scheme)) {
         return 8123;
       }
       if ("https".equalsIgnoreCase(scheme)) {
         return 8443;
       }
-      return null;
-    }
-
-    private String render(boolean includePort) {
-      StringBuilder rendered = new StringBuilder();
-      if (address.indexOf(':') >= 0) {
-        rendered.append('[').append(address).append(']');
-      } else {
-        rendered.append(address);
-      }
-      Integer renderedPort = port != null ? port : defaultPort();
-      if (includePort && renderedPort != null) {
-        rendered.append(':').append(renderedPort);
-      }
-      return rendered.toString();
+      return -1;
     }
   }
 

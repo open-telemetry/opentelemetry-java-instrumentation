@@ -15,6 +15,8 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
@@ -123,12 +125,12 @@ public final class DbExecution {
             resolvedDriver,
             resolvedProtocol,
             factoryOptions.hasOption(SSL) && Boolean.TRUE.equals(factoryOptions.getValue(SSL)));
-    ServerTarget configuredServerTarget =
+    ConfiguredServerTarget configuredServerTarget =
         isUnixDomainSocket(serverAddress)
-            ? sanitizeUnixDomainSocket(serverAddress)
+            ? ConfiguredServerTarget.from(DbServerTarget.unixSocket(serverAddress))
             : isServerAddressGroupCandidate(serverAddress)
-                ? sanitizeServerAddressGroup(serverAddress, serverPort, defaultPort)
-                : sanitizeServerTarget(serverAddress, serverPort, defaultPort);
+                ? buildServerAddressGroup(serverAddress, serverPort, defaultPort)
+                : buildServerTarget(serverAddress, serverPort, defaultPort);
     this.configuredServerAddress = configuredServerTarget.address;
     this.configuredServerPort = configuredServerTarget.port;
     this.connectionString =
@@ -180,71 +182,52 @@ public final class DbExecution {
     return serverAddress != null && serverAddress.startsWith("/");
   }
 
-  private static ServerTarget sanitizeUnixDomainSocket(@Nullable String serverAddress) {
-    if (serverAddress == null
-        || serverAddress.length() == 1
-        || serverAddress.indexOf(',') >= 0
-        || serverAddress.indexOf('=') >= 0
-        || serverAddress.indexOf('%') >= 0
-        || serverAddress.indexOf('@') >= 0
-        || serverAddress.indexOf('?') >= 0
-        || serverAddress.indexOf('#') >= 0) {
-      return ServerTarget.EMPTY;
-    }
-    return new ServerTarget(serverAddress, null);
-  }
-
   private static boolean isServerAddressGroupCandidate(@Nullable String serverAddress) {
     return serverAddress != null && serverAddress.indexOf(',') >= 0;
   }
 
-  private static ServerTarget sanitizeServerAddressGroup(
+  private static ConfiguredServerTarget buildServerAddressGroup(
       @Nullable String serverAddress, @Nullable Integer serverPort, @Nullable Integer defaultPort) {
     if (serverAddress == null
         || serverAddress.indexOf('/') >= 0
         || serverAddress.indexOf('?') >= 0
         || serverAddress.indexOf('#') >= 0
-        || (serverPort != null && !isPort(serverPort))) {
-      return ServerTarget.EMPTY;
+        || (serverPort != null && !isValidPort(serverPort))) {
+      return ConfiguredServerTarget.EMPTY;
     }
 
     int firstComma = serverAddress.indexOf(',');
     int userInfoEnd = serverAddress.indexOf('@');
     if (userInfoEnd > firstComma
         || (userInfoEnd >= 0 && userInfoEnd != serverAddress.lastIndexOf('@'))) {
-      return ServerTarget.EMPTY;
+      return ConfiguredServerTarget.EMPTY;
     }
 
     String hostList = stripUserInfo(serverAddress);
     String[] hosts = hostList.split(",", -1);
-
-    List<ServerTarget> targets = new ArrayList<>(Math.min(hosts.length, MAX_ENDPOINTS));
-    boolean hasNonDefaultPort = false;
+    List<ParsedEndpoint> endpoints = new ArrayList<>(hosts.length);
     for (String host : hosts) {
-      String trimmed = host.trim();
-      if (!isValidHostPort(trimmed)) {
-        return ServerTarget.EMPTY;
+      ParsedEndpoint endpoint = parseEndpoint(host, serverPort);
+      if (endpoint == null) {
+        return ConfiguredServerTarget.EMPTY;
       }
-      ServerTarget target = sanitizeServerTarget(trimmed, serverPort);
-      if (target.address == null) {
-        return ServerTarget.EMPTY;
-      }
-      Integer effectivePort = target.port != null ? target.port : defaultPort;
-      if (targets.size() < MAX_ENDPOINTS) {
-        targets.add(new ServerTarget(target.address, effectivePort));
-      }
-      hasNonDefaultPort |=
-          effectivePort != null && (defaultPort == null || !defaultPort.equals(effectivePort));
+      endpoints.add(endpoint);
+    }
+    if (defaultPort == null) {
+      return buildUnknownDefaultPortGroup(endpoints);
     }
 
-    StringBuilder group = new StringBuilder();
-    for (ServerTarget target : targets) {
-      if (group.length() > 0) {
-        group.append(',');
-      }
-      appendAddress(group, target.address, hasNonDefaultPort ? target.port : null);
+    DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort).setSorted(false);
+    boolean inlinePorts = false;
+    for (ParsedEndpoint endpoint : endpoints) {
+      builder.addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port);
+      inlinePorts |= endpoint.port != null && !defaultPort.equals(endpoint.port);
     }
-    return new ServerTarget(group.toString(), null);
+    ConfiguredServerTarget target = ConfiguredServerTarget.from(builder.build());
+    if (!inlinePorts && target.address != null) {
+      target = new ConfiguredServerTarget(bracketIpv6Endpoints(target.address), null);
+    }
+    return target;
   }
 
   private static String stripUserInfo(String serverAddress) {
@@ -252,216 +235,136 @@ public final class DbExecution {
     return at < 0 ? serverAddress : serverAddress.substring(at + 1);
   }
 
-  private static ServerTarget sanitizeServerTarget(
-      @Nullable String serverAddress, @Nullable Integer serverPort) {
-    if (serverAddress == null
-        || serverAddress.indexOf('/') >= 0
-        || serverAddress.indexOf('?') >= 0
-        || serverAddress.indexOf('#') >= 0
-        || (serverPort != null && !isPort(serverPort))) {
-      return ServerTarget.EMPTY;
+  private static ConfiguredServerTarget buildServerTarget(
+      @Nullable String serverAddress, @Nullable Integer serverPort, @Nullable Integer defaultPort) {
+    if (serverAddress != null
+        && (serverAddress.indexOf('/') >= 0
+            || serverAddress.indexOf('?') >= 0
+            || serverAddress.indexOf('#') >= 0)) {
+      return ConfiguredServerTarget.EMPTY;
+    }
+    if (serverPort != null && !isValidPort(serverPort)) {
+      return ConfiguredServerTarget.EMPTY;
+    }
+    ParsedEndpoint endpoint = parseEndpoint(serverAddress, serverPort);
+    if (endpoint == null) {
+      return ConfiguredServerTarget.EMPTY;
+    }
+    int effectiveDefaultPort = defaultPort != null ? defaultPort : endpoint.port == null ? 1 : -1;
+    return ConfiguredServerTarget.from(
+        DbServerTarget.builder(effectiveDefaultPort)
+            .setSorted(false)
+            .addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port)
+            .build());
+  }
+
+  private static ConfiguredServerTarget buildUnknownDefaultPortGroup(
+      List<ParsedEndpoint> endpoints) {
+    for (ParsedEndpoint endpoint : endpoints) {
+      int validationDefaultPort = endpoint.port == null ? 1 : -1;
+      if (DbServerTarget.builder(validationDefaultPort)
+              .addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port)
+              .build()
+          == null) {
+        return ConfiguredServerTarget.EMPTY;
+      }
     }
 
+    StringBuilder addressGroup = new StringBuilder();
+    for (int i = 0; i < Math.min(endpoints.size(), MAX_ENDPOINTS); i++) {
+      ParsedEndpoint endpoint = endpoints.get(i);
+      if (addressGroup.length() > 0) {
+        addressGroup.append(',');
+      }
+      appendEndpoint(addressGroup, endpoint);
+    }
+    return new ConfiguredServerTarget(addressGroup.toString(), null);
+  }
+
+  private static String bracketIpv6Endpoints(String addressGroup) {
+    StringBuilder result = new StringBuilder();
+    for (String endpoint : addressGroup.split(",", -1)) {
+      if (result.length() > 0) {
+        result.append(',');
+      }
+      if (endpoint.indexOf(':') >= 0) {
+        result.append('[').append(endpoint).append(']');
+      } else {
+        result.append(endpoint);
+      }
+    }
+    return result.toString();
+  }
+
+  private static void appendEndpoint(StringBuilder result, ParsedEndpoint endpoint) {
+    if (endpoint.host.indexOf(':') >= 0) {
+      result.append('[').append(endpoint.host).append(']');
+    } else {
+      result.append(endpoint.host);
+    }
+    if (endpoint.port != null) {
+      result.append(':').append(endpoint.port);
+    }
+  }
+
+  @Nullable
+  private static ParsedEndpoint parseEndpoint(
+      @Nullable String serverAddress, @Nullable Integer serverPort) {
+    if (serverAddress == null) {
+      return null;
+    }
     int userInfoEnd = serverAddress.indexOf('@');
     if (userInfoEnd >= 0 && userInfoEnd != serverAddress.lastIndexOf('@')) {
-      return ServerTarget.EMPTY;
+      return null;
     }
 
     String host = stripUserInfo(serverAddress).trim();
-    if (!isValidHostPort(host)) {
-      return ServerTarget.EMPTY;
-    }
-
     if (host.startsWith("[")) {
       int closingBracket = host.indexOf(']');
-      String port = host.substring(closingBracket + 1);
-      return new ServerTarget(
-          host.substring(1, closingBracket),
-          port.isEmpty() ? serverPort : Integer.valueOf(port.substring(1)));
+      if (closingBracket < 0 || host.indexOf(']', closingBracket + 1) >= 0) {
+        return null;
+      }
+      String rest = host.substring(closingBracket + 1);
+      Integer port =
+          rest.isEmpty() ? serverPort : parsePort(rest.startsWith(":") ? rest.substring(1) : "");
+      return !rest.isEmpty() && port == null
+          ? null
+          : new ParsedEndpoint(host.substring(1, closingBracket), port);
+    }
+    if (host.indexOf('[') >= 0 || host.indexOf(']') >= 0) {
+      return null;
     }
 
     int firstColon = host.indexOf(':');
     int lastColon = host.lastIndexOf(':');
     if (firstColon >= 0 && firstColon == lastColon) {
-      return new ServerTarget(
-          host.substring(0, firstColon), Integer.valueOf(host.substring(firstColon + 1)));
+      Integer port = parsePort(host.substring(firstColon + 1));
+      return port == null ? null : new ParsedEndpoint(host.substring(0, firstColon), port);
     }
-    return new ServerTarget(host, serverPort);
+    return new ParsedEndpoint(host, serverPort);
   }
 
-  private static ServerTarget sanitizeServerTarget(
-      @Nullable String serverAddress, @Nullable Integer serverPort, @Nullable Integer defaultPort) {
-    ServerTarget target = sanitizeServerTarget(serverAddress, serverPort);
-    return defaultPort != null && defaultPort.equals(target.port)
-        ? new ServerTarget(target.address, null)
-        : target;
-  }
-
-  private static void appendAddress(
-      StringBuilder addressGroup, String host, @Nullable Integer port) {
-    if (isUnbracketedIpv6(host)) {
-      addressGroup.append('[').append(host).append(']');
-    } else {
-      addressGroup.append(host);
-    }
-    if (port != null) {
-      addressGroup.append(':').append(port);
-    }
-  }
-
-  private static boolean isValidHostPort(String value) {
-    if (value.isEmpty()
-        || value.indexOf('=') >= 0
-        || value.indexOf('@') >= 0
-        || value.indexOf('[') > 0) {
-      return false;
-    }
-    for (int i = 0; i < value.length(); i++) {
-      if (Character.isWhitespace(value.charAt(i))) {
-        return false;
-      }
-    }
-    if (value.startsWith("[")) {
-      int closingBracket = value.indexOf(']');
-      if (closingBracket <= 1 || value.indexOf(']', closingBracket + 1) >= 0) {
-        return false;
-      }
-      if (!isIpv6Literal(value.substring(1, closingBracket))) {
-        return false;
-      }
-      String rest = value.substring(closingBracket + 1);
-      return rest.isEmpty() || (rest.startsWith(":") && isPort(rest.substring(1)));
-    }
-    if (value.indexOf(']') >= 0) {
-      return false;
-    }
-    int firstColon = value.indexOf(':');
-    if (firstColon < 0) {
-      return value.indexOf('%') < 0;
-    }
-    int lastColon = value.lastIndexOf(':');
-    if (firstColon != lastColon) {
-      return isIpv6Literal(value);
-    }
-    return value.indexOf('%') < 0 && firstColon > 0 && isPort(value.substring(firstColon + 1));
-  }
-
-  // Checks the syntax rather than resolving the value: InetAddress hands anything it cannot parse
-  // as a literal to the platform name service, and that lookup blocks until the resolver answers.
-  private static boolean isIpv6Literal(String value) {
-    String address = value;
-    int zone = value.indexOf('%');
-    if (zone >= 0) {
-      // a link-local address may carry a zone identifier, which is not part of the address
-      if (zone == 0 || zone == value.length() - 1 || value.indexOf('%', zone + 1) >= 0) {
-        return false;
-      }
-      address = value.substring(0, zone);
-    }
-
-    int firstDot = address.indexOf('.');
-    if (firstDot >= 0) {
-      int ipv4Start = address.lastIndexOf(':') + 1;
-      if (firstDot < ipv4Start || !isIpv4Literal(address.substring(ipv4Start))) {
-        return false;
-      }
-      // An embedded IPv4 address occupies the final two IPv6 groups.
-      address = address.substring(0, ipv4Start) + "0:0";
-    }
-
-    int compression = address.indexOf("::");
-    if (compression >= 0) {
-      // "::" stands for the omitted groups, so it may appear at most once
-      if (compression != address.lastIndexOf("::")) {
-        return false;
-      }
-      int leftGroups = countIpv6Groups(address.substring(0, compression));
-      int rightGroups = countIpv6Groups(address.substring(compression + 2));
-      return leftGroups >= 0 && rightGroups >= 0 && leftGroups + rightGroups < 8;
-    }
-    return countIpv6Groups(address) == 8;
-  }
-
-  private static int countIpv6Groups(String value) {
+  @Nullable
+  private static Integer parsePort(String value) {
     if (value.isEmpty()) {
-      return 0;
-    }
-
-    int groups = 0;
-    int groupStart = 0;
-    for (int i = 0; i <= value.length(); i++) {
-      if (i == value.length() || value.charAt(i) == ':') {
-        int length = i - groupStart;
-        if (length == 0 || length > 4) {
-          return -1;
-        }
-        for (int j = groupStart; j < i; j++) {
-          if (!isHexDigit(value.charAt(j))) {
-            return -1;
-          }
-        }
-        groups++;
-        groupStart = i + 1;
-      }
-    }
-    return groups;
-  }
-
-  private static boolean isIpv4Literal(String value) {
-    int octets = 0;
-    int octetStart = 0;
-    for (int i = 0; i <= value.length(); i++) {
-      if (i == value.length() || value.charAt(i) == '.') {
-        int length = i - octetStart;
-        if (length == 0 || length > 3) {
-          return false;
-        }
-        int octet = 0;
-        for (int j = octetStart; j < i; j++) {
-          char c = value.charAt(j);
-          if (c < '0' || c > '9') {
-            return false;
-          }
-          octet = octet * 10 + c - '0';
-        }
-        if (octet > 255) {
-          return false;
-        }
-        octets++;
-        octetStart = i + 1;
-      }
-    }
-    return octets == 4;
-  }
-
-  private static boolean isHexDigit(char c) {
-    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-  }
-
-  private static boolean isPort(String value) {
-    if (value.isEmpty()) {
-      return false;
+      return null;
     }
     int port = 0;
     for (int i = 0; i < value.length(); i++) {
       char c = value.charAt(i);
       if (c < '0' || c > '9') {
-        return false;
+        return null;
       }
       port = port * 10 + c - '0';
-      if (!isPort(port)) {
-        return false;
+      if (port > 65535) {
+        return null;
       }
     }
-    return true;
+    return port;
   }
 
-  private static boolean isPort(int value) {
-    return value >= 0 && value <= 65535;
-  }
-
-  private static boolean isUnbracketedIpv6(String host) {
-    return !host.startsWith("[") && host.indexOf(':') != host.lastIndexOf(':');
+  private static boolean isValidPort(int port) {
+    return port >= 1 && port <= 65535;
   }
 
   public String getSystemName() {
@@ -569,13 +472,29 @@ public final class DbExecution {
     return driver != null ? DRIVER_TO_SYSTEM_NAME.getOrDefault(driver, OTHER_SQL) : OTHER_SQL;
   }
 
-  private static class ServerTarget {
-    private static final ServerTarget EMPTY = new ServerTarget(null, null);
+  private static class ParsedEndpoint {
+    private final String host;
+    @Nullable private final Integer port;
+
+    private ParsedEndpoint(String host, @Nullable Integer port) {
+      this.host = host;
+      this.port = port;
+    }
+  }
+
+  private static class ConfiguredServerTarget {
+    private static final ConfiguredServerTarget EMPTY = new ConfiguredServerTarget(null, null);
 
     @Nullable private final String address;
     @Nullable private final Integer port;
 
-    private ServerTarget(@Nullable String address, @Nullable Integer port) {
+    private static ConfiguredServerTarget from(@Nullable DbServerTarget target) {
+      return target == null
+          ? EMPTY
+          : new ConfiguredServerTarget(target.getAddress(), target.getPort());
+    }
+
+    private ConfiguredServerTarget(@Nullable String address, @Nullable Integer port) {
       this.address = address;
       this.port = port;
     }
