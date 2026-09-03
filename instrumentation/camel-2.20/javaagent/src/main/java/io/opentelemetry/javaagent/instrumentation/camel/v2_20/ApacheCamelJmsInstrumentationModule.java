@@ -13,22 +13,19 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ApacheCamelInstrumentationModule extends InstrumentationModule {
+public class ApacheCamelJmsInstrumentationModule extends InstrumentationModule {
 
-  public ApacheCamelInstrumentationModule() {
-    super("camel", "camel-2.20");
-  }
-
-  @Override
-  public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new CamelContextInstrumentation(),
-        new KafkaFetchRecordsInstrumentation(),
-        new SendProcessorInstrumentation());
+  public ApacheCamelJmsInstrumentationModule() {
+    super("camel", "camel-2.20", "camel-jms");
   }
 
   @Override
   public boolean isHelperClass(String className) {
     return className.startsWith("io.opentelemetry.contrib.awsxray.");
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(new CamelMuzzleInstrumentation(), new JmsMessageInstrumentation());
   }
 }

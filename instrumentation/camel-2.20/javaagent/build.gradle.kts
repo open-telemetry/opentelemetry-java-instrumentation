@@ -8,6 +8,8 @@ muzzle {
     module.set("camel-core")
     versions.set("[2.19,3)")
     assertInverse.set(true)
+    extraDependency("javax.jms:jms-api:1.1-rev-1")
+    extraDependency("org.apache.kafka:kafka-clients:0.11.0.0")
   }
 }
 
@@ -17,6 +19,8 @@ description = "camel-2-20"
 
 dependencies {
   compileOnly("org.apache.camel:camel-core:$camelversion")
+  compileOnly("javax.jms:jms-api:1.1-rev-1")
+  compileOnly("org.apache.kafka:kafka-clients:0.11.0.0")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))

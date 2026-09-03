@@ -5,13 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier.replace;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryClaims;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -38,10 +42,14 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This Object camelMessage, @Advice.Argument(0) Object jmsMessage) {
+        @Advice.This org.apache.camel.Message camelMessage,
+        @Advice.Argument(0) Message jmsMessage) {
       // a Camel message is refilled when its JMS message is swapped, so what it carried before must
       // not survive
-      replace(jmsMessage, camelMessage);
+      MessagingTelemetryCarrier<Message> jmsMessageTelemetry =
+          MessagingTelemetryCarrier.create(
+              VirtualField.find(Message.class, MessagingTelemetryClaims.class));
+      messageTelemetry().replaceFrom(jmsMessageTelemetry, jmsMessage, camelMessage);
     }
   }
 }
