@@ -319,7 +319,7 @@ public class LettuceSingletons {
     if (commands == null) {
       return;
     }
-    commands.pop();
+    commands.poll();
     if (commands.isEmpty()) {
       REACTIVE_COMMANDS.remove();
     }
