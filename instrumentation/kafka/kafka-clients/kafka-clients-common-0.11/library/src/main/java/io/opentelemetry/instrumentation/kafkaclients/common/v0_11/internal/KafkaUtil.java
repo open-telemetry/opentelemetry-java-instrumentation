@@ -69,9 +69,11 @@ public final class KafkaUtil {
               return Optional.of(field);
             } catch (NoSuchFieldException ignored) {
               // 'metadata' not declared on this class; check superclass
-            } catch (RuntimeException e) {
-              // SecurityException from either call, or InaccessibleObjectException from
-              // setAccessible: reflection can't succeed here, so stop walking and cache the miss.
+            } catch (RuntimeException | LinkageError e) {
+              // SecurityException from either call, InaccessibleObjectException from
+              // setAccessible, or NoClassDefFoundError because getDeclaredField resolves the
+              // types of every declared field. Reflection can't succeed for this class, so stop
+              // walking and cache the miss.
               logReflectionFailureOnce(holderClass, e.toString());
               return Optional.empty();
             }
