@@ -59,7 +59,9 @@ abstract class HttpCommonAttributesExtractor<
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     String method = getter.getHttpRequestMethod(request);
-    if (method == null || knownMethods.contains(method)) {
+    if (method == null || method.equals(_OTHER)) {
+      attributes.put(HTTP_REQUEST_METHOD, _OTHER);
+    } else if (knownMethods.contains(method)) {
       attributes.put(HTTP_REQUEST_METHOD, method);
     } else {
       attributes.put(HTTP_REQUEST_METHOD, _OTHER);

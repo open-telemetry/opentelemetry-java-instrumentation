@@ -21,9 +21,12 @@ import javax.annotation.Nullable;
 public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
 
   /**
-   * Returns the HTTP request method.
+   * Returns the HTTP request method, or {@code null} if the method is unavailable.
    *
    * <p>Examples: {@code GET}, {@code POST}, {@code HEAD}
+   *
+   * <p>When the method is unavailable, HTTP attributes extractors record it as {@value
+   * HttpConstants#_OTHER}.
    */
   @Nullable
   String getHttpRequestMethod(REQUEST request);

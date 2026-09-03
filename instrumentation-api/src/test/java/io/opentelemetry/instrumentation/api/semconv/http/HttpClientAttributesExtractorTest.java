@@ -41,6 +41,7 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class HttpClientAttributesExtractorTest {
@@ -218,7 +219,9 @@ class HttpClientAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), request);
 
     assertThat(attributes.build())
-        .containsOnly(entry(URL_FULL, "https://service.com?sig=REDACTED"));
+        .containsOnly(
+            entry(HTTP_REQUEST_METHOD, HttpConstants._OTHER),
+            entry(URL_FULL, "https://service.com?sig=REDACTED"));
   }
 
   @ParameterizedTest
@@ -273,6 +276,24 @@ class HttpClientAttributesExtractorTest {
     assertThat(attributes.build())
         .containsEntry(HTTP_REQUEST_METHOD, HttpConstants._OTHER)
         .containsEntry(HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = HttpConstants._OTHER)
+  void shouldUseOtherWithoutOriginalMethod(String requestMethod) {
+    Map<String, String> request = new HashMap<>();
+    request.put("method", requestMethod);
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsEntry(HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .doesNotContainKey(HTTP_REQUEST_METHOD_ORIGINAL);
   }
 
   @ParameterizedTest
@@ -386,7 +407,10 @@ class HttpClientAttributesExtractorTest {
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
-        .containsOnly(entry(SERVER_ADDRESS, "github.com"), entry(SERVER_PORT, 123L));
+        .containsOnly(
+            entry(HTTP_REQUEST_METHOD, HttpConstants._OTHER),
+            entry(SERVER_ADDRESS, "github.com"),
+            entry(SERVER_PORT, 123L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -410,7 +434,10 @@ class HttpClientAttributesExtractorTest {
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
-        .containsOnly(entry(SERVER_ADDRESS, "1.2.3.4"), entry(SERVER_PORT, 123L));
+        .containsOnly(
+            entry(HTTP_REQUEST_METHOD, HttpConstants._OTHER),
+            entry(SERVER_ADDRESS, "1.2.3.4"),
+            entry(SERVER_PORT, 123L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -435,7 +462,8 @@ class HttpClientAttributesExtractorTest {
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
-    assertThat(startAttributes.build()).isEmpty();
+    assertThat(startAttributes.build())
+        .containsOnly(entry(HTTP_REQUEST_METHOD, HttpConstants._OTHER));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
