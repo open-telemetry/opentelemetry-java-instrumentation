@@ -289,11 +289,16 @@ class SelectorConfigTest {
   @ResourceLock(Resources.SYSTEM_PROPERTIES)
   void stableSystemPropertyFallbackIsOnlyUsedWhenEnabled() {
     DeclarativeConfigProperties config = mockStableConfig();
-    System.setProperty(
-        "otel.instrumentation.stable-flat.mdc-attributes.included", "public*,secret*");
-    System.setProperty("otel.instrumentation.stable-flat.mdc-attributes.excluded", "secret*");
-    System.setProperty(
-        "otel.instrumentation.stable-flat.experimental.mdc-attributes.included", "wrong");
+    String includedProperty = "otel.instrumentation.stable-flat.mdc-attributes.included";
+    String excludedProperty = "otel.instrumentation.stable-flat.mdc-attributes.excluded";
+    String experimentalIncludedProperty =
+        "otel.instrumentation.stable-flat.experimental.mdc-attributes.included";
+    String previousIncluded = System.getProperty(includedProperty);
+    String previousExcluded = System.getProperty(excludedProperty);
+    String previousExperimentalIncluded = System.getProperty(experimentalIncludedProperty);
+    System.setProperty(includedProperty, "public*,secret*");
+    System.setProperty(excludedProperty, "secret*");
+    System.setProperty(experimentalIncludedProperty, "wrong");
     try {
       assertThat(SelectorConfig.resolve(config, "stable-flat", SELECTOR, STABLE)).isNull();
 
@@ -305,9 +310,9 @@ class SelectorConfigTest {
       assertThat(selector.matches("secret-value")).isFalse();
       assertThat(selector.matches("wrong")).isFalse();
     } finally {
-      System.clearProperty("otel.instrumentation.stable-flat.mdc-attributes.included");
-      System.clearProperty("otel.instrumentation.stable-flat.mdc-attributes.excluded");
-      System.clearProperty("otel.instrumentation.stable-flat.experimental.mdc-attributes.included");
+      restoreSystemProperty(includedProperty, previousIncluded);
+      restoreSystemProperty(excludedProperty, previousExcluded);
+      restoreSystemProperty(experimentalIncludedProperty, previousExperimentalIncluded);
     }
   }
 
@@ -562,6 +567,14 @@ class SelectorConfigTest {
     when(selectorNode.getScalarList("excluded", String.class)).thenReturn(null);
     when(config.getScalarList("capture_mdc_attributes/development", String.class)).thenReturn(null);
     return config;
+  }
+
+  private static void restoreSystemProperty(String name, String value) {
+    if (value == null) {
+      System.clearProperty(name);
+    } else {
+      System.setProperty(name, value);
+    }
   }
 
   private static TestHandler attachWarningHandler() {
