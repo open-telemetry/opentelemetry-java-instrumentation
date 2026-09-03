@@ -74,7 +74,10 @@ public final class VertxRedisServerTargets {
   private static boolean hasStaticTopology(Object options) {
     try {
       Object topology = options.getClass().getMethod("getTopology").invoke(options);
-      return topology != null && "STATIC".equals(topology.toString());
+      if (topology instanceof Enum<?>) {
+        return ((Enum<?>) topology).name().equals("STATIC");
+      }
+      return topology != null && topology.toString().equals("STATIC");
     } catch (NoSuchMethodException ignored) {
       return false;
     } catch (IllegalAccessException | InvocationTargetException ignored) {
