@@ -197,7 +197,7 @@ class OpenSearchServerTargetTest {
   }
 
   @Test
-  void credentialsPathQueryAndFragmentAreRemoved() {
+  void credentialsPathQueryAndFragmentHaveNoTarget() {
     List<Endpoint> endpoints =
         asList(
             new Endpoint("user:secret@h1", 9200, "https"),
@@ -205,12 +205,7 @@ class OpenSearchServerTargetTest {
             new Endpoint("h3?token=secret", 9200, "https"),
             new Endpoint("h4#secret", 9200, "https"));
 
-    OpenSearchServerTarget target = OpenSearchServerTarget.of(endpoints);
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9200,h3:9200,h4:9200");
-    assertThat(target.getPort()).isNull();
-    assertThat(target.getAddress()).doesNotContain("secret");
+    assertThat(OpenSearchServerTarget.of(endpoints)).isNull();
   }
 
   @Test
@@ -226,13 +221,11 @@ class OpenSearchServerTargetTest {
   }
 
   @Test
-  void credentialsAreRemovedFromASingleEndpoint() {
-    OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(
-            singletonList(new Endpoint("user:secret@search.example", 9200, "https")));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("search.example");
+  void credentialsHaveNoTarget() {
+    assertThat(
+            OpenSearchServerTarget.of(
+                singletonList(new Endpoint("user:secret@search.example", 9200, "https"))))
+        .isNull();
   }
 
   @Test
