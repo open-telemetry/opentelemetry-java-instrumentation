@@ -4289,6 +4289,25 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.consumed.messages-f3bb81cb:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     messaging.client.operation.duration-4afb25bc:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -4350,28 +4369,6 @@ definitions:
       unit: s
       attributes:
       - name: messaging.destination.name
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    messaging.client.operation.duration-df200871:
-      name: messaging.client.operation.duration
-      description: Duration of messaging operation initiated by a producer or consumer
-        client.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.destination.subscription.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -4446,6 +4443,25 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.process.duration-049f91c8:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     messaging.process.duration-43b43ca1:
       name: messaging.process.duration
       description: Duration of processing operation.
@@ -13717,6 +13733,8 @@ libraries:
         type: STRING
       - name: messaging.destination.name
         type: STRING
+      - name: messaging.destination.template
+        type: STRING
       - name: messaging.destination.temporary
         type: BOOLEAN
       - name: messaging.message.body.size
@@ -13732,6 +13750,20 @@ libraries:
     - messaging.client.sent.messages-a16c8de0
     - messaging.process.duration-800050f8
     spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.template
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     - span_kind: CONSUMER
       attributes:
       - name: messaging.client.id
@@ -15081,7 +15113,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-df200871
+    - messaging.client.operation.duration-dab7c60a
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
@@ -17354,9 +17386,16 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
-    - messaging.process.duration-800050f8
+    - messaging.client.consumed.messages-f3bb81cb
+    - messaging.process.duration-049f91c8
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -17372,6 +17411,16 @@ libraries:
         type: LONG
       - name: messaging.system
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: spring-rmi-4.0
   display_name: Spring RMI
   description: This instrumentation enables RPC client and RPC server spans for Spring
