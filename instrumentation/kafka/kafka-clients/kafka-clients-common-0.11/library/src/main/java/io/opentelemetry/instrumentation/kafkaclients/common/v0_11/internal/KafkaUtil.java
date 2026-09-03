@@ -50,10 +50,10 @@ public final class KafkaUtil {
       VirtualField.find(Consumer.class, Map.class);
 
   // Cached per-instance; resolved lazily after the first metadata refresh.
-  private static final VirtualField<Consumer<?, ?>, KafkaClusterId> consumerClusterIdField =
+  private static final VirtualField<Consumer<?, ?>, KafkaClusterId> CONSUMER_CLUSTER_ID_FIELD =
       VirtualField.find(Consumer.class, KafkaClusterId.class);
 
-  private static final VirtualField<Producer<?, ?>, KafkaClusterId> producerClusterIdField =
+  private static final VirtualField<Producer<?, ?>, KafkaClusterId> PRODUCER_CLUSTER_ID_FIELD =
       VirtualField.find(Producer.class, KafkaClusterId.class);
 
   // ClassValue: thread-safe per-class cache; Optional.empty() prevents repeated failed lookups.
@@ -210,7 +210,7 @@ public final class KafkaUtil {
     if (consumer == null || !(consumer instanceof KafkaConsumer)) {
       return null;
     }
-    KafkaClusterId cached = consumerClusterIdField.get(consumer);
+    KafkaClusterId cached = CONSUMER_CLUSTER_ID_FIELD.get(consumer);
     if (cached != null) {
       if (cached == KafkaClusterId.UNAVAILABLE) {
         return null;
@@ -221,11 +221,11 @@ public final class KafkaUtil {
       // Pending state: cluster id not yet available from broker; retry this span.
       String id = clusterIdFromMetadata(cached.metadata);
       if (id != null) {
-        consumerClusterIdField.set(consumer, KafkaClusterId.resolved(id));
+        CONSUMER_CLUSTER_ID_FIELD.set(consumer, KafkaClusterId.resolved(id));
       }
       return id;
     }
-    return resolveAndCache(consumer, consumerClusterIdField, resolveMetadataHolder(consumer));
+    return resolveAndCache(consumer, CONSUMER_CLUSTER_ID_FIELD, resolveMetadataHolder(consumer));
   }
 
   @Nullable
@@ -233,7 +233,7 @@ public final class KafkaUtil {
     if (producer == null || !(producer instanceof KafkaProducer)) {
       return null;
     }
-    KafkaClusterId cached = producerClusterIdField.get(producer);
+    KafkaClusterId cached = PRODUCER_CLUSTER_ID_FIELD.get(producer);
     if (cached != null) {
       if (cached == KafkaClusterId.UNAVAILABLE) {
         return null;
@@ -244,11 +244,11 @@ public final class KafkaUtil {
       // Pending state: cluster id not yet available from broker; retry this span.
       String id = clusterIdFromMetadata(cached.metadata);
       if (id != null) {
-        producerClusterIdField.set(producer, KafkaClusterId.resolved(id));
+        PRODUCER_CLUSTER_ID_FIELD.set(producer, KafkaClusterId.resolved(id));
       }
       return id;
     }
-    return resolveAndCache(producer, producerClusterIdField, producer);
+    return resolveAndCache(producer, PRODUCER_CLUSTER_ID_FIELD, producer);
   }
 
   @Nullable
