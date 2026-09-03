@@ -76,7 +76,8 @@ public class ConfigServerTargetsSince317 {
       Object address = config.getClass().getMethod("getAddress").invoke(config);
       return address != null ? address.toString() : null;
     } catch (ReflectiveOperationException e) {
-      throw new IllegalStateException("Could not read Redisson server address", e);
+      logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
+      return null;
     }
   }
 

@@ -81,11 +81,13 @@ public class ConfigServerTargetsBefore317 {
   }
 
   // Redisson changes the single server address return type across supported versions.
+  @Nullable
   private static Object getAddress(SingleServerConfig config) {
     try {
       return config.getClass().getMethod("getAddress").invoke(config);
     } catch (ReflectiveOperationException e) {
-      throw new IllegalStateException("Could not read Redisson server address", e);
+      logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
+      return null;
     }
   }
 
@@ -109,11 +111,13 @@ public class ConfigServerTargetsBefore317 {
   }
 
   // Redisson changes the master address return type across supported versions.
+  @Nullable
   private static Object getMasterAddress(MasterSlaveServersConfig config) {
     try {
       return config.getClass().getMethod("getMasterAddress").invoke(config);
     } catch (ReflectiveOperationException e) {
-      throw new IllegalStateException("Could not read Redisson master address", e);
+      logger.log(FINE, "Failed to read the configured Redisson master address", e);
+      return null;
     }
   }
 
