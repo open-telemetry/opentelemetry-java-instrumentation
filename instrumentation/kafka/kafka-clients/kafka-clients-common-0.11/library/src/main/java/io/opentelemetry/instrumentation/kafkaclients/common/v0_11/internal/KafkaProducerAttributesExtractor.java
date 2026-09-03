@@ -49,10 +49,7 @@ final class KafkaProducerAttributesExtractor
       @Nullable Throwable error) {
 
     if (request.getClusterId() == null) {
-      String resolved = KafkaUtil.getClusterId(request.getProducer());
-      if (resolved != null) {
-        attributes.put(KafkaClusterId.ATTRIBUTE_KEY, resolved);
-      }
+      attributes.put(KafkaClusterId.ATTRIBUTE_KEY, KafkaUtil.getClusterId(request.getProducer()));
     }
 
     if (recordMetadata != null) {
