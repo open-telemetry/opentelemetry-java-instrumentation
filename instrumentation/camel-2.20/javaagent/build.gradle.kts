@@ -121,15 +121,6 @@ tasks {
       }
     }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging/dup")
-  }
-
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -157,7 +148,6 @@ tasks {
     dependsOn(
       testStableSemconv,
       testStableSemconvWithReceiveTelemetry,
-      testBothSemconv,
       testExperimental,
       testV3Preview,
       testStableSemconvNoLowerMessaging,

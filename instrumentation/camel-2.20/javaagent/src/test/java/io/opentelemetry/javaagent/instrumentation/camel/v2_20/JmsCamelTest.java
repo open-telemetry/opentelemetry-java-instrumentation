@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
@@ -126,9 +125,6 @@ class JmsCamelTest {
                 .hasAttributesSatisfyingExactly(
                     equalTo(MESSAGING_SYSTEM, "jms"),
                     equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
-                    equalTo(
-                        stringKey("messaging.operation"),
-                        emitOldMessagingSemconv() ? "receive" : null),
                     equalTo(MESSAGING_OPERATION_NAME, "receive"),
                     equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                     satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
@@ -147,11 +143,6 @@ class JmsCamelTest {
                     equalTo(
                         MESSAGING_DESTINATION_NAME,
                         emitStableMessagingSemconv() ? "testQueue" : "queue:testQueue"),
-                    equalTo(
-                        stringKey("messaging.operation"),
-                        emitStableMessagingSemconv() && emitOldMessagingSemconv()
-                            ? "publish"
-                            : null),
                     equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
                     equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
                     equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue"))));
@@ -179,9 +170,6 @@ class JmsCamelTest {
                   equalTo(
                       MESSAGING_DESTINATION_NAME,
                       emitStableMessagingSemconv() ? "testQueue" : "queue:testQueue"),
-                  equalTo(
-                      stringKey("messaging.operation"),
-                      emitStableMessagingSemconv() && emitOldMessagingSemconv() ? "process" : null),
                   equalTo(
                       MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
                   equalTo(
