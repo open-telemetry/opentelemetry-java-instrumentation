@@ -25,6 +25,7 @@ enum AwsSdkRequestType {
       requestExperimental(stringKey("aws.queue.name"), "QueueName")),
   KINESIS(request(AttributeKeys.AWS_KINESIS_STREAM_NAME, "StreamName")),
   DYNAMODB(),
+  RDS_DATA(),
   BEDROCK_RUNTIME(),
   LAMBDA(
       requestExperimental(AWS_LAMBDA_NAME, "FunctionName"),

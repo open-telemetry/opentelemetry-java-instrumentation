@@ -4,9 +4,10 @@ description: >
   Collects and reports metrics exposed through Java Management Extensions (JMX). It can be
   configured to extract JVM and application-level telemetry data from JMX MBeans such as memory
   usage, thread counts, and garbage collection statistics, and translate these measurements into
-  OpenTelemetry metrics.
+  OpenTelemetry metrics. Collected metrics can be filtered by name using include and exclude
+  patterns.
 configurations:
-  - name: otel.jmx.enabled
+  - name: otel.instrumentation.jmx.enabled
     declarative_name: java.jmx.enabled
     description: Enables collection of JMX metrics.
     type: boolean
@@ -24,5 +25,15 @@ configurations:
   - name: otel.jmx.target.system
     declarative_name: java.jmx.target.system
     description: List of predefined JMX target systems to collect metrics for.
+    type: list
+    default: ""
+  - name: otel.jmx.metrics.included
+    declarative_name: java.jmx.metrics.included
+    description: List of metric name patterns to include. When set, only metrics matching these patterns are collected; all others are excluded. Wildcards are supported.
+    type: list
+    default: ""
+  - name: otel.jmx.metrics.excluded
+    declarative_name: java.jmx.metrics.excluded
+    description: List of metric name patterns to exclude. Metrics matching these patterns are not collected. Wildcards are supported.
     type: list
     default: ""
