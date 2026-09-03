@@ -151,16 +151,6 @@ public abstract class AbstractNetty41ClientTest
     return method;
   }
 
-  @SuppressWarnings("MissingDefault")
-  private static boolean isFailedConnectUri(URI uri) {
-    switch (uri.toString()) {
-      case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
-        return true;
-    }
-    return false;
-  }
-
   private static int getPort(URI uri) {
     if (uri.getPort() != -1) {
       return uri.getPort();

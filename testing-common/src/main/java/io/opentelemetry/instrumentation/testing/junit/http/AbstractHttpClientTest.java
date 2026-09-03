@@ -134,6 +134,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return method;
   }
 
+  protected static boolean isFailedConnectUri(URI uri) {
+    return uri.getPort() == PortUtils.UNUSABLE_PORT || "192.0.2.1".equals(uri.getHost());
+  }
+
   // called by the HttpClientInstrumentationExtension
   void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
     this.testing = testing;

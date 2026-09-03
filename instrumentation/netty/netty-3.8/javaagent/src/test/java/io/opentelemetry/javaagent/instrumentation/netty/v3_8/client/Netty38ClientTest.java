@@ -188,14 +188,4 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
     }
     return method;
   }
-
-  @SuppressWarnings("MissingDefault")
-  private static boolean isFailedConnectUri(URI uri) {
-    switch (uri.toString()) {
-      case "http://localhost:61/": // unopened port
-      case "http://192.0.2.1/": // non routable address
-        return true;
-    }
-    return false;
-  }
 }
