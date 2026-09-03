@@ -14,8 +14,18 @@ class LettuceCommandPeer {
   private static final String DOMAIN_SOCKET_ADDRESS_CLASS =
       "io.netty.channel.unix.DomainSocketAddress";
 
-  @Nullable private static volatile Method domainSocketAddressPathMethod;
-  private static volatile boolean domainSocketAddressPathMethodInitialized;
+  private static final ClassValue<Method> domainSocketAddressPathMethods =
+      new ClassValue<Method>() {
+        @Nullable
+        @Override
+        protected Method computeValue(Class<?> type) {
+          try {
+            return type.getMethod("path");
+          } catch (NoSuchMethodException | SecurityException ignored) {
+            return null;
+          }
+        }
+      };
 
   @Nullable private SocketAddress address;
 
@@ -36,7 +46,7 @@ class LettuceCommandPeer {
     }
     if (peerAddress != null
         && peerAddress.getClass().getName().equals(DOMAIN_SOCKET_ADDRESS_CLASS)) {
-      Method pathMethod = getDomainSocketAddressPathMethod(peerAddress.getClass());
+      Method pathMethod = domainSocketAddressPathMethods.get(peerAddress.getClass());
       if (pathMethod == null) {
         return null;
       }
@@ -49,23 +59,6 @@ class LettuceCommandPeer {
       }
     }
     return null;
-  }
-
-  @Nullable
-  private static Method getDomainSocketAddressPathMethod(Class<?> addressClass) {
-    if (!domainSocketAddressPathMethodInitialized) {
-      synchronized (LettuceCommandPeer.class) {
-        if (!domainSocketAddressPathMethodInitialized) {
-          try {
-            domainSocketAddressPathMethod = addressClass.getMethod("path");
-          } catch (NoSuchMethodException | SecurityException ignored) {
-            // Leave the method unset when this Netty version does not expose the path.
-          }
-          domainSocketAddressPathMethodInitialized = true;
-        }
-      }
-    }
-    return domainSocketAddressPathMethod;
   }
 
   @Nullable
