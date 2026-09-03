@@ -25,6 +25,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
           .getBoolean("experimental_span_attributes/development", false);
+  private static final Logger logger = Logger.getLogger(Flux.class.getName());
 
   private final FluxOnSubscribeConsumer onSubscribeConsumer;
   @Nullable private RedisCommand<?, ?, ?> command;
@@ -51,10 +52,9 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
       }
       LettuceSingletons.instrumenter().end(context, command, null, throwable);
     } else {
-      Logger.getLogger(Flux.class.getName())
-          .severe(
-              "Failed to end this.context, LettuceFluxTerminationRunnable cannot find this.context "
-                  + "because it probably wasn't started.");
+      logger.fine(
+          "Failed to end this.context, LettuceFluxTerminationRunnable cannot find this.context "
+              + "because it probably wasn't started.");
     }
   }
 
@@ -91,8 +91,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
     public void accept(Subscription subscription) {
       RedisCommand<?, ?, ?> command = LettuceSingletons.currentReactiveCommand();
       if (command == null) {
-        Logger.getLogger(Flux.class.getName())
-            .severe("Failed to correlate a Lettuce reactive subscription with its command.");
+        logger.fine("Failed to correlate a Lettuce reactive subscription with its command.");
         return;
       }
       owner.command = command;
