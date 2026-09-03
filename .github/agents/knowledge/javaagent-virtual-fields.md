@@ -102,7 +102,7 @@ is otherwise demonstrably unique.
 ## Lookup Placement
 
 - Call `VirtualField.find(Carrier.class, Value.class)` with class literals in normal javaagent
-  instrumentation. Muzzle and the javaagent field machinery discover and rewrite these calls.
+  instrumentation. Muzzle uses the literals to discover and register the mapping.
 - Inside `@Advice` methods, call `VirtualField.find(...)` directly where the field is used. The call
   is rewritten during transformation; do not extract it into a helper or field merely to cache the
   lookup.
@@ -114,7 +114,7 @@ is otherwise demonstrably unique.
   Do not copy that specialized pattern when class literals can represent the types.
 
 The containing instrumentation module must use muzzle generation so the carrier/value mapping is
-registered and its calls can be rewritten.
+registered and calls inside `@Advice` can be rewritten.
 
 ## Lifetime, Reuse, and Retention
 

@@ -485,10 +485,12 @@ private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
 ```
 
 The first argument is the carrier type and the second is the attached value type. In normal
-javaagent instrumentation, both must be class literals so muzzle and the javaagent field machinery
-can discover and rewrite the lookup. The `(carrier class, value class)` pair identifies the virtual
-field across instrumentations, so use a dedicated holder class when common value types such as
-`Object`, `Boolean`, `String`, or `Map` could give unrelated state the same pair.
+javaagent instrumentation, both must be class literals so muzzle can discover and register the
+mapping. Calls inside `@Advice` can then be rewritten during bytecode transformation, while calls
+outside advice may execute as runtime lookups and should be cached. The `(carrier class, value
+class)` pair identifies the virtual field across instrumentations, so use a dedicated holder class
+when common value types such as `Object`, `Boolean`, `String`, or `Map` could give unrelated state
+the same pair.
 
 When a shared bootstrap or common helper cannot name the library carrier type, keep the
 `VirtualField` lookup with the instrumentation-specific caller. Pass the typed handle, or a small
