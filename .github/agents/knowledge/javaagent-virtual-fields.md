@@ -107,8 +107,9 @@ is otherwise demonstrably unique.
   The call is rewritten during transformation; do not extract it into a helper or field merely to
   cache the lookup.
 - Non-inlined advice methods (`inline = false`) must not call `VirtualField.find(...)` because those
-  calls are not rewritten and `VirtualFieldChecker` rejects them. Store the result in a
-  `static final` `SCREAMING_SNAKE_CASE` field on the advice class or a helper instead.
+  calls are not rewritten and `VirtualFieldChecker` rejects them. Put the result in a `static final`
+  `SCREAMING_SNAKE_CASE` field on a non-advice helper or singleton, then reference that handle from
+  the advice method.
 - Outside advice, including helper and singleton classes, also store the result in a `static final`
   `SCREAMING_SNAKE_CASE` field so runtime lookup happens once.
 - Non-literal class arguments are rejected in normal instrumentation. A rare runtime lookup for

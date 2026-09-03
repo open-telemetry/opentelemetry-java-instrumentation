@@ -486,10 +486,10 @@ private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
 
 The first argument is the carrier type and the second is the attached value type. In normal
 javaagent instrumentation, both should be class literals so muzzle can discover and register the
-mapping. Calls with class-literal arguments inside inlined `@Advice` can then be rewritten during
-bytecode transformation. Lookups made outside advice execute at runtime and should be cached. A rare
-lookup that resolves carrier types at runtime must run outside advice in an `@NoMuzzle` method. The
-instrumentation module must implement `ExperimentalInstrumentationModule` and override
+mapping. Calls with class-literal arguments inside inlined `@Advice` methods can then be rewritten
+during bytecode transformation. Lookups made outside advice execute at runtime and should be cached.
+A rare lookup that resolves carrier types at runtime must run outside advice in an `@NoMuzzle`
+method. The instrumentation module must implement `ExperimentalInstrumentationModule` and override
 `registerVirtualFields(...)` to register every possible carrier/value pair. The `(carrier class,
 value class)` pair identifies the virtual field across instrumentations, so use a dedicated holder
 class when common value types such as `Object`, `Boolean`, `String`, or `Map` could give unrelated
@@ -512,8 +512,9 @@ the narrow class or interface that identifies the library objects that can carry
 Inside an inlined `@Advice` method, call `VirtualField.find(...)` directly where the virtual field
 is used. The call is rewritten during bytecode transformation and does not need to be cached. A
 non-inlined advice method (`inline = false`) must not call `VirtualField.find(...)` because the call
-is not rewritten. In non-inlined advice classes and other helper or singleton classes, store the
-handle in a `static final` field to avoid repeated runtime lookup.
+is not rewritten. For non-inlined advice, put the handle in a `static final` field on a non-advice
+helper or singleton and reference that handle from the advice method. Use the same caching pattern
+for other lookups outside advice.
 
 The javaagent normally injects field-backed storage into eligible carrier implementations. It falls
 back to a weak-key, strong-value map when field injection is unavailable. Avoid storing a value that
