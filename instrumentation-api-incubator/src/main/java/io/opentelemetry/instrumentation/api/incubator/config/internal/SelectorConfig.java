@@ -45,18 +45,6 @@ public final class SelectorConfig {
   private static final Set<String> warnings = ConcurrentHashMap.newKeySet();
 
   /**
-   * The stability of the included/excluded selector configuration. This does not change the
-   * stability of the deprecated capture setting.
-   *
-   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
-   * at any time.
-   */
-  public enum Stability {
-    STABLE,
-    EXPERIMENTAL
-  }
-
-  /**
    * Returns the configured selector, or {@code null} when nothing is configured to be captured.
    *
    * <p>Note that {@code null} is returned rather than an {@linkplain IncludeExclude#isEmpty()
@@ -361,4 +349,16 @@ public final class SelectorConfig {
   }
 
   private SelectorConfig() {}
+
+  /**
+   * The stability of the included/excluded selector configuration. This does not change the
+   * stability of the deprecated capture setting.
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
+   */
+  public enum Stability {
+    STABLE,
+    EXPERIMENTAL
+  }
 }
