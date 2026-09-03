@@ -54,7 +54,7 @@ public final class MessagingProcessMetrics implements OperationListener {
       return context;
     }
     boolean recordProcessDuration =
-        !MessagingTelemetryState.isClaimed(
+        !MessagingTelemetryState.contains(
             context, MessagingOperationType.PROCESS, MessagingTelemetrySignal.PROCESS_DURATION);
     Context contextWithState =
         context.with(
@@ -62,7 +62,7 @@ public final class MessagingProcessMetrics implements OperationListener {
             new AutoValue_MessagingProcessMetrics_State(
                 startAttributes, startNanos, recordProcessDuration));
     return recordProcessDuration
-        ? MessagingTelemetryState.claimIfEnabled(
+        ? MessagingTelemetryState.addIfEnabled(
             contextWithState,
             MessagingOperationType.PROCESS,
             MessagingTelemetrySignal.PROCESS_DURATION)

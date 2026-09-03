@@ -13,27 +13,27 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryClaims;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
 class MessagingTelemetrySuppressionTest {
 
   @Test
-  void claimsNothingUntilAskedTo() {
+  void suppressesNothingUntilAskedTo() {
     MessagingTelemetrySuppression suppression = MessagingTelemetrySuppression.create();
 
-    assertThat(suppression.current()).isEqualTo(MessagingTelemetryClaims.none());
+    assertThat(suppression.current()).isEqualTo(MessagingTelemetrySignals.none());
     assertThat(suppression.isSuppressed(PROCESS, SPAN)).isFalse();
   }
 
   @Test
-  void suppressReturnsWhatWasClaimedBefore() {
+  void suppressReturnsPreviousSignals() {
     MessagingTelemetrySuppression suppression = MessagingTelemetrySuppression.create();
 
-    MessagingTelemetryClaims previous = suppression.suppress(PROCESS, SPAN);
+    MessagingTelemetrySignals previous = suppression.suppress(PROCESS, SPAN);
 
-    assertThat(previous).isEqualTo(MessagingTelemetryClaims.none());
+    assertThat(previous).isEqualTo(MessagingTelemetrySignals.none());
     assertThat(suppression.isSuppressed(PROCESS, SPAN)).isTrue();
 
     suppression.restore(previous);
@@ -50,15 +50,15 @@ class MessagingTelemetrySuppressionTest {
     assertThat(suppression.isSuppressed(PROCESS, PROCESS_DURATION)).isFalse();
     assertThat(suppression.isSuppressed(RECEIVE, SPAN)).isFalse();
 
-    suppression.restore(MessagingTelemetryClaims.none());
+    suppression.restore(MessagingTelemetrySignals.none());
   }
 
   @Test
-  void nestedClaimsUnwindToWhereTheyStarted() {
+  void nestedSuppressionUnwindsToWhereItStarted() {
     MessagingTelemetrySuppression suppression = MessagingTelemetrySuppression.create();
 
-    MessagingTelemetryClaims beforeOuter = suppression.suppress(PROCESS, SPAN);
-    MessagingTelemetryClaims beforeInner = suppression.suppress(RECEIVE, CONSUMED_MESSAGES);
+    MessagingTelemetrySignals beforeOuter = suppression.suppress(PROCESS, SPAN);
+    MessagingTelemetrySignals beforeInner = suppression.suppress(RECEIVE, CONSUMED_MESSAGES);
 
     assertThat(suppression.isSuppressed(PROCESS, SPAN)).isTrue();
     assertThat(suppression.isSuppressed(RECEIVE, CONSUMED_MESSAGES)).isTrue();
@@ -68,15 +68,15 @@ class MessagingTelemetrySuppressionTest {
     assertThat(suppression.isSuppressed(RECEIVE, CONSUMED_MESSAGES)).isFalse();
 
     suppression.restore(beforeOuter);
-    assertThat(suppression.current()).isEqualTo(MessagingTelemetryClaims.none());
+    assertThat(suppression.current()).isEqualTo(MessagingTelemetrySignals.none());
   }
 
   @Test
-  void repeatingAClaimStillUnwinds() {
+  void repeatingSuppressionStillUnwinds() {
     MessagingTelemetrySuppression suppression = MessagingTelemetrySuppression.create();
 
-    MessagingTelemetryClaims beforeOuter = suppression.suppress(PROCESS, SPAN);
-    MessagingTelemetryClaims beforeInner = suppression.suppress(PROCESS, SPAN);
+    MessagingTelemetrySignals beforeOuter = suppression.suppress(PROCESS, SPAN);
+    MessagingTelemetrySignals beforeInner = suppression.suppress(PROCESS, SPAN);
 
     suppression.restore(beforeInner);
     assertThat(suppression.isSuppressed(PROCESS, SPAN)).isTrue();
@@ -89,7 +89,7 @@ class MessagingTelemetrySuppressionTest {
   void restoringInAFinallyBlockSurvivesAnException() {
     MessagingTelemetrySuppression suppression = MessagingTelemetrySuppression.create();
 
-    MessagingTelemetryClaims previous = suppression.suppress(PROCESS, SPAN);
+    MessagingTelemetrySignals previous = suppression.suppress(PROCESS, SPAN);
     assertThatIllegalStateException()
         .isThrownBy(
             () -> {
@@ -104,7 +104,7 @@ class MessagingTelemetrySuppressionTest {
   }
 
   @Test
-  void oneThreadDoesNotSeeAnotherThreadsClaims() throws InterruptedException {
+  void oneThreadDoesNotSeeAnotherThreadsSuppression() throws InterruptedException {
     MessagingTelemetrySuppression suppression = MessagingTelemetrySuppression.create();
     AtomicBoolean suppressedOnOtherThread = new AtomicBoolean(true);
 
@@ -117,11 +117,11 @@ class MessagingTelemetrySuppressionTest {
     assertThat(suppressedOnOtherThread).isFalse();
     assertThat(suppression.isSuppressed(PROCESS, SPAN)).isTrue();
 
-    suppression.restore(MessagingTelemetryClaims.none());
+    suppression.restore(MessagingTelemetrySignals.none());
   }
 
   @Test
-  void oneStackDoesNotSeeAnotherStacksClaims() {
+  void oneStackDoesNotSeeAnotherStacksSuppression() {
     MessagingTelemetrySuppression stack = MessagingTelemetrySuppression.create();
     MessagingTelemetrySuppression otherStack = MessagingTelemetrySuppression.create();
 
@@ -129,8 +129,8 @@ class MessagingTelemetrySuppressionTest {
 
     assertThat(stack.isSuppressed(PROCESS, SPAN)).isTrue();
     assertThat(otherStack.isSuppressed(PROCESS, SPAN)).isFalse();
-    assertThat(otherStack.current()).isEqualTo(MessagingTelemetryClaims.none());
+    assertThat(otherStack.current()).isEqualTo(MessagingTelemetrySignals.none());
 
-    stack.restore(MessagingTelemetryClaims.none());
+    stack.restore(MessagingTelemetrySignals.none());
   }
 }

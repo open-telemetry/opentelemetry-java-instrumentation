@@ -6,15 +6,15 @@
 package io.opentelemetry.javaagent.bootstrap.messaging;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryClaims;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 
 /**
- * Accesses the {@link MessagingTelemetryClaims} attached to objects that carry in-flight messages.
+ * Accesses the {@link MessagingTelemetrySignals} attached to objects that carry in-flight messages.
  *
- * <p>Claims live here rather than in the {@link io.opentelemetry.context.Context} when the message
+ * <p>Signals live here rather than in the {@link io.opentelemetry.context.Context} when the message
  * outlives the scope that emitted telemetry for it, or reaches the next instrumentation on a
  * different thread. A JMS message that already has a receive span, for instance, still has it when
  * a listener picks it up later.
@@ -24,36 +24,36 @@ import javax.annotation.Nullable;
  */
 public final class MessagingTelemetryCarrier<T> {
 
-  private final VirtualField<T, MessagingTelemetryClaims> claimsField;
+  private final VirtualField<T, MessagingTelemetrySignals> signalsField;
 
   public static <T> MessagingTelemetryCarrier<T> create(
-      VirtualField<T, MessagingTelemetryClaims> claimsField) {
-    return new MessagingTelemetryCarrier<>(claimsField);
+      VirtualField<T, MessagingTelemetrySignals> signalsField) {
+    return new MessagingTelemetryCarrier<>(signalsField);
   }
 
-  private MessagingTelemetryCarrier(VirtualField<T, MessagingTelemetryClaims> claimsField) {
-    this.claimsField = claimsField;
+  private MessagingTelemetryCarrier(VirtualField<T, MessagingTelemetrySignals> signalsField) {
+    this.signalsField = signalsField;
   }
 
-  /** Returns the claims held by {@code carrier}, or no claims when it is null or has none. */
-  public MessagingTelemetryClaims getClaims(@Nullable T carrier) {
+  /** Returns the signals held by {@code carrier}, or no signals when it is null or has none. */
+  public MessagingTelemetrySignals getSignals(@Nullable T carrier) {
     if (carrier == null) {
-      return MessagingTelemetryClaims.none();
+      return MessagingTelemetrySignals.none();
     }
-    MessagingTelemetryClaims claims = claimsField.get(carrier);
-    return claims == null ? MessagingTelemetryClaims.none() : claims;
+    MessagingTelemetrySignals signals = signalsField.get(carrier);
+    return signals == null ? MessagingTelemetrySignals.none() : signals;
   }
 
-  public boolean isClaimed(
+  public boolean contains(
       @Nullable T carrier, MessagingOperationType operation, MessagingTelemetrySignal signal) {
-    return getClaims(carrier).contains(operation, signal);
+    return getSignals(carrier).contains(operation, signal);
   }
 
-  public void claim(
+  public void add(
       @Nullable T carrier, MessagingOperationType operation, MessagingTelemetrySignal signal) {
     if (carrier != null) {
       synchronized (carrier) {
-        claimsField.set(carrier, getClaims(carrier).with(operation, signal));
+        signalsField.set(carrier, getSignals(carrier).with(operation, signal));
       }
     }
   }
@@ -64,39 +64,39 @@ public final class MessagingTelemetryCarrier<T> {
    */
   public <S> void mergeFrom(
       MessagingTelemetryCarrier<S> sourceCarrier, @Nullable S source, @Nullable T target) {
-    MessagingTelemetryClaims claims = sourceCarrier.getClaims(source);
-    if (target == null || claims.isEmpty()) {
+    MessagingTelemetrySignals signals = sourceCarrier.getSignals(source);
+    if (target == null || signals.isEmpty()) {
       return;
     }
     synchronized (target) {
-      claimsField.set(target, getClaims(target).union(claims));
+      signalsField.set(target, getSignals(target).union(signals));
     }
   }
 
   /**
    * Makes {@code target} hold exactly what {@code source} holds, for an object that is being reused
-   * or refilled and must not keep the claims of the message it carried before.
+   * or refilled and must not keep the signals of the message it carried before.
    */
   public <S> void replaceFrom(
       MessagingTelemetryCarrier<S> sourceCarrier, @Nullable S source, @Nullable T target) {
     if (target == null) {
       return;
     }
-    MessagingTelemetryClaims claims = sourceCarrier.getClaims(source);
+    MessagingTelemetrySignals signals = sourceCarrier.getSignals(source);
     synchronized (target) {
-      if (claims.isEmpty()) {
-        claimsField.set(target, null);
+      if (signals.isEmpty()) {
+        signalsField.set(target, null);
       } else {
-        claimsField.set(target, claims);
+        signalsField.set(target, signals);
       }
     }
   }
 
-  /** Forgets every claim on {@code carrier}. */
+  /** Forgets every signal on {@code carrier}. */
   public void clear(@Nullable T carrier) {
     if (carrier != null) {
       synchronized (carrier) {
-        claimsField.set(carrier, null);
+        signalsField.set(carrier, null);
       }
     }
   }

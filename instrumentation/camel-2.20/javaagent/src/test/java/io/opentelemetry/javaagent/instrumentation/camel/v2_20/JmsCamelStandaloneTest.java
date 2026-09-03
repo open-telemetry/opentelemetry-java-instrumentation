@@ -63,7 +63,7 @@ class JmsCamelStandaloneTest {
   }
 
   @Test
-  void camelOwnsMetricsWithoutLowerMessagingInstrumentation() throws Exception {
+  void camelRecordsMetricsWithoutLowerMessagingInstrumentation() throws Exception {
     ProducerTemplate template = camelContext.createProducerTemplate();
     template.sendBody("direct:input", "test message");
 

@@ -108,8 +108,8 @@ class CamelProcessMetricsTest {
   }
 
   @ParameterizedTest
-  @MethodSource("partialOwnership")
-  void recordsOnlyUnclaimedMetric(String operation, String signal, String expectedMetric)
+  @MethodSource("signalsAlreadyPresent")
+  void recordsOnlyAbsentMetric(String operation, String signal, String expectedMetric)
       throws ReflectiveOperationException {
     Exchange exchange = new DefaultExchange(new DefaultCamelContext());
     Endpoint endpoint = mock(Endpoint.class);
@@ -123,7 +123,7 @@ class CamelProcessMetricsTest {
     Class<?> signalClass = shadedApiClass("messaging.internal.MessagingTelemetrySignal");
     parentContext =
         telemetryStateClass
-            .getMethod("claim", contextClass, operationTypeClass, signalClass)
+            .getMethod("add", contextClass, operationTypeClass, signalClass)
             .invoke(
                 null,
                 parentContext,
@@ -173,15 +173,15 @@ class CamelProcessMetricsTest {
         .containsExactly(expectedMetric);
   }
 
-  private static Stream<Arguments> partialOwnership() {
+  private static Stream<Arguments> signalsAlreadyPresent() {
     return Stream.of(
         argumentSet(
-            "consumed messages already owned",
+            "consumed messages already present",
             "RECEIVE",
             "CONSUMED_MESSAGES",
             "messaging.process.duration"),
         argumentSet(
-            "process duration already owned",
+            "process duration already present",
             "PROCESS",
             "PROCESS_DURATION",
             "messaging.client.consumed.messages"));

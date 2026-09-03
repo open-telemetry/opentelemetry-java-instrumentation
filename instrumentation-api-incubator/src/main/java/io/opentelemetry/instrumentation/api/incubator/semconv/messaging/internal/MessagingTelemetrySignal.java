@@ -9,9 +9,8 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.interna
  * An individual telemetry signal that a messaging instrumentation can emit for one messaging
  * operation.
  *
- * <p>Signals are tracked separately from each other so that a layer can own some of the telemetry
- * for an operation without owning the rest of it. Owning the process span, for example, says
- * nothing about who counts the delivered messages.
+ * <p>Signals are tracked separately so the presence of a process span, for example, does not affect
+ * which instrumentation counts delivered messages.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.

@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryClaims;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -42,7 +42,11 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
 
     private static final MessagingTelemetryCarrier<Message> jmsMessageTelemetry =
         MessagingTelemetryCarrier.create(
-            VirtualField.find(Message.class, MessagingTelemetryClaims.class));
+            VirtualField.find(Message.class, MessagingTelemetrySignals.class));
+
+    public static MessagingTelemetryCarrier<Message> jmsMessageTelemetry() {
+      return jmsMessageTelemetry;
+    }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
@@ -50,7 +54,7 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Message jmsMessage) {
       // a Camel message is refilled when its JMS message is swapped, so what it carried before must
       // not survive
-      messageTelemetry().replaceFrom(jmsMessageTelemetry, jmsMessage, camelMessage);
+      messageTelemetry().replaceFrom(jmsMessageTelemetry(), jmsMessage, camelMessage);
     }
   }
 }

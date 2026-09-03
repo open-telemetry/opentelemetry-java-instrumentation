@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.recordTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -17,15 +18,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryClaims;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
-import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
@@ -108,13 +106,9 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
         for (ConsumerRecord<?, ?> record : records) {
           KafkaConsumerContextUtil.set(record, consumerContext);
-          // the receive span covers the whole batch rather than this record, so only the counter
-          // is claimed here
+          // The receive span covers the whole batch, so record only the per-message counter here.
           if (receiveOperationStarted && emitStableMessagingSemconv()) {
-            MessagingTelemetryCarrier<ConsumerRecord<?, ?>> recordTelemetry =
-                MessagingTelemetryCarrier.create(
-                    VirtualField.find(ConsumerRecord.class, MessagingTelemetryClaims.class));
-            recordTelemetry.claim(record, RECEIVE, CONSUMED_MESSAGES);
+            recordTelemetry().add(record, RECEIVE, CONSUMED_MESSAGES);
           }
         }
       } finally {

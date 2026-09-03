@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryClaims;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -43,7 +43,11 @@ class KafkaEndpointInstrumentation implements TypeInstrumentation {
 
     private static final MessagingTelemetryCarrier<ConsumerRecord<?, ?>> recordTelemetry =
         MessagingTelemetryCarrier.create(
-            VirtualField.find(ConsumerRecord.class, MessagingTelemetryClaims.class));
+            VirtualField.find(ConsumerRecord.class, MessagingTelemetrySignals.class));
+
+    public static MessagingTelemetryCarrier<ConsumerRecord<?, ?>> recordTelemetry() {
+      return recordTelemetry;
+    }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
@@ -51,7 +55,7 @@ class KafkaEndpointInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable Exchange exchange) {
       if (exchange != null) {
         // the exchange is freshly created for this record, so nothing it could keep is stale
-        messageTelemetry().mergeFrom(recordTelemetry, record, exchange.getIn());
+        messageTelemetry().mergeFrom(recordTelemetry(), record, exchange.getIn());
       }
     }
   }

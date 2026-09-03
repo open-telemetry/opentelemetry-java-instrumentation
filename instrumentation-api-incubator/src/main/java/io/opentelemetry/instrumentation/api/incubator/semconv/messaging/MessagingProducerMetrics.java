@@ -130,21 +130,21 @@ public final class MessagingProducerMetrics implements OperationListener {
         MessagingOperationType.fromValue(startAttributes.get(MESSAGING_OPERATION_TYPE));
     boolean recordClientOperationDuration =
         clientOperationDurationHistogram != null
-            && !MessagingTelemetryState.isClaimed(
+            && !MessagingTelemetryState.contains(
                 context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
     boolean recordSentMessages =
         sentMessagesCounter != null
             && operationType == MessagingOperationType.SEND
-            && !MessagingTelemetryState.isClaimed(
+            && !MessagingTelemetryState.contains(
                 context, MessagingOperationType.SEND, MessagingTelemetrySignal.SENT_MESSAGES);
     if (recordClientOperationDuration) {
       context =
-          MessagingTelemetryState.claimIfEnabled(
+          MessagingTelemetryState.addIfEnabled(
               context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
     }
     if (recordSentMessages) {
       context =
-          MessagingTelemetryState.claimIfEnabled(
+          MessagingTelemetryState.addIfEnabled(
               context, MessagingOperationType.SEND, MessagingTelemetrySignal.SENT_MESSAGES);
     }
     return context.with(

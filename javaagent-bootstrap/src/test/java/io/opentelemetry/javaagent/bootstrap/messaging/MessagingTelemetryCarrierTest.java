@@ -12,7 +12,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryClaims;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.junit.jupiter.api.Test;
 
@@ -20,32 +20,32 @@ class MessagingTelemetryCarrierTest {
 
   private static final MessagingTelemetryCarrier<Message> messageTelemetry =
       MessagingTelemetryCarrier.create(
-          VirtualField.find(Message.class, MessagingTelemetryClaims.class));
+          VirtualField.find(Message.class, MessagingTelemetrySignals.class));
   private static final MessagingTelemetryCarrier<OtherMessage> otherMessageTelemetry =
       MessagingTelemetryCarrier.create(
-          VirtualField.find(OtherMessage.class, MessagingTelemetryClaims.class));
+          VirtualField.find(OtherMessage.class, MessagingTelemetrySignals.class));
 
   @Test
-  void remembersClaimsPerObject() {
+  void remembersSignalsPerObject() {
     Message message = new Message();
     Message otherMessage = new Message();
 
-    messageTelemetry.claim(message, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
 
-    assertThat(messageTelemetry.isClaimed(message, RECEIVE, CONSUMED_MESSAGES)).isTrue();
-    assertThat(messageTelemetry.isClaimed(otherMessage, RECEIVE, CONSUMED_MESSAGES)).isFalse();
+    assertThat(messageTelemetry.contains(message, RECEIVE, CONSUMED_MESSAGES)).isTrue();
+    assertThat(messageTelemetry.contains(otherMessage, RECEIVE, CONSUMED_MESSAGES)).isFalse();
   }
 
   @Test
-  void sharesClaimsBetweenAccessorsForTheSameType() {
+  void sharesSignalsBetweenAccessorsForTheSameType() {
     MessagingTelemetryCarrier<Message> otherAccessor =
         MessagingTelemetryCarrier.create(
-            VirtualField.find(Message.class, MessagingTelemetryClaims.class));
+            VirtualField.find(Message.class, MessagingTelemetrySignals.class));
     Message message = new Message();
 
-    messageTelemetry.claim(message, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
 
-    assertThat(otherAccessor.isClaimed(message, RECEIVE, CONSUMED_MESSAGES)).isTrue();
+    assertThat(otherAccessor.contains(message, RECEIVE, CONSUMED_MESSAGES)).isTrue();
   }
 
   @Test
@@ -54,147 +54,147 @@ class MessagingTelemetryCarrierTest {
         MessagingTelemetryCarrier.create(new DirectMessageField());
     Message message = new Message();
 
-    directFieldTelemetry.claim(message, RECEIVE, CONSUMED_MESSAGES);
+    directFieldTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
 
-    assertThat(message.claims).isEqualTo(MessagingTelemetryClaims.of(RECEIVE, CONSUMED_MESSAGES));
+    assertThat(message.signals).isEqualTo(MessagingTelemetrySignals.of(RECEIVE, CONSUMED_MESSAGES));
   }
 
   @Test
-  void updatesClaimsWhileHoldingTheCarrierLock() {
+  void updatesSignalsWhileHoldingTheCarrierLock() {
     MessagingTelemetryCarrier<Message> lockCheckingTelemetry =
         MessagingTelemetryCarrier.create(new LockCheckingMessageField());
 
-    lockCheckingTelemetry.claim(new Message(), RECEIVE, CONSUMED_MESSAGES);
+    lockCheckingTelemetry.add(new Message(), RECEIVE, CONSUMED_MESSAGES);
   }
 
   @Test
   void keepsSignalsOfTheSameObjectIndependent() {
     Message message = new Message();
 
-    messageTelemetry.claim(message, RECEIVE, CONSUMED_MESSAGES);
-    messageTelemetry.claim(message, PROCESS, SPAN);
+    messageTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(message, PROCESS, SPAN);
 
-    assertThat(messageTelemetry.isClaimed(message, RECEIVE, CONSUMED_MESSAGES)).isTrue();
-    assertThat(messageTelemetry.isClaimed(message, PROCESS, SPAN)).isTrue();
-    assertThat(messageTelemetry.isClaimed(message, RECEIVE, SPAN)).isFalse();
+    assertThat(messageTelemetry.contains(message, RECEIVE, CONSUMED_MESSAGES)).isTrue();
+    assertThat(messageTelemetry.contains(message, PROCESS, SPAN)).isTrue();
+    assertThat(messageTelemetry.contains(message, RECEIVE, SPAN)).isFalse();
   }
 
   @Test
   void mergeAddsToWhatTheTargetAlreadyHolds() {
     OtherMessage source = new OtherMessage();
     Message target = new Message();
-    otherMessageTelemetry.claim(source, RECEIVE, CONSUMED_MESSAGES);
-    messageTelemetry.claim(target, PROCESS, PROCESS_DURATION);
+    otherMessageTelemetry.add(source, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(target, PROCESS, PROCESS_DURATION);
 
     messageTelemetry.mergeFrom(otherMessageTelemetry, source, target);
 
-    assertThat(messageTelemetry.isClaimed(target, RECEIVE, CONSUMED_MESSAGES)).isTrue();
-    assertThat(messageTelemetry.isClaimed(target, PROCESS, PROCESS_DURATION)).isTrue();
-    assertThat(otherMessageTelemetry.isClaimed(source, PROCESS, PROCESS_DURATION)).isFalse();
+    assertThat(messageTelemetry.contains(target, RECEIVE, CONSUMED_MESSAGES)).isTrue();
+    assertThat(messageTelemetry.contains(target, PROCESS, PROCESS_DURATION)).isTrue();
+    assertThat(otherMessageTelemetry.contains(source, PROCESS, PROCESS_DURATION)).isFalse();
   }
 
   @Test
-  void mergingAnUnclaimedSourceKeepsTheTargetAsItWas() {
+  void mergingAnEmptySourceKeepsTheTargetAsItWas() {
     Message target = new Message();
-    messageTelemetry.claim(target, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(target, RECEIVE, CONSUMED_MESSAGES);
 
     messageTelemetry.mergeFrom(otherMessageTelemetry, new OtherMessage(), target);
 
-    assertThat(messageTelemetry.isClaimed(target, RECEIVE, CONSUMED_MESSAGES)).isTrue();
+    assertThat(messageTelemetry.contains(target, RECEIVE, CONSUMED_MESSAGES)).isTrue();
   }
 
   @Test
   void replaceMakesTheTargetMatchTheSource() {
     OtherMessage source = new OtherMessage();
     Message target = new Message();
-    otherMessageTelemetry.claim(source, RECEIVE, CONSUMED_MESSAGES);
-    messageTelemetry.claim(target, PROCESS, PROCESS_DURATION);
+    otherMessageTelemetry.add(source, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(target, PROCESS, PROCESS_DURATION);
 
     messageTelemetry.replaceFrom(otherMessageTelemetry, source, target);
 
-    assertThat(messageTelemetry.isClaimed(target, RECEIVE, CONSUMED_MESSAGES)).isTrue();
-    assertThat(messageTelemetry.isClaimed(target, PROCESS, PROCESS_DURATION)).isFalse();
+    assertThat(messageTelemetry.contains(target, RECEIVE, CONSUMED_MESSAGES)).isTrue();
+    assertThat(messageTelemetry.contains(target, PROCESS, PROCESS_DURATION)).isFalse();
   }
 
   @Test
-  void replacingFromAnUnclaimedSourceEmptiesTheTarget() {
+  void replacingFromAnEmptySourceEmptiesTheTarget() {
     Message target = new Message();
-    messageTelemetry.claim(target, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(target, RECEIVE, CONSUMED_MESSAGES);
 
     messageTelemetry.replaceFrom(otherMessageTelemetry, new OtherMessage(), target);
 
-    assertThat(messageTelemetry.getClaims(target).isEmpty()).isTrue();
+    assertThat(messageTelemetry.getSignals(target).isEmpty()).isTrue();
   }
 
   @Test
   void clearForgetsEverythingAboutTheObject() {
     Message message = new Message();
-    messageTelemetry.claim(message, RECEIVE, CONSUMED_MESSAGES);
-    messageTelemetry.claim(message, PROCESS, SPAN);
+    messageTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(message, PROCESS, SPAN);
 
     messageTelemetry.clear(message);
 
-    assertThat(messageTelemetry.getClaims(message).isEmpty()).isTrue();
+    assertThat(messageTelemetry.getSignals(message).isEmpty()).isTrue();
   }
 
   @Test
   void toleratesNullObjects() {
     Message message = new Message();
-    messageTelemetry.claim(message, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
 
-    messageTelemetry.claim(null, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(null, RECEIVE, CONSUMED_MESSAGES);
     messageTelemetry.mergeFrom(otherMessageTelemetry, new OtherMessage(), null);
     messageTelemetry.mergeFrom(otherMessageTelemetry, null, message);
     messageTelemetry.replaceFrom(otherMessageTelemetry, new OtherMessage(), null);
     messageTelemetry.replaceFrom(otherMessageTelemetry, null, null);
     messageTelemetry.clear(null);
 
-    assertThat(messageTelemetry.getClaims(null)).isEqualTo(MessagingTelemetryClaims.none());
-    assertThat(messageTelemetry.isClaimed(null, RECEIVE, CONSUMED_MESSAGES)).isFalse();
-    assertThat(messageTelemetry.isClaimed(message, RECEIVE, CONSUMED_MESSAGES)).isTrue();
+    assertThat(messageTelemetry.getSignals(null)).isEqualTo(MessagingTelemetrySignals.none());
+    assertThat(messageTelemetry.contains(null, RECEIVE, CONSUMED_MESSAGES)).isFalse();
+    assertThat(messageTelemetry.contains(message, RECEIVE, CONSUMED_MESSAGES)).isTrue();
   }
 
   @Test
   void replacingFromNullEmptiesTheTarget() {
     Message target = new Message();
-    messageTelemetry.claim(target, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(target, RECEIVE, CONSUMED_MESSAGES);
 
     messageTelemetry.replaceFrom(otherMessageTelemetry, null, target);
 
-    assertThat(messageTelemetry.getClaims(target).isEmpty()).isTrue();
+    assertThat(messageTelemetry.getSignals(target).isEmpty()).isTrue();
   }
 
   private static class Message {
-    private MessagingTelemetryClaims claims;
+    private MessagingTelemetrySignals signals;
   }
 
   private static class OtherMessage {}
 
-  private static class DirectMessageField extends VirtualField<Message, MessagingTelemetryClaims> {
+  private static class DirectMessageField extends VirtualField<Message, MessagingTelemetrySignals> {
 
     @Override
-    public MessagingTelemetryClaims get(Message message) {
-      return message.claims;
+    public MessagingTelemetrySignals get(Message message) {
+      return message.signals;
     }
 
     @Override
-    public void set(Message message, MessagingTelemetryClaims claims) {
-      message.claims = claims;
+    public void set(Message message, MessagingTelemetrySignals signals) {
+      message.signals = signals;
     }
   }
 
   private static class LockCheckingMessageField extends DirectMessageField {
 
     @Override
-    public MessagingTelemetryClaims get(Message message) {
+    public MessagingTelemetrySignals get(Message message) {
       assertThat(Thread.holdsLock(message)).isTrue();
       return super.get(message);
     }
 
     @Override
-    public void set(Message message, MessagingTelemetryClaims claims) {
+    public void set(Message message, MessagingTelemetrySignals signals) {
       assertThat(Thread.holdsLock(message)).isTrue();
-      super.set(message, claims);
+      super.set(message, signals);
     }
   }
 }

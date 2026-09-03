@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryClaims;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
@@ -25,7 +25,7 @@ public class JavaxMessageAdapter implements MessageAdapter {
 
   private static final MessagingTelemetryCarrier<Message> messageTelemetry =
       MessagingTelemetryCarrier.create(
-          VirtualField.find(Message.class, MessagingTelemetryClaims.class));
+          VirtualField.find(Message.class, MessagingTelemetrySignals.class));
 
   public static MessageAdapter create(Message message) {
     return new JavaxMessageAdapter(message);
@@ -84,16 +84,16 @@ public class JavaxMessageAdapter implements MessageAdapter {
 
   @Override
   public boolean wereConsumedMessagesRecorded() {
-    return messageTelemetry.isClaimed(message, RECEIVE, CONSUMED_MESSAGES);
+    return messageTelemetry.contains(message, RECEIVE, CONSUMED_MESSAGES);
   }
 
   @Override
   public void markReceiveSpanRecorded() {
-    messageTelemetry.claim(message, RECEIVE, SPAN);
+    messageTelemetry.add(message, RECEIVE, SPAN);
   }
 
   @Override
   public void markConsumedMessagesRecorded() {
-    messageTelemetry.claim(message, RECEIVE, CONSUMED_MESSAGES);
+    messageTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
   }
 }

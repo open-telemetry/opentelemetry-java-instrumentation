@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.claim;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
@@ -47,8 +47,8 @@ class CamelSingletons {
       createMessagingInstrumenter(SEND, "send", true);
   private static final Instrumenter<CamelRequest, Void> messagingPublishInstrumenter =
       createMessagingInstrumenter(SEND, "publish", true);
-  // AWS SQS sends rely on the nested AWS SDK producer span to inject propagation, while Camel owns
-  // the messaging operation metrics.
+  // AWS SQS sends rely on the nested AWS SDK producer span to inject propagation, while Camel
+  // records the messaging operation metrics.
   private static final Instrumenter<CamelRequest, Void> keylessMessagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", false);
   private static final Instrumenter<CamelRequest, Void> messagingProcessInstrumenter =
@@ -98,9 +98,8 @@ class CamelSingletons {
       builder.addOperationMetrics(MessagingProcessMetrics.get());
       builder.addContextCustomizer(
           (context, request, startAttributes) ->
-              messageTelemetry()
-                      .isClaimed(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
-                  ? claim(context, RECEIVE, CONSUMED_MESSAGES)
+              messageTelemetry().contains(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
+                  ? add(context, RECEIVE, CONSUMED_MESSAGES)
                   : context);
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
       return MessagingProcessInstrumenterFactory.create(

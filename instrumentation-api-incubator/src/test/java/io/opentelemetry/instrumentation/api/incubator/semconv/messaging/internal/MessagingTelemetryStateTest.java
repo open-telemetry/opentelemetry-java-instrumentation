@@ -24,72 +24,71 @@ class MessagingTelemetryStateTest {
     Context context = Context.root();
 
     assertThat(MessagingTelemetryState.isEnabled(context)).isFalse();
-    assertThat(MessagingTelemetryState.isClaimed(context, RECEIVE, CONSUMED_MESSAGES)).isFalse();
+    assertThat(MessagingTelemetryState.contains(context, RECEIVE, CONSUMED_MESSAGES)).isFalse();
   }
 
   @Test
-  void claimIfEnabledIsIgnoredWithoutOptIn() {
+  void addIfEnabledIsIgnoredWithoutOptIn() {
     Context context =
-        MessagingTelemetryState.claimIfEnabled(Context.root(), RECEIVE, CONSUMED_MESSAGES);
+        MessagingTelemetryState.addIfEnabled(Context.root(), RECEIVE, CONSUMED_MESSAGES);
 
     assertThat(MessagingTelemetryState.isEnabled(context)).isFalse();
-    assertThat(MessagingTelemetryState.isClaimed(context, RECEIVE, CONSUMED_MESSAGES)).isFalse();
+    assertThat(MessagingTelemetryState.contains(context, RECEIVE, CONSUMED_MESSAGES)).isFalse();
   }
 
   @Test
-  void claimIfEnabledIsRememberedAfterOptIn() {
+  void addIfEnabledIsRememberedAfterOptIn() {
     Context context = MessagingTelemetryState.enable(Context.root());
-    context = MessagingTelemetryState.claimIfEnabled(context, RECEIVE, CONSUMED_MESSAGES);
+    context = MessagingTelemetryState.addIfEnabled(context, RECEIVE, CONSUMED_MESSAGES);
 
-    assertThat(MessagingTelemetryState.isClaimed(context, RECEIVE, CONSUMED_MESSAGES)).isTrue();
+    assertThat(MessagingTelemetryState.contains(context, RECEIVE, CONSUMED_MESSAGES)).isTrue();
   }
 
   @Test
-  void claimOptsInOnItsOwn() {
-    Context context = MessagingTelemetryState.claim(Context.root(), PROCESS, PROCESS_DURATION);
+  void addEnablesTracking() {
+    Context context = MessagingTelemetryState.add(Context.root(), PROCESS, PROCESS_DURATION);
 
     assertThat(MessagingTelemetryState.isEnabled(context)).isTrue();
-    assertThat(MessagingTelemetryState.isClaimed(context, PROCESS, PROCESS_DURATION)).isTrue();
+    assertThat(MessagingTelemetryState.contains(context, PROCESS, PROCESS_DURATION)).isTrue();
   }
 
   @Test
-  void enablingTwiceKeepsWhatWasAlreadyClaimed() {
-    Context context = MessagingTelemetryState.claim(Context.root(), PROCESS, PROCESS_DURATION);
+  void enablingTwiceKeepsSignalsAlreadyPresent() {
+    Context context = MessagingTelemetryState.add(Context.root(), PROCESS, PROCESS_DURATION);
 
     Context enabled = MessagingTelemetryState.enable(context);
 
     assertThat(enabled).isSameAs(context);
-    assertThat(MessagingTelemetryState.isClaimed(enabled, PROCESS, PROCESS_DURATION)).isTrue();
+    assertThat(MessagingTelemetryState.contains(enabled, PROCESS, PROCESS_DURATION)).isTrue();
   }
 
   @Test
   void separateOperationsAndSignalsStayIndependent() {
     Context context = MessagingTelemetryState.enable(Context.root());
-    context = MessagingTelemetryState.claimIfEnabled(context, SEND, CLIENT_OPERATION_DURATION);
+    context = MessagingTelemetryState.addIfEnabled(context, SEND, CLIENT_OPERATION_DURATION);
 
-    assertThat(MessagingTelemetryState.isClaimed(context, SEND, CLIENT_OPERATION_DURATION))
-        .isTrue();
-    assertThat(MessagingTelemetryState.isClaimed(context, RECEIVE, CLIENT_OPERATION_DURATION))
+    assertThat(MessagingTelemetryState.contains(context, SEND, CLIENT_OPERATION_DURATION)).isTrue();
+    assertThat(MessagingTelemetryState.contains(context, RECEIVE, CLIENT_OPERATION_DURATION))
         .isFalse();
-    assertThat(MessagingTelemetryState.isClaimed(context, SEND, SPAN)).isFalse();
+    assertThat(MessagingTelemetryState.contains(context, SEND, SPAN)).isFalse();
   }
 
   @Test
-  void claimOnlyReachesTheContextItWasMadeOn() {
+  void addedSignalOnlyReachesItsContext() {
     Context outer = MessagingTelemetryState.enable(Context.root());
-    Context inner = MessagingTelemetryState.claimIfEnabled(outer, PROCESS, PROCESS_DURATION);
+    Context inner = MessagingTelemetryState.addIfEnabled(outer, PROCESS, PROCESS_DURATION);
 
-    assertThat(MessagingTelemetryState.isClaimed(inner, PROCESS, PROCESS_DURATION)).isTrue();
-    assertThat(MessagingTelemetryState.isClaimed(outer, PROCESS, PROCESS_DURATION)).isFalse();
+    assertThat(MessagingTelemetryState.contains(inner, PROCESS, PROCESS_DURATION)).isTrue();
+    assertThat(MessagingTelemetryState.contains(outer, PROCESS, PROCESS_DURATION)).isFalse();
   }
 
   @Test
-  void anUnknownOperationClaimsNothing() {
+  void anUnknownOperationAddsNothing() {
     Context context = MessagingTelemetryState.enable(Context.root());
 
-    Context unchanged = MessagingTelemetryState.claim(context, null, CONSUMED_MESSAGES);
+    Context unchanged = MessagingTelemetryState.add(context, null, CONSUMED_MESSAGES);
 
     assertThat(unchanged).isSameAs(context);
-    assertThat(MessagingTelemetryState.isClaimed(context, null, CONSUMED_MESSAGES)).isFalse();
+    assertThat(MessagingTelemetryState.contains(context, null, CONSUMED_MESSAGES)).isFalse();
   }
 }

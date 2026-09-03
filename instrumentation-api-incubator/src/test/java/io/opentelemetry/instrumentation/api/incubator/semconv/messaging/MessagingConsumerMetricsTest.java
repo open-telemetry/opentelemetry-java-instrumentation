@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CLIENT_OPERATION_DURATION;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.isClaimed;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -75,9 +75,9 @@ class MessagingConsumerMetricsTest {
             .build();
 
     Context context = listener.onStart(enable(Context.root()), requestAttributes, nanos(100));
-    assertThat(isClaimed(context, RECEIVE, CLIENT_OPERATION_DURATION))
+    assertThat(contains(context, RECEIVE, CLIENT_OPERATION_DURATION))
         .isEqualTo(emitStableMessagingSemconv());
-    assertThat(isClaimed(context, RECEIVE, CONSUMED_MESSAGES))
+    assertThat(contains(context, RECEIVE, CONSUMED_MESSAGES))
         .isEqualTo(emitStableMessagingSemconv());
     listener.onEnd(context, responseAttributes, nanos(300));
 
@@ -188,7 +188,7 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  void outerReceiveOwnsNestedStableMetrics() {
+  void outerReceivePreventsDuplicateNestedStableMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
@@ -260,7 +260,7 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  void separateListenersKeepOwnState() {
+  void separateListenersKeepIndependentState() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
@@ -291,7 +291,7 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  void distinctClientOperationTypesOwnTheirDurations() {
+  void distinctClientOperationTypesRecordTheirDurations() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
@@ -454,7 +454,7 @@ class MessagingConsumerMetricsTest {
             .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null)
             .build();
     Context context = listener.onStart(Context.root(), attributes, nanos(100));
-    assertThat(isClaimed(context, RECEIVE, CONSUMED_MESSAGES)).isFalse();
+    assertThat(contains(context, RECEIVE, CONSUMED_MESSAGES)).isFalse();
     listener.onEnd(context, Attributes.empty(), nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();

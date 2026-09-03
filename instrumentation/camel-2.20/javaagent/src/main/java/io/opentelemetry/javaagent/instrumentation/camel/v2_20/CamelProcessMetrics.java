@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.claim;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
@@ -57,8 +57,8 @@ class CamelProcessMetrics {
     long startNanos = System.nanoTime();
     Context metricsContext = enable(parentContext);
     metricsContext =
-        messageTelemetry().isClaimed(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
-            ? claim(metricsContext, RECEIVE, CONSUMED_MESSAGES)
+        messageTelemetry().contains(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
+            ? add(metricsContext, RECEIVE, CONSUMED_MESSAGES)
             : metricsContext;
     metricsContext = consumedMessages.onStart(metricsContext, startAttributes, startNanos);
     metricsContext = processDuration.onStart(metricsContext, startAttributes, startNanos);

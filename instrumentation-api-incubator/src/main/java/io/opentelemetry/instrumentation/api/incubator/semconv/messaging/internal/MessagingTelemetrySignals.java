@@ -12,39 +12,38 @@ import java.util.StringJoiner;
 import javax.annotation.Nullable;
 
 /**
- * An immutable set of claims on messaging telemetry, where a claim is one {@link
+ * An immutable set of messaging telemetry signals, where each entry is one {@link
  * MessagingTelemetrySignal} of one {@link MessagingOperationType}.
  *
- * <p>A claim means "this layer emits this signal for this operation", so a layer nested inside it
- * has to leave that signal alone. Because operations and signals are tracked as separate claims, a
- * layer that owns the {@code send} duration still leaves the {@code receive} duration and the
- * process span to whoever owns those.
+ * <p>Signal presence means either that the signal was already emitted or that an outer operation
+ * selected it for emission. A nested operation can use that information to avoid emitting the same
+ * signal.
  *
- * <p>Claims are held as one bit per signal of each operation that has any, which is small enough to
- * keep in a {@link io.opentelemetry.context.Context}, in a weak map keyed by a message, or in a
- * thread local.
+ * <p>Signals are held as one bit per signal of each operation that has any. The representation is
+ * small enough to keep in a {@link io.opentelemetry.context.Context}, in a weak map keyed by a
+ * message, or in a thread local.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class MessagingTelemetryClaims {
+public final class MessagingTelemetrySignals {
 
-  private static final MessagingTelemetryClaims NONE =
-      new MessagingTelemetryClaims(new EnumMap<>(MessagingOperationType.class));
+  private static final MessagingTelemetrySignals NONE =
+      new MessagingTelemetrySignals(new EnumMap<>(MessagingOperationType.class));
 
   private final EnumMap<MessagingOperationType, Integer> signalsByOperation;
 
-  private MessagingTelemetryClaims(EnumMap<MessagingOperationType, Integer> signalsByOperation) {
+  private MessagingTelemetrySignals(EnumMap<MessagingOperationType, Integer> signalsByOperation) {
     this.signalsByOperation = signalsByOperation;
   }
 
-  /** Returns the empty claim set. */
-  public static MessagingTelemetryClaims none() {
+  /** Returns the empty signal set. */
+  public static MessagingTelemetrySignals none() {
     return NONE;
   }
 
-  /** Returns a claim set holding only the given signal of the given operation. */
-  public static MessagingTelemetryClaims of(
+  /** Returns a set holding only the given signal of the given operation. */
+  public static MessagingTelemetrySignals of(
       MessagingOperationType operation, MessagingTelemetrySignal signal) {
     return NONE.with(operation, signal);
   }
@@ -57,17 +56,17 @@ public final class MessagingTelemetryClaims {
     return (signalsOf(operation) & signal.bit()) != 0;
   }
 
-  public MessagingTelemetryClaims with(
+  public MessagingTelemetrySignals with(
       MessagingOperationType operation, MessagingTelemetrySignal signal) {
     return withSignals(operation, signalsOf(operation) | signal.bit());
   }
 
-  public MessagingTelemetryClaims without(
+  public MessagingTelemetrySignals without(
       MessagingOperationType operation, MessagingTelemetrySignal signal) {
     return withSignals(operation, signalsOf(operation) & ~signal.bit());
   }
 
-  public MessagingTelemetryClaims union(MessagingTelemetryClaims other) {
+  public MessagingTelemetrySignals union(MessagingTelemetrySignals other) {
     if (other.isEmpty()) {
       return this;
     }
@@ -79,7 +78,7 @@ public final class MessagingTelemetryClaims {
       merged.merge(
           entry.getKey(), entry.getValue(), (signals, otherSignals) -> signals | otherSignals);
     }
-    return merged.equals(signalsByOperation) ? this : new MessagingTelemetryClaims(merged);
+    return merged.equals(signalsByOperation) ? this : new MessagingTelemetrySignals(merged);
   }
 
   private int signalsOf(MessagingOperationType operation) {
@@ -87,7 +86,7 @@ public final class MessagingTelemetryClaims {
     return signals == null ? 0 : signals;
   }
 
-  private MessagingTelemetryClaims withSignals(MessagingOperationType operation, int signals) {
+  private MessagingTelemetrySignals withSignals(MessagingOperationType operation, int signals) {
     if (signals == signalsOf(operation)) {
       return this;
     }
@@ -97,13 +96,13 @@ public final class MessagingTelemetryClaims {
     } else {
       updated.put(operation, signals);
     }
-    return updated.isEmpty() ? NONE : new MessagingTelemetryClaims(updated);
+    return updated.isEmpty() ? NONE : new MessagingTelemetrySignals(updated);
   }
 
   @Override
   public boolean equals(@Nullable Object obj) {
-    return obj instanceof MessagingTelemetryClaims
-        && signalsByOperation.equals(((MessagingTelemetryClaims) obj).signalsByOperation);
+    return obj instanceof MessagingTelemetrySignals
+        && signalsByOperation.equals(((MessagingTelemetrySignals) obj).signalsByOperation);
   }
 
   @Override
@@ -113,7 +112,7 @@ public final class MessagingTelemetryClaims {
 
   @Override
   public String toString() {
-    StringJoiner joiner = new StringJoiner(", ", "MessagingTelemetryClaims[", "]");
+    StringJoiner joiner = new StringJoiner(", ", "MessagingTelemetrySignals[", "]");
     for (Map.Entry<MessagingOperationType, Integer> entry : signalsByOperation.entrySet()) {
       for (MessagingTelemetrySignal signal : MessagingTelemetrySignal.values()) {
         if ((entry.getValue() & signal.bit()) != 0) {

@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.isClaimed;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -56,7 +56,7 @@ class MessagingProcessMetricsTest {
 
     Context root = enable(Context.root());
     Context context = listener.onStart(root, attributes, nanos(100));
-    assertThat(isClaimed(context, PROCESS, PROCESS_DURATION))
+    assertThat(contains(context, PROCESS, PROCESS_DURATION))
         .isEqualTo(emitStableMessagingSemconv());
     Attributes endAttributes =
         Attributes.builder()
@@ -96,7 +96,7 @@ class MessagingProcessMetricsTest {
   }
 
   @Test
-  void outerOperationOwnsNestedProcessDuration() {
+  void outerOperationPreventsDuplicateNestedProcessDuration() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();

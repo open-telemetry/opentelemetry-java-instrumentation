@@ -73,7 +73,7 @@ class KafkaCamelTest {
   }
 
   @Test
-  void camelOwnsMetricsOverKafkaClients() throws Exception {
+  void camelRecordsMetricsOverKafkaClients() throws Exception {
     ProducerTemplate template = camelContext.createProducerTemplate();
     ExecutorService sender = Executors.newSingleThreadExecutor();
     cleanup.deferCleanup(sender::shutdownNow);

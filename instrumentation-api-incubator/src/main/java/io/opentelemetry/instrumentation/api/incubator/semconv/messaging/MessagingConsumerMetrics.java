@@ -45,9 +45,9 @@ public final class MessagingConsumerMetrics implements OperationListener {
       AttributeKey.stringKey("messaging.operation");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
       AttributeKey.stringKey("messaging.operation.type");
-  // the consumed messages counter answers "has this delivered message been counted yet", so the
-  // receive operation owns the claim even when a process operation is the one recording it
-  private static final MessagingOperationType CONSUMED_MESSAGES_OWNER =
+  // Use RECEIVE as the coordination key because the counter records each delivered message once,
+  // including when a PROCESS operation records it.
+  private static final MessagingOperationType CONSUMED_MESSAGES_OPERATION =
       MessagingOperationType.RECEIVE;
   private static final Logger logger = Logger.getLogger(MessagingConsumerMetrics.class.getName());
 
@@ -155,22 +155,22 @@ public final class MessagingConsumerMetrics implements OperationListener {
     boolean recordClientOperationDuration =
         clientOperationDurationHistogram != null
             && operationType != MessagingOperationType.PROCESS
-            && !MessagingTelemetryState.isClaimed(
+            && !MessagingTelemetryState.contains(
                 context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
     boolean recordConsumedMessages =
         consumedMessagesCounter != null
             && (consumedMessagesOnly || operationType == MessagingOperationType.RECEIVE)
-            && !MessagingTelemetryState.isClaimed(
-                context, CONSUMED_MESSAGES_OWNER, MessagingTelemetrySignal.CONSUMED_MESSAGES);
+            && !MessagingTelemetryState.contains(
+                context, CONSUMED_MESSAGES_OPERATION, MessagingTelemetrySignal.CONSUMED_MESSAGES);
     if (recordClientOperationDuration) {
       context =
-          MessagingTelemetryState.claimIfEnabled(
+          MessagingTelemetryState.addIfEnabled(
               context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
     }
     if (recordConsumedMessages) {
       context =
-          MessagingTelemetryState.claimIfEnabled(
-              context, CONSUMED_MESSAGES_OWNER, MessagingTelemetrySignal.CONSUMED_MESSAGES);
+          MessagingTelemetryState.addIfEnabled(
+              context, CONSUMED_MESSAGES_OPERATION, MessagingTelemetrySignal.CONSUMED_MESSAGES);
     }
     return context.with(
         messagingConsumerMetricsState,
