@@ -34,7 +34,7 @@ class VertxSqlAddressGroupTest {
     "oracle.db, 1521",
     "ibm.db2, 50000"
   })
-  void omitsKnownDefaultPorts(String dbSystem, int defaultPort) {
+  void omitsKnownDefaultPortsAndPreservesConfiguredOrder(String dbSystem, int defaultPort) {
     VertxSqlAddressGroup singleAddress =
         VertxSqlAddressGroup.of(
             new SqlConnectOptions().setHost("single.example").setPort(defaultPort), dbSystem);
