@@ -38,7 +38,7 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import java.time.Duration;
 
 // Get an OpenTelemetry instance
-OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+OpenTelemetry openTelemetry = ...;
 
 JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
   // Load metrics from classpath resource (optional)

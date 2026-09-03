@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
+import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -141,17 +142,15 @@ public final class JmxTelemetryBuilder {
           }
         });
 
-    IncludeExclude effectiveMetrics = metrics;
-    if (metrics.getIncluded().isEmpty()) {
-      // no explict 'included' metrics, so we include everything that has been registered
-      effectiveMetrics =
-          IncludeExclude.builder()
-              .setIncluded(registeredMetrics)
-              .setExcluded(metrics.getExcluded())
-              .build();
+    // making it easier to debug include/exclude patterns
+    logger.log(FINE, "Registered JMX metrics: {0}", registeredMetrics);
+    if (!metrics.isEmpty() && logger.isLoggable(FINE)) {
+      List<String> filteredMetrics =
+          registeredMetrics.stream().sorted().filter(m -> !metrics.matches(m)).collect(toList());
+      logger.log(FINE, "Metrics filtered by configuration: {0}", filteredMetrics);
     }
 
     return new JmxTelemetry(
-        openTelemetry, discoveryDelayMs, metricConfiguration, handlerRegistry, effectiveMetrics);
+        openTelemetry, discoveryDelayMs, metricConfiguration, handlerRegistry, metrics);
   }
 }
