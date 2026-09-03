@@ -127,21 +127,21 @@ public final class SelectorConfig {
     if (selector != null) {
       return selector;
     }
-    String replacementFlatProperty =
-        flatProperty(instrumentationName, selectorName, ".included", stability);
+    String replacementFlatProperties =
+        selectorFlatProperties(instrumentationName, selectorName, stability);
     List<String> deprecated =
         getDeprecated(
             config,
             instrumentationName,
             selectorName,
-            replacementFlatProperty,
+            replacementFlatProperties,
             systemPropertyFallback);
     return DeprecatedCaptureNames.toSelector(
         deprecated,
         "the "
             + deprecatedFlatProperty(instrumentationName, selectorName)
             + " setting or equivalent declarative configuration",
-        replacementFlatProperty + " or equivalent declarative configuration");
+        replacementFlatProperties + " or equivalent declarative configuration");
   }
 
   /**
@@ -166,7 +166,7 @@ public final class SelectorConfig {
             config,
             instrumentationName,
             selectorName,
-            flatProperty(instrumentationName, selectorName, ".included", Stability.EXPERIMENTAL),
+            selectorFlatProperties(instrumentationName, selectorName, Stability.EXPERIMENTAL),
             false);
     return deprecated == null ? null : resolveLegacyLiteral(deprecated);
   }
@@ -232,7 +232,7 @@ public final class SelectorConfig {
     warnDeprecated(
         instrumentationName,
         deprecatedSelectorName,
-        flatProperty(instrumentationName, selectorName, ".included", Stability.EXPERIMENTAL));
+        selectorFlatProperties(instrumentationName, selectorName, Stability.EXPERIMENTAL));
     return deprecated ? value -> true : null;
   }
 
@@ -279,7 +279,7 @@ public final class SelectorConfig {
       DeclarativeConfigProperties config,
       String instrumentationName,
       String selectorName,
-      String replacementFlatProperty,
+      String replacementFlatProperties,
       boolean systemPropertyFallback) {
     String flatProperty = deprecatedFlatProperty(instrumentationName, selectorName);
     List<String> deprecated =
@@ -291,12 +291,12 @@ public final class SelectorConfig {
     if (deprecated == null) {
       return null;
     }
-    warnDeprecated(instrumentationName, selectorName, replacementFlatProperty);
+    warnDeprecated(instrumentationName, selectorName, replacementFlatProperties);
     return deprecated;
   }
 
   private static void warnDeprecated(
-      String instrumentationName, String deprecatedSelectorName, String replacementFlatProperty) {
+      String instrumentationName, String deprecatedSelectorName, String replacementFlatProperties) {
     String flatProperty = deprecatedFlatProperty(instrumentationName, deprecatedSelectorName);
     warnOnce(
         flatProperty + ":deprecated",
@@ -304,7 +304,7 @@ public final class SelectorConfig {
             + flatProperty
             + " setting and the equivalent declarative configuration property are deprecated and"
             + " may be removed in the next minor release. Use "
-            + replacementFlatProperty
+            + replacementFlatProperties
             + " or equivalent declarative configuration instead.");
   }
 
@@ -334,6 +334,13 @@ public final class SelectorConfig {
   private static String selectorNodeName(String selectorName, Stability stability) {
     String nodeName = nodeName(selectorName);
     return stability == Stability.EXPERIMENTAL ? nodeName + "/development" : nodeName;
+  }
+
+  private static String selectorFlatProperties(
+      String instrumentationName, String selectorName, Stability stability) {
+    return flatProperty(instrumentationName, selectorName, ".included", stability)
+        + " or "
+        + flatProperty(instrumentationName, selectorName, ".excluded", stability);
   }
 
   private static String flatProperty(

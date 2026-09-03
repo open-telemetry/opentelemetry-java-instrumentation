@@ -174,6 +174,7 @@ class SelectorConfigTest {
                   + " setting and the equivalent declarative configuration property are deprecated"
                   + " and may be removed in the next minor release. Use"
                   + " otel.instrumentation.exact-matching.experimental.mdc-attributes.included"
+                  + " or otel.instrumentation.exact-matching.experimental.mdc-attributes.excluded"
                   + " or equivalent declarative configuration instead.");
     } finally {
       detachWarningHandler(handler);
@@ -201,6 +202,7 @@ class SelectorConfigTest {
                   + " setting and the equivalent declarative configuration property are deprecated"
                   + " and may be removed in the next minor release. Use"
                   + " otel.instrumentation.stable-deprecated.mdc-attributes.included"
+                  + " or otel.instrumentation.stable-deprecated.mdc-attributes.excluded"
                   + " or equivalent declarative configuration instead.");
     } finally {
       detachWarningHandler(handler);
@@ -409,8 +411,9 @@ class SelectorConfigTest {
                   + ".capture-key-value-pair-attributes setting and the equivalent declarative"
                   + " configuration property are deprecated and may be removed in the next minor"
                   + " release. Use otel.instrumentation.boolean-enabled.experimental"
-                  + ".key-value-pair-attributes.included or equivalent declarative configuration"
-                  + " instead.");
+                  + ".key-value-pair-attributes.included or otel.instrumentation.boolean-enabled"
+                  + ".experimental.key-value-pair-attributes.excluded or equivalent declarative"
+                  + " configuration instead.");
     } finally {
       detachWarningHandler(handler);
     }
@@ -462,7 +465,9 @@ class SelectorConfigTest {
                   + ".capture-logstash-structured-arguments setting and the equivalent declarative"
                   + " configuration property are deprecated and may be removed in the next minor"
                   + " release. Use otel.instrumentation.boolean-renamed.experimental"
-                  + ".logstash-structured-argument-attributes.included or equivalent declarative"
+                  + ".logstash-structured-argument-attributes.included or"
+                  + " otel.instrumentation.boolean-renamed.experimental"
+                  + ".logstash-structured-argument-attributes.excluded or equivalent declarative"
                   + " configuration instead.");
     } finally {
       detachWarningHandler(handler);
