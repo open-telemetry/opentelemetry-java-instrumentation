@@ -24,6 +24,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Clock;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -108,6 +109,51 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(thrown).isSameAs(exception);
     assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenDecoratedCallableSucceeds() throws Exception {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Callable<String> callable = CircuitBreaker.decorateCallable(circuitBreaker, () -> "ok");
+
+    String result = testing.runWithSpan("parent", callable::call);
+
+    assertThat(result).isEqualTo("ok");
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedCallableThrowsCheckedException() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Exception exception = new Exception("boom");
+    Callable<String> callable =
+        CircuitBreaker.decorateCallable(
+            circuitBreaker,
+            () -> {
+              throw exception;
+            });
+
+    Throwable thrown = catchThrowable(() -> testing.runWithSpan("parent", callable::call));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedCallableThrowsError() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Error error = new AssertionError("boom");
+    Callable<String> callable =
+        CircuitBreaker.decorateCallable(
+            circuitBreaker,
+            () -> {
+              throw error;
+            });
+
+    Throwable thrown = catchThrowable(() -> testing.runWithSpan("parent", callable::call));
+
+    assertThat(thrown).isSameAs(error);
+    assertCircuitBreakerSpan("closed", "failure", error);
   }
 
   @Test
