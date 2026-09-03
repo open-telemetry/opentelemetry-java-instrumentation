@@ -72,13 +72,13 @@ class OpenSearchServerTargetTest {
   }
 
   @Test
-  void mixedPortsStayInTheSortedAddressList() {
+  void mixedPortsStayInConfiguredOrder() {
     OpenSearchServerTarget target =
         OpenSearchServerTarget.of(
             asList(new Endpoint("h2", 9201, "http"), new Endpoint("h1", 9200, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9201");
+    assertThat(target.getAddress()).isEqualTo("h2:9201,h1:9200");
     assertThat(target.getPort()).isNull();
   }
 
@@ -91,7 +91,7 @@ class OpenSearchServerTargetTest {
                 new Endpoint("default.example", -1, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("default.example:80,non-default.example:9200");
+    assertThat(target.getAddress()).isEqualTo("non-default.example:9200,default.example:80");
     assertThat(target.getPort()).isNull();
   }
 
@@ -102,7 +102,7 @@ class OpenSearchServerTargetTest {
             asList(new Endpoint("::1", 9200, "https"), new Endpoint("192.0.2.1", 9200, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("192.0.2.1:9200,[::1]:9200");
+    assertThat(target.getAddress()).isEqualTo("[::1]:9200,192.0.2.1:9200");
     assertThat(target.getPort()).isNull();
   }
 
@@ -115,12 +115,12 @@ class OpenSearchServerTargetTest {
                 new Endpoint("plain.example", 80, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("plain.example,secure.example");
+    assertThat(target.getAddress()).isEqualTo("secure.example,plain.example");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void endpointPermutationsHaveTheSameTarget() {
+  void configuredNodeOrderIsPreserved() {
     OpenSearchServerTarget first =
         OpenSearchServerTarget.of(
             asList(
@@ -136,8 +136,8 @@ class OpenSearchServerTargetTest {
 
     assertThat(first).isNotNull();
     assertThat(second).isNotNull();
-    assertThat(first.getAddress()).isEqualTo("h1:9200,h2:9201,h3:9202");
-    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getAddress()).isEqualTo("h3:9202,h1:9200,h2:9201");
+    assertThat(second.getAddress()).isEqualTo("h2:9201,h3:9202,h1:9200");
   }
 
   @Test
@@ -150,11 +150,11 @@ class OpenSearchServerTargetTest {
                 new Endpoint("h1", 9200, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1:9200,h1:9200,h2:9201");
+    assertThat(target.getAddress()).isEqualTo("h2:9201,h1:9200,h1:9200");
   }
 
   @Test
-  void fiveEndpointsAreIncludedAfterSorting() {
+  void fiveEndpointsAreIncludedInConfiguredOrder() {
     OpenSearchServerTarget target =
         OpenSearchServerTarget.of(
             asList(
@@ -165,12 +165,12 @@ class OpenSearchServerTargetTest {
                 new Endpoint("h2", 80, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1,h2,h3,h4,h5");
+    assertThat(target.getAddress()).isEqualTo("h5,h3,h1,h4,h2");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void sixthEndpointIsOmittedAfterSorting() {
+  void onlyFirstFiveConfiguredEndpointsAreIncluded() {
     OpenSearchServerTarget target =
         OpenSearchServerTarget.of(
             asList(
@@ -182,7 +182,7 @@ class OpenSearchServerTargetTest {
                 new Endpoint("h4", 80, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1,h2,h3,h4,h5");
+    assertThat(target.getAddress()).isEqualTo("h6,h3,h1,h5,h2");
     assertThat(target.getPort()).isNull();
   }
 
