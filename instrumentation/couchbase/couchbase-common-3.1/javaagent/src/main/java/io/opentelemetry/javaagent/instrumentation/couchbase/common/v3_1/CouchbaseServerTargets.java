@@ -54,7 +54,8 @@ public class CouchbaseServerTargets {
   static CouchbaseServerTarget target(Set<SeedNode> seedNodes, boolean tlsEnabled) {
     DbServerTargetBuilder target =
         DbServerTarget.builder(
-            CouchbaseServerTarget.defaultPort(tlsEnabled ? "couchbases" : "couchbase"));
+                CouchbaseServerTarget.defaultPort(tlsEnabled ? "couchbases" : "couchbase"))
+            .setSorted(true);
     Map<String, Set<Integer>> portsByAddress = new HashMap<>();
     for (SeedNode seedNode : seedNodes) {
       if (seedNode == null) {
