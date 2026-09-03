@@ -32,6 +32,7 @@ import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.pool.TypePool;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -296,7 +297,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
     @Override
     public int mergeWriter(int flags) {
-      return flags;
+      return flags | ClassWriter.COMPUTE_MAXS;
     }
 
     @Override
