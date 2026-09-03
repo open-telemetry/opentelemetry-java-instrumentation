@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 import io.opentelemetry.instrumentation.testing.junit.http.{
@@ -22,8 +21,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-import java.util
-import java.util.function.{BiFunction, Consumer, Function}
+import java.util.function.{BiFunction, Consumer}
 
 class PekkoHttpServerInstrumentationTest
     extends AbstractHttpServerInstrumentationTest {
@@ -41,18 +39,10 @@ class PekkoHttpServerInstrumentationTest
   override protected def configure(
       options: HttpServerTestOptions
   ): Unit = {
-    super.configure(options)
+    super.configure(options, hasRoute = true)
     // exception doesn't propagate
     options.setTestException(false)
     options.setTestPathParam(true)
-
-    options.setHttpAttributes(
-      new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
-        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
-          HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
-        }
-      }
-    )
 
     val expectedRoute = new BiFunction[ServerEndpoint, String, String] {
       def apply(endpoint: ServerEndpoint, method: String): String = {
