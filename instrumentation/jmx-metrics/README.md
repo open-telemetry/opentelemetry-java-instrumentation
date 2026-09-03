@@ -32,6 +32,7 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
      ... \
      -jar myapp.jar
 ```
+
 This example will enable all stable metrics (for any supported system) and all the non-stable metrics for `jetty` and systems matching the `kafka-*` pattern.
 
 The supported target systems are listed below.
