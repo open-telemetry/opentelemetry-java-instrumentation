@@ -486,8 +486,8 @@ private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
 
 The first argument is the carrier type and the second is the attached value type. In normal
 javaagent instrumentation, both should be class literals so muzzle can discover and register the
-mapping. Calls with class-literal arguments inside inlined `@Advice` methods can then be rewritten
-during bytecode transformation. Lookups made outside advice execute at runtime and should be cached.
+mapping. Bytecode transformation rewrites calls with class-literal arguments in inlined `@Advice`
+methods. Lookups made outside advice execute at runtime and should be cached.
 A rare lookup that resolves carrier types at runtime must run outside advice in an `@NoMuzzle`
 method. The instrumentation module must implement `ExperimentalInstrumentationModule` and override
 `registerVirtualFields(...)` to register every possible carrier/value pair. The `(carrier class,
