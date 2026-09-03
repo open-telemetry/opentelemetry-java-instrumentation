@@ -23,7 +23,7 @@ public final class ElasticsearchServerTarget {
       return null;
     }
 
-    DbServerTargetBuilder builder = DbServerTarget.builder(-1);
+    DbServerTargetBuilder builder = DbServerTarget.builder(-1).setSorted(true);
     for (HttpHost httpHost : hosts) {
       builder.addEndpoint(httpHost.getHostName(), httpHost.getPort(), defaultPort(httpHost));
     }

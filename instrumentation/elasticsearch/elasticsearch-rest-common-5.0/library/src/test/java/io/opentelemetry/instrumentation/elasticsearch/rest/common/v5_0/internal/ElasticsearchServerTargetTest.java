@@ -120,7 +120,7 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void hostPermutationsHaveTheSameTarget() {
+  void configuredNodeOrderDoesNotChangeTarget() {
     DbServerTarget first =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h3", 9202), new HttpHost("h1", 9200), new HttpHost("h2", 9201)));
