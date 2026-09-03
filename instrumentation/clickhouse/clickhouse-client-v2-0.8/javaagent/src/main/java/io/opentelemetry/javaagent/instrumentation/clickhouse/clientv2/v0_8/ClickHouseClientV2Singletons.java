@@ -110,7 +110,7 @@ public class ClickHouseClientV2Singletons {
     }
 
     static ServerInfo of(Set<String> endpoints) {
-      DbServerTargetBuilder builder = DbServerTarget.builder(-1);
+      DbServerTargetBuilder builder = DbServerTarget.builder(-1).setSorted(true);
       boolean inlinePorts = false;
       for (String endpoint : endpoints) {
         EndpointTarget extracted = extractEndpoint(endpoint);

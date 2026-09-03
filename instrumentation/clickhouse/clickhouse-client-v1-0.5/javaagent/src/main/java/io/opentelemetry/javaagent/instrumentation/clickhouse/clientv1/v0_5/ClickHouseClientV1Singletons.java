@@ -91,7 +91,7 @@ public class ClickHouseClientV1Singletons {
 
   @Nullable
   private static ServerTarget createServerTarget(Collection<ClickHouseNode> nodes) {
-    DbServerTargetBuilder builder = DbServerTarget.builder(-1).setSorted(false);
+    DbServerTargetBuilder builder = DbServerTarget.builder(-1);
     for (ClickHouseNode node : nodes) {
       addEndpoint(builder, node);
     }

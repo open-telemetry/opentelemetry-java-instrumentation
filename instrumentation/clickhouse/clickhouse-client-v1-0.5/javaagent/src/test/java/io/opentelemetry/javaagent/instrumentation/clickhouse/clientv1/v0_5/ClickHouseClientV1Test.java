@@ -691,13 +691,13 @@ class ClickHouseClientV1Test {
     ClickHouseRequest<?> request =
         requestWithNodes(
             ImmutableList.of(
-                ClickHouseNode.of("http://http.example"),
-                ClickHouseNode.of("https://https.example"),
+                ClickHouseNode.of("tcps://tcps.example"),
                 ClickHouseNode.of("tcp://tcp.example"),
-                ClickHouseNode.of("tcps://tcps.example")));
+                ClickHouseNode.of("https://https.example"),
+                ClickHouseNode.of("http://http.example")));
 
     assertThat(serverAddressGroup(request))
-        .isEqualTo("http.example,https.example,tcp.example,tcps.example");
+        .isEqualTo("tcps.example,tcp.example,https.example,http.example");
     assertThat(serverPort(request)).isNull();
   }
 

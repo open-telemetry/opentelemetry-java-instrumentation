@@ -156,13 +156,13 @@ class DbExecutionTest {
   @Test
   void dbExecutionKeepsMultiHostAddressVerbatim() {
     ConnectionFactoryOptions factoryOptions =
-        ConnectionFactoryOptions.parse("r2dbc:mariadb:sequential://host1:3306,host2:3307/db");
+        ConnectionFactoryOptions.parse("r2dbc:mariadb:sequential://host2:3307,host1:3306/db");
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.getServerAddress()).isEqualTo("host1:3306,host2:3307");
+    assertThat(dbExecution.getServerAddress()).isEqualTo("host2:3307,host1:3306");
     assertThat(dbExecution.getServerPort()).isNull();
-    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1:3306,host2:3307");
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host2:3307,host1:3306");
     assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 

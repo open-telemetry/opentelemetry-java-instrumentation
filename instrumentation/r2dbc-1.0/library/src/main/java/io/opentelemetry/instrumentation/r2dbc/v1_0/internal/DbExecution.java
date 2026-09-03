@@ -217,7 +217,7 @@ public final class DbExecution {
       return buildUnknownDefaultPortGroup(endpoints);
     }
 
-    DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort).setSorted(false);
+    DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort);
     boolean inlinePorts = false;
     for (ParsedEndpoint endpoint : endpoints) {
       builder.addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port);
@@ -253,7 +253,6 @@ public final class DbExecution {
     int effectiveDefaultPort = defaultPort != null ? defaultPort : endpoint.port == null ? 1 : -1;
     return ConfiguredServerTarget.from(
         DbServerTarget.builder(effectiveDefaultPort)
-            .setSorted(false)
             .addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port)
             .build());
   }
