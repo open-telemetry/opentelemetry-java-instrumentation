@@ -11,6 +11,10 @@ muzzle {
   }
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 dependencies {
   library("io.github.resilience4j:resilience4j-circuitbreaker:2.0.0")
   latestDepTestLibrary("io.github.resilience4j:resilience4j-circuitbreaker:latest.release")

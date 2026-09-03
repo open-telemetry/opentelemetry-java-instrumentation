@@ -1250,25 +1250,25 @@ class Resilience4jCircuitBreakerTest {
     @Override
     public T get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-      if (exception instanceof TimeoutException) {
-        throw (TimeoutException) exception;
+      if (exception instanceof TimeoutException timeoutException) {
+        throw timeoutException;
       }
       throwException();
       return null;
     }
 
     private void throwException() throws InterruptedException, ExecutionException {
-      if (exception instanceof InterruptedException) {
-        throw (InterruptedException) exception;
+      if (exception instanceof InterruptedException interruptedException) {
+        throw interruptedException;
       }
-      if (exception instanceof ExecutionException) {
-        throw (ExecutionException) exception;
+      if (exception instanceof ExecutionException executionException) {
+        throw executionException;
       }
-      if (exception instanceof RuntimeException) {
-        throw (RuntimeException) exception;
+      if (exception instanceof RuntimeException runtimeException) {
+        throw runtimeException;
       }
-      if (exception instanceof Error) {
-        throw (Error) exception;
+      if (exception instanceof Error error) {
+        throw error;
       }
       throw new AssertionError(exception);
     }
