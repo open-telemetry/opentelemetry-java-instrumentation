@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+  testImplementation(project(":instrumentation-api-incubator"))
   testImplementation(
     project(
       ":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent",

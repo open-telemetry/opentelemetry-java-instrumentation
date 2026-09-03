@@ -336,7 +336,7 @@ class VertxSqlClientServerListTest {
   private static String hostOfLength(int length) {
     StringBuilder host = new StringBuilder(length);
     for (int i = 0; i < length; i++) {
-      host.append('a');
+      host.append(i > 0 && i % 64 == 63 ? '.' : 'a');
     }
     return host.toString();
   }
