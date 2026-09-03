@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import javax.annotation.Nullable;
 
 public class CouchbaseSpanName {

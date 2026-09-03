@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.couchbase.client.core.util.ConnectionString;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

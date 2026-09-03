@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import org.junit.jupiter.api.Test;
 
 class CouchbaseSpanNameTest {
@@ -15,10 +15,11 @@ class CouchbaseSpanNameTest {
   @Test
   void serverOnlyFallbackIncludesNonDefaultPort() {
     CouchbaseSpanName spanName = new CouchbaseSpanName("get");
-    CouchbaseServerTarget.Builder serverTarget = CouchbaseServerTarget.builder("couchbase");
-    serverTarget.addSeed("node.example", 11211);
+    CouchbaseServerTarget serverTarget =
+        CouchbaseServerTarget.direct(
+            DbServerTarget.builder(11210).addEndpoint("node.example", 11211).build());
 
-    spanName.captureServerTarget(serverTarget.build());
+    spanName.captureServerTarget(serverTarget);
     assertThat(spanName.spanName()).isEqualTo("get node.example:11211");
   }
 
@@ -44,10 +45,11 @@ class CouchbaseSpanNameTest {
   @Test
   void collectionTakesPriorityRegardlessOfCallbackOrder() {
     CouchbaseSpanName spanName = new CouchbaseSpanName("get");
-    CouchbaseServerTarget.Builder serverTarget = CouchbaseServerTarget.builder("couchbase");
-    serverTarget.addSeed("node.example", 11211);
+    CouchbaseServerTarget serverTarget =
+        CouchbaseServerTarget.direct(
+            DbServerTarget.builder(11210).addEndpoint("node.example", 11211).build());
 
-    spanName.captureServerTarget(serverTarget.build());
+    spanName.captureServerTarget(serverTarget);
     spanName.captureAttribute("db.namespace", "bucket");
     spanName.captureAttribute("db.collection.name", "collection");
     spanName.captureAttribute("db.operation.name", "upsert");

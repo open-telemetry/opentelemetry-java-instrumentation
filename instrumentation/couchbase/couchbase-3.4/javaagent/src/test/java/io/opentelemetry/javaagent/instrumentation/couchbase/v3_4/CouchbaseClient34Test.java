@@ -39,7 +39,7 @@ import com.couchbase.client.java.env.ClusterEnvironment;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;

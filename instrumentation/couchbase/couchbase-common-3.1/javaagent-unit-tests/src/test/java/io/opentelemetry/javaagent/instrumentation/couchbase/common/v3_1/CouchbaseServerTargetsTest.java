@@ -13,7 +13,6 @@ import static org.mockito.Mockito.mock;
 
 import com.couchbase.client.core.Core;
 import com.couchbase.client.core.env.SeedNode;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;

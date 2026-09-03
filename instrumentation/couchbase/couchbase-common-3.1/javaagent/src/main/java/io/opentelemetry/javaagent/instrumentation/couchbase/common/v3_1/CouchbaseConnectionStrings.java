@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
 import com.couchbase.client.core.util.ConnectionString;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
@@ -45,15 +46,16 @@ public class CouchbaseConnectionStrings {
         }
         return CouchbaseServerTarget.forServiceDiscovery(scheme, seed.hostname());
       }
-      CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder(scheme);
+      DbServerTargetBuilder target =
+          DbServerTarget.builder(CouchbaseServerTarget.defaultPort(scheme)).setSorted(false);
       for (ConnectionString.UnresolvedSocket seed : connectionString.hosts()) {
         if (seed == null) {
-          target.addSeed(null, 0);
+          target.addEndpoint(null, -1);
         } else {
-          target.addSeed(seed.hostname(), seed.port());
+          target.addEndpoint(seed.hostname(), seed.port() > 0 ? seed.port() : -1);
         }
       }
-      return target.buildPreservingOrder();
+      return CouchbaseServerTarget.direct(target.build());
     } catch (RuntimeException ignored) {
       return null;
     }

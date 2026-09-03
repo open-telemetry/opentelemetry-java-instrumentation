@@ -11,7 +11,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.cnc.RequestTracer;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
@@ -23,9 +24,9 @@ class CouchbaseRequestTracerTest {
     RequestTracer tracer =
         CouchbaseRequestTracer.create(OpenTelemetry.noop().getTracer("test-couchbase"));
     RequestSpan span = tracer.requestSpan("test", null);
-    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder();
-    builder.addSeed("db.example", 11210);
-    CouchbaseServerTarget target = builder.build();
+    CouchbaseServerTarget target =
+        CouchbaseServerTarget.direct(
+            DbServerTarget.builder(11210).addEndpoint("db.example", 11210).build());
     assertThat(target).isNotNull();
     Field delegateField = span.getClass().getDeclaredField("delegate");
     delegateField.setAccessible(true);

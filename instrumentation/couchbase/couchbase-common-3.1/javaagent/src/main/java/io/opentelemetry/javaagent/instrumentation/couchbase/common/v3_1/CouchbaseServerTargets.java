@@ -8,8 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 import com.couchbase.client.core.Core;
 import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.env.SeedNode;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.CouchbaseServerTarget;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -51,8 +52,9 @@ public class CouchbaseServerTargets {
 
   @Nullable
   static CouchbaseServerTarget target(Set<SeedNode> seedNodes, boolean tlsEnabled) {
-    CouchbaseServerTarget.Builder target =
-        CouchbaseServerTarget.builder(tlsEnabled ? "couchbases" : "couchbase");
+    DbServerTargetBuilder target =
+        DbServerTarget.builder(
+            CouchbaseServerTarget.defaultPort(tlsEnabled ? "couchbases" : "couchbase"));
     Map<String, Set<Integer>> portsByAddress = new HashMap<>();
     for (SeedNode seedNode : seedNodes) {
       if (seedNode == null) {
@@ -72,16 +74,16 @@ public class CouchbaseServerTargets {
         }
       }
     }
-    return target.build();
+    return CouchbaseServerTarget.direct(target.build());
   }
 
   private static void addSeed(
-      CouchbaseServerTarget.Builder target,
+      DbServerTargetBuilder target,
       Map<String, Set<Integer>> portsByAddress,
       @Nullable String address,
       int port) {
     if (address == null) {
-      target.addSeed(null, port);
+      target.addEndpoint(null, port > 0 ? port : -1);
       return;
     }
     Set<Integer> ports = portsByAddress.get(address);
@@ -90,7 +92,7 @@ public class CouchbaseServerTargets {
       portsByAddress.put(address, ports);
     }
     if (ports.add(port)) {
-      target.addSeed(address, port);
+      target.addEndpoint(address, port > 0 ? port : -1);
     }
   }
 
