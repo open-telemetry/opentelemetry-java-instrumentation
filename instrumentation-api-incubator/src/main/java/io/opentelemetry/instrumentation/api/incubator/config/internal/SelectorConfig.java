@@ -24,9 +24,13 @@ import javax.annotation.Nullable;
  * Resolves an {@code included}/{@code excluded} selector and its deprecated include-only
  * predecessor, so that precedence and deprecation warnings are uniform across instrumentations.
  *
- * <p>The property names are derived from the instrumentation and selector names. Existing overloads
- * resolve experimental included/excluded selectors. Overloads accepting {@link Stability} can
- * instead resolve stable selectors. Deprecated capture settings remain experimental.
+ * <p>The property names are derived from the instrumentation and selector names. For {@code
+ * ("messaging", "headers")}, experimental resolution reads the {@code headers/development} node and
+ * {@code otel.instrumentation.messaging.experimental.headers.included|excluded}. Stable resolution
+ * reads the {@code headers} node and {@code
+ * otel.instrumentation.messaging.headers.included|excluded}. Both modes fall back to the deprecated
+ * experimental {@code capture_headers/development} node and {@code
+ * otel.instrumentation.messaging.experimental.capture-headers} flat property.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -123,15 +127,21 @@ public final class SelectorConfig {
     if (selector != null) {
       return selector;
     }
+    String replacementFlatProperty =
+        flatProperty(instrumentationName, selectorName, ".included", stability);
     List<String> deprecated =
-        getDeprecated(config, instrumentationName, selectorName, stability, systemPropertyFallback);
+        getDeprecated(
+            config,
+            instrumentationName,
+            selectorName,
+            replacementFlatProperty,
+            systemPropertyFallback);
     return DeprecatedCaptureNames.toSelector(
         deprecated,
         "the "
             + deprecatedFlatProperty(instrumentationName, selectorName)
             + " setting or equivalent declarative configuration",
-        flatProperty(instrumentationName, selectorName, ".included", stability)
-            + " or equivalent declarative configuration");
+        replacementFlatProperty + " or equivalent declarative configuration");
   }
 
   /**
@@ -146,33 +156,18 @@ public final class SelectorConfig {
   @Nullable
   public static Predicate<String> resolveLegacyLiteral(
       DeclarativeConfigProperties config, String instrumentationName, String selectorName) {
-    return resolveLegacyLiteral(config, instrumentationName, selectorName, Stability.EXPERIMENTAL);
-  }
-
-  /**
-   * Returns a predicate matching the configured selector, or {@code null} when nothing is
-   * configured to be captured.
-   *
-   * <p>Unlike {@link #resolve}, the values of the deprecated include-only setting are matched
-   * literally, except for the single value {@code "*"} which matches everything. This preserves the
-   * behavior of settings that documented {@code "*"} as capturing all values, where interpreting
-   * the remaining values as globs would silently widen what is captured.
-   *
-   * @param stability whether the included/excluded selector is stable or experimental
-   */
-  @Nullable
-  public static Predicate<String> resolveLegacyLiteral(
-      DeclarativeConfigProperties config,
-      String instrumentationName,
-      String selectorName,
-      Stability stability) {
     IncludeExclude selector =
-        getSelector(config, instrumentationName, selectorName, stability, false);
+        getSelector(config, instrumentationName, selectorName, Stability.EXPERIMENTAL, false);
     if (selector != null) {
       return selector::matches;
     }
     List<String> deprecated =
-        getDeprecated(config, instrumentationName, selectorName, stability, false);
+        getDeprecated(
+            config,
+            instrumentationName,
+            selectorName,
+            flatProperty(instrumentationName, selectorName, ".included", Stability.EXPERIMENTAL),
+            false);
     return deprecated == null ? null : resolveLegacyLiteral(deprecated);
   }
 
@@ -207,26 +202,7 @@ public final class SelectorConfig {
   @Nullable
   public static Predicate<String> resolveLegacyBoolean(
       DeclarativeConfigProperties config, String instrumentationName, String selectorName) {
-    return resolveLegacyBoolean(
-        config, instrumentationName, selectorName, selectorName, Stability.EXPERIMENTAL);
-  }
-
-  /**
-   * Returns a predicate matching the configured selector, or {@code null} when nothing is
-   * configured to be captured.
-   *
-   * <p>Unlike {@link #resolve}, the deprecated setting is a boolean, where {@code true} selects
-   * every value and {@code false} selects none.
-   *
-   * @param stability whether the included/excluded selector is stable or experimental
-   */
-  @Nullable
-  public static Predicate<String> resolveLegacyBoolean(
-      DeclarativeConfigProperties config,
-      String instrumentationName,
-      String selectorName,
-      Stability stability) {
-    return resolveLegacyBoolean(config, instrumentationName, selectorName, selectorName, stability);
+    return resolveLegacyBoolean(config, instrumentationName, selectorName, selectorName);
   }
 
   /**
@@ -243,30 +219,8 @@ public final class SelectorConfig {
       String instrumentationName,
       String selectorName,
       String deprecatedSelectorName) {
-    return resolveLegacyBoolean(
-        config, instrumentationName, selectorName, deprecatedSelectorName, Stability.EXPERIMENTAL);
-  }
-
-  /**
-   * Returns a predicate matching the configured selector, or {@code null} when nothing is
-   * configured to be captured.
-   *
-   * <p>Unlike {@link #resolveLegacyBoolean(DeclarativeConfigProperties, String, String,
-   * Stability)}, the deprecated boolean setting is named after {@code deprecatedSelectorName}
-   * instead of {@code selectorName}, for settings that were not renamed consistently with their
-   * replacement.
-   *
-   * @param stability whether the included/excluded selector is stable or experimental
-   */
-  @Nullable
-  public static Predicate<String> resolveLegacyBoolean(
-      DeclarativeConfigProperties config,
-      String instrumentationName,
-      String selectorName,
-      String deprecatedSelectorName,
-      Stability stability) {
     IncludeExclude selector =
-        getSelector(config, instrumentationName, selectorName, stability, false);
+        getSelector(config, instrumentationName, selectorName, Stability.EXPERIMENTAL, false);
     if (selector != null) {
       return selector::matches;
     }
@@ -275,7 +229,10 @@ public final class SelectorConfig {
     if (deprecated == null) {
       return null;
     }
-    warnDeprecated(instrumentationName, selectorName, deprecatedSelectorName, stability);
+    warnDeprecated(
+        instrumentationName,
+        deprecatedSelectorName,
+        flatProperty(instrumentationName, selectorName, ".included", Stability.EXPERIMENTAL));
     return deprecated ? value -> true : null;
   }
 
@@ -322,7 +279,7 @@ public final class SelectorConfig {
       DeclarativeConfigProperties config,
       String instrumentationName,
       String selectorName,
-      Stability stability,
+      String replacementFlatProperty,
       boolean systemPropertyFallback) {
     String flatProperty = deprecatedFlatProperty(instrumentationName, selectorName);
     List<String> deprecated =
@@ -334,23 +291,20 @@ public final class SelectorConfig {
     if (deprecated == null) {
       return null;
     }
-    warnDeprecated(instrumentationName, selectorName, selectorName, stability);
+    warnDeprecated(instrumentationName, selectorName, replacementFlatProperty);
     return deprecated;
   }
 
   private static void warnDeprecated(
-      String instrumentationName,
-      String selectorName,
-      String deprecatedSelectorName,
-      Stability stability) {
+      String instrumentationName, String deprecatedSelectorName, String replacementFlatProperty) {
     String flatProperty = deprecatedFlatProperty(instrumentationName, deprecatedSelectorName);
     warnOnce(
-        flatProperty + ":" + stability + ":deprecated",
+        flatProperty + ":deprecated",
         "The "
             + flatProperty
             + " setting and the equivalent declarative configuration property are deprecated and"
             + " may be removed in the next minor release. Use "
-            + flatProperty(instrumentationName, selectorName, ".included", stability)
+            + replacementFlatProperty
             + " or equivalent declarative configuration instead.");
   }
 

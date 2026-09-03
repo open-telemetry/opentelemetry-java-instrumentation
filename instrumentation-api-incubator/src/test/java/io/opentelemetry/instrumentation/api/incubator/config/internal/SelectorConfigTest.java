@@ -68,17 +68,12 @@ class SelectorConfigTest {
         .thenReturn(singletonList("wrong"));
 
     IncludeExclude selector = SelectorConfig.resolve(config, "test", SELECTOR, STABLE);
-    Predicate<String> legacyLiteral =
-        SelectorConfig.resolveLegacyLiteral(config, "test", SELECTOR, STABLE);
 
     assertThat(selector).isNotNull();
     assertThat(selector.matches("exact")).isTrue();
     assertThat(selector.matches("prefix.value")).isTrue();
     assertThat(selector.matches("prefix.secret")).isFalse();
     assertThat(selector.matches("wrong")).isFalse();
-    assertThat(legacyLiteral).isNotNull();
-    assertThat(legacyLiteral.test("prefix.value")).isTrue();
-    assertThat(legacyLiteral.test("prefix.secret")).isFalse();
   }
 
   @Test
@@ -146,8 +141,6 @@ class SelectorConfigTest {
 
     assertThat(SelectorConfig.resolve(absent, "stable-absent", SELECTOR, STABLE)).isNull();
     assertThat(SelectorConfig.resolve(empty, "stable-empty", SELECTOR, STABLE)).isNull();
-    assertThat(SelectorConfig.resolveLegacyLiteral(empty, "stable-empty-literal", SELECTOR, STABLE))
-        .isNull();
   }
 
   @Test
@@ -392,56 +385,6 @@ class SelectorConfigTest {
   }
 
   @Test
-  void legacyBooleanReadsStableSelector() {
-    DeclarativeConfigProperties config = mockStableRenamedBooleanConfig();
-    when(config
-            .get("logstash_structured_argument_attributes")
-            .getScalarList("included", String.class))
-        .thenReturn(singletonList("new"));
-    when(config
-            .get("logstash_structured_argument_attributes/development")
-            .getScalarList("included", String.class))
-        .thenReturn(singletonList("wrong"));
-    when(config.getBoolean("capture_logstash_structured_arguments/development")).thenReturn(true);
-
-    Predicate<String> selector =
-        SelectorConfig.resolveLegacyBoolean(
-            config, "stable-boolean", RENAMED_SELECTOR, DEPRECATED_RENAMED_SELECTOR, STABLE);
-
-    assertThat(selector).isNotNull();
-    assertThat(selector.test("new")).isTrue();
-    assertThat(selector.test("wrong")).isFalse();
-    verify(config, never()).getBoolean("capture_logstash_structured_arguments/development");
-  }
-
-  @Test
-  void stableLegacyBooleanFallsBackToExperimentalDeprecatedConfig() {
-    DeclarativeConfigProperties config = mockStableBooleanConfig();
-    when(config.getBoolean("capture_key_value_pair_attributes/development")).thenReturn(true);
-    TestHandler handler = attachWarningHandler();
-    try {
-      Predicate<String> selector =
-          SelectorConfig.resolveLegacyBoolean(
-              config, "stable-boolean-deprecated", BOOLEAN_SELECTOR, STABLE);
-
-      assertThat(selector).isNotNull();
-      assertThat(selector.test("anything")).isTrue();
-      verify(config, never()).getBoolean("capture_key_value_pair_attributes");
-      assertThat(handler.records).hasSize(1);
-      assertThat(handler.records.get(0).getMessage())
-          .isEqualTo(
-              "The otel.instrumentation.stable-boolean-deprecated.experimental"
-                  + ".capture-key-value-pair-attributes setting and the equivalent declarative"
-                  + " configuration property are deprecated and may be removed in the next minor"
-                  + " release. Use otel.instrumentation.stable-boolean-deprecated"
-                  + ".key-value-pair-attributes.included or equivalent declarative configuration"
-                  + " instead.");
-    } finally {
-      detachWarningHandler(handler);
-    }
-  }
-
-  @Test
   void legacyBooleanTrueCapturesEverythingAndWarnsOnce() {
     DeclarativeConfigProperties config = mockBooleanConfig();
     when(config.getBoolean("capture_key_value_pair_attributes/development")).thenReturn(true);
@@ -556,31 +499,10 @@ class SelectorConfigTest {
     return config;
   }
 
-  private static DeclarativeConfigProperties mockStableRenamedBooleanConfig() {
-    DeclarativeConfigProperties config =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    DeclarativeConfigProperties selectorNode =
-        config.get("logstash_structured_argument_attributes");
-    when(selectorNode.getScalarList("included", String.class)).thenReturn(null);
-    when(selectorNode.getScalarList("excluded", String.class)).thenReturn(null);
-    when(config.getBoolean("capture_logstash_structured_arguments/development")).thenReturn(null);
-    return config;
-  }
-
   private static DeclarativeConfigProperties mockBooleanConfig() {
     DeclarativeConfigProperties config =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     DeclarativeConfigProperties selectorNode = config.get("key_value_pair_attributes/development");
-    when(selectorNode.getScalarList("included", String.class)).thenReturn(null);
-    when(selectorNode.getScalarList("excluded", String.class)).thenReturn(null);
-    when(config.getBoolean("capture_key_value_pair_attributes/development")).thenReturn(null);
-    return config;
-  }
-
-  private static DeclarativeConfigProperties mockStableBooleanConfig() {
-    DeclarativeConfigProperties config =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    DeclarativeConfigProperties selectorNode = config.get("key_value_pair_attributes");
     when(selectorNode.getScalarList("included", String.class)).thenReturn(null);
     when(selectorNode.getScalarList("excluded", String.class)).thenReturn(null);
     when(config.getBoolean("capture_key_value_pair_attributes/development")).thenReturn(null);
