@@ -2,7 +2,7 @@
 
 ## Quick Reference
 
-- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, `VirtualField`, or `CallDepth` code
+- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, or `CallDepth` code
 - Review focus: registration and naming, matcher performance, safe advice wiring
 
 ## InstrumentationModule
@@ -525,18 +525,7 @@ to prevent nested spans.
 
 ## VirtualField (Attaching Context to Library Objects)
 
-`VirtualField` attaches virtual fields to library classes without modifying their bytecode,
-for associating OpenTelemetry context or state with library objects.
-
-### Rules
-
-- Call `VirtualField.find(Carrier.class, Value.class)` with class literals.
-- **Inside `@Advice` methods** these calls are **rewritten at bytecode transformation time**
-  by `VirtualFieldFindRewriter` into direct static calls to generated implementations —
-  they are never executed at runtime. It is perfectly fine to call `VirtualField.find()`
-  inside advice methods; do **not** extract them into helper classes or static final fields.
-- **Outside advice** (helper classes, singletons, etc.) the call executes at runtime, so
-  declare the result as a `static final` field to avoid repeated lookups.
-- The first type parameter is the "carrier" class (the library object); the second is the
-  attached value type.
-- Uses weak-key semantics: when the carrier is garbage-collected, the value is released.
+Load [Virtual Fields](javaagent-virtual-fields.md) when code uses `VirtualField` or introduces weak
+or identity-keyed storage for state associated with third-party object instances. That article
+covers storage selection, typed carrier boundaries, lookup placement, lifetime, fallback behavior,
+and concurrency.

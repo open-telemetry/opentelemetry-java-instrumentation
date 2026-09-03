@@ -74,6 +74,23 @@ attributes.put(SOME_KEY, getSomething());
 Do **not** flag when the guard protects a dereference or derived computation
 (e.g. `view.getClass().getName()`). When in doubt, stay silent.
 
+## [Javaagent] Prefer VirtualField for Per-Object State
+
+When javaagent or shared bootstrap code introduces a weak-key or identity-keyed
+registry to attach instrumentation state to third-party object instances, prefer
+`VirtualField`. If shared logic cannot name the library type, keep the
+`VirtualField` with the caller that knows the concrete carrier and pass the
+typed handle or a typed accessor into the shared helper; do not replace
+`Cache<Object, State>` with `VirtualField<Object, State>`.
+
+Flag this only when the value is state belonging to that exact carrier and the
+carrier type and lifecycle are clear. Do not apply it to real memoization such
+as `Class`/`ClassLoader` metadata caches, bounded caches, deliberate weak
+callback/delegate links, value-equality interning pools, or non-javaagent
+library code. See
+`.github/agents/knowledge/javaagent-virtual-fields.md` for the full decision
+guide.
+
 ## [Javaagent] Singleton Accessor Naming
 
 In `*Singletons`, `*SpanNaming`, and similar holder classes, zero-arg accessor
