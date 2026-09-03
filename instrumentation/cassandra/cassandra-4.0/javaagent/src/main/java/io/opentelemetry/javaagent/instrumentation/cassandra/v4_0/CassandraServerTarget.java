@@ -33,7 +33,7 @@ class CassandraServerTarget {
       // basic.contact-points has no default, so the single argument lookup would throw when a
       // session names its contact points on the builder alone
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
-      DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT);
+      DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
       for (String contactPoint : configuredContactPoints) {
         addContactPoint(target, contactPoint);
       }
@@ -59,7 +59,7 @@ class CassandraServerTarget {
     if (contactPoints == null || contactPoints.isEmpty()) {
       return null;
     }
-    DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT);
+    DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
     for (String contactPoint : contactPoints) {
       addContactPoint(target, contactPoint);
     }

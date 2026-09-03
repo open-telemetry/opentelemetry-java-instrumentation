@@ -78,7 +78,7 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void severalContactPointsOmitTheSharedDefaultPort() {
+  void unorderedContactPointsAreSortedAndOmitTheSharedDefaultPort() {
     DbServerTarget target =
         CassandraServerTarget.of(asList("node1.example.com:9042", "10.0.0.5:9042"));
 
@@ -98,7 +98,7 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void mixedPortContactPointPermutationsHaveTheSameOrder() {
+  void mixedPortContactPointPermutationsAreSorted() {
     DbServerTarget first =
         CassandraServerTarget.of(asList("node2.example.com:9142", "node1.example.com:9042"));
     DbServerTarget second =
@@ -153,7 +153,7 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void endpointListKeepsTheFirstFiveOfSixSortedEndpoints() {
+  void endpointListIsSortedBeforeKeepingTheFirstFiveOfSixEndpoints() {
     DbServerTarget target =
         CassandraServerTarget.of(
             asList(
