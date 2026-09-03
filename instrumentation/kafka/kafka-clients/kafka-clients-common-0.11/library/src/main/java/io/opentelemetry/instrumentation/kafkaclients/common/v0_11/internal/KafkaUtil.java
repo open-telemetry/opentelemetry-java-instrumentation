@@ -65,15 +65,15 @@ public final class KafkaUtil {
           for (Class<?> cls = holderClass; cls != null; cls = cls.getSuperclass()) {
             try {
               Field field = cls.getDeclaredField("metadata");
-              try {
-                field.setAccessible(true);
-              } catch (RuntimeException e) {
-                logReflectionFailureOnce(holderClass, e.toString());
-                return Optional.empty();
-              }
+              field.setAccessible(true);
               return Optional.of(field);
             } catch (NoSuchFieldException ignored) {
               // 'metadata' not declared on this class; check superclass
+            } catch (RuntimeException e) {
+              // SecurityException from either call, or InaccessibleObjectException from
+              // setAccessible: reflection can't succeed here, so stop walking and cache the miss.
+              logReflectionFailureOnce(holderClass, e.toString());
+              return Optional.empty();
             }
           }
           logReflectionFailureOnce(holderClass, "no 'metadata' field found");
