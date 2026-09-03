@@ -60,6 +60,7 @@ readonly INSTRUMENTATIONS=(
   "camel-2.20:javaagent:test"
   "camel-2.20:javaagent:testExperimental"
   "camel-2.20:javaagent:testStableSemconv"
+  "camel-2.20:javaagent:testV3Preview"
   "cassandra:cassandra-3.0:javaagent:test"
   "cassandra:cassandra-3.0:javaagent:testStableSemconv"
   "cassandra:cassandra-4.0:javaagent:test"
