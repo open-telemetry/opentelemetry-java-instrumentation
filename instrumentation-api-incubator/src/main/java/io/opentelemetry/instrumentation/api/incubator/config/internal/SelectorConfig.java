@@ -32,6 +32,10 @@ import javax.annotation.Nullable;
  * experimental {@code capture_headers/development} node and {@code
  * otel.instrumentation.messaging.experimental.capture-headers} flat property.
  *
+ * <p>Flat system properties are read directly only when {@code systemPropertyFallback} is {@code
+ * true}; otherwise the flat names describe the equivalent form of the supplied declarative
+ * configuration.
+ *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
