@@ -438,8 +438,8 @@ class DbServerTargetTest {
 
   @Test
   void hostNameLengthLimitIsEnforced() {
-    String label = repeated('a', 63);
-    String longestValidHost = label + "." + label + "." + label + "." + repeated('a', 61);
+    String segment = repeated('a', 63);
+    String longestValidHost = segment + "." + segment + "." + segment + "." + repeated('a', 61);
     String tooLongHost = longestValidHost + "a";
 
     assertThat(builder().addEndpoint(longestValidHost, -1).build()).isNotNull();
@@ -447,7 +447,7 @@ class DbServerTargetTest {
   }
 
   @Test
-  void hostLabelLengthLimitIsEnforced() {
+  void hostNameSegmentLengthLimitIsEnforced() {
     assertThat(builder().addEndpoint(repeated('a', 63) + ".example.com", -1).build()).isNotNull();
     assertThat(builder().addEndpoint(repeated('a', 64) + ".example.com", -1).build()).isNull();
   }

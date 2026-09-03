@@ -38,7 +38,7 @@ public class DbServerTargetBuilder {
   private static final int MIN_PORT = 1;
   private static final int MAX_PORT = 65535;
   private static final int MAX_HOST_NAME_LENGTH = 253;
-  private static final int MAX_HOST_LABEL_LENGTH = 63;
+  private static final int MAX_HOST_NAME_SEGMENT_LENGTH = 63;
 
   private final int defaultPort;
   private final List<Endpoint> endpoints = new ArrayList<>();
@@ -296,21 +296,21 @@ public class DbServerTargetBuilder {
     if (length <= 0 || length > MAX_HOST_NAME_LENGTH) {
       return false;
     }
-    int labelStart = 0;
+    int segmentStart = 0;
     for (int i = 0; i <= length; i++) {
       if (i != length && host.charAt(i) != '.') {
         continue;
       }
-      if (!isHostLabel(host, labelStart, i)) {
+      if (!isHostNameSegment(host, segmentStart, i)) {
         return false;
       }
-      labelStart = i + 1;
+      segmentStart = i + 1;
     }
     return true;
   }
 
-  private static boolean isHostLabel(String host, int start, int end) {
-    if (end - start < 1 || end - start > MAX_HOST_LABEL_LENGTH) {
+  private static boolean isHostNameSegment(String host, int start, int end) {
+    if (end - start < 1 || end - start > MAX_HOST_NAME_SEGMENT_LENGTH) {
       return false;
     }
     if (!isAsciiLetterOrDigit(host.charAt(start)) || !isAsciiLetterOrDigit(host.charAt(end - 1))) {
