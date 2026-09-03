@@ -125,6 +125,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
    */
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {}
 
+  protected String expectedHttpRequestMethod(URI uri, String method) {
+    return method;
+  }
+
   // called by the HttpClientInstrumentationExtension
   void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
     this.testing = testing;
@@ -1183,7 +1187,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 assertThat(attrs).containsEntry(URL_TEMPLATE, expectedUrlTemplate);
               }
               if (httpClientAttributes.contains(HTTP_REQUEST_METHOD)) {
-                assertThat(attrs).containsEntry(HTTP_REQUEST_METHOD, method);
+                assertThat(attrs)
+                    .containsEntry(HTTP_REQUEST_METHOD, expectedHttpRequestMethod(uri, method));
               }
 
               // opt-in, not collected by default

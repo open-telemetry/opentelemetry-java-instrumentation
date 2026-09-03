@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -128,7 +130,7 @@ public abstract class AbstractNetty41ClientTest
     String uriString = uri.toString();
     // http://localhost:61/ => unopened port, https://192.0.2.1/ => non routable address
     if ("http://localhost:61/".equals(uriString) || "https://192.0.2.1/".equals(uriString)) {
-      return emptySet();
+      return singleton(HTTP_REQUEST_METHOD);
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     attributes.remove(SERVER_ADDRESS);
@@ -143,6 +145,17 @@ public abstract class AbstractNetty41ClientTest
         return "CONNECT";
       default:
         return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+    }
+  }
+
+  @Override
+  protected String expectedHttpRequestMethod(URI uri, String method) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "https://192.0.2.1/": // non routable address
+        return _OTHER;
+      default:
+        return method;
     }
   }
 

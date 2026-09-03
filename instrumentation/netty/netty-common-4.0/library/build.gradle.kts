@@ -9,5 +9,4 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-common:library"))
 
   compileOnly("io.netty:netty-codec-http:4.0.0.Final")
-  testLibrary("io.netty:netty-codec-http:4.0.0.Final")
 }

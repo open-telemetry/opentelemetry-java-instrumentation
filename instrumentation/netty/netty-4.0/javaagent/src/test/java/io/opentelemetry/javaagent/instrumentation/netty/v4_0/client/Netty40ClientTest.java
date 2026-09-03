@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
+import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -175,12 +177,23 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
     }
   }
 
+  @Override
+  protected String expectedHttpRequestMethod(URI uri, String method) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "http://192.0.2.1/": // non routable address
+        return _OTHER;
+      default:
+        return method;
+    }
+  }
+
   @SuppressWarnings("MissingDefault")
   private static Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://192.0.2.1/": // non routable address
-        return emptySet();
+        return singleton(HTTP_REQUEST_METHOD);
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     attributes.remove(SERVER_ADDRESS);

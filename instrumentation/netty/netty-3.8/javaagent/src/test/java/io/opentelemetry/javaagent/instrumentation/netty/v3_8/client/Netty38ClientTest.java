@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
+import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
@@ -173,7 +175,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
           // unopened port or non routable address
           if ("http://localhost:61/".equals(uri.toString())
               || "http://192.0.2.1/".equals(uri.toString())) {
-            return emptySet();
+            return singleton(HTTP_REQUEST_METHOD);
           }
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
@@ -181,5 +183,15 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
           attributes.remove(SERVER_PORT);
           return attributes;
         });
+  }
+
+  @Override
+  protected String expectedHttpRequestMethod(URI uri, String method) {
+    // unopened port or non routable address
+    if ("http://localhost:61/".equals(uri.toString())
+        || "http://192.0.2.1/".equals(uri.toString())) {
+      return _OTHER;
+    }
+    return method;
   }
 }
