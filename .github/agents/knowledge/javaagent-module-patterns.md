@@ -523,7 +523,7 @@ to prevent nested spans.
 - In `@OnMethodEnter`: call `getAndIncrement()`, return the `CallDepth`.
 - In `@OnMethodExit`: if `decrementAndGet() > 0`, skip span-ending logic (still nested).
 
-## VirtualField (Attaching Context to Library Objects)
+## VirtualField (Per-Object State Attached to Library Objects)
 
 Load [Virtual Fields](javaagent-virtual-fields.md) when code uses `VirtualField` or introduces weak
 or identity-keyed storage for state associated with third-party object instances. That article
