@@ -25,12 +25,14 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import reactor.core.publisher.Mono;
 
 class LettuceClusterClientInstrumentation implements TypeInstrumentation {
 
@@ -59,6 +61,12 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("io.lettuce.core.protocol.DefaultEndpoint")))
             .and(takesArgument(2, named("io.lettuce.core.RedisURI"))),
         getClass().getName() + "$AttachEndpointAdvice");
+    transformer.applyAdviceToMethod(
+        named("connectStatefulAsync")
+            .and(takesArgument(2, named("io.lettuce.core.protocol.DefaultEndpoint")))
+            .and(takesArgument(3, named("io.lettuce.core.RedisURI")))
+            .and(takesArgument(4, named("reactor.core.publisher.Mono"))),
+        getClass().getName() + "$AttachEndpointWithCodecAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -91,36 +99,85 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(3))
-    public static Supplier<SocketAddress> onEnter(
+    public static Object onEnter(
         @Advice.This RedisClusterClient client,
         @Advice.Argument(1) DefaultEndpoint endpoint,
         @Advice.Argument(2) RedisURI redisUri,
-        @Advice.Argument(3) Supplier<SocketAddress> socketAddressSupplier) {
-      ENDPOINT_DATABASE_INDEX.set(endpoint, redisUri.getDatabase());
-      RedisServerTarget clusterTarget = CLUSTER_CLIENT_TARGET.get(client);
-      ENDPOINT_TARGET.set(endpoint, clusterTarget);
-      return socketAddressSupplier instanceof EndpointAddressSupplier
-          ? socketAddressSupplier
-          : new EndpointAddressSupplier(socketAddressSupplier, endpoint);
+        @Advice.Argument(3) Object socketAddressSource) {
+      return AttachEndpointHelper.attach(client, endpoint, redisUri, socketAddressSource);
     }
   }
 
+  @SuppressWarnings("unused")
+  public static class AttachEndpointWithCodecAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToArguments(@ToArgument(4))
+    public static Object onEnter(
+        @Advice.This RedisClusterClient client,
+        @Advice.Argument(2) DefaultEndpoint endpoint,
+        @Advice.Argument(3) RedisURI redisUri,
+        @Advice.Argument(4) Object socketAddressSource) {
+      return AttachEndpointHelper.attach(client, endpoint, redisUri, socketAddressSource);
+    }
+  }
+
+  public static class AttachEndpointHelper {
+
+    public static Object attach(
+        RedisClusterClient client,
+        DefaultEndpoint endpoint,
+        RedisURI redisUri,
+        Object socketAddressSource) {
+      ENDPOINT_DATABASE_INDEX.set(endpoint, redisUri.getDatabase());
+      RedisServerTarget clusterTarget = CLUSTER_CLIENT_TARGET.get(client);
+      ENDPOINT_TARGET.set(endpoint, clusterTarget);
+      if (socketAddressSource instanceof Supplier) {
+        Supplier<?> socketAddressSupplier = (Supplier<?>) socketAddressSource;
+        return socketAddressSupplier instanceof EndpointAddressSupplier
+            ? socketAddressSupplier
+            : new EndpointAddressSupplier(socketAddressSupplier, endpoint);
+      }
+      if (socketAddressSource instanceof Mono) {
+        return ((Mono<?>) socketAddressSource).doOnNext(new EndpointAddressConsumer(endpoint));
+      }
+      return socketAddressSource;
+    }
+
+    private AttachEndpointHelper() {}
+  }
+
   public static class EndpointAddressSupplier implements Supplier<SocketAddress> {
-    private final Supplier<SocketAddress> delegate;
+    private final Supplier<?> delegate;
     private final DefaultEndpoint endpoint;
 
-    public EndpointAddressSupplier(Supplier<SocketAddress> delegate, DefaultEndpoint endpoint) {
+    public EndpointAddressSupplier(Supplier<?> delegate, DefaultEndpoint endpoint) {
       this.delegate = delegate;
       this.endpoint = endpoint;
     }
 
     @Override
     public SocketAddress get() {
-      SocketAddress address = delegate.get();
+      Object address = delegate.get();
       if (address instanceof InetSocketAddress) {
         ENDPOINT_ADDRESS.set(endpoint, (InetSocketAddress) address);
       }
-      return address;
+      return (SocketAddress) address;
+    }
+  }
+
+  public static class EndpointAddressConsumer implements Consumer<Object> {
+    private final DefaultEndpoint endpoint;
+
+    public EndpointAddressConsumer(DefaultEndpoint endpoint) {
+      this.endpoint = endpoint;
+    }
+
+    @Override
+    public void accept(Object address) {
+      if (address instanceof InetSocketAddress) {
+        ENDPOINT_ADDRESS.set(endpoint, (InetSocketAddress) address);
+      }
     }
   }
 }

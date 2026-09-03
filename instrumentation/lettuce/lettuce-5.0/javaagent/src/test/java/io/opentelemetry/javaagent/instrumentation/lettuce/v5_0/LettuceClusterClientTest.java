@@ -237,7 +237,20 @@ class LettuceClusterClientTest {
 
     private void writeResponse(List<String> command, OutputStream output) throws IOException {
       String name = command.get(0).toUpperCase(Locale.ROOT);
-      if ("CLUSTER".equals(name)
+      if ("HELLO".equals(name)) {
+        write(
+            output,
+            "%7\r\n"
+                + "$6\r\nserver\r\n$5\r\nredis\r\n"
+                + "$7\r\nversion\r\n$5\r\n7.2.0\r\n"
+                + "$5\r\nproto\r\n:3\r\n"
+                + "$2\r\nid\r\n:1\r\n"
+                + "$4\r\nmode\r\n$7\r\ncluster\r\n"
+                + "$4\r\nrole\r\n$6\r\nmaster\r\n"
+                + "$7\r\nmodules\r\n*0\r\n");
+      } else if ("INFO".equals(name)) {
+        write(output, "$0\r\n\r\n");
+      } else if ("CLUSTER".equals(name)
           && command.size() > 1
           && "NODES".equals(command.get(1).toUpperCase(Locale.ROOT))) {
         String nodes =
@@ -263,7 +276,7 @@ class LettuceClusterClientTest {
       } else {
         AssertionError error = new AssertionError("Unexpected Redis command: " + command);
         failure.compareAndSet(null, error);
-        write(output, "-ERR unsupported command\r\n");
+        write(output, "-ERR unsupported command: " + command + "\r\n");
       }
     }
 
