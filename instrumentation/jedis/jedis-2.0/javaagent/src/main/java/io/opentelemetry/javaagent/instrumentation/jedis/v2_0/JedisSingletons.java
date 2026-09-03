@@ -178,15 +178,7 @@ public class JedisSingletons {
 
   private static void setAggregateConnectionTarget(
       @Nullable Connection connection, @Nullable RedisServerTarget target) {
-    if (connection == null) {
-      return;
-    }
-    if (target != null) {
-      CONNECTION_TARGET.set(connection, target);
-      CONNECTION_TARGET_SUPPRESSED.set(connection, null);
-    } else {
-      CONNECTION_TARGET_SUPPRESSED.set(connection, true);
-    }
+    setConnectionTarget(connection, target);
   }
 
   @Nullable
