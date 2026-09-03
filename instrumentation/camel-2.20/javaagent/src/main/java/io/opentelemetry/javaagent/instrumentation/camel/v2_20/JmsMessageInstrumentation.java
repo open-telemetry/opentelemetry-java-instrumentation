@@ -40,15 +40,16 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StoreReceiveTelemetryAdvice {
 
+    private static final MessagingTelemetryCarrier<Message> jmsMessageTelemetry =
+        MessagingTelemetryCarrier.create(
+            VirtualField.find(Message.class, MessagingTelemetryClaims.class));
+
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This org.apache.camel.Message camelMessage,
         @Advice.Argument(0) Message jmsMessage) {
       // a Camel message is refilled when its JMS message is swapped, so what it carried before must
       // not survive
-      MessagingTelemetryCarrier<Message> jmsMessageTelemetry =
-          MessagingTelemetryCarrier.create(
-              VirtualField.find(Message.class, MessagingTelemetryClaims.class));
       messageTelemetry().replaceFrom(jmsMessageTelemetry, jmsMessage, camelMessage);
     }
   }
