@@ -25,9 +25,9 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Examples: {@code GET}, {@code POST}, {@code HEAD}
    *
-   * <p>When the method is unavailable, return {@code null} or {@value HttpConstants#_OTHER}. HTTP
-   * attributes extractors record both as {@value HttpConstants#_OTHER} and do not set {@code
-   * http.request.method_original}.
+   * <p>When the method is unavailable, return {@code null}. HTTP attributes extractors record it as
+   * {@code _OTHER} and do not set {@code http.request.method_original}. Returning {@code _OTHER}
+   * has the same effect.
    */
   @Nullable
   String getHttpRequestMethod(REQUEST request);
