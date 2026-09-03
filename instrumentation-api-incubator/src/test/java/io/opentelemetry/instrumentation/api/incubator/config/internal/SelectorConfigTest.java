@@ -25,6 +25,8 @@ import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 
 class SelectorConfigTest {
 
@@ -280,6 +282,7 @@ class SelectorConfigTest {
   }
 
   @Test
+  @ResourceLock(Resources.SYSTEM_PROPERTIES)
   void stableSystemPropertyFallbackIsOnlyUsedWhenEnabled() {
     DeclarativeConfigProperties config = mockStableConfig();
     System.setProperty(
