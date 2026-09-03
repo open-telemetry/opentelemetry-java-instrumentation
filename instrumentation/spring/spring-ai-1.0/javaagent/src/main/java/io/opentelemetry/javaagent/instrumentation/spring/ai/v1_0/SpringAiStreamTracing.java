@@ -215,7 +215,11 @@ public class SpringAiStreamTracing {
             }
           }
         }
+      } catch (Throwable ignored) {
+        // Telemetry state must not affect the instrumented publisher.
+      }
 
+      try {
         ChatResponseMetadata metadata = response.getMetadata();
         if (metadata != null) {
           if (metadata.getId() != null && !metadata.getId().isEmpty()) {

@@ -176,13 +176,39 @@ class ChatModelTest {
 
     testing.runWithSpan("parent", () -> chatModel.call(prompt()));
 
-    assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isEqualTo(1);
+    assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isZero();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
     assertMetrics();
+  }
+
+  @Test
+  void callResponseEventSurvivesSpanAttributeSerializationFailure() {
+    AssistantMessage output =
+        new AssistantMessage(RESPONSE) {
+          @Override
+          public List<Media> getMedia() {
+            throw new IllegalStateException("media processing failed");
+          }
+        };
+    chatModel.setCallResponse(
+        response(
+            singletonList(generation(output, "stop")),
+            ChatResponseMetadata.builder()
+                .id("response-id")
+                .model(MODEL)
+                .usage(new DefaultUsage(3, 2))
+                .build()));
+
+    testing.runWithSpan("parent", () -> chatModel.call(prompt()));
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertTraces("test", false, false);
+    assertMetrics();
+    assertMessageEvents(spanContext);
   }
 
   @Test
@@ -207,6 +233,8 @@ class ChatModelTest {
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
 
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertTraces("test", true, false);
+    assertMetrics();
     assertMessageEvents(spanContext);
   }
 
@@ -982,6 +1010,11 @@ class ChatModelTest {
   }
 
   private static void assertTraces(String provider, boolean streaming) {
+    assertTraces(provider, streaming, true);
+  }
+
+  private static void assertTraces(
+      String provider, boolean streaming, boolean expectOutputMessages) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1015,10 +1048,12 @@ class ChatModelTest {
                                         + "\"}]}]")),
                             equalTo(
                                 stringKey("gen_ai.output.messages"),
-                                messageSpanAttribute(
-                                    "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                                        + RESPONSE
-                                        + "\"}],\"finish_reason\":\"stop\"}]")))));
+                                expectOutputMessages
+                                    ? messageSpanAttribute(
+                                        "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
+                                            + RESPONSE
+                                            + "\"}],\"finish_reason\":\"stop\"}]")
+                                    : null))));
   }
 
   private static void assertErrorTrace(IllegalStateException error, boolean streaming) {
