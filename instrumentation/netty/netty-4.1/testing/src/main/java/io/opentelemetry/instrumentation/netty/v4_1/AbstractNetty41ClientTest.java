@@ -127,9 +127,7 @@ public abstract class AbstractNetty41ClientTest
   }
 
   private static Set<AttributeKey<?>> getHttpAttributes(URI uri) {
-    String uriString = uri.toString();
-    // http://localhost:61/ => unopened port, https://192.0.2.1/ => non routable address
-    if ("http://localhost:61/".equals(uriString) || "https://192.0.2.1/".equals(uriString)) {
+    if (isFailedConnectUri(uri)) {
       return singleton(HTTP_REQUEST_METHOD);
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
@@ -139,24 +137,28 @@ public abstract class AbstractNetty41ClientTest
   }
 
   private static String getExpectedClientSpanName(URI uri, String method) {
-    switch (uri.toString()) {
-      case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
-        return "CONNECT";
-      default:
-        return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+    if (isFailedConnectUri(uri)) {
+      return "CONNECT";
     }
+    return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
   }
 
   @Override
   protected String expectedHttpRequestMethod(URI uri, String method) {
+    if (isFailedConnectUri(uri)) {
+      return _OTHER;
+    }
+    return method;
+  }
+
+  @SuppressWarnings("MissingDefault")
+  private static boolean isFailedConnectUri(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "https://192.0.2.1/": // non routable address
-        return _OTHER;
-      default:
-        return method;
+        return true;
     }
+    return false;
   }
 
   private static int getPort(URI uri) {
