@@ -17,6 +17,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -33,10 +35,11 @@ class CassandraServerTarget {
       // basic.contact-points has no default, so the single argument lookup would throw when a
       // session names its contact points on the builder alone
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
-      DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
+      DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT);
       for (String contactPoint : configuredContactPoints) {
         addContactPoint(target, contactPoint);
       }
+      List<InetSocketAddress> resolvedProgrammaticContactPoints = new ArrayList<>();
       for (EndPoint endPoint : programmaticContactPoints) {
         if (!isDefaultEndPoint(endPoint)) {
           return null;
@@ -45,7 +48,16 @@ class CassandraServerTarget {
         if (!(address instanceof InetSocketAddress)) {
           return null;
         }
-        target.addEndpoint((InetSocketAddress) address);
+        resolvedProgrammaticContactPoints.add((InetSocketAddress) address);
+      }
+      if (configuredContactPoints.isEmpty()) {
+        target.setSorted(true);
+      } else {
+        resolvedProgrammaticContactPoints.sort(
+            Comparator.comparing(CassandraServerTarget::asContactPoint));
+      }
+      for (InetSocketAddress contactPoint : resolvedProgrammaticContactPoints) {
+        target.addEndpoint(contactPoint);
       }
       return target.build();
     } catch (RuntimeException ignored) {
@@ -59,11 +71,18 @@ class CassandraServerTarget {
     if (contactPoints == null || contactPoints.isEmpty()) {
       return null;
     }
-    DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
+    DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT);
     for (String contactPoint : contactPoints) {
       addContactPoint(target, contactPoint);
     }
     return target.build();
+  }
+
+  private static String asContactPoint(InetSocketAddress address) {
+    String host = address.getHostString();
+    return host.indexOf(':') < 0
+        ? host + ":" + address.getPort()
+        : "[" + host + "]:" + address.getPort();
   }
 
   private static void addContactPoint(DbServerTargetBuilder target, @Nullable String contactPoint) {
