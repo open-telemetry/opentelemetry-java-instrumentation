@@ -260,6 +260,37 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
+  void separateListenersKeepOwnState() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener durationListener =
+        MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("test"));
+    OperationListener consumedMessagesListener =
+        MessagingConsumerMetrics.getConsumedMessages().create(meterProvider.get("test"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .build();
+
+    Context context = durationListener.onStart(Context.root(), attributes, nanos(100));
+    context = consumedMessagesListener.onStart(context, attributes, nanos(100));
+    consumedMessagesListener.onEnd(context, Attributes.empty(), nanos(200));
+    durationListener.onEnd(context, Attributes.empty(), nanos(200));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .extracting(MetricData::getName)
+          .containsExactlyInAnyOrder(
+              "messaging.client.operation.duration", "messaging.client.consumed.messages");
+    } else {
+      assertThat(metrics).isEmpty();
+    }
+  }
+
+  @Test
   void distinctClientOperationTypesOwnTheirDurations() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =

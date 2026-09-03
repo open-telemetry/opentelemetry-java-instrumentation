@@ -45,14 +45,14 @@ public final class MessagingConsumerMetrics implements OperationListener {
       AttributeKey.stringKey("messaging.operation");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
       AttributeKey.stringKey("messaging.operation.type");
-  private static final ContextKey<MessagingConsumerMetrics.State> MESSAGING_CONSUMER_METRICS_STATE =
-      ContextKey.named("messaging-consumer-metrics-state");
   // the consumed messages counter answers "has this delivered message been counted yet", so the
   // receive operation owns the claim even when a process operation is the one recording it
   private static final MessagingOperationType CONSUMED_MESSAGES_OWNER =
       MessagingOperationType.RECEIVE;
   private static final Logger logger = Logger.getLogger(MessagingConsumerMetrics.class.getName());
 
+  private final ContextKey<MessagingConsumerMetrics.State> messagingConsumerMetricsState =
+      ContextKey.named("messaging-consumer-metrics-state");
   private final boolean supportsStableSemconv;
   private final boolean clientOperationDurationOnly;
   private final boolean consumedMessagesOnly;
@@ -173,7 +173,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
               context, CONSUMED_MESSAGES_OWNER, MessagingTelemetrySignal.CONSUMED_MESSAGES);
     }
     return context.with(
-        MESSAGING_CONSUMER_METRICS_STATE,
+        messagingConsumerMetricsState,
         new AutoValue_MessagingConsumerMetrics_State(
             startAttributes, startNanos, recordClientOperationDuration, recordConsumedMessages));
   }
@@ -183,7 +183,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
     if (!enabled) {
       return;
     }
-    MessagingConsumerMetrics.State state = context.get(MESSAGING_CONSUMER_METRICS_STATE);
+    MessagingConsumerMetrics.State state = context.get(messagingConsumerMetricsState);
     if (state == null) {
       logger.log(
           FINE,

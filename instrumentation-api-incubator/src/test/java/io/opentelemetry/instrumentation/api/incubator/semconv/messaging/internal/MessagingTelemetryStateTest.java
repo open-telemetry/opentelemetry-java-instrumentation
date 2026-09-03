@@ -75,7 +75,7 @@ class MessagingTelemetryStateTest {
   }
 
   @Test
-  void aClaimOnlyReachesTheContextItWasMadeOn() {
+  void claimOnlyReachesTheContextItWasMadeOn() {
     Context outer = MessagingTelemetryState.enable(Context.root());
     Context inner = MessagingTelemetryState.claimIfEnabled(outer, PROCESS, PROCESS_DURATION);
 
