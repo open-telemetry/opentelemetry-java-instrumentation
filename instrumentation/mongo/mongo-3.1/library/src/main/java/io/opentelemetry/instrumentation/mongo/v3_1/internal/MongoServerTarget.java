@@ -91,7 +91,7 @@ public final class MongoServerTarget {
       return from(unixSocketTarget);
     }
 
-    DbServerTargetBuilder targetBuilder = DbServerTarget.builder(DEFAULT_PORT);
+    DbServerTargetBuilder targetBuilder = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
     for (int i = 0; i < hosts.size(); i++) {
       targetBuilder.addEndpoint(hosts.get(i), ports.get(i));
     }

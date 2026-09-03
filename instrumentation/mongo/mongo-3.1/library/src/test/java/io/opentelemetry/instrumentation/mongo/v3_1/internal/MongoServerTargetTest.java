@@ -45,7 +45,7 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void defaultPortSeedGroupsHaveAStableOrderWithoutPorts() {
+  void defaultPortSeedGroupsAreSortedWithoutPorts() {
     MongoServerTarget target =
         MongoServerTarget.seeds(
             asList(
