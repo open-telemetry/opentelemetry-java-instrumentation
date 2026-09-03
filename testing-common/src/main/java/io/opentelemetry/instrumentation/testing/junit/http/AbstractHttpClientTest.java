@@ -125,6 +125,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
    */
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {}
 
+  /**
+   * Returns the expected {@code http.request.method} for the request. Override this when the
+   * instrumentation cannot obtain {@code method} during a request failure and returns {@code
+   * _OTHER} instead.
+   */
   protected String expectedHttpRequestMethod(URI uri, String method) {
     return method;
   }
