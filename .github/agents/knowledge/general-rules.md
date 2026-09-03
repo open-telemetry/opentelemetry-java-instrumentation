@@ -191,7 +191,6 @@ variable (`MyGetter g = MyGetter.INSTANCE`), keep the variable and only change t
 right-hand side to `new MyGetter()`.
 
 Convert the class declaration from `enum` / singleton-holder to a plain `class`.
-If the implementation is a private nested class, omit the `final` keyword.
 
 **Exception — Kotlin `object` declarations**: Kotlin `object` is an idiomatic
 language-level singleton. Do not convert `object` declarations to `class`. This
