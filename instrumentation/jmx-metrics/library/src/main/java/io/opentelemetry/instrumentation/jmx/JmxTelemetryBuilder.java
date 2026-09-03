@@ -169,9 +169,12 @@ public final class JmxTelemetryBuilder {
     for (String path : rulesToLoad) {
       logger.log(FINE, "loading embedded JMX rules from {0}", path);
       try (InputStream input = classLoader.getResourceAsStream(path)) {
-        if (input != null) {
-          addRules(input);
+        if (input == null) {
+          // this is not expected to happen as the list of rules to load is generated from the
+          // same classloader, but just in case we prevent a silent failure.
+          throw new IllegalStateException("unable to load rules " + path);
         }
+        addRules(input);
       } catch (IOException e) {
         throw new IllegalStateException("Unable to load embedded JMX rules from: " + path, e);
       }
