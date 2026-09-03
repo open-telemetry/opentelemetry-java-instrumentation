@@ -9,11 +9,16 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterSettings;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class MongoServerTargetTest {
 
@@ -173,6 +178,22 @@ class MongoServerTargetTest {
     assertThat(target.getPort()).isNull();
   }
 
+  @ParameterizedTest
+  @MethodSource("unsafeUnixSocketPaths")
+  void unsafeUnixSocketIsNotReported(String path) {
+    assertThat(MongoServerTarget.seeds(singletonList(seedWithHost(path, 27017)))).isNull();
+  }
+
+  private static Stream<Arguments> unsafeUnixSocketPaths() {
+    return Stream.of(
+        argumentSet("comma", "/tmp/mongo,db.sock"),
+        argumentSet("equals", "/tmp/mongo=db.sock"),
+        argumentSet("percent", "/tmp/mongo%db.sock"),
+        argumentSet("at sign", "/tmp/mongo@db.sock"),
+        argumentSet("question mark", "/tmp/mongo?db.sock"),
+        argumentSet("hash", "/tmp/mongo#db.sock"));
+  }
+
   @Test
   void multipleUnixSocketSeedsAreNotReported() {
     assertThat(
@@ -258,9 +279,6 @@ class MongoServerTargetTest {
                     seedWithHost("unsafe.example?authSource=admin", 27017))))
         .isNull();
     assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("apiKey=secret", 27017))))
-        .isNull();
-    assertThat(
-            MongoServerTarget.seeds(singletonList(seedWithHost("/tmp/apiKey=secret.sock", 27017))))
         .isNull();
     assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("abc:def:123", 27017)))).isNull();
     assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("[::1%3Apassword]", 27017))))

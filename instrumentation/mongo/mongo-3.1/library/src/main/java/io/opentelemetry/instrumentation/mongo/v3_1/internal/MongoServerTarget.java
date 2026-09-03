@@ -6,10 +6,9 @@
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import com.mongodb.ServerAddress;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -21,7 +20,6 @@ import javax.annotation.Nullable;
 public final class MongoServerTarget {
 
   private static final int DEFAULT_PORT = 27017;
-  private static final int MAX_ENDPOINTS = 5;
   private static final String SRV_SCHEME = "mongodb+srv://";
   private static final String UNIX_SERVER_ADDRESS_CLASS = "com.mongodb.UnixServerAddress";
 
@@ -37,7 +35,9 @@ public final class MongoServerTarget {
       return null;
     }
     String host = sanitizeSrvHost(srvHost);
-    return host.isEmpty() || !isSafeHost(host, false)
+    DbServerTarget target =
+        DbServerTarget.builder(DEFAULT_PORT).addEndpoint(host, DEFAULT_PORT).build();
+    return target == null || !target.getAddress().equals(host)
         ? null
         : new MongoServerTarget(SRV_SCHEME + host, null);
   }
@@ -63,44 +63,47 @@ public final class MongoServerTarget {
 
     List<String> hosts = new ArrayList<>(seeds.size());
     List<Integer> ports = new ArrayList<>(seeds.size());
-    boolean hasNonDefaultPort = false;
-    boolean hasUnixSocket = false;
+    DbServerTarget unixSocketTarget = null;
     for (ServerAddress seed : seeds) {
       String host = host(seed);
       if (host == null) {
         return null;
       }
       boolean unixSocket = isUnixSocket(seed, host);
-      hasUnixSocket |= unixSocket;
+      if (unixSocket) {
+        unixSocketTarget = DbServerTarget.unixSocket(host);
+        if (unixSocketTarget == null) {
+          return null;
+        }
+      } else if (hasUnsafeEncodedIpv6Zone(host)) {
+        return null;
+      }
       Integer port = unixSocket ? null : seed.getPort();
       if (!containsEndpoint(hosts, ports, host, port)) {
         hosts.add(host);
         ports.add(port);
-        hasNonDefaultPort |= port != null && port != DEFAULT_PORT;
       }
     }
-    if (seeds.size() > 1 && hasUnixSocket) {
+    if (unixSocketTarget != null) {
+      if (seeds.size() > 1) {
+        return null;
+      }
+      return from(unixSocketTarget);
+    }
+
+    DbServerTargetBuilder targetBuilder = DbServerTarget.builder(DEFAULT_PORT);
+    for (int i = 0; i < hosts.size(); i++) {
+      targetBuilder.addEndpoint(hosts.get(i), ports.get(i));
+    }
+    return from(targetBuilder.build());
+  }
+
+  @Nullable
+  private static MongoServerTarget from(@Nullable DbServerTarget target) {
+    if (target == null) {
       return null;
     }
-
-    boolean multipleEndpoints = hosts.size() > 1;
-    boolean includePorts = multipleEndpoints && hasNonDefaultPort;
-    List<String> addresses = new ArrayList<>(seeds.size());
-    for (int i = 0; i < hosts.size(); i++) {
-      addresses.add(includePorts ? endpoint(hosts.get(i), ports.get(i)) : hosts.get(i));
-    }
-    Collections.sort(addresses, String::compareTo);
-
-    StringBuilder address = new StringBuilder();
-    int endpointCount = Math.min(addresses.size(), MAX_ENDPOINTS);
-    for (int i = 0; i < endpointCount; i++) {
-      if (address.length() != 0) {
-        address.append(',');
-      }
-      address.append(addresses.get(i));
-    }
-    Integer port = !multipleEndpoints && hasNonDefaultPort ? ports.get(0) : null;
-    return new MongoServerTarget(address.toString(), port);
+    return new MongoServerTarget(target.getAddress(), target.getPort());
   }
 
   private static boolean containsEndpoint(
@@ -118,23 +121,12 @@ public final class MongoServerTarget {
     this.port = port;
   }
 
-  private static String endpoint(String host, @Nullable Integer port) {
-    if (port == null) {
-      return host;
-    }
-    if (host.indexOf(':') >= 0) {
-      return "[" + host + "]:" + port;
-    }
-    return host + ":" + port;
-  }
-
   @Nullable
   private static String host(@Nullable ServerAddress seed) {
     if (seed == null || seed.getHost() == null || seed.getHost().isEmpty()) {
       return null;
     }
-    String host = stripBrackets(seed.getHost());
-    return host.isEmpty() || !isSafeHost(host, isUnixSocket(seed, host)) ? null : host;
+    return stripBrackets(seed.getHost());
   }
 
   // server.address uses the host without URI brackets around IPv6 literals
@@ -160,61 +152,9 @@ public final class MongoServerTarget {
     return credentialsSeparator < 0 ? host : host.substring(credentialsSeparator + 1);
   }
 
-  private static boolean isSafeHost(String host, boolean unixSocket) {
-    if (unixSocket) {
-      return host.indexOf('@') < 0
-          && host.indexOf('%') < 0
-          && host.indexOf('=') < 0
-          && host.indexOf('?') < 0
-          && host.indexOf('#') < 0;
-    }
-    if (host.indexOf('@') >= 0
-        || host.indexOf('/') >= 0
-        || host.indexOf('\\') >= 0
-        || host.indexOf('?') >= 0
-        || host.indexOf('#') >= 0) {
-      return false;
-    }
-    if (host.indexOf(':') >= 0) {
-      return isIpv6Literal(host);
-    }
-    if (host.indexOf('%') >= 0) {
-      return false;
-    }
-    for (int i = 0; i < host.length(); i++) {
-      char c = host.charAt(i);
-      if (!Character.isLetterOrDigit(c) && c != '.' && c != '_' && c != '-') {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private static boolean isIpv6Literal(String host) {
+  private static boolean hasUnsafeEncodedIpv6Zone(String host) {
     int zoneSeparator = host.indexOf('%');
-    String address = zoneSeparator < 0 ? host : host.substring(0, zoneSeparator);
-    if (zoneSeparator >= 0) {
-      String zone = host.substring(zoneSeparator + 1);
-      if (zone.isEmpty() || zone.indexOf('%') >= 0) {
-        return false;
-      }
-      if (startsWithEncodedDelimiter(zone)) {
-        return false;
-      }
-      for (int i = 0; i < zone.length(); i++) {
-        char c = zone.charAt(i);
-        if (!Character.isLetterOrDigit(c) && c != '.' && c != '_' && c != '-') {
-          return false;
-        }
-      }
-    }
-
-    try {
-      InetAddress.getByName(address);
-      return true;
-    } catch (UnknownHostException e) {
-      return false;
-    }
+    return zoneSeparator >= 0 && startsWithEncodedDelimiter(host.substring(zoneSeparator + 1));
   }
 
   private static boolean startsWithEncodedDelimiter(String value) {

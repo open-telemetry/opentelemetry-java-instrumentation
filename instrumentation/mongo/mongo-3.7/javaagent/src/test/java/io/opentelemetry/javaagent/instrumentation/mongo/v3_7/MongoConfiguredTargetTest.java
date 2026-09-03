@@ -108,13 +108,13 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void relativeUnixSocketIsReportedAsTheStableTarget() {
+  void relativeUnixSocketOmitsTheStableTarget() {
     try (ConfiguredClient client =
         createClient(singletonList(new UnixServerAddress("mongodb.sock")))) {
       runCommand(client);
     }
 
-    assertFindSpan("mongodb.sock", null);
+    assertFindSpan(null, null);
   }
 
   @Test
