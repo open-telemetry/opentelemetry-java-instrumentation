@@ -48,6 +48,7 @@ tasks {
     }
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database/dup,service.peer")
   }
 
   check {

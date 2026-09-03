@@ -49,6 +49,7 @@ tasks {
     }
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database/dup")
   }
 
   check {
