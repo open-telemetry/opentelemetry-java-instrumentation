@@ -27,6 +27,7 @@ import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
 import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.BeforeEach;
@@ -135,7 +136,7 @@ class CassandraTelemetryTest {
   }
 
   private static void assertTarget(CassandraRequest request, String address, Integer port) {
-    CassandraServerTarget target = request.getServerTarget();
+    DbServerTarget target = request.getServerTarget();
     if (emitStableDatabaseSemconv()) {
       assertThat(target).isNotNull();
       assertThat(target.getAddress()).isEqualTo(address);
