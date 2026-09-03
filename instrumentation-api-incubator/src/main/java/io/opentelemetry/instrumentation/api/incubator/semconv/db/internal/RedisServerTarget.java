@@ -311,7 +311,9 @@ public final class RedisServerTarget {
       }
       if (socket) {
         String path = stripSocketCredentials(value);
-        return path.isEmpty() || path.indexOf(',') >= 0 ? null : new Endpoint(path, null, true);
+        return path.isEmpty() || firstIndexOf(path, ',', '?', '#', '@') >= 0
+            ? null
+            : new Endpoint(path, null, true);
       }
 
       // everything from the first slash on is the selected database, not part of the endpoint
@@ -439,7 +441,7 @@ public final class RedisServerTarget {
         }
         port = port * 10 + (c - '0');
       }
-      return port <= 65535 ? port : null;
+      return port >= 1 && port <= 65535 ? port : null;
     }
 
     String renderConfigured() {
