@@ -242,7 +242,8 @@ public class HbaseServerTarget {
       return null;
     }
 
-    DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort).setPortAlwaysInline(true);
+    DbServerTargetBuilder builder =
+        DbServerTarget.builder(defaultPort).setSorted(true).setPortAlwaysInline(true);
     for (String configuredMaster : configuredMasters.split(",", -1)) {
       String endpoint = canonicalEndpoint(configuredMaster, defaultPort);
       if (endpoint == null) {
