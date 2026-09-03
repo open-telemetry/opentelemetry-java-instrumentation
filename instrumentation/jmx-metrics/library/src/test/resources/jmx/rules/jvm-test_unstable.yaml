@@ -3,7 +3,7 @@
 rules:
 
   - bean: java.lang:type=Threading
-    prefix: jvm.thread.
+    prefix: jvm.
     mapping:
 
       # jvm.file_descriptor.count (experimental)

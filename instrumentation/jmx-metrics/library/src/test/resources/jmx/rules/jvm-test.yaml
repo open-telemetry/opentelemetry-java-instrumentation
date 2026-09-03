@@ -18,6 +18,14 @@ rules:
       Usage.committed:
         metric: committed
         desc: Measure of memory committed.
+      Usage.max:
+        metric: limit
+        desc: Measure of max obtainable memory.
+      # jvm.memory.used_after_last_gc
+      # note: metric attribute "jvm.memory.type" will always be "heap" as GC only manages heap
+      CollectionUsage.used:
+        metric: used_after_last_gc
+        desc: Measure of memory used, as measured after the most recent garbage collection event on this pool.
 
   - bean: java.lang:type=Threading
     prefix: jvm.thread.

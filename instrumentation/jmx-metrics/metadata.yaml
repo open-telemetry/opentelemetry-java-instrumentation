@@ -7,7 +7,7 @@ description: >
   OpenTelemetry metrics. Collected metrics can be filtered by name using include and exclude
   patterns.
 configurations:
-  - name: otel.instrumentation.jmx.enabled
+  - name: otel.jmx.enabled
     declarative_name: java.jmx.enabled
     description: Enables collection of JMX metrics.
     type: boolean
