@@ -16,11 +16,11 @@ import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
 import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,13 +31,9 @@ import javax.annotation.Nullable;
 final class CassandraServerTarget {
 
   private static final int DEFAULT_PORT = 9042;
-  private static final int MAX_ENDPOINTS = 5;
-
-  private final String address;
-  @Nullable private final Integer port;
 
   @Nullable
-  static CassandraServerTarget of(Session session) {
+  static DbServerTarget of(Session session) {
     try {
       DriverContext context = session.getContext();
       if (!(context instanceof InternalDriverContext)) {
@@ -51,9 +47,13 @@ final class CassandraServerTarget {
       // basic.contact-points has no default, so the single argument lookup would throw when a
       // session names its contact points on the builder alone
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
-      List<CassandraServerTarget> contactPoints = valid(configuredContactPoints);
-      if (contactPoints == null) {
-        return null;
+      DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT);
+      List<ContactPoint> configuredTargets = new ArrayList<>();
+      for (String contactPoint : configuredContactPoints) {
+        ContactPoint configuredTarget = addContactPoint(target, contactPoint);
+        if (configuredTarget != null) {
+          configuredTargets.add(configuredTarget);
+        }
       }
       boolean hasConfiguredContactPoints = !configuredContactPoints.isEmpty();
       for (DefaultNode node : metadataManager.getContactPoints()) {
@@ -65,19 +65,16 @@ final class CassandraServerTarget {
         if (!(address instanceof InetSocketAddress)) {
           return null;
         }
-        CassandraServerTarget target = fromAddress((InetSocketAddress) address);
-        if (target == null) {
-          return null;
-        }
-        if (matches(contactPoints, target)) {
+        InetSocketAddress inetAddress = (InetSocketAddress) address;
+        if (matches(configuredTargets, fromAddress(inetAddress))) {
           continue;
         }
         if (hasConfiguredContactPoints) {
           return null;
         }
-        contactPoints.add(target);
+        target.addEndpoint(inetAddress);
       }
-      return combine(contactPoints);
+      return target.build();
     } catch (RuntimeException ignored) {
       // A session that cannot describe its configuration has no stable server target.
       return null;
@@ -85,16 +82,16 @@ final class CassandraServerTarget {
   }
 
   @Nullable
-  static CassandraServerTarget of(Session session, Set<EndPoint> programmaticContactPoints) {
+  static DbServerTarget of(Session session, Set<EndPoint> programmaticContactPoints) {
     try {
       DriverContext context = session.getContext();
       DriverExecutionProfile config = context.getConfig().getDefaultProfile();
       // basic.contact-points has no default, so the single argument lookup would throw when a
       // session names its contact points on the builder alone
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
-      List<CassandraServerTarget> contactPoints = valid(configuredContactPoints);
-      if (contactPoints == null) {
-        return null;
+      DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT);
+      for (String contactPoint : configuredContactPoints) {
+        addContactPoint(target, contactPoint);
       }
       for (EndPoint endPoint : programmaticContactPoints) {
         if (endPoint.getClass() != DefaultEndPoint.class) {
@@ -104,13 +101,9 @@ final class CassandraServerTarget {
         if (!(address instanceof InetSocketAddress)) {
           return null;
         }
-        CassandraServerTarget target = fromAddress((InetSocketAddress) address);
-        if (target == null) {
-          return null;
-        }
-        contactPoints.add(target);
+        target.addEndpoint((InetSocketAddress) address);
       }
-      return combine(contactPoints);
+      return target.build();
     } catch (RuntimeException ignored) {
       // A session that cannot describe its configuration has no stable server target.
       return null;
@@ -118,95 +111,75 @@ final class CassandraServerTarget {
   }
 
   @Nullable
-  static CassandraServerTarget of(@Nullable List<String> contactPoints) {
+  static DbServerTarget of(@Nullable List<String> contactPoints) {
     if (contactPoints == null || contactPoints.isEmpty()) {
       return null;
     }
-    List<CassandraServerTarget> validContactPoints = valid(contactPoints);
-    return validContactPoints == null ? null : combine(validContactPoints);
-  }
-
-  @Nullable
-  static CassandraServerTarget ofAddresses(Collection<InetSocketAddress> contactPoints) {
-    List<CassandraServerTarget> targets = new ArrayList<>();
-    for (InetSocketAddress contactPoint : contactPoints) {
-      if (contactPoint == null) {
-        return null;
-      }
-      CassandraServerTarget target = fromAddress(contactPoint);
-      if (target == null) {
-        return null;
-      }
-      targets.add(target);
-    }
-    return combine(targets);
-  }
-
-  private CassandraServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
-
-  @Nullable
-  private static List<CassandraServerTarget> valid(List<String> contactPoints) {
-    List<CassandraServerTarget> validContactPoints = new ArrayList<>();
+    DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT);
     for (String contactPoint : contactPoints) {
-      if (contactPoint != null && !isSafeHost(contactPoint)) {
-        return null;
-      }
-      CassandraServerTarget target = single(contactPoint);
-      if (target != null) {
-        validContactPoints.add(target);
-      }
+      addContactPoint(target, contactPoint);
     }
-    return validContactPoints;
+    return target.build();
   }
 
   @Nullable
-  private static CassandraServerTarget combine(List<CassandraServerTarget> contactPoints) {
-    if (contactPoints.isEmpty()) {
+  static DbServerTarget ofAddresses(Collection<InetSocketAddress> contactPoints) {
+    DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT);
+    for (InetSocketAddress contactPoint : contactPoints) {
+      target.addEndpoint(contactPoint);
+    }
+    return target.build();
+  }
+
+  @Nullable
+  private static ContactPoint addContactPoint(
+      DbServerTargetBuilder target, @Nullable String contactPoint) {
+    if (contactPoint == null) {
+      target.addEndpoint((String) null, -1);
       return null;
     }
-    if (contactPoints.size() == 1) {
-      CassandraServerTarget contactPoint = contactPoints.get(0);
-      return new CassandraServerTarget(
-          contactPoint.address, contactPoint.port == DEFAULT_PORT ? null : contactPoint.port);
+    int separator = contactPoint.lastIndexOf(':');
+    if (separator < 0) {
+      target.addEndpoint((String) null, -1);
+      return null;
     }
-
-    boolean allPortsDefault = true;
-    List<String> hosts = new ArrayList<>(contactPoints.size());
-    List<String> endpoints = new ArrayList<>(contactPoints.size());
-    for (CassandraServerTarget contactPoint : contactPoints) {
-      allPortsDefault &= contactPoint.port == DEFAULT_PORT;
-      hosts.add(contactPoint.address);
-      endpoints.add(contactPoint.asContactPoint());
+    String host = contactPoint.substring(0, separator);
+    if (host.startsWith("[") && host.endsWith("]")) {
+      host = host.substring(1, host.length() - 1);
     }
-
-    List<String> renderedEndpoints = allPortsDefault ? hosts : endpoints;
-    renderedEndpoints.sort(String::compareTo);
-    return new CassandraServerTarget(joinFirstEndpoints(renderedEndpoints), null);
+    try {
+      int port = Integer.parseInt(contactPoint.substring(separator + 1));
+      target.addEndpoint(host, port);
+      return new ContactPoint(host, port);
+    } catch (NumberFormatException ignored) {
+      target.addEndpoint((String) null, -1);
+      return null;
+    }
   }
 
-  private static String joinFirstEndpoints(List<String> endpoints) {
-    return String.join(",", endpoints.subList(0, Math.min(endpoints.size(), MAX_ENDPOINTS)));
-  }
-
-  private static boolean matches(
-      List<CassandraServerTarget> configuredTargets, CassandraServerTarget target) {
-    for (CassandraServerTarget configuredTarget : configuredTargets) {
-      if (!configuredTarget.port.equals(target.port)) {
+  private static boolean matches(List<ContactPoint> configuredTargets, ContactPoint target) {
+    for (ContactPoint configuredTarget : configuredTargets) {
+      if (configuredTarget.port != target.port) {
         continue;
       }
-      if (configuredTarget.address.equals(target.address)) {
+      if (configuredTarget.host.equals(target.host)) {
         return true;
       }
-      InetAddress configuredAddress = numericAddress(configuredTarget.address);
-      InetAddress targetAddress = numericAddress(target.address);
+      InetAddress configuredAddress = numericAddress(configuredTarget.host);
+      InetAddress targetAddress = numericAddress(target.host);
       if (configuredAddress != null && configuredAddress.equals(targetAddress)) {
         return true;
       }
     }
     return false;
+  }
+
+  private static ContactPoint fromAddress(InetSocketAddress address) {
+    String host = address.getHostString();
+    if (host.startsWith("[") && host.endsWith("]")) {
+      host = host.substring(1, host.length() - 1);
+    }
+    return new ContactPoint(host, address.getPort());
   }
 
   @Nullable
@@ -258,100 +231,16 @@ final class CassandraServerTarget {
     return byteIndex == bytes.length ? bytes : null;
   }
 
-  @Nullable
-  private static CassandraServerTarget single(@Nullable String contactPoint) {
-    if (contactPoint == null) {
-      return null;
-    }
-    int separator = contactPoint.lastIndexOf(':');
-    if (separator < 0) {
-      return null;
-    }
-    String host = contactPoint.substring(0, separator);
-    if (host.startsWith("[")) {
-      if (!host.endsWith("]")) {
-        return null;
-      }
-      host = host.substring(1, host.length() - 1);
-    } else if (host.indexOf('[') >= 0 || host.indexOf(']') >= 0) {
-      return null;
-    }
-    if (!isValidHost(host)) {
-      return null;
-    }
-    Integer port = port(contactPoint.substring(separator + 1));
-    return port == null ? null : new CassandraServerTarget(host, port);
-  }
+  private CassandraServerTarget() {}
 
-  @Nullable
-  private static CassandraServerTarget fromAddress(InetSocketAddress address) {
-    String host = address.getHostString();
-    if (host.startsWith("[")) {
-      if (!host.endsWith("]")) {
-        return null;
-      }
-      host = host.substring(1, host.length() - 1);
-    } else if (host.indexOf('[') >= 0 || host.indexOf(']') >= 0) {
-      return null;
-    }
-    return isValidHost(host) && validPort(address.getPort())
-        ? new CassandraServerTarget(host, address.getPort())
-        : null;
-  }
+  private static class ContactPoint {
 
-  private static boolean isSafeHost(String host) {
-    if (host.isEmpty()) {
-      return false;
-    }
-    for (int i = 0; i < host.length(); i++) {
-      char c = host.charAt(i);
-      if (c <= ' ' || c == '@' || c == '/' || c == '\\' || c == '?' || c == '#' || c == ',') {
-        return false;
-      }
-    }
-    return true;
-  }
+    private final String host;
+    private final int port;
 
-  private static boolean isValidHost(String host) {
-    if (!isSafeHost(host)) {
-      return false;
+    private ContactPoint(String host, int port) {
+      this.host = host;
+      this.port = port;
     }
-    if (host.indexOf(':') < 0) {
-      return true;
-    }
-    try {
-      new URI("cassandra", null, host, DEFAULT_PORT, null, null, null);
-      return true;
-    } catch (URISyntaxException ignored) {
-      return false;
-    }
-  }
-
-  private static boolean validPort(int port) {
-    return port > 0 && port <= 65535;
-  }
-
-  @Nullable
-  private static Integer port(String port) {
-    try {
-      int value = Integer.parseInt(port);
-      return validPort(value) ? value : null;
-    } catch (NumberFormatException ignored) {
-      return null;
-    }
-  }
-
-  private String asContactPoint() {
-    String host = address.indexOf(':') < 0 ? address : '[' + address + ']';
-    return host + ':' + port;
-  }
-
-  String getAddress() {
-    return address;
-  }
-
-  @Nullable
-  Integer getPort() {
-    return port;
   }
 }
