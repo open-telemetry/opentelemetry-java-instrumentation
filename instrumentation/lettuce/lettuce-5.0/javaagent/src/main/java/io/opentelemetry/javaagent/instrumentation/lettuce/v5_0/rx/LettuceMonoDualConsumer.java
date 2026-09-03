@@ -19,6 +19,8 @@ import reactor.core.publisher.Mono;
 public class LettuceMonoDualConsumer<T>
     implements Consumer<Subscription>, BiConsumer<T, Throwable> {
 
+  private static final Logger logger = Logger.getLogger(Mono.class.getName());
+
   private final StatefulConnection<?, ?> connection;
   private final boolean finishSpanOnClose;
   @Nullable private RedisCommand<?, ?, ?> command;
@@ -33,8 +35,7 @@ public class LettuceMonoDualConsumer<T>
   public void accept(Subscription subscription) {
     RedisCommand<?, ?, ?> subscriptionCommand = LettuceSingletons.currentReactiveCommand();
     if (subscriptionCommand == null) {
-      Logger.getLogger(Mono.class.getName())
-          .severe("Failed to correlate a Lettuce reactive subscription with its command.");
+      logger.fine("Failed to correlate a Lettuce reactive subscription with its command.");
       return;
     }
     command = subscriptionCommand;
@@ -50,10 +51,9 @@ public class LettuceMonoDualConsumer<T>
     if (context != null && command != null) {
       LettuceSingletons.instrumenter().end(context, command, null, throwable);
     } else {
-      Logger.getLogger(Mono.class.getName())
-          .severe(
-              "Failed to finish this.span, BiConsumer cannot find this.span because "
-                  + "it probably wasn't started.");
+      logger.fine(
+          "Failed to finish this.span, BiConsumer cannot find this.span because "
+              + "it probably wasn't started.");
     }
   }
 
