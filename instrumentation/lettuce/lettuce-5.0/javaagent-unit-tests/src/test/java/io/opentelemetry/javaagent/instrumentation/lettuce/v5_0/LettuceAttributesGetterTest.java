@@ -92,12 +92,13 @@ class LettuceAttributesGetterTest {
     try {
       Supplier<SocketAddress> addressSupplier = () -> SELECTED_ADDRESS;
 
-      Supplier<SocketAddress> wrappedSupplier =
+      Object wrappedAddressSource =
           LettuceClusterClientInstrumentation.AttachEndpointAdvice.onEnter(
               client, endpoint, selectedRedisUri, addressSupplier);
 
       assertThat(LettuceSingletons.ENDPOINT_TARGET.get(endpoint)).isNull();
-      assertThat(wrappedSupplier.get()).isEqualTo(SELECTED_ADDRESS);
+      assertThat(wrappedAddressSource).isInstanceOf(Supplier.class);
+      assertThat(((Supplier<?>) wrappedAddressSource).get()).isEqualTo(SELECTED_ADDRESS);
       assertThat(LettuceSingletons.ENDPOINT_ADDRESS.get(endpoint)).isEqualTo(SELECTED_ADDRESS);
     } finally {
       endpoint.close();
