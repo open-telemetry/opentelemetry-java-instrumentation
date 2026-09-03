@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -322,6 +323,31 @@ class SelectorConfigTest {
     assertThat(selector.matches("exact.name")).isTrue();
     assertThat(selector.matches("prefix.value")).isFalse();
     assertThat(selector.matches("other")).isFalse();
+  }
+
+  @Test
+  void ignoredDeprecatedWildcardsPointToTheIncludedProperty() {
+    DeclarativeConfigProperties config = mockStableConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(asList("exact.name", "prefix.*"));
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(DeprecatedCaptureNames.class.getName());
+    logger.addHandler(handler);
+    try {
+      assertThat(SelectorConfig.resolve(config, "ignored-wildcards", SELECTOR, STABLE)).isNotNull();
+
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .isEqualTo(
+              "Ignoring [prefix.*] configured in the"
+                  + " otel.instrumentation.ignored-wildcards.experimental.capture-mdc-attributes"
+                  + " setting or equivalent declarative configuration, which matches names"
+                  + " literally and never supported wildcards. Use"
+                  + " otel.instrumentation.ignored-wildcards.mdc-attributes.included or equivalent"
+                  + " declarative configuration to match names by pattern.");
+    } finally {
+      logger.removeHandler(handler);
+    }
   }
 
   @Test

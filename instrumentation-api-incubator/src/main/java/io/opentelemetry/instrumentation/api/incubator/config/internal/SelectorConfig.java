@@ -133,7 +133,8 @@ public final class SelectorConfig {
         "the "
             + deprecatedFlatProperty(instrumentationName, selectorName)
             + " setting or equivalent declarative configuration",
-        replacementFlatProperties + " or equivalent declarative configuration");
+        flatProperty(instrumentationName, selectorName, ".included", stability)
+            + " or equivalent declarative configuration");
   }
 
   /**
