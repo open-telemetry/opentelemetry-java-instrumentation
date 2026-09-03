@@ -11,6 +11,7 @@ import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.cluster.RedisClusterClient;
+import io.lettuce.core.masterslave.StatefulRedisMasterSlaveConnection;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
@@ -73,6 +74,11 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisClusterClient, RedisServerTarget> CLUSTER_CLIENT_TARGET =
       VirtualField.find(RedisClusterClient.class, RedisServerTarget.class);
+
+  public static final VirtualField<
+          StatefulRedisMasterSlaveConnection<?, ?>, RedisChannelHandler<?, ?>>
+      MASTER_SLAVE_CONNECTION_DELEGATE =
+          VirtualField.find(StatefulRedisMasterSlaveConnection.class, RedisChannelHandler.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();

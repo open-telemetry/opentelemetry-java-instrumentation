@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.MASTER_SLAVE_CONNECTION_DELEGATE;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -15,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.masterslave.StatefulRedisMasterSlaveConnection;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -31,7 +33,8 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.lettuce.core.masterslave.MasterSlave");
+    return named("io.lettuce.core.masterslave.MasterSlave")
+        .or(named("io.lettuce.core.masterslave.MasterSlaveConnectionWrapper"));
   }
 
   @Override
@@ -45,6 +48,13 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
                 takesArgument(2, named("io.lettuce.core.RedisURI"))
                     .or(takesArgument(2, named("java.lang.Iterable")))),
         getClass().getName() + "$ConnectAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor()
+            .and(
+                takesArgument(
+                    0,
+                    named("io.lettuce.core.masterreplica.StatefulRedisMasterReplicaConnection"))),
+        getClass().getName() + "$WrapperConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -75,8 +85,21 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
       if (connection instanceof CompletableFuture) {
         ((CompletableFuture<?>) connection)
             .whenComplete(new SetMasterSlaveTargetBiConsumer(target));
-      } else if (connection instanceof RedisChannelHandler) {
-        CONNECTION_TARGET.set((RedisChannelHandler<?, ?>) connection, target);
+      } else {
+        SetMasterSlaveTargetBiConsumer.setTarget(connection, target);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class WrapperConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This StatefulRedisMasterSlaveConnection<?, ?> connection,
+        @Advice.Argument(0) Object delegate) {
+      if (delegate instanceof RedisChannelHandler) {
+        MASTER_SLAVE_CONNECTION_DELEGATE.set(connection, (RedisChannelHandler<?, ?>) delegate);
       }
     }
   }
