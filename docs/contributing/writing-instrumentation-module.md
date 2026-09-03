@@ -486,13 +486,14 @@ private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
 
 The first argument is the carrier type and the second is the attached value type. In normal
 javaagent instrumentation, both should be class literals so muzzle can discover and register the
-mapping. A rare lookup that resolves carrier types at runtime must be in an `@NoMuzzle` method, and
-the instrumentation module must register every possible carrier/value pair through
-`InstrumentationModule.registerVirtualFields(...)`. Calls inside `@Advice` can then be rewritten
-during bytecode transformation, while calls outside advice may execute as runtime lookups and should
-be cached. The `(carrier class, value class)` pair identifies the virtual field across
-instrumentations, so use a dedicated holder class when common value types such as `Object`,
-`Boolean`, `String`, or `Map` could give unrelated state the same pair.
+mapping. Calls with class-literal arguments inside inlined `@Advice` can then be rewritten during
+bytecode transformation. Lookups made outside advice execute at runtime and should be cached. A rare
+lookup that resolves carrier types at runtime must run outside advice in an `@NoMuzzle` method. The
+instrumentation module must implement `ExperimentalInstrumentationModule` and override
+`registerVirtualFields(...)` to register every possible carrier/value pair. The `(carrier class,
+value class)` pair identifies the virtual field across instrumentations, so use a dedicated holder
+class when common value types such as `Object`, `Boolean`, `String`, or `Map` could give unrelated
+state the same pair.
 
 When a shared bootstrap or common helper cannot name the library carrier type, keep the
 `VirtualField` lookup with the instrumentation-specific caller. Pass the typed handle, or a small
@@ -508,10 +509,11 @@ public static <T> void attachContext(
 Do not generalize this pattern with `VirtualField.find(Object.class, ...)`. The caller should select
 the narrow class or interface that identifies the library objects that can carry the state.
 
-Inside an `@Advice` method, call `VirtualField.find(...)` directly where the virtual field is used.
-The call is rewritten during bytecode transformation and does not need to be cached. Outside advice,
-including helper and singleton classes, store the handle in a `static final` field to avoid repeated
-runtime lookup.
+Inside an inlined `@Advice` method, call `VirtualField.find(...)` directly where the virtual field
+is used. The call is rewritten during bytecode transformation and does not need to be cached. A
+non-inlined advice method (`inline = false`) must not call `VirtualField.find(...)` because the call
+is not rewritten. In non-inlined advice classes and other helper or singleton classes, store the
+handle in a `static final` field to avoid repeated runtime lookup.
 
 The javaagent normally injects field-backed storage into eligible carrier implementations. It falls
 back to a weak-key, strong-value map when field injection is unavailable. Avoid storing a value that

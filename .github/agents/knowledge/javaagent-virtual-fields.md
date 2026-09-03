@@ -103,18 +103,22 @@ is otherwise demonstrably unique.
 
 - Call `VirtualField.find(Carrier.class, Value.class)` with class literals in normal javaagent
   instrumentation. Muzzle uses the literals to discover and register the mapping.
-- Inside `@Advice` methods, call `VirtualField.find(...)` directly where the field is used. The call
-  is rewritten during transformation; do not extract it into a helper or field merely to cache the
-  lookup.
-- Outside advice, including helper and singleton classes, store the result in a `static final`
+- Inside inlined `@Advice` methods, call `VirtualField.find(...)` directly where the field is used.
+  The call is rewritten during transformation; do not extract it into a helper or field merely to
+  cache the lookup.
+- Non-inlined advice methods (`inline = false`) must not call `VirtualField.find(...)` because those
+  calls are not rewritten and `VirtualFieldChecker` rejects them. Store the result in a
+  `static final` `SCREAMING_SNAKE_CASE` field on the advice class or a helper instead.
+- Outside advice, including helper and singleton classes, also store the result in a `static final`
   `SCREAMING_SNAKE_CASE` field so runtime lookup happens once.
 - Non-literal class arguments are rejected in normal instrumentation. A rare runtime lookup for
-  alternative carrier class names requires both `@NoMuzzle` on the lookup and explicit
-  `InstrumentationModule.registerVirtualFields(...)` entries for every possible carrier/value pair.
-  Do not copy that specialized pattern when class literals can represent the types.
+  alternative carrier class names must run outside advice in an `@NoMuzzle` method. The
+  instrumentation module must implement `ExperimentalInstrumentationModule` and override
+  `registerVirtualFields(...)` to register every possible carrier/value pair. Do not copy that
+  specialized pattern when class literals can represent the types.
 
 The containing instrumentation module must use muzzle generation so the carrier/value mapping is
-registered and calls inside `@Advice` can be rewritten.
+registered and calls inside inlined `@Advice` can be rewritten.
 
 ## Lifetime, Reuse, and Retention
 
