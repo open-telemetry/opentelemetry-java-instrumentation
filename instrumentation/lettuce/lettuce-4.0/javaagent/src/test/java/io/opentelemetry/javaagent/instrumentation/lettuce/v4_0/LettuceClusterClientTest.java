@@ -87,6 +87,7 @@ class LettuceClusterClientTest {
 
     connection = client.connect();
     cleanup.deferAfterAll(connection);
+    testing.clearData();
   }
 
   @Test
