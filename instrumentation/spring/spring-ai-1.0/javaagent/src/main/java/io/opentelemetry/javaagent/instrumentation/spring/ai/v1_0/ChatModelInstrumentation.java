@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
+package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.shouldSuppressNestedChatModelInstrumentation;
+import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.shouldSuppressNestedChatModelInstrumentation;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;

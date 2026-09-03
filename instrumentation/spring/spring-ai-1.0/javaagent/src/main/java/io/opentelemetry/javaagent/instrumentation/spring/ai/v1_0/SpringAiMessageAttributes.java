@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
+package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.captureMessageContentAsSpanAttributes;
-import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
-import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiStringUtil.truncate;
+import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.captureMessageContentAsSpanAttributes;
+import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
+import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiStringUtil.truncate;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import io.opentelemetry.api.common.AttributeKey;
@@ -245,7 +245,7 @@ public class SpringAiMessageAttributes {
   }
 
   @Nullable
-  private static String uriString(Object data) {
+  static String uriString(Object data) {
     if (data instanceof URI uri) {
       return uri.isAbsolute() ? uri.toString() : null;
     }

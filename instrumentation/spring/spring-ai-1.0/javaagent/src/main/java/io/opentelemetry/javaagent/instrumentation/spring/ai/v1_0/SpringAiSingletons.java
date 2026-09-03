@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
+package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.internal.GenAiExceptionEventExtractors.setGenAiClientExceptionEventExtractor;
 

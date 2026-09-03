@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
+package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
@@ -44,7 +44,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.springai.v1_0.app.TestChatModel;
+import io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.app.TestChatModel;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
@@ -78,6 +78,9 @@ class ChatModelTest {
   private static final String TOOL_NAME = "get_weather";
   private static final String TOOL_ARGUMENTS = "{\"location\":\"Paris\"}";
   private static final String TOOL_RESPONSE = "rainy, 57F";
+  private static final String SECOND_TOOL_CALL_ID = "call_time";
+  private static final String SECOND_TOOL_NAME = "get_time";
+  private static final String SECOND_TOOL_RESPONSE = "10:00 UTC";
   private static final String MEDIA_URL = "https://example.com/weather.png";
   private static final boolean CAPTURE_MESSAGE_CONTENT =
       Boolean.getBoolean("otel.instrumentation.genai.capture-message-content");
@@ -183,6 +186,31 @@ class ChatModelTest {
   }
 
   @Test
+  void streamResponseEventSurvivesSpanAttributeSerializationFailure() {
+    AssistantMessage output =
+        new AssistantMessage(RESPONSE) {
+          @Override
+          public List<Media> getMedia() {
+            throw new IllegalStateException("media processing failed");
+          }
+        };
+    chatModel.setStreamPublisher(
+        Flux.just(
+            response(
+                singletonList(generation(output, "stop")),
+                ChatResponseMetadata.builder()
+                    .id("response-id")
+                    .model(MODEL)
+                    .usage(new DefaultUsage(3, 2))
+                    .build())));
+
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertMessageEvents(spanContext);
+  }
+
+  @Test
   void optionalPromptProcessingFailureStillTracesCall() {
     testing.runWithSpan("parent", () -> chatModel.call(promptWithFailingInstructions()));
 
@@ -263,19 +291,28 @@ class ChatModelTest {
   }
 
   @Test
-  void streamAggregatesChunksForEachChoice() {
+  void streamAggregatesChunksByProviderChoiceIndex() {
     ChatResponse firstChunk =
         response(
-            asList(generation("A ", null), generation("B ", null)),
+            singletonList(generationWithChoiceIndex("A ", null, 1)),
             ChatResponseMetadata.builder().id("response-id").model(MODEL).build());
     ChatResponse secondChunk =
         response(
-            asList(generation("one", "stop"), generation("two", "length")),
+            singletonList(generationWithChoiceIndex("B ", null, 3)),
+            ChatResponseMetadata.builder().build());
+    ChatResponse thirdChunk =
+        response(
+            singletonList(generationWithChoiceIndex("one", "stop", 1)),
+            ChatResponseMetadata.builder().build());
+    ChatResponse fourthChunk =
+        response(
+            singletonList(generationWithChoiceIndex("two", "length", 3)),
             ChatResponseMetadata.builder().build());
     ChatResponse usageChunk =
         response(emptyList(), ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build());
     ChatResponse metadataOnlyChunk = response(emptyList(), ChatResponseMetadata.builder().build());
-    chatModel.setStreamPublisher(Flux.just(firstChunk, secondChunk, usageChunk, metadataOnlyChunk));
+    chatModel.setStreamPublisher(
+        Flux.just(firstChunk, secondChunk, thirdChunk, fourthChunk, usageChunk, metadataOnlyChunk));
 
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
 
@@ -318,6 +355,46 @@ class ChatModelTest {
                                         + "{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"B two\"}],\"finish_reason\":\"length\"}]")))));
     assertMetrics();
     assertMultiChoiceEvents(spanContext);
+  }
+
+  @Test
+  void streamDeduplicatesMediaByEmittedMetadata() {
+    Media firstMedia =
+        Media.builder()
+            .mimeType(Media.Format.IMAGE_PNG)
+            .data(new byte[] {1, 2, 3})
+            .name("image")
+            .build();
+    Media secondMedia =
+        Media.builder()
+            .mimeType(Media.Format.IMAGE_PNG)
+            .data(new byte[] {4, 5, 6})
+            .name("image")
+            .build();
+    chatModel.setStreamPublisher(
+        Flux.just(
+            response(
+                singletonList(
+                    generation(assistantMessage("", emptyList(), singletonList(firstMedia)), null)),
+                ChatResponseMetadata.builder().id("response-id").model(MODEL).build()),
+            response(
+                singletonList(
+                    generation(
+                        assistantMessage("", emptyList(), singletonList(secondMedia)), "stop")),
+                ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build())));
+
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
+
+    assertThat(
+            testing
+                .waitForTraces(1)
+                .get(0)
+                .get(1)
+                .getAttributes()
+                .get(stringKey("gen_ai.output.messages")))
+        .isEqualTo(
+            messageSpanAttribute(
+                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"media\",\"mime_type\":\"image/png\",\"modality\":\"image\",\"name\":\"image\"}],\"finish_reason\":\"stop\"}]"));
   }
 
   @Test
@@ -592,6 +669,46 @@ class ChatModelTest {
                     equalTo(stringKey("event.name"), "gen_ai.choice"))
                 .hasSpanContext(spanContext)
                 .hasBody(choiceBodyWithToolCall()));
+  }
+
+  @Test
+  void messageEventsEmitOneEventPerToolResponse() {
+    chatModel.setCallResponse(
+        response(
+            singletonList(generation(RESPONSE, "stop")),
+            ChatResponseMetadata.builder().id("response-id").model(MODEL).build()));
+    Prompt prompt =
+        new Prompt(
+            singletonList(
+                toolResponseMessage(
+                    asList(
+                        toolResponse(),
+                        new ToolResponseMessage.ToolResponse(
+                            SECOND_TOOL_CALL_ID, SECOND_TOOL_NAME, SECOND_TOOL_RESPONSE)))));
+
+    testing.runWithSpan("parent", () -> chatModel.call(prompt));
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    testing.waitAndAssertLogRecords(
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.tool.message"))
+                .hasSpanContext(spanContext)
+                .hasBody(toolResponseBody()),
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.tool.message"))
+                .hasSpanContext(spanContext)
+                .hasBody(
+                    toolResponseBody(SECOND_TOOL_CALL_ID, SECOND_TOOL_NAME, SECOND_TOOL_RESPONSE)),
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.choice"))
+                .hasSpanContext(spanContext)
+                .hasBody(choiceBody("stop", 0, RESPONSE)));
   }
 
   @Test
@@ -1034,13 +1151,13 @@ class ChatModelTest {
                     equalTo(GEN_AI_PROVIDER_NAME, "test"),
                     equalTo(stringKey("event.name"), "gen_ai.choice"))
                 .hasSpanContext(spanContext)
-                .hasBody(choiceBody("stop", 0, "A one")),
+                .hasBody(choiceBody("stop", 1, "A one")),
         log ->
             log.hasAttributesSatisfyingExactly(
                     equalTo(GEN_AI_PROVIDER_NAME, "test"),
                     equalTo(stringKey("event.name"), "gen_ai.choice"))
                 .hasSpanContext(spanContext)
-                .hasBody(choiceBody("length", 1, "B two")));
+                .hasBody(choiceBody("length", 3, "B two")));
   }
 
   private static Value<?> messageBody(String content) {
@@ -1065,14 +1182,17 @@ class ChatModelTest {
   }
 
   private static Value<?> toolResponseBody() {
+    return toolResponseBody(TOOL_CALL_ID, TOOL_NAME, TOOL_RESPONSE);
+  }
+
+  private static Value<?> toolResponseBody(String id, String name, String response) {
     if (CAPTURE_MESSAGE_CONTENT) {
       return Value.of(
-          KeyValue.of("id", Value.of(TOOL_CALL_ID)),
-          KeyValue.of("name", Value.of(TOOL_NAME)),
-          KeyValue.of("content", Value.of(TOOL_RESPONSE)));
+          KeyValue.of("id", Value.of(id)),
+          KeyValue.of("name", Value.of(name)),
+          KeyValue.of("content", Value.of(response)));
     }
-    return Value.of(
-        KeyValue.of("id", Value.of(TOOL_CALL_ID)), KeyValue.of("name", Value.of(TOOL_NAME)));
+    return Value.of(KeyValue.of("id", Value.of(id)), KeyValue.of("name", Value.of(name)));
   }
 
   private static Value<?> choiceBodyWithToolCall() {
@@ -1167,32 +1287,56 @@ class ChatModelTest {
     return new Generation(message, metadata);
   }
 
+  private static Generation generationWithChoiceIndex(
+      String content, String finishReason, int choiceIndex) {
+    return generation(
+        assistantMessage(content, emptyList(), emptyList(), Map.of("index", choiceIndex)),
+        finishReason);
+  }
+
   private static AssistantMessage outputMessageWithToolCall() {
     return assistantMessage(RESPONSE, singletonList(toolCall()));
   }
 
   private static AssistantMessage assistantMessage(
       String content, List<AssistantMessage.ToolCall> toolCalls) {
+    return assistantMessage(content, toolCalls, emptyList());
+  }
+
+  private static AssistantMessage assistantMessage(
+      String content, List<AssistantMessage.ToolCall> toolCalls, List<Media> media) {
+    return assistantMessage(content, toolCalls, media, emptyMetadata());
+  }
+
+  private static AssistantMessage assistantMessage(
+      String content,
+      List<AssistantMessage.ToolCall> toolCalls,
+      List<Media> media,
+      Map<String, Object> metadata) {
     try {
       Object builder = AssistantMessage.class.getMethod("builder").invoke(null);
       invokeBuilder(builder, "content", String.class, content);
-      invokeBuilder(builder, "properties", Map.class, emptyMetadata());
+      invokeBuilder(builder, "properties", Map.class, metadata);
       invokeBuilder(builder, "toolCalls", List.class, toolCalls);
-      invokeBuilder(builder, "media", List.class, emptyList());
+      invokeBuilder(builder, "media", List.class, media);
       return (AssistantMessage) builder.getClass().getMethod("build").invoke(builder);
     } catch (NoSuchMethodException e) {
-      return assistantMessageWithConstructor(content, toolCalls, e);
+      return assistantMessageWithConstructor(content, toolCalls, media, metadata, e);
     } catch (ReflectiveOperationException e) {
       throw new IllegalStateException("Could not create AssistantMessage", e);
     }
   }
 
   private static AssistantMessage assistantMessageWithConstructor(
-      String content, List<AssistantMessage.ToolCall> toolCalls, NoSuchMethodException e) {
+      String content,
+      List<AssistantMessage.ToolCall> toolCalls,
+      List<Media> media,
+      Map<String, Object> metadata,
+      NoSuchMethodException e) {
     try {
       return AssistantMessage.class
-          .getConstructor(String.class, Map.class, List.class)
-          .newInstance(content, emptyMetadata(), toolCalls);
+          .getConstructor(String.class, Map.class, List.class, List.class)
+          .newInstance(content, metadata, toolCalls, media);
     } catch (ReflectiveOperationException f) {
       e.addSuppressed(f);
       throw new IllegalStateException("Could not create AssistantMessage", e);

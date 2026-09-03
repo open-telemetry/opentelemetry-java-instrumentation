@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
+package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.captureMessageContent;
-import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.eventLogger;
+import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.captureMessageContent;
+import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.eventLogger;
 import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 
@@ -29,6 +29,10 @@ import org.springframework.ai.chat.model.Generation;
 public class SpringAiMessageEvents {
   public static void emitPromptEvents(Context context, SpringAiRequest request) {
     for (Message message : request.prompt().getInstructions()) {
+      if (message instanceof ToolResponseMessage toolResponseMessage) {
+        emitToolResponseEvents(context, request, toolResponseMessage);
+        continue;
+      }
       String eventName = eventName(message.getMessageType());
       if (eventName == null) {
         continue;
@@ -41,7 +45,6 @@ public class SpringAiMessageEvents {
         }
       }
       addToolCalls(body, message);
-      addToolResponses(body, message);
       newEvent(request, eventName).setContext(context).setBody(Value.of(body)).emit();
     }
   }
@@ -63,7 +66,7 @@ public class SpringAiMessageEvents {
       if (finishReason != null) {
         body.put("finish_reason", Value.of(finishReason));
       }
-      body.put("index", Value.of(index));
+      body.put("index", Value.of(choiceIndex(generation, index)));
       Map<String, Value<?>> message = new LinkedHashMap<>();
       if (captureMessageContent()) {
         String content =
@@ -116,10 +119,6 @@ public class SpringAiMessageEvents {
       List<AssistantMessage.ToolCall> toolCalls = assistantMessage.getToolCalls();
       return toolCalls != null && !toolCalls.isEmpty();
     }
-    if (message instanceof ToolResponseMessage toolResponseMessage) {
-      List<ToolResponseMessage.ToolResponse> responses = toolResponseMessage.getResponses();
-      return responses != null && !responses.isEmpty();
-    }
     return false;
   }
 
@@ -151,38 +150,38 @@ public class SpringAiMessageEvents {
     return Value.of(result);
   }
 
-  private static void addToolResponses(Map<String, Value<?>> body, Message message) {
-    if (!(message instanceof ToolResponseMessage toolResponseMessage)) {
-      return;
-    }
+  private static void emitToolResponseEvents(
+      Context context, SpringAiRequest request, ToolResponseMessage toolResponseMessage) {
     List<ToolResponseMessage.ToolResponse> responses = toolResponseMessage.getResponses();
     if (responses == null || responses.isEmpty()) {
       return;
     }
-    if (responses.size() == 1) {
-      ToolResponseMessage.ToolResponse response = responses.get(0);
-      putString(body, "id", response.id());
+    for (ToolResponseMessage.ToolResponse response : responses) {
+      String id = response.id();
+      if (id == null) {
+        continue;
+      }
+      Map<String, Value<?>> body = new LinkedHashMap<>();
+      body.put("id", Value.of(id));
       putString(body, "name", response.name());
       if (captureMessageContent()) {
         putString(body, "content", response.responseData());
       }
-      return;
+      newEvent(request, "gen_ai.tool.message").setContext(context).setBody(Value.of(body)).emit();
     }
-    List<Value<?>> values = new ArrayList<>(responses.size());
-    for (ToolResponseMessage.ToolResponse response : responses) {
-      values.add(toolResponseEventValue(response));
-    }
-    body.put("responses", Value.of(values));
   }
 
-  private static Value<?> toolResponseEventValue(ToolResponseMessage.ToolResponse response) {
-    Map<String, Value<?>> result = new LinkedHashMap<>();
-    putString(result, "id", response.id());
-    putString(result, "name", response.name());
-    if (captureMessageContent()) {
-      putString(result, "content", response.responseData());
+  static int choiceIndex(Generation generation, int fallback) {
+    Map<String, Object> metadata = generation.getOutput().getMetadata();
+    if (metadata == null) {
+      return fallback;
     }
-    return Value.of(result);
+    Object value = metadata.get("index");
+    if (!(value instanceof Number number)) {
+      return fallback;
+    }
+    long index = number.longValue();
+    return index >= 0 && index <= Integer.MAX_VALUE ? (int) index : fallback;
   }
 
   private static void putString(Map<String, Value<?>> values, String key, @Nullable String value) {

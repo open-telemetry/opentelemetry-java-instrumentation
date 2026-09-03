@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springai.v1_0.app;
+package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.app;
 
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
