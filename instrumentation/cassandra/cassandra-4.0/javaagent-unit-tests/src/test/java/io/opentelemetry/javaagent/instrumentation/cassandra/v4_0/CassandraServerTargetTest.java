@@ -78,12 +78,12 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void unorderedContactPointsAreSortedAndOmitTheSharedDefaultPort() {
+  void configuredContactPointsPreserveOrderAndOmitTheSharedDefaultPort() {
     DbServerTarget target =
         CassandraServerTarget.of(asList("node1.example.com:9042", "10.0.0.5:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("10.0.0.5,node1.example.com");
+    assertThat(target.getAddress()).isEqualTo("node1.example.com,10.0.0.5");
     assertThat(target.getPort()).isNull();
   }
 
@@ -93,12 +93,12 @@ class CassandraServerTargetTest {
         CassandraServerTarget.of(asList("node1.example.com:9142", "10.0.0.5:9142"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("10.0.0.5:9142,node1.example.com:9142");
+    assertThat(target.getAddress()).isEqualTo("node1.example.com:9142,10.0.0.5:9142");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void mixedPortContactPointPermutationsAreSorted() {
+  void configuredMixedPortContactPointOrderIsPreserved() {
     DbServerTarget first =
         CassandraServerTarget.of(asList("node2.example.com:9142", "node1.example.com:9042"));
     DbServerTarget second =
@@ -106,8 +106,8 @@ class CassandraServerTargetTest {
 
     assertThat(first).isNotNull();
     assertThat(second).isNotNull();
-    assertThat(first.getAddress()).isEqualTo("node1.example.com:9042,node2.example.com:9142");
-    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getAddress()).isEqualTo("node2.example.com:9142,node1.example.com:9042");
+    assertThat(second.getAddress()).isEqualTo("node1.example.com:9042,node2.example.com:9142");
     assertThat(first.getPort()).isNull();
     assertThat(second.getPort()).isNull();
   }
@@ -129,7 +129,7 @@ class CassandraServerTargetTest {
         CassandraServerTarget.of(asList("[::1]:9042", "2001:db8::1:9142", "10.0.0.5:9042"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("10.0.0.5:9042,[2001:db8::1]:9142,[::1]:9042");
+    assertThat(target.getAddress()).isEqualTo("[::1]:9042,[2001:db8::1]:9142,10.0.0.5:9042");
     assertThat(target.getPort()).isNull();
   }
 
@@ -147,13 +147,13 @@ class CassandraServerTargetTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
         .isEqualTo(
-            "node1.example.com,node2.example.com,node3.example.com,node4.example.com,"
-                + "node5.example.com");
+            "node5.example.com,node2.example.com,node4.example.com,node1.example.com,"
+                + "node3.example.com");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void endpointListIsSortedBeforeKeepingTheFirstFiveOfSixEndpoints() {
+  void configuredEndpointListKeepsTheFirstFiveEndpoints() {
     DbServerTarget target =
         CassandraServerTarget.of(
             asList(
@@ -167,8 +167,8 @@ class CassandraServerTargetTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
         .isEqualTo(
-            "node1.example.com,node2.example.com,node3.example.com,node4.example.com,"
-                + "node5.example.com");
+            "node6.example.com,node3.example.com,node1.example.com,node5.example.com,"
+                + "node2.example.com");
     assertThat(target.getPort()).isNull();
   }
 
@@ -303,6 +303,25 @@ class CassandraServerTargetTest {
     assertThat(forwardTarget.getAddress())
         .isEqualTo("node1.example.com:9042,node2.example.com:9142");
     assertThat(reverseTarget.getAddress()).isEqualTo(forwardTarget.getAddress());
+  }
+
+  @Test
+  void sessionPreservesConfiguredOrderBeforeSortedProgrammaticContactPoints() {
+    configureContactPoints(asList("configured2.example.com:9042", "configured1.example.com:9042"));
+    when(session.getContext()).thenReturn(context);
+    EndPoint first =
+        new DefaultEndPoint(InetSocketAddress.createUnresolved("programmatic1.example.com", 9042));
+    EndPoint second =
+        new DefaultEndPoint(InetSocketAddress.createUnresolved("programmatic2.example.com", 9042));
+    Set<EndPoint> programmaticContactPoints = new LinkedHashSet<>(asList(second, first));
+
+    DbServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress())
+        .isEqualTo(
+            "configured2.example.com,configured1.example.com,programmatic1.example.com,"
+                + "programmatic2.example.com");
   }
 
   @Test
