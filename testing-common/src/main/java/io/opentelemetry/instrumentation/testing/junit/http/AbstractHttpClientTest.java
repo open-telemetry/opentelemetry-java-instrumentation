@@ -1170,7 +1170,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 }
               }
 
-              if (uri.getPort() != PortUtils.UNUSABLE_PORT && !uri.getHost().equals("192.0.2.1")) {
+              if (!isFailedConnectUri(uri)) {
                 // TODO: Move to test knob rather than always treating as optional
                 if (attrs.get(NETWORK_PEER_ADDRESS) != null) {
                   assertThat(attrs)
