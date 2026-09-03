@@ -392,14 +392,23 @@ class VertxRedisServerTargetsTest {
   }
 
   static class StaticReplicationConnectOptions extends RedisConnectOptions {
-    public String getTopology() {
-      return "STATIC";
+    public TestTopology getTopology() {
+      return TestTopology.STATIC;
     }
 
     @Override
     public StaticReplicationConnectOptions addConnectionString(String connectionString) {
       super.addConnectionString(connectionString);
       return this;
+    }
+  }
+
+  enum TestTopology {
+    STATIC;
+
+    @Override
+    public String toString() {
+      return "custom";
     }
   }
 }
