@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SearchPeerState;
 import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
@@ -36,7 +37,7 @@ public abstract class ElasticsearchRestRequest {
       String endpoint,
       @Nullable ElasticsearchEndpointDefinition endpointDefinition,
       @Nullable HttpEntity httpEntity,
-      @Nullable ElasticsearchServerTarget serverTarget) {
+      @Nullable DbServerTarget serverTarget) {
     return new AutoValue_ElasticsearchRestRequest(
         method, endpoint, endpointDefinition, httpEntity, serverTarget);
   }
@@ -52,7 +53,7 @@ public abstract class ElasticsearchRestRequest {
   public abstract HttpEntity getHttpEntity();
 
   @Nullable
-  public abstract ElasticsearchServerTarget getServerTarget();
+  public abstract DbServerTarget getServerTarget();
 
   public final SearchPeerState getPeerState() {
     return peerState;

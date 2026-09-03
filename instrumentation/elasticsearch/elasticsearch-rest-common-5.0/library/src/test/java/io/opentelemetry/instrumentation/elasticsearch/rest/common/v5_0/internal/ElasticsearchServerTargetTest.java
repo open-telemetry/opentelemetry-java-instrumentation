@@ -12,6 +12,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
@@ -32,7 +33,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void singleHostKeepsItsHostAndPort() {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example", 9200, "https")));
 
     assertThat(target).isNotNull();
@@ -43,7 +44,7 @@ class ElasticsearchServerTargetTest {
   @ParameterizedTest
   @MethodSource("defaultPortCases")
   void singleHostOmitsItsDefaultPort(String scheme, int port) {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example", port, scheme)));
 
     assertThat(target).isNotNull();
@@ -53,8 +54,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void singleHostWithoutPortHasNoPort() {
-    ElasticsearchServerTarget target =
-        ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example")));
+    DbServerTarget target = ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example")));
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("es.example");
@@ -63,7 +63,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void singleIpv6HostDropsItsBrackets() {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(singletonList(new HttpHost("[::1]", 9200, "https")));
 
     assertThat(target).isNotNull();
@@ -73,7 +73,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void mixedPortsStayInTheSortedAddressList() {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h2", 9201, "http"), new HttpHost("h1", 9200, "http")));
 
@@ -84,7 +84,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void mixedDefaultAndNonDefaultPortsStayInTheAddressList() {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(
             asList(
                 new HttpHost("non-default.example", 9200, "http"),
@@ -97,7 +97,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void sharedNonDefaultPortStaysInIpv4AndIpv6Addresses() {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("::1", 9200, "https"), new HttpHost("192.0.2.1", 9200, "http")));
 
@@ -108,7 +108,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void mixedHttpAndHttpsDefaultPortsAreOmitted() {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(
             asList(
                 new HttpHost("secure.example", 443, "https"),
@@ -121,10 +121,10 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void hostPermutationsHaveTheSameTarget() {
-    ElasticsearchServerTarget first =
+    DbServerTarget first =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h3", 9202), new HttpHost("h1", 9200), new HttpHost("h2", 9201)));
-    ElasticsearchServerTarget second =
+    DbServerTarget second =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h2", 9201), new HttpHost("h3", 9202), new HttpHost("h1", 9200)));
 
@@ -136,7 +136,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void duplicateHostsArePreserved() {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h2", 9201), new HttpHost("h1", 9200), new HttpHost("h1", 9200)));
 
@@ -146,7 +146,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void fiveEndpointsAreKeptAfterSorting() {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(
             asList(
                 new HttpHost("h5", 80, "http"),
@@ -162,7 +162,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void endpointsAfterFirstFiveAreOmittedAfterSorting() {
-    ElasticsearchServerTarget first =
+    DbServerTarget first =
         ElasticsearchServerTarget.of(
             asList(
                 new HttpHost("h6", 80, "http"),
@@ -171,7 +171,7 @@ class ElasticsearchServerTargetTest {
                 new HttpHost("h1", 80, "http"),
                 new HttpHost("h5", 80, "http"),
                 new HttpHost("h3", 80, "http")));
-    ElasticsearchServerTarget second =
+    DbServerTarget second =
         ElasticsearchServerTarget.of(
             asList(
                 new HttpHost("h3", 80, "http"),
@@ -190,20 +190,18 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void endpointLengthDoesNotLimitTarget() {
+  void invalidEndpointLengthDropsTarget() {
     String host = repeat("a", 256);
 
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(singletonList(new HttpHost(host, 9200, "http")));
 
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo(host).hasSize(256);
-    assertThat(target.getPort()).isEqualTo(9200);
+    assertThat(target).isNull();
   }
 
   @Test
   void severalHostsWithDifferentSchemesOmitThem() {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h1", 9200, "http"), new HttpHost("h2", 9200, "https")));
 
@@ -214,7 +212,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void literalIpv6AddressesAreBracketed() {
-    ElasticsearchServerTarget target =
+    DbServerTarget target =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("::1", 9200, "http"), new HttpHost("[fe80::1]", 9200, "http")));
 
@@ -224,7 +222,7 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void credentialsPathQueryAndFragmentAreRemoved() {
+  void credentialsPathQueryAndFragmentHaveNoTarget() {
     List<HttpHost> hosts =
         asList(
             new HttpHost("user:secret@h1", 443, "https"),
@@ -232,12 +230,7 @@ class ElasticsearchServerTargetTest {
             new HttpHost("h3?token=secret", 443, "https"),
             new HttpHost("h4#secret", 443, "https"));
 
-    ElasticsearchServerTarget target = ElasticsearchServerTarget.of(hosts);
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h1,h2,h3,h4");
-    assertThat(target.getPort()).isNull();
-    assertThat(target.getAddress()).doesNotContain("secret");
+    assertThat(ElasticsearchServerTarget.of(hosts)).isNull();
   }
 
   @Test
@@ -253,13 +246,11 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void credentialsAreRemovedFromASingleHost() {
-    ElasticsearchServerTarget target =
-        ElasticsearchServerTarget.of(
-            singletonList(new HttpHost("user:secret@es.example", 9200, "https")));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("es.example");
+  void credentialsHaveNoTarget() {
+    assertThat(
+            ElasticsearchServerTarget.of(
+                singletonList(new HttpHost("user:secret@es.example", 9200, "https"))))
+        .isNull();
   }
 
   @Test

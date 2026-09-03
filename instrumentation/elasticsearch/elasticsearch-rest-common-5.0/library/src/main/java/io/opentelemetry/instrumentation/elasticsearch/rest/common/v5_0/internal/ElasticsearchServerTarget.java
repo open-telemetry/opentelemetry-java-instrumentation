@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
-import static java.util.Collections.singletonList;
-
-import java.util.ArrayList;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
@@ -16,82 +15,19 @@ import org.apache.http.HttpHost;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class ElasticsearchServerTarget {
-
-  private static final int MAX_ENDPOINTS = 5;
-
-  private final String address;
-  @Nullable private final Integer port;
+public final class ElasticsearchServerTarget {
 
   @Nullable
-  public static ElasticsearchServerTarget of(@Nullable List<HttpHost> hosts) {
+  public static DbServerTarget of(@Nullable List<HttpHost> hosts) {
     if (hosts == null || hosts.isEmpty()) {
       return null;
     }
-    if (hosts.size() == 1) {
-      HttpHost httpHost = hosts.get(0);
-      String host = sanitizeHost(httpHost.getHostName());
-      if (host == null) {
-        return null;
-      }
-      String address = joinFirstEndpoints(singletonList(host));
-      int port = normalizedPort(httpHost);
-      return new ElasticsearchServerTarget(address, port >= 0 ? port : null);
-    }
-    return renderGroup(hosts);
-  }
 
-  private ElasticsearchServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
-
-  @Nullable
-  private static ElasticsearchServerTarget renderGroup(List<HttpHost> hosts) {
-    List<String> addresses = new ArrayList<>(hosts.size());
-    boolean allPortsAreDefault = true;
+    DbServerTargetBuilder builder = DbServerTarget.builder(-1);
     for (HttpHost httpHost : hosts) {
-      String host = sanitizeHost(httpHost.getHostName());
-      if (host == null) {
-        return null;
-      }
-      int port = effectivePort(httpHost);
-      if (port != defaultPort(httpHost)) {
-        allPortsAreDefault = false;
-      }
-      addresses.add(host);
+      builder.addEndpoint(httpHost.getHostName(), httpHost.getPort(), defaultPort(httpHost));
     }
-    List<String> endpoints = new ArrayList<>(hosts.size());
-    for (int i = 0; i < hosts.size(); i++) {
-      endpoints.add(
-          renderHostAndPort(
-              addresses.get(i), allPortsAreDefault ? -1 : effectivePort(hosts.get(i))));
-    }
-    endpoints.sort(String::compareTo);
-    String address = joinFirstEndpoints(endpoints);
-    return new ElasticsearchServerTarget(address, null);
-  }
-
-  private static String joinFirstEndpoints(List<String> endpoints) {
-    StringBuilder address = new StringBuilder();
-    int endpointCount = Math.min(endpoints.size(), MAX_ENDPOINTS);
-    for (int i = 0; i < endpointCount; i++) {
-      if (i != 0) {
-        address.append(',');
-      }
-      address.append(endpoints.get(i));
-    }
-    return address.toString();
-  }
-
-  private static int normalizedPort(HttpHost httpHost) {
-    int port = effectivePort(httpHost);
-    return port == defaultPort(httpHost) ? -1 : port;
-  }
-
-  private static int effectivePort(HttpHost httpHost) {
-    int port = httpHost.getPort();
-    return port >= 0 ? port : defaultPort(httpHost);
+    return builder.build();
   }
 
   private static int defaultPort(HttpHost httpHost) {
@@ -104,53 +40,5 @@ public class ElasticsearchServerTarget {
     return -1;
   }
 
-  private static String renderHostAndPort(String host, int port) {
-    StringBuilder endpoint = new StringBuilder();
-    if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
-      endpoint.append('[').append(host).append(']');
-    } else {
-      endpoint.append(host);
-    }
-    if (port >= 0) {
-      endpoint.append(':').append(port);
-    }
-    return endpoint.toString();
-  }
-
-  @Nullable
-  private static String sanitizeHost(@Nullable String hostName) {
-    if (hostName == null) {
-      return null;
-    }
-    String host = hostName;
-    int authorityEnd = host.length();
-    for (int i = 0; i < host.length(); i++) {
-      char c = host.charAt(i);
-      if (c == '/' || c == '?' || c == '#') {
-        authorityEnd = i;
-        break;
-      }
-    }
-    int credentialsEnd = host.lastIndexOf('@');
-    if (credentialsEnd >= authorityEnd) {
-      return null;
-    }
-    host = host.substring(credentialsEnd + 1, authorityEnd);
-    if (host.indexOf(',') >= 0) {
-      return null;
-    }
-    if (host.length() >= 2 && host.charAt(0) == '[' && host.charAt(host.length() - 1) == ']') {
-      host = host.substring(1, host.length() - 1);
-    }
-    return host.isEmpty() ? null : host;
-  }
-
-  public String getAddress() {
-    return address;
-  }
-
-  @Nullable
-  public Integer getPort() {
-    return port;
-  }
+  private ElasticsearchServerTarget() {}
 }

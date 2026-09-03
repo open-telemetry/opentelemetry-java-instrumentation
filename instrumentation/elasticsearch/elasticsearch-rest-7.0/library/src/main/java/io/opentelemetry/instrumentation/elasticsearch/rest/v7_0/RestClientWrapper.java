@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchServerTarget;
@@ -151,10 +152,9 @@ class RestClientWrapper {
 
   @SuppressWarnings("unchecked") // casting reflection result
   @Nullable
-  private static ElasticsearchServerTarget getServerTarget(Object proxy)
-      throws IllegalAccessException {
-    Supplier<ElasticsearchServerTarget> supplier =
-        (Supplier<ElasticsearchServerTarget>) serverTargetSupplierField.get(proxy);
+  private static DbServerTarget getServerTarget(Object proxy) throws IllegalAccessException {
+    Supplier<DbServerTarget> supplier =
+        (Supplier<DbServerTarget>) serverTargetSupplierField.get(proxy);
     return supplier != null ? supplier.get() : null;
   }
 
@@ -245,15 +245,14 @@ class RestClientWrapper {
   private static RestClient wrapWithTarget(
       RestClient restClient,
       Instrumenter<ElasticsearchRestRequest, Response> instrumenter,
-      @Nullable ElasticsearchServerTarget serverTarget) {
+      @Nullable DbServerTarget serverTarget) {
     RestClient wrapped = proxyFactory.apply(restClient);
     try {
       // set wrapped RestClient instance and the instrumenter on the proxy
       targetField.set(wrapped, restClient);
       instrumenterSupplierField.set(
           wrapped, (Supplier<Instrumenter<ElasticsearchRestRequest, Response>>) () -> instrumenter);
-      serverTargetSupplierField.set(
-          wrapped, (Supplier<ElasticsearchServerTarget>) () -> serverTarget);
+      serverTargetSupplierField.set(wrapped, (Supplier<DbServerTarget>) () -> serverTarget);
       return wrapped;
     } catch (Exception e) {
       throw new IllegalStateException("Failed to construct proxy instance", e);

@@ -11,6 +11,7 @@ import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -182,7 +183,7 @@ final class ElasticsearchDbAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    ElasticsearchServerTarget target = request.getServerTarget();
+    DbServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;
   }
 
@@ -192,7 +193,7 @@ final class ElasticsearchDbAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    ElasticsearchServerTarget target = request.getServerTarget();
+    DbServerTarget target = request.getServerTarget();
 
     return target != null ? target.getPort() : null;
   }
