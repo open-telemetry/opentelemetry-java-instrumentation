@@ -185,23 +185,9 @@ class DbServerTargetTest {
   }
 
   @Test
-  void endpointsAreSortedByDefault() {
+  void nativeOrderIsPreservedByDefault() {
     DbServerTarget target =
         builder()
-            .addEndpoint("c.example.com", -1)
-            .addEndpoint("a.example.com", -1)
-            .addEndpoint("b.example.com", -1)
-            .build();
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("a.example.com,b.example.com,c.example.com");
-  }
-
-  @Test
-  void nativeOrderIsPreservedWhenSortingIsOff() {
-    DbServerTarget target =
-        builder()
-            .setSorted(false)
             .addEndpoint("c.example.com", -1)
             .addEndpoint("a.example.com", -1)
             .addEndpoint("b.example.com", -1)
@@ -209,6 +195,20 @@ class DbServerTargetTest {
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("c.example.com,a.example.com,b.example.com");
+  }
+
+  @Test
+  void endpointsAreSortedWhenSortingIsOn() {
+    DbServerTarget target =
+        builder()
+            .setSorted(true)
+            .addEndpoint("c.example.com", -1)
+            .addEndpoint("a.example.com", -1)
+            .addEndpoint("b.example.com", -1)
+            .build();
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("a.example.com,b.example.com,c.example.com");
   }
 
   @Test
@@ -250,6 +250,7 @@ class DbServerTargetTest {
   void endpointsAreSortedBeforeTheyAreCapped() {
     DbServerTarget target =
         builder()
+            .setSorted(true)
             .setMaxEndpoints(2)
             .addEndpoint("c.example.com", -1)
             .addEndpoint("a.example.com", -1)
@@ -289,7 +290,7 @@ class DbServerTargetTest {
             .build();
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:9042,a.example.com:9042");
+    assertThat(target.getAddress()).isEqualTo("a.example.com:9042,[2001:db8::1]:9042");
   }
 
   @Test

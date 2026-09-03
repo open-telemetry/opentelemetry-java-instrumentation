@@ -43,7 +43,7 @@ public class DbServerTargetBuilder {
   private final int defaultPort;
   private final List<Endpoint> endpoints = new ArrayList<>();
   private int maxEndpoints = DEFAULT_MAX_ENDPOINTS;
-  private boolean sorted = true;
+  private boolean sorted;
   private boolean portAlwaysInline;
   @Nullable private String suffix;
   private boolean complete = true;
@@ -53,8 +53,8 @@ public class DbServerTargetBuilder {
   }
 
   /**
-   * Sort the rendered endpoints in natural string order. Default is to sort. Turn sorting off when
-   * the configured order carries priority, failover, or role semantics.
+   * Sort the rendered endpoints in natural string order. Default is to preserve the configured
+   * order. Turn sorting on only when endpoint order carries no semantic meaning.
    */
   @CanIgnoreReturnValue
   public DbServerTargetBuilder setSorted(boolean sorted) {
