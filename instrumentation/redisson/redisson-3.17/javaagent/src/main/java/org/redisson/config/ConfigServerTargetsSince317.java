@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
+// This helper is in the Redisson package to access package-private configuration state.
 public class ConfigServerTargetsSince317 {
 
   private static final Logger logger =
