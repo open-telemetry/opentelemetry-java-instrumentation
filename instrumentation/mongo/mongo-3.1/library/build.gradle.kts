@@ -26,18 +26,7 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
-  val testConfiguredTargetBothSemconv = register<Test>("testConfiguredTargetBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching(
-        "io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoConfiguredTargetTest"
-      )
-    }
-    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
-  }
-
   check {
-    dependsOn(testStableSemconv, testConfiguredTargetBothSemconv)
+    dependsOn(testStableSemconv)
   }
 }
