@@ -1065,7 +1065,13 @@ class SpymemcachedTest {
         "parent", () -> assertThat(memcached.get(key("test-several-nodes"))).isNull());
 
     String address =
-        configuredEndpoint(memcachedAddress) + "," + configuredEndpoint(memcachedLiteralAddress);
+        memcachedAddress.getHostString()
+            + ":"
+            + memcachedAddress.getPort()
+            + ","
+            + memcachedLiteralAddress.getHostString()
+            + ":"
+            + memcachedLiteralAddress.getPort();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1140,10 +1146,6 @@ class SpymemcachedTest {
 
   private static String spanName(String operation, String target) {
     return emitStableDatabaseSemconv() ? operation + " " + target : operation;
-  }
-
-  private static String configuredEndpoint(InetSocketAddress node) {
-    return node.getHostString() + ":" + node.getPort();
   }
 
   private static <T> T experimental(T value) {
