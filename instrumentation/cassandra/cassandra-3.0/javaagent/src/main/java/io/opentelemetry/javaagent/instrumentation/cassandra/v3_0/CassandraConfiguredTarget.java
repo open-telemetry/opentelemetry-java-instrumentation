@@ -69,8 +69,7 @@ public class CassandraConfiguredTarget {
 
     DbServerTargetBuilder targetBuilder = DbServerTarget.builder(DEFAULT_PORT);
     for (ContactPoint point : contactPoints.points) {
-      targetBuilder.addEndpoint(
-          point.host, point.port == null ? configuredPort : point.port.intValue());
+      targetBuilder.addEndpoint(point.host, point.port == null ? configuredPort : point.port);
     }
     return targetBuilder.build();
   }
