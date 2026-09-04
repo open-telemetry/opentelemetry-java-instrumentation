@@ -237,7 +237,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       delegate.releaseResources();
     }
 
-    public static void capture(Context parentContext, HttpContext httpContext) {
+    private static void capture(Context parentContext, HttpContext httpContext) {
       EndpointDetails endpointDetails = HttpClientContext.adapt(httpContext).getEndpointDetails();
       if (endpointDetails != null) {
         SearchPeerState.capture(parentContext, endpointDetails.getRemoteAddress());
