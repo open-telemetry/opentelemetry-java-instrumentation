@@ -34,7 +34,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -210,16 +209,15 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
 
     await()
         .atMost(Duration.ofSeconds(10))
-        .until(
+        .untilAsserted(
             () ->
-                Arrays.stream(
-                            redisServer
-                                .execInContainer("redis-cli", "CLIENT", "LIST")
-                                .getStdout()
-                                .split("\\R"))
-                        .filter(line -> line.contains("cmd=blpop"))
-                        .count()
-                    == 1);
+                assertThat(
+                        redisServer
+                            .execInContainer("redis-cli", "CLIENT", "LIST")
+                            .getStdout()
+                            .split("\\R"))
+                    .filteredOn(line -> line.contains("cmd=blpop"))
+                    .hasSize(1));
     assertThat(first).isNotDone();
     assertThat(second).isNotDone();
 
