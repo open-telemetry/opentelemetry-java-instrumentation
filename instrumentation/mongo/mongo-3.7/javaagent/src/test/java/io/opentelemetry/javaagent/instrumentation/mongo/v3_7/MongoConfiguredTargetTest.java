@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension testing() {
