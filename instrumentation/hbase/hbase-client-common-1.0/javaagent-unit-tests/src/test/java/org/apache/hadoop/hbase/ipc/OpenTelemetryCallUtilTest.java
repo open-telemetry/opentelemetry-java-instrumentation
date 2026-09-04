@@ -15,12 +15,13 @@ import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAnd
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 
 class OpenTelemetryCallUtilTest {
 
   @Test
-  void setsResolvedInetSocketAddress() throws Exception {
+  void setsResolvedInetSocketAddress() throws UnknownHostException {
     Call call = mock(Call.class);
     RequestAndContext requestAndContext = requestAndContext();
     OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
@@ -66,7 +67,7 @@ class OpenTelemetryCallUtilTest {
   }
 
   @Test
-  void updatesPeerWhenBufferedCallIsWrittenAgain() throws Exception {
+  void updatesPeerWhenBufferedCallIsWrittenAgain() throws UnknownHostException {
     Call call = mock(Call.class);
     OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext());
 
