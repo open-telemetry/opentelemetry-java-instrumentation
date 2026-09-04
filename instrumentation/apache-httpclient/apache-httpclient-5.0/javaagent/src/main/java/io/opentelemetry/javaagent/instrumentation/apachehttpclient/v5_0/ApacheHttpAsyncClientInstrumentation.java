@@ -16,12 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkPeerCapture;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -29,17 +26,12 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.concurrent.FutureCallback;
-import org.apache.hc.core5.http.EndpointDetails;
 import org.apache.hc.core5.http.EntityDetails;
-import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.nio.AsyncRequestProducer;
-import org.apache.hc.core5.http.nio.AsyncResponseConsumer;
-import org.apache.hc.core5.http.nio.CapacityChannel;
 import org.apache.hc.core5.http.nio.DataStreamChannel;
 import org.apache.hc.core5.http.nio.RequestChannel;
 import org.apache.hc.core5.http.protocol.BasicHttpContext;
@@ -76,14 +68,12 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToArguments({
       @ToArgument(value = 0, index = 0),
-      @ToArgument(value = 1, index = 1),
-      @ToArgument(value = 3, index = 2),
-      @ToArgument(value = 4, index = 3)
+      @ToArgument(value = 3, index = 1),
+      @ToArgument(value = 4, index = 2)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) AsyncRequestProducer requestProducer,
-        @Advice.Argument(1) AsyncResponseConsumer<?> responseConsumer,
         @Advice.Argument(3) @Nullable HttpContext originalHttpContext,
         @Advice.Argument(4) @Nullable FutureCallback<?> futureCallback) {
       HttpContext httpContext = originalHttpContext;
@@ -93,18 +83,10 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         httpContext = new BasicHttpContext();
       }
 
-      boolean captureNetworkPeer = NetworkPeerCapture.isActive(parentContext);
-      AsyncResponseConsumer<?> modifiedResponseConsumer = responseConsumer;
-      if (captureNetworkPeer) {
-        modifiedResponseConsumer =
-            new NetworkPeerResponseConsumer<>(parentContext, responseConsumer);
-      }
       WrappedFutureCallback<?> wrappedFutureCallback =
-          new WrappedFutureCallback<>(
-              parentContext, httpContext, futureCallback, captureNetworkPeer);
+          new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
       return new Object[] {
         new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback),
-        modifiedResponseConsumer,
         httpContext,
         wrappedFutureCallback
       };
@@ -185,66 +167,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class NetworkPeerResponseConsumer<T> implements AsyncResponseConsumer<T> {
-    private final Context parentContext;
-    private final AsyncResponseConsumer<T> delegate;
-
-    public NetworkPeerResponseConsumer(Context parentContext, AsyncResponseConsumer<T> delegate) {
-      this.parentContext = parentContext;
-      this.delegate = delegate;
-    }
-
-    @Override
-    public void consumeResponse(
-        HttpResponse response,
-        @Nullable EntityDetails entityDetails,
-        HttpContext context,
-        FutureCallback<T> resultCallback)
-        throws HttpException, IOException {
-      capture(parentContext, context);
-      delegate.consumeResponse(response, entityDetails, context, resultCallback);
-    }
-
-    @Override
-    public void informationResponse(HttpResponse response, HttpContext context)
-        throws HttpException, IOException {
-      delegate.informationResponse(response, context);
-    }
-
-    @Override
-    public void updateCapacity(CapacityChannel capacityChannel) throws IOException {
-      delegate.updateCapacity(capacityChannel);
-    }
-
-    @Override
-    public void consume(ByteBuffer src) throws IOException {
-      delegate.consume(src);
-    }
-
-    @Override
-    public void streamEnd(@Nullable List<? extends Header> trailers)
-        throws HttpException, IOException {
-      delegate.streamEnd(trailers);
-    }
-
-    @Override
-    public void failed(Exception cause) {
-      delegate.failed(cause);
-    }
-
-    @Override
-    public void releaseResources() {
-      delegate.releaseResources();
-    }
-
-    private static void capture(Context parentContext, HttpContext httpContext) {
-      EndpointDetails endpointDetails = HttpClientContext.adapt(httpContext).getEndpointDetails();
-      if (endpointDetails != null) {
-        NetworkPeerCapture.capture(parentContext, endpointDetails.getRemoteAddress());
-      }
-    }
-  }
-
   public static class WrappedFutureCallback<T> implements FutureCallback<T> {
 
     private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
@@ -252,21 +174,16 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final Context parentContext;
     private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
-    private final boolean captureNetworkPeer;
 
     @Nullable private volatile Context context;
     @Nullable private volatile HttpRequest httpRequest;
 
     public WrappedFutureCallback(
-        Context parentContext,
-        HttpContext httpContext,
-        @Nullable FutureCallback<T> delegate,
-        boolean captureNetworkPeer) {
+        Context parentContext, HttpContext httpContext, @Nullable FutureCallback<T> delegate) {
       this.parentContext = parentContext;
       this.httpContext = httpContext;
       // Note: this can be null in real life, so we have to handle this carefully
       this.delegate = delegate;
-      this.captureNetworkPeer = captureNetworkPeer;
     }
 
     @Override
@@ -287,9 +204,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void failed(Exception ex) {
-      if (captureNetworkPeer) {
-        NetworkPeerResponseConsumer.capture(parentContext, httpContext);
-      }
       if (context == null) {
         // this is unexpected
         logger.log(FINE, "context was never set");
@@ -307,9 +221,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void cancelled() {
-      if (captureNetworkPeer) {
-        NetworkPeerResponseConsumer.capture(parentContext, httpContext);
-      }
       if (context == null) {
         // this is unexpected
         logger.log(FINE, "context was never set");

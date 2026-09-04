@@ -17,7 +17,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -33,7 +32,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -57,7 +55,6 @@ public abstract class AbstractOpenSearchRestTest {
   protected OpensearchContainer opensearch;
   protected RestClient client;
   protected URI httpHost;
-  private String socketPeerAddress;
 
   protected abstract InstrumentationExtension getTesting();
 
@@ -83,7 +80,6 @@ public abstract class AbstractOpenSearchRestTest {
         "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
-    socketPeerAddress = InetAddress.getByName(httpHost.getHost()).getHostAddress();
 
     client = buildRestClient(opensearch.getHttpHostAddress());
     cleanup.deferAfterAll(client);
@@ -111,14 +107,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
                                 equalTo(
                                     NETWORK_PEER_ADDRESS,
-                                    emitStableDatabaseSemconv()
-                                        ? socketPeerAddress
-                                        : responseAddress),
-                                equalTo(
-                                    NETWORK_PEER_PORT,
-                                    emitStableDatabaseSemconv()
-                                        ? Long.valueOf(httpHost.getPort())
-                                        : null),
+                                    emitOldDatabaseSemconv() ? responseAddress : null),
                                 equalTo(
                                     NETWORK_TYPE,
                                     emitOldDatabaseSemconv() && responseAddress != null
@@ -209,14 +198,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
                                 equalTo(
                                     NETWORK_PEER_ADDRESS,
-                                    emitStableDatabaseSemconv()
-                                        ? socketPeerAddress
-                                        : responseAddress),
-                                equalTo(
-                                    NETWORK_PEER_PORT,
-                                    emitStableDatabaseSemconv()
-                                        ? Long.valueOf(httpHost.getPort())
-                                        : null),
+                                    emitOldDatabaseSemconv() ? responseAddress : null),
                                 equalTo(
                                     NETWORK_TYPE,
                                     emitOldDatabaseSemconv() && responseAddress != null
@@ -260,8 +242,6 @@ public abstract class AbstractOpenSearchRestTest {
         getInstrumentationName(),
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -315,10 +295,7 @@ public abstract class AbstractOpenSearchRestTest {
                         equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
                         equalTo(
                             NETWORK_PEER_ADDRESS,
-                            emitStableDatabaseSemconv() ? socketPeerAddress : responseAddress),
-                        equalTo(
-                            NETWORK_PEER_PORT,
-                            emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null),
+                            emitOldDatabaseSemconv() ? responseAddress : null),
                         equalTo(
                             NETWORK_TYPE,
                             emitOldDatabaseSemconv() && responseAddress != null

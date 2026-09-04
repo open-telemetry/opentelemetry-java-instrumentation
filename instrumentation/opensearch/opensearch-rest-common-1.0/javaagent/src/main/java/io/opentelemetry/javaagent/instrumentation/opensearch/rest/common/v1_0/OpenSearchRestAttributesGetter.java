@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
@@ -13,7 +14,6 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class OpenSearchRestAttributesGetter
@@ -80,7 +80,10 @@ final class OpenSearchRestAttributesGetter
   @Nullable
   public String getNetworkType(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    InetAddress address = getNetworkPeerInetAddress(request, response);
+    if (!emitOldDatabaseSemconv() || response == null) {
+      return null;
+    }
+    InetAddress address = response.getAddress();
     if (address instanceof Inet4Address) {
       return "ipv4";
     } else if (address instanceof Inet6Address) {
@@ -93,28 +96,12 @@ final class OpenSearchRestAttributesGetter
   @Nullable
   public String getNetworkPeerAddress(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    InetAddress address = getNetworkPeerInetAddress(request, response);
-    return address != null ? address.getHostAddress() : null;
-  }
-
-  @Override
-  @Nullable
-  public Integer getNetworkPeerPort(
-      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
+    if (!emitStableDatabaseSemconv() && response != null) {
+      InetAddress address = response.getAddress();
+      if (address != null) {
+        return address.getHostAddress();
+      }
     }
-    InetSocketAddress peerAddress = request.getNetworkPeerCapture().getPeerAddress();
-    return peerAddress != null ? peerAddress.getPort() : null;
-  }
-
-  @Nullable
-  private static InetAddress getNetworkPeerInetAddress(
-      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (emitStableDatabaseSemconv()) {
-      InetSocketAddress peerAddress = request.getNetworkPeerCapture().getPeerAddress();
-      return peerAddress != null ? peerAddress.getAddress() : null;
-    }
-    return response != null ? response.getAddress() : null;
+    return null;
   }
 }
