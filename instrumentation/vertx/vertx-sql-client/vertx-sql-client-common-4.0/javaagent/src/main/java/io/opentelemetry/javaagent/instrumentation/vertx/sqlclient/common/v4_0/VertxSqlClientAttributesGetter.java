@@ -57,7 +57,7 @@ class VertxSqlClientAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(VertxSqlClientRequest request) {
-    if (emitStableDatabaseSemconv() && request.hasConfiguredServerTarget()) {
+    if (emitStableDatabaseSemconv() && request.isServerTargetCaptured()) {
       return request.getConfiguredServerAddress();
     }
     return request.getHost();
@@ -66,7 +66,7 @@ class VertxSqlClientAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(VertxSqlClientRequest request) {
-    if (emitStableDatabaseSemconv() && request.hasConfiguredServerTarget()) {
+    if (emitStableDatabaseSemconv() && request.isServerTargetCaptured()) {
       return request.getConfiguredServerPort();
     }
     return request.getPort();

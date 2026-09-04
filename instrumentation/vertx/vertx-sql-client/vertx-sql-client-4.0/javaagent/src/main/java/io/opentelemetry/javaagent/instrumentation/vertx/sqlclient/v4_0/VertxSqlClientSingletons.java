@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoProvider;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.vertx.core.Future;
@@ -20,31 +20,32 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final VirtualField<SqlClientBase<?>, VertxSqlClientData> CLIENT_DATA =
-      VirtualField.find(SqlClientBase.class, VertxSqlClientData.class);
+  private static final VirtualField<SqlClientBase<?>, VertxSqlClientInfoProvider> CLIENT_INFO =
+      VirtualField.find(SqlClientBase.class, VertxSqlClientInfoProvider.class);
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
     return instrumenter;
   }
 
-  public static VertxSqlClientData getClientData(SqlClientBase<?> sqlClientBase) {
-    return CLIENT_DATA.get(sqlClientBase);
+  public static void attachClientInfoProvider(
+      SqlClientBase<?> sqlClientBase, @Nullable VertxSqlClientInfoProvider infoProvider) {
+    CLIENT_INFO.set(sqlClientBase, infoProvider);
   }
 
-  public static void attachClientState(
-      SqlClientBase<?> sqlClientBase, @Nullable VertxSqlClientData data) {
-    CLIENT_DATA.set(sqlClientBase, data);
-  }
-
-  public static Future<SqlConnection> attachClientState(
-      Future<SqlConnection> future, @Nullable VertxSqlClientData data) {
+  public static Future<SqlConnection> attachClientInfoProvider(
+      Future<SqlConnection> future, @Nullable VertxSqlClientInfoProvider infoProvider) {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {
-            attachClientState((SqlClientBase<?>) sqlConnection, data);
+            attachClientInfoProvider((SqlClientBase<?>) sqlConnection, infoProvider);
           }
           return sqlConnection;
         });
+  }
+
+  @Nullable
+  public static VertxSqlClientInfoProvider getClientInfoProvider(SqlClientBase<?> sqlClientBase) {
+    return CLIENT_INFO.get(sqlClientBase);
   }
 
   private VertxSqlClientSingletons() {}

@@ -14,140 +14,80 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.vertx.sqlclient.SqlConnectOptions;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class VertxServerTarget {
+public final class VertxServerTarget {
 
-  private final List<Endpoint> endpoints;
-  private final boolean complete;
-  @Nullable private String address;
-  @Nullable private Integer port;
-
-  public static VertxServerTarget create(@Nullable SqlConnectOptions database) {
-    List<Endpoint> endpoints = new ArrayList<>(1);
-    Endpoint endpoint = Endpoint.from(database);
-    if (endpoint != null) {
-      endpoints.add(endpoint);
+  @Nullable
+  public static DbServerTarget from(
+      @Nullable SqlConnectOptions connectOptions, String dbSystemName) {
+    if (connectOptions == null) {
+      return null;
     }
-    return new VertxServerTarget(endpoints, endpoint != null);
-  }
-
-  public static VertxServerTarget create(
-      @Nullable SqlConnectOptions database, @Nullable String dbSystem) {
-    VertxServerTarget target = create(database);
-    target.resolveDbSystem(dbSystem);
-    return target;
-  }
-
-  public static VertxServerTarget create(@Nullable List<? extends SqlConnectOptions> databases) {
-    if (databases == null || databases.isEmpty()) {
-      return new VertxServerTarget(new ArrayList<>(), false);
+    String host = normalizedHost(connectOptions);
+    if (host != null && host.startsWith("/")) {
+      return DbServerTarget.unixSocket(host);
     }
-    List<Endpoint> endpoints = new ArrayList<>(databases.size());
-    boolean complete = true;
-    for (SqlConnectOptions database : databases) {
-      Endpoint endpoint = Endpoint.from(database);
-      if (endpoint == null) {
-        complete = false;
-      } else {
-        endpoints.add(endpoint);
-      }
-    }
-    return new VertxServerTarget(endpoints, complete);
-  }
-
-  public static VertxServerTarget create(
-      @Nullable List<? extends SqlConnectOptions> databases, @Nullable String dbSystem) {
-    VertxServerTarget target = create(databases);
-    target.resolveDbSystem(dbSystem);
-    return target;
-  }
-
-  private VertxServerTarget(List<Endpoint> endpoints, boolean complete) {
-    this.endpoints = endpoints;
-    this.complete = complete;
-  }
-
-  public void resolveDbSystem(@Nullable String dbSystem) {
-    DbServerTarget target = complete ? buildTarget(endpoints, dbSystem) : null;
-    address = target == null ? null : target.getAddress();
-    port = target == null ? null : target.getPort();
+    return addEndpoint(DbServerTarget.builder(defaultPort(dbSystemName)), connectOptions).build();
   }
 
   @Nullable
-  public String getAddress() {
-    return address;
-  }
-
-  @Nullable
-  public Integer getPort() {
-    return port;
-  }
-
-  @Nullable
-  private static DbServerTarget buildTarget(List<Endpoint> endpoints, @Nullable String dbSystem) {
-    if (endpoints.size() == 1 && endpoints.get(0).unixSocket) {
-      return DbServerTarget.unixSocket(endpoints.get(0).host);
+  public static DbServerTarget from(
+      @Nullable List<? extends SqlConnectOptions> connectOptions, String dbSystemName) {
+    if (connectOptions == null || connectOptions.isEmpty()) {
+      return null;
+    }
+    if (connectOptions.size() == 1) {
+      return from(connectOptions.get(0), dbSystemName);
     }
 
-    DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort(dbSystem));
-    for (Endpoint endpoint : endpoints) {
-      if (endpoint.unixSocket) {
+    DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort(dbSystemName));
+    for (SqlConnectOptions options : connectOptions) {
+      String host = normalizedHost(options);
+      if (host != null && host.startsWith("/")) {
         return null;
       }
-      builder.addEndpoint(endpoint.host, endpoint.port);
+      addEndpoint(builder, options);
     }
     return builder.build();
   }
 
-  private static int defaultPort(@Nullable String dbSystem) {
-    if (POSTGRESQL.equals(dbSystem)) {
+  private static DbServerTargetBuilder addEndpoint(
+      DbServerTargetBuilder builder, @Nullable SqlConnectOptions connectOptions) {
+    if (connectOptions == null) {
+      return builder.addEndpoint(null, -1);
+    }
+    int configuredPort = connectOptions.getPort();
+    return builder.addEndpoint(connectOptions.getHost(), configuredPort > 0 ? configuredPort : -1);
+  }
+
+  @Nullable
+  private static String normalizedHost(@Nullable SqlConnectOptions connectOptions) {
+    if (connectOptions == null || connectOptions.getHost() == null) {
+      return null;
+    }
+    return connectOptions.getHost().trim();
+  }
+
+  private static int defaultPort(String dbSystemName) {
+    if (POSTGRESQL.equals(dbSystemName)) {
       return 5432;
     }
-    if (MYSQL.equals(dbSystem)) {
+    if (MYSQL.equals(dbSystemName)) {
       return 3306;
     }
-    if (MICROSOFT_SQL_SERVER.equals(dbSystem)) {
+    if (MICROSOFT_SQL_SERVER.equals(dbSystemName)) {
       return 1433;
     }
-    if (ORACLE_DB.equals(dbSystem)) {
+    if (ORACLE_DB.equals(dbSystemName)) {
       return 1521;
     }
-    if (IBM_DB2.equals(dbSystem)) {
+    if (IBM_DB2.equals(dbSystemName)) {
       return 50000;
     }
     return -1;
   }
 
-  private static class Endpoint {
-    private final String host;
-    private final int port;
-    private final boolean unixSocket;
-
-    @Nullable
-    private static Endpoint from(@Nullable SqlConnectOptions database) {
-      if (database == null || database.getHost() == null) {
-        return null;
-      }
-      String host = database.getHost();
-      boolean unixSocket = host.startsWith("/");
-      int port = database.getPort();
-      DbServerTarget target =
-          unixSocket
-              ? DbServerTarget.unixSocket(host)
-              : DbServerTarget.builder(1).addEndpoint(host, port).build();
-      if (target == null) {
-        return null;
-      }
-      return new Endpoint(host, port, unixSocket);
-    }
-
-    private Endpoint(String host, int port, boolean unixSocket) {
-      this.host = host;
-      this.port = port;
-      this.unixSocket = unixSocket;
-    }
-  }
+  private VertxServerTarget() {}
 }

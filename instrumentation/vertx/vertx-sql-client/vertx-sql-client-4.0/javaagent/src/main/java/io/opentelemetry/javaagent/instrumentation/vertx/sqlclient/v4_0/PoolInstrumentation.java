@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientData;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolClientData;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientData;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolClientData;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.resolveDbSystemName;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolClientInfoProvider;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.attachClientState;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.attachClientInfoProvider;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -26,7 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -80,13 +80,16 @@ class PoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PoolAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth onEnter(@Advice.Argument(1) SqlConnectOptions sqlConnectOptions) {
+    public static CallDepth onEnter(
+        @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
+        @Advice.Origin("#t") String declaringTypeName) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
         return callDepth;
       }
 
-      setClientData(VertxSqlClientData.create(sqlConnectOptions));
+      String dbSystemName = resolveDbSystemName(sqlConnectOptions, declaringTypeName);
+      setClientInfoProvider(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
       return callDepth;
     }
 
@@ -96,28 +99,27 @@ class PoolInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      VertxSqlClientData data = getClientData();
-      if (pool != null && data != null) {
-        // Detect db system from pool implementation class (e.g. PgPool -> postgresql).
-        // This handles cases where connect options is a generic SqlConnectOptions
-        // but the pool is database-specific (e.g. Hibernate Reactive).
-        data.resolveDbSystem(getDbSystemNameFromClassName(pool));
-        setPoolClientData(pool, data);
+      if (pool != null) {
+        setPoolClientInfoProvider(pool, getClientInfoProvider());
       }
-      setClientData(null);
+      setClientInfoProvider(null);
     }
   }
 
   @SuppressWarnings("unused")
   public static class ServerListAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth onEnter(@Advice.Argument(1) List<SqlConnectOptions> databases) {
+    public static CallDepth onEnter(
+        @Advice.Argument(1) List<SqlConnectOptions> databases,
+        @Advice.Origin("#t") String declaringTypeName) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
         return callDepth;
       }
 
-      setClientData(VertxSqlClientData.create(databases));
+      SqlConnectOptions first = databases == null || databases.isEmpty() ? null : databases.get(0);
+      String dbSystemName = resolveDbSystemName(first, declaringTypeName);
+      setClientInfoProvider(VertxSqlClientInfo.create(databases, dbSystemName));
       return callDepth;
     }
 
@@ -127,14 +129,10 @@ class PoolInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      VertxSqlClientData data = getClientData();
-      if (client != null && data != null) {
-        data.resolveDbSystem(getDbSystemNameFromClassName(client));
-        if (client instanceof Pool) {
-          setPoolClientData((Pool) client, data);
-        }
+      if (client instanceof Pool) {
+        setPoolClientInfoProvider((Pool) client, getClientInfoProvider());
       }
-      setClientData(null);
+      setClientInfoProvider(null);
     }
   }
 
@@ -144,7 +142,7 @@ class PoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<SqlConnection> onExit(
         @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
-      return wrapContext(attachClientState(future, getPoolClientData(pool)));
+      return wrapContext(attachClientInfoProvider(future, getPoolClientInfoProvider(pool)));
     }
   }
 }

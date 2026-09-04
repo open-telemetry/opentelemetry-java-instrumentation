@@ -5,40 +5,39 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
-import io.vertx.sqlclient.SqlConnectOptions;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientRequest {
 
   private final String queryText;
   private final boolean parameterizedQuery;
-  private final String dbSystemName;
   @Nullable private final Long operationBatchSize;
-  private final VertxSqlClientData clientData;
+  private final VertxSqlClientInfo initialInfo;
+  private volatile VertxSqlClientInfo info;
 
   public VertxSqlClientRequest(
       String queryText,
-      @Nullable SqlConnectOptions sqlConnectOptions,
-      boolean parameterizedQuery,
-      String dbSystemName,
-      @Nullable Long operationBatchSize) {
-    this(
-        queryText,
-        new VertxSqlClientData(sqlConnectOptions, dbSystemName),
-        parameterizedQuery,
-        operationBatchSize);
-  }
-
-  public VertxSqlClientRequest(
-      String queryText,
-      VertxSqlClientData clientData,
+      VertxSqlClientInfo info,
       boolean parameterizedQuery,
       @Nullable Long operationBatchSize) {
     this.queryText = queryText;
     this.parameterizedQuery = parameterizedQuery;
-    this.dbSystemName = clientData.getDbSystemName();
     this.operationBatchSize = operationBatchSize;
-    this.clientData = clientData;
+    this.initialInfo = info;
+    this.info = info;
+  }
+
+  public synchronized boolean replaceInfo(VertxSqlClientInfo info) {
+    if (this.info.isConfigurationCaptured()) {
+      return false;
+    }
+    this.info = info;
+    return true;
+  }
+
+  public boolean isInfoUpdated() {
+    return info != initialInfo;
   }
 
   public String getQueryText() {
@@ -47,36 +46,38 @@ public class VertxSqlClientRequest {
 
   @Nullable
   public String getUser() {
-    return clientData.getUser();
+    return info.getUser();
   }
 
   @Nullable
   public String getDatabase() {
-    return clientData.getDatabase();
+    return info.getNamespace();
   }
 
   @Nullable
   public String getHost() {
-    return clientData.getHost();
+    return info.getLegacyServerAddress();
   }
 
   @Nullable
   public Integer getPort() {
-    return clientData.getPort();
+    return info.getLegacyServerPort();
   }
 
   @Nullable
   public String getConfiguredServerAddress() {
-    return clientData.getConfiguredServerAddress();
+    DbServerTarget serverTarget = info.getServerTarget();
+    return serverTarget != null ? serverTarget.getAddress() : null;
   }
 
   @Nullable
   public Integer getConfiguredServerPort() {
-    return clientData.getConfiguredServerPort();
+    DbServerTarget serverTarget = info.getServerTarget();
+    return serverTarget != null ? serverTarget.getPort() : null;
   }
 
-  boolean hasConfiguredServerTarget() {
-    return clientData.hasConfiguredServerTarget();
+  public boolean isServerTargetCaptured() {
+    return info.isServerTargetCaptured();
   }
 
   public boolean isParameterizedQuery() {
@@ -84,7 +85,7 @@ public class VertxSqlClientRequest {
   }
 
   public String getDbSystemName() {
-    return dbSystemName;
+    return info.getDbSystemName();
   }
 
   @Nullable
