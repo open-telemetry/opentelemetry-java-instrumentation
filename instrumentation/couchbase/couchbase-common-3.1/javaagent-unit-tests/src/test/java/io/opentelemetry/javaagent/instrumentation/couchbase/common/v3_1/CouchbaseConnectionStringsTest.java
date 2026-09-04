@@ -79,8 +79,7 @@ class CouchbaseConnectionStringsTest {
   @Test
   void bucketNameIsStrippedFromSeveralSeeds() {
     CouchbaseServerTarget target =
-        CouchbaseConnectionStrings.target(
-            "couchbase://one.example,two.example/travel-sample");
+        CouchbaseConnectionStrings.target("couchbase://one.example,two.example/travel-sample");
 
     assertThat(target.getAddress()).isEqualTo("one.example,two.example");
     assertThat(target.getPort()).isNull();

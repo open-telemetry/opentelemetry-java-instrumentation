@@ -175,8 +175,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       if (port != null) {
         // RequestSpan does not expose long attributes throughout the supported range, while the
         // shaded implementation does.
-        ((OpenTelemetryRequestSpan) span)
-            .setAttribute(SERVER_PORT.getKey(), port.longValue());
+        ((OpenTelemetryRequestSpan) span).setAttribute(SERVER_PORT.getKey(), port.longValue());
       }
     }
 

@@ -53,8 +53,7 @@ public class CouchbaseConnectionStrings {
           target.addEndpoint(null, -1);
         } else {
           target.addEndpoint(
-              CouchbaseServerTarget.cleanHost(seed.hostname()),
-              seed.port() > 0 ? seed.port() : -1);
+              CouchbaseServerTarget.cleanHost(seed.hostname()), seed.port() > 0 ? seed.port() : -1);
         }
       }
       return CouchbaseServerTarget.direct(target.build());
