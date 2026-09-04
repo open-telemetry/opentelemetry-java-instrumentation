@@ -41,7 +41,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
         () -> {
           LettuceFluxTerminationRunnable handler =
               new LettuceFluxTerminationRunnable(connection, expectsResponse);
-          Flux<T> monitoredPublisher = publisher.doOnSubscribe(handler.getOnSubscribeConsumer());
+          Flux<T> monitoredPublisher = publisher.doOnSubscribe(handler.onSubscribeConsumer);
           if (expectsResponse) {
             monitoredPublisher = monitoredPublisher.doOnEach(handler).doOnCancel(handler);
           }
@@ -52,10 +52,6 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
   private LettuceFluxTerminationRunnable(
       StatefulConnection<?, ?> connection, boolean expectsResponse) {
     onSubscribeConsumer = new FluxOnSubscribeConsumer(this, connection, expectsResponse);
-  }
-
-  public Consumer<Subscription> getOnSubscribeConsumer() {
-    return onSubscribeConsumer;
   }
 
   private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
@@ -89,13 +85,13 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
     finishSpan(/* isCommandCancelled= */ true, null);
   }
 
-  public static class FluxOnSubscribeConsumer implements Consumer<Subscription> {
+  private static class FluxOnSubscribeConsumer implements Consumer<Subscription> {
 
     private final LettuceFluxTerminationRunnable owner;
     private final StatefulConnection<?, ?> connection;
     private final boolean expectsResponse;
 
-    public FluxOnSubscribeConsumer(
+    private FluxOnSubscribeConsumer(
         LettuceFluxTerminationRunnable owner,
         StatefulConnection<?, ?> connection,
         boolean expectsResponse) {
