@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class ClusterSettingsBuilderInstrumentation implements TypeInstrumentation {
+class ClusterSettingsBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

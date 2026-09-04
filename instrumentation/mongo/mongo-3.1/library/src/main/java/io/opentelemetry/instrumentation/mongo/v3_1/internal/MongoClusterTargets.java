@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class MongoClusterTargets {
+public class MongoClusterTargets {
 
   // weak keys release targets together with their clients
   private static final Cache<ClusterId, MongoServerTarget> targets = Cache.weak();
