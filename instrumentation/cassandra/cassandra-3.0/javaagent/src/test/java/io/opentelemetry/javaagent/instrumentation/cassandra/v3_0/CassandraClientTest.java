@@ -853,11 +853,7 @@ class CassandraClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? "LOCALHOST" : null),
-                            satisfies(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? val -> val.isEqualTo(4242)
-                                    : val -> val.isNull()),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? 4242L : null),
                             equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
                             equalTo(maybeStable(DB_STATEMENT), "invalid"),
                             equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
