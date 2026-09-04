@@ -94,6 +94,7 @@ class LettuceNetworkAttributesGetterTest {
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
+    assertThat(request.getPeerAddress()).isEqualTo(address);
     assertThat(getter.getNetworkPeerAddress(request, null))
         .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
     assertThat(getter.getNetworkPeerPort(request, null))
