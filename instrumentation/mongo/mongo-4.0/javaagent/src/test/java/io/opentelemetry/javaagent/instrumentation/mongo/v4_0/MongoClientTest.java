@@ -20,6 +20,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.connection.ClusterId;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
@@ -114,7 +115,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   @Test
   void commandUsesTheClusterIdentityFromClientConstruction() {
     ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
-    AtomicReference<Object> commandClusterId = new AtomicReference<>();
+    AtomicReference<ClusterId> commandClusterId = new AtomicReference<>();
     CommandListener commandListener =
         new CommandListener() {
           @Override

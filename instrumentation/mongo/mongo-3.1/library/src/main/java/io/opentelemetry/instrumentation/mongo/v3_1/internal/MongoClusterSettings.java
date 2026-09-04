@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class MongoClusterSettings {
+public class MongoClusterSettings {
 
   // getSrvHost was added in 3.10; reflection keeps this compatible with older drivers
   @Nullable private static final Method GET_SRV_HOST = findGetSrvHost();
@@ -140,7 +140,7 @@ public final class MongoClusterSettings {
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
-  public static final class LegacySrvTargetScope {
+  public static class LegacySrvTargetScope {
 
     @Nullable private final MongoServerTarget previous;
 
@@ -157,7 +157,7 @@ public final class MongoClusterSettings {
     }
   }
 
-  private static final class Configuration {
+  private static class Configuration {
 
     private final boolean direct;
     @Nullable private final MongoServerTarget target;

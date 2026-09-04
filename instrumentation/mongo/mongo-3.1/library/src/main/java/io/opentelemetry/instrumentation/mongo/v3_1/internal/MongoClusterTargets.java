@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class MongoClusterTargets {
+public class MongoClusterTargets {
 
   // weak keys release targets together with their clients
   private static final Cache<ClusterId, MongoServerTarget> targets = Cache.weak();
@@ -28,8 +28,7 @@ public final class MongoClusterTargets {
     }
   }
 
-  public static void register(
-      CommandStartedEvent event, @Nullable MongoServerTarget configuredTarget) {
+  static void register(CommandStartedEvent event, @Nullable MongoServerTarget configuredTarget) {
     ClusterId clusterId = clusterId(event);
     if (clusterId != null) {
       register(clusterId, configuredTarget);
@@ -37,7 +36,7 @@ public final class MongoClusterTargets {
   }
 
   @Nullable
-  public static MongoServerTarget get(CommandStartedEvent event) {
+  static MongoServerTarget get(CommandStartedEvent event) {
     ClusterId clusterId = clusterId(event);
     return clusterId == null ? null : targets.get(clusterId);
   }

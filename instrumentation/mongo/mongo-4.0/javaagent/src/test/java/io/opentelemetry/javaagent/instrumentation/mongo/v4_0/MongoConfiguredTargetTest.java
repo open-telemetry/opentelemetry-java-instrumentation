@@ -29,7 +29,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension testing() {
@@ -38,34 +38,37 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
 
   @Override
   protected ConfiguredClient createClient(List<ServerAddress> seeds) {
-    ClusterIdCapture clusterId = new ClusterIdCapture();
+    ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
-            .applyToClusterSettings(builder -> builder.hosts(seeds).addClusterListener(clusterId))
+            .applyToClusterSettings(
+                builder -> builder.hosts(seeds).addClusterListener(clusterIdCapture))
             .build();
-    return createClient(settings, clusterId);
+    return createClient(settings, clusterIdCapture);
   }
 
   private static ConfiguredClient createClient(
-      MongoClientSettings settings, ClusterIdCapture clusterId) {
+      MongoClientSettings settings, ClusterIdCapture clusterIdCapture) {
     MongoClient client = MongoClients.create(settings);
     return new ConfiguredClient(
-        clusterId.getClusterId(), settings.getCommandListeners().get(0), client::close);
+        clusterIdCapture.getClusterId(), settings.getCommandListeners().get(0), client::close);
   }
 
   @Test
-  void anSrvHostIsPreferredOverTheSeedsItStandsIn() {
+  void srvHostIsPreferredOverTheSeedsItStandsIn() {
     // SRV settings include a placeholder seed that the client never contacts
-    ClusterIdCapture clusterId = new ClusterIdCapture();
+    ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
             .applyToClusterSettings(
                 builder ->
-                    builder.srvHost("cluster0.example.invalid").addClusterListener(clusterId))
+                    builder
+                        .srvHost("cluster0.example.invalid")
+                        .addClusterListener(clusterIdCapture))
             .build();
 
     // closing an SRV client races the resolver thread and can report an uncaught exception
-    runCommand(createClient(settings, clusterId));
+    runCommand(createClient(settings, clusterIdCapture));
 
     assertFindSpan("mongodb+srv://cluster0.example.invalid", null);
   }

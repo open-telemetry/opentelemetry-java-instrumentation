@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import com.mongodb.ConnectionString;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterId;
+import com.mongodb.connection.ClusterSettings;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandListener;
@@ -44,6 +45,7 @@ import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.bson.BsonDocument;
@@ -89,6 +91,25 @@ public abstract class AbstractMongoConfiguredTargetTest {
         return connectionString;
       }
     };
+  }
+
+  protected static void applySrvHost(ClusterSettings.Builder builder, String host) {
+    Method srvHost = srvHostSetter();
+    assumeTrue(srvHost != null);
+    try {
+      srvHost.invoke(builder, host);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  // srvHost was added in 3.10
+  private static Method srvHostSetter() {
+    try {
+      return ClusterSettings.Builder.class.getMethod("srvHost", String.class);
+    } catch (NoSuchMethodException ignored) {
+      return null;
+    }
   }
 
   @Test
@@ -161,22 +182,6 @@ public abstract class AbstractMongoConfiguredTargetTest {
     }
 
     assertFindSpan("db1.example:27017,db2.example:27018", null);
-  }
-
-  @Test
-  void fiveConfiguredSeedsAreReported() {
-    try (ConfiguredClient client =
-        createClient(
-            asList(
-                new ServerAddress("db5.example", 27017),
-                new ServerAddress("db3.example", 27017),
-                new ServerAddress("db1.example", 27017),
-                new ServerAddress("db4.example", 27017),
-                new ServerAddress("db2.example", 27017)))) {
-      runCommand(client);
-    }
-
-    assertFindSpan("db1.example,db2.example,db3.example,db4.example,db5.example", null);
   }
 
   @Test

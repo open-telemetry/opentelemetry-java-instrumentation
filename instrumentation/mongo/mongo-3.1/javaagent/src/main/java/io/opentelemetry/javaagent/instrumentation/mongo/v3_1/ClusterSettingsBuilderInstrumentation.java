@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class ClusterSettingsBuilderInstrumentation implements TypeInstrumentation {
+class ClusterSettingsBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,13 +36,12 @@ final class ClusterSettingsBuilderInstrumentation implements TypeInstrumentation
         isConstructor().and(takesArgument(0, named("com.mongodb.connection.ClusterSettings"))),
         getClass().getName() + "$CopyConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("hosts").and(takesArgument(0, named("java.util.List"))),
-        getClass().getName() + "$HostsAdvice");
+        named("hosts").and(takesArgument(0, List.class)), getClass().getName() + "$HostsAdvice");
     transformer.applyAdviceToMethod(
         named("applyConnectionString").and(takesArgument(0, named("com.mongodb.ConnectionString"))),
         getClass().getName() + "$ConnectionStringAdvice");
     transformer.applyAdviceToMethod(
-        named("srvHost").and(takesArgument(0, named("java.lang.String"))),
+        named("srvHost").and(takesArgument(0, String.class)),
         getClass().getName() + "$SrvHostAdvice");
     transformer.applyAdviceToMethod(
         named("applySettings")
