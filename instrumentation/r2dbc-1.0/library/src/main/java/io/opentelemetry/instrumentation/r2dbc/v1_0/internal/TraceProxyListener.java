@@ -6,12 +6,10 @@
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.listener.ProxyMethodExecutionListener;
 import io.r2dbc.spi.ConnectionFactoryOptions;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -22,20 +20,18 @@ public final class TraceProxyListener implements ProxyMethodExecutionListener {
   private static final String KEY_DB_EXECUTION = "dbExecution";
 
   private final Instrumenter<DbExecution, Void> instrumenter;
-  private final ConnectionFactoryOptions factoryOptions;
-  @Nullable private final DbServerTarget configuredServerTarget;
+  private final R2dbcConnectionInfo connectionInfo;
 
   public TraceProxyListener(
       Instrumenter<DbExecution, Void> instrumenter, ConnectionFactoryOptions factoryOptions) {
     this.instrumenter = instrumenter;
-    this.factoryOptions = factoryOptions;
-    this.configuredServerTarget = DbExecution.createConfiguredServerTarget(factoryOptions);
+    this.connectionInfo = new R2dbcConnectionInfo(factoryOptions);
   }
 
   @Override
   public void beforeQuery(QueryExecutionInfo queryInfo) {
     Context parentContext = Context.current();
-    DbExecution dbExecution = new DbExecution(queryInfo, factoryOptions, configuredServerTarget);
+    DbExecution dbExecution = new DbExecution(queryInfo, connectionInfo);
     if (!instrumenter.shouldStart(parentContext, dbExecution)) {
       return;
     }
