@@ -81,18 +81,19 @@ class OpenSearchBodyExtractorTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(openSearchSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                satisfies(
-                                    maybeStable(DB_STATEMENT),
-                                    val ->
-                                        val.asString()
-                                            .doesNotContain(accentedCharacter)
-                                            .containsPattern("\\\\u00[eE]9")
-                                            .contains("\"?\""))),
+                                withServer(
+                                    equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                    equalTo(maybeStable(DB_OPERATION), "POST"),
+                                    satisfies(
+                                        maybeStable(DB_STATEMENT),
+                                        val ->
+                                            val.asString()
+                                                .doesNotContain(accentedCharacter)
+                                                .containsPattern("\\\\u00[eE]9")
+                                                .contains("\"?\"")))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
