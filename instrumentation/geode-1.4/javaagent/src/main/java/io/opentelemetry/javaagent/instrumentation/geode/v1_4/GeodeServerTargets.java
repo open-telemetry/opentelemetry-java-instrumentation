@@ -53,7 +53,10 @@ public class GeodeServerTargets {
   public static void capture(PoolFactory poolFactory, @Nullable Pool pool) {
     if (pool != null) {
       // Each pool keeps the configuration snapshot from the moment it was created.
-      POOL_TARGETS.set(pool, builder(poolFactory).build());
+      DbServerTarget target = builder(poolFactory).build();
+      if (target != null) {
+        POOL_TARGETS.set(pool, target);
+      }
     }
   }
 
