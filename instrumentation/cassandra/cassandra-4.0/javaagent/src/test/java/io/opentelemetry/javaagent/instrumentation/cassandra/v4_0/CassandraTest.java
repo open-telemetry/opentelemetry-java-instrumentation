@@ -8,6 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -74,7 +78,7 @@ class CassandraTest extends AbstractCassandraTest {
 
     String configuredTarget =
         Stream.of("127.0.0.2:9042", cassandraHost + ':' + cassandraPort)
-            .sorted(String::compareTo)
+            .sorted()
             .collect(joining(","));
     testing.waitAndAssertTraces(
         trace ->
@@ -163,7 +167,11 @@ class CassandraTest extends AbstractCassandraTest {
                       histogram ->
                           histogram.hasPointsSatisfying(
                               point ->
-                                  point.hasAttributesSatisfying(
+                                  point.hasAttributesSatisfyingExactly(
+                                      equalTo(DB_COLLECTION_NAME, "system.local"),
+                                      equalTo(DB_OPERATION_NAME, "SELECT"),
+                                      equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
+                                      equalTo(DB_SYSTEM_NAME, "cassandra"),
                                       equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                                       equalTo(NETWORK_PEER_PORT, cassandraPort)))));
     }
