@@ -32,8 +32,8 @@ class CassandraServerTarget {
     try {
       DriverContext context = session.getContext();
       DriverExecutionProfile config = context.getConfig().getDefaultProfile();
-      // basic.contact-points has no default, so the single argument lookup would throw when a
-      // session names its contact points on the builder alone
+      // The basic.contact-points option has no default, so the single-argument lookup would throw
+      // when a session names its contact points on the builder alone.
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
       DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT);
       for (String contactPoint : configuredContactPoints) {
