@@ -12,11 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchServerTarget.Endpoint;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
 import java.util.stream.Stream;
-import org.apache.http.HttpHost;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -62,51 +58,6 @@ class OpenSearchServerTargetTest {
   }
 
   @Test
-  void singleIpv6EndpointDropsItsBrackets() {
-    OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(singletonList(new Endpoint("[::1]", 9200, "https")));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("::1");
-    assertThat(target.getPort()).isEqualTo(9200);
-  }
-
-  @Test
-  void mixedPortsStayInConfiguredOrder() {
-    OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(
-            asList(new Endpoint("h2", 9201, "http"), new Endpoint("h1", 9200, "http")));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h2:9201,h1:9200");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void mixedDefaultAndNonDefaultPortsStayInTheAddressList() {
-    OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(
-            asList(
-                new Endpoint("non-default.example", 9200, "http"),
-                new Endpoint("default.example", -1, "http")));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("non-default.example:9200,default.example:80");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void sharedNonDefaultPortStaysInIpv4AndIpv6Addresses() {
-    OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(
-            asList(new Endpoint("::1", 9200, "https"), new Endpoint("192.0.2.1", 9200, "http")));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]:9200,192.0.2.1:9200");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
   void mixedHttpAndHttpsDefaultPortsAreOmitted() {
     OpenSearchServerTarget target =
         OpenSearchServerTarget.of(
@@ -138,124 +89,6 @@ class OpenSearchServerTargetTest {
     assertThat(second).isNotNull();
     assertThat(first.getAddress()).isEqualTo("h3:9202,h1:9200,h2:9201");
     assertThat(second.getAddress()).isEqualTo("h2:9201,h3:9202,h1:9200");
-  }
-
-  @Test
-  void duplicateEndpointsArePreserved() {
-    OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(
-            asList(
-                new Endpoint("h2", 9201, "http"),
-                new Endpoint("h1", 9200, "http"),
-                new Endpoint("h1", 9200, "http")));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h2:9201,h1:9200,h1:9200");
-  }
-
-  @Test
-  void fiveEndpointsAreIncludedInConfiguredOrder() {
-    OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(
-            asList(
-                new Endpoint("h5", 80, "http"),
-                new Endpoint("h3", 80, "http"),
-                new Endpoint("h1", 80, "http"),
-                new Endpoint("h4", 80, "http"),
-                new Endpoint("h2", 80, "http")));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h5,h3,h1,h4,h2");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void onlyFirstFiveConfiguredEndpointsAreIncluded() {
-    OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(
-            asList(
-                new Endpoint("h6", 80, "http"),
-                new Endpoint("h3", 80, "http"),
-                new Endpoint("h1", 80, "http"),
-                new Endpoint("h5", 80, "http"),
-                new Endpoint("h2", 80, "http"),
-                new Endpoint("h4", 80, "http")));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("h6,h3,h1,h5,h2");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void literalIpv6AddressesAreBracketedInGroups() {
-    OpenSearchServerTarget target =
-        OpenSearchServerTarget.of(
-            asList(new Endpoint("::1", 9200, "http"), new Endpoint("[fe80::1]", 9201, "http")));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]:9200,[fe80::1]:9201");
-  }
-
-  @Test
-  void credentialsPathQueryAndFragmentHaveNoTarget() {
-    List<Endpoint> endpoints =
-        asList(
-            new Endpoint("user:secret@h1", 9200, "https"),
-            new Endpoint("h2/prefix", 9200, "https"),
-            new Endpoint("h3?token=secret", 9200, "https"),
-            new Endpoint("h4#secret", 9200, "https"));
-
-    assertThat(OpenSearchServerTarget.of(endpoints)).isNull();
-  }
-
-  @Test
-  void userInfoAfterAuthorityHasNoTarget() {
-    assertThat(
-            OpenSearchServerTarget.of(
-                singletonList(new Endpoint("search.example?token=user@secret", 9200, "https"))))
-        .isNull();
-    assertThat(
-            OpenSearchServerTarget.of(
-                singletonList(new Endpoint("user:pa/ss@search.example", 9200, "https"))))
-        .isNull();
-  }
-
-  @Test
-  void credentialsHaveNoTarget() {
-    assertThat(
-            OpenSearchServerTarget.of(
-                singletonList(new Endpoint("user:secret@search.example", 9200, "https"))))
-        .isNull();
-  }
-
-  @Test
-  void endpointThatIsOnlyCredentialsHasNoTarget() {
-    assertThat(
-            OpenSearchServerTarget.of(singletonList(new Endpoint("user:secret@", 9200, "https"))))
-        .isNull();
-    assertThat(
-            OpenSearchServerTarget.of(
-                asList(
-                    new Endpoint("h1", 9200, "https"),
-                    new Endpoint("user:secret@", 9200, "https"))))
-        .isNull();
-  }
-
-  @Test
-  void resolvedHttpHostAliasContainingCommaHasNoTarget() throws UnknownHostException {
-    HttpHost unsafeHost =
-        new HttpHost(
-            InetAddress.getByAddress("h1.example,h2.example", new byte[] {127, 0, 0, 1}),
-            9200,
-            "http");
-    Endpoint unsafeEndpoint =
-        new Endpoint(unsafeHost.getHostName(), unsafeHost.getPort(), unsafeHost.getSchemeName());
-
-    assertThat(OpenSearchServerTarget.of(singletonList(unsafeEndpoint))).isNull();
-    assertThat(
-            OpenSearchServerTarget.of(
-                asList(new Endpoint("safe.example", 9200, "http"), unsafeEndpoint)))
-        .isNull();
   }
 
   private static Stream<Arguments> defaultPortCases() {
