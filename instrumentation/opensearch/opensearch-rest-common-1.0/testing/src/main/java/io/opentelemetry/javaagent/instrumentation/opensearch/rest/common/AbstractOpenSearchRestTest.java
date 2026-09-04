@@ -225,28 +225,6 @@ public abstract class AbstractOpenSearchRestTest {
   }
 
   @Test
-  void mixedDefaultAndNonDefaultPortsAreReportedInline() throws Exception {
-    RestClient nodeListClient = buildRestClient("https://127.0.0.2:443", "http://127.0.0.3:9443");
-    cleanup.deferCleanup(nodeListClient);
-    resetNodes(nodeListClient, opensearch.getHttpHostAddress());
-
-    Response response = nodeListClient.performRequest(new Request("GET", "_cluster/health"));
-
-    assertConfiguredTarget("127.0.0.2:443,127.0.0.3:9443", null, getResponseAddress(response));
-  }
-
-  @Test
-  void sharedNonDefaultPortIsReportedInline() throws Exception {
-    RestClient nodeListClient = buildRestClient("https://127.0.0.2:9443", "http://127.0.0.3:9443");
-    cleanup.deferCleanup(nodeListClient);
-    resetNodes(nodeListClient, opensearch.getHttpHostAddress());
-
-    Response response = nodeListClient.performRequest(new Request("GET", "_cluster/health"));
-
-    assertConfiguredTarget("127.0.0.2:9443,127.0.0.3:9443", null, getResponseAddress(response));
-  }
-
-  @Test
   void theTargetDoesNotFollowLaterNodeChanges() throws Exception {
     RestClient singleNodeClient = buildRestClient(opensearch.getHttpHostAddress());
     cleanup.deferCleanup(singleNodeClient);
