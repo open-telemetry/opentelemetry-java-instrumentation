@@ -70,17 +70,12 @@ public class JedisSingletons {
     SHARDED_TARGET_CONFIGURED.set(sharded, true);
   }
 
-  @Nullable
-  private static RedisServerTarget shardedTarget(Sharded<?, ?> sharded) {
-    return SHARDED_TARGET.get(sharded);
-  }
-
   public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
     if (!Boolean.TRUE.equals(SHARDED_TARGET_CONFIGURED.get(sharded))
         || !(shard instanceof BinaryJedis)) {
       return;
     }
-    setConnectionTarget(((BinaryJedis) shard).getClient(), shardedTarget(sharded));
+    setConnectionTarget(((BinaryJedis) shard).getClient(), SHARDED_TARGET.get(sharded));
   }
 
   public static void setConnectionTarget(
