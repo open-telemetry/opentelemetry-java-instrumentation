@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceReactiveCommandContext;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -33,7 +34,7 @@ public class LettuceMonoDualConsumer<T>
 
   @Override
   public void accept(Subscription subscription) {
-    RedisCommand<?, ?, ?> subscriptionCommand = LettuceSingletons.currentReactiveCommand();
+    RedisCommand<?, ?, ?> subscriptionCommand = LettuceReactiveCommandContext.current();
     if (subscriptionCommand == null) {
       logger.fine("Failed to correlate a Lettuce reactive subscription with its command.");
       return;

@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceReactiveCommandContext;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
@@ -89,7 +90,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
     @Override
     public void accept(Subscription subscription) {
-      RedisCommand<?, ?, ?> command = LettuceSingletons.currentReactiveCommand();
+      RedisCommand<?, ?, ?> command = LettuceReactiveCommandContext.current();
       if (command == null) {
         logger.fine("Failed to correlate a Lettuce reactive subscription with its command.");
         return;

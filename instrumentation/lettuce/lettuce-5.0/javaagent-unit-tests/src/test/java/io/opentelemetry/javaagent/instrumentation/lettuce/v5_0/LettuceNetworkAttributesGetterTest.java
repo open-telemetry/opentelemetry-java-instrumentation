@@ -272,31 +272,31 @@ class LettuceNetworkAttributesGetterTest {
       Future<SocketAddress> first =
           executor.submit(
               () -> {
-                LettuceSingletons.enterReactiveCommand(firstCommand);
+                LettuceReactiveCommandContext.enter(firstCommand);
                 try {
                   RedisCommand<?, ?, ?> command =
-                      requireNonNull(LettuceSingletons.currentReactiveCommand());
+                      requireNonNull(LettuceReactiveCommandContext.current());
                   LettuceSingletons.recordCommandPeer(command, firstAddress);
                   ready.countDown();
                   release.await();
                   return LettuceSingletons.commandPeerAddress(command);
                 } finally {
-                  LettuceSingletons.exitReactiveCommand();
+                  LettuceReactiveCommandContext.exit();
                 }
               });
       Future<SocketAddress> second =
           executor.submit(
               () -> {
-                LettuceSingletons.enterReactiveCommand(secondCommand);
+                LettuceReactiveCommandContext.enter(secondCommand);
                 try {
                   RedisCommand<?, ?, ?> command =
-                      requireNonNull(LettuceSingletons.currentReactiveCommand());
+                      requireNonNull(LettuceReactiveCommandContext.current());
                   LettuceSingletons.recordCommandPeer(command, secondAddress);
                   ready.countDown();
                   release.await();
                   return LettuceSingletons.commandPeerAddress(command);
                 } finally {
-                  LettuceSingletons.exitReactiveCommand();
+                  LettuceReactiveCommandContext.exit();
                 }
               });
 
