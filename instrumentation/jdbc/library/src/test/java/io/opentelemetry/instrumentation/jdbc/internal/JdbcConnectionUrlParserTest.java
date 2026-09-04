@@ -2421,6 +2421,11 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getServerAddressGroup()).isNull();
   }
 
+  @Test
+  void invalidUnixSocketInServerAddressGroupFailsClosed() {
+    assertThat(UrlParsingUtils.parseServerAddressGroup("/valid.sock,/invalid?sock", null)).isNull();
+  }
+
   @ParameterizedTest
   @MethodSource("configuredOrderServerAddressGroupArguments")
   void preservesConfiguredServerAddressGroupOrder(String url, String expectedServerAddressGroup) {

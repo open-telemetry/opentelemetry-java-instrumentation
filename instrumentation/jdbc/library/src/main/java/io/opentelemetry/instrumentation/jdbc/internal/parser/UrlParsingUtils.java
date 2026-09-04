@@ -531,6 +531,9 @@ public final class UrlParsingUtils {
     for (HostPort endpoint : endpoints) {
       String host = endpoint.host();
       if (host.startsWith("/")) {
+        if (DbServerTarget.unixSocket(host) == null) {
+          return null;
+        }
         continue;
       }
       int instanceStart = host.indexOf('\\');
