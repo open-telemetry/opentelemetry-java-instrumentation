@@ -67,20 +67,12 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database/dup,service.peer")
     filter {
       includeTestsMatching(
-        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testConnectingToSupplierCapturesTheSuppliedOptions",
+        "VertxSqlClientTest.testConnectingToSupplierCapturesTheSuppliedOptions",
       )
-      includeTestsMatching(
-        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testConnectingToServerListReportsTheWholeConfiguredTarget",
-      )
-      includeTestsMatching(
-        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testConnectingToServerListWithUnixSocketOmitsStableTarget",
-      )
-      includeTestsMatching(
-        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testOracleSupplierConnectFailureCapturesSuppliedOptions",
-      )
-      includeTestsMatching(
-        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientTest.testSupplierAddressDoesNotBecomeFallbackSpanName",
-      )
+      includeTestsMatching("VertxSqlClientTest.testConnectingToServerListReportsTheWholeConfiguredTarget")
+      includeTestsMatching("VertxSqlClientTest.testConnectingToServerListWithUnixSocketOmitsStableTarget")
+      includeTestsMatching("VertxSqlClientTest.testOracleSupplierConnectFailureCapturesSuppliedOptions")
+      includeTestsMatching("VertxSqlClientTest.testSupplierAddressDoesNotBecomeFallbackSpanName")
     }
   }
 
