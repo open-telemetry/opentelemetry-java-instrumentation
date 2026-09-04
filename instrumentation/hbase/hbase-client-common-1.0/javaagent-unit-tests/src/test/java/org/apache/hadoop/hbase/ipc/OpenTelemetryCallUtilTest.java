@@ -95,8 +95,7 @@ class OpenTelemetryCallUtilTest {
 
   private static RequestAndContext requestAndContext() {
     HbaseRequest request =
-        HbaseRequest.create(
-            "Get", null, "user", "logical-host", 4321, "logical-target", null);
+        HbaseRequest.create("Get", null, "user", "logical-host", 4321, "logical-target", null);
     return RequestAndContext.create(request, mock(Scope.class), mock(Context.class));
   }
 }
