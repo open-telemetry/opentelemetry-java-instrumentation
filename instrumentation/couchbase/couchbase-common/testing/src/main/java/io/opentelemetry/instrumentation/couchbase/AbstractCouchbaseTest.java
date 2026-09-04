@@ -127,25 +127,25 @@ public abstract class AbstractCouchbaseTest {
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
-  protected String serverAddress() {
+  protected String configuredServerAddress() {
     return emitStableDatabaseSemconv() ? "127.0.0.1" : null;
   }
 
-  protected StringAssertConsumer operationServerAddress() {
+  protected StringAssertConsumer serverAddress() {
     if (emitStableDatabaseSemconv()) {
-      return val -> val.isEqualTo(serverAddress());
+      return val -> val.isEqualTo(configuredServerAddress());
     }
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
-  protected LongAssertConsumer operationServerPort() {
+  protected LongAssertConsumer serverPort() {
     return !emitStableDatabaseSemconv() && includesNetworkAttributes()
         ? val -> val.isNotNull()
         : val -> val.isNull();
   }
 
   protected String spanName(String operation) {
-    return emitStableDatabaseSemconv() ? operation + " " + serverAddress() : operation;
+    return emitStableDatabaseSemconv() ? operation + " " + configuredServerAddress() : operation;
   }
 
   protected StringAssertConsumer experimentalAttribute() {

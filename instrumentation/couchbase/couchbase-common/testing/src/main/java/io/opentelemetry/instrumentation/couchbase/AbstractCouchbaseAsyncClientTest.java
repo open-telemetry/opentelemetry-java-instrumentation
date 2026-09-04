@@ -126,7 +126,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(SERVER_ADDRESS, serverAddress())),
+                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
                 span ->
                     span.hasName(spanName("ClusterManager.hasBucket"))
                         .hasKind(SpanKind.CLIENT)
@@ -137,8 +137,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, operationServerAddress()),
-                            satisfies(SERVER_PORT, operationServerPort()),
+                            satisfies(SERVER_ADDRESS, serverAddress()),
+                            satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()))));
   }
@@ -178,7 +178,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(SERVER_ADDRESS, serverAddress())),
+                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -193,8 +193,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, operationServerAddress()),
-                            satisfies(SERVER_PORT, operationServerPort()),
+                            satisfies(SERVER_ADDRESS, serverAddress()),
+                            satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(
@@ -243,7 +243,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(SERVER_ADDRESS, serverAddress())),
+                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -258,8 +258,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, operationServerAddress()),
-                            satisfies(SERVER_PORT, operationServerPort()),
+                            satisfies(SERVER_ADDRESS, serverAddress()),
+                            satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(
@@ -278,8 +278,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, operationServerAddress()),
-                            satisfies(SERVER_PORT, operationServerPort()),
+                            satisfies(SERVER_ADDRESS, serverAddress()),
+                            satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(
@@ -324,7 +324,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(SERVER_ADDRESS, serverAddress())),
+                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -343,8 +343,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, operationServerAddress()),
-                            satisfies(SERVER_PORT, operationServerPort()),
+                            satisfies(SERVER_ADDRESS, serverAddress()),
+                            satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(
@@ -386,7 +386,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(SERVER_ADDRESS, serverAddress())),
+                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
                 span -> upsertSpan(trace, bucketSettings, span),
                 span -> upsertSpan(trace, bucketSettings, span)));
   }
@@ -405,8 +405,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             equalTo(NETWORK_TYPE, networkType()),
             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-            satisfies(SERVER_ADDRESS, operationServerAddress()),
-            satisfies(SERVER_PORT, operationServerPort()),
+            satisfies(SERVER_ADDRESS, serverAddress()),
+            satisfies(SERVER_PORT, serverPort()),
             satisfies(stringKey("couchbase.local.address"), experimentalAttribute()),
             satisfies(stringKey("couchbase.operation_id"), experimentalAttribute()));
   }
