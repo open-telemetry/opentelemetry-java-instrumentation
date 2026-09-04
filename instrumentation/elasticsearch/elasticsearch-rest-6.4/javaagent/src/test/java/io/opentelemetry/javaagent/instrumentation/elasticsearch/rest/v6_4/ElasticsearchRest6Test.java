@@ -305,7 +305,8 @@ class ElasticsearchRest6Test {
   @Test
   void configuredNodeListIsTheWholeTarget() throws IOException {
     HttpHost deadHost = deadHost();
-    RestClient nodeListClient = RestClient.builder(httpHost, deadHost).build();
+    RestClient nodeListClient =
+        RestClient.builder(httpHost, deadHost).setMaxRetryTimeoutMillis(Integer.MAX_VALUE).build();
     cleanup.deferCleanup(nodeListClient);
 
     nodeListClient.performRequest(new Request("GET", "_cluster/health"));
