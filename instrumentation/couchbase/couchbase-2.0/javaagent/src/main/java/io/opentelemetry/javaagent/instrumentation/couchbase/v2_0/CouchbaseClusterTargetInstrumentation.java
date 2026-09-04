@@ -11,6 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.ClusterFacade;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -40,7 +42,10 @@ class CouchbaseClusterTargetInstrumentation implements TypeInstrumentation {
     public static void captureConfiguredTarget(
         @Advice.FieldValue("core") ClusterFacade core,
         @Advice.Argument(1) Object connectionString) {
-      CouchbaseCoreTargets.register(core, CouchbaseConnectionStrings.target(connectionString));
+      DbServerTarget target = CouchbaseConnectionStrings.target(connectionString);
+      if (target != null) {
+        VirtualField.find(ClusterFacade.class, DbServerTarget.class).set(core, target);
+      }
     }
   }
 }
