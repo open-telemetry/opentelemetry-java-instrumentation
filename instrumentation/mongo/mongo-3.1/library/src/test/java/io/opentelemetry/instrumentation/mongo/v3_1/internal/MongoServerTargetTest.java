@@ -216,22 +216,9 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void srvHostOmitsCredentialsPathQueryAndFragment() {
-    MongoServerTarget target =
-        MongoServerTarget.srvHost(
-            "mongodb+srv://user:password@cluster0.example.com/database?tls=true#fragment");
-
-    assertThat(target.getAddress()).isEqualTo("mongodb+srv://cluster0.example.com");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void unsafeEncodedSrvIdentityIsNotReported() {
-    assertThat(
-            MongoServerTarget.srvConnectionString(
-                "mongodb+srv://user%3Apassword%40cluster0.example.com"))
-        .isNull();
-    assertThat(MongoServerTarget.srvConnectionString("mongodb://cluster0.example.com")).isNull();
+  void srvHostOnlyAcceptsAnExtractedHostname() {
+    assertThat(MongoServerTarget.srvHost("mongodb+srv://cluster0.example.com")).isNull();
+    assertThat(MongoServerTarget.srvHost("cluster0.example.com/database")).isNull();
   }
 
   @Test

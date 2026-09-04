@@ -30,24 +30,15 @@ public class MongoServerTarget {
   @Nullable private final Integer port;
 
   @Nullable
-  static MongoServerTarget srvHost(@Nullable String srvHost) {
-    if (srvHost == null || srvHost.isEmpty()) {
+  static MongoServerTarget srvHost(@Nullable String host) {
+    if (host == null || host.isEmpty()) {
       return null;
     }
-    String host = sanitizeSrvHost(srvHost);
     DbServerTarget target =
         DbServerTarget.builder(DEFAULT_PORT).addEndpoint(host, DEFAULT_PORT).build();
     return target == null || !target.getAddress().equals(host)
         ? null
         : new MongoServerTarget(SRV_SCHEME + host, null);
-  }
-
-  @Nullable
-  static MongoServerTarget srvConnectionString(@Nullable String connectionString) {
-    if (!isSrvConnectionString(connectionString)) {
-      return null;
-    }
-    return srvHost(connectionString);
   }
 
   @Nullable
@@ -98,11 +89,6 @@ public class MongoServerTarget {
     this.port = port;
   }
 
-  static boolean isSrvConnectionString(@Nullable String connectionString) {
-    return connectionString != null
-        && connectionString.regionMatches(true, 0, SRV_SCHEME, 0, SRV_SCHEME.length());
-  }
-
   String getAddress() {
     return address;
   }
@@ -144,21 +130,6 @@ public class MongoServerTarget {
       return host.substring(1, host.length() - 1);
     }
     return host;
-  }
-
-  private static String sanitizeSrvHost(String value) {
-    int schemeSeparator = value.indexOf("://");
-    String host = schemeSeparator < 0 ? value : value.substring(schemeSeparator + 3);
-    int end = host.length();
-    for (char separator : new char[] {'/', '?', '#'}) {
-      int index = host.indexOf(separator);
-      if (index >= 0 && index < end) {
-        end = index;
-      }
-    }
-    host = host.substring(0, end);
-    int credentialsSeparator = host.lastIndexOf('@');
-    return credentialsSeparator < 0 ? host : host.substring(credentialsSeparator + 1);
   }
 
   private static boolean hasUnsafeEncodedIpv6Zone(String host) {
