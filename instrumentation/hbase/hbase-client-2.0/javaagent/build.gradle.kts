@@ -53,8 +53,8 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
