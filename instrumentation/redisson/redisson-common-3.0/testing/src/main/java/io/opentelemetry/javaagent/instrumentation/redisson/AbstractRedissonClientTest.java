@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -33,6 +34,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -125,11 +127,6 @@ public abstract class AbstractRedissonClientTest {
 
   private Config createConfig(int database, Integer connectionMinimumIdleSize)
       throws InvocationTargetException, IllegalAccessException {
-    String newAddress = address;
-    if (useRedisProtocol()) {
-      // Newer versions of redisson require scheme, older versions forbid it
-      newAddress = "redis://" + address;
-    }
     Config config = new Config();
     try {
       // script cache is enabled by default in 3.46.0 and that causes hashCommand and lockCommand
@@ -139,7 +136,7 @@ public abstract class AbstractRedissonClientTest {
       // ignored
     }
     SingleServerConfig singleServerConfig = config.useSingleServer();
-    singleServerConfig.setAddress(newAddress);
+    singleServerConfig.setAddress(redisAddress(host));
     singleServerConfig.setTimeout(30_000);
     singleServerConfig.setDatabase(database);
     if (connectionMinimumIdleSize != null) {
@@ -155,6 +152,11 @@ public abstract class AbstractRedissonClientTest {
       // ignored
     }
     return config;
+  }
+
+  private String redisAddress(String serverHost) {
+    // Newer versions of redisson require scheme, older versions forbid it.
+    return (useRedisProtocol() ? "redis://" : "") + serverHost + ":" + port;
   }
 
   @AfterEach
@@ -275,6 +277,89 @@ public abstract class AbstractRedissonClientTest {
     } finally {
       databaseOne.shutdown();
     }
+  }
+
+  @Test
+  void configuredMasterSlaveServerTarget() {
+    String aliasHost = host.equals(ip) ? "localhost" : ip;
+    String configuredServerAddress = host + ":" + port + "," + aliasHost + ":" + port;
+
+    Config config = new Config();
+    config
+        .useMasterSlaveServers()
+        .setMasterAddress(redisAddress(host))
+        .addSlaveAddress(redisAddress(aliasHost));
+    RedissonClient configuredClient = Redisson.create(config);
+    try {
+      assertConfiguredTarget(
+          configuredClient,
+          "configured-target",
+          configuredServerAddress,
+          configuredServerAddress,
+          null,
+          host);
+    } finally {
+      configuredClient.shutdown();
+    }
+  }
+
+  @Test
+  void configuredSingleServerTarget() {
+    String configuredHost = host.equals(ip) ? "localhost" : ip;
+    Config config = new Config();
+    config.useSingleServer().setAddress(redisAddress(configuredHost));
+    RedissonClient configuredClient = Redisson.create(config);
+    try {
+      assertConfiguredTarget(
+          configuredClient,
+          "configured-single-target",
+          configuredHost + ":" + port,
+          configuredHost,
+          port,
+          configuredHost);
+    } finally {
+      configuredClient.shutdown();
+    }
+  }
+
+  private void assertConfiguredTarget(
+      RedissonClient client,
+      String key,
+      String stableSpanTarget,
+      String stableServerAddress,
+      Long stableServerPort,
+      String legacyServerAddress) {
+    testing.clearData();
+    client.getBucket(key).set("value");
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .filteredOn(spanData -> spanData.getName().startsWith("SET"))
+                    .singleElement()
+                    .satisfies(
+                        spanData ->
+                            assertThat(spanData)
+                                .hasName(
+                                    emitStableDatabaseSemconv() ? "SET " + stableSpanTarget : "SET")
+                                .hasKind(CLIENT)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(
+                                        SERVER_ADDRESS,
+                                        emitStableDatabaseSemconv()
+                                            ? stableServerAddress
+                                            : legacyServerAddress),
+                                    equalTo(
+                                        SERVER_PORT,
+                                        emitStableDatabaseSemconv() ? stableServerPort : port),
+                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                    equalTo(DB_NAMESPACE, dbNamespace()),
+                                    equalTo(maybeStable(DB_STATEMENT), "SET " + key + " ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
 
   @Test
