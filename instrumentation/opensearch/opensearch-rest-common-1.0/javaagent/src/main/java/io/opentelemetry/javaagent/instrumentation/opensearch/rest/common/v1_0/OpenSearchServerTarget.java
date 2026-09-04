@@ -18,7 +18,7 @@ public class OpenSearchServerTarget {
       return null;
     }
 
-    DbServerTargetBuilder builder = DbServerTarget.builder(-1);
+    DbServerTargetBuilder builder = DbServerTarget.builder(-1).setSorted(true);
     for (Endpoint endpoint : endpoints) {
       builder.addEndpoint(endpoint.host, endpoint.port, defaultPort(endpoint));
     }

@@ -67,12 +67,12 @@ class OpenSearchServerTargetTest {
                 new Endpoint("plain.example", 80, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("secure.example,plain.example");
+    assertThat(target.getAddress()).isEqualTo("plain.example,secure.example");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void configuredNodeOrderIsPreserved() {
+  void configuredNodeOrderDoesNotChangeTarget() {
     DbServerTarget first =
         OpenSearchServerTarget.of(
             asList(
@@ -88,8 +88,8 @@ class OpenSearchServerTargetTest {
 
     assertThat(first).isNotNull();
     assertThat(second).isNotNull();
-    assertThat(first.getAddress()).isEqualTo("h3:9202,h1:9200,h2:9201");
-    assertThat(second.getAddress()).isEqualTo("h2:9201,h3:9202,h1:9200");
+    assertThat(first.getAddress()).isEqualTo("h1:9200,h2:9201,h3:9202");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
   }
 
   private static Stream<Arguments> defaultPortCases() {
