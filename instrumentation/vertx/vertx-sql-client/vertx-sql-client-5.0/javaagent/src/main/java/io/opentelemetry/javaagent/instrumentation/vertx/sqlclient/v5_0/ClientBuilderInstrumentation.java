@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setAddressGroup;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolAddressGroup;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolClientInfoProvider;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -17,13 +15,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoCapture;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -96,28 +94,27 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToFields(@ToField(value = "connectHandler", index = 0))
     public static Object[] onEnter(
         @Advice.This Object clientBuilder,
+        @Advice.FieldValue("driver") Object driver,
         @Advice.FieldValue("connectHandler") @Nullable Handler<SqlConnection> connectHandler) {
       List<SqlConnectOptions> databases =
           VertxSqlClientSingletons.getBuilderDatabases(clientBuilder);
       if (databases != null && !databases.isEmpty()) {
-        List<SqlConnectOptions> snapshots = new ArrayList<>(databases.size());
-        for (SqlConnectOptions database : databases) {
-          snapshots.add(database != null ? new SqlConnectOptions(database) : null);
-        }
-        databases = snapshots;
-        SqlConnectOptions firstDatabase = databases.get(0);
-        VertxSqlAddressGroup addressGroup = VertxSqlAddressGroup.of(databases);
-        setSqlConnectOptions(firstDatabase);
-        setAddressGroup(addressGroup);
+        VertxSqlClientInfo info =
+            VertxSqlClientInfo.create(
+                databases, VertxSqlClientUtil.getDbSystemNameFromClassName(driver));
+        setClientInfoProvider(info);
         return new Object[] {
-          VertxSqlClientSingletons.wrapConnectHandler(connectHandler, firstDatabase, addressGroup),
-          new BuildState(firstDatabase, addressGroup, null, connectHandler)
+          info != null
+              ? VertxSqlClientSingletons.wrapConnectHandler(connectHandler, info)
+              : connectHandler,
+          new BuildState(info, null, connectHandler)
         };
       }
 
-      VertxSqlClientDataCapture dataCapture = new VertxSqlClientDataCapture();
-      VertxSqlClientSingletons.setBuildingDataCapture(dataCapture);
-      return new Object[] {connectHandler, new BuildState(null, null, dataCapture, connectHandler)};
+      VertxSqlClientInfoCapture supplierCapture = new VertxSqlClientInfoCapture();
+      setClientInfoProvider(supplierCapture);
+      VertxSqlClientSingletons.setBuildingSupplierCapture(supplierCapture);
+      return new Object[] {connectHandler, new BuildState(null, supplierCapture, connectHandler)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -126,9 +123,8 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable Object client,
         @Advice.FieldValue("connectHandler") @Nullable Handler<SqlConnection> connectHandler,
         @Advice.Enter @Nullable Object[] enterState) {
-      setSqlConnectOptions(null);
-      setAddressGroup(null);
-      VertxSqlClientSingletons.setBuildingDataCapture(null);
+      setClientInfoProvider(null);
+      VertxSqlClientSingletons.setBuildingSupplierCapture(null);
 
       if (enterState == null) {
         return new Object[] {connectHandler};
@@ -137,31 +133,26 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
       BuildState state = (BuildState) enterState[1];
       if (client instanceof Pool) {
         Pool pool = (Pool) client;
-        if (state.connectOptions != null) {
-          setPoolConnectOptions(pool, state.connectOptions);
-          setPoolAddressGroup(pool, state.addressGroup);
-          VertxSqlClientSingletons.resolveAndStoreDbSystem(pool, state.connectOptions);
+        if (state.info != null) {
+          setPoolClientInfoProvider(pool, state.info);
         } else {
-          VertxSqlClientSingletons.setPoolDataCapture(pool, state.dataCapture);
+          VertxSqlClientSingletons.setPoolSupplierCapture(pool, state.supplierCapture);
         }
       }
       return new Object[] {state.connectHandler};
     }
 
     public static class BuildState {
-      @Nullable public final SqlConnectOptions connectOptions;
-      @Nullable public final VertxSqlAddressGroup addressGroup;
-      @Nullable public final VertxSqlClientDataCapture dataCapture;
+      @Nullable public final VertxSqlClientInfo info;
+      @Nullable public final VertxSqlClientInfoCapture supplierCapture;
       @Nullable public final Handler<SqlConnection> connectHandler;
 
       public BuildState(
-          @Nullable SqlConnectOptions connectOptions,
-          @Nullable VertxSqlAddressGroup addressGroup,
-          @Nullable VertxSqlClientDataCapture dataCapture,
+          @Nullable VertxSqlClientInfo info,
+          @Nullable VertxSqlClientInfoCapture supplierCapture,
           @Nullable Handler<SqlConnection> connectHandler) {
-        this.connectOptions = connectOptions;
-        this.addressGroup = addressGroup;
-        this.dataCapture = dataCapture;
+        this.info = info;
+        this.supplierCapture = supplierCapture;
         this.connectHandler = connectHandler;
       }
     }

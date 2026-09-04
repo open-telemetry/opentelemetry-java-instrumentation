@@ -7,13 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getAddressGroup;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolAddressGroup;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolSqlConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setAddressGroup;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolAddressGroup;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.resolveDbSystemName;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolClientInfoProvider;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -25,8 +23,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoCapture;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoProvider;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -46,8 +45,6 @@ class PoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    // Match both the Pool interface (for static pool() factory methods) and classes/interfaces
-    // that implement/extend Pool (for instance methods like getConnection())
     return implementsInterface(named("io.vertx.sqlclient.Pool"));
   }
 
@@ -70,34 +67,28 @@ class PoolInstrumentation implements TypeInstrumentation {
   public static class PoolAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth onEnter(@Advice.Argument(1) SqlConnectOptions sqlConnectOptions) {
+    public static CallDepth onEnter(
+        @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
+        @Advice.Origin("#t") String declaringTypeName) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+      if (callDepth.getAndIncrement() == 0) {
+        String dbSystemName = resolveDbSystemName(sqlConnectOptions, declaringTypeName);
+        setClientInfoProvider(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
       }
-
-      // set connection options to ThreadLocal, they will be read in SqlClientBase constructor
-      setSqlConnectOptions(sqlConnectOptions);
-      setAddressGroup(VertxSqlAddressGroup.of(sqlConnectOptions));
       return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Return @Nullable Pool pool,
-        @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
-        @Advice.Enter CallDepth callDepth) {
+        @Advice.Return @Nullable Pool pool, @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
       if (pool != null) {
-        setPoolConnectOptions(pool, sqlConnectOptions);
-        setPoolAddressGroup(pool, getAddressGroup());
-        VertxSqlClientSingletons.resolveAndStoreDbSystem(pool, sqlConnectOptions);
+        setPoolClientInfoProvider(pool, getClientInfoProvider());
       }
-      setSqlConnectOptions(null);
-      setAddressGroup(null);
+      setClientInfoProvider(null);
     }
   }
 
@@ -106,12 +97,13 @@ class PoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Object onEnter(@Advice.This Pool pool) {
-      VertxSqlClientDataCapture dataCapture = VertxSqlClientSingletons.getPoolDataCapture(pool);
-      if (dataCapture == null) {
+      VertxSqlClientInfoCapture supplierCapture =
+          VertxSqlClientSingletons.getPoolSupplierCapture(pool);
+      if (supplierCapture == null) {
         return null;
       }
       Object connectionRequest = new Object();
-      dataCapture.addConnectionRequest(connectionRequest);
+      supplierCapture.addConnectionRequest(connectionRequest);
       return connectionRequest;
     }
 
@@ -122,20 +114,20 @@ class PoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool pool,
         @Advice.Return @Nullable Future<SqlConnection> future,
         @Advice.Enter @Nullable Object connectionRequest) {
-      VertxSqlClientDataCapture dataCapture = VertxSqlClientSingletons.getPoolDataCapture(pool);
+      VertxSqlClientInfoProvider infoProvider = getPoolClientInfoProvider(pool);
+      VertxSqlClientInfoCapture supplierCapture =
+          infoProvider instanceof VertxSqlClientInfoCapture
+              ? (VertxSqlClientInfoCapture) infoProvider
+              : null;
       if (future == null) {
-        if (dataCapture != null && connectionRequest != null) {
-          dataCapture.removeConnectionRequest(connectionRequest);
+        if (supplierCapture != null && connectionRequest != null) {
+          supplierCapture.removeConnectionRequest(connectionRequest);
         }
         return null;
       }
       return wrapContext(
-          VertxSqlClientSingletons.attachClientState(
-              future,
-              getPoolSqlConnectOptions(pool),
-              getPoolAddressGroup(pool),
-              dataCapture,
-              connectionRequest));
+          VertxSqlClientSingletons.attachClientInfoProvider(
+              future, infoProvider, connectionRequest));
     }
   }
 }
