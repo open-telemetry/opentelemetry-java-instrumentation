@@ -141,15 +141,6 @@ class JedisServerTargetsTest {
     assertThat(target.getPort()).isNull();
   }
 
-  private static Object unconvertibleMember() {
-    return new Object() {
-      @Override
-      public String toString() {
-        throw new IllegalStateException("must not convert unsupported member");
-      }
-    };
-  }
-
   @Test
   void portlessStringSentinelIpv6AddressStaysUnbracketed() {
     RedisServerTarget target =
@@ -176,5 +167,14 @@ class JedisServerTargetsTest {
   void noNodes() {
     assertThat(JedisServerTargets.ofNodes(null)).isNull();
     assertThat(JedisServerTargets.ofNodes(emptyList())).isNull();
+  }
+
+  private static Object unconvertibleMember() {
+    return new Object() {
+      @Override
+      public String toString() {
+        throw new IllegalStateException("must not convert unsupported member");
+      }
+    };
   }
 }
