@@ -969,7 +969,9 @@ class ClickHouseClientV1Test {
         "host1,host2",
         "host?email=user@example.com",
         "configured.example%3Fpassword%3Dsecret",
-        "[configured.example]"
+        "[configured.example]",
+        " configured.example",
+        "configured.example "
       })
   void testConfiguredNodeHostsRejectMalformedValues(String configuredHost) throws Exception {
     ClickHouseNode malformedNode = ClickHouseNode.builder(server).host(configuredHost).build();

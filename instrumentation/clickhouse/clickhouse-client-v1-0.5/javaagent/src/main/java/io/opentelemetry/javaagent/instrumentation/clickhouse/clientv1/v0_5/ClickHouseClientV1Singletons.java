@@ -126,10 +126,23 @@ public class ClickHouseClientV1Singletons {
         || host.indexOf('?') >= 0
         || host.indexOf('#') >= 0
         || host.indexOf(',') >= 0
-        || host.indexOf('=') >= 0) {
+        || host.indexOf('=') >= 0
+        || host.indexOf('%') >= 0
+        || host.indexOf('[') >= 0
+        || host.indexOf(']') >= 0
+        || hasWhitespace(host)) {
       return null;
     }
     return host.indexOf('@') < 0 ? host : null;
+  }
+
+  private static boolean hasWhitespace(String value) {
+    for (int i = 0; i < value.length(); i++) {
+      if (Character.isWhitespace(value.charAt(i))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static class ServerTarget {

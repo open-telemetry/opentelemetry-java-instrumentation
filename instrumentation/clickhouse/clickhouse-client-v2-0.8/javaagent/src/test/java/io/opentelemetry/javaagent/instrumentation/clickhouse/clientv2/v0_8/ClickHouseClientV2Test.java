@@ -57,6 +57,8 @@ import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -900,6 +902,17 @@ class ClickHouseClientV2Test {
                 "http://host6.example:not-a-port"));
 
     assertServerInfo(endpoints, null, null, null);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "http://first.example,second.example:8123",
+        " http://host.example:8123",
+        "http://host.example:8123 "
+      })
+  void testConfiguredEndpointsRejectAmbiguousAuthorities(String endpoint) throws Exception {
+    assertServerInfo(new HashSet<>(asList(endpoint)), null, null, null);
   }
 
   @Test

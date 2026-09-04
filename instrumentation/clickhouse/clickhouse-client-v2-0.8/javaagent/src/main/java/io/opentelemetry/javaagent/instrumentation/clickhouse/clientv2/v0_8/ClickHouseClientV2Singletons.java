@@ -155,6 +155,9 @@ public class ClickHouseClientV2Singletons {
 
     @Nullable
     private static EndpointTarget extractEndpoint(String endpoint) {
+      if (hasWhitespace(endpoint)) {
+        return null;
+      }
       String scheme = null;
       int authorityStart = endpoint.indexOf("://");
       if (authorityStart < 0) {
@@ -175,7 +178,9 @@ public class ClickHouseClientV2Singletons {
         return null;
       }
       String authority = endpoint.substring(authorityStart, authorityEnd);
-      if (authority.indexOf('=') >= 0 || hasUnsafePercentEscape(authority)) {
+      if (authority.indexOf('=') >= 0
+          || authority.indexOf(',') >= 0
+          || hasUnsafePercentEscape(authority)) {
         return null;
       }
       if (authority.startsWith("[")) {
@@ -232,6 +237,15 @@ public class ClickHouseClientV2Singletons {
       return !authority.startsWith("[")
           || bracketEnd < percent
           || authority.indexOf('%', percent + 1) >= 0;
+    }
+
+    private static boolean hasWhitespace(String value) {
+      for (int i = 0; i < value.length(); i++) {
+        if (Character.isWhitespace(value.charAt(i))) {
+          return true;
+        }
+      }
+      return false;
     }
 
     @Nullable
