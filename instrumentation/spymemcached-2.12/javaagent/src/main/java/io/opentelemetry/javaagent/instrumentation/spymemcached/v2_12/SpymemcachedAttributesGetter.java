@@ -58,22 +58,22 @@ class SpymemcachedAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(SpymemcachedRequest spymemcachedRequest) {
-    // server.address and server.port describe the configured target and are emitted only when
-    // stable database conventions are enabled and the target was captured
-    if (!emitStableDatabaseSemconv()) {
-      return null;
+    if (emitStableDatabaseSemconv()) {
+      DbServerTarget target = spymemcachedRequest.getServerTarget();
+      return target == null ? null : target.getAddress();
     }
-    DbServerTarget target = spymemcachedRequest.getServerTarget();
-    return target == null ? null : target.getAddress();
+    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
+    return address == null ? null : address.getHostString();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(SpymemcachedRequest spymemcachedRequest) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
+    if (emitStableDatabaseSemconv()) {
+      DbServerTarget target = spymemcachedRequest.getServerTarget();
+      return target == null ? null : target.getPort();
     }
-    DbServerTarget target = spymemcachedRequest.getServerTarget();
-    return target == null ? null : target.getPort();
+    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
+    return address == null ? null : address.getPort();
   }
 }

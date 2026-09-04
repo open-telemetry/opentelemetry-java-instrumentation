@@ -6,12 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -30,8 +36,8 @@ class SpymemcachedAttributesGetterTest {
     request.setHandlingNode(memcachedNode("selected.example", 11212));
 
     assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "one.example" : null);
-    assertThat(getter.getServerPort(request)).isNull();
+        .isEqualTo(emitStableDatabaseSemconv() ? "one.example" : "selected.example");
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 11212);
   }
 
   @Test
@@ -41,8 +47,9 @@ class SpymemcachedAttributesGetterTest {
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
     assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "one.example:11212,two.example:11212" : null);
-    assertThat(getter.getServerPort(request)).isNull();
+        .isEqualTo(
+            emitStableDatabaseSemconv() ? "one.example:11212,two.example:11212" : "two.example");
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 11212);
   }
 
   @Test
@@ -52,18 +59,64 @@ class SpymemcachedAttributesGetterTest {
     request.setHandlingNode(memcachedNode("selected.example", 11213));
 
     assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "one.example:11211,two.example:11212" : null);
-    assertThat(getter.getServerPort(request)).isNull();
+        .isEqualTo(
+            emitStableDatabaseSemconv()
+                ? "one.example:11211,two.example:11212"
+                : "selected.example");
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 11213);
   }
 
   @Test
-  void clientWithoutAConfiguredTargetNamesNoServer() {
+  void clientWithoutAConfiguredTargetUsesHandlingNodeInLegacyTelemetry() {
     SpymemcachedRequest request =
         SpymemcachedRequest.create(mock(MemcachedConnection.class), "asyncGet");
     request.setHandlingNode(memcachedNode("one.example", 11211));
 
-    assertThat(getter.getServerAddress(request)).isNull();
-    assertThat(getter.getServerPort(request)).isNull();
+    assertThat(getter.getServerAddress(request))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "one.example");
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 11211);
+  }
+
+  @Test
+  void selectedNodeIsReportedOnlyWhenStableTelemetryIsDisabled() {
+    MemcachedConnection connection = mock(MemcachedConnection.class);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
+    request.setHandlingNode(memcachedNode("selected.example", 11212));
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractServerAttributes(attributes, request);
+
+    Attributes result = attributes.build();
+    assertThat(result.get(SERVER_ADDRESS))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "selected.example");
+    assertThat(result.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 11212L);
+  }
+
+  @Test
+  void selectedNodeDoesNotOverwriteStableConfiguredTarget() {
+    MemcachedConnection connection = mock(MemcachedConnection.class);
+    SpymemcachedSingletons.setServerTarget(
+        connection, asList(node("one.example", 11212), node("two.example", 11212)));
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
+    request.setHandlingNode(memcachedNode("selected.example", 11213));
+    AttributesBuilder attributes = Attributes.builder();
+    attributes.put(SERVER_ADDRESS, getter.getServerAddress(request));
+    Integer serverPort = getter.getServerPort(request);
+    if (serverPort != null) {
+      attributes.put(SERVER_PORT, serverPort);
+    }
+
+    extractServerAttributes(attributes, request);
+
+    Attributes result = attributes.build();
+    assertThat(result.get(SERVER_ADDRESS))
+        .isEqualTo(
+            emitStableDatabaseSemconv()
+                ? "one.example:11212,two.example:11212"
+                : "selected.example");
+    assertThat(result.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 11213L);
+    assertThat(request.getServerTarget().getAddress())
+        .isEqualTo("one.example:11212,two.example:11212");
   }
 
   @Test
@@ -108,7 +161,7 @@ class SpymemcachedAttributesGetterTest {
 
   private static SpymemcachedRequest request(List<InetSocketAddress> nodes) {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(connection, nodes);
+    SpymemcachedSingletons.setServerTarget(connection, nodes);
     return SpymemcachedRequest.create(connection, "asyncGet");
   }
 
@@ -120,6 +173,14 @@ class SpymemcachedAttributesGetterTest {
     MemcachedNode node = mock(MemcachedNode.class);
     when(node.getSocketAddress()).thenReturn(address);
     return node;
+  }
+
+  private static void extractServerAttributes(
+      AttributesBuilder attributes, SpymemcachedRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      ServerAttributesExtractor.create(new SpymemcachedAttributesGetter())
+          .onStart(attributes, Context.root(), request);
+    }
   }
 
   private static InetSocketAddress node(String host, int port) {

@@ -48,10 +48,10 @@ class ConnectionFactoryInstrumentation implements TypeInstrumentation {
   public static class CreateConnectionAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void captureConfiguredNodes(
+    public static void onExit(
         @Advice.Argument(0) @Nullable List<InetSocketAddress> nodes,
         @Advice.Return @Nullable MemcachedConnection connection) {
-      SpymemcachedServerTargets.capture(connection, nodes);
+      SpymemcachedSingletons.setServerTarget(connection, nodes);
     }
   }
 }
