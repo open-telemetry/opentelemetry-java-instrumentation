@@ -80,6 +80,8 @@ class MetricRegistrar implements AutoCloseable {
     String metricName = metricInfo.getMetricName();
 
     if (!metrics.matches(metricName)) {
+      // shortcut: when metric is excluded, we don't even need to attempt building it nor let the
+      // meter filter the metrics.
       logger.log(FINE, "Metric {0} is excluded by configuration", metricName);
       return;
     }

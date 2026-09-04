@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
@@ -19,8 +21,11 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 class FilteringMeter implements Meter {
+
+  private static final Logger logger = Logger.getLogger(FilteringMeter.class.getName());
 
   private static final Meter NOOP_METER = OpenTelemetry.noop().getMeter("noop");
   private static final ObservableLongMeasurement NOOP_LONG_MEASUREMENT =
@@ -36,24 +41,32 @@ class FilteringMeter implements Meter {
     this.metrics = metrics;
   }
 
+  private Meter getMeterAndLog(String metricName) {
+    if (metrics.matches(metricName)) {
+      return delegate;
+    }
+    logger.log(FINE, "Metric is filtered out by configuration: " + metricName);
+    return NOOP_METER;
+  }
+
   @Override
   public LongCounterBuilder counterBuilder(String s) {
-    return (metrics.matches(s) ? delegate : NOOP_METER).counterBuilder(s);
+    return getMeterAndLog(s).counterBuilder(s);
   }
 
   @Override
   public LongUpDownCounterBuilder upDownCounterBuilder(String s) {
-    return (metrics.matches(s) ? delegate : NOOP_METER).upDownCounterBuilder(s);
+    return getMeterAndLog(s).upDownCounterBuilder(s);
   }
 
   @Override
   public DoubleHistogramBuilder histogramBuilder(String s) {
-    return (metrics.matches(s) ? delegate : NOOP_METER).histogramBuilder(s);
+    return getMeterAndLog(s).histogramBuilder(s);
   }
 
   @Override
   public DoubleGaugeBuilder gaugeBuilder(String s) {
-    return (metrics.matches(s) ? delegate : NOOP_METER).gaugeBuilder(s);
+    return getMeterAndLog(s).gaugeBuilder(s);
   }
 
   @Override
