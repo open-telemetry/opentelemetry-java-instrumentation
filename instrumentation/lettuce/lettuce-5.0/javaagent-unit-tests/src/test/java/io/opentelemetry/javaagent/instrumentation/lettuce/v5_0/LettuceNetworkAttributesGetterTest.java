@@ -24,6 +24,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.unix.DomainSocketAddress;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -84,6 +85,22 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
+  void commandKeepsConfiguredServerAddressWhenPeerIsUnknown() {
+    RedisCommand<?, ?, ?> command = command();
+    LettuceSingletons.COMMAND_ADDRESS.set(
+        command, InetSocketAddress.createUnresolved("redis.example", PORT));
+    LettuceSingletons.COMMAND_TARGET.set(
+        command, RedisServerTarget.ofHostAndPort("redis.example", PORT));
+
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+
+    assertThat(getter.getServerAddress(command)).isEqualTo("redis.example");
+    assertThat(getter.getServerPort(command)).isEqualTo(emitStableDatabaseSemconv() ? null : PORT);
+    assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+  }
+
+  @Test
   void batchUsesResolvedSelectedAddress() throws UnknownHostException {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
@@ -99,6 +116,20 @@ class LettuceNetworkAttributesGetterTest {
         .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
     assertThat(getter.getNetworkPeerPort(request, null))
         .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+  }
+
+  @Test
+  void batchDropsUnresolvedSelectedAddress() {
+    RedisCommand<?, ?, ?> command = command();
+    LettuceSingletons.recordCommandPeer(
+        command, InetSocketAddress.createUnresolved("redis.example", PORT));
+    LettuceBatchRequest request =
+        LettuceBatchRequest.create(singletonList(command), null, null, null);
+
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   @Test
