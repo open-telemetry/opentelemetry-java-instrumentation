@@ -67,9 +67,7 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
               host,
               port,
               ClickHouseClientV1Singletons.peerEndpoint(host, port),
-              ClickHouseClientV1Singletons.serverAddress(clickHouseRequest),
-              ClickHouseClientV1Singletons.serverPort(clickHouseRequest),
-              ClickHouseClientV1Singletons.serverAddressGroup(clickHouseRequest),
+              ClickHouseClientV1Singletons.serverTarget(clickHouseRequest),
               server.getDatabase().orElse(ClickHouseDefaults.DATABASE.getDefaultValue().toString()),
               ClickHouseRequestAccess.getQuery(clickHouseRequest));
 

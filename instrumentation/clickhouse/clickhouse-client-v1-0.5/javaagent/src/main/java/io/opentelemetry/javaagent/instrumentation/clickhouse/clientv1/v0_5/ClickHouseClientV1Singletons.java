@@ -26,8 +26,8 @@ public class ClickHouseClientV1Singletons {
   private static final CapturedServerTarget NO_SERVER_TARGET = new CapturedServerTarget(null);
   private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
 
-  private static final VirtualField<ClickHouseNodes, ServerTarget> NODES_SERVER_TARGET =
-      VirtualField.find(ClickHouseNodes.class, ServerTarget.class);
+  private static final VirtualField<ClickHouseNodes, DbServerTarget> NODES_SERVER_TARGET =
+      VirtualField.find(ClickHouseNodes.class, DbServerTarget.class);
   private static final VirtualField<ClickHouseRequest<?>, CapturedServerTarget>
       REQUEST_SERVER_TARGET =
           VirtualField.find(ClickHouseRequest.class, CapturedServerTarget.class);
@@ -50,21 +50,12 @@ public class ClickHouseClientV1Singletons {
   }
 
   @Nullable
-  public static String serverAddressGroup(ClickHouseRequest<?> request) {
-    ServerTarget target = serverTarget(request);
-    return target == null || !target.addressGroup ? null : target.target.getAddress();
-  }
-
-  @Nullable
-  public static String serverAddress(ClickHouseRequest<?> request) {
-    ServerTarget target = serverTarget(request);
-    return target == null || target.addressGroup ? null : target.target.getAddress();
-  }
-
-  @Nullable
-  public static Integer serverPort(ClickHouseRequest<?> request) {
-    ServerTarget target = serverTarget(request);
-    return target == null ? null : target.target.getPort();
+  public static DbServerTarget serverTarget(ClickHouseRequest<?> request) {
+    CapturedServerTarget capturedTarget = REQUEST_SERVER_TARGET.get(request);
+    if (capturedTarget != null) {
+      return capturedTarget.target;
+    }
+    return uncapturedServerTarget(request);
   }
 
   public static ClickHouseDbRequest.Endpoint peerEndpoint(String host, int port) {
@@ -82,23 +73,14 @@ public class ClickHouseClientV1Singletons {
       ClickHouseRequest<?> request, ClickHouseRequest<?> copiedRequest) {
     CapturedServerTarget capturedTarget = REQUEST_SERVER_TARGET.get(request);
     if (capturedTarget == null) {
-      ServerTarget target = uncapturedServerTarget(request);
+      DbServerTarget target = uncapturedServerTarget(request);
       capturedTarget = target == null ? NO_SERVER_TARGET : new CapturedServerTarget(target);
     }
     REQUEST_SERVER_TARGET.set(copiedRequest, capturedTarget);
   }
 
   @Nullable
-  private static ServerTarget serverTarget(ClickHouseRequest<?> request) {
-    CapturedServerTarget capturedTarget = REQUEST_SERVER_TARGET.get(request);
-    if (capturedTarget != null) {
-      return capturedTarget.target;
-    }
-    return uncapturedServerTarget(request);
-  }
-
-  @Nullable
-  private static ServerTarget uncapturedServerTarget(ClickHouseRequest<?> request) {
+  private static DbServerTarget uncapturedServerTarget(ClickHouseRequest<?> request) {
     ClickHouseNodes nodes = ClickHouseRequestAccess.getNodes(request);
     if (nodes != null) {
       return NODES_SERVER_TARGET.get(nodes);
@@ -108,21 +90,19 @@ public class ClickHouseClientV1Singletons {
   }
 
   @Nullable
-  private static ServerTarget createServerTarget(Collection<ClickHouseNode> nodes) {
+  private static DbServerTarget createServerTarget(Collection<ClickHouseNode> nodes) {
     DbServerTargetBuilder builder = DbServerTarget.builder(-1);
     for (ClickHouseNode node : nodes) {
       addEndpoint(builder, node);
     }
-    DbServerTarget target = builder.build();
-    return target == null ? null : new ServerTarget(target, nodes.size() > 1);
+    return builder.build();
   }
 
   @Nullable
-  private static ServerTarget createServerTarget(ClickHouseNode node) {
+  private static DbServerTarget createServerTarget(ClickHouseNode node) {
     DbServerTargetBuilder builder = DbServerTarget.builder(-1);
     addEndpoint(builder, node);
-    DbServerTarget target = builder.build();
-    return target == null ? null : new ServerTarget(target, false);
+    return builder.build();
   }
 
   private static void addEndpoint(DbServerTargetBuilder builder, ClickHouseNode node) {
@@ -158,20 +138,10 @@ public class ClickHouseClientV1Singletons {
   }
 
   private static class CapturedServerTarget {
-    @Nullable private final ServerTarget target;
+    @Nullable private final DbServerTarget target;
 
-    private CapturedServerTarget(@Nullable ServerTarget target) {
+    private CapturedServerTarget(@Nullable DbServerTarget target) {
       this.target = target;
-    }
-  }
-
-  private static class ServerTarget {
-    private final DbServerTarget target;
-    private final boolean addressGroup;
-
-    private ServerTarget(DbServerTarget target, boolean addressGroup) {
-      this.target = target;
-      this.addressGroup = addressGroup;
     }
   }
 

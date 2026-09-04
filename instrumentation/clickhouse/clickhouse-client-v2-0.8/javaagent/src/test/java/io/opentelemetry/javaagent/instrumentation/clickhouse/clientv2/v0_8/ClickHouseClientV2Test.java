@@ -804,9 +804,9 @@ class ClickHouseClientV2Test {
     cleanup.deferCleanup(httpsClient);
     cleanup.deferCleanup(multiClient);
 
-    assertServerInfo(httpClient, "http.example", null, null);
-    assertServerInfo(httpsClient, "https.example", null, null);
-    assertServerInfo(multiClient, null, null, "http.example,https.example");
+    assertServerTarget(httpClient, "http.example", null);
+    assertServerTarget(httpsClient, "https.example", null);
+    assertServerTarget(multiClient, "http.example,https.example", null);
   }
 
   @Test
@@ -820,7 +820,7 @@ class ClickHouseClientV2Test {
             .build();
     cleanup.deferCleanup(testClient);
 
-    assertServerInfo(testClient, null, null, "host1.example:9123,host2.example:9123");
+    assertServerTarget(testClient, "host1.example:9123,host2.example:9123", null);
   }
 
   @Test
@@ -834,7 +834,7 @@ class ClickHouseClientV2Test {
             .build();
     cleanup.deferCleanup(testClient);
 
-    assertServerInfo(testClient, null, null, "[2001:db8::1]:9443,host.example:8123");
+    assertServerTarget(testClient, "[2001:db8::1]:9443,host.example:8123", null);
   }
 
   @Test
@@ -848,7 +848,7 @@ class ClickHouseClientV2Test {
             .build();
     cleanup.deferCleanup(testClient);
 
-    assertServerInfo(testClient, null, null, "2001:db8::1,2001:db8::2");
+    assertServerTarget(testClient, "2001:db8::1,2001:db8::2", null);
   }
 
   @Test
@@ -865,8 +865,8 @@ class ClickHouseClientV2Test {
     sixEndpoints.add("http://host6.example:8123");
     String expected = "host1.example,host2.example,host3.example,host4.example,host5.example";
 
-    assertServerInfo(fiveEndpoints, null, null, expected);
-    assertServerInfo(sixEndpoints, null, null, expected);
+    assertServerTarget(fiveEndpoints, expected, null);
+    assertServerTarget(sixEndpoints, expected, null);
   }
 
   @Test
@@ -881,12 +881,11 @@ class ClickHouseClientV2Test {
                 "http://host5.example:8123",
                 "http://host6.example:9123"));
 
-    assertServerInfo(
+    assertServerTarget(
         endpoints,
-        null,
-        null,
         "host1.example:8123,host2.example:8123,host3.example:8123,"
-            + "host4.example:8123,host5.example:8123");
+            + "host4.example:8123,host5.example:8123",
+        null);
   }
 
   @Test
@@ -901,7 +900,7 @@ class ClickHouseClientV2Test {
                 "http://host5.example:8123",
                 "http://host6.example:not-a-port"));
 
-    assertServerInfo(endpoints, null, null, null);
+    assertServerTarget(endpoints, null, null);
   }
 
   @ParameterizedTest
@@ -912,7 +911,7 @@ class ClickHouseClientV2Test {
         "http://host.example:8123 "
       })
   void testConfiguredEndpointsRejectAmbiguousAuthorities(String endpoint) throws Exception {
-    assertServerInfo(new HashSet<>(asList(endpoint)), null, null, null);
+    assertServerTarget(new HashSet<>(asList(endpoint)), null, null);
   }
 
   @Test
@@ -978,7 +977,7 @@ class ClickHouseClientV2Test {
             .setOption("compress", "false")
             .build();
     cleanup.deferCleanup(testClient);
-    assertThat(clearServerInfo(testClient)).isNull();
+    assertThat(clearConfiguredServerTarget(testClient)).isNull();
 
     QueryResponse response = testClient.query("select * from " + TABLE_NAME).join();
     response.close();
@@ -1026,7 +1025,7 @@ class ClickHouseClientV2Test {
     }
     Client testClient = builder.build();
     cleanup.deferCleanup(testClient);
-    replaceServerInfo(testClient, endpoints.toArray(new String[0]));
+    replaceServerTarget(testClient, endpoints.toArray(new String[0]));
     String currentEndpoint = testClient.getEndpoints().iterator().next();
     String legacyAddress = UrlParser.getHost(currentEndpoint);
     Integer legacyPort = UrlParser.getPort(currentEndpoint);
@@ -1131,7 +1130,7 @@ class ClickHouseClientV2Test {
     Integer legacyPort = UrlParser.getPort(currentEndpoint);
     String peerAddress = endpointHost(currentEndpoint);
     int peerPort = URI.create(currentEndpoint).getPort();
-    replaceServerInfo(testClient, "http://configured.example%3fpassword%3dsecret:8123");
+    replaceServerTarget(testClient, "http://configured.example%3fpassword%3dsecret:8123");
 
     QueryResponse response = testClient.query("select 1").join();
     response.close();
@@ -1178,54 +1177,61 @@ class ClickHouseClientV2Test {
     }
   }
 
-  private static void replaceServerInfo(Client client, String... endpoints) throws Exception {
+  private static void replaceServerTarget(Client client, String... endpoints) throws Exception {
     Class<?> singletons = singletons(client);
-    Class<?> serverInfoClass = serverInfo(client).getClass();
-    Method of = serverInfoClass.getDeclaredMethod("of", Set.class);
-    of.setAccessible(true);
-    Object replacement = of.invoke(null, new HashSet<>(asList(endpoints)));
+    Method parseConfiguredServerTarget =
+        singletons.getDeclaredMethod("parseConfiguredServerTarget", Set.class);
+    parseConfiguredServerTarget.setAccessible(true);
+    Object replacement = parseConfiguredServerTarget.invoke(null, new HashSet<>(asList(endpoints)));
 
-    Field serverInfoField = singletons.getDeclaredField("SERVER_INFO_FIELD");
-    serverInfoField.setAccessible(true);
-    Object virtualField = serverInfoField.get(null);
+    Field serverTargetField = singletons.getDeclaredField("CONFIGURED_SERVER_TARGET");
+    serverTargetField.setAccessible(true);
+    Object virtualField = serverTargetField.get(null);
     virtualField
         .getClass()
         .getMethod("set", Object.class, Object.class)
         .invoke(virtualField, client, replacement);
   }
 
-  private static Object serverInfo(Client client) throws Exception {
-    return singletons(client).getMethod("serverInfo", Client.class).invoke(null, client);
+  private static Object serverTarget(Client client) throws Exception {
+    return singletons(client)
+        .getMethod("configuredServerTarget", Client.class)
+        .invoke(null, client);
   }
 
-  private static Object clearServerInfo(Client client) throws Exception {
+  private static Object clearConfiguredServerTarget(Client client) throws Exception {
     Class<?> singletons = singletons(client);
-    Method clearServerInfo = singletons.getDeclaredMethod("clearServerInfo", Client.class);
-    clearServerInfo.setAccessible(true);
-    clearServerInfo.invoke(null, client);
-    return serverInfo(client);
+    Method clearConfiguredServerTarget =
+        singletons.getDeclaredMethod("clearConfiguredServerTarget", Client.class);
+    clearConfiguredServerTarget.setAccessible(true);
+    clearConfiguredServerTarget.invoke(null, client);
+    return serverTarget(client);
   }
 
-  private static void assertServerInfo(
-      Client client, String address, Integer port, String addressGroup) throws Exception {
-    assertServerInfo(serverInfo(client), address, port, addressGroup);
+  private static void assertServerTarget(Client client, String address, Integer port)
+      throws Exception {
+    assertServerTarget(serverTarget(client), address, port);
   }
 
-  private static void assertServerInfo(
-      Set<String> endpoints, String address, Integer port, String addressGroup) throws Exception {
-    Class<?> serverInfoClass = serverInfo(client).getClass();
-    Method of = serverInfoClass.getDeclaredMethod("of", Set.class);
-    of.setAccessible(true);
-    assertServerInfo(of.invoke(null, endpoints), address, port, addressGroup);
+  private static void assertServerTarget(Set<String> endpoints, String address, Integer port)
+      throws Exception {
+    Class<?> singletons = singletons(client);
+    Method parseConfiguredServerTarget =
+        singletons.getDeclaredMethod("parseConfiguredServerTarget", Set.class);
+    parseConfiguredServerTarget.setAccessible(true);
+    assertServerTarget(parseConfiguredServerTarget.invoke(null, endpoints), address, port);
   }
 
-  private static void assertServerInfo(
-      Object serverInfo, String address, Integer port, String addressGroup) throws Exception {
-    Class<?> serverInfoClass = serverInfo.getClass();
-    assertThat(serverInfoClass.getMethod("getAddress").invoke(serverInfo)).isEqualTo(address);
-    assertThat(serverInfoClass.getMethod("getPort").invoke(serverInfo)).isEqualTo(port);
-    assertThat(serverInfoClass.getMethod("getAddressGroup").invoke(serverInfo))
-        .isEqualTo(addressGroup);
+  private static void assertServerTarget(Object serverTarget, String address, Integer port)
+      throws Exception {
+    if (address == null) {
+      assertThat(serverTarget).isNull();
+      return;
+    }
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTarget.getClass().getMethod("getAddress").invoke(serverTarget))
+        .isEqualTo(address);
+    assertThat(serverTarget.getClass().getMethod("getPort").invoke(serverTarget)).isEqualTo(port);
   }
 
   private static String endpointHost(String endpoint) {

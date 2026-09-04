@@ -21,8 +21,8 @@ public class ClickHouseClientV2Singletons {
 
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v2-0.8";
   private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
-  private static final VirtualField<Client, ServerInfo> SERVER_INFO_FIELD =
-      VirtualField.find(Client.class, ServerInfo.class);
+  private static final VirtualField<Client, DbServerTarget> CONFIGURED_SERVER_TARGET =
+      VirtualField.find(Client.class, DbServerTarget.class);
   private static final VirtualField<Client, CurrentServerInfo> CURRENT_SERVER_INFO_FIELD =
       VirtualField.find(Client.class, CurrentServerInfo.class);
 
@@ -43,29 +43,43 @@ public class ClickHouseClientV2Singletons {
     return instrumenter;
   }
 
-  public static void captureServerInfo(Client client) {
-    SERVER_INFO_FIELD.set(client, ServerInfo.of(client.getEndpoints()));
+  public static void captureConfiguredServerTarget(Client client) {
+    CONFIGURED_SERVER_TARGET.set(client, parseConfiguredServerTarget(client.getEndpoints()));
   }
 
   // ClickHouseClientV2Test calls this reflectively to simulate a client whose endpoints were never
   // captured
-  static void clearServerInfo(Client client) {
-    SERVER_INFO_FIELD.set(client, null);
+  static void clearConfiguredServerTarget(Client client) {
+    CONFIGURED_SERVER_TARGET.set(client, null);
   }
 
   @Nullable
-  public static ServerInfo serverInfo(Client client) {
-    return SERVER_INFO_FIELD.get(client);
+  public static DbServerTarget configuredServerTarget(Client client) {
+    return CONFIGURED_SERVER_TARGET.get(client);
   }
 
-  public static ServerInfo currentServerInfo(Client client) {
+  public static CurrentServerInfo currentServerInfo(Client client) {
     CurrentServerInfo currentServerInfo = CURRENT_SERVER_INFO_FIELD.get(client);
     if (currentServerInfo == null) {
-      currentServerInfo =
-          new CurrentServerInfo(ServerInfo.ofCurrentEndpoint(client.getEndpoints()));
+      currentServerInfo = CurrentServerInfo.of(client.getEndpoints());
       CURRENT_SERVER_INFO_FIELD.set(client, currentServerInfo);
     }
-    return currentServerInfo.serverInfo;
+    return currentServerInfo;
+  }
+
+  @Nullable
+  static DbServerTarget parseConfiguredServerTarget(Set<String> endpoints) {
+    DbServerTargetBuilder builder = DbServerTarget.builder(-1).setSorted(true);
+    for (String endpoint : endpoints) {
+      EndpointTarget extracted = CurrentServerInfo.extractEndpoint(endpoint);
+      if (extracted == null) {
+        return null;
+      }
+      int defaultPort = extracted.defaultPort();
+      builder.addEndpoint(
+          extracted.address, extracted.port == null ? -1 : extracted.port, defaultPort);
+    }
+    return builder.build();
   }
 
   public static void capturePeer(ClickHouseDbRequest request, Object selectedNode)
@@ -73,7 +87,7 @@ public class ClickHouseClientV2Singletons {
     Class<?> selectedNodeClass = selectedNode.getClass();
     String host = (String) selectedNodeClass.getMethod("getHost").invoke(selectedNode);
     int port = (Integer) selectedNodeClass.getMethod("getPort").invoke(selectedNode);
-    EndpointTarget extracted = ServerInfo.extractEndpoint(host);
+    EndpointTarget extracted = CurrentServerInfo.extractEndpoint(host);
     DbServerTarget target =
         extracted == null
             ? null
@@ -81,59 +95,27 @@ public class ClickHouseClientV2Singletons {
     request.setPeer(target == null ? null : target.getAddress(), target == null ? null : port);
   }
 
-  public static class ServerInfo {
+  public static class CurrentServerInfo {
 
-    private static final ServerInfo EMPTY = new ServerInfo(null, null, null);
+    private static final CurrentServerInfo EMPTY = new CurrentServerInfo(null, null, null, null);
 
     @Nullable private final String address;
     @Nullable private final Integer port;
-    @Nullable private final String addressGroup;
     @Nullable private final String peerAddress;
     @Nullable private final Integer peerPort;
 
-    private ServerInfo(
-        @Nullable String address, @Nullable Integer port, @Nullable String addressGroup) {
-      this(address, port, addressGroup, address, port);
-    }
-
-    private ServerInfo(
+    private CurrentServerInfo(
         @Nullable String address,
         @Nullable Integer port,
-        @Nullable String addressGroup,
         @Nullable String peerAddress,
         @Nullable Integer peerPort) {
       this.address = address;
       this.port = port;
-      this.addressGroup = addressGroup;
       this.peerAddress = peerAddress;
       this.peerPort = peerPort;
     }
 
-    public static ServerInfo empty() {
-      return EMPTY;
-    }
-
-    static ServerInfo of(Set<String> endpoints) {
-      DbServerTargetBuilder builder = DbServerTarget.builder(-1).setSorted(true);
-      for (String endpoint : endpoints) {
-        EndpointTarget extracted = extractEndpoint(endpoint);
-        if (extracted == null) {
-          return EMPTY;
-        }
-        int defaultPort = extracted.defaultPort();
-        builder.addEndpoint(
-            extracted.address, extracted.port == null ? -1 : extracted.port, defaultPort);
-      }
-      DbServerTarget target = builder.build();
-      if (target == null) {
-        return EMPTY;
-      }
-      return endpoints.size() == 1
-          ? new ServerInfo(target.getAddress(), target.getPort(), null)
-          : new ServerInfo(null, null, target.getAddress());
-    }
-
-    private static ServerInfo ofCurrentEndpoint(Set<String> endpoints) {
+    private static CurrentServerInfo of(Set<String> endpoints) {
       if (endpoints.isEmpty()) {
         return EMPTY;
       }
@@ -145,10 +127,9 @@ public class ClickHouseClientV2Singletons {
               : DbServerTarget.builder(extracted.defaultPort())
                   .addEndpoint(extracted.address, extracted.port == null ? -1 : extracted.port)
                   .build();
-      return new ServerInfo(
+      return new CurrentServerInfo(
           UrlParser.getHost(endpoint),
           UrlParser.getPort(endpoint),
-          null,
           peer == null ? null : peer.getAddress(),
           extracted == null ? null : extracted.port);
     }
@@ -259,11 +240,6 @@ public class ClickHouseClientV2Singletons {
     }
 
     @Nullable
-    public String getAddressGroup() {
-      return addressGroup;
-    }
-
-    @Nullable
     public String getPeerAddress() {
       return peerAddress;
     }
@@ -293,16 +269,6 @@ public class ClickHouseClientV2Singletons {
         return 8443;
       }
       return -1;
-    }
-  }
-
-  // VirtualField keys its storage by the owner class and the field type, so this wrapper is what
-  // keeps CURRENT_SERVER_INFO_FIELD separate from SERVER_INFO_FIELD.
-  private static class CurrentServerInfo {
-    private final ServerInfo serverInfo;
-
-    private CurrentServerInfo(ServerInfo serverInfo) {
-      this.serverInfo = serverInfo;
     }
   }
 

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import javax.annotation.Nullable;
 
 @AutoValue
@@ -15,13 +16,10 @@ public abstract class ClickHouseDbRequest {
       @Nullable String host,
       @Nullable Integer port,
       Endpoint peer,
-      @Nullable String configuredHost,
-      @Nullable Integer configuredPort,
-      @Nullable String serverAddressGroup,
+      @Nullable DbServerTarget serverTarget,
       @Nullable String namespace,
       String sql) {
-    return new AutoValue_ClickHouseDbRequest(
-        host, port, peer, configuredHost, configuredPort, serverAddressGroup, namespace, sql);
+    return new AutoValue_ClickHouseDbRequest(host, port, peer, serverTarget, namespace, sql);
   }
 
   public static Endpoint endpoint(@Nullable String address, @Nullable Integer port) {
@@ -51,13 +49,7 @@ public abstract class ClickHouseDbRequest {
   }
 
   @Nullable
-  public abstract String getConfiguredHost();
-
-  @Nullable
-  public abstract Integer getConfiguredPort();
-
-  @Nullable
-  public abstract String getServerAddressGroup();
+  public abstract DbServerTarget getServerTarget();
 
   @Nullable
   public abstract String getNamespace();

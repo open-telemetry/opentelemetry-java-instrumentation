@@ -693,10 +693,12 @@ class ClickHouseClientV1Test {
                 ClickHouseNode.of("tcp://tcp.example"),
                 ClickHouseNode.of("https://https.example"),
                 ClickHouseNode.of("http://http.example")));
+    Object serverTarget = serverTarget(request);
 
-    assertThat(serverAddressGroup(request))
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget))
         .isEqualTo("tcps.example,tcp.example,https.example,http.example");
-    assertThat(serverPort(request)).isNull();
+    assertThat(serverTargetPort(serverTarget)).isNull();
   }
 
   @ParameterizedTest
@@ -709,8 +711,10 @@ class ClickHouseClientV1Test {
       })
   void testDirectNodeDefaultPortsAreOmitted(String nodeUrl) throws Exception {
     ClickHouseRequest<?> request = client.read(ClickHouseNode.of(nodeUrl));
+    Object serverTarget = serverTarget(request);
 
-    assertThat(serverPort(request)).isNull();
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetPort(serverTarget)).isNull();
   }
 
   @Test
@@ -718,8 +722,11 @@ class ClickHouseClientV1Test {
     ClickHouseNode node =
         ClickHouseNode.builder(ClickHouseNode.of("http://http.example")).port(12345).build();
     ClickHouseRequest<?> request = client.read(node);
+    Object serverTarget = serverTarget(request);
 
-    assertThat(serverPort(request)).isEqualTo(12345);
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget)).isEqualTo("http.example");
+    assertThat(serverTargetPort(serverTarget)).isEqualTo(12345);
   }
 
   @Test
@@ -732,9 +739,12 @@ class ClickHouseClientV1Test {
             .port(12345)
             .build();
     ClickHouseRequest<?> request = requestWithNodes(ImmutableList.of(httpNode, tcpNode));
+    Object serverTarget = serverTarget(request);
 
-    assertThat(serverAddressGroup(request)).isEqualTo("http.example:12345,[2001:db8::2]:12345");
-    assertThat(serverPort(request)).isNull();
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget))
+        .isEqualTo("http.example:12345,[2001:db8::2]:12345");
+    assertThat(serverTargetPort(serverTarget)).isNull();
   }
 
   @Test
@@ -742,9 +752,11 @@ class ClickHouseClientV1Test {
     ClickHouseNode httpNode = ClickHouseNode.of("http://http.example");
     ClickHouseNode httpsNode = ClickHouseNode.of("https://https.example:9444");
     ClickHouseRequest<?> request = requestWithNodes(ImmutableList.of(httpNode, httpsNode));
+    Object serverTarget = serverTarget(request);
 
-    assertThat(serverAddressGroup(request)).isEqualTo("http.example:8123,https.example:9444");
-    assertThat(serverPort(request)).isNull();
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget)).isEqualTo("http.example:8123,https.example:9444");
+    assertThat(serverTargetPort(serverTarget)).isNull();
   }
 
   @Test
@@ -757,14 +769,16 @@ class ClickHouseClientV1Test {
     ClickHouseNode sixth = ClickHouseNode.of("http://host6.example");
     String expected = "host1.example,host2.example,host3.example,host4.example,host5.example";
 
-    assertThat(
-            serverAddressGroup(
-                requestWithNodes(ImmutableList.of(first, second, third, fourth, fifth))))
-        .isEqualTo(expected);
-    assertThat(
-            serverAddressGroup(
-                requestWithNodes(ImmutableList.of(first, second, third, fourth, fifth, sixth))))
-        .isEqualTo(expected);
+    Object fiveNodeTarget =
+        serverTarget(requestWithNodes(ImmutableList.of(first, second, third, fourth, fifth)));
+    Object sixNodeTarget =
+        serverTarget(
+            requestWithNodes(ImmutableList.of(first, second, third, fourth, fifth, sixth)));
+
+    assertThat(fiveNodeTarget).isNotNull();
+    assertThat(serverTargetAddress(fiveNodeTarget)).isEqualTo(expected);
+    assertThat(sixNodeTarget).isNotNull();
+    assertThat(serverTargetAddress(sixNodeTarget)).isEqualTo(expected);
   }
 
   @Test
@@ -780,12 +794,14 @@ class ClickHouseClientV1Test {
                 ClickHouseNode.of("http://host4.example"),
                 ClickHouseNode.of("http://host5.example"),
                 nonDefaultSixth));
+    Object serverTarget = serverTarget(request);
 
-    assertThat(serverAddressGroup(request))
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget))
         .isEqualTo(
             "host1.example:8123,host2.example:8123,host3.example:8123,"
                 + "host4.example:8123,host5.example:8123");
-    assertThat(serverPort(request)).isNull();
+    assertThat(serverTargetPort(serverTarget)).isNull();
   }
 
   @Test
@@ -804,8 +820,7 @@ class ClickHouseClientV1Test {
                 ClickHouseNode.of("http://host5.example"),
                 invalidSixth));
 
-    assertThat(serverAddressGroup(request)).isNull();
-    assertThat(serverPort(request)).isNull();
+    assertThat(serverTarget(request)).isNull();
   }
 
   @Test
@@ -1156,16 +1171,18 @@ class ClickHouseClientV1Test {
     return client.read(createNodes(nodes));
   }
 
-  private static String serverAddressGroup(ClickHouseRequest<?> request) throws Exception {
-    return (String)
-        singletons(request)
-            .getMethod("serverAddressGroup", ClickHouseRequest.class)
-            .invoke(null, request);
+  private static Object serverTarget(ClickHouseRequest<?> request) throws Exception {
+    return singletons(request)
+        .getMethod("serverTarget", ClickHouseRequest.class)
+        .invoke(null, request);
   }
 
-  private static Integer serverPort(ClickHouseRequest<?> request) throws Exception {
-    return (Integer)
-        singletons(request).getMethod("serverPort", ClickHouseRequest.class).invoke(null, request);
+  private static String serverTargetAddress(Object serverTarget) throws Exception {
+    return (String) serverTarget.getClass().getMethod("getAddress").invoke(serverTarget);
+  }
+
+  private static Integer serverTargetPort(Object serverTarget) throws Exception {
+    return (Integer) serverTarget.getClass().getMethod("getPort").invoke(serverTarget);
   }
 
   private static Class<?> singletons(ClickHouseRequest<?> request) throws Exception {

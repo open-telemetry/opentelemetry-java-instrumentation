@@ -16,12 +16,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.clickhouse.client.api.Client;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseScope;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.ServerInfo;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.CurrentServerInfo;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -51,7 +52,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
   public static class ConstructAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Client client) {
-      ClickHouseClientV2Singletons.captureServerInfo(client);
+      ClickHouseClientV2Singletons.captureConfiguredServerTarget(client);
     }
   }
 
@@ -66,11 +67,8 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         return null;
       }
 
-      ServerInfo configuredServerInfo = ClickHouseClientV2Singletons.serverInfo(client);
-      if (configuredServerInfo == null) {
-        configuredServerInfo = ServerInfo.empty();
-      }
-      ServerInfo currentServerInfo = ClickHouseClientV2Singletons.currentServerInfo(client);
+      DbServerTarget serverTarget = ClickHouseClientV2Singletons.configuredServerTarget(client);
+      CurrentServerInfo currentServerInfo = ClickHouseClientV2Singletons.currentServerInfo(client);
 
       String database = client.getConfiguration().get("database");
       Context parentContext = currentContext();
@@ -80,9 +78,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
               currentServerInfo.getPort(),
               ClickHouseDbRequest.endpoint(
                   currentServerInfo.getPeerAddress(), currentServerInfo.getPeerPort()),
-              configuredServerInfo.getAddress(),
-              configuredServerInfo.getPort(),
-              configuredServerInfo.getAddressGroup(),
+              serverTarget,
               database,
               sqlQuery);
 
