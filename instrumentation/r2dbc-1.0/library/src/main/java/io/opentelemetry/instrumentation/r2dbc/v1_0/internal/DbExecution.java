@@ -94,6 +94,13 @@ public final class DbExecution {
   @Nullable private Context context;
 
   public DbExecution(QueryExecutionInfo queryInfo, ConnectionFactoryOptions factoryOptions) {
+    this(queryInfo, factoryOptions, createConfiguredServerTarget(factoryOptions));
+  }
+
+  DbExecution(
+      QueryExecutionInfo queryInfo,
+      ConnectionFactoryOptions factoryOptions,
+      @Nullable DbServerTarget configuredServerTarget) {
     Connection originalConnection = queryInfo.getConnectionInfo().getOriginalConnection();
     this.system =
         originalConnection != null
@@ -110,20 +117,11 @@ public final class DbExecution {
         factoryOptions.hasOption(DRIVER) ? (String) factoryOptions.getValue(DRIVER) : null;
     String protocol =
         factoryOptions.hasOption(PROTOCOL) ? (String) factoryOptions.getValue(PROTOCOL) : null;
-    String resolvedDriver = resolveDriver(driver, protocol);
-    String resolvedProtocol = resolveProtocol(driver, protocol);
     this.systemName = resolveDbSystemName(driver, protocol);
     this.serverAddress =
         factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
     this.serverPort =
         factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
-    Integer defaultPort =
-        resolveDefaultPort(
-            resolvedDriver,
-            resolvedProtocol,
-            factoryOptions.hasOption(SSL) && Boolean.TRUE.equals(factoryOptions.getValue(SSL)));
-    DbServerTarget configuredServerTarget =
-        R2dbcServerTarget.create(serverAddress, serverPort, defaultPort);
     this.configuredServerAddress =
         configuredServerTarget == null ? null : configuredServerTarget.getAddress();
     this.configuredServerPort =
@@ -151,6 +149,24 @@ public final class DbExecution {
         queryInfo.getQueries().stream()
             .anyMatch(queryInfo1 -> !queryInfo1.getBindingsList().isEmpty());
     R2dbcSqlCommenterUtil.clearQueries(queryInfo.getConnectionInfo());
+  }
+
+  @Nullable
+  static DbServerTarget createConfiguredServerTarget(ConnectionFactoryOptions factoryOptions) {
+    String driver =
+        factoryOptions.hasOption(DRIVER) ? (String) factoryOptions.getValue(DRIVER) : null;
+    String protocol =
+        factoryOptions.hasOption(PROTOCOL) ? (String) factoryOptions.getValue(PROTOCOL) : null;
+    Integer defaultPort =
+        resolveDefaultPort(
+            resolveDriver(driver, protocol),
+            resolveProtocol(driver, protocol),
+            factoryOptions.hasOption(SSL) && Boolean.TRUE.equals(factoryOptions.getValue(SSL)));
+    String serverAddress =
+        factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
+    Integer serverPort =
+        factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
+    return R2dbcServerTarget.create(serverAddress, serverPort, defaultPort);
   }
 
   @Nullable
