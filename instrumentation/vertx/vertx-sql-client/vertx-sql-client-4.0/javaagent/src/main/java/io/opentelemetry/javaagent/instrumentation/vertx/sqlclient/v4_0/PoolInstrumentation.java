@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.firstDatabase;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolSqlConnectOptions;
@@ -107,7 +108,7 @@ class PoolInstrumentation implements TypeInstrumentation {
 
       if (pool != null) {
         setPoolConnectOptions(pool, sqlConnectOptions);
-        setPoolAddressGroup(pool, VertxSqlAddressGroup.of(sqlConnectOptions));
+        setPoolAddressGroup(pool, getAddressGroup());
         // Detect db system from pool implementation class (e.g. PgPool -> postgresql).
         // This handles cases where connect options is a generic SqlConnectOptions
         // but the pool is database-specific (e.g. Hibernate Reactive).
@@ -149,7 +150,7 @@ class PoolInstrumentation implements TypeInstrumentation {
         if (client instanceof Pool) {
           Pool pool = (Pool) client;
           setPoolConnectOptions(pool, firstDatabase);
-          setPoolAddressGroup(pool, VertxSqlAddressGroup.of(databases));
+          setPoolAddressGroup(pool, getAddressGroup());
         }
       }
       setSqlConnectOptions(null);
