@@ -72,12 +72,12 @@ class CouchbaseConnectionStrings {
       if (seeds == null) {
         return null;
       }
-      DbServerTargetBuilder target =
+      DbServerTargetBuilder builder =
           DbServerTarget.builder(defaultPort(scheme(type, connectionString)));
       for (Object seed : seeds) {
-        addSeed(target, seed);
+        addSeed(builder, seed);
       }
-      return target.build();
+      return builder.build();
     } catch (ReflectiveOperationException ignored) {
       // An unsupported connection-string shape leaves the stable server target unset. Legacy
       // semantic conventions report the contacted node later.
@@ -125,28 +125,28 @@ class CouchbaseConnectionStrings {
     return value == null ? null : value.toString();
   }
 
-  private static void addSeed(DbServerTargetBuilder target, @Nullable Object seed)
+  private static void addSeed(DbServerTargetBuilder builder, @Nullable Object seed)
       throws ReflectiveOperationException {
     if (seed == null) {
-      target.addEndpoint(null, -1);
+      builder.addEndpoint(null, -1);
       return;
     }
     if (seed instanceof InetSocketAddress) {
       InetSocketAddress address = (InetSocketAddress) seed;
       // getHostString never triggers a reverse lookup, unlike getHostName
-      target.addEndpoint(cleanHost(address.getHostString()), configuredPort(address.getPort()));
+      builder.addEndpoint(cleanHost(address.getHostString()), configuredPort(address.getPort()));
       return;
     }
     Class<?> type = seed.getClass();
     Method hostname = HOSTNAME.get(type);
     Method port = PORT.get(type);
     if (hostname == null || port == null) {
-      target.addEndpoint(null, -1);
+      builder.addEndpoint(null, -1);
       return;
     }
     Object host = hostname.invoke(seed);
     Object value = port.invoke(seed);
-    target.addEndpoint(
+    builder.addEndpoint(
         cleanHost(host == null ? null : host.toString()),
         configuredPort(value instanceof Number ? ((Number) value).intValue() : 0));
   }
