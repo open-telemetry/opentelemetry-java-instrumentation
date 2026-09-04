@@ -101,7 +101,10 @@ public abstract class AbstractOpenSearchRestTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(openSearchSpanName())
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
@@ -195,7 +198,10 @@ public abstract class AbstractOpenSearchRestTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(openSearchSpanName())
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -293,25 +299,16 @@ public abstract class AbstractOpenSearchRestTest {
     return httpHost.getHost() + ":" + httpHost.getPort() + ",127.0.0.1:" + httpHost.getPort();
   }
 
-  private String openSearchSpanName() {
-    return openSearchSpanName(httpHost.getHost(), Long.valueOf(httpHost.getPort()));
-  }
-
-  private static String openSearchSpanName(String serverAddress, Long serverPort) {
-    // the stable span name falls back to the target, because opensearch has no namespace or
-    // collection to name
-    return emitStableDatabaseSemconv()
-        ? "GET " + serverAddress + (serverPort != null ? ":" + serverPort : "")
-        : "GET";
-  }
-
   private void assertConfiguredTarget(
       String serverAddress, Long serverPort, String responseAddress) {
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 assertThat(trace.getSpan(0))
-                    .hasName(openSearchSpanName(serverAddress, serverPort))
+                    .hasName(
+                        emitStableDatabaseSemconv()
+                            ? "GET " + serverAddress + (serverPort != null ? ":" + serverPort : "")
+                            : "GET")
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfyingExactly(
                         equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
