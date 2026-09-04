@@ -283,34 +283,56 @@ class CassandraClientTest {
     ResultSet resultSet = session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
     InetSocketAddress coordinatorAddress =
         resultSet.getExecutionInfo().getQueriedHost().getSocketAddress();
+    Long expectedServerPort =
+        emitStableDatabaseSemconv()
+            ? (expectedPort == null ? null : Long.valueOf(expectedPort))
+            : Long.valueOf(coordinatorAddress.getPort());
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.satisfies(
-                        spanData -> {
-                          assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(
-                                  emitStableDatabaseSemconv()
-                                      ? expectedAddress
-                                      : coordinatorAddress.getHostString());
-                          if (emitStableDatabaseSemconv()) {
-                            if (expectedPort == null) {
-                              assertThat(spanData.getAttributes().get(SERVER_PORT)).isNull();
-                            } else {
-                              assertThat(spanData.getAttributes().get(SERVER_PORT))
-                                  .isEqualTo(expectedPort.longValue());
-                            }
-                          } else {
-                            assertThat(spanData.getAttributes().get(SERVER_PORT))
-                                .isEqualTo((long) coordinatorAddress.getPort());
-                          }
-                          assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
-                              .isEqualTo(coordinatorAddress.getAddress().getHostAddress());
-                          assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
-                              .isEqualTo((long) coordinatorAddress.getPort());
-                        })));
+                    span.hasName(emitStableDatabaseSemconv() ? "DROP KEYSPACE" : "DROP")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? val -> val.isNull()
+                                    : val -> val.isIn("ipv4", "ipv6")),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? expectedAddress
+                                    : coordinatorAddress.getHostString()),
+                            equalTo(SERVER_PORT, expectedServerPort),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                coordinatorAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, coordinatorAddress.getPort()),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "DROP KEYSPACE IF EXISTS contact_points_test"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "DROP KEYSPACE" : null),
+                            equalTo(maybeStable(DB_OPERATION), "DROP"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                            satisfies(
+                                maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                coordinatorIdAvailable
+                                    ? val -> val.isInstanceOf(String.class)
+                                    : val -> val.isNull()),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                            satisfies(
+                                maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                speculativeExecutionCountAvailable
+                                    ? val -> val.isEqualTo(0)
+                                    : val -> val.isNull()))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
