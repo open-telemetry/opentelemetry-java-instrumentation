@@ -607,8 +607,8 @@ class CassandraServerTargetTest {
 
   @Test
   void sessionWithOnlyProgrammaticContactPointsReadsTheRealDriverConfiguration() {
-    // basic.contact-points has no default, so a lookup without one throws on a session that names
-    // its contact points on the builder alone
+    // The basic.contact-points option has no default, so a lookup without one throws on a session
+    // that names its contact points on the builder alone.
     when(session.getContext()).thenReturn(context);
     when(context.getConfig()).thenReturn(new DefaultDriverConfigLoader().getInitialConfig());
     when(context.getMetadataManager()).thenReturn(metadataManager);
