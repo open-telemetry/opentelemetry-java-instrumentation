@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -38,7 +37,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -268,31 +266,21 @@ public abstract class AbstractOpenSearchRestTest {
   private List<AttributeAssertion> openSearchAttributes(
       String serverAddress, Long serverPort, String responseAddress) {
     String expectedPeerAddress = emitStableDatabaseSemconv() ? socketPeerAddress : responseAddress;
-    List<AttributeAssertion> attributes = new ArrayList<>();
-    if (emitOldDatabaseSemconv()) {
-      attributes.add(equalTo(DB_SYSTEM, OPENSEARCH));
-      attributes.add(equalTo(DB_OPERATION, "GET"));
-      attributes.add(equalTo(DB_STATEMENT, "GET _cluster/health"));
-    }
-    if (emitStableDatabaseSemconv()) {
-      attributes.add(equalTo(DB_SYSTEM_NAME, OPENSEARCH));
-      attributes.add(equalTo(DB_OPERATION_NAME, "GET"));
-      attributes.add(equalTo(DB_QUERY_TEXT, "GET _cluster/health"));
-    }
-    attributes.addAll(
-        asList(
-            equalTo(NETWORK_PEER_ADDRESS, expectedPeerAddress),
-            equalTo(
-                NETWORK_PEER_PORT,
-                emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null),
-            equalTo(
-                NETWORK_TYPE,
-                emitOldDatabaseSemconv() && expectedPeerAddress != null
-                    ? (expectedPeerAddress.contains(":") ? "ipv6" : "ipv4")
-                    : null),
-            equalTo(SERVER_ADDRESS, serverAddress),
-            equalTo(SERVER_PORT, serverPort)));
-    return attributes;
+    return asList(
+        equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+        equalTo(maybeStable(DB_OPERATION), "GET"),
+        equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
+        equalTo(NETWORK_PEER_ADDRESS, expectedPeerAddress),
+        equalTo(
+            NETWORK_PEER_PORT,
+            emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null),
+        equalTo(
+            NETWORK_TYPE,
+            !emitStableDatabaseSemconv() && expectedPeerAddress != null
+                ? (expectedPeerAddress.contains(":") ? "ipv6" : "ipv4")
+                : null),
+        equalTo(SERVER_ADDRESS, serverAddress),
+        equalTo(SERVER_PORT, serverPort));
   }
 
   private void assertConfiguredTarget(
