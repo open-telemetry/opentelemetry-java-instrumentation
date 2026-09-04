@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setAddressGroup;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientDataProvider;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataProvider;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import net.bytebuddy.asm.Advice;
@@ -38,8 +42,11 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase sqlClientBase) {
-      // copy connection options from ThreadLocal to VirtualField
-      VertxSqlClientSingletons.attachConnectOptions(sqlClientBase, getSqlConnectOptions());
+      VertxSqlClientSingletons.attachClientState(
+          sqlClientBase,
+          getSqlConnectOptions(),
+          getAddressGroup(),
+          VertxSqlClientSingletons.getBuildingDataCapture());
     }
   }
 
@@ -52,10 +59,16 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
 
-      // set connection options to ThreadLocal, they will be read in QueryExecutor constructor
-      SqlConnectOptions sqlConnectOptions =
-          VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
-      setSqlConnectOptions(sqlConnectOptions);
+      VertxSqlClientDataProvider dataProvider =
+          VertxSqlClientSingletons.getDataProvider(sqlClientBase);
+      if (dataProvider != null) {
+        setClientDataProvider(dataProvider);
+      } else {
+        SqlConnectOptions sqlConnectOptions =
+            VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
+        setSqlConnectOptions(sqlConnectOptions);
+        setAddressGroup(VertxSqlClientSingletons.getAddressGroup(sqlClientBase));
+      }
       return callDepth;
     }
 
@@ -66,6 +79,8 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
       }
 
       setSqlConnectOptions(null);
+      setAddressGroup(null);
+      setClientDataProvider(null);
     }
   }
 }

@@ -5,17 +5,30 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlAddressGroup;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataCapture;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDataProvider;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.impl.ClientBuilderBase;
 import io.vertx.sqlclient.internal.SqlClientBase;
+import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {
@@ -31,6 +44,29 @@ public class VertxSqlClientSingletons {
 
   private static final VirtualField<SqlClientBase, SqlConnectOptions> CONNECT_OPTIONS =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
+
+  private static final VirtualField<SqlClientBase, VertxSqlAddressGroup> ADDRESS_GROUP =
+      VirtualField.find(SqlClientBase.class, VertxSqlAddressGroup.class);
+
+  private static final VirtualField<SqlClientBase, VertxSqlClientDataProvider> DATA_PROVIDER =
+      VirtualField.find(SqlClientBase.class, VertxSqlClientDataProvider.class);
+
+  private static final Cache<Object, VertxSqlClientData> connectionDataCache = Cache.weak();
+  private static final Cache<Object, ConnectionDataListener> commandDataListenerCache =
+      Cache.weak();
+  private static final Cache<Future<?>, VertxSqlClientDataCapture> supplierFutureDataCaptureCache =
+      Cache.weak();
+
+  private static final VirtualField<Pool, VertxSqlClientDataCapture> POOL_DATA_CAPTURE =
+      VirtualField.find(Pool.class, VertxSqlClientDataCapture.class);
+
+  private static final VirtualField<ClientBuilderBase<?>, List<SqlConnectOptions>>
+      BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
+
+  private static final ThreadLocal<VertxSqlClientDataCapture> buildingDataCapture =
+      new ThreadLocal<>();
+  private static final ThreadLocal<ConnectionDataListener> pendingConnectionDataListener =
+      new ThreadLocal<>();
 
   @Nullable
   private static final VirtualField<Object, Context> COMMAND_CONTEXT =
@@ -75,8 +111,41 @@ public class VertxSqlClientSingletons {
     }
   }
 
+  public static void setPendingConnectionDataListener(@Nullable ConnectionDataListener listener) {
+    if (listener == null) {
+      pendingConnectionDataListener.remove();
+    } else {
+      pendingConnectionDataListener.set(listener);
+    }
+  }
+
+  public static void capturePendingConnectionDataListener(Object command) {
+    ConnectionDataListener listener = pendingConnectionDataListener.get();
+    if (listener != null) {
+      commandDataListenerCache.put(command, listener);
+    }
+  }
+
+  @Nullable
+  public static Context notifyConnectionDataListener(Object command, Object connection) {
+    ConnectionDataListener listener = commandDataListenerCache.get(command);
+    if (listener == null) {
+      return null;
+    }
+    VertxSqlClientData data = getConnectionData(connection);
+    if (data == null) {
+      return null;
+    }
+    commandDataListenerCache.remove(command);
+    return listener.onConnectionData(data);
+  }
+
   public static void storePoolDbSystem(Pool pool, String dbSystem) {
     POOL_DB_SYSTEM.set(pool, dbSystem);
+    VertxSqlClientDataCapture dataCapture = POOL_DATA_CAPTURE.get(pool);
+    if (dataCapture != null) {
+      dataCapture.setDbSystem(dbSystem);
+    }
   }
 
   @Nullable
@@ -96,20 +165,231 @@ public class VertxSqlClientSingletons {
     return CONNECT_OPTIONS.get(sqlClientBase);
   }
 
-  public static void attachConnectOptions(
-      SqlClientBase sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
-    CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
+  @Nullable
+  public static VertxSqlAddressGroup getAddressGroup(SqlClientBase sqlClientBase) {
+    return ADDRESS_GROUP.get(sqlClientBase);
   }
 
-  public static Future<SqlConnection> attachConnectOptions(
-      Future<SqlConnection> future, @Nullable SqlConnectOptions connectOptions) {
-    return future.map(
-        sqlConnection -> {
-          if (sqlConnection instanceof SqlClientBase) {
-            CONNECT_OPTIONS.set((SqlClientBase) sqlConnection, connectOptions);
+  public static void attachClientState(
+      SqlClientBase sqlClientBase,
+      @Nullable SqlConnectOptions connectOptions,
+      @Nullable VertxSqlAddressGroup addressGroup,
+      @Nullable VertxSqlClientDataProvider dataProvider) {
+    CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
+    ADDRESS_GROUP.set(sqlClientBase, addressGroup);
+    DATA_PROVIDER.set(sqlClientBase, dataProvider);
+  }
+
+  public static Future<SqlConnection> attachClientState(
+      Future<SqlConnection> future,
+      @Nullable SqlConnectOptions connectOptions,
+      @Nullable VertxSqlAddressGroup addressGroup,
+      @Nullable VertxSqlClientDataCapture dataCapture,
+      @Nullable Object connectionRequest) {
+    return future.transform(
+        result -> {
+          if (dataCapture != null && connectionRequest != null) {
+            dataCapture.removeConnectionRequest(connectionRequest);
           }
-          return sqlConnection;
+          if (result.succeeded() && result.result() instanceof SqlClientBase) {
+            SqlClientBase sqlClientBase = (SqlClientBase) result.result();
+            VertxSqlClientData data = dataCapture != null ? getConnectionData(sqlClientBase) : null;
+            if (data != null) {
+              attachClientState(
+                  sqlClientBase, data.getConnectOptions(), data.getAddressGroup(), data);
+            } else {
+              attachClientState(sqlClientBase, connectOptions, addressGroup, null);
+            }
+          }
+          return copyResult(result);
         });
+  }
+
+  @Nullable
+  public static Handler<SqlConnection> wrapConnectHandler(
+      @Nullable Handler<SqlConnection> handler,
+      SqlConnectOptions connectOptions,
+      VertxSqlAddressGroup addressGroup) {
+    if (handler == null) {
+      return null;
+    }
+    return connection -> {
+      if (connection instanceof SqlClientBase) {
+        attachClientState((SqlClientBase) connection, connectOptions, addressGroup, null);
+      }
+      handler.handle(connection);
+    };
+  }
+
+  public static Supplier<Future<SqlConnectOptions>> wrapConnectOptionsSupplier(
+      Supplier<Future<SqlConnectOptions>> supplier, VertxSqlClientDataCapture dataCapture) {
+    return () -> {
+      Future<SqlConnectOptions> future = supplier.get();
+      if (future != null) {
+        Promise<SqlConnectOptions> invocationPromise = Promise.promise();
+        future.onComplete(invocationPromise);
+        future = invocationPromise.future();
+        supplierFutureDataCaptureCache.put(future, dataCapture);
+      }
+      return future;
+    };
+  }
+
+  @Nullable
+  public static ConnectionAttempt createConnectionAttempt(
+      Object connectionFactory, Future<SqlConnectOptions> connectOptionsFuture) {
+    VertxSqlClientDataCapture dataCapture =
+        supplierFutureDataCaptureCache.get(connectOptionsFuture);
+    if (dataCapture == null) {
+      return null;
+    }
+    supplierFutureDataCaptureCache.remove(connectOptionsFuture);
+    Object connectionRequest = dataCapture.takeConnectionRequest();
+    return new ConnectionAttempt(
+        getDbSystemNameFromClassName(connectionFactory), connectionRequest);
+  }
+
+  public static Future<SqlConnectOptions> captureConnectionAttempt(
+      Future<SqlConnectOptions> connectOptionsFuture, ConnectionAttempt connectionAttempt) {
+    return connectOptionsFuture.map(
+        connectOptions -> {
+          connectionAttempt.capture(connectOptions);
+          return connectOptions;
+        });
+  }
+
+  public static <T> Future<T> attachConnectionData(
+      Future<T> future, @Nullable ConnectionAttempt connectionAttempt) {
+    if (connectionAttempt == null) {
+      return future;
+    }
+    return future.transform(
+        result -> {
+          VertxSqlClientData data = connectionAttempt.data;
+          if (data != null) {
+            if (result.succeeded()) {
+              cacheConnectionData(result.result(), data);
+            } else {
+              connectionAttempt.notifyConnectionDataListener(data);
+            }
+          }
+          return copyResult(result);
+        });
+  }
+
+  private static <T> Future<T> copyResult(AsyncResult<T> result) {
+    return result.succeeded()
+        ? Future.succeededFuture(result.result())
+        : Future.failedFuture(result.cause());
+  }
+
+  private static void cacheConnectionData(Object connection, VertxSqlClientData data) {
+    Object candidate = connection;
+    while (candidate != null) {
+      connectionDataCache.put(candidate, data);
+      candidate = unwrap(candidate);
+    }
+  }
+
+  @Nullable
+  public static VertxSqlClientData getConnectionData(Object connection) {
+    Object candidate = connection;
+    while (candidate != null) {
+      VertxSqlClientData data = connectionDataCache.get(candidate);
+      if (data != null) {
+        if (candidate != connection) {
+          connectionDataCache.put(connection, data);
+        }
+        return data;
+      }
+      candidate = unwrap(candidate);
+    }
+    return null;
+  }
+
+  @Nullable
+  private static Object unwrap(Object candidate) {
+    try {
+      Object unwrapped = candidate.getClass().getMethod("unwrap").invoke(candidate);
+      return unwrapped != candidate ? unwrapped : null;
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  public static VertxSqlClientDataProvider getDataProvider(SqlClientBase sqlClientBase) {
+    return DATA_PROVIDER.get(sqlClientBase);
+  }
+
+  public static void setPoolDataCapture(
+      Pool pool, @Nullable VertxSqlClientDataCapture dataCapture) {
+    POOL_DATA_CAPTURE.set(pool, dataCapture);
+    if (dataCapture != null) {
+      dataCapture.setDbSystem(POOL_DB_SYSTEM.get(pool));
+    }
+  }
+
+  @Nullable
+  public static VertxSqlClientDataCapture getPoolDataCapture(Pool pool) {
+    return POOL_DATA_CAPTURE.get(pool);
+  }
+
+  public static void setBuildingDataCapture(@Nullable VertxSqlClientDataCapture dataCapture) {
+    if (dataCapture == null) {
+      buildingDataCapture.remove();
+    } else {
+      buildingDataCapture.set(dataCapture);
+    }
+  }
+
+  @Nullable
+  public static VertxSqlClientDataCapture getBuildingDataCapture() {
+    return buildingDataCapture.get();
+  }
+
+  public static void storeBuilderDatabases(
+      Object clientBuilder, @Nullable List<SqlConnectOptions> databases) {
+    if (clientBuilder instanceof ClientBuilderBase) {
+      BUILDER_DATABASES.set((ClientBuilderBase<?>) clientBuilder, databases);
+    }
+  }
+
+  @Nullable
+  public static List<SqlConnectOptions> getBuilderDatabases(Object clientBuilder) {
+    return clientBuilder instanceof ClientBuilderBase
+        ? BUILDER_DATABASES.get((ClientBuilderBase<?>) clientBuilder)
+        : null;
+  }
+
+  public interface ConnectionDataListener {
+
+    /**
+     * Returns the context of the span this listener started, or {@code null} if it started none.
+     */
+    @Nullable
+    Context onConnectionData(VertxSqlClientData data);
+  }
+
+  public static class ConnectionAttempt {
+    private final String dbSystem;
+    @Nullable private final Object connectionRequest;
+    @Nullable private volatile VertxSqlClientData data;
+
+    private ConnectionAttempt(String dbSystem, @Nullable Object connectionRequest) {
+      this.dbSystem = dbSystem;
+      this.connectionRequest = connectionRequest;
+    }
+
+    private void capture(SqlConnectOptions connectOptions) {
+      data = VertxSqlClientData.fromSuppliedConnectOptions(connectOptions, dbSystem);
+    }
+
+    private void notifyConnectionDataListener(VertxSqlClientData data) {
+      if (connectionRequest instanceof ConnectionDataListener) {
+        ((ConnectionDataListener) connectionRequest).onConnectionData(data);
+      }
+    }
   }
 
   private VertxSqlClientSingletons() {}
