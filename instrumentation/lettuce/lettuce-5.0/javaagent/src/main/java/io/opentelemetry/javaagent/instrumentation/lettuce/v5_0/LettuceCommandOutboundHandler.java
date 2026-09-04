@@ -19,7 +19,7 @@ public class LettuceCommandOutboundHandler extends ChannelOutboundHandlerAdapter
     try {
       SocketAddress remoteAddress = context.channel().remoteAddress();
       if (remoteAddress != null) {
-        recordCommands(message, remoteAddress);
+        recordCommandPeers(message, remoteAddress);
       }
     } catch (Throwable ignored) {
       // Do not let telemetry collection disrupt Redis I/O.
@@ -27,19 +27,15 @@ public class LettuceCommandOutboundHandler extends ChannelOutboundHandlerAdapter
     context.write(message, promise);
   }
 
-  static void recordCommands(Object message, SocketAddress remoteAddress) {
+  static void recordCommandPeers(Object message, SocketAddress remoteAddress) {
     if (message instanceof RedisCommand) {
-      recordCommand((RedisCommand<?, ?, ?>) message, remoteAddress);
+      LettuceSingletons.recordCommandPeer((RedisCommand<?, ?, ?>) message, remoteAddress);
     } else if (message instanceof Collection) {
       for (Object item : (Collection<?>) message) {
         if (item instanceof RedisCommand) {
-          recordCommand((RedisCommand<?, ?, ?>) item, remoteAddress);
+          LettuceSingletons.recordCommandPeer((RedisCommand<?, ?, ?>) item, remoteAddress);
         }
       }
     }
-  }
-
-  private static void recordCommand(RedisCommand<?, ?, ?> command, SocketAddress remoteAddress) {
-    LettuceSingletons.recordCommandPeer(command, remoteAddress);
   }
 }
