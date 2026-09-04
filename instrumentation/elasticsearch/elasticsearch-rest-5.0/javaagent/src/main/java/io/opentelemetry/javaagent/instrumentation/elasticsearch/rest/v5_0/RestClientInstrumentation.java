@@ -71,7 +71,7 @@ class RestClientInstrumentation implements TypeInstrumentation {
         }
         Context context = instrumenter().start(parentContext, request);
         if (emitStableDatabaseSemconv()) {
-          context = request.getPeerState().storeInContext(context);
+          context = request.getNetworkPeerCapture().storeInContext(context);
         }
         return new AdviceScope(request, parentContext, context, context.makeCurrent());
       }

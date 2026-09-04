@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SearchPeerState;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkPeerCapture;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
@@ -84,20 +84,20 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) FutureCallback<?> futureCallback) {
 
       Context parentContext = currentContext();
-      boolean captureSearchPeer = SearchPeerState.isActive(parentContext);
+      boolean captureNetworkPeer = NetworkPeerCapture.isActive(parentContext);
       HttpContext httpContext = originalHttpContext;
       HttpAsyncResponseConsumer<?> modifiedResponseConsumer = responseConsumer;
-      if (captureSearchPeer) {
+      if (captureNetworkPeer) {
         if (httpContext == null) {
           httpContext = new BasicHttpContext();
         }
         modifiedResponseConsumer =
-            new SearchPeerResponseConsumer<>(parentContext, httpContext, responseConsumer);
+            new NetworkPeerResponseConsumer<>(parentContext, httpContext, responseConsumer);
       }
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(
-              parentContext, httpContext, futureCallback, captureSearchPeer);
+              parentContext, httpContext, futureCallback, captureNetworkPeer);
       HttpAsyncRequestProducer modifiedRequestProducer =
           new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
       return new Object[] {
@@ -171,12 +171,12 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class SearchPeerResponseConsumer<T> implements HttpAsyncResponseConsumer<T> {
+  public static class NetworkPeerResponseConsumer<T> implements HttpAsyncResponseConsumer<T> {
     private final Context parentContext;
     private final HttpContext httpContext;
     private final HttpAsyncResponseConsumer<T> delegate;
 
-    public SearchPeerResponseConsumer(
+    public NetworkPeerResponseConsumer(
         Context parentContext, HttpContext httpContext, HttpAsyncResponseConsumer<T> delegate) {
       this.parentContext = parentContext;
       this.httpContext = httpContext;
@@ -243,7 +243,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       if (remoteAddress == null || remotePort < 0) {
         return;
       }
-      SearchPeerState.capture(parentContext, new InetSocketAddress(remoteAddress, remotePort));
+      NetworkPeerCapture.capture(parentContext, new InetSocketAddress(remoteAddress, remotePort));
     }
   }
 
@@ -254,7 +254,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final Context parentContext;
     @Nullable private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
-    private final boolean captureSearchPeer;
+    private final boolean captureNetworkPeer;
 
     @Nullable private volatile Context context;
     @Nullable private volatile ApacheHttpClientRequest otelRequest;
@@ -263,11 +263,11 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         Context parentContext,
         @Nullable HttpContext httpContext,
         @Nullable FutureCallback<T> delegate,
-        boolean captureSearchPeer) {
+        boolean captureNetworkPeer) {
       this.parentContext = parentContext;
       this.httpContext = httpContext;
       this.delegate = delegate;
-      this.captureSearchPeer = captureSearchPeer;
+      this.captureNetworkPeer = captureNetworkPeer;
     }
 
     @Override
@@ -288,8 +288,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void failed(Exception ex) {
-      if (captureSearchPeer) {
-        SearchPeerResponseConsumer.capture(parentContext, httpContext);
+      if (captureNetworkPeer) {
+        NetworkPeerResponseConsumer.capture(parentContext, httpContext);
       }
       if (context == null) {
         // this is unexpected
@@ -308,8 +308,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void cancelled() {
-      if (captureSearchPeer) {
-        SearchPeerResponseConsumer.capture(parentContext, httpContext);
+      if (captureNetworkPeer) {
+        NetworkPeerResponseConsumer.capture(parentContext, httpContext);
       }
       if (context == null) {
         // this is unexpected

@@ -16,7 +16,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SearchPeerState;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkPeerCapture;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -251,10 +251,11 @@ class ElasticsearchDbAttributesGetterTest {
   }
 
   @Test
-  void capturesPeerFromRequestState() {
+  void capturesNetworkPeerFromRequest() {
     ElasticsearchRestRequest request = ElasticsearchRestRequest.create("GET", "/");
-    Context context = request.getPeerState().storeInContext(Context.root());
-    SearchPeerState.capture(context, new InetSocketAddress(InetAddress.getLoopbackAddress(), 9200));
+    Context context = request.getNetworkPeerCapture().storeInContext(Context.root());
+    NetworkPeerCapture.capture(
+        context, new InetSocketAddress(InetAddress.getLoopbackAddress(), 9200));
 
     assertThat(getter.getNetworkPeerAddress(request, null))
         .isEqualTo(emitStableDatabaseSemconv() ? "127.0.0.1" : null);
@@ -270,8 +271,8 @@ class ElasticsearchDbAttributesGetterTest {
   @Test
   void doesNotResolveConfiguredHostname() {
     ElasticsearchRestRequest request = ElasticsearchRestRequest.create("GET", "/");
-    Context context = request.getPeerState().storeInContext(Context.root());
-    SearchPeerState.capture(context, InetSocketAddress.createUnresolved("search.example", 9200));
+    Context context = request.getNetworkPeerCapture().storeInContext(Context.root());
+    NetworkPeerCapture.capture(context, InetSocketAddress.createUnresolved("search.example", 9200));
 
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerPort(request, null)).isNull();

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
+package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -15,10 +15,10 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class SearchPeerState {
+public final class NetworkPeerCapture {
 
   private static final ContextKey<StackEntry> KEY =
-      ContextKey.named("opentelemetry-search-peer-state");
+      ContextKey.named("opentelemetry-network-peer-capture");
 
   @Nullable private volatile InetSocketAddress peerAddress;
 
@@ -37,7 +37,7 @@ public final class SearchPeerState {
 
     StackEntry entry = context.get(KEY);
     while (entry != null) {
-      entry.state.peerAddress = inetPeerAddress;
+      entry.capture.peerAddress = inetPeerAddress;
       entry = entry.previous;
     }
   }
@@ -52,11 +52,11 @@ public final class SearchPeerState {
   }
 
   private static final class StackEntry {
-    private final SearchPeerState state;
+    private final NetworkPeerCapture capture;
     @Nullable private final StackEntry previous;
 
-    private StackEntry(SearchPeerState state, @Nullable StackEntry previous) {
-      this.state = state;
+    private StackEntry(NetworkPeerCapture capture, @Nullable StackEntry previous) {
+      this.capture = capture;
       this.previous = previous;
     }
   }

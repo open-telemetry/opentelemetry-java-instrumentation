@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SearchPeerState;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkPeerCapture;
 import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 
@@ -18,7 +18,7 @@ import org.apache.http.HttpEntity;
 @AutoValue
 public abstract class ElasticsearchRestRequest {
 
-  private final SearchPeerState peerState = new SearchPeerState();
+  private final NetworkPeerCapture networkPeerCapture = new NetworkPeerCapture();
 
   public static ElasticsearchRestRequest create(String method, String endpoint) {
     return create(method, endpoint, null, null);
@@ -55,7 +55,7 @@ public abstract class ElasticsearchRestRequest {
   @Nullable
   public abstract DbServerTarget getServerTarget();
 
-  public final SearchPeerState getPeerState() {
-    return peerState;
+  public final NetworkPeerCapture getNetworkPeerCapture() {
+    return networkPeerCapture;
   }
 }

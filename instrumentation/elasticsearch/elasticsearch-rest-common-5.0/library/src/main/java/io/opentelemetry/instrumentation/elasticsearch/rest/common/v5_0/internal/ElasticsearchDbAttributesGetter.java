@@ -162,7 +162,7 @@ final class ElasticsearchDbAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+    InetSocketAddress peerAddress = request.getNetworkPeerCapture().getPeerAddress();
     return peerAddress != null ? peerAddress.getAddress().getHostAddress() : null;
   }
 
@@ -172,7 +172,7 @@ final class ElasticsearchDbAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+    InetSocketAddress peerAddress = request.getNetworkPeerCapture().getPeerAddress();
     return peerAddress != null ? peerAddress.getPort() : null;
   }
 
