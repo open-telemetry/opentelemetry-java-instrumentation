@@ -178,6 +178,51 @@ public final class DbExecution {
     return configuredServerPort;
   }
 
+  public String getSystemName() {
+    return systemName;
+  }
+
+  @Deprecated // to be removed in 3.0
+  public String getSystem() {
+    return system;
+  }
+
+  @Nullable
+  public String getUser() {
+    return user;
+  }
+
+  @Nullable
+  public String getNamespace() {
+    return namespace;
+  }
+
+  public String getConnectionString() {
+    return connectionString;
+  }
+
+  public List<String> getRawQueryTexts() {
+    return rawQueryTexts;
+  }
+
+  @Nullable
+  public Long getBatchSize() {
+    return batchSize;
+  }
+
+  public boolean isParameterizedQuery() {
+    return parameterizedQuery;
+  }
+
+  @Nullable
+  public Context getContext() {
+    return context;
+  }
+
+  public void setContext(Context context) {
+    this.context = context;
+  }
+
   private static boolean isUnixDomainSocket(@Nullable String serverAddress) {
     return serverAddress != null && serverAddress.startsWith("/");
   }
@@ -343,51 +388,6 @@ public final class DbExecution {
 
   private static boolean isValidPort(int port) {
     return port >= 1 && port <= 65535;
-  }
-
-  public String getSystemName() {
-    return systemName;
-  }
-
-  @Deprecated // to be removed in 3.0
-  public String getSystem() {
-    return system;
-  }
-
-  @Nullable
-  public String getUser() {
-    return user;
-  }
-
-  @Nullable
-  public String getNamespace() {
-    return namespace;
-  }
-
-  public String getConnectionString() {
-    return connectionString;
-  }
-
-  public List<String> getRawQueryTexts() {
-    return rawQueryTexts;
-  }
-
-  @Nullable
-  public Long getBatchSize() {
-    return batchSize;
-  }
-
-  public boolean isParameterizedQuery() {
-    return parameterizedQuery;
-  }
-
-  @Nullable
-  public Context getContext() {
-    return context;
-  }
-
-  public void setContext(Context context) {
-    this.context = context;
   }
 
   @Nullable
