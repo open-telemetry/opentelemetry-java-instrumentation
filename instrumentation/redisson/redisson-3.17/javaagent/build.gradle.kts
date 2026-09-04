@@ -39,7 +39,7 @@ testing {
       targets.all {
         testTask.configure {
           filter {
-            includeTestsMatching("*RedissonClientTest.configuredServerTarget")
+            includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
             includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
           }
           jvmArgs("-Dotel.semconv-stability.opt-in=database")
@@ -68,7 +68,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("*RedissonClientTest.configuredServerTarget")
+      includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
       includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
     }
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
