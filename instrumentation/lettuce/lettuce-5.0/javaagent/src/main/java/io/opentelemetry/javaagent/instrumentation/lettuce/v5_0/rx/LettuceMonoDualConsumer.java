@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
+
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
@@ -41,16 +43,16 @@ public class LettuceMonoDualConsumer<T>
     }
     command = subscriptionCommand;
     LettuceSingletons.attachAddress(subscriptionCommand, connection);
-    context = LettuceSingletons.instrumenter().start(Context.current(), subscriptionCommand);
+    context = instrumenter().start(Context.current(), subscriptionCommand);
     if (finishSpanOnClose) {
-      LettuceSingletons.instrumenter().end(context, subscriptionCommand, null, null);
+      instrumenter().end(context, subscriptionCommand, null, null);
     }
   }
 
   @Override
   public void accept(T t, Throwable throwable) {
     if (context != null && command != null) {
-      LettuceSingletons.instrumenter().end(context, command, null, throwable);
+      instrumenter().end(context, command, null, throwable);
     } else {
       logger.fine(
           "Failed to finish this.span, BiConsumer cannot find this.span because "
