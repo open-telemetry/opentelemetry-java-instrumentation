@@ -401,7 +401,16 @@ class VertxSqlClientTest {
     assertThat(calls).hasValue(2);
     List<String> expectedHosts = asList(host, alternateHost);
     Collections.sort(expectedHosts);
-    assertSupplierTargetTraces(expectedHosts);
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertTraces(
+          trace -> assertSupplierTarget(trace, expectedHosts.get(0)),
+          trace -> assertSupplierTarget(trace, expectedHosts.get(1)));
+    } else {
+      testing.waitAndAssertSortedTraces(
+          comparingRootSpanAttribute(SERVER_ADDRESS),
+          trace -> assertSupplierTarget(trace, expectedHosts.get(0)),
+          trace -> assertSupplierTarget(trace, expectedHosts.get(1)));
+    }
   }
 
   @Test
@@ -930,19 +939,6 @@ class VertxSqlClientTest {
                         emitStableDatabaseSemconv() ? null : "test-peer-service"),
                     equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : expectedHost),
                     equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port))));
-  }
-
-  private static void assertSupplierTargetTraces(List<String> expectedHosts) {
-    if (emitStableDatabaseSemconv()) {
-      testing.waitAndAssertTraces(
-          trace -> assertSupplierTarget(trace, expectedHosts.get(0)),
-          trace -> assertSupplierTarget(trace, expectedHosts.get(1)));
-    } else {
-      testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SERVER_ADDRESS),
-          trace -> assertSupplierTarget(trace, expectedHosts.get(0)),
-          trace -> assertSupplierTarget(trace, expectedHosts.get(1)));
-    }
   }
 
   private static void assertSupplierFailure(TraceAssert trace, RuntimeException error) {
