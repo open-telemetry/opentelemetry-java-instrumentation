@@ -14,7 +14,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation-api-incubator"))
         implementation(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent"))
-        implementation("org.apache.hbase:hbase-client:2.4.18")
+        implementation("org.apache.hbase:hbase-client:${baseVersion("2.4.18").orLatest("2.4.+")}")
       }
     }
   }
