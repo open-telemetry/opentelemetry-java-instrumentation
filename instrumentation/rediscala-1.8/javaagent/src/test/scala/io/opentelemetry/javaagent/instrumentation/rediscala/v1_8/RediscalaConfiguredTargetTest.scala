@@ -360,6 +360,7 @@ class RediscalaConfiguredTargetTest {
       )
       .asInstanceOf[RedisClientMutablePool]
     try {
+      awaitMutablePoolConnection(pool)
       Await.result(
         pool.set("mutable-pool-initial-target", "value"),
         Duration("3 second")
@@ -381,6 +382,7 @@ class RediscalaConfiguredTargetTest {
 
       pool.removeServer(first)
 
+      awaitMutablePoolConnection(pool)
       Await.result(
         pool.set("mutable-pool-final-target", "value"),
         Duration("3 second")
@@ -389,6 +391,13 @@ class RediscalaConfiguredTargetTest {
     } finally {
       pool.stop()
     }
+  }
+
+  private def awaitMutablePoolConnection(pool: RedisClientMutablePool): Unit = {
+    await().untilAsserted(new ThrowingRunnable {
+      override def run(): Unit =
+        assertThat(pool.getNextConnection.isDefined).isTrue()
+    })
   }
 
   private def namespace(databaseIndex: Int): String =
