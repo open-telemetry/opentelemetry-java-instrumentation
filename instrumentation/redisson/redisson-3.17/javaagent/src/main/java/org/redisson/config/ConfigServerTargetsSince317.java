@@ -71,6 +71,7 @@ public class ConfigServerTargetsSince317 {
     return null;
   }
 
+  // Redisson changes the single server address return type across supported versions.
   @Nullable
   private static String getAddress(SingleServerConfig config) {
     try {
