@@ -10,22 +10,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.jupiter.api.Test;
 
-class HbaseServerTarget20Test {
+class HbaseServerTarget14Test {
 
   @Test
-  void recognizesPrivateRegistryConfiguration() {
+  void ignoresRegistryConfigurationOnHbase14() {
     Configuration configuration = new Configuration(false);
     configuration.set("hbase.client.registry.impl", "com.example.CustomRegistry");
-    configuration.set("hbase.zookeeper.quorum", "zk");
-
-    assertThat(HbaseServerTarget.from(configuration)).isNull();
-  }
-
-  @Test
-  void selectsEarlierZooKeeperRegistry() {
-    Configuration configuration = new Configuration(false);
-    configuration.set(
-        "hbase.client.registry.impl", "org.apache.hadoop.hbase.client.ZKAsyncRegistry");
     configuration.set("hbase.zookeeper.quorum", "zk");
 
     assertThat(HbaseServerTarget.from(configuration)).isEqualTo("zk:2181:/hbase");
