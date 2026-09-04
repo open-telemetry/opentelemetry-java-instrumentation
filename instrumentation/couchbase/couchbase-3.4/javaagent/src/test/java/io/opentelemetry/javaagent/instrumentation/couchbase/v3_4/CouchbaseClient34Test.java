@@ -178,8 +178,6 @@ class CouchbaseClient34Test {
 
   @Test
   void directSeedSetHasDeterministicServerAddress() {
-    assumeTrue(testLatestDeps());
-
     Set<SeedNode> seedNodes =
         new LinkedHashSet<>(
             asList(
