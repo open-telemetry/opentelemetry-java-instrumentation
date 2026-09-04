@@ -13,7 +13,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceReactiveCommandContext;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
