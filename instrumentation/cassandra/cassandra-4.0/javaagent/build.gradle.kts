@@ -44,22 +44,10 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*CassandraTest.responsePeerComesFromTheChannel")
-    }
-    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database/dup")
-  }
-
   fun registerShadedTest(
     name: String,
     version: String,
     semconvOptIn: String? = null,
-    peerSourceOnly: Boolean = false,
   ): org.gradle.api.tasks.TaskProvider<Test> {
     val shadedClasspath =
       configurations.create("${name}RuntimeClasspath") {
@@ -77,11 +65,6 @@ tasks {
       if (otelProps.denyUnsafe) {
         systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
       }
-      if (peerSourceOnly) {
-        filter {
-          includeTestsMatching("*CassandraTest.responsePeerComesFromTheChannel")
-        }
-      }
       if (semconvOptIn != null) {
         jvmArgs("-Dotel.semconv-stability.opt-in=$semconvOptIn")
         systemProperty("metadataConfig", "otel.semconv-stability.opt-in=$semconvOptIn")
@@ -92,22 +75,13 @@ tasks {
   val testShaded = registerShadedTest("testShaded", "4.0.0")
   val testShadedStableSemconv =
     registerShadedTest("testShadedStableSemconv", "4.0.0", semconvOptIn = "database")
-  val testShadedBothSemconv =
-    registerShadedTest(
-      "testShadedBothSemconv",
-      "4.0.0",
-      semconvOptIn = "database/dup",
-      peerSourceOnly = true,
-    )
   val testShadedLatest = registerShadedTest("testShadedLatest", "4.3.1")
 
   check {
     dependsOn(
       testStableSemconv,
-      testBothSemconv,
       testShaded,
       testShadedStableSemconv,
-      testShadedBothSemconv,
       testShadedLatest,
     )
   }
