@@ -32,7 +32,7 @@ public abstract class HbaseRequest {
         operationBatchSize);
   }
 
-  public HbaseRequest withNetworkPeer(String networkPeerAddress, int networkPeerPort) {
+  HbaseRequest withNetworkPeer(String networkPeerAddress, int networkPeerPort) {
     return new AutoValue_HbaseRequest(
         getOperation(),
         getTableName(),
