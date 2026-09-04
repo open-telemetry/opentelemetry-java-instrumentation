@@ -85,5 +85,4 @@ public class LettuceMonoDualConsumer<T>
         .doOnSuccess(value -> accept(value, (Throwable) null))
         .doOnError(error -> accept(null, error));
   }
-
 }

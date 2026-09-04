@@ -213,9 +213,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         ChannelHandlerContext encoder = channel.pipeline().context(CommandEncoder.class);
         if (encoder != null) {
           LettuceCommandOutboundHandler handler = new LettuceCommandOutboundHandler();
-          channel
-              .pipeline()
-              .addAfter(encoder.name(), handler.getClass().getName(), handler);
+          channel.pipeline().addAfter(encoder.name(), handler.getClass().getName(), handler);
         }
       }
     }

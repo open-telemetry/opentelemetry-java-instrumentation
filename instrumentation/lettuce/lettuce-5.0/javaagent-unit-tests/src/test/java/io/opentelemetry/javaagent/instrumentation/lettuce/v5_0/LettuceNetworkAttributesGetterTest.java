@@ -10,8 +10,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -121,7 +121,8 @@ class LettuceNetworkAttributesGetterTest {
   void batchDropsUnresolvedSelectedAddress() {
     LettuceBatchRequest request =
         LettuceBatchRequest.create(
-            singletonList(commandWithPeer(InetSocketAddress.createUnresolved("redis.example", PORT))),
+            singletonList(
+                commandWithPeer(InetSocketAddress.createUnresolved("redis.example", PORT))),
             null,
             null,
             null);
@@ -347,15 +348,11 @@ class LettuceNetworkAttributesGetterTest {
 
   private static Stream<Arguments> resolvedAddresses() throws UnknownHostException {
     return Stream.of(
-        argumentSet(
-            "ipv4", InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), "10.1.2.3"),
+        argumentSet("ipv4", InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), "10.1.2.3"),
         argumentSet(
             "ipv6",
             InetAddress.getByAddress(
-                new byte[] {
-                  0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
-                }),
+                new byte[] {0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}),
             "2001:db8:0:0:0:0:0:1"));
   }
-
 }
