@@ -28,7 +28,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
           .getBoolean("experimental_span_attributes/development", false);
-  private static final Logger logger = Logger.getLogger(Flux.class.getName());
+  private static final Logger logger = Logger.getLogger(LettuceFluxTerminationRunnable.class.getName());
 
   private final FluxOnSubscribeConsumer onSubscribeConsumer;
   @Nullable private RedisCommand<?, ?, ?> command;

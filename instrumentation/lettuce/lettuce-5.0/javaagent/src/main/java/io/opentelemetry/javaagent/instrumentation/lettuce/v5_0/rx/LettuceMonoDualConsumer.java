@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
 public class LettuceMonoDualConsumer<T>
     implements Consumer<Subscription>, BiConsumer<T, Throwable> {
 
-  private static final Logger logger = Logger.getLogger(Mono.class.getName());
+  private static final Logger logger = Logger.getLogger(LettuceMonoDualConsumer.class.getName());
 
   private final StatefulConnection<?, ?> connection;
   private final boolean finishSpanOnClose;
