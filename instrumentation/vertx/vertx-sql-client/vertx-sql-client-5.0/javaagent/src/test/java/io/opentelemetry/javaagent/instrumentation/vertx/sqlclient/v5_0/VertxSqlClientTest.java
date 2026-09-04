@@ -162,8 +162,7 @@ class VertxSqlClientTest {
     select(listPool);
 
     testing.waitAndAssertTraces(
-        trace ->
-            assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)));
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -181,8 +180,7 @@ class VertxSqlClientTest {
 
     select(listPool);
 
-    testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, null));
+    testing.waitAndAssertTraces(trace -> assertServerGroup(trace, null));
   }
 
   @Test
@@ -205,12 +203,7 @@ class VertxSqlClientTest {
     testing.waitAndAssertTraces(
         trace ->
             assertServerGroup(
-                trace,
-                "127.0.0.1",
-                1,
-                "127.0.0.1:1,127.0.0.1:2",
-                "select * from test",
-                error));
+                trace, "127.0.0.1", 1, "127.0.0.1:1,127.0.0.1:2", "select * from test", error));
   }
 
   @Test
@@ -240,8 +233,7 @@ class VertxSqlClientTest {
     handlerInvoked.get(30, SECONDS);
 
     testing.waitAndAssertTraces(
-        trace ->
-            assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)));
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -711,8 +703,7 @@ class VertxSqlClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            assertServerGroup(
-                trace, query, host + ":" + port + "," + host + ":" + (port + 1)));
+            assertServerGroup(trace, query, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -732,10 +723,8 @@ class VertxSqlClientTest {
     select(secondPool);
 
     testing.waitAndAssertTraces(
-        trace ->
-            assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)),
-        trace ->
-            assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 2)));
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)),
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 2)));
   }
 
   @Test
