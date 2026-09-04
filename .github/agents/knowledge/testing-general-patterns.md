@@ -278,31 +278,21 @@ site.
 
 ### Mode-dependent expected values
 
-Use an established semconv test utility when it directly represents the
-expected key mapping. For database attributes whose old and stable keys carry
-the same value, use `SemconvStabilityUtil.maybeStable(...)` when the test does
-not exercise `database/dup`:
+Database instrumentation tests run either the default or stable database
+semconv mode. Do not add `database/dup` test tasks or expand assertions to
+cover both modes at once. Duplicate-mode coverage belongs in tests for the
+semconv stability API itself.
+
+Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
+carry the same expected value:
 
 ```java
 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH)
 equalTo(maybeStable(DB_OPERATION), "info")
 ```
 
-For a dup-aware test, build a `List<AttributeAssertion>` and conditionally add
-the real assertions for each enabled mode:
-
-```java
-List<AttributeAssertion> attributes = new ArrayList<>();
-if (emitOldDatabaseSemconv()) {
-  attributes.add(equalTo(DB_SYSTEM, ELASTICSEARCH));
-}
-if (emitStableDatabaseSemconv()) {
-  attributes.add(equalTo(DB_SYSTEM_NAME, ELASTICSEARCH));
-}
-```
-
-Do not model this as two always-present assertions whose expected values become
-`null` when their mode is disabled:
+Do not replace these with separate null-gated assertions for the old and stable
+keys:
 
 ```java
 equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null)
