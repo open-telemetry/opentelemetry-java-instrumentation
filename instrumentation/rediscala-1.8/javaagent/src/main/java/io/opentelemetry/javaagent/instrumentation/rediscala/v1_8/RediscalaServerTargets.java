@@ -196,10 +196,11 @@ public class RediscalaServerTargets {
     Iterator<?> iterator = ((Iterable<?>) slaves).iterator();
     while (iterator.hasNext()) {
       Object slave = iterator.next();
-      if (slave instanceof RedisServer) {
-        RedisServer redisServer = (RedisServer) slave;
-        slaveEndpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
+      if (!(slave instanceof RedisServer)) {
+        return null;
       }
+      RedisServer redisServer = (RedisServer) slave;
+      slaveEndpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
     }
     // the master always leads, the replicas behind it carry no meaningful order
     Collections.sort(slaveEndpoints);
@@ -235,14 +236,18 @@ public class RediscalaServerTargets {
     Iterator<?> iterator = ((Iterable<?>) sentinels).iterator();
     while (iterator.hasNext()) {
       Object sentinel = iterator.next();
-      if (sentinel instanceof Tuple2) {
-        Tuple2<?, ?> endpoint = (Tuple2<?, ?>) sentinel;
-        if (endpoint._1() instanceof String && endpoint._2() instanceof Number) {
-          endpoints.add(
-              RedisServerTarget.endpoint(
-                  (String) endpoint._1(), ((Number) endpoint._2()).intValue()));
-        }
+      if (!(sentinel instanceof Tuple2)) {
+        endpoints.add(null);
+        continue;
       }
+      Tuple2<?, ?> endpoint = (Tuple2<?, ?>) sentinel;
+      if (!(endpoint._1() instanceof String) || !(endpoint._2() instanceof Number)) {
+        endpoints.add(null);
+        continue;
+      }
+      endpoints.add(
+          RedisServerTarget.endpoint(
+              (String) endpoint._1(), ((Number) endpoint._2()).intValue()));
     }
     return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, master);
   }
@@ -266,10 +271,12 @@ public class RediscalaServerTargets {
     Iterator<?> iterator = ((Iterable<?>) servers).iterator();
     while (iterator.hasNext()) {
       Object server = iterator.next();
-      if (server instanceof RedisServer) {
-        RedisServer redisServer = (RedisServer) server;
-        endpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
+      if (!(server instanceof RedisServer)) {
+        endpoints.add(null);
+        continue;
       }
+      RedisServer redisServer = (RedisServer) server;
+      endpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
     }
     return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
@@ -294,13 +301,17 @@ public class RediscalaServerTargets {
       Iterator<?> iterator = ((Iterable<?>) connections).iterator();
       while (iterator.hasNext()) {
         Object entry = iterator.next();
-        if (entry instanceof Tuple2) {
-          Object server = ((Tuple2<?, ?>) entry)._1();
-          if (server instanceof RedisServer) {
-            RedisServer redisServer = (RedisServer) server;
-            endpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
-          }
+        if (!(entry instanceof Tuple2)) {
+          endpoints.add(null);
+          continue;
         }
+        Object server = ((Tuple2<?, ?>) entry)._1();
+        if (!(server instanceof RedisServer)) {
+          endpoints.add(null);
+          continue;
+        }
+        RedisServer redisServer = (RedisServer) server;
+        endpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
       }
     }
     return RedisServerTarget.ofUnorderedEndpoints(endpoints);
