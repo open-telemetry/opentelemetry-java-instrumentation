@@ -74,7 +74,7 @@ class CassandraTest extends AbstractCassandraTest {
 
     String configuredTarget =
         Stream.of("127.0.0.2:9042", cassandraHost + ':' + cassandraPort)
-            .sorted(String::compareTo)
+            .sorted()
             .collect(joining(","));
     testing.waitAndAssertTraces(
         trace ->

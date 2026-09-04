@@ -36,7 +36,6 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -49,7 +48,7 @@ class CassandraEndpointAttributesTest {
 
   // SniEndPoint.resolve() always looks the proxy host up with
   // InetAddress.getAllByName(proxyAddress.getHostName()), so an unresolved literal keeps every test
-  // offline and deterministic. A resolved address would make getHostName() do a reverse dns lookup
+  // offline and deterministic. A resolved address would make getHostName() do a reverse DNS lookup
   // and the driver would then resolve whatever name came back.
   private static final InetSocketAddress PROXY_ADDRESS =
       InetSocketAddress.createUnresolved("127.0.0.1", 29042);
@@ -83,7 +82,8 @@ class CassandraEndpointAttributesTest {
       when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
     }
 
-    Attributes attributes = serverAttributes(target(singletonList("cassandra.example.com:9042")));
+    Attributes attributes =
+        serverAttributes(CassandraServerTarget.of(singletonList("cassandra.example.com:9042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("cassandra.example.com");
@@ -100,7 +100,7 @@ class CassandraEndpointAttributesTest {
     }
 
     Attributes attributes =
-        serverAttributes(target(asList("node1.example.com:9042", "[::1]:9042")));
+        serverAttributes(CassandraServerTarget.of(asList("node1.example.com:9042", "[::1]:9042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com,::1");
@@ -114,7 +114,11 @@ class CassandraEndpointAttributesTest {
   void configuredTargetIsAvailableWithoutExecutionInfo() {
     CassandraRequest request =
         CassandraRequest.create(
-            session, target(singletonList("cassandra.example.com:9042")), "SELECT 1");
+            session,
+            emitStableDatabaseSemconv()
+                ? CassandraServerTarget.of(singletonList("cassandra.example.com:9042"))
+                : null,
+            "SELECT 1");
     AttributesBuilder builder = Attributes.builder();
 
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
@@ -132,7 +136,8 @@ class CassandraEndpointAttributesTest {
       when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "host-id"));
     }
 
-    Attributes attributes = serverAttributes(target(singletonList("proxy.example.com:29042")));
+    Attributes attributes =
+        serverAttributes(CassandraServerTarget.of(singletonList("proxy.example.com:29042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("proxy.example.com");
@@ -335,7 +340,9 @@ class CassandraEndpointAttributesTest {
   }
 
   private Attributes serverAttributes(DbServerTarget serverTarget) {
-    CassandraRequest request = CassandraRequest.create(session, serverTarget, "SELECT 1");
+    CassandraRequest request =
+        CassandraRequest.create(
+            session, emitStableDatabaseSemconv() ? serverTarget : null, "SELECT 1");
     AttributesBuilder startAttributes = Attributes.builder();
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
         .onStart(startAttributes, Context.root(), request);
@@ -345,10 +352,6 @@ class CassandraEndpointAttributesTest {
         .putAll(startAttributes.build())
         .putAll(endAttributes.build())
         .build();
-  }
-
-  private static DbServerTarget target(List<String> contactPoints) {
-    return CassandraServerTarget.of(contactPoints);
   }
 
   private static void assertCoordinatorIsServer(Attributes attributes) {
