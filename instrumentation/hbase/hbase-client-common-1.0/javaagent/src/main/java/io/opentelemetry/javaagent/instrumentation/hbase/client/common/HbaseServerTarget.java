@@ -25,6 +25,16 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.ipc.AbstractRpcClient;
 import org.apache.hadoop.hbase.zookeeper.ZKConfig;
 
+/**
+ * Builds logical HBase server targets from the client configuration.
+ *
+ * <p>ZooKeeper targets use HBase's cluster-key shape {@code <quorum>:<clientPort>:<znodeParent>}.
+ * The shared module compiles against HBase 1.0.0, which does not have {@code
+ * ZKConfig.getZooKeeperClusterKey}, so target construction cannot be delegated to that method.
+ * Implementations in newer versions also do not handle every supported source and path:
+ * client-specific ZooKeeper configuration, legacy {@code zoo.cfg}, or {@code MasterRegistry}. This
+ * class also validates and canonicalizes targets before emitting them as telemetry.
+ */
 public class HbaseServerTarget {
 
   private static final String REGISTRY_KEY = "hbase.client.registry.impl";
