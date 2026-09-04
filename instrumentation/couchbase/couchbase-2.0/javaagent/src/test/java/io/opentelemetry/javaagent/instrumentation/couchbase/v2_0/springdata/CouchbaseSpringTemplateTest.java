@@ -27,19 +27,19 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseSpringTemplateTest {
 
   @Override
   protected boolean includesLocalAddressAttribute() {
-    // core-io before 1.6.0 has no localSocket field to capture it from.
+    // The core-io versions before 1.6.0 have no localSocket field to capture it from.
     return false;
   }
 
   @Override
   protected boolean includesOperationIdAttribute() {
-    // core-io before 1.6.0 has no CouchbaseRequest.operationId() to correlate with.
+    // The core-io versions before 1.6.0 have no CouchbaseRequest.operationId() to correlate with.
     return false;
   }
 
   @Override
   protected boolean includesOldServerAddressAttribute() {
-    // this module never resolves a node string to pair with the actual peer address.
+    // This module never resolves a node string to pair with the actual peer address.
     return false;
   }
 }

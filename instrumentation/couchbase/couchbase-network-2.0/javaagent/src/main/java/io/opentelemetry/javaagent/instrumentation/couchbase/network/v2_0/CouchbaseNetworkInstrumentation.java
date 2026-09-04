@@ -49,10 +49,10 @@ class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ChannelHandlerContext channelHandlerContext,
         @Advice.Argument(1) CouchbaseRequest request) {
 
-      // core-io before 1.6.0 has no reliable, version-stable way to read the node string the driver
-      // considers itself connected to, so unlike couchbase-2.6 this only records the actual peer
-      // the driver connected to. The old semantic conventions describe these spans with that node
-      // string, so they are left as they are.
+      // The core-io versions before 1.6.0 have no reliable, version-stable way to read the node
+      // string the driver considers itself connected to, so unlike couchbase-2.6 this only records
+      // the actual peer connection. The old semantic conventions describe these spans with that
+      // node string, so they are left as they are.
       if (!emitStableDatabaseSemconv()) {
         return;
       }
