@@ -35,7 +35,7 @@ public class RedissonServerTargets {
   }
 
   @Nullable
-  public static RedisServerTarget of(RedisConnection connection) {
+  public static RedisServerTarget connectionTarget(RedisConnection connection) {
     RedisClient client = connection.getRedisClient();
     return client != null ? CLIENT_TARGET.get(client) : null;
   }
