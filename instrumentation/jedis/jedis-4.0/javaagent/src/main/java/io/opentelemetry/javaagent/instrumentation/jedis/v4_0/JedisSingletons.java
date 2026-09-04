@@ -136,12 +136,12 @@ public class JedisSingletons {
     } else {
       return;
     }
-    setAggregateConnectionTarget(connection, POOL_TARGET.get(pool));
+    setConnectionTarget(connection, POOL_TARGET.get(pool));
   }
 
   public static void attachProviderTarget(Object provider, @Nullable Connection connection) {
     if (Boolean.TRUE.equals(configuredProviders.get(provider))) {
-      setAggregateConnectionTarget(connection, providerTargets.get(provider));
+      setConnectionTarget(connection, providerTargets.get(provider));
     }
   }
 
@@ -194,11 +194,6 @@ public class JedisSingletons {
     } else {
       CONNECTION_TARGET_SUPPRESSED.set(connection, true);
     }
-  }
-
-  private static void setAggregateConnectionTarget(
-      @Nullable Connection connection, @Nullable RedisServerTarget target) {
-    setConnectionTarget(connection, target);
   }
 
   @Nullable

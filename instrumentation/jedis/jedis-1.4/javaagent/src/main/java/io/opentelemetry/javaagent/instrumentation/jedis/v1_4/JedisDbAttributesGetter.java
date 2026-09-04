@@ -43,6 +43,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
+  @Nullable
   public String getServerAddress(JedisRequest request) {
     if (!emitStableDatabaseSemconv()) {
       return request.getConnection().getHost();
@@ -52,6 +53,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(JedisRequest request) {
     if (!emitStableDatabaseSemconv()) {
       return request.getConnection().getPort();

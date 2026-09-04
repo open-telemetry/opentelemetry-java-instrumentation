@@ -36,8 +36,7 @@ public class JedisServerTargets {
 
   @Nullable
   public static RedisServerTarget ofNodes(@Nullable Collection<?> nodes) {
-    List<String> endpoints = endpointStrings(nodes);
-    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
+    return RedisServerTarget.ofUnorderedEndpoints(endpointStrings(nodes));
   }
 
   @Nullable
