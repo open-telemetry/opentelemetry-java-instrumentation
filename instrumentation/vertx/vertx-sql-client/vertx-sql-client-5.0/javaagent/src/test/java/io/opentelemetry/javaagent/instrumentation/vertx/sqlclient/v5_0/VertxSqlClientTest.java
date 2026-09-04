@@ -753,8 +753,9 @@ class VertxSqlClientTest {
     select(secondPool);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, host + "," + alternateHost),
-        trace -> assertServerGroup(trace, host + "," + host));
+        trace ->
+            assertServerGroup(trace, host + ":" + port + "," + alternateHost + ":" + port),
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + port));
   }
 
   @Test
