@@ -51,7 +51,7 @@ class ConnectionFactoryInstrumentation implements TypeInstrumentation {
     public static void captureConfiguredNodes(
         @Advice.Argument(0) @Nullable List<InetSocketAddress> nodes,
         @Advice.Return @Nullable MemcachedConnection connection) {
-      SpymemcachedServerTargets.capture(connection, nodes);
+      SpymemcachedSingletons.setServerTarget(connection, nodes);
     }
   }
 }

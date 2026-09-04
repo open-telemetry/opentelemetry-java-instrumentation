@@ -71,7 +71,7 @@ class SpymemcachedAttributesGetterTest {
 
   private static SpymemcachedRequest request(List<InetSocketAddress> nodes) {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(connection, nodes);
+    SpymemcachedSingletons.setServerTarget(connection, nodes);
     return SpymemcachedRequest.create(connection, "asyncGet");
   }
 

@@ -14,14 +14,14 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
 
-class SpymemcachedServerTargetsTest {
+class SpymemcachedSingletonsTest {
 
   @Test
   void usesMemcachedDefaultPort() {
     DbServerTarget defaultPort =
-        SpymemcachedServerTargets.create(singletonList(node("cache.example", 11211)));
+        SpymemcachedSingletons.createServerTarget(singletonList(node("cache.example", 11211)));
     DbServerTarget customPort =
-        SpymemcachedServerTargets.create(singletonList(node("cache.example", 11212)));
+        SpymemcachedSingletons.createServerTarget(singletonList(node("cache.example", 11212)));
 
     assertThat(defaultPort.getAddress()).isEqualTo("cache.example");
     assertThat(defaultPort.getPort()).isNull();
@@ -32,7 +32,7 @@ class SpymemcachedServerTargetsTest {
   @Test
   void preservesConfiguredNodeOrder() {
     DbServerTarget target =
-        SpymemcachedServerTargets.create(
+        SpymemcachedSingletons.createServerTarget(
             asList(node("two.example", 11212), node("one.example", 11211)));
 
     assertThat(target.getAddress()).isEqualTo("two.example:11212,one.example:11211");
@@ -42,7 +42,7 @@ class SpymemcachedServerTargetsTest {
   @Test
   void capsTargetAtFiveEndpoints() {
     DbServerTarget target =
-        SpymemcachedServerTargets.create(
+        SpymemcachedSingletons.createServerTarget(
             asList(
                 node("one.example", 11211),
                 node("two.example", 11211),
@@ -58,8 +58,8 @@ class SpymemcachedServerTargetsTest {
 
   @Test
   void clientWithoutNodesHasNoTarget() {
-    assertThat(SpymemcachedServerTargets.create(null)).isNull();
-    assertThat(SpymemcachedServerTargets.create(emptyList())).isNull();
+    assertThat(SpymemcachedSingletons.createServerTarget(null)).isNull();
+    assertThat(SpymemcachedSingletons.createServerTarget(emptyList())).isNull();
   }
 
   private static InetSocketAddress node(String host, int port) {

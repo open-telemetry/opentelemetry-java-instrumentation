@@ -29,7 +29,7 @@ class SpymemcachedRequestTest {
   @Test
   void requestCarriesTheTargetItsConnectionWasCreatedFor() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(
+    SpymemcachedSingletons.setServerTarget(
         connection, asList(node("one.example", 11211), node("two.example", 11212)));
 
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
@@ -65,7 +65,7 @@ class SpymemcachedRequestTest {
   @Test
   void selectedNodeDoesNotOverwriteStableConfiguredTarget() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(
+    SpymemcachedSingletons.setServerTarget(
         connection, asList(node("one.example", 11212), node("two.example", 11212)));
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
     request.setHandlingNode(memcachedNode("selected.example", 11213));
@@ -97,7 +97,7 @@ class SpymemcachedRequestTest {
     nodes.add(node("one.example", 11211));
 
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(connection, nodes);
+    SpymemcachedSingletons.setServerTarget(connection, nodes);
 
     nodes.add(node("two.example", 11212));
 
@@ -108,7 +108,7 @@ class SpymemcachedRequestTest {
   @Test
   void handlingNodeIsKeptBesideTheConfiguredTarget() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(
+    SpymemcachedSingletons.setServerTarget(
         connection, asList(node("one.example", 11211), node("two.example", 11212)));
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
 
@@ -122,7 +122,7 @@ class SpymemcachedRequestTest {
   @Test
   void sequentialSingleKeyRetryDoesNotChangeTheConfiguredTarget() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(
+    SpymemcachedSingletons.setServerTarget(
         connection, asList(node("one.example", 11211), node("two.example", 11212)));
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
 
@@ -136,7 +136,7 @@ class SpymemcachedRequestTest {
   @Test
   void handlingNodeIsHeldPerRequest() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedServerTargets.capture(connection, singletonList(node("one.example", 11211)));
+    SpymemcachedSingletons.setServerTarget(connection, singletonList(node("one.example", 11211)));
 
     SpymemcachedRequest first = SpymemcachedRequest.create(connection, "asyncGet");
     SpymemcachedRequest second = SpymemcachedRequest.create(connection, "asyncGet");

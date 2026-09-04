@@ -18,7 +18,7 @@ public abstract class SpymemcachedRequest {
 
   public static SpymemcachedRequest create(MemcachedConnection connection, String queryText) {
     return new AutoValue_SpymemcachedRequest(
-        connection, queryText, SpymemcachedServerTargets.get(connection));
+        connection, queryText, SpymemcachedSingletons.serverTarget(connection));
   }
 
   public abstract MemcachedConnection getConnection();
