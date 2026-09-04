@@ -57,11 +57,11 @@ class TransactionInstrumentation implements TypeInstrumentation {
         Queue<Operation<?, ?>> operations = transactionBuilder.operations().result();
         Object client = TRANSACTION_CLIENT.get(transactionBuilder);
         ServerEndpoint endpoint = TRANSACTION_ENDPOINT.get(transactionBuilder);
+        RedisServerTarget serverTarget = null;
         if (emitStableDatabaseSemconv()) {
           endpoint = ServerEndpoint.create(client);
+          serverTarget = RediscalaServerTargets.get(client);
         }
-        RedisServerTarget serverTarget =
-            emitStableDatabaseSemconv() ? RediscalaServerTargets.get(client) : null;
         RediscalaRequest request =
             RediscalaRequest.createTransaction(operations, endpoint, serverTarget);
         Context parentContext = Context.current();
