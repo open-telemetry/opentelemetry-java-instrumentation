@@ -34,6 +34,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // present in supported synchronous drivers and absent from the async driver
     return hasClassesNamed("com.mongodb.MongoClientOptions");
   }
 
