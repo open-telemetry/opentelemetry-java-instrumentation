@@ -181,7 +181,7 @@ class CouchbaseClient31Test {
     List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
     dispatchAttributes.add(equalTo(maybeStable(DB_SYSTEM), "couchbase"));
     if (EXPERIMENTAL_ATTRIBUTES) {
-      // the chunked http handler reports a textual operation id, unlike the key-value handler
+      // The chunked HTTP handler reports a textual operation id, unlike the key-value handler
       dispatchAttributes.add(
           satisfies(stringKey("db.couchbase.operation_id"), val -> val.isNotBlank()));
     }
