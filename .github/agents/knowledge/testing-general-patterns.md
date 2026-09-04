@@ -280,16 +280,34 @@ site.
 
 Use an established semconv test utility when it directly represents the
 expected key mapping. For database attributes whose old and stable keys carry
-the same value, use `SemconvStabilityUtil.maybeStable(...)`:
+the same value, use `SemconvStabilityUtil.maybeStable(...)` when the test does
+not exercise `database/dup`:
 
 ```java
 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH)
 equalTo(maybeStable(DB_OPERATION), "info")
 ```
 
-Do not expand these into separate null-gated assertions such as
-`equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null)` and
-`equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null)`.
+For a dup-aware test, build a `List<AttributeAssertion>` and conditionally add
+the real assertions for each enabled mode:
+
+```java
+List<AttributeAssertion> attributes = new ArrayList<>();
+if (emitOldDatabaseSemconv()) {
+  attributes.add(equalTo(DB_SYSTEM, ELASTICSEARCH));
+}
+if (emitStableDatabaseSemconv()) {
+  attributes.add(equalTo(DB_SYSTEM_NAME, ELASTICSEARCH));
+}
+```
+
+Do not model this as two always-present assertions whose expected values become
+`null` when their mode is disabled:
+
+```java
+equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null)
+equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null)
+```
 
 When no established semconv utility applies, put the ternary inside the
 `equalTo` value or single attribute key. Do not duplicate two whole
