@@ -70,17 +70,12 @@ public class JedisSingletons {
     SHARDED_TARGET_CONFIGURED.set(sharded, true);
   }
 
-  @Nullable
-  private static RedisServerTarget shardedTarget(Sharded<?, ?> sharded) {
-    return SHARDED_TARGET.get(sharded);
-  }
-
   public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
     if (!Boolean.TRUE.equals(SHARDED_TARGET_CONFIGURED.get(sharded))
         || !(shard instanceof BinaryJedis)) {
       return;
     }
-    setAggregateConnectionTarget(((BinaryJedis) shard).getClient(), shardedTarget(sharded));
+    setConnectionTarget(((BinaryJedis) shard).getClient(), SHARDED_TARGET.get(sharded));
   }
 
   public static void setConnectionTarget(
@@ -94,11 +89,6 @@ public class JedisSingletons {
     } else {
       CONNECTION_TARGET_SUPPRESSED.set(connection, true);
     }
-  }
-
-  private static void setAggregateConnectionTarget(
-      @Nullable Connection connection, @Nullable RedisServerTarget target) {
-    setConnectionTarget(connection, target);
   }
 
   public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {

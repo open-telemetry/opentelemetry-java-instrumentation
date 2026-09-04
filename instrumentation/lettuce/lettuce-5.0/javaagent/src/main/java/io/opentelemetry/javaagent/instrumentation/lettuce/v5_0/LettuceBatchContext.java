@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -155,17 +156,17 @@ public final class LettuceBatchContext {
     private final List<AsyncCommand<?, ?, ?>> asyncCommands = new ArrayList<>();
     @Nullable private Context parentContext;
     @Nullable private RedisServerTarget serverTarget;
-    private boolean serverTargetsDisagree;
+    private boolean serverTargetVaries;
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
       RedisServerTarget commandTarget = COMMAND_TARGET.get(command);
-      if (commandTarget != null && !serverTargetsDisagree) {
+      if (commandTarget != null && !serverTargetVaries) {
         if (serverTarget == null) {
           serverTarget = commandTarget;
         } else if (!sameServerTarget(serverTarget, commandTarget)) {
           serverTarget = null;
-          serverTargetsDisagree = true;
+          serverTargetVaries = true;
         }
       }
       if (parentContext == null && asyncCommand != null) {
@@ -182,17 +183,15 @@ public final class LettuceBatchContext {
 
     @Nullable
     private RedisServerTarget getServerTarget(@Nullable RedisServerTarget fallback) {
-      if (serverTargetsDisagree) {
+      if (serverTargetVaries) {
         return null;
       }
       return serverTarget != null ? serverTarget : fallback;
     }
 
     private static boolean sameServerTarget(RedisServerTarget first, RedisServerTarget second) {
-      Integer firstPort = first.getPort();
-      Integer secondPort = second.getPort();
       return first.getAddress().equals(second.getAddress())
-          && (firstPort == null ? secondPort == null : firstPort.equals(secondPort));
+          && Objects.equals(first.getPort(), second.getPort());
     }
   }
 }

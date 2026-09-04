@@ -245,11 +245,11 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         .isEqualTo("OK");
 
     masterSlaveConnection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> masterSlaveConnection.setAutoFlushCommands(true));
     RedisAsyncCommands<String, String> asyncCommands = masterSlaveConnection.async();
     RedisFuture<String> first = asyncCommands.set("MASTER_SLAVE_BATCH_KEY_1", "value");
     RedisFuture<String> second = asyncCommands.set("MASTER_SLAVE_BATCH_KEY_2", "value");
     masterSlaveConnection.flushCommands();
-    masterSlaveConnection.setAutoFlushCommands(true);
     assertThat(first.get(10, SECONDS)).isEqualTo("OK");
     assertThat(second.get(10, SECONDS)).isEqualTo("OK");
 

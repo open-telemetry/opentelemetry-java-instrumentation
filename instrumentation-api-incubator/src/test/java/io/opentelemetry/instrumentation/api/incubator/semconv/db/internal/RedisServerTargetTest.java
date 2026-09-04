@@ -76,7 +76,7 @@ class RedisServerTargetTest {
   }
 
   @Test
-  void discoveryEndpointsKeepOrderAndLogicalName() {
+  void discoveryEndpointsKeepOrderAndDuplicatesAndLogicalName() {
     RedisServerTarget target =
         RedisServerTarget.ofEndpointsAndLogicalName(
             asList("redis://sentinel2:26380", "redis://sentinel1:26379", "redis://sentinel2:26380"),

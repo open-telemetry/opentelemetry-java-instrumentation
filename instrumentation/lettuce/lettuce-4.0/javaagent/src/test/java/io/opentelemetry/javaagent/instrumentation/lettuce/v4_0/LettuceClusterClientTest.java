@@ -112,10 +112,10 @@ class LettuceClusterClientTest {
     assertThat(asyncCommands.set(routedKey, "value").get(10, SECONDS)).isEqualTo("OK");
 
     asyncCommands.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
     RedisFuture<String> first = asyncCommands.set(firstBatchKey, "value");
     RedisFuture<String> second = asyncCommands.set(secondBatchKey, "value");
     asyncCommands.flushCommands();
-    asyncCommands.setAutoFlushCommands(true);
     assertThat(first.get(10, SECONDS)).isEqualTo("OK");
     assertThat(second.get(10, SECONDS)).isEqualTo("OK");
 
@@ -126,6 +126,9 @@ class LettuceClusterClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, null),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
@@ -137,25 +140,22 @@ class LettuceClusterClientTest {
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
                                     ? Long.valueOf(secondRedisServer.getPort())
-                                    : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+                                    : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("PIPELINE SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, null),
+                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
                             equalTo(NETWORK_PEER_ADDRESS, null),
                             equalTo(NETWORK_PEER_PORT, null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? Long.valueOf(2) : null))));

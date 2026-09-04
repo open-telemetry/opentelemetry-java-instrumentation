@@ -33,8 +33,9 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.lettuce.core.masterslave.MasterSlave")
-        .or(named("io.lettuce.core.masterslave.MasterSlaveConnectionWrapper"));
+    return namedOneOf(
+        "io.lettuce.core.masterslave.MasterSlave",
+        "io.lettuce.core.masterslave.MasterSlaveConnectionWrapper");
   }
 
   @Override
