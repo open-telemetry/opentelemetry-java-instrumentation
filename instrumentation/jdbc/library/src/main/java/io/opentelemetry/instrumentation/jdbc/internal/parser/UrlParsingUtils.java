@@ -150,6 +150,7 @@ public final class UrlParsingUtils {
     }
   }
 
+  /** Append a host and optional port, adding brackets around an unbracketed IPv6 address. */
   public static void appendHostPort(StringBuilder builder, String host, @Nullable Integer port) {
     // Brackets keep an IPv6 literal unambiguous when a port follows.
     if (host.contains(":") && !host.startsWith("[")) {
@@ -254,6 +255,7 @@ public final class UrlParsingUtils {
     return -1;
   }
 
+  /** Extract the authority from a JDBC URL without reporting ambiguous credential text. */
   @Nullable
   public static String extractAuthority(String url) {
     int protoLoc = url.indexOf("://");
@@ -280,6 +282,7 @@ public final class UrlParsingUtils {
     return end < 0 ? url.substring(start) : url.substring(start, end);
   }
 
+  /** Extract an authority when an at sign in a later query parameter obscures its boundary. */
   @Nullable
   public static String extractAuthorityWithQueryAt(String url) {
     int authorityStart = url.indexOf("://");
@@ -374,6 +377,7 @@ public final class UrlParsingUtils {
     return authority.indexOf('(') < 0;
   }
 
+  /** Returns whether a JDBC URL contains more than one configured target. */
   public static boolean hasMultipleTargets(String jdbcUrl) {
     int protocol = jdbcUrl.indexOf("://");
     if (protocol < 0) {
@@ -479,6 +483,7 @@ public final class UrlParsingUtils {
         || (colon > 0 && parsePort(value.substring(colon + 1)) != null);
   }
 
+  /** Sanitize a comma-separated host list, returning {@code null} when it is not valid. */
   @Nullable
   public static String sanitizeHostList(String authority) {
     String hostList = stripUserInfo(authority);
@@ -501,6 +506,7 @@ public final class UrlParsingUtils {
     return group.toString();
   }
 
+  /** Parse and normalize a comma-separated configured server group. */
   @Nullable
   public static ServerAddressGroup parseServerAddressGroup(
       String authority, @Nullable Integer defaultPort) {
