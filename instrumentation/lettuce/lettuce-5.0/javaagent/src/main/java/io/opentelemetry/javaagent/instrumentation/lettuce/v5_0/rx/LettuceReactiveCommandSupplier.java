@@ -21,14 +21,11 @@ public class LettuceReactiveCommandSupplier<K, V, T> implements Supplier<RedisCo
 
   @Override
   public synchronized RedisCommand<K, V, T> get() {
-    RedisCommand<K, V, T> command;
     if (first) {
       first = false;
-      command = tracingCommand;
-    } else {
-      command = delegate.get();
+      return tracingCommand;
     }
-    return command;
+    return delegate.get();
   }
 
   public RedisCommand<K, V, T> getTracingCommand() {
