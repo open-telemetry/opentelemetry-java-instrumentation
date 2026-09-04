@@ -163,7 +163,7 @@ class VertxSqlClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            assertServerGroup(trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)));
+            assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -182,7 +182,7 @@ class VertxSqlClientTest {
     select(listPool);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, "/var/run/postgres:primary", 5432, null));
+        trace -> assertServerGroup(trace, null));
   }
 
   @Test
@@ -208,8 +208,6 @@ class VertxSqlClientTest {
                 trace,
                 "127.0.0.1",
                 1,
-                "127.0.0.1",
-                2,
                 "127.0.0.1:1,127.0.0.1:2",
                 "select * from test",
                 error));
@@ -243,7 +241,7 @@ class VertxSqlClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            assertServerGroup(trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)));
+            assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -714,7 +712,7 @@ class VertxSqlClientTest {
     testing.waitAndAssertTraces(
         trace ->
             assertServerGroup(
-                trace, port + 1, query, host + ":" + port + "," + host + ":" + (port + 1)));
+                trace, query, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -735,9 +733,9 @@ class VertxSqlClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            assertServerGroup(trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)),
+            assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)),
         trace ->
-            assertServerGroup(trace, port + 2, host + ":" + port + "," + host + ":" + (port + 2)));
+            assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 2)));
   }
 
   @Test
@@ -766,8 +764,8 @@ class VertxSqlClientTest {
     select(secondPool);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, alternateHost, port, host + "," + alternateHost),
-        trace -> assertServerGroup(trace, host, port, host + "," + host));
+        trace -> assertServerGroup(trace, host + "," + alternateHost),
+        trace -> assertServerGroup(trace, host + "," + host));
   }
 
   @Test
@@ -808,45 +806,19 @@ class VertxSqlClientTest {
                             equalTo(SERVER_PORT, port))));
   }
 
-  private static void assertServerGroup(
-      TraceAssert trace, int secondPort, String expectedStableAddress) {
-    assertServerGroup(trace, host, secondPort, "select * from test", expectedStableAddress);
+  private static void assertServerGroup(TraceAssert trace, String expectedStableAddress) {
+    assertServerGroup(trace, "select * from test", expectedStableAddress);
   }
 
   private static void assertServerGroup(
-      TraceAssert trace, int secondPort, String statement, String expectedStableAddress) {
-    assertServerGroup(trace, host, secondPort, statement, expectedStableAddress);
-  }
-
-  private static void assertServerGroup(
-      TraceAssert trace, String secondHost, int secondPort, String expectedStableAddress) {
-    assertServerGroup(
-        trace,
-        host,
-        port,
-        secondHost,
-        secondPort,
-        expectedStableAddress,
-        "select * from test",
-        null);
-  }
-
-  private static void assertServerGroup(
-      TraceAssert trace,
-      String secondHost,
-      int secondPort,
-      String statement,
-      String expectedStableAddress) {
-    assertServerGroup(
-        trace, host, port, secondHost, secondPort, expectedStableAddress, statement, null);
+      TraceAssert trace, String statement, String expectedStableAddress) {
+    assertServerGroup(trace, host, port, expectedStableAddress, statement, null);
   }
 
   private static void assertServerGroup(
       TraceAssert trace,
       String firstHost,
       int firstPort,
-      String secondHost,
-      int secondPort,
       String expectedStableAddress,
       String statement,
       Throwable error) {
