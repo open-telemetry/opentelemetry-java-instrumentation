@@ -174,8 +174,8 @@ tasks {
       testing.suites,
       testConnectionTelemetryEnabled,
       testConnectionTelemetryEnabledStableSemconv,
-      testBothSemconv,
       testStableSemconv,
+      testBothSemconv,
       testExperimental,
       testV3Preview
     )

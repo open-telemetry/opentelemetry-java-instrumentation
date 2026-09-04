@@ -79,8 +79,8 @@ tasks {
     dependsOn(
       testConnectionTelemetryEnabled,
       testConnectionTelemetryEnabledStableSemconv,
-      testBothSemconv,
       testStableSemconv,
+      testBothSemconv,
       testExperimental
     )
   }
