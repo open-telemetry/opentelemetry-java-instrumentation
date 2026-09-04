@@ -86,6 +86,7 @@ final class LettuceBatchRequest {
 
   @Nullable
   SocketAddress getPeerAddress() {
+    // Read when the span ends so an outbound write after the flush can still supply the peer.
     return LettuceSingletons.batchPeerAddress(commands);
   }
 

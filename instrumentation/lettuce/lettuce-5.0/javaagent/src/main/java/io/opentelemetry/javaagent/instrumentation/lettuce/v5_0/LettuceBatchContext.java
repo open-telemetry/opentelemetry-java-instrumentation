@@ -67,7 +67,6 @@ public final class LettuceBatchContext {
     if (state == null || state.isEmpty()) {
       return null;
     }
-
     // flushCommands() does not re-enable auto-flush, so keep batching active with a fresh buffer
     BATCH_STATE.set(endpoint, new BatchState());
     return BatchScope.start(
@@ -113,7 +112,6 @@ public final class LettuceBatchContext {
         batchInstrumenter().end(context, request, null, null);
         return null;
       }
-
       BatchScope scope = new BatchScope(context, request, asyncCommands.size());
       // Redis executes batch commands in order, but the individual async command futures can
       // complete in a different order. Observe every future so an earlier failure or cancellation
