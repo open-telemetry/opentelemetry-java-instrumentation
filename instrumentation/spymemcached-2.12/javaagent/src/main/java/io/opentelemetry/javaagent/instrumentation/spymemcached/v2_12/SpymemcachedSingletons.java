@@ -30,7 +30,6 @@ import net.spy.memcached.MemcachedConnection;
 public class SpymemcachedSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spymemcached-2.12";
   private static final int DEFAULT_PORT = 11211;
-  private static final int MAX_ENDPOINT_COUNT = 5;
 
   private static final Instrumenter<SpymemcachedRequest, Object> instrumenter;
   private static final VirtualField<MemcachedConnection, DbServerTarget> CONFIGURED_TARGETS =
@@ -94,8 +93,7 @@ public class SpymemcachedSingletons {
     if (nodes == null) {
       return null;
     }
-    DbServerTargetBuilder builder =
-        DbServerTarget.builder(DEFAULT_PORT).setSorted(false).setMaxEndpoints(MAX_ENDPOINT_COUNT);
+    DbServerTargetBuilder builder = DbServerTarget.builder(DEFAULT_PORT);
     for (InetSocketAddress node : nodes) {
       builder.addEndpoint(node);
     }
