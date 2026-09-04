@@ -895,7 +895,8 @@ class ClickHouseClientV1Test {
                     selector -> server,
                 ImmutableMap.of())
             .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
-            .query("select * from " + TABLE_NAME);
+            .query("select * from " + TABLE_NAME)
+            .seal();
 
     ClickHouseResponse response = client.executeAndWait(request);
     response.close();
@@ -936,6 +937,7 @@ class ClickHouseClientV1Test {
             .read(nodes)
             .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
             .query("select * from " + TABLE_NAME)
+            .seal()
             .executeAndWait();
     response.close();
 

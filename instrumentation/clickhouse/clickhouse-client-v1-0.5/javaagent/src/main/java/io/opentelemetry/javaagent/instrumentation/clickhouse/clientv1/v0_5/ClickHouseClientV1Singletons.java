@@ -23,12 +23,14 @@ import javax.annotation.Nullable;
 public class ClickHouseClientV1Singletons {
 
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v1-0.5";
+  private static final CapturedServerTarget NO_SERVER_TARGET = new CapturedServerTarget(null);
   private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
 
   private static final VirtualField<ClickHouseNodes, ServerTarget> NODES_SERVER_TARGET =
       VirtualField.find(ClickHouseNodes.class, ServerTarget.class);
-  private static final VirtualField<ClickHouseRequest<?>, ServerTarget> REQUEST_SERVER_TARGET =
-      VirtualField.find(ClickHouseRequest.class, ServerTarget.class);
+  private static final VirtualField<ClickHouseRequest<?>, CapturedServerTarget>
+      REQUEST_SERVER_TARGET =
+          VirtualField.find(ClickHouseRequest.class, CapturedServerTarget.class);
 
   static {
     instrumenter =
@@ -78,15 +80,25 @@ public class ClickHouseClientV1Singletons {
 
   public static void copyServerTarget(
       ClickHouseRequest<?> request, ClickHouseRequest<?> copiedRequest) {
-    REQUEST_SERVER_TARGET.set(copiedRequest, serverTarget(request));
+    CapturedServerTarget capturedTarget = REQUEST_SERVER_TARGET.get(request);
+    if (capturedTarget == null) {
+      ServerTarget target = uncapturedServerTarget(request);
+      capturedTarget = target == null ? NO_SERVER_TARGET : new CapturedServerTarget(target);
+    }
+    REQUEST_SERVER_TARGET.set(copiedRequest, capturedTarget);
   }
 
   @Nullable
   private static ServerTarget serverTarget(ClickHouseRequest<?> request) {
-    ServerTarget target = REQUEST_SERVER_TARGET.get(request);
-    if (target != null) {
-      return target;
+    CapturedServerTarget capturedTarget = REQUEST_SERVER_TARGET.get(request);
+    if (capturedTarget != null) {
+      return capturedTarget.target;
     }
+    return uncapturedServerTarget(request);
+  }
+
+  @Nullable
+  private static ServerTarget uncapturedServerTarget(ClickHouseRequest<?> request) {
     ClickHouseNodes nodes = ClickHouseRequestAccess.getNodes(request);
     if (nodes != null) {
       return NODES_SERVER_TARGET.get(nodes);
@@ -143,6 +155,14 @@ public class ClickHouseClientV1Singletons {
       }
     }
     return false;
+  }
+
+  private static class CapturedServerTarget {
+    @Nullable private final ServerTarget target;
+
+    private CapturedServerTarget(@Nullable ServerTarget target) {
+      this.target = target;
+    }
   }
 
   private static class ServerTarget {
