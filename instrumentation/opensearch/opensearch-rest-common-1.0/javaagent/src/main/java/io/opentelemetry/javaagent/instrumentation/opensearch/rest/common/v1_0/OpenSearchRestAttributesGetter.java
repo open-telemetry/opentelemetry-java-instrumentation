@@ -104,7 +104,7 @@ final class OpenSearchRestAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+    InetSocketAddress peerAddress = request.getNetworkPeerCapture().getPeerAddress();
     return peerAddress != null ? peerAddress.getPort() : null;
   }
 
@@ -112,7 +112,7 @@ final class OpenSearchRestAttributesGetter
   private static InetAddress getNetworkPeerInetAddress(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
     if (emitStableDatabaseSemconv()) {
-      InetSocketAddress peerAddress = request.getPeerState().getPeerAddress();
+      InetSocketAddress peerAddress = request.getNetworkPeerCapture().getPeerAddress();
       return peerAddress != null ? peerAddress.getAddress() : null;
     }
     return response != null ? response.getAddress() : null;
