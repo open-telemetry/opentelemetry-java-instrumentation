@@ -190,8 +190,7 @@ public class VertxSqlClientSingletons {
 
   @Nullable
   public static VertxSqlClientInfoCapture getPoolSupplierCapture(Pool pool) {
-    VertxSqlClientInfoProvider infoProvider =
-        getPoolClientInfoProvider(pool);
+    VertxSqlClientInfoProvider infoProvider = getPoolClientInfoProvider(pool);
     return infoProvider instanceof VertxSqlClientInfoCapture
         ? (VertxSqlClientInfoCapture) infoProvider
         : null;
@@ -212,8 +211,7 @@ public class VertxSqlClientSingletons {
   }
 
   public static Supplier<Future<SqlConnectOptions>> wrapConnectOptionsSupplier(
-      Supplier<Future<SqlConnectOptions>> supplier,
-      VertxSqlClientInfoCapture supplierCapture) {
+      Supplier<Future<SqlConnectOptions>> supplier, VertxSqlClientInfoCapture supplierCapture) {
     return () -> {
       Future<SqlConnectOptions> future = supplier.get();
       if (future != null) {
@@ -229,8 +227,7 @@ public class VertxSqlClientSingletons {
   @Nullable
   public static ConnectionAttempt createConnectionAttempt(
       Object connectionFactory, Future<SqlConnectOptions> connectOptionsFuture) {
-    VertxSqlClientInfoCapture supplierCapture =
-        SUPPLIER_FUTURE_CAPTURE.get(connectOptionsFuture);
+    VertxSqlClientInfoCapture supplierCapture = SUPPLIER_FUTURE_CAPTURE.get(connectOptionsFuture);
     if (supplierCapture == null) {
       return null;
     }
@@ -346,9 +343,7 @@ public class VertxSqlClientSingletons {
     }
 
     private void capture(SqlConnectOptions connectOptions) {
-      info =
-          VertxSqlClientInfo.create(
-              new SqlConnectOptions(connectOptions), dbSystemName);
+      info = VertxSqlClientInfo.create(new SqlConnectOptions(connectOptions), dbSystemName);
     }
 
     private void notifyConnectionDataListener(VertxSqlClientInfo info) {
