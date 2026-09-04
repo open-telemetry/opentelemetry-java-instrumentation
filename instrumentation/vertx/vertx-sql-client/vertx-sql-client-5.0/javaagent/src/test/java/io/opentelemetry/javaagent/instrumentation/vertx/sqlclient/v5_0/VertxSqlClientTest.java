@@ -161,7 +161,10 @@ class VertxSqlClientTest {
 
     select(listPool);
 
-    testing.waitAndAssertTraces(trace -> assertServerGroup(trace, port + 1));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertServerGroup(
+                trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -180,7 +183,7 @@ class VertxSqlClientTest {
     select(listPool);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, "/var/run/postgres:primary", 5432));
+        trace -> assertServerGroup(trace, "/var/run/postgres:primary", 5432, null));
   }
 
   @Test
@@ -202,7 +205,15 @@ class VertxSqlClientTest {
     assertThat(error).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
-            assertServerGroup(trace, "127.0.0.1", 1, "127.0.0.1", 2, "select * from test", error));
+            assertServerGroup(
+                trace,
+                "127.0.0.1",
+                1,
+                "127.0.0.1",
+                2,
+                "127.0.0.1:1,127.0.0.1:2",
+                "select * from test",
+                error));
   }
 
   @Test
@@ -231,7 +242,10 @@ class VertxSqlClientTest {
     cleanup.deferCleanup(connection::close);
     handlerInvoked.get(30, SECONDS);
 
-    testing.waitAndAssertTraces(trace -> assertServerGroup(trace, port + 1));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertServerGroup(
+                trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -699,7 +713,10 @@ class VertxSqlClientTest {
         .toCompletableFuture()
         .get(30, SECONDS);
 
-    testing.waitAndAssertTraces(trace -> assertServerGroup(trace, port + 1, query));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertServerGroup(
+                trace, port + 1, query, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -719,7 +736,12 @@ class VertxSqlClientTest {
     select(secondPool);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, port + 1), trace -> assertServerGroup(trace, port + 2));
+        trace ->
+            assertServerGroup(
+                trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)),
+        trace ->
+            assertServerGroup(
+                trace, port + 2, host + ":" + port + "," + host + ":" + (port + 2)));
   }
 
   @Test
@@ -748,8 +770,8 @@ class VertxSqlClientTest {
     select(secondPool);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, alternateHost, port),
-        trace -> assertServerGroup(trace, host, port));
+        trace -> assertServerGroup(trace, alternateHost, port, host + "," + alternateHost),
+        trace -> assertServerGroup(trace, host, port, host + "," + host));
   }
 
   @Test
@@ -790,21 +812,37 @@ class VertxSqlClientTest {
                             equalTo(SERVER_PORT, port))));
   }
 
-  private static void assertServerGroup(TraceAssert trace, int secondPort) {
-    assertServerGroup(trace, host, secondPort, "select * from test");
-  }
-
-  private static void assertServerGroup(TraceAssert trace, int secondPort, String statement) {
-    assertServerGroup(trace, host, secondPort, statement);
-  }
-
-  private static void assertServerGroup(TraceAssert trace, String secondHost, int secondPort) {
-    assertServerGroup(trace, secondHost, secondPort, "select * from test");
+  private static void assertServerGroup(
+      TraceAssert trace, int secondPort, String expectedStableAddress) {
+    assertServerGroup(trace, host, secondPort, "select * from test", expectedStableAddress);
   }
 
   private static void assertServerGroup(
-      TraceAssert trace, String secondHost, int secondPort, String statement) {
-    assertServerGroup(trace, host, port, secondHost, secondPort, statement, null);
+      TraceAssert trace, int secondPort, String statement, String expectedStableAddress) {
+    assertServerGroup(trace, host, secondPort, statement, expectedStableAddress);
+  }
+
+  private static void assertServerGroup(
+      TraceAssert trace, String secondHost, int secondPort, String expectedStableAddress) {
+    assertServerGroup(
+        trace,
+        host,
+        port,
+        secondHost,
+        secondPort,
+        expectedStableAddress,
+        "select * from test",
+        null);
+  }
+
+  private static void assertServerGroup(
+      TraceAssert trace,
+      String secondHost,
+      int secondPort,
+      String statement,
+      String expectedStableAddress) {
+    assertServerGroup(
+        trace, host, port, secondHost, secondPort, expectedStableAddress, statement, null);
   }
 
   private static void assertServerGroup(
@@ -813,16 +851,9 @@ class VertxSqlClientTest {
       int firstPort,
       String secondHost,
       int secondPort,
+      String expectedStableAddress,
       String statement,
       Throwable error) {
-    boolean hasUnixSocket = firstHost.startsWith("/") || secondHost.startsWith("/");
-    boolean inlinePorts = firstPort != 5432 || secondPort != 5432;
-    String stableAddress =
-        hasUnixSocket
-            ? null
-            : inlinePorts
-                ? firstHost + ":" + firstPort + "," + secondHost + ":" + secondPort
-                : firstHost + "," + secondHost;
     Consumer<SpanDataAssert> operationSpan;
     if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       operationSpan =
@@ -838,7 +869,7 @@ class VertxSqlClientTest {
                       equalTo(DB_STATEMENT, statement),
                       equalTo(DB_OPERATION, "SELECT"),
                       equalTo(DB_SQL_TABLE, "test"),
-                      equalTo(SERVER_ADDRESS, stableAddress),
+                      equalTo(SERVER_ADDRESS, expectedStableAddress),
                       equalTo(ERROR_TYPE, error != null ? PgException.class.getName() : null));
     } else {
       operationSpan =
@@ -859,7 +890,8 @@ class VertxSqlClientTest {
                           maybeStablePeerService(),
                           emitStableDatabaseSemconv() ? null : "test-peer-service"),
                       equalTo(
-                          SERVER_ADDRESS, emitStableDatabaseSemconv() ? stableAddress : firstHost),
+                          SERVER_ADDRESS,
+                          emitStableDatabaseSemconv() ? expectedStableAddress : firstHost),
                       equalTo(
                           SERVER_PORT,
                           emitStableDatabaseSemconv() ? null : Long.valueOf(firstPort)),
