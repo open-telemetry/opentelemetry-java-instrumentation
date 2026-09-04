@@ -28,8 +28,8 @@ class SpymemcachedAttributesGetterTest {
     request.setHandlingNode(memcachedNode("selected.example", 11212));
 
     assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "one.example" : null);
-    assertThat(getter.getServerPort(request)).isNull();
+        .isEqualTo(emitStableDatabaseSemconv() ? "one.example" : "selected.example");
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 11212);
   }
 
   @Test
@@ -39,8 +39,9 @@ class SpymemcachedAttributesGetterTest {
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
     assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "one.example:11212,two.example:11212" : null);
-    assertThat(getter.getServerPort(request)).isNull();
+        .isEqualTo(
+            emitStableDatabaseSemconv() ? "one.example:11212,two.example:11212" : "two.example");
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 11212);
   }
 
   @Test
@@ -50,18 +51,22 @@ class SpymemcachedAttributesGetterTest {
     request.setHandlingNode(memcachedNode("selected.example", 11213));
 
     assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "one.example:11211,two.example:11212" : null);
-    assertThat(getter.getServerPort(request)).isNull();
+        .isEqualTo(
+            emitStableDatabaseSemconv()
+                ? "one.example:11211,two.example:11212"
+                : "selected.example");
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 11213);
   }
 
   @Test
-  void clientWithoutAConfiguredTargetNamesNoServer() {
+  void clientWithoutAConfiguredTargetUsesHandlingNodeInLegacyTelemetry() {
     SpymemcachedRequest request =
         SpymemcachedRequest.create(mock(MemcachedConnection.class), "asyncGet");
     request.setHandlingNode(memcachedNode("one.example", 11211));
 
-    assertThat(getter.getServerAddress(request)).isNull();
-    assertThat(getter.getServerPort(request)).isNull();
+    assertThat(getter.getServerAddress(request))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "one.example");
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 11211);
   }
 
   private static SpymemcachedRequest request(List<InetSocketAddress> nodes) {

@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 class SpymemcachedAttributesGetter
@@ -46,21 +47,22 @@ class SpymemcachedAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(SpymemcachedRequest spymemcachedRequest) {
-    // The configured target is part of stable database telemetry only.
-    if (!emitStableDatabaseSemconv()) {
-      return null;
+    if (emitStableDatabaseSemconv()) {
+      DbServerTarget target = spymemcachedRequest.getServerTarget();
+      return target == null ? null : target.getAddress();
     }
-    DbServerTarget target = spymemcachedRequest.getServerTarget();
-    return target == null ? null : target.getAddress();
+    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
+    return address == null ? null : address.getHostString();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(SpymemcachedRequest spymemcachedRequest) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
+    if (emitStableDatabaseSemconv()) {
+      DbServerTarget target = spymemcachedRequest.getServerTarget();
+      return target == null ? null : target.getPort();
     }
-    DbServerTarget target = spymemcachedRequest.getServerTarget();
-    return target == null ? null : target.getPort();
+    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
+    return address == null ? null : address.getPort();
   }
 }

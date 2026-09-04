@@ -17,7 +17,7 @@ class SpymemcachedServerAttributesExtractor
     implements AttributesExtractor<SpymemcachedRequest, Object> {
 
   private final ServerAttributesExtractor<SpymemcachedRequest, Void> delegate =
-      ServerAttributesExtractor.create(new SpymemcachedServerAttributesGetter());
+      ServerAttributesExtractor.create(new SpymemcachedAttributesGetter());
 
   @Override
   public void onStart(AttributesBuilder attributes, Context context, SpymemcachedRequest request) {}
