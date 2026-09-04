@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -98,7 +99,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (throwable != null || future == null) {
+      if (!emitStableDatabaseSemconv() || throwable != null || future == null) {
         scope.end(throwable);
       } else {
         scope.endOnCompletion(future);

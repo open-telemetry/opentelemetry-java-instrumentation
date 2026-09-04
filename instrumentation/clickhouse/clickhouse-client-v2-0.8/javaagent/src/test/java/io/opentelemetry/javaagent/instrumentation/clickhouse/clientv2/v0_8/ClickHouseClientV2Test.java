@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.clickhouse.client.api.Client;
@@ -52,6 +53,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -332,6 +334,41 @@ class ClickHouseClientV2Test {
                           histogram.hasPointsSatisfying(
                               point -> point.hasAttribute(ERROR_TYPE, "60"))));
     }
+  }
+
+  @Test
+  void testAsyncFailurePreservesLegacyCompletion() {
+    assumeFalse(emitStableDatabaseSemconv());
+
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint(Protocol.HTTP, host, port, false)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false")
+            .useAsyncRequests(true)
+            .build();
+    cleanup.deferCleanup(testClient);
+
+    CompletableFuture<QueryResponse> future = testClient.query("select * from non_existent_table");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from non_existent_table"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"))));
+
+    assertThat(catchThrowable(future::join)).isNotNull();
   }
 
   @Test
