@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
-import static io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer.get;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.protocol.internal.Frame;
+import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import java.net.InetAddress;
@@ -42,8 +42,8 @@ class CassandraResponsePeerTest {
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(secondExecutionInfo, secondFrame);
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(firstExecutionInfo, firstFrame);
 
-    assertThat(get(firstExecutionInfo)).isEqualTo(firstPeer);
-    assertThat(get(secondExecutionInfo)).isEqualTo(secondPeer);
+    assertThat(CassandraNetworkPeer.getExecutionInfoPeer(firstExecutionInfo)).isEqualTo(firstPeer);
+    assertThat(CassandraNetworkPeer.getExecutionInfoPeer(secondExecutionInfo)).isEqualTo(secondPeer);
   }
 
   @Test
@@ -67,8 +67,8 @@ class CassandraResponsePeerTest {
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(
         nonInetExecutionInfo, nonInetFrame);
 
-    assertThat(get(unresolvedExecutionInfo)).isNull();
-    assertThat(get(nonInetExecutionInfo)).isNull();
+    assertThat(CassandraNetworkPeer.getExecutionInfoPeer(unresolvedExecutionInfo)).isNull();
+    assertThat(CassandraNetworkPeer.getExecutionInfoPeer(nonInetExecutionInfo)).isNull();
   }
 
   @Test
@@ -81,7 +81,7 @@ class CassandraResponsePeerTest {
         new TestContext(new TestChannel(peer)), responseFrame);
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(executionInfo, responseFrame);
 
-    assertThat(get(executionInfo)).isEqualTo(peer);
+    assertThat(CassandraNetworkPeer.getExecutionInfoPeer(executionInfo)).isEqualTo(peer);
   }
 
   @Test
@@ -106,8 +106,8 @@ class CassandraResponsePeerTest {
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(firstExecutionInfo, firstResponse);
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(retryExecutionInfo, retryResponse);
 
-    assertThat(get(firstExecutionInfo)).isEqualTo(firstPeer);
-    assertThat(get(retryExecutionInfo)).isEqualTo(retryPeer);
+    assertThat(CassandraNetworkPeer.getExecutionInfoPeer(firstExecutionInfo)).isEqualTo(firstPeer);
+    assertThat(CassandraNetworkPeer.getExecutionInfoPeer(retryExecutionInfo)).isEqualTo(retryPeer);
   }
 
   private static InetSocketAddress resolved(int port) throws UnknownHostException {
