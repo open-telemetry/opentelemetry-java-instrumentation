@@ -85,8 +85,7 @@ class CassandraEndpointAttributesTest {
     }
 
     Attributes attributes =
-        serverAttributes(
-            CassandraServerTarget.of(asList("node1.example.com:9042", "[::1]:9042")));
+        serverAttributes(CassandraServerTarget.of(asList("node1.example.com:9042", "[::1]:9042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com,::1");

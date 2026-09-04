@@ -241,15 +241,12 @@ class CassandraServerTargetTest {
   private static Stream<Arguments> unsafeExplicitContactPointAddresses() {
     return Stream.of(
         argumentSet("null address", (Object) null),
-        argumentSet(
-            "zero port", InetSocketAddress.createUnresolved("node.example.com", 0)),
+        argumentSet("zero port", InetSocketAddress.createUnresolved("node.example.com", 0)),
         argumentSet(
             "credentials in host",
             InetSocketAddress.createUnresolved("user:password@node.example.com", 9042)),
-        argumentSet(
-            "unclosed IPv6 bracket", InetSocketAddress.createUnresolved("[::1", 9042)),
-        argumentSet(
-            "invalid IPv6 literal", InetSocketAddress.createUnresolved("not:ipv6", 9042)));
+        argumentSet("unclosed IPv6 bracket", InetSocketAddress.createUnresolved("[::1", 9042)),
+        argumentSet("invalid IPv6 literal", InetSocketAddress.createUnresolved("not:ipv6", 9042)));
   }
 
   @ParameterizedTest
