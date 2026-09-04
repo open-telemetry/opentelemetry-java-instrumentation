@@ -11,6 +11,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,8 +30,12 @@ import java.net.InetSocketAddress;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -43,58 +48,77 @@ class CassandraServerTargetTest {
   @Mock private DriverExecutionProfile defaultProfile;
   @Mock private EndPoint customEndPoint;
 
-  @Test
-  void singleContactPointOmitsTheDefaultPort() {
-    DbServerTarget target = CassandraServerTarget.of(singletonList("cassandra.example.com:9042"));
+  @ParameterizedTest
+  @MethodSource("validContactPointTargets")
+  void contactPointsProduceTheExpectedTarget(
+      List<String> contactPoints, String expectedAddress, Integer expectedPort) {
+    DbServerTarget target = CassandraServerTarget.of(contactPoints);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
-    assertThat(target.getPort()).isNull();
+    assertThat(target.getAddress()).isEqualTo(expectedAddress);
+    assertThat(target.getPort()).isEqualTo(expectedPort);
   }
 
-  @Test
-  void singleContactPointExtractsANonDefaultPort() {
-    DbServerTarget target = CassandraServerTarget.of(singletonList("cassandra.example.com:9142"));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
-    assertThat(target.getPort()).isEqualTo(9142);
-  }
-
-  @Test
-  void singleIpv6ContactPointLosesItsBrackets() {
-    DbServerTarget target = CassandraServerTarget.of(singletonList("[::1]:9042"));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("::1");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void contactPointWithoutAPortIsIgnored() {
-    DbServerTarget target = CassandraServerTarget.of(singletonList("cassandra.example.com"));
-
-    assertThat(target).isNull();
-  }
-
-  @Test
-  void configuredContactPointsPreserveOrderAndOmitTheSharedDefaultPort() {
-    DbServerTarget target =
-        CassandraServerTarget.of(asList("node1.example.com:9042", "10.0.0.5:9042"));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("node1.example.com,10.0.0.5");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void severalContactPointsInlineEverySharedNonDefaultPort() {
-    DbServerTarget target =
-        CassandraServerTarget.of(asList("node1.example.com:9142", "10.0.0.5:9142"));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("node1.example.com:9142,10.0.0.5:9142");
-    assertThat(target.getPort()).isNull();
+  private static Stream<Arguments> validContactPointTargets() {
+    return Stream.of(
+        argumentSet(
+            "single contact point omits the default port",
+            singletonList("cassandra.example.com:9042"),
+            "cassandra.example.com",
+            null),
+        argumentSet(
+            "single contact point extracts a non-default port",
+            singletonList("cassandra.example.com:9142"),
+            "cassandra.example.com",
+            9142),
+        argumentSet(
+            "single IPv6 contact point loses its brackets",
+            singletonList("[::1]:9042"),
+            "::1",
+            null),
+        argumentSet(
+            "configured contact points preserve order and omit the shared default port",
+            asList("node1.example.com:9042", "10.0.0.5:9042"),
+            "node1.example.com,10.0.0.5",
+            null),
+        argumentSet(
+            "several contact points inline every shared non-default port",
+            asList("node1.example.com:9142", "10.0.0.5:9142"),
+            "node1.example.com:9142,10.0.0.5:9142",
+            null),
+        argumentSet(
+            "duplicate configured contact points are preserved",
+            asList("cassandra.example.com:9042", "cassandra.example.com:9042"),
+            "cassandra.example.com,cassandra.example.com",
+            null),
+        argumentSet(
+            "IPv6 contact points stay bracketed when ports are mixed",
+            asList("[::1]:9042", "2001:db8::1:9142", "10.0.0.5:9042"),
+            "[::1]:9042,[2001:db8::1]:9142,10.0.0.5:9042",
+            null),
+        argumentSet(
+            "endpoint list includes five endpoints",
+            asList(
+                "node5.example.com:9042",
+                "node2.example.com:9042",
+                "node4.example.com:9042",
+                "node1.example.com:9042",
+                "node3.example.com:9042"),
+            "node5.example.com,node2.example.com,node4.example.com,node1.example.com,"
+                + "node3.example.com",
+            null),
+        argumentSet(
+            "configured endpoint list keeps the first five endpoints",
+            asList(
+                "node6.example.com:9042",
+                "node3.example.com:9042",
+                "node1.example.com:9042",
+                "node5.example.com:9042",
+                "node2.example.com:9042",
+                "node4.example.com:9042"),
+            "node6.example.com,node3.example.com,node1.example.com,node5.example.com,"
+                + "node2.example.com",
+            null));
   }
 
   @Test
@@ -112,90 +136,34 @@ class CassandraServerTargetTest {
     assertThat(second.getPort()).isNull();
   }
 
-  @Test
-  void duplicateConfiguredContactPointsArePreserved() {
-    DbServerTarget target =
-        CassandraServerTarget.of(
-            asList("cassandra.example.com:9042", "cassandra.example.com:9042"));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("cassandra.example.com,cassandra.example.com");
-    assertThat(target.getPort()).isNull();
+  @ParameterizedTest
+  @MethodSource("invalidContactPoints")
+  void invalidContactPointsDropTheTarget(List<String> contactPoints) {
+    assertThat(CassandraServerTarget.of(contactPoints)).isNull();
   }
 
-  @Test
-  void ipv6ContactPointsStayBracketedWhenPortsAreMixed() {
-    DbServerTarget target =
-        CassandraServerTarget.of(asList("[::1]:9042", "2001:db8::1:9142", "10.0.0.5:9042"));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("[::1]:9042,[2001:db8::1]:9142,10.0.0.5:9042");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void endpointListIncludesFiveEndpoints() {
-    DbServerTarget target =
-        CassandraServerTarget.of(
-            asList(
-                "node5.example.com:9042",
-                "node2.example.com:9042",
-                "node4.example.com:9042",
-                "node1.example.com:9042",
-                "node3.example.com:9042"));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress())
-        .isEqualTo(
-            "node5.example.com,node2.example.com,node4.example.com,node1.example.com,"
-                + "node3.example.com");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void configuredEndpointListKeepsTheFirstFiveEndpoints() {
-    DbServerTarget target =
-        CassandraServerTarget.of(
-            asList(
-                "node6.example.com:9042",
-                "node3.example.com:9042",
-                "node1.example.com:9042",
-                "node5.example.com:9042",
-                "node2.example.com:9042",
-                "node4.example.com:9042"));
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress())
-        .isEqualTo(
-            "node6.example.com,node3.example.com,node1.example.com,node5.example.com,"
-                + "node2.example.com");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void invalidContactPointsDropTheTarget() {
-    assertThat(CassandraServerTarget.of(emptyList())).isNull();
-    assertThat(CassandraServerTarget.of((List<String>) null)).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("  "))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("node.example.com:not-a-port"))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("node.example.com:0"))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("[::1:9042"))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("::1"))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("2001:db8::1"))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("user:password@node.example.com:9042")))
-        .isNull();
-    assertThat(CassandraServerTarget.of(singletonList("node.example.com/path?token=secret:9042")))
-        .isNull();
-    assertThat(
-            CassandraServerTarget.of(
-                asList("node.example.com:9042", "user:password@other.example.com:9042")))
-        .isNull();
-
-    assertThat(
-            CassandraServerTarget.of(
-                asList(
-                    "missing-port", "node.example.com:9042", "invalid:not-a-port", "[::1]:9042")))
-        .isNull();
+  private static Stream<Arguments> invalidContactPoints() {
+    return Stream.of(
+        argumentSet("empty list", emptyList()),
+        argumentSet("null list", (Object) null),
+        argumentSet("blank contact point", singletonList("  ")),
+        argumentSet("contact point without a port", singletonList("cassandra.example.com")),
+        argumentSet("non-numeric port", singletonList("node.example.com:not-a-port")),
+        argumentSet("zero port", singletonList("node.example.com:0")),
+        argumentSet("unclosed IPv6 bracket", singletonList("[::1:9042")),
+        argumentSet("unbracketed loopback IPv6", singletonList("::1")),
+        argumentSet("unbracketed IPv6", singletonList("2001:db8::1")),
+        argumentSet(
+            "credentials in contact point", singletonList("user:password@node.example.com:9042")),
+        argumentSet(
+            "path and query in contact point",
+            singletonList("node.example.com/path?token=secret:9042")),
+        argumentSet(
+            "unsafe contact point among valid contact points",
+            asList("node.example.com:9042", "user:password@other.example.com:9042")),
+        argumentSet(
+            "several malformed contact points",
+            asList("missing-port", "node.example.com:9042", "invalid:not-a-port", "[::1]:9042")));
   }
 
   @Test
@@ -363,8 +331,8 @@ class CassandraServerTargetTest {
 
   @Test
   void sessionWithOnlyProgrammaticContactPointsReadsTheRealDriverConfiguration() {
-    // basic.contact-points has no default, so a lookup without one throws on a session that names
-    // its contact points on the builder alone
+    // The basic.contact-points option has no default, so a lookup without one throws on a session
+    // that names its contact points on the builder alone.
     when(session.getContext()).thenReturn(context);
     when(context.getConfig()).thenReturn(new DefaultDriverConfigLoader().getInitialConfig());
     Set<EndPoint> programmaticContactPoints =

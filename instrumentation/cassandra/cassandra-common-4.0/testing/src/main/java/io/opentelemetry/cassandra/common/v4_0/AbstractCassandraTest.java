@@ -661,7 +661,7 @@ public abstract class AbstractCassandraTest {
     return sessionBuilder;
   }
 
-  protected CqlSession getSessionWithConfiguredContactPoints(List<String> contactPoints) {
+  private CqlSession getSessionWithConfiguredContactPoints(List<String> contactPoints) {
     DriverConfigLoader configLoader =
         DefaultDriverConfigLoader.builder()
             .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
