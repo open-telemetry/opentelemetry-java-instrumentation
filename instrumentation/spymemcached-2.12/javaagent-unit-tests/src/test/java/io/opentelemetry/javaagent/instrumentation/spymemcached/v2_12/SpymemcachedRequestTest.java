@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,8 +54,7 @@ class SpymemcachedRequestTest {
     request.setHandlingNode(memcachedNode("selected.example", 11212));
     AttributesBuilder attributes = Attributes.builder();
 
-    new SpymemcachedServerAttributesExtractor()
-        .onEnd(attributes, Context.root(), request, null, null);
+    extractServerAttributes(attributes, request);
 
     Attributes result = attributes.build();
     assertThat(result.get(SERVER_ADDRESS))
@@ -77,8 +77,7 @@ class SpymemcachedRequestTest {
       attributes.put(SERVER_PORT, serverPort);
     }
 
-    new SpymemcachedServerAttributesExtractor()
-        .onEnd(attributes, Context.root(), request, null, null);
+    extractServerAttributes(attributes, request);
 
     Attributes result = attributes.build();
     assertThat(result.get(SERVER_ADDRESS))
@@ -150,6 +149,14 @@ class SpymemcachedRequestTest {
     MemcachedNode node = mock(MemcachedNode.class);
     when(node.getSocketAddress()).thenReturn(node(host, port));
     return node;
+  }
+
+  private static void extractServerAttributes(
+      AttributesBuilder attributes, SpymemcachedRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      ServerAttributesExtractor.create(new SpymemcachedAttributesGetter())
+          .onStart(attributes, Context.root(), request);
+    }
   }
 
   private static InetSocketAddress node(String host, int port) {
