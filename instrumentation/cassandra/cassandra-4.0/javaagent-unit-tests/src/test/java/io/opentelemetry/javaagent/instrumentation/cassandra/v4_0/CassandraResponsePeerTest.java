@@ -18,12 +18,13 @@ import io.netty.channel.ChannelHandlerContext;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 
 class CassandraResponsePeerTest {
 
   @Test
-  void correlatesMultiplexedResponsesWithTheirChannels() throws Exception {
+  void correlatesMultiplexedResponsesWithTheirChannels() throws UnknownHostException {
     ChannelHandlerContext context = mock(ChannelHandlerContext.class);
     Channel channel = mock(Channel.class);
     Frame firstFrame = frame(1);
@@ -72,7 +73,7 @@ class CassandraResponsePeerTest {
   }
 
   @Test
-  void supportsPackageIndependentPublicContextInterfaces() throws Exception {
+  void supportsPackageIndependentPublicContextInterfaces() throws UnknownHostException {
     InetSocketAddress peer = resolved(39042);
     Frame responseFrame = frame(1);
     ExecutionInfo executionInfo = mock(ExecutionInfo.class);
@@ -85,7 +86,7 @@ class CassandraResponsePeerTest {
   }
 
   @Test
-  void finalRetryResponseKeepsItsChannelPeer() throws Exception {
+  void finalRetryResponseKeepsItsChannelPeer() throws UnknownHostException {
     ChannelHandlerContext firstContext = mock(ChannelHandlerContext.class);
     ChannelHandlerContext retryContext = mock(ChannelHandlerContext.class);
     Channel firstChannel = mock(Channel.class);
@@ -112,7 +113,7 @@ class CassandraResponsePeerTest {
         .isEqualTo(retryPeer);
   }
 
-  private static InetSocketAddress resolved(int port) throws Exception {
+  private static InetSocketAddress resolved(int port) throws UnknownHostException {
     return new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), port);
   }
 
