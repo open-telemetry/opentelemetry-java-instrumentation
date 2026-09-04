@@ -76,7 +76,7 @@ public class HbaseServerTarget {
   }
 
   @Nullable
-  public static String from(Configuration configuration) {
+  static String from(Configuration configuration) {
     return from(
         configuration,
         SUPPORTS_CLIENT_ZK_CONFIG,
