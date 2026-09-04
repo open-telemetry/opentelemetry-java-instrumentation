@@ -57,7 +57,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         named("write").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
         getClass().getName() + "$WriteAdvice");
     transformer.applyAdviceToMethod(
-        named("write").and(takesArgument(0, named("java.util.Collection"))),
+        named("write").and(takesArgument(0, Collection.class)),
         getClass().getName() + "$CollectionWriteAdvice");
     transformer.applyAdviceToMethod(
         named("setAutoFlushCommands").and(takesArguments(1)),
