@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -120,9 +121,7 @@ class ConfigServerTargetsTest {
             .setMasterAddress(redisAddress("master:6379"))
             .addSlaveAddress(redisAddress("replica:6380"));
     Object validReplica = serverConfig.getSlaveAddresses().iterator().next();
-    Set<Object> replicas = new LinkedHashSet<>();
-    replicas.add(validReplica);
-    replicas.add(invalidReplica);
+    Set<Object> replicas = new LinkedHashSet<>(asList(validReplica, invalidReplica));
     serverConfig
         .getClass()
         .getMethod("setSlaveAddresses", Set.class)
