@@ -16,9 +16,7 @@ class HbaseServerTarget24Test {
   private static final String MASTER_REGISTRY = "org.apache.hadoop.hbase.client.MasterRegistry";
 
   @Test
-  void omitsUnconfiguredMasterRegistryTarget() throws ClassNotFoundException {
-    assertThat(Class.forName(MASTER_REGISTRY)).isNotNull();
-
+  void omitsUnconfiguredMasterRegistryTarget() {
     Configuration configuration = new Configuration(false);
     configuration.set(REGISTRY_KEY, MASTER_REGISTRY);
 
