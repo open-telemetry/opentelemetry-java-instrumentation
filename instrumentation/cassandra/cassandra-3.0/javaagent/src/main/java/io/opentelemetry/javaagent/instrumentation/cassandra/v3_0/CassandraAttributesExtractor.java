@@ -64,7 +64,7 @@ class CassandraAttributesExtractor
       return;
     }
 
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
+    if (!emitStableDatabaseSemconv()) {
       InetSocketAddress coordinatorAddress = response.getPeerAddress();
       if (coordinatorAddress != null) {
         attributes.put(SERVER_ADDRESS, coordinatorAddress.getHostString());

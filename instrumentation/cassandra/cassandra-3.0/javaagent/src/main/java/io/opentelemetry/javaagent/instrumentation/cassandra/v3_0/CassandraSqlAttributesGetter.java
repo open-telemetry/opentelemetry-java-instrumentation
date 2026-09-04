@@ -50,15 +50,15 @@ final class CassandraSqlAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CassandraRequest request) {
-    DbServerTarget configuredTarget = request.getConfiguredTarget();
-    return configuredTarget == null ? null : configuredTarget.getAddress();
+    DbServerTarget serverTarget = request.getServerTarget();
+    return serverTarget == null ? null : serverTarget.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(CassandraRequest request) {
-    DbServerTarget configuredTarget = request.getConfiguredTarget();
-    return configuredTarget == null ? null : configuredTarget.getPort();
+    DbServerTarget serverTarget = request.getServerTarget();
+    return serverTarget == null ? null : serverTarget.getPort();
   }
 
   @Nullable
