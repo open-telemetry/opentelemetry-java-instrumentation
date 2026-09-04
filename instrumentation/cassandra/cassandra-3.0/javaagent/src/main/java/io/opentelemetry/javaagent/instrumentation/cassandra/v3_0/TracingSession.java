@@ -30,7 +30,7 @@ public class TracingSession implements Session {
   @Nullable private final DbServerTarget serverTarget;
 
   public TracingSession(Session session) {
-    this(session, CassandraConfiguredTarget.get(session.getCluster()));
+    this(session, CassandraServerTarget.get(session.getCluster()));
   }
 
   private TracingSession(Session session, @Nullable DbServerTarget serverTarget) {

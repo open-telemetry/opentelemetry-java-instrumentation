@@ -51,9 +51,9 @@ class CassandraBuilderInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable) {
       if (callDepth.decrementAndGet() == 0 && emitStableDatabaseSemconv()) {
         if (throwable == null) {
-          CassandraConfiguredTarget.capture(builder, arguments);
+          CassandraServerTarget.capture(builder, arguments);
         } else {
-          CassandraConfiguredTarget.invalidate(builder);
+          CassandraServerTarget.invalidate(builder);
         }
       }
     }
@@ -68,7 +68,7 @@ class CassandraBuilderInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("port") int port,
         @Advice.Return Cluster cluster) {
       if (emitStableDatabaseSemconv()) {
-        CassandraConfiguredTarget.store(builder, cluster, port);
+        CassandraServerTarget.store(builder, cluster, port);
       }
     }
   }

@@ -15,11 +15,11 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 
-class CassandraConfiguredTargetTest {
+class CassandraServerTargetTest {
 
   @Test
   void omitsImplicitDefaultPortFromSingleHostTarget() {
-    DbServerTarget target = CassandraConfiguredTarget.create(new String[] {"db.example"}, 9042);
+    DbServerTarget target = CassandraServerTarget.create(new String[] {"db.example"}, 9042);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("db.example");
@@ -28,7 +28,7 @@ class CassandraConfiguredTargetTest {
 
   @Test
   void extractsConfiguredNonDefaultPortFromSingleHostTarget() {
-    DbServerTarget target = CassandraConfiguredTarget.create("db.example", 9142);
+    DbServerTarget target = CassandraServerTarget.create("db.example", 9142);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("db.example");
@@ -38,8 +38,7 @@ class CassandraConfiguredTargetTest {
   @Test
   void omitsMaterializedDefaultPortFromSingleHostTarget() {
     DbServerTarget target =
-        CassandraConfiguredTarget.create(
-            InetSocketAddress.createUnresolved("db.example", 9042), 9142);
+        CassandraServerTarget.create(InetSocketAddress.createUnresolved("db.example", 9042), 9142);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("db.example");
@@ -49,7 +48,7 @@ class CassandraConfiguredTargetTest {
   @Test
   void omitsDefaultPortFromMultipleContactPoints() {
     DbServerTarget target =
-        CassandraConfiguredTarget.create(
+        CassandraServerTarget.create(
             asList("second.example", InetSocketAddress.createUnresolved("first.example", 9042)),
             9042);
 
@@ -61,7 +60,7 @@ class CassandraConfiguredTargetTest {
   @Test
   void inlinesSharedNonDefaultPortForMultipleContactPoints() {
     DbServerTarget target =
-        CassandraConfiguredTarget.create(
+        CassandraServerTarget.create(
             asList("second.example", InetSocketAddress.createUnresolved("first.example", 9142)),
             9142);
 
@@ -75,9 +74,9 @@ class CassandraConfiguredTargetTest {
     InetAddress address = InetAddress.getByAddress(new byte[] {10, 0, 0, 1});
     InetSocketAddress otherAddress = InetSocketAddress.createUnresolved("other.example", 9142);
     DbServerTarget firstTarget =
-        CassandraConfiguredTarget.create(asList("db.example", address, otherAddress), 9042);
+        CassandraServerTarget.create(asList("db.example", address, otherAddress), 9042);
     DbServerTarget secondTarget =
-        CassandraConfiguredTarget.create(asList(otherAddress, "db.example", address), 9042);
+        CassandraServerTarget.create(asList(otherAddress, "db.example", address), 9042);
 
     assertThat(firstTarget).isNotNull();
     assertThat(secondTarget).isNotNull();
@@ -92,7 +91,7 @@ class CassandraConfiguredTargetTest {
   @Test
   void preservesDuplicateListContactPoints() {
     DbServerTarget target =
-        CassandraConfiguredTarget.create(
+        CassandraServerTarget.create(
             asList("second.example", "duplicate.example", "duplicate.example"), 9042);
 
     assertThat(target).isNotNull();
@@ -103,7 +102,7 @@ class CassandraConfiguredTargetTest {
   @Test
   void preservesUnresolvedSocketAddress() {
     DbServerTarget target =
-        CassandraConfiguredTarget.create(
+        CassandraServerTarget.create(
             InetSocketAddress.createUnresolved("unresolved.example", 9142), 9042);
 
     assertThat(target).isNotNull();
@@ -116,7 +115,7 @@ class CassandraConfiguredTargetTest {
     InetAddress address =
         InetAddress.getByAddress(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1});
     InetSocketAddress otherAddress = InetSocketAddress.createUnresolved("db.example", 9142);
-    DbServerTarget target = CassandraConfiguredTarget.create(asList(address, otherAddress), 9042);
+    DbServerTarget target = CassandraServerTarget.create(asList(address, otherAddress), 9042);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("[0:0:0:0:0:0:0:1]:9042,db.example:9142");
@@ -126,11 +125,11 @@ class CassandraConfiguredTargetTest {
   @Test
   void limitsDefaultPortListToFirstFiveInConfiguredOrder() {
     DbServerTarget firstTarget =
-        CassandraConfiguredTarget.create(
+        CassandraServerTarget.create(
             asList("f.example", "b.example", "e.example", "a.example", "d.example", "c.example"),
             9042);
     DbServerTarget secondTarget =
-        CassandraConfiguredTarget.create(
+        CassandraServerTarget.create(
             asList("c.example", "d.example", "a.example", "e.example", "b.example", "f.example"),
             9042);
 
@@ -148,19 +147,18 @@ class CassandraConfiguredTargetTest {
   void unsupportedEndPointDropsEntireTarget() {
     EndPoint customEndPoint = () -> new InetSocketAddress(InetAddress.getLoopbackAddress(), 9042);
 
-    assertThat(CassandraConfiguredTarget.create(asList("db.example", customEndPoint), 9042))
-        .isNull();
+    assertThat(CassandraServerTarget.create(asList("db.example", customEndPoint), 9042)).isNull();
   }
 
   @Test
   void nullContactPointDropsEntireTarget() {
-    assertThat(CassandraConfiguredTarget.create(asList("db.example", null), 9042)).isNull();
+    assertThat(CassandraServerTarget.create(asList("db.example", null), 9042)).isNull();
   }
 
   @Test
   void invalidContactPointAfterFirstFiveDropsEntireTarget() {
     assertThat(
-            CassandraConfiguredTarget.create(
+            CassandraServerTarget.create(
                 asList("a.example", "b.example", "c.example", "d.example", "e.example", null),
                 9042))
         .isNull();
@@ -169,13 +167,13 @@ class CassandraConfiguredTargetTest {
   @Test
   void invalidContactPointDataDropsEntireTarget() {
     DbServerTarget target =
-        CassandraConfiguredTarget.create(new Object[] {null, "", new Object()}, 9042);
+        CassandraServerTarget.create(new Object[] {null, "", new Object()}, 9042);
 
     assertThat(target).isNull();
   }
 
   @Test
   void invalidConfiguredPortDropsEntireTarget() {
-    assertThat(CassandraConfiguredTarget.create("db.example", 0)).isNull();
+    assertThat(CassandraServerTarget.create("db.example", 0)).isNull();
   }
 }

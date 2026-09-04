@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class CassandraConfiguredTarget {
+public class CassandraServerTarget {
 
   private static final int DEFAULT_PORT = 9042;
 
@@ -74,7 +74,7 @@ public class CassandraConfiguredTarget {
     return targetBuilder.build();
   }
 
-  private CassandraConfiguredTarget() {}
+  private CassandraServerTarget() {}
 
   private static class ContactPoints {
     private final List<ContactPoint> points = new ArrayList<>();
