@@ -214,7 +214,7 @@ public abstract class AbstractOpenSearchRestTest {
   @Test
   void configuredNodeListIsTheWholeTarget() throws Exception {
     RestClient nodeListClient =
-        buildRestClient(addressOfHostThatIsDown(), opensearch.getHttpHostAddress());
+        buildRestClient(opensearch.getHttpHostAddress(), alternateHostAddress());
     cleanup.deferCleanup(nodeListClient);
 
     Response response = nodeListClient.performRequest(new Request("GET", "_cluster/health"));
@@ -227,7 +227,7 @@ public abstract class AbstractOpenSearchRestTest {
     RestClient singleNodeClient = buildRestClient(opensearch.getHttpHostAddress());
     cleanup.deferCleanup(singleNodeClient);
     // a client is given new nodes when it is sniffed; the configured target must not follow them
-    resetNodes(singleNodeClient, opensearch.getHttpHostAddress(), addressOfHostThatIsDown());
+    resetNodes(singleNodeClient, opensearch.getHttpHostAddress(), alternateHostAddress());
 
     Response response = singleNodeClient.performRequest(new Request("GET", "_cluster/health"));
 
@@ -235,13 +235,12 @@ public abstract class AbstractOpenSearchRestTest {
         httpHost.getHost(), Long.valueOf(httpHost.getPort()), getResponseAddress(response));
   }
 
-  private String addressOfHostThatIsDown() {
-    // nothing listens on this port, so a request is served by the running server after a retry
-    return httpHost.getScheme() + "://127.0.0.2:61";
+  private String alternateHostAddress() {
+    return httpHost.getScheme() + "://127.0.0.1:" + httpHost.getPort();
   }
 
   private String nodeList() {
-    return "127.0.0.2:61," + httpHost.getHost() + ":" + httpHost.getPort();
+    return httpHost.getHost() + ":" + httpHost.getPort() + ",127.0.0.1:" + httpHost.getPort();
   }
 
   private String openSearchSpanName() {
