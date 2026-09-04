@@ -104,8 +104,6 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
               hostname,
               port,
               HbaseServerTarget.get(client),
-              null,
-              null,
               batchSize);
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
