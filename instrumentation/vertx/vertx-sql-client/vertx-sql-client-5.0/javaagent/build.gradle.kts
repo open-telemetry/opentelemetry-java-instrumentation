@@ -45,12 +45,6 @@ dependencies {
   testLibrary("io.vertx:vertx-jdbc-client:$version")
   testImplementation("io.agroal:agroal-pool:2.5")
   testImplementation("org.hsqldb:hsqldb:2.3.4")
-
-  latestDepTestLibrary("io.vertx:vertx-sql-client:latest.release")
-  latestDepTestLibrary("io.vertx:vertx-codegen:latest.release")
-  latestDepTestLibrary("io.vertx:vertx-pg-client:latest.release")
-  latestDepTestLibrary("io.vertx:vertx-oracle-client:latest.release")
-  latestDepTestLibrary("io.vertx:vertx-jdbc-client:latest.release")
 }
 
 tasks {
