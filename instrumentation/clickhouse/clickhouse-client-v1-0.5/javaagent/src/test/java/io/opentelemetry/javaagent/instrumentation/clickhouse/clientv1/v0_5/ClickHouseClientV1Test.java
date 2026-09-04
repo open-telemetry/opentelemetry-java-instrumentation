@@ -669,9 +669,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -836,9 +834,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -913,9 +909,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -956,9 +950,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -1003,9 +995,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -1046,9 +1036,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -1091,9 +1079,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -1141,9 +1127,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(

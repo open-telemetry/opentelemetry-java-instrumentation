@@ -585,7 +585,7 @@ class ClickHouseClientV2Test {
                                 emitStableDatabaseSemconv() ? addressGroup : legacyAddress),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(legacyPort)),
+                                emitStableDatabaseSemconv() ? null : (long) legacyPort),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv() ? peerAddress : null),
@@ -651,7 +651,7 @@ class ClickHouseClientV2Test {
                                     : legacyAddress),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(legacyPort)),
+                                emitStableDatabaseSemconv() ? null : (long) legacyPort),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -868,9 +868,7 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -931,7 +929,7 @@ class ClickHouseClientV2Test {
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() || legacyPort == null
                                     ? null
-                                    : legacyPort.longValue()),
+                                    : (long) legacyPort),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv() ? peerAddress : null),
@@ -1030,7 +1028,7 @@ class ClickHouseClientV2Test {
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() || legacyPort == null
                                     ? null
-                                    : legacyPort.longValue()),
+                                    : (long) legacyPort),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv() ? peerAddress : null),
