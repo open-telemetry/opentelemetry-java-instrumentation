@@ -24,6 +24,7 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -56,6 +57,9 @@ final class CassandraServerTarget {
         }
       }
       boolean hasConfiguredContactPoints = !configuredContactPoints.isEmpty();
+      if (!hasConfiguredContactPoints) {
+        target.setSorted(true);
+      }
       for (DefaultNode node : metadataManager.getContactPoints()) {
         EndPoint endPoint = node.getEndPoint();
         if (endPoint.getClass() != DefaultEndPoint.class) {
@@ -93,6 +97,7 @@ final class CassandraServerTarget {
       for (String contactPoint : configuredContactPoints) {
         addContactPoint(target, contactPoint);
       }
+      List<InetSocketAddress> resolvedProgrammaticContactPoints = new ArrayList<>();
       for (EndPoint endPoint : programmaticContactPoints) {
         if (endPoint.getClass() != DefaultEndPoint.class) {
           return null;
@@ -101,7 +106,16 @@ final class CassandraServerTarget {
         if (!(address instanceof InetSocketAddress)) {
           return null;
         }
-        target.addEndpoint((InetSocketAddress) address);
+        resolvedProgrammaticContactPoints.add((InetSocketAddress) address);
+      }
+      if (configuredContactPoints.isEmpty()) {
+        target.setSorted(true);
+      } else {
+        resolvedProgrammaticContactPoints.sort(
+            Comparator.comparing(CassandraServerTarget::asContactPoint));
+      }
+      for (InetSocketAddress contactPoint : resolvedProgrammaticContactPoints) {
+        target.addEndpoint(contactPoint);
       }
       return target.build();
     } catch (RuntimeException ignored) {
@@ -124,11 +138,18 @@ final class CassandraServerTarget {
 
   @Nullable
   static DbServerTarget ofAddresses(Collection<InetSocketAddress> contactPoints) {
-    DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT);
+    DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
     for (InetSocketAddress contactPoint : contactPoints) {
       target.addEndpoint(contactPoint);
     }
     return target.build();
+  }
+
+  private static String asContactPoint(InetSocketAddress address) {
+    String host = address.getHostString();
+    return host.indexOf(':') < 0
+        ? host + ":" + address.getPort()
+        : "[" + host + "]:" + address.getPort();
   }
 
   @Nullable
