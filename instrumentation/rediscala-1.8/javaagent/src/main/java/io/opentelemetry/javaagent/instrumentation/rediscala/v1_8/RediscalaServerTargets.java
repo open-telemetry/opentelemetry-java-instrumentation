@@ -47,7 +47,8 @@ public class RediscalaServerTargets {
   // Scala collection return types differ between the Scala 2.12 and 2.13 builds, so
   // collection-returning methods are resolved reflectively rather than called directly.
   @Nullable
-  private static final Method POOL_REDIS_SERVERS = findRedisServers(RedisClientPool.class);
+  private static final Method POOL_REDIS_SERVERS =
+      findMethod(RedisClientPool.class, "redisServers");
 
   // Some rediscala forks drop the master and slaves accessors from RedisClientMasterSlaves, so both
   // are resolved reflectively and the client is skipped when either one is missing.
@@ -84,15 +85,6 @@ public class RediscalaServerTargets {
   @Nullable
   private static final Method BLOCKING_SENTINELS =
       findMethod(SentinelMonitoredRedisBlockingClient.class, "sentinels");
-
-  @Nullable
-  private static Method findRedisServers(Class<?> poolClass) {
-    try {
-      return poolClass.getMethod("redisServers");
-    } catch (NoSuchMethodException ignored) {
-      return null;
-    }
-  }
 
   @Nullable
   private static Class<?> findClass(String className) {
