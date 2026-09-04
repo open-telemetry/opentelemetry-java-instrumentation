@@ -32,9 +32,26 @@ public class ConfigServerTargetsBefore317 {
       findConfigMethod("getReplicatedServersConfig");
 
   @Nullable
+  private static final Method SINGLE_SERVER_CONFIG_GET_ADDRESS =
+      findPublicMethod(SingleServerConfig.class, "getAddress");
+
+  @Nullable
+  private static final Method MASTER_SLAVE_SERVERS_CONFIG_GET_MASTER_ADDRESS =
+      findPublicMethod(MasterSlaveServersConfig.class, "getMasterAddress");
+
+  @Nullable
   private static Method findConfigMethod(String methodName) {
     try {
       return Config.class.getDeclaredMethod(methodName);
+    } catch (NoSuchMethodException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Method findPublicMethod(Class<?> declaringClass, String methodName) {
+    try {
+      return declaringClass.getMethod(methodName);
     } catch (NoSuchMethodException ignored) {
       return null;
     }
@@ -79,8 +96,11 @@ public class ConfigServerTargetsBefore317 {
   // Redisson changes the single server address return type across supported versions.
   @Nullable
   private static Object getAddress(SingleServerConfig config) {
+    if (SINGLE_SERVER_CONFIG_GET_ADDRESS == null) {
+      return null;
+    }
     try {
-      return config.getClass().getMethod("getAddress").invoke(config);
+      return SINGLE_SERVER_CONFIG_GET_ADDRESS.invoke(config);
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
       return null;
@@ -111,8 +131,11 @@ public class ConfigServerTargetsBefore317 {
   // Redisson changes the master address return type across supported versions.
   @Nullable
   private static Object getMasterAddress(MasterSlaveServersConfig config) {
+    if (MASTER_SLAVE_SERVERS_CONFIG_GET_MASTER_ADDRESS == null) {
+      return null;
+    }
     try {
-      return config.getClass().getMethod("getMasterAddress").invoke(config);
+      return MASTER_SLAVE_SERVERS_CONFIG_GET_MASTER_ADDRESS.invoke(config);
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured Redisson master address", e);
       return null;
