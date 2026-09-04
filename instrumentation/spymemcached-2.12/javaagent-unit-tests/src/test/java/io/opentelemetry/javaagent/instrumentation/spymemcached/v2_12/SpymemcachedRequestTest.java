@@ -301,7 +301,10 @@ class SpymemcachedRequestTest {
   }
 
   private static Operation operation(String host, int port) {
-    return operation(host, port, new String[0]);
+    Operation operation = mock(Operation.class);
+    MemcachedNode node = memcachedNode(host, port);
+    when(operation.getHandlingNode()).thenReturn(node);
+    return operation;
   }
 
   private static Operation operation(String host, int port, String... keys) {
