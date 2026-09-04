@@ -52,6 +52,11 @@ public class DbServerTargetBuilder {
     this.defaultPort = defaultPort;
   }
 
+  /** Returns whether {@code host} can be represented safely as a database server host. */
+  public static boolean isValidHost(@Nullable String host) {
+    return sanitizeHost(host) != null;
+  }
+
   /**
    * Sort the rendered endpoints in natural string order. Default is to preserve the configured
    * order. Turn sorting on only when endpoint order carries no semantic meaning.
