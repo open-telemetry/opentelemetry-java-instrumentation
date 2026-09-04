@@ -47,7 +47,7 @@ class DefaultExecutionInfoInstrumentation implements TypeInstrumentation {
       }
       InetSocketAddress peer = VirtualFieldHelper.FRAME_PEER.get(frame);
       if (peer != null) {
-        CassandraNetworkPeer.set(executionInfo, peer);
+        CassandraNetworkPeer.setExecutionInfoPeer(executionInfo, peer);
       }
     }
   }

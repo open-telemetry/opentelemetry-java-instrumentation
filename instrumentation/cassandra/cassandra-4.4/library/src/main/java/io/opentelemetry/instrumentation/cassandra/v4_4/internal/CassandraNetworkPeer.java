@@ -21,12 +21,13 @@ public class CassandraNetworkPeer {
   private static final VirtualField<ExecutionInfo, InetSocketAddress> EXECUTION_INFO_PEER =
       VirtualField.find(ExecutionInfo.class, InetSocketAddress.class);
 
-  public static void set(ExecutionInfo executionInfo, InetSocketAddress peer) {
+  public static void setExecutionInfoPeer(
+      ExecutionInfo executionInfo, InetSocketAddress peer) {
     EXECUTION_INFO_PEER.set(executionInfo, peer);
   }
 
   @Nullable
-  public static InetSocketAddress get(ExecutionInfo executionInfo) {
+  public static InetSocketAddress getExecutionInfoPeer(ExecutionInfo executionInfo) {
     return EXECUTION_INFO_PEER.get(executionInfo);
   }
 

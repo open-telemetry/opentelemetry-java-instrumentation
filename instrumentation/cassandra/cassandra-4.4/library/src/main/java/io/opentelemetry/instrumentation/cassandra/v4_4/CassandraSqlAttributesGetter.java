@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer.get;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -17,6 +16,7 @@ import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -77,7 +77,7 @@ final class CassandraSqlAttributesGetter
       return null;
     }
     if (emitStableDatabaseSemconv()) {
-      InetSocketAddress peer = get(executionInfo);
+      InetSocketAddress peer = CassandraNetworkPeer.getExecutionInfoPeer(executionInfo);
       if (peer != null) {
         return peer;
       }
