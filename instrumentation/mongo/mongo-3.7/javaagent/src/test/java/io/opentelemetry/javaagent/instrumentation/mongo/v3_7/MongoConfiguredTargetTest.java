@@ -36,31 +36,32 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
 
   @Override
   protected ConfiguredClient createClient(List<ServerAddress> seeds) {
-    ClusterIdCapture clusterId = new ClusterIdCapture();
+    ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
-            .applyToClusterSettings(builder -> builder.hosts(seeds).addClusterListener(clusterId))
+            .applyToClusterSettings(
+                builder -> builder.hosts(seeds).addClusterListener(clusterIdCapture))
             .build();
-    return createClient(settings, clusterId);
+    return createClient(settings, clusterIdCapture);
   }
 
   private static ConfiguredClient createClient(
-      MongoClientSettings settings, ClusterIdCapture clusterId) {
+      MongoClientSettings settings, ClusterIdCapture clusterIdCapture) {
     MongoClient client = MongoClients.create(settings);
     return new ConfiguredClient(
-        clusterId.getClusterId(), settings.getCommandListeners().get(0), client::close);
+        clusterIdCapture.getClusterId(), settings.getCommandListeners().get(0), client::close);
   }
 
   @Test
   void anSrvConnectionStringDoesNotExposeResolvedHosts() {
-    ClusterIdCapture clusterId = new ClusterIdCapture();
+    ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
             .applyConnectionString(resolvedSrvConnectionString())
-            .applyToClusterSettings(builder -> builder.addClusterListener(clusterId))
+            .applyToClusterSettings(builder -> builder.addClusterListener(clusterIdCapture))
             .build();
 
-    try (ConfiguredClient client = createClient(settings, clusterId)) {
+    try (ConfiguredClient client = createClient(settings, clusterIdCapture)) {
       runCommand(client);
     }
 
@@ -69,16 +70,16 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
 
   @Test
   void anUnsafeSrvConnectionStringDoesNotFallBackToResolvedHosts() {
-    ClusterIdCapture clusterId = new ClusterIdCapture();
+    ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
             .applyConnectionString(
                 resolvedSrvConnectionString(
                     "mongodb+srv://user%3Apassword%40cluster0.example.invalid"))
-            .applyToClusterSettings(builder -> builder.addClusterListener(clusterId))
+            .applyToClusterSettings(builder -> builder.addClusterListener(clusterIdCapture))
             .build();
 
-    try (ConfiguredClient client = createClient(settings, clusterId)) {
+    try (ConfiguredClient client = createClient(settings, clusterIdCapture)) {
       runCommand(client);
     }
 
@@ -91,18 +92,18 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
     Method srvHost = srvHostSetter();
     assumeTrue(srvHost != null);
 
-    ClusterIdCapture clusterId = new ClusterIdCapture();
+    ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
             .applyToClusterSettings(
                 builder -> {
                   invoke(srvHost, builder, "cluster0.example.invalid");
-                  builder.addClusterListener(clusterId);
+                  builder.addClusterListener(clusterIdCapture);
                 })
             .build();
 
     // closing an SRV client races the resolver thread and can report an uncaught exception
-    runCommand(createClient(settings, clusterId));
+    runCommand(createClient(settings, clusterIdCapture));
 
     assertFindSpan("mongodb+srv://cluster0.example.invalid", null);
   }
