@@ -51,11 +51,12 @@ public class ConfigServerTargetsBefore317 {
     }
     SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
     if (sentinelConfig != null) {
-      return ofAddresses(sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
+      return ofSentinelAddresses(
+          sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
     }
     ClusterServersConfig clusterConfig = config.getClusterServersConfig();
     if (clusterConfig != null) {
-      return ofAddresses(clusterConfig.getNodeAddresses());
+      return ofUnorderedAddresses(clusterConfig.getNodeAddresses());
     }
     RedisServerTarget elasticacheTarget =
         ofOptionalServerConfig(config, CONFIG_GET_ELASTICACHE_SERVERS);
@@ -69,7 +70,7 @@ public class ConfigServerTargetsBefore317 {
     }
     MasterSlaveServersConfig masterSlaveConfig = config.getMasterSlaveServersConfig();
     if (masterSlaveConfig != null) {
-      return ofAddresses(
+      return ofMasterSlaveAddresses(
           getMasterAddress(masterSlaveConfig), masterSlaveConfig.getSlaveAddresses());
     }
     return null;
@@ -98,7 +99,9 @@ public class ConfigServerTargetsBefore317 {
         return null;
       }
       Object addresses = serverConfig.getClass().getMethod("getNodeAddresses").invoke(serverConfig);
-      return addresses instanceof Collection ? ofAddresses((Collection<?>) addresses) : null;
+      return addresses instanceof Collection
+          ? ofUnorderedAddresses((Collection<?>) addresses)
+          : null;
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured Redisson servers", e);
       return null;
@@ -118,7 +121,7 @@ public class ConfigServerTargetsBefore317 {
 
   // Redisson stores addresses as URI, URL, or String across supported versions.
   @Nullable
-  private static RedisServerTarget ofAddresses(@Nullable Collection<?> addresses) {
+  private static RedisServerTarget ofUnorderedAddresses(@Nullable Collection<?> addresses) {
     if (addresses == null || addresses.isEmpty()) {
       return null;
     }
@@ -130,7 +133,7 @@ public class ConfigServerTargetsBefore317 {
   }
 
   @Nullable
-  private static RedisServerTarget ofAddresses(
+  private static RedisServerTarget ofMasterSlaveAddresses(
       @Nullable Object firstAddress, @Nullable Collection<?> otherAddresses) {
     List<String> endpoints = new ArrayList<>();
     String firstEndpoint = addressString(firstAddress);
@@ -156,7 +159,7 @@ public class ConfigServerTargetsBefore317 {
   }
 
   @Nullable
-  private static RedisServerTarget ofAddresses(
+  private static RedisServerTarget ofSentinelAddresses(
       @Nullable Collection<?> addresses, @Nullable String logicalName) {
     if (addresses == null || addresses.isEmpty()) {
       return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(null, logicalName);
