@@ -144,10 +144,6 @@ public abstract class AbstractCouchbaseTest {
         : val -> val.isNull();
   }
 
-  protected String spanName(String operation) {
-    return emitStableDatabaseSemconv() ? operation + " " + configuredServerAddress() : operation;
-  }
-
   protected StringAssertConsumer experimentalAttribute() {
     return includesExperimentalAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }

@@ -102,7 +102,10 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("ClusterManager.hasBucket"))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "ClusterManager.hasBucket 127.0.0.1"
+                                : "ClusterManager.hasBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -146,7 +149,10 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("Cluster.openBucket"))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Cluster.openBucket 127.0.0.1"
+                                : "Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -216,7 +222,10 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("Cluster.openBucket"))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Cluster.openBucket 127.0.0.1"
+                                : "Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
