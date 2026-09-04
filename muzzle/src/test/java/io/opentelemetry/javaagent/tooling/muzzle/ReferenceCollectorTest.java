@@ -10,13 +10,13 @@ import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumV
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.OtherTestHelperClasses;
 import io.opentelemetry.instrumentation.TestHelperClasses;
+import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings.Mapping;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldTestClasses.State;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
@@ -344,10 +344,13 @@ class ReferenceCollectorTest {
     collector.prune();
 
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
-    assertThat(virtualFieldMappings.entrySet())
+    assertThat(virtualFieldMappings.getMappings())
         .containsExactlyInAnyOrder(
-            entry(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
-            entry(VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName()));
+            new Mapping("", VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
+            new Mapping(
+                "namedField",
+                VirtualFieldTestClasses.Key2.class.getName(),
+                Context.class.getName()));
   }
 
   @Test
@@ -358,10 +361,11 @@ class ReferenceCollectorTest {
     collector.prune();
 
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
-    assertThat(virtualFieldMappings.entrySet())
+    assertThat(virtualFieldMappings.getMappings())
         .containsExactlyInAnyOrder(
-            entry(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
-            entry(VirtualFieldTestClasses.Key1.class.getName(), State.class.getName()));
+            new Mapping("", VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
+            new Mapping(
+                "namedField", VirtualFieldTestClasses.Key1.class.getName(), State.class.getName()));
   }
 
   @Test
@@ -372,10 +376,10 @@ class ReferenceCollectorTest {
     collector.prune();
 
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
-    assertThat(virtualFieldMappings.entrySet())
+    assertThat(virtualFieldMappings.getMappings())
         .containsExactlyInAnyOrder(
-            entry(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
-            entry(VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName()));
+            new Mapping("", VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
+            new Mapping("", VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName()));
   }
 
   @ParameterizedTest
@@ -419,9 +423,10 @@ class ReferenceCollectorTest {
     collector.prune();
 
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
-    assertThat(virtualFieldMappings.entrySet())
+    assertThat(virtualFieldMappings.getMappings())
         .containsExactly(
-            entry(
+            new Mapping(
+                "",
                 VirtualFieldTestClasses.Key1.class.getName(),
                 Type.getType(Context[].class).getClassName()));
   }
