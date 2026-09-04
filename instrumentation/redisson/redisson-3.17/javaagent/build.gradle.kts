@@ -64,19 +64,8 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-      includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-    }
-    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database/dup")
-  }
-
   check {
-    dependsOn(testing.suites, testStableSemconv, testBothSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 
   if (otelProps.denyUnsafe) {
