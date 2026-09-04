@@ -23,7 +23,7 @@ class RediscalaAttributesGetterTest {
   private final RediscalaAttributesGetter getter = new RediscalaAttributesGetter();
 
   @Test
-  void requestWithoutTargetOmitsStableNetworkPeer() {
+  void requestWithoutTargetUsesSelectedAddressOnlyForLegacySemconv() {
     RediscalaRequest request = request(null, SELECTED_PORT);
 
     assertThat(getter.getServerAddress(request))
@@ -36,7 +36,7 @@ class RediscalaAttributesGetterTest {
 
   @ParameterizedTest
   @ValueSource(ints = {6379, 6381})
-  void requestWithTargetOmitsStableNetworkPeer(int selectedPort) {
+  void requestWithTargetUsesConfiguredAddressForStableSemconv(int selectedPort) {
     RedisServerTarget target = RedisServerTarget.ofHostAndPort("configured-node", 6380);
     RediscalaRequest request = request(target, selectedPort);
 
