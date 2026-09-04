@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -199,11 +198,9 @@ class LettuceSyncClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
-                            equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? REDIS : null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "SET" : null),
-                            equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "SET" : null),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
