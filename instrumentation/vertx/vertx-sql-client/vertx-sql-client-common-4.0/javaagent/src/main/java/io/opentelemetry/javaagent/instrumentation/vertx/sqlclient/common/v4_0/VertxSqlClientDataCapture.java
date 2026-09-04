@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import java.util.ArrayDeque;
+import java.util.Deque;
 import javax.annotation.Nullable;
 
 /**
@@ -16,7 +17,7 @@ import javax.annotation.Nullable;
  */
 public class VertxSqlClientDataCapture implements VertxSqlClientDataProvider {
 
-  private final ArrayDeque<Object> connectionRequests = new ArrayDeque<>();
+  private final Deque<Object> connectionRequests = new ArrayDeque<>();
   @Nullable private volatile String dbSystem;
 
   public void setDbSystem(@Nullable String dbSystem) {
