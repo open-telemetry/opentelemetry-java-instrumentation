@@ -11,6 +11,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -36,8 +37,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -84,12 +89,6 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void bareIpv6ContactPointsWithoutAPortAreIgnored() {
-    assertThat(CassandraServerTarget.of(singletonList("::1"))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("2001:db8::1"))).isNull();
-  }
-
-  @Test
   void unbracketedIpv6ContactPointsWithAPortAreAccepted() {
     DbServerTarget target = CassandraServerTarget.of(singletonList("2001:db8::1:9042"));
     DbServerTarget trailingDoubleColonTarget =
@@ -101,13 +100,6 @@ class CassandraServerTargetTest {
     assertThat(trailingDoubleColonTarget).isNotNull();
     assertThat(trailingDoubleColonTarget.getAddress()).isEqualTo("2001:db8::");
     assertThat(trailingDoubleColonTarget.getPort()).isEqualTo(9142);
-  }
-
-  @Test
-  void contactPointWithoutAPortIsIgnored() {
-    DbServerTarget target = CassandraServerTarget.of(singletonList("cassandra.example.com"));
-
-    assertThat(target).isNull();
   }
 
   @Test
@@ -234,26 +226,24 @@ class CassandraServerTargetTest {
     assertThat(target.getPort()).isNull();
   }
 
-  @Test
-  void unsafeExplicitContactPointAddressesHaveNoTarget() {
-    assertThat(CassandraServerTarget.ofAddresses(singletonList((InetSocketAddress) null))).isNull();
-    assertThat(
-            CassandraServerTarget.ofAddresses(
-                singletonList(InetSocketAddress.createUnresolved("node.example.com", 0))))
-        .isNull();
-    assertThat(
-            CassandraServerTarget.ofAddresses(
-                singletonList(
-                    InetSocketAddress.createUnresolved("user:password@node.example.com", 9042))))
-        .isNull();
-    assertThat(
-            CassandraServerTarget.ofAddresses(
-                singletonList(InetSocketAddress.createUnresolved("[::1", 9042))))
-        .isNull();
-    assertThat(
-            CassandraServerTarget.ofAddresses(
-                singletonList(InetSocketAddress.createUnresolved("not:ipv6", 9042))))
-        .isNull();
+  @ParameterizedTest
+  @MethodSource("unsafeExplicitContactPointAddresses")
+  void unsafeExplicitContactPointAddressesHaveNoTarget(InetSocketAddress contactPoint) {
+    assertThat(CassandraServerTarget.ofAddresses(singletonList(contactPoint))).isNull();
+  }
+
+  private static Stream<Arguments> unsafeExplicitContactPointAddresses() {
+    return Stream.of(
+        argumentSet("null address", (Object) null),
+        argumentSet(
+            "zero port", InetSocketAddress.createUnresolved("node.example.com", 0)),
+        argumentSet(
+            "credentials in host",
+            InetSocketAddress.createUnresolved("user:password@node.example.com", 9042)),
+        argumentSet(
+            "unclosed IPv6 bracket", InetSocketAddress.createUnresolved("[::1", 9042)),
+        argumentSet(
+            "invalid IPv6 literal", InetSocketAddress.createUnresolved("not:ipv6", 9042)));
   }
 
   @Test
@@ -331,28 +321,34 @@ class CassandraServerTargetTest {
     assertThat(target.getPort()).isNull();
   }
 
-  @Test
-  void invalidContactPointsDropTheTarget() {
-    assertThat(CassandraServerTarget.of(emptyList())).isNull();
-    assertThat(CassandraServerTarget.of((List<String>) null)).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("  "))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("node.example.com:not-a-port"))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("node.example.com:0"))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("[::1:9042"))).isNull();
-    assertThat(CassandraServerTarget.of(singletonList("user:password@node.example.com:9042")))
-        .isNull();
-    assertThat(CassandraServerTarget.of(singletonList("node.example.com/path?token=secret:9042")))
-        .isNull();
-    assertThat(
-            CassandraServerTarget.of(
-                asList("node.example.com:9042", "user:password@other.example.com:9042")))
-        .isNull();
+  @ParameterizedTest
+  @MethodSource("invalidContactPoints")
+  void invalidContactPointsDropTheTarget(List<String> contactPoints) {
+    assertThat(CassandraServerTarget.of(contactPoints)).isNull();
+  }
 
-    assertThat(
-            CassandraServerTarget.of(
-                asList(
-                    "missing-port", "node.example.com:9042", "invalid:not-a-port", "[::1]:9042")))
-        .isNull();
+  private static Stream<Arguments> invalidContactPoints() {
+    return Stream.of(
+        argumentSet("empty list", emptyList()),
+        argumentSet("null list", (Object) null),
+        argumentSet("blank contact point", singletonList("  ")),
+        argumentSet("contact point without a port", singletonList("cassandra.example.com")),
+        argumentSet("non-numeric port", singletonList("node.example.com:not-a-port")),
+        argumentSet("zero port", singletonList("node.example.com:0")),
+        argumentSet("unclosed IPv6 bracket", singletonList("[::1:9042")),
+        argumentSet("unbracketed loopback IPv6", singletonList("::1")),
+        argumentSet("unbracketed IPv6", singletonList("2001:db8::1")),
+        argumentSet(
+            "credentials in contact point", singletonList("user:password@node.example.com:9042")),
+        argumentSet(
+            "path and query in contact point",
+            singletonList("node.example.com/path?token=secret:9042")),
+        argumentSet(
+            "unsafe contact point among valid contact points",
+            asList("node.example.com:9042", "user:password@other.example.com:9042")),
+        argumentSet(
+            "several malformed contact points",
+            asList("missing-port", "node.example.com:9042", "invalid:not-a-port", "[::1]:9042")));
   }
 
   @Test
