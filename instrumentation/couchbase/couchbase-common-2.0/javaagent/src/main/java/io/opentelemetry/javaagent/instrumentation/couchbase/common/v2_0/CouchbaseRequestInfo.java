@@ -147,7 +147,7 @@ public abstract class CouchbaseRequestInfo {
     node = new Node(peerAddress, backendAddress);
   }
 
-  public static class Node {
+  public static final class Node {
 
     private final SocketAddress peerAddress;
     @Nullable private final String backendAddress;
