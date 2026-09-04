@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -23,22 +24,16 @@ import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.Couchbas
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import org.junit.jupiter.api.Test;
+import java.util.stream.Stream;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class CouchbaseMessageHandlerInstrumentationTest {
 
-  @Test
-  void capturesKeyValueRequestPeer() throws UnknownHostException {
-    capturesRequestPeer(mock(KeyValueRequest.class));
-  }
-
-  @Test
-  void capturesHttpRequestPeers() throws UnknownHostException {
-    capturesRequestPeer(mock(NonChunkedHttpRequest.class));
-    capturesRequestPeer(mock(HttpRequest.class));
-  }
-
-  private static void capturesRequestPeer(Request<?> request) throws UnknownHostException {
+  @ParameterizedTest
+  @MethodSource("requests")
+  void capturesRequestPeer(Request<?> request) throws UnknownHostException {
     assumeTrue(emitStableDatabaseSemconv());
     RequestSpan parent = mock(RequestSpan.class);
     when(request.requestSpan()).thenReturn(parent);
@@ -57,5 +52,12 @@ class CouchbaseMessageHandlerInstrumentationTest {
 
     CouchbaseMessageHandlerInstrumentation.WriteAdvice.onExit(scope);
     assertThat(CouchbaseRequestPeers.consume(parent)).isNull();
+  }
+
+  private static Stream<Arguments> requests() {
+    return Stream.of(
+        argumentSet("key-value request", mock(KeyValueRequest.class)),
+        argumentSet("non-chunked HTTP request", mock(NonChunkedHttpRequest.class)),
+        argumentSet("chunked HTTP request", mock(HttpRequest.class)));
   }
 }
