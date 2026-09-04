@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.attachConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.attachClientState;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.getAddressGroup;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.getSqlConnectOptions;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -40,8 +43,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase<?> sqlClientBase) {
-      // copy connection options from ThreadLocal to VirtualField
-      attachConnectOptions(sqlClientBase, getSqlConnectOptions());
+      attachClientState(sqlClientBase, getSqlConnectOptions(), getAddressGroup());
     }
   }
 
@@ -54,9 +56,9 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
 
-      // set connection options to ThreadLocal, they will be read in QueryExecutor constructor
       SqlConnectOptions sqlConnectOptions = getSqlConnectOptions(sqlClientBase);
       setSqlConnectOptions(sqlConnectOptions);
+      setAddressGroup(getAddressGroup(sqlClientBase));
       return callDepth;
     }
 
@@ -67,6 +69,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
       }
 
       setSqlConnectOptions(null);
+      setAddressGroup(null);
     }
   }
 }

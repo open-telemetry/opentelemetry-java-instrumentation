@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -56,12 +57,18 @@ class VertxSqlClientAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(VertxSqlClientRequest request) {
+    if (emitStableDatabaseSemconv() && request.hasConfiguredServerTarget()) {
+      return request.getConfiguredServerAddress();
+    }
     return request.getHost();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(VertxSqlClientRequest request) {
+    if (emitStableDatabaseSemconv() && request.hasConfiguredServerTarget()) {
+      return request.getConfiguredServerPort();
+    }
     return request.getPort();
   }
 

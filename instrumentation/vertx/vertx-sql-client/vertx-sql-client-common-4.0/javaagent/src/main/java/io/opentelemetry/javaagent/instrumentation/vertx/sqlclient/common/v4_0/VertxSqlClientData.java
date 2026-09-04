@@ -11,10 +11,19 @@ import javax.annotation.Nullable;
 public class VertxSqlClientData {
   @Nullable private final SqlConnectOptions connectOptions;
   @Nullable private final String dbSystem;
+  @Nullable private final VertxSqlAddressGroup addressGroup;
 
   public VertxSqlClientData(@Nullable SqlConnectOptions connectOptions, @Nullable String dbSystem) {
+    this(connectOptions, dbSystem, null);
+  }
+
+  public VertxSqlClientData(
+      @Nullable SqlConnectOptions connectOptions,
+      @Nullable String dbSystem,
+      @Nullable VertxSqlAddressGroup addressGroup) {
     this.connectOptions = connectOptions;
     this.dbSystem = dbSystem;
+    this.addressGroup = addressGroup;
   }
 
   @Nullable
@@ -25,5 +34,10 @@ public class VertxSqlClientData {
   @Nullable
   public String getDbSystem() {
     return dbSystem;
+  }
+
+  @Nullable
+  public VertxSqlAddressGroup getAddressGroup() {
+    return addressGroup;
   }
 }
