@@ -370,8 +370,8 @@ class ElasticsearchClientTest {
 
   @Test
   void configuredNodeListIsTheWholeTarget() throws IOException {
-    HttpHost deadHost = deadHost();
-    RestClient nodeListRestClient = RestClient.builder(httpHost, deadHost).build();
+    HttpHost alternateHost = alternateHost();
+    RestClient nodeListRestClient = RestClient.builder(httpHost, alternateHost).build();
     cleanup.deferCleanup(nodeListRestClient);
     ElasticsearchClient nodeListClient =
         new ElasticsearchClient(
@@ -379,23 +379,21 @@ class ElasticsearchClientTest {
 
     nodeListClient.info();
 
-    assertConfiguredTarget(hostList(deadHost));
+    assertConfiguredTarget(hostList(alternateHost));
   }
 
-  private static HttpHost deadHost() {
-    // nothing listens on this port, so it is only ever a configured target, never the host that
-    // answers
-    return new HttpHost(httpHost.getHostName(), httpHost.getPort() + 1, httpHost.getSchemeName());
+  private static HttpHost alternateHost() {
+    return new HttpHost("127.0.0.1", httpHost.getPort(), httpHost.getSchemeName());
   }
 
-  private static String hostList(HttpHost deadHost) {
-    return httpHost.getHostName()
+  private static String hostList(HttpHost alternateHost) {
+    return alternateHost.getHostName()
         + ":"
-        + httpHost.getPort()
+        + alternateHost.getPort()
         + ","
-        + deadHost.getHostName()
+        + httpHost.getHostName()
         + ":"
-        + deadHost.getPort();
+        + httpHost.getPort();
   }
 
   private static void assertConfiguredTarget(String hostList) {
