@@ -155,6 +155,118 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
+  @Test
+  void resubscribedCommandRetainsPeerCapture() {
+    Mono<String> command = reactiveCommands.set("resubscribed", "value");
+    assertThat(command.block()).isEqualTo("OK");
+    assertThat(command.block()).isEqualTo("OK");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "SET resubscribed ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "SET resubscribed ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+  }
+
+  @Test
+  void overlappingSubscriptionsUseIndependentCommands() throws Exception {
+    redisServer.execInContainer("redis-cli", "DEL", "overlapping");
+    Mono<KeyValue<String, String>> command = reactiveCommands.blpop(30, "overlapping");
+
+    CompletableFuture<KeyValue<String, String>> first = command.toFuture();
+    CompletableFuture<KeyValue<String, String>> second = command.toFuture();
+
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .until(
+            () ->
+                Arrays.stream(
+                            redisServer
+                                .execInContainer("redis-cli", "CLIENT", "LIST")
+                                .getStdout()
+                                .split("\\R"))
+                        .filter(line -> line.contains("cmd=blpop"))
+                        .count()
+                    == 1);
+    assertThat(first).isNotDone();
+    assertThat(second).isNotDone();
+
+    redisServer.execInContainer("redis-cli", "LPUSH", "overlapping", "first", "second");
+
+    assertThat(first.get(10, SECONDS).getKey()).isEqualTo("overlapping");
+    assertThat(second.get(10, SECONDS).getKey()).isEqualTo("overlapping");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "BLPOP " + host + ":" + port : "BLPOP")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
+                            equalTo(maybeStable(DB_OPERATION), "BLPOP"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "BLPOP " + host + ":" + port : "BLPOP")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
+                            equalTo(maybeStable(DB_OPERATION), "BLPOP"))));
+  }
+
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
   // still recording spans
   @Test
@@ -413,118 +525,6 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET a"),
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
-  }
-
-  @Test
-  void resubscribedCommandRetainsPeerCapture() {
-    Mono<String> command = reactiveCommands.set("resubscribed", "value");
-    assertThat(command.block()).isEqualTo("OK");
-    assertThat(command.block()).isEqualTo("OK");
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET resubscribed ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET resubscribed ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))));
-  }
-
-  @Test
-  void overlappingSubscriptionsUseIndependentCommands() throws Exception {
-    redisServer.execInContainer("redis-cli", "DEL", "overlapping");
-    Mono<KeyValue<String, String>> command = reactiveCommands.blpop(30, "overlapping");
-
-    CompletableFuture<KeyValue<String, String>> first = command.toFuture();
-    CompletableFuture<KeyValue<String, String>> second = command.toFuture();
-
-    await()
-        .atMost(Duration.ofSeconds(10))
-        .until(
-            () ->
-                Arrays.stream(
-                            redisServer
-                                .execInContainer("redis-cli", "CLIENT", "LIST")
-                                .getStdout()
-                                .split("\\R"))
-                        .filter(line -> line.contains("cmd=blpop"))
-                        .count()
-                    == 1);
-    assertThat(first).isNotDone();
-    assertThat(second).isNotDone();
-
-    redisServer.execInContainer("redis-cli", "LPUSH", "overlapping", "first", "second");
-
-    assertThat(first.get(10, SECONDS).getKey()).isEqualTo("overlapping");
-    assertThat(second.get(10, SECONDS).getKey()).isEqualTo("overlapping");
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "BLPOP " + host + ":" + port : "BLPOP")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
-                            equalTo(maybeStable(DB_OPERATION), "BLPOP"))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "BLPOP " + host + ":" + port : "BLPOP")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
-                            equalTo(maybeStable(DB_OPERATION), "BLPOP"))));
   }
 
   @Test
