@@ -830,7 +830,7 @@ class VertxSqlClientTest {
                       equalTo(DB_OPERATION, "SELECT"),
                       equalTo(DB_SQL_TABLE, "test"),
                       equalTo(SERVER_ADDRESS, stableAddress),
-                      equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
+                      equalTo(ERROR_TYPE, error != null ? PgException.class.getName() : null));
     } else {
       operationSpan =
           span ->
@@ -857,7 +857,7 @@ class VertxSqlClientTest {
                       equalTo(
                           ERROR_TYPE,
                           emitStableDatabaseSemconv() && error != null
-                              ? error.getClass().getName()
+                              ? PgException.class.getName()
                               : null));
     }
     if (error == null) {
