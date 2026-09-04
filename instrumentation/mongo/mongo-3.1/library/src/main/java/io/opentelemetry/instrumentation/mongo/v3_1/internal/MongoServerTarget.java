@@ -50,11 +50,6 @@ public class MongoServerTarget {
     return srvHost(connectionString);
   }
 
-  public static boolean isSrvConnectionString(@Nullable String connectionString) {
-    return connectionString != null
-        && connectionString.regionMatches(true, 0, SRV_SCHEME, 0, SRV_SCHEME.length());
-  }
-
   @Nullable
   public static MongoServerTarget seeds(@Nullable List<ServerAddress> seeds) {
     if (seeds == null || seeds.isEmpty()) {
@@ -98,6 +93,25 @@ public class MongoServerTarget {
     return from(targetBuilder.build());
   }
 
+  private MongoServerTarget(String address, @Nullable Integer port) {
+    this.address = address;
+    this.port = port;
+  }
+
+  public static boolean isSrvConnectionString(@Nullable String connectionString) {
+    return connectionString != null
+        && connectionString.regionMatches(true, 0, SRV_SCHEME, 0, SRV_SCHEME.length());
+  }
+
+  public String getAddress() {
+    return address;
+  }
+
+  @Nullable
+  public Integer getPort() {
+    return port;
+  }
+
   @Nullable
   private static MongoServerTarget from(@Nullable DbServerTarget target) {
     if (target == null) {
@@ -114,11 +128,6 @@ public class MongoServerTarget {
       }
     }
     return false;
-  }
-
-  private MongoServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
   }
 
   @Nullable
@@ -180,14 +189,5 @@ public class MongoServerTarget {
   private static boolean isUnixSocket(ServerAddress seed, String host) {
     return seed.getClass().getName().equals(UNIX_SERVER_ADDRESS_CLASS)
         || (host.startsWith("/") && host.endsWith(UNIX_SOCKET_SUFFIX));
-  }
-
-  public String getAddress() {
-    return address;
-  }
-
-  @Nullable
-  public Integer getPort() {
-    return port;
   }
 }
