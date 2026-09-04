@@ -66,13 +66,13 @@ public class HbaseServerTarget {
     }
     String serverTarget = from(configuration);
     if (serverTarget != null) {
-      ServerTargetVirtualField.SERVER_TARGET.set(client, serverTarget);
+      ServerTargetHolder.SERVER_TARGET.set(client, serverTarget);
     }
   }
 
   @Nullable
   public static String get(AbstractRpcClient client) {
-    return emitStableDatabaseSemconv() ? ServerTargetVirtualField.SERVER_TARGET.get(client) : null;
+    return emitStableDatabaseSemconv() ? ServerTargetHolder.SERVER_TARGET.get(client) : null;
   }
 
   @Nullable
@@ -443,7 +443,7 @@ public class HbaseServerTarget {
     }
   }
 
-  private static class ServerTargetVirtualField {
+  private static class ServerTargetHolder {
     private static final VirtualField<AbstractRpcClient, String> SERVER_TARGET =
         VirtualField.find(AbstractRpcClient.class, String.class);
   }
