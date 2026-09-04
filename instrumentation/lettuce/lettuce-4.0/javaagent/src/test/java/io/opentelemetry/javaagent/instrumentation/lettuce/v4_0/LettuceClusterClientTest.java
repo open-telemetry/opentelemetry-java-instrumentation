@@ -96,10 +96,10 @@ class LettuceClusterClientTest {
     assertThat(asyncCommands.set("CLUSTER_COMMAND_KEY", "value").get(10, SECONDS)).isEqualTo("OK");
 
     asyncCommands.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
     RedisFuture<String> first = asyncCommands.set("CLUSTER_BATCH_KEY_1", "value");
     RedisFuture<String> second = asyncCommands.set("CLUSTER_BATCH_KEY_2", "value");
     asyncCommands.flushCommands();
-    asyncCommands.setAutoFlushCommands(true);
     assertThat(first.get(10, SECONDS)).isEqualTo("OK");
     assertThat(second.get(10, SECONDS)).isEqualTo("OK");
 
