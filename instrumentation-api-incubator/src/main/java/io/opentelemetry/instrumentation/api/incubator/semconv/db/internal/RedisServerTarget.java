@@ -15,7 +15,18 @@ import java.util.List;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("OtelInternalJavadoc")
+/**
+ * The logical Redis server a client was configured to talk to, rendered as {@code server.address}
+ * and {@code server.port}.
+ *
+ * <p>Configured members are normalized before they are rendered: schemes, credentials, and URL
+ * suffixes are stripped, while host names, IPv4 literals, IPv6 literals, and Unix socket paths are
+ * preserved. A member that cannot be normalized drops the whole target, because a partial list
+ * describes a deployment the client was never pointed at.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public final class RedisServerTarget {
 
   private static final int DEFAULT_PORT = 6379;
