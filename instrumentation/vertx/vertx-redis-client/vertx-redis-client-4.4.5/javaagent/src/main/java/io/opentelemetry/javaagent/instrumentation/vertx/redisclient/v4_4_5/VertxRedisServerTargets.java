@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.net.SocketAddress;
@@ -15,13 +17,15 @@ import io.vertx.redis.client.RedisSentinelConnectOptions;
 import io.vertx.redis.client.RedisStandaloneConnectOptions;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public final class VertxRedisServerTargets {
+
+  private static final Logger logger = Logger.getLogger(VertxRedisServerTargets.class.getName());
 
   private static final VirtualField<RedisURI, RedisServerTarget> TARGET_FIELD =
       VirtualField.find(RedisURI.class, RedisServerTarget.class);
@@ -97,7 +101,8 @@ public final class VertxRedisServerTargets {
       return topology != null && topology.toString().equals("STATIC");
     } catch (NoSuchMethodException ignored) {
       return false;
-    } catch (IllegalAccessException | InvocationTargetException ignored) {
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to read the Vert.x Redis topology", e);
       return false;
     }
   }
