@@ -231,7 +231,7 @@ class CassandraClientTest {
   void multipleConfiguredContactPointsWithSharedNonDefaultPortAreStableTarget() {
     Cluster multiContactPointCluster =
         Cluster.builder()
-            .addContactPoints(cassandra.getHost(), "127.0.0.2")
+            .addContactPoints(cassandraHost, "127.0.0.2")
             .withPort(cassandraPort)
             .build();
 
@@ -244,7 +244,7 @@ class CassandraClientTest {
     Cluster multiContactPointCluster =
         Cluster.builder()
             .addContactPointsWithPorts(
-                new InetSocketAddress(cassandra.getHost(), cassandraPort),
+                new InetSocketAddress(cassandraHost, cassandraPort),
                 // unreachable on purpose: only the configuration is under test
                 new InetSocketAddress("127.0.0.2", 9042))
             .build();
@@ -256,7 +256,7 @@ class CassandraClientTest {
   @Test
   void emptyConfiguredContactPointDropsTarget() {
     Cluster emptyContactPointCluster =
-        Cluster.builder().addContactPoints(cassandra.getHost(), "").withPort(cassandraPort).build();
+        Cluster.builder().addContactPoints(cassandraHost, "").withPort(cassandraPort).build();
 
     assertConfiguredTarget(emptyContactPointCluster, null, null);
   }
@@ -269,7 +269,7 @@ class CassandraClientTest {
         .isInstanceOf(NullPointerException.class);
 
     Cluster configuredCluster =
-        builder.addContactPoint(cassandra.getHost()).withPort(cassandraPort).build();
+        builder.addContactPoint(cassandraHost).withPort(cassandraPort).build();
 
     assertConfiguredTarget(configuredCluster, null, null);
   }
