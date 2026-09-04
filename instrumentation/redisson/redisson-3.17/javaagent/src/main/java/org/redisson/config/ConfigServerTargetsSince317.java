@@ -120,7 +120,9 @@ public class ConfigServerTargetsSince317 {
         }
         Integer port = target.getPort();
         sortedAddresses.add(
-            RedisServerTarget.endpoint(target.getAddress(), port == null ? -1 : port.intValue()));
+            port == null
+                ? target.getAddress()
+                : RedisServerTarget.endpoint(target.getAddress(), port.intValue()));
       }
     }
     Collections.sort(sortedAddresses);
