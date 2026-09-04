@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,16 +24,20 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class LettuceNetworkAttributesGetterTest {
 
   private static final int PORT = 6379;
 
-  @Test
-  void commandUsesResolvedSelectedAddress() throws UnknownHostException {
-    InetSocketAddress address =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
+  @ParameterizedTest
+  @MethodSource("resolvedAddresses")
+  void commandUsesResolvedSelectedAddress(InetAddress inetAddress, String expectedAddress) {
+    InetSocketAddress address = new InetSocketAddress(inetAddress, PORT);
     RedisCommand<?, ?, ?> command = command();
     LettuceSingletons.COMMAND_PEER.set(command, new LettucePeerAddress(address));
 
@@ -40,7 +45,7 @@ class LettuceNetworkAttributesGetterTest {
 
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
     assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
+        .isEqualTo(emitStableDatabaseSemconv() ? expectedAddress : null);
     assertThat(getter.getNetworkPeerPort(command, null))
         .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
   }
@@ -92,25 +97,6 @@ class LettuceNetworkAttributesGetterTest {
     assertThat(getter.getNetworkPeerAddress(command, null))
         .isEqualTo(emitStableDatabaseSemconv() ? "/var/run/redis.sock" : null);
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
-  }
-
-  @Test
-  void commandUsesResolvedIpv6Address() throws UnknownHostException {
-    RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(
-        command,
-        new LettucePeerAddress(
-            new InetSocketAddress(
-                InetAddress.getByAddress(
-                    new byte[] {0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}),
-                PORT)));
-
-    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-
-    assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "2001:db8:0:0:0:0:0:1" : null);
-    assertThat(getter.getNetworkPeerPort(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
   }
 
   @Test
@@ -221,5 +207,18 @@ class LettuceNetworkAttributesGetterTest {
     RedisCommand<?, ?, ?> command = command();
     LettuceSingletons.COMMAND_PEER.set(command, new LettucePeerAddress(address));
     return command;
+  }
+
+  private static Stream<Arguments> resolvedAddresses() throws UnknownHostException {
+    return Stream.of(
+        argumentSet(
+            "ipv4", InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), "10.1.2.3"),
+        argumentSet(
+            "ipv6",
+            InetAddress.getByAddress(
+                new byte[] {
+                  0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+                }),
+            "2001:db8:0:0:0:0:0:1"));
   }
 }
