@@ -82,8 +82,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) Object param,
         @Advice.Argument(4) User ticket,
         @Advice.Argument(5) InetSocketAddress addr) {
-      String serverTarget = HbaseServerTarget.get(client);
-      HbaseRequest request = createRequest(md, param, ticket, addr, serverTarget);
+      HbaseRequest request = createRequest(md, param, ticket, addr, HbaseServerTarget.get(client));
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;

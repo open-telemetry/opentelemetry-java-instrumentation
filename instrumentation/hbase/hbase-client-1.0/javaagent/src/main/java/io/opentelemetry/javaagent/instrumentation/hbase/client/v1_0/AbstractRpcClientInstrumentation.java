@@ -124,8 +124,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) Object param,
         @Advice.Argument(4) User ticket,
         @Advice.Argument(5) InetSocketAddress addr) {
-      String serverTarget = HbaseServerTarget.get(client);
-      return AdviceScope.start(md, param, ticket, addr, serverTarget);
+      return AdviceScope.start(md, param, ticket, addr, HbaseServerTarget.get(client));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
