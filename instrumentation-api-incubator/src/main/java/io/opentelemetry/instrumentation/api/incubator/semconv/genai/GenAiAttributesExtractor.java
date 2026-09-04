@@ -57,8 +57,12 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<String> GEN_AI_RESPONSE_MODEL = stringKey("gen_ai.response.model");
   static final AttributeKey<String> GEN_AI_PROVIDER_NAME = stringKey("gen_ai.provider.name");
   static final AttributeKey<Long> GEN_AI_USAGE_INPUT_TOKENS = longKey("gen_ai.usage.input_tokens");
+  static final AttributeKey<Long> GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS =
+      longKey("gen_ai.usage.cache_read.input_tokens");
   static final AttributeKey<Long> GEN_AI_USAGE_OUTPUT_TOKENS =
       longKey("gen_ai.usage.output_tokens");
+  static final AttributeKey<Long> GEN_AI_USAGE_REASONING_OUTPUT_TOKENS =
+      longKey("gen_ai.usage.reasoning.output_tokens");
 
   /** Creates the GenAI attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -105,7 +109,13 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(GEN_AI_RESPONSE_ID, getter.getResponseId(request, response));
     attributes.put(GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
     attributes.put(GEN_AI_USAGE_INPUT_TOKENS, getter.getUsageInputTokens(request, response));
+    attributes.put(
+        GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+        getter.getUsageCacheReadInputTokens(request, response));
     attributes.put(GEN_AI_USAGE_OUTPUT_TOKENS, getter.getUsageOutputTokens(request, response));
+    attributes.put(
+        GEN_AI_USAGE_REASONING_OUTPUT_TOKENS,
+        getter.getUsageReasoningOutputTokens(request, response));
     String errorType = getter.getErrorType(request, response, error);
     if (errorType == null && error != null) {
       errorType = error.getClass().getName();

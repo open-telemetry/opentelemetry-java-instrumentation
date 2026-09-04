@@ -64,6 +64,11 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
   Long getUsageInputTokens(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
+  default Long getUsageCacheReadInputTokens(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
   Long getUsageOutputTokens(REQUEST request, @Nullable RESPONSE response);
 
   /**
@@ -78,6 +83,11 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   default String getErrorType(
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Nullable
+  default Long getUsageReasoningOutputTokens(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 }

@@ -10,6 +10,8 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_REQUEST_MODEL;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_USAGE_REASONING_OUTPUT_TOKENS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Collections.emptyList;
@@ -20,6 +22,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -36,7 +39,7 @@ class GenAiAttributesExtractorTest {
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void extractsStreamingOnStart(boolean streaming) {
-    AttributesExtractor<Request, Void> extractor =
+    AttributesExtractor<Request, Response> extractor =
         GenAiAttributesExtractor.create(new TestGetter());
     Request request = new Request(streaming);
 
@@ -58,7 +61,7 @@ class GenAiAttributesExtractorTest {
 
   @Test
   void fallsBackToExceptionClassForErrorType() {
-    AttributesExtractor<Request, Void> extractor =
+    AttributesExtractor<Request, Response> extractor =
         GenAiAttributesExtractor.create(new TestGetter());
     AttributesBuilder attributes = Attributes.builder();
 
@@ -70,11 +73,11 @@ class GenAiAttributesExtractorTest {
 
   @Test
   void usesGetterErrorTypeBeforeExceptionClass() {
-    AttributesExtractor<Request, Void> extractor =
+    AttributesExtractor<Request, Response> extractor =
         GenAiAttributesExtractor.create(
             new TestGetter() {
               @Override
-              public String getErrorType(Request request, Void response, Throwable error) {
+              public String getErrorType(Request request, Response response, Throwable error) {
                 return "provider_error";
               }
             });
@@ -86,6 +89,49 @@ class GenAiAttributesExtractorTest {
     assertThat(attributes.build()).containsEntry(ERROR_TYPE, "provider_error");
   }
 
+  @Test
+  void extractsDetailedTokenUsageOnEnd() {
+    AttributesExtractor<Request, Response> extractor =
+        GenAiAttributesExtractor.create(new TestGetter());
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), new Request(false), new Response(12L, 4L), null);
+
+    assertThat(attributes.build())
+        .isEqualTo(
+            Attributes.builder()
+                .put(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 12L)
+                .put(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 4L)
+                .build());
+  }
+
+  @Test
+  void preservesExplicitZeroDetailedTokenUsageOnEnd() {
+    AttributesExtractor<Request, Response> extractor =
+        GenAiAttributesExtractor.create(new TestGetter());
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), new Request(false), new Response(0L, 0L), null);
+
+    assertThat(attributes.build())
+        .isEqualTo(
+            Attributes.builder()
+                .put(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L)
+                .put(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)
+                .build());
+  }
+
+  @Test
+  void omitsDetailedTokenUsageWhenResponseIsUnavailable() {
+    AttributesExtractor<Request, Response> extractor =
+        GenAiAttributesExtractor.create(new TestGetter());
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), new Request(false), null, null);
+
+    assertThat(attributes.build()).isEmpty();
+  }
+
   private static final class Request {
     private final boolean streaming;
 
@@ -94,7 +140,17 @@ class GenAiAttributesExtractorTest {
     }
   }
 
-  private static class TestGetter implements GenAiAttributesGetter<Request, Void> {
+  private static final class Response {
+    private final Long cacheReadInputTokens;
+    private final Long reasoningOutputTokens;
+
+    private Response(Long cacheReadInputTokens, Long reasoningOutputTokens) {
+      this.cacheReadInputTokens = cacheReadInputTokens;
+      this.reasoningOutputTokens = reasoningOutputTokens;
+    }
+  }
+
+  private static class TestGetter implements GenAiAttributesGetter<Request, Response> {
 
     @Override
     public String getOperationName(Request request) {
@@ -162,28 +218,40 @@ class GenAiAttributesExtractorTest {
     }
 
     @Override
-    public List<String> getResponseFinishReasons(Request request, Void response) {
+    public List<String> getResponseFinishReasons(Request request, @Nullable Response response) {
       return emptyList();
     }
 
     @Override
-    public String getResponseId(Request request, Void response) {
+    public String getResponseId(Request request, @Nullable Response response) {
       return null;
     }
 
     @Override
-    public String getResponseModel(Request request, Void response) {
+    public String getResponseModel(Request request, @Nullable Response response) {
       return null;
     }
 
     @Override
-    public Long getUsageInputTokens(Request request, Void response) {
+    public Long getUsageInputTokens(Request request, @Nullable Response response) {
       return null;
     }
 
     @Override
-    public Long getUsageOutputTokens(Request request, Void response) {
+    public Long getUsageCacheReadInputTokens(Request request, @Nullable Response response) {
+      return response == null ? null : response.cacheReadInputTokens;
+    }
+
+    @Nullable
+    @Override
+    public Long getUsageOutputTokens(Request request, @Nullable Response response) {
       return null;
+    }
+
+    @Nullable
+    @Override
+    public Long getUsageReasoningOutputTokens(Request request, @Nullable Response response) {
+      return response == null ? null : response.reasoningOutputTokens;
     }
   }
 }

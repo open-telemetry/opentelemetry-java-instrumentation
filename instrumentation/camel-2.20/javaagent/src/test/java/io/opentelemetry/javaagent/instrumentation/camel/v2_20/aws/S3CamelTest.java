@@ -78,7 +78,9 @@ class S3CamelTest {
         // camel cleaning received msg
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()));
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
+                        .hasNoParent()));
 
     camelApp.stop();
     awsConnector.deleteBucket(bucketName);
