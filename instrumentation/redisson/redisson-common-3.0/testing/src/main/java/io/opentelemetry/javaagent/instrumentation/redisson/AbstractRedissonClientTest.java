@@ -20,7 +20,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -42,7 +41,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
@@ -331,28 +329,6 @@ public abstract class AbstractRedissonClientTest {
       String stableServerAddress,
       Long stableServerPort,
       String legacyServerAddress) {
-    List<AttributeAssertion> attributes =
-        new ArrayList<>(
-            asList(
-                equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                equalTo(NETWORK_PEER_ADDRESS, ip),
-                equalTo(NETWORK_PEER_PORT, port),
-                equalTo(
-                    SERVER_ADDRESS,
-                    emitStableDatabaseSemconv() ? stableServerAddress : legacyServerAddress),
-                equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? stableServerPort : port),
-                equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
-                equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? REDIS : null),
-                equalTo(DB_NAMESPACE, dbNamespace())));
-    if (emitOldDatabaseSemconv()) {
-      attributes.add(equalTo(DB_STATEMENT, "SET " + key + " ?"));
-      attributes.add(equalTo(DB_OPERATION, "SET"));
-    }
-    if (emitStableDatabaseSemconv()) {
-      attributes.add(equalTo(DB_QUERY_TEXT, "SET " + key + " ?"));
-      attributes.add(equalTo(DB_OPERATION_NAME, "SET"));
-    }
-
     testing.clearData();
     client.getBucket(key).set("value");
 
@@ -368,7 +344,22 @@ public abstract class AbstractRedissonClientTest {
                                 .hasName(
                                     emitStableDatabaseSemconv() ? "SET " + stableSpanTarget : "SET")
                                 .hasKind(CLIENT)
-                                .hasAttributesSatisfyingExactly(attributes)));
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(
+                                        SERVER_ADDRESS,
+                                        emitStableDatabaseSemconv()
+                                            ? stableServerAddress
+                                            : legacyServerAddress),
+                                    equalTo(
+                                        SERVER_PORT,
+                                        emitStableDatabaseSemconv() ? stableServerPort : port),
+                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                    equalTo(DB_NAMESPACE, dbNamespace()),
+                                    equalTo(maybeStable(DB_STATEMENT), "SET " + key + " ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
 
   @Test
