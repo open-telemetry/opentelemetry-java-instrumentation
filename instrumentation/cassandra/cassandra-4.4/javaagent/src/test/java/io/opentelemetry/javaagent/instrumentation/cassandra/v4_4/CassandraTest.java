@@ -38,13 +38,13 @@ class CassandraTest extends AbstractCassandra44Test {
 
   private static final String PEER_QUERY = "SELECT release_version FROM system.local";
 
+  @RegisterExtension
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.cassandra-4.4";
   }
-
-  @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension testing() {
