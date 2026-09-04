@@ -129,7 +129,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       }
 
       // the first server stands for the pool in the attributes that name a single host, matching
-      // the way multi host connection urls are reported elsewhere
+      // the way multi-host connection URLs are reported elsewhere
       setSqlConnectOptions(firstDatabase(databases));
       setAddressGroup(VertxSqlAddressGroup.of(databases));
       return callDepth;
