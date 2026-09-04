@@ -694,7 +694,7 @@ class VertxSqlClientTest {
     cleanup.deferCleanup(listPool::close);
     String query = "select * from test where id = $1";
 
-    executePreparedStatement(listPool, query, Tuple.of(1))
+    executePreparedStatement(listPool, query, Tuple.of(1), PreparedStatement::query)
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -1436,10 +1436,6 @@ class VertxSqlClientTest {
 
   private static Future<?> executePreparedStatement(String query, Tuple tuple) {
     return executePreparedStatement(query, tuple, PreparedStatement::query);
-  }
-
-  private static Future<?> executePreparedStatement(Pool targetPool, String query, Tuple tuple) {
-    return executePreparedStatement(targetPool, query, tuple, PreparedStatement::query);
   }
 
   private static Future<?> executePreparedStatement(
