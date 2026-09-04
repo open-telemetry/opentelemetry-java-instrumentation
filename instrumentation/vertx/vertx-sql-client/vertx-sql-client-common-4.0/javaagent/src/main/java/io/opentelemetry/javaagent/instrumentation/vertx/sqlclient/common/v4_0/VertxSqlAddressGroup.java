@@ -14,8 +14,6 @@ import javax.annotation.Nullable;
 
 public class VertxSqlAddressGroup {
 
-  private static final int MAX_ENDPOINTS = 5;
-
   private final List<Endpoint> endpoints;
   @Nullable private final String address;
   @Nullable private final Integer port;
@@ -86,10 +84,7 @@ public class VertxSqlAddressGroup {
       return DbServerTarget.unixSocket(endpoints.get(0).host);
     }
 
-    DbServerTargetBuilder builder =
-        DbServerTarget.builder(defaultPort(dbSystem))
-            .setSorted(false)
-            .setMaxEndpoints(MAX_ENDPOINTS);
+    DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort(dbSystem));
     for (Endpoint endpoint : endpoints) {
       if (endpoint.unixSocket) {
         return null;
