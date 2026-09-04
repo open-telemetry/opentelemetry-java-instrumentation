@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -17,7 +18,11 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.FilterClient;
 import org.elasticsearch.client.transport.TransportClient;
@@ -166,6 +171,34 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     clusterHealth(addressListClient);
 
     assertConfiguredTarget(configuredAddressListWithSharedNonDefaultPort(), null);
+  }
+
+  @Test
+  void concurrentAddressChangesPublishFinalSnapshot() {
+    TransportClient addressListClient = connectedClient();
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+    cleanup.deferCleanup(executor::shutdownNow);
+    CompletableFuture<Void> start = new CompletableFuture<>();
+    CompletableFuture<Void> add =
+        start.thenRunAsync(
+            () -> addressListClient.addTransportAddress(addressThatIsDown), executor);
+    CompletableFuture<Void> remove =
+        start.thenRunAsync(
+            () -> addressListClient.removeTransportAddress(addressThatIsDown), executor);
+
+    testing.runWithSpan(
+        "setup",
+        () -> {
+          start.complete(null);
+          assertThat(add).succeedsWithin(Duration.ofSeconds(10));
+          assertThat(remove).succeedsWithin(Duration.ofSeconds(10));
+        });
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    boolean hasDownAddress = addressListClient.transportAddresses().contains(addressThatIsDown);
+    clusterHealth(addressListClient);
+    assertConfiguredTarget(hasDownAddress ? configuredAddressListWithMixedPorts() : null, null);
   }
 
   @Test

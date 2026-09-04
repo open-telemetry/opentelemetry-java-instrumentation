@@ -33,6 +33,22 @@ class ElasticsearchTransportServerTargetsTest {
   }
 
   @Test
+  void updateLockIsStableAndPerClient() {
+    AbstractClient firstClient = mock(AbstractClient.class);
+    AbstractClient secondClient = mock(AbstractClient.class);
+
+    ElasticsearchTransportServerTargets.initializeUpdateLock(firstClient);
+    Object firstLock = ElasticsearchTransportServerTargets.getUpdateLock(firstClient);
+    ElasticsearchTransportServerTargets.initializeUpdateLock(firstClient);
+    ElasticsearchTransportServerTargets.initializeUpdateLock(secondClient);
+
+    assertThat(firstLock).isNotNull();
+    assertThat(ElasticsearchTransportServerTargets.getUpdateLock(firstClient)).isSameAs(firstLock);
+    assertThat(ElasticsearchTransportServerTargets.getUpdateLock(secondClient))
+        .isNotSameAs(firstLock);
+  }
+
+  @Test
   void updateClearsTarget() {
     AbstractClient client = mock(AbstractClient.class);
 

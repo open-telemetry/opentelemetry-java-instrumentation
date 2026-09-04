@@ -16,6 +16,19 @@ public class ElasticsearchTransportServerTargets {
       VirtualField.find(AbstractClient.class, DbServerTarget.class);
   private static final VirtualField<AbstractClient, AbstractClient> DELEGATE =
       VirtualField.find(AbstractClient.class, AbstractClient.class);
+  private static final VirtualField<AbstractClient, UpdateLock> UPDATE_LOCK =
+      VirtualField.find(AbstractClient.class, UpdateLock.class);
+
+  public static void initializeUpdateLock(AbstractClient client) {
+    if (UPDATE_LOCK.get(client) == null) {
+      UPDATE_LOCK.set(client, new UpdateLock());
+    }
+  }
+
+  @Nullable
+  public static Object getUpdateLock(AbstractClient client) {
+    return UPDATE_LOCK.get(client);
+  }
 
   public static void update(
       AbstractClient client,
@@ -40,4 +53,6 @@ public class ElasticsearchTransportServerTargets {
   }
 
   private ElasticsearchTransportServerTargets() {}
+
+  private static class UpdateLock {}
 }

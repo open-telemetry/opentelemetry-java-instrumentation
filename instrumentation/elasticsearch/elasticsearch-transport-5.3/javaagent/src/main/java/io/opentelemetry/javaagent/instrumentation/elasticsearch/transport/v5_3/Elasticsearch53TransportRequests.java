@@ -23,7 +23,11 @@ public class Elasticsearch53TransportRequests {
   }
 
   public static void updateServerTarget(TransportClient client) {
-    synchronized (client) {
+    Object updateLock = ElasticsearchTransportServerTargets.getUpdateLock(client);
+    if (updateLock == null) {
+      return;
+    }
+    synchronized (updateLock) {
       List<ElasticsearchTransportServerTarget.Endpoint> endpoints = new ArrayList<>();
       for (TransportAddress address : client.transportAddresses()) {
         endpoints.add(

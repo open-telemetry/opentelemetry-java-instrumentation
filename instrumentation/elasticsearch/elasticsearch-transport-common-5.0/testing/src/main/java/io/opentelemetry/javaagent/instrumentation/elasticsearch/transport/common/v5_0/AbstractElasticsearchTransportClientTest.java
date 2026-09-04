@@ -34,14 +34,19 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.transport.RemoteTransportException;
 import org.junit.jupiter.api.Test;
@@ -55,9 +60,27 @@ import org.junit.jupiter.params.provider.MethodSource;
 public abstract class AbstractElasticsearchTransportClientTest
     extends AbstractElasticsearchClientTest {
 
+  @Override
+  protected abstract TransportClient client();
+
   protected abstract String getAddress();
 
   protected abstract int getPort();
+
+  @Test
+  void transportAddressUpdatesDoNotUseClientMonitor() {
+    TransportClient client = client();
+    TransportAddress address = client.transportAddresses().get(0);
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    cleanup.deferCleanup(executor::shutdownNow);
+    Object applicationMonitor = client;
+
+    synchronized (applicationMonitor) {
+      assertThat(CompletableFuture.supplyAsync(() -> client.addTransportAddress(address), executor))
+          .succeedsWithin(Duration.ofSeconds(5))
+          .isSameAs(client);
+    }
+  }
 
   private Stream<Arguments> healthArguments() {
     return Stream.of(
@@ -231,7 +254,7 @@ public abstract class AbstractElasticsearchTransportClientTest
     String indexType = "test-type";
     String id = "1";
 
-    Client client = client();
+    TransportClient client = client();
     CreateIndexResponse indexResult = client.admin().indices().prepareCreate(indexName).get();
     assertThat(indexResult.isAcknowledged()).isTrue();
 
