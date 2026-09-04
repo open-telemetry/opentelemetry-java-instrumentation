@@ -10,6 +10,14 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("hbase14Test") {
+      dependencies {
+        implementation(project(":instrumentation-api-incubator"))
+        implementation(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent"))
+        implementation("org.apache.hbase:hbase-client:${baseVersion("1.4.0").orLatest("1.+")}")
+      }
+    }
+
     register<JvmTestSuite>("hbase20Test") {
       dependencies {
         implementation(project(":instrumentation-api-incubator"))
@@ -26,6 +34,10 @@ testing {
       }
     }
   }
+}
+
+sourceSets.named("hbase14Test") {
+  resources.srcDir("src/test/resources")
 }
 
 tasks {

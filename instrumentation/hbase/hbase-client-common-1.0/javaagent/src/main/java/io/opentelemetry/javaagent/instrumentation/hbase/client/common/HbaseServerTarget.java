@@ -66,42 +66,6 @@ public class HbaseServerTarget {
     return null;
   }
 
-  @Nullable
-  static String from(
-      Configuration configuration,
-      boolean supportsClientZkConfig,
-      boolean supportsRegistryConfig,
-      boolean usesConfiguredMasterPort) {
-    return from(
-        configuration,
-        supportsClientZkConfig,
-        supportsRegistryConfig,
-        true,
-        usesConfiguredMasterPort);
-  }
-
-  @Nullable
-  static String from(
-      Configuration configuration,
-      boolean supportsClientZkConfig,
-      boolean supportsRegistryConfig,
-      boolean supportsZkConfigFile,
-      boolean usesConfiguredMasterPort) {
-    String registry = supportsRegistryConfig ? configuration.get(REGISTRY_KEY) : null;
-    if (registry == null) {
-      return HbaseZookeeperTarget.from(configuration, supportsClientZkConfig, supportsZkConfigFile);
-    }
-
-    registry = registry.trim();
-    if (HbaseZookeeperTarget.isRegistry(registry)) {
-      return HbaseZookeeperTarget.from(configuration, supportsClientZkConfig, supportsZkConfigFile);
-    }
-    if (HbaseMasterTarget.isRegistry(registry)) {
-      return HbaseMasterTarget.from(configuration, usesConfiguredMasterPort);
-    }
-    return null;
-  }
-
   private static boolean hasHbaseConstant(String fieldName) {
     try {
       Field unused = HConstants.class.getField(fieldName);
