@@ -163,8 +163,7 @@ class VertxSqlClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            assertServerGroup(
-                trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)));
+            assertServerGroup(trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -244,8 +243,7 @@ class VertxSqlClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            assertServerGroup(
-                trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)));
+            assertServerGroup(trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -737,11 +735,9 @@ class VertxSqlClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            assertServerGroup(
-                trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)),
+            assertServerGroup(trace, port + 1, host + ":" + port + "," + host + ":" + (port + 1)),
         trace ->
-            assertServerGroup(
-                trace, port + 2, host + ":" + port + "," + host + ":" + (port + 2)));
+            assertServerGroup(trace, port + 2, host + ":" + port + "," + host + ":" + (port + 2)));
   }
 
   @Test
