@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -287,29 +288,17 @@ public abstract class AbstractMongoClientTest<T> {
                                   + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"));
                     }));
 
+    List<AttributeKey<?>> expectedMetricKeys =
+        new ArrayList<>(
+            asList(DB_SYSTEM_NAME, DB_OPERATION_NAME, DB_NAMESPACE, DB_COLLECTION_NAME));
     if (supportsNetworkPeer() && emitStableDatabaseSemconv()) {
-      assertDurationMetric(
-          testing(),
-          scopeName.get(),
-          DB_SYSTEM_NAME,
-          DB_OPERATION_NAME,
-          DB_NAMESPACE,
-          DB_COLLECTION_NAME,
-          NETWORK_PEER_ADDRESS,
-          NETWORK_PEER_PORT,
-          SERVER_ADDRESS,
-          SERVER_PORT);
-    } else {
-      assertDurationMetric(
-          testing(),
-          scopeName.get(),
-          DB_SYSTEM_NAME,
-          DB_OPERATION_NAME,
-          DB_NAMESPACE,
-          DB_COLLECTION_NAME,
-          SERVER_ADDRESS,
-          SERVER_PORT);
+      expectedMetricKeys.add(NETWORK_PEER_ADDRESS);
+      expectedMetricKeys.add(NETWORK_PEER_PORT);
     }
+    expectedMetricKeys.add(SERVER_ADDRESS);
+    expectedMetricKeys.add(SERVER_PORT);
+    assertDurationMetric(
+        testing(), scopeName.get(), expectedMetricKeys.toArray(new AttributeKey<?>[0]));
   }
 
   @Test
