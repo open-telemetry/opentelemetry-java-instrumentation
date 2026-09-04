@@ -470,6 +470,20 @@ class DbExecutionTest {
   }
 
   @Test
+  void dbExecutionValidatesConfiguredHostsAfterTheLimitWithUnknownDefaultPort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "unknown")
+            .option(ConnectionFactoryOptions.HOST, "host1,host2,host3,host4,host5,host six")
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isNull();
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @Test
   void dbExecutionSanitizesUserInfoFromMultiHostAddress() {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
