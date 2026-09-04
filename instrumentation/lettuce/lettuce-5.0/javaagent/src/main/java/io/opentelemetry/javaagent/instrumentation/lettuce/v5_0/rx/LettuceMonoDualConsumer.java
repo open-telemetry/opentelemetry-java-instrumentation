@@ -29,6 +29,19 @@ public class LettuceMonoDualConsumer<T>
   @Nullable private RedisCommand<?, ?, ?> command;
   @Nullable private Context context;
 
+  public static <T> Mono<T> monitor(
+      Mono<T> publisher, StatefulConnection<?, ?> connection, boolean expectsResponse) {
+    return Mono.defer(
+        () -> {
+          LettuceMonoDualConsumer<T> handler =
+              new LettuceMonoDualConsumer<>(connection, expectsResponse);
+          Mono<T> monitoredPublisher = publisher.doOnSubscribe(handler);
+          return expectsResponse
+              ? handler.finishSpanOnTerminal(monitoredPublisher)
+              : monitoredPublisher;
+        });
+  }
+
   private LettuceMonoDualConsumer(StatefulConnection<?, ?> connection, boolean expectsResponse) {
     this.connection = connection;
     this.expectsResponse = expectsResponse;
@@ -74,16 +87,4 @@ public class LettuceMonoDualConsumer<T>
         .doOnError(error -> accept(null, error));
   }
 
-  public static <T> Mono<T> monitor(
-      Mono<T> publisher, StatefulConnection<?, ?> connection, boolean expectsResponse) {
-    return Mono.defer(
-        () -> {
-          LettuceMonoDualConsumer<T> handler =
-              new LettuceMonoDualConsumer<>(connection, expectsResponse);
-          Mono<T> monitoredPublisher = publisher.doOnSubscribe(handler);
-          return expectsResponse
-              ? handler.finishSpanOnTerminal(monitoredPublisher)
-              : monitoredPublisher;
-        });
-  }
 }
