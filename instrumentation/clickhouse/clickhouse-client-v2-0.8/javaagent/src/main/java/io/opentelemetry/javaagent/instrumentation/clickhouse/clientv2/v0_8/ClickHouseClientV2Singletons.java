@@ -111,7 +111,6 @@ public class ClickHouseClientV2Singletons {
 
     static ServerInfo of(Set<String> endpoints) {
       DbServerTargetBuilder builder = DbServerTarget.builder(-1).setSorted(true);
-      boolean inlinePorts = false;
       for (String endpoint : endpoints) {
         EndpointTarget extracted = extractEndpoint(endpoint);
         if (extracted == null) {
@@ -120,7 +119,6 @@ public class ClickHouseClientV2Singletons {
         int defaultPort = extracted.defaultPort();
         builder.addEndpoint(
             extracted.address, extracted.port == null ? -1 : extracted.port, defaultPort);
-        inlinePorts |= extracted.port != null && extracted.port != defaultPort;
       }
       DbServerTarget target = builder.build();
       if (target == null) {
@@ -128,10 +126,7 @@ public class ClickHouseClientV2Singletons {
       }
       return endpoints.size() == 1
           ? new ServerInfo(target.getAddress(), target.getPort(), null)
-          : new ServerInfo(
-              null,
-              null,
-              inlinePorts ? target.getAddress() : bracketIpv6Endpoints(target.getAddress()));
+          : new ServerInfo(null, null, target.getAddress());
     }
 
     private static ServerInfo ofCurrentEndpoint(Set<String> endpoints) {
@@ -223,21 +218,6 @@ public class ClickHouseClientV2Singletons {
         }
       }
       return port;
-    }
-
-    private static String bracketIpv6Endpoints(String addressGroup) {
-      StringBuilder result = new StringBuilder();
-      for (String endpoint : addressGroup.split(",", -1)) {
-        if (result.length() > 0) {
-          result.append(',');
-        }
-        if (endpoint.indexOf(':') >= 0) {
-          result.append('[').append(endpoint).append(']');
-        } else {
-          result.append(endpoint);
-        }
-      }
-      return result.toString();
     }
 
     private static boolean hasUnsafePercentEscape(String authority) {

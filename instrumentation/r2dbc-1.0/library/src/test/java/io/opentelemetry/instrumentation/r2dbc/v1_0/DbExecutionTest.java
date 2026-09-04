@@ -335,7 +335,7 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1:1234,[2001:db8::2]");
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1:1234,2001:db8::2");
     assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
@@ -371,7 +371,7 @@ class DbExecutionTest {
   }
 
   @Test
-  void dbExecutionBracketsUnbracketedIpv6HostsWhenOmittingDefaultPorts() {
+  void dbExecutionKeepsUnbracketedIpv6HostsWhenOmittingDefaultPorts() {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
             .option(ConnectionFactoryOptions.DRIVER, "postgresql")
@@ -381,12 +381,12 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("[2001:db8::1],[2001:db8::2]");
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("2001:db8::1,2001:db8::2");
     assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
   @Test
-  void dbExecutionBracketsUnbracketedIpv6HostsThatHaveNoPort() {
+  void dbExecutionKeepsUnbracketedIpv6HostsThatHaveNoPort() {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
             .option(ConnectionFactoryOptions.DRIVER, "postgresql")
@@ -395,7 +395,7 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("[2001:db8::1],[2001:db8::2]");
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("2001:db8::1,2001:db8::2");
     assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 
@@ -410,8 +410,7 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.getConfiguredServerAddress())
-        .isEqualTo("host2,[2001:db8::2],host1,host2");
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host2,2001:db8::2,host1,host2");
     assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
 

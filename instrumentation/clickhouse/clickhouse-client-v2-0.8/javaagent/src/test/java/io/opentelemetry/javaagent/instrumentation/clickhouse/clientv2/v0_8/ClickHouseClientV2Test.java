@@ -725,6 +725,20 @@ class ClickHouseClientV2Test {
   }
 
   @Test
+  void testConfiguredIpv6EndpointsOnDefaultPortsRemainUnbracketed() throws Exception {
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint("http://[2001:db8::2]:8123")
+            .addEndpoint("https://[2001:db8::1]:8443")
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .build();
+    cleanup.deferCleanup(testClient);
+
+    assertServerInfo(testClient, null, null, "2001:db8::1,2001:db8::2");
+  }
+
+  @Test
   void testConfiguredEndpointsIncludeAtMostFiveEndpoints() throws Exception {
     Set<String> fiveEndpoints =
         new HashSet<>(
@@ -911,7 +925,7 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv()
-                                    ? "[2001:db8::1],host.example"
+                                    ? "2001:db8::1,host.example"
                                     : legacyAddress),
                             equalTo(
                                 SERVER_PORT,

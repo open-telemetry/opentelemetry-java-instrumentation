@@ -218,16 +218,10 @@ public final class DbExecution {
     }
 
     DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort);
-    boolean inlinePorts = false;
     for (ParsedEndpoint endpoint : endpoints) {
       builder.addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port);
-      inlinePorts |= endpoint.port != null && !defaultPort.equals(endpoint.port);
     }
-    ConfiguredServerTarget target = ConfiguredServerTarget.from(builder.build());
-    if (!inlinePorts && target.address != null) {
-      target = new ConfiguredServerTarget(bracketIpv6Endpoints(target.address), null);
-    }
-    return target;
+    return ConfiguredServerTarget.from(builder.build());
   }
 
   private static String stripUserInfo(String serverAddress) {
@@ -280,23 +274,8 @@ public final class DbExecution {
     return new ConfiguredServerTarget(addressGroup.toString(), null);
   }
 
-  private static String bracketIpv6Endpoints(String addressGroup) {
-    StringBuilder result = new StringBuilder();
-    for (String endpoint : addressGroup.split(",", -1)) {
-      if (result.length() > 0) {
-        result.append(',');
-      }
-      if (endpoint.indexOf(':') >= 0) {
-        result.append('[').append(endpoint).append(']');
-      } else {
-        result.append(endpoint);
-      }
-    }
-    return result.toString();
-  }
-
   private static void appendEndpoint(StringBuilder result, ParsedEndpoint endpoint) {
-    if (endpoint.host.indexOf(':') >= 0) {
+    if (endpoint.port != null && endpoint.host.indexOf(':') >= 0) {
       result.append('[').append(endpoint.host).append(']');
     } else {
       result.append(endpoint.host);
