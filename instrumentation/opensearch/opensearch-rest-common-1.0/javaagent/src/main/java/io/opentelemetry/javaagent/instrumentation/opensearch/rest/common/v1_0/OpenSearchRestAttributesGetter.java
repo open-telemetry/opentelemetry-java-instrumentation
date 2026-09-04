@@ -76,8 +76,8 @@ final class OpenSearchRestAttributesGetter
     return target != null ? target.getPort() : null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getNetworkType(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
     InetAddress address = getNetworkPeerInetAddress(request, response);
