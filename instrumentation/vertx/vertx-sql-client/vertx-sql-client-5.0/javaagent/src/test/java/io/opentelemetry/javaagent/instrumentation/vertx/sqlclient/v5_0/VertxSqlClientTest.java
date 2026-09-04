@@ -815,7 +815,7 @@ class VertxSqlClientTest {
                 ? firstHost + ":" + firstPort + "," + secondHost + ":" + secondPort
                 : firstHost + "," + secondHost;
     Consumer<SpanDataAssert> operationSpan;
-    if (emitOldDatabaseSemconv() && emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       operationSpan =
           span ->
               span.hasKind(SpanKind.CLIENT)
@@ -892,7 +892,7 @@ class VertxSqlClientTest {
   }
 
   private static void assertSupplierTarget(TraceAssert trace, String expectedHost) {
-    if (emitOldDatabaseSemconv() && emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       trace.hasSpansSatisfyingExactly(
           span ->
               span.hasName("select test")
@@ -1003,7 +1003,7 @@ class VertxSqlClientTest {
   }
 
   private static void assertSupplierFallbackFailure(TraceAssert trace, RuntimeException error) {
-    if (emitOldDatabaseSemconv() && emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       trace.hasSpansSatisfyingExactly(
           span ->
               span.hasName("<unspecified span name>")
@@ -1072,7 +1072,7 @@ class VertxSqlClientTest {
   }
 
   private static void assertOracleConnectFailure(TraceAssert trace, Throwable error) {
-    if (emitOldDatabaseSemconv() && emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       trace.hasSpansSatisfyingExactly(
           span ->
               span.hasName("select test")
