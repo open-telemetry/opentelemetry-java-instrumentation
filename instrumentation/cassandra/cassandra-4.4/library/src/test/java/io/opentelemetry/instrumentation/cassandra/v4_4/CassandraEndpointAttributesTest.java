@@ -11,6 +11,8 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -53,6 +55,7 @@ class CassandraEndpointAttributesTest {
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isNull();
       assertThat(attributes.get(SERVER_PORT)).isNull();
+      verify(coordinator, never()).getEndPoint();
     } else {
       assertCoordinatorIsServer(attributes);
     }
@@ -160,6 +163,7 @@ class CassandraEndpointAttributesTest {
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isNull();
       assertThat(attributes.get(SERVER_PORT)).isNull();
+      verify(coordinator, never()).getEndPoint();
     } else {
       assertProxyIsServer(attributes);
     }
