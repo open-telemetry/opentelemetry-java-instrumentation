@@ -34,8 +34,7 @@ class InFlightHandlerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) Object context, @Advice.Argument(1) Object message)
-        throws ReflectiveOperationException {
+        @Advice.Argument(0) Object context, @Advice.Argument(1) Object message) {
       if (!(message instanceof Frame)) {
         return;
       }
