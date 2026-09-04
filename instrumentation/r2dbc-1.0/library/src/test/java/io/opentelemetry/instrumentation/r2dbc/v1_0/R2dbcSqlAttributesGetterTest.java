@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -94,5 +95,146 @@ class R2dbcSqlAttributesGetterTest {
         argumentSet("MySQL", "r2dbc:mysql://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS),
         argumentSet("SQL Server", "r2dbc:mssql://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS),
         argumentSet("unknown", "r2dbc:unknown://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS));
+  }
+
+  @Test
+  void multiHostUrlKeepsAddressAndHasNoPort() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.parse("r2dbc:mariadb:sequential://host1:3306,host2:3307/db"));
+
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1:3306,host2:3307");
+    assertThat(getter.getServerPort(dbExecution)).isNull();
+  }
+
+  @Test
+  void multiHostOptionsOmitTheKnownDefaultPortInStableSemconv() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "mariadb")
+                .option(ConnectionFactoryOptions.HOST, "host1,host2")
+                .option(ConnectionFactoryOptions.PORT, 3306)
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 3306);
+  }
+
+  @Test
+  void multiHostOptionsInlineASharedNonDefaultPortInStableSemconv() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "mariadb")
+                .option(ConnectionFactoryOptions.HOST, "host1,host2")
+                .option(ConnectionFactoryOptions.PORT, 3307)
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? "host1:3307,host2:3307" : "host1,host2");
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 3307);
+  }
+
+  @Test
+  void multiHostOptionsRemoveUserInfoFromTheStableTarget() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, "user:secret@host1,host2")
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? "host1,host2" : "user:secret@host1,host2");
+  }
+
+  @Test
+  void malformedMultiHostOptionsOmitTheStableTarget() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, "host1:invalid,host2")
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "host1:invalid,host2");
+  }
+
+  @Test
+  void singleHostOptionsRemoveUserInfoFromTheStableTarget() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, "user:secret@host1")
+                .option(ConnectionFactoryOptions.PORT, 5432)
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? "host1" : "user:secret@host1");
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+  }
+
+  @Test
+  void malformedSingleHostOptionsOmitTheStableTarget() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, "host1:invalid")
+                .option(ConnectionFactoryOptions.PORT, 5432)
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "host1:invalid");
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+  }
+
+  @Test
+  void singleHostOmitsKnownDefaultPortInStableMode() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.parse("r2dbc:postgresql://host1:5432/db"));
+
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1");
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+  }
+
+  @Test
+  void unixDomainSocketOmitsPortFromStableTarget() {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, "/var/run/postgresql/.s.PGSQL.5432")
+                .option(ConnectionFactoryOptions.PORT, 5432)
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("/var/run/postgresql/.s.PGSQL.5432");
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+  }
+
+  private static QueryExecutionInfo queryExecutionInfo() {
+    return MockQueryExecutionInfo.builder()
+        .queryInfo(new QueryInfo("SELECT 1"))
+        .connectionInfo(MockConnectionInfo.builder().build())
+        .build();
   }
 }
