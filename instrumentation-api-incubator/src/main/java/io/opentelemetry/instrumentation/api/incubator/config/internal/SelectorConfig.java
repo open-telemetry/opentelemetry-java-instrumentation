@@ -52,7 +52,11 @@ public final class SelectorConfig {
    *
    * <p>Values of the deprecated include-only setting that contain {@code *} or {@code ?} are
    * ignored and logged, since that setting matches values literally and never supported wildcards.
+   *
+   * @deprecated Use {@link #resolve(DeclarativeConfigProperties, String, String, Stability)} and
+   *     specify the selector configuration stability explicitly.
    */
+  @Deprecated
   @Nullable
   public static IncludeExclude resolve(
       DeclarativeConfigProperties config, String instrumentationName, String selectorName) {
@@ -68,7 +72,10 @@ public final class SelectorConfig {
    * @param systemPropertyFallback whether to fall back to the flat system properties when the
    *     declarative configuration does not contain a value. This is needed by library
    *     instrumentation entry points that have no programmatic configuration surface.
+   * @deprecated Use {@link #resolve(DeclarativeConfigProperties, String, String, Stability,
+   *     boolean)} and specify the selector configuration stability explicitly.
    */
+  @Deprecated
   @Nullable
   public static IncludeExclude resolve(
       DeclarativeConfigProperties config,

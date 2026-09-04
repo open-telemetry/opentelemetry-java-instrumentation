@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.EXPERIMENTAL;
 import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.STABLE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -130,8 +131,8 @@ class SelectorConfigTest {
 
     assertThat(SelectorConfig.resolveLegacyLiteral(absent, "test", SELECTOR)).isNull();
     assertThat(SelectorConfig.resolveLegacyLiteral(empty, "test", SELECTOR)).isNull();
-    assertThat(SelectorConfig.resolve(absent, "test", SELECTOR)).isNull();
-    assertThat(SelectorConfig.resolve(empty, "test", SELECTOR)).isNull();
+    assertThat(SelectorConfig.resolve(absent, "test", SELECTOR, EXPERIMENTAL)).isNull();
+    assertThat(SelectorConfig.resolve(empty, "test", SELECTOR, EXPERIMENTAL)).isNull();
   }
 
   @Test
@@ -145,6 +146,26 @@ class SelectorConfigTest {
 
     assertThat(SelectorConfig.resolve(absent, "stable-absent", SELECTOR, STABLE)).isNull();
     assertThat(SelectorConfig.resolve(empty, "stable-empty", SELECTOR, STABLE)).isNull();
+  }
+
+  @SuppressWarnings("deprecation")
+  @Test
+  void deprecatedResolveOverloadsUseExperimentalStability() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.get("mdc_attributes/development").getScalarList("included", String.class))
+        .thenReturn(singletonList("experimental"));
+    when(config.get("mdc_attributes").getScalarList("included", String.class))
+        .thenReturn(singletonList("stable"));
+
+    IncludeExclude selector = SelectorConfig.resolve(config, "test", SELECTOR);
+    IncludeExclude selectorWithFallback = SelectorConfig.resolve(config, "test", SELECTOR, false);
+
+    assertThat(selector).isNotNull();
+    assertThat(selector.matches("experimental")).isTrue();
+    assertThat(selector.matches("stable")).isFalse();
+    assertThat(selectorWithFallback).isNotNull();
+    assertThat(selectorWithFallback.matches("experimental")).isTrue();
+    assertThat(selectorWithFallback.matches("stable")).isFalse();
   }
 
   @Test
@@ -231,7 +252,8 @@ class SelectorConfigTest {
         .thenReturn(emptyList());
 
     assertThat(SelectorConfig.resolveLegacyLiteral(config, "deprecated-empty", SELECTOR)).isNull();
-    assertThat(SelectorConfig.resolve(config, "deprecated-empty-resolve", SELECTOR)).isNull();
+    assertThat(SelectorConfig.resolve(config, "deprecated-empty-resolve", SELECTOR, EXPERIMENTAL))
+        .isNull();
   }
 
   @Test
@@ -246,7 +268,8 @@ class SelectorConfigTest {
       Predicate<String> first = SelectorConfig.resolveLegacyLiteral(config, "precedence", SELECTOR);
       Predicate<String> second =
           SelectorConfig.resolveLegacyLiteral(config, "precedence", SELECTOR);
-      IncludeExclude resolved = SelectorConfig.resolve(config, "precedence", SELECTOR);
+      IncludeExclude resolved =
+          SelectorConfig.resolve(config, "precedence", SELECTOR, EXPERIMENTAL);
 
       assertThat(first).isNotNull();
       assertThat(first.test("new")).isTrue();
@@ -322,7 +345,8 @@ class SelectorConfigTest {
     when(config.getScalarList("capture_mdc_attributes/development", String.class))
         .thenReturn(asList("exact.name", "prefix.*"));
 
-    IncludeExclude selector = SelectorConfig.resolve(config, "resolve-deprecated", SELECTOR);
+    IncludeExclude selector =
+        SelectorConfig.resolve(config, "resolve-deprecated", SELECTOR, EXPERIMENTAL);
 
     assertThat(selector).isNotNull();
     assertThat(selector.matches("exact.name")).isTrue();
@@ -361,7 +385,8 @@ class SelectorConfigTest {
     when(config.getScalarList("capture_mdc_attributes/development", String.class))
         .thenReturn(singletonList("*"));
 
-    assertThat(SelectorConfig.resolve(config, "resolve-all-wildcards", SELECTOR)).isNull();
+    assertThat(SelectorConfig.resolve(config, "resolve-all-wildcards", SELECTOR, EXPERIMENTAL))
+        .isNull();
   }
 
   @Test
@@ -375,7 +400,8 @@ class SelectorConfigTest {
     when(config.getScalarList("capture_request_parameters/development", String.class))
         .thenReturn(null);
 
-    IncludeExclude selector = SelectorConfig.resolve(config, "servlet", "request-parameters");
+    IncludeExclude selector =
+        SelectorConfig.resolve(config, "servlet", "request-parameters", EXPERIMENTAL);
 
     assertThat(selector).isNotNull();
     assertThat(selector.matches("id")).isTrue();
