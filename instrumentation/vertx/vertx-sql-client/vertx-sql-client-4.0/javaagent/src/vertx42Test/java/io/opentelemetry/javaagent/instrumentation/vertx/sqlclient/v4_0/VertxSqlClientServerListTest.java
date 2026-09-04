@@ -133,6 +133,16 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
+  void differingDatabaseAndUserAreOmitted() throws Exception {
+    PgConnectOptions first = connectOptions().setPort(port);
+    PgConnectOptions second =
+        connectOptions().setPort(port + 1).setDatabase("other-database").setUser("other-user");
+    Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
+
+    assertServerListTarget(pool, host + ":" + port + "," + host + ":" + (port + 1), null, null);
+  }
+
+  @Test
   void nullServerDoesNotPoisonLaterPoolTarget() throws Exception {
     PgConnectOptions first = connectOptions().setPort(port);
     try {
@@ -150,12 +160,23 @@ class VertxSqlClientServerListTest {
 
   private static void assertServerListTarget(SqlClient client, String serverAddress)
       throws InterruptedException, ExecutionException, TimeoutException {
+    assertServerListTarget(client, serverAddress, DB, USER_DB);
+  }
+
+  private static void assertServerListTarget(
+      SqlClient client, String serverAddress, String database, String user)
+      throws InterruptedException, ExecutionException, TimeoutException {
     cleanup.deferCleanup(client::close);
     select(client);
-    assertServerListTarget(serverAddress, "select ?");
+    assertServerListTarget(serverAddress, "select ?", database, user);
   }
 
   private static void assertServerListTarget(String serverAddress, String statement) {
+    assertServerListTarget(serverAddress, statement, DB, USER_DB);
+  }
+
+  private static void assertServerListTarget(
+      String serverAddress, String statement, String database, String user) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -165,8 +186,8 @@ class VertxSqlClientServerListTest {
                             equalTo(
                                 maybeStable(DB_SYSTEM),
                                 emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_NAME), database),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
                             equalTo(maybeStable(DB_STATEMENT), statement),
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),

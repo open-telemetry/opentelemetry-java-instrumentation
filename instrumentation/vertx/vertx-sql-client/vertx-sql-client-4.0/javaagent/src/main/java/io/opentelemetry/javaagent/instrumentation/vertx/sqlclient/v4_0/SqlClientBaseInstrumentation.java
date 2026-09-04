@@ -5,13 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getAddressGroup;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setAddressGroup;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientData;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.attachClientState;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.getAddressGroup;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.getSqlConnectOptions;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -19,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.vertx.sqlclient.SqlConnectOptions;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.sqlclient.impl.SqlClientBase;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -43,7 +38,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase<?> sqlClientBase) {
-      attachClientState(sqlClientBase, getSqlConnectOptions(), getAddressGroup());
+      attachClientState(sqlClientBase, VertxSqlClientUtil.getClientData());
     }
   }
 
@@ -56,9 +51,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
 
-      SqlConnectOptions sqlConnectOptions = getSqlConnectOptions(sqlClientBase);
-      setSqlConnectOptions(sqlConnectOptions);
-      setAddressGroup(getAddressGroup(sqlClientBase));
+      setClientData(VertxSqlClientSingletons.getClientData(sqlClientBase));
       return callDepth;
     }
 
@@ -68,8 +61,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      setSqlConnectOptions(null);
-      setAddressGroup(null);
+      setClientData(null);
     }
   }
 }

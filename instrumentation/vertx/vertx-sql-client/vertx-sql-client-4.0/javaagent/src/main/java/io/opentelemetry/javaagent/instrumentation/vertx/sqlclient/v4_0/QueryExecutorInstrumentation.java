@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystem;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientData;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -49,11 +48,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
-      // copy client data from ThreadLocal to VirtualField
-      VertxSqlClientUtil.setQueryExecutorData(
-          queryExecutor,
-          new VertxSqlClientData(
-              getSqlConnectOptions(), getDbSystem(), VertxSqlClientUtil.getAddressGroup()));
+      VertxSqlClientUtil.setQueryExecutorData(queryExecutor, getClientData());
     }
   }
 
@@ -122,24 +117,13 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         if (connectOptions == null) {
           return new AdviceScope(callDepth);
         }
-        // Prefer the db system captured when the prepared statement was created, then the value
-        // stored from the pool class (handles generic SqlConnectOptions), and finally fall back to
-        // class name detection on the connect options itself
         String dbSystem = data.getDbSystem();
         if (dbSystem == null) {
-          dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
-        }
-        if (dbSystem == null) {
           dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
+          data.resolveDbSystem(dbSystem);
         }
         VertxSqlClientRequest otelRequest =
-            new VertxSqlClientRequest(
-                sql,
-                connectOptions,
-                parameterizedQuery,
-                dbSystem,
-                batchSize,
-                data.getAddressGroup());
+            new VertxSqlClientRequest(sql, data, parameterizedQuery, batchSize);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return new AdviceScope(callDepth);

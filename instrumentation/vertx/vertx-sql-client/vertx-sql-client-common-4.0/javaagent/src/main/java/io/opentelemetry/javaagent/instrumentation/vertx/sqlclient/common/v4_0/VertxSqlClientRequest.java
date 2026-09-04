@@ -14,9 +14,7 @@ public class VertxSqlClientRequest {
   private final boolean parameterizedQuery;
   private final String dbSystemName;
   @Nullable private final Long operationBatchSize;
-  @Nullable private final SqlConnectOptions sqlConnectOptions;
-  @Nullable private final VertxSqlAddressGroup addressGroup;
-  private final boolean configuredServerTarget;
+  private final VertxSqlClientData clientData;
 
   public VertxSqlClientRequest(
       String queryText,
@@ -26,46 +24,21 @@ public class VertxSqlClientRequest {
       @Nullable Long operationBatchSize) {
     this(
         queryText,
-        sqlConnectOptions,
+        new VertxSqlClientData(sqlConnectOptions, dbSystemName),
         parameterizedQuery,
-        dbSystemName,
-        operationBatchSize,
-        null,
-        false);
+        operationBatchSize);
   }
 
   public VertxSqlClientRequest(
       String queryText,
-      @Nullable SqlConnectOptions sqlConnectOptions,
+      VertxSqlClientData clientData,
       boolean parameterizedQuery,
-      String dbSystemName,
-      @Nullable Long operationBatchSize,
-      @Nullable VertxSqlAddressGroup addressGroup) {
-    this(
-        queryText,
-        sqlConnectOptions,
-        parameterizedQuery,
-        dbSystemName,
-        operationBatchSize,
-        addressGroup,
-        true);
-  }
-
-  private VertxSqlClientRequest(
-      String queryText,
-      @Nullable SqlConnectOptions sqlConnectOptions,
-      boolean parameterizedQuery,
-      String dbSystemName,
-      @Nullable Long operationBatchSize,
-      @Nullable VertxSqlAddressGroup addressGroup,
-      boolean configuredServerTarget) {
+      @Nullable Long operationBatchSize) {
     this.queryText = queryText;
-    this.sqlConnectOptions = sqlConnectOptions;
     this.parameterizedQuery = parameterizedQuery;
-    this.dbSystemName = dbSystemName;
+    this.dbSystemName = clientData.getDbSystemName();
     this.operationBatchSize = operationBatchSize;
-    this.addressGroup = addressGroup != null ? addressGroup.withDbSystem(dbSystemName) : null;
-    this.configuredServerTarget = configuredServerTarget;
+    this.clientData = clientData;
   }
 
   public String getQueryText() {
@@ -74,36 +47,36 @@ public class VertxSqlClientRequest {
 
   @Nullable
   public String getUser() {
-    return sqlConnectOptions != null ? sqlConnectOptions.getUser() : null;
+    return clientData.getUser();
   }
 
   @Nullable
   public String getDatabase() {
-    return sqlConnectOptions != null ? sqlConnectOptions.getDatabase() : null;
+    return clientData.getDatabase();
   }
 
   @Nullable
   public String getHost() {
-    return sqlConnectOptions != null ? sqlConnectOptions.getHost() : null;
+    return clientData.getHost();
   }
 
   @Nullable
   public Integer getPort() {
-    return sqlConnectOptions != null ? sqlConnectOptions.getPort() : null;
+    return clientData.getPort();
   }
 
   @Nullable
   public String getConfiguredServerAddress() {
-    return addressGroup != null ? addressGroup.getAddress() : null;
+    return clientData.getConfiguredServerAddress();
   }
 
   @Nullable
   public Integer getConfiguredServerPort() {
-    return addressGroup != null ? addressGroup.getPort() : null;
+    return clientData.getConfiguredServerPort();
   }
 
   boolean hasConfiguredServerTarget() {
-    return configuredServerTarget;
+    return clientData.hasConfiguredServerTarget();
   }
 
   public boolean isParameterizedQuery() {

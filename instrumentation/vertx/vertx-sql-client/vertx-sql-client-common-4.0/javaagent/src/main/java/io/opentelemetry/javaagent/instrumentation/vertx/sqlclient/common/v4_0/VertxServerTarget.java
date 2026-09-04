@@ -10,7 +10,6 @@ import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
@@ -19,58 +18,62 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class VertxSqlAddressGroup {
+public class VertxServerTarget {
 
   private final List<Endpoint> endpoints;
-  @Nullable private final String address;
-  @Nullable private final Integer port;
+  private final boolean complete;
+  @Nullable private String address;
+  @Nullable private Integer port;
 
-  @Nullable
-  public static VertxSqlAddressGroup of(@Nullable SqlConnectOptions database) {
-    return of(database, null);
-  }
-
-  @Nullable
-  public static VertxSqlAddressGroup of(
-      @Nullable SqlConnectOptions database, @Nullable String dbSystem) {
+  public static VertxServerTarget create(@Nullable SqlConnectOptions database) {
+    List<Endpoint> endpoints = new ArrayList<>(1);
     Endpoint endpoint = Endpoint.from(database);
-    if (endpoint == null) {
-      return null;
+    if (endpoint != null) {
+      endpoints.add(endpoint);
     }
-    return new VertxSqlAddressGroup(singletonList(endpoint), dbSystem);
+    return new VertxServerTarget(endpoints, endpoint != null);
   }
 
-  @Nullable
-  public static VertxSqlAddressGroup of(@Nullable List<? extends SqlConnectOptions> databases) {
-    return of(databases, null);
+  public static VertxServerTarget create(
+      @Nullable SqlConnectOptions database, @Nullable String dbSystem) {
+    VertxServerTarget target = create(database);
+    target.resolveDbSystem(dbSystem);
+    return target;
   }
 
-  @Nullable
-  public static VertxSqlAddressGroup of(
-      @Nullable List<? extends SqlConnectOptions> databases, @Nullable String dbSystem) {
+  public static VertxServerTarget create(@Nullable List<? extends SqlConnectOptions> databases) {
     if (databases == null || databases.isEmpty()) {
-      return null;
+      return new VertxServerTarget(new ArrayList<>(), false);
     }
     List<Endpoint> endpoints = new ArrayList<>(databases.size());
+    boolean complete = true;
     for (SqlConnectOptions database : databases) {
       Endpoint endpoint = Endpoint.from(database);
       if (endpoint == null) {
-        return null;
+        complete = false;
+      } else {
+        endpoints.add(endpoint);
       }
-      endpoints.add(endpoint);
     }
-    return new VertxSqlAddressGroup(endpoints, dbSystem);
+    return new VertxServerTarget(endpoints, complete);
   }
 
-  private VertxSqlAddressGroup(List<Endpoint> endpoints, @Nullable String dbSystem) {
+  public static VertxServerTarget create(
+      @Nullable List<? extends SqlConnectOptions> databases, @Nullable String dbSystem) {
+    VertxServerTarget target = create(databases);
+    target.resolveDbSystem(dbSystem);
+    return target;
+  }
+
+  private VertxServerTarget(List<Endpoint> endpoints, boolean complete) {
     this.endpoints = endpoints;
-    DbServerTarget target = buildTarget(endpoints, dbSystem);
+    this.complete = complete;
+  }
+
+  public void resolveDbSystem(@Nullable String dbSystem) {
+    DbServerTarget target = complete ? buildTarget(endpoints, dbSystem) : null;
     address = target == null ? null : target.getAddress();
     port = target == null ? null : target.getPort();
-  }
-
-  public VertxSqlAddressGroup withDbSystem(@Nullable String dbSystem) {
-    return new VertxSqlAddressGroup(endpoints, dbSystem);
   }
 
   @Nullable
@@ -128,13 +131,9 @@ public class VertxSqlAddressGroup {
       if (database == null || database.getHost() == null) {
         return null;
       }
-      String host = database.getHost().trim();
-      if (host.isEmpty()) {
-        return null;
-      }
+      String host = database.getHost();
       boolean unixSocket = host.startsWith("/");
-      int configuredPort = database.getPort();
-      int port = configuredPort > 0 ? configuredPort : -1;
+      int port = database.getPort();
       DbServerTarget target =
           unixSocket
               ? DbServerTarget.unixSocket(host)

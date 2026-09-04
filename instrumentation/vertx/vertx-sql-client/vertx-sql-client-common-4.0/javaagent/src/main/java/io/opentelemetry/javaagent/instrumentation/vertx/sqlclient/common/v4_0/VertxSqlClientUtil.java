@@ -23,7 +23,6 @@ import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -32,22 +31,16 @@ public class VertxSqlClientUtil {
 
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
   private static final ThreadLocal<String> dbSystem = new ThreadLocal<>();
-  private static final ThreadLocal<VertxSqlAddressGroup> addressGroup = new ThreadLocal<>();
+  private static final ThreadLocal<VertxSqlClientData> clientData = new ThreadLocal<>();
   private static final VirtualField<Pool, SqlConnectOptions> POOL_CONNECT_OPTIONS =
       VirtualField.find(Pool.class, SqlConnectOptions.class);
-  private static final VirtualField<Pool, VertxSqlAddressGroup> POOL_ADDRESS_GROUP =
-      VirtualField.find(Pool.class, VertxSqlAddressGroup.class);
+  private static final VirtualField<Pool, VertxSqlClientData> POOL_CLIENT_DATA =
+      VirtualField.find(Pool.class, VertxSqlClientData.class);
   private static final Map<String, String> dbSystemNameByPackage = buildPackageDbSystemNameMap();
   private static final VirtualField<Promise<?>, RequestData> REQUEST_DATA =
       VirtualField.find(Promise.class, RequestData.class);
   private static final VirtualField<PreparedStatement, VertxSqlClientData> PREPARED_STATEMENT_DATA =
       VirtualField.find(PreparedStatement.class, VertxSqlClientData.class);
-
-  @Nullable
-  public static SqlConnectOptions firstDatabase(
-      @Nullable List<? extends SqlConnectOptions> databases) {
-    return databases == null || databases.isEmpty() ? null : databases.get(0);
-  }
 
   public static void setSqlConnectOptions(@Nullable SqlConnectOptions sqlConnectOptions) {
     if (sqlConnectOptions == null) {
@@ -75,17 +68,17 @@ public class VertxSqlClientUtil {
     return dbSystem.get();
   }
 
-  public static void setAddressGroup(@Nullable VertxSqlAddressGroup value) {
+  public static void setClientData(@Nullable VertxSqlClientData value) {
     if (value == null) {
-      addressGroup.remove();
+      clientData.remove();
     } else {
-      addressGroup.set(value);
+      clientData.set(value);
     }
   }
 
   @Nullable
-  public static VertxSqlAddressGroup getAddressGroup() {
-    return addressGroup.get();
+  public static VertxSqlClientData getClientData() {
+    return clientData.get();
   }
 
   public static void setPoolConnectOptions(Pool pool, SqlConnectOptions sqlConnectOptions) {
@@ -97,16 +90,16 @@ public class VertxSqlClientUtil {
     return POOL_CONNECT_OPTIONS.get(pool);
   }
 
-  public static void setPoolAddressGroup(Pool pool, @Nullable VertxSqlAddressGroup value) {
-    POOL_ADDRESS_GROUP.set(pool, value);
+  public static void setPoolClientData(Pool pool, @Nullable VertxSqlClientData value) {
+    POOL_CLIENT_DATA.set(pool, value);
   }
 
   @Nullable
-  public static VertxSqlAddressGroup getPoolAddressGroup(Pool pool) {
-    return POOL_ADDRESS_GROUP.get(pool);
+  public static VertxSqlClientData getPoolClientData(Pool pool) {
+    return POOL_CLIENT_DATA.get(pool);
   }
 
-  public static void setQueryExecutorData(Object queryExecutor, VertxSqlClientData data) {
+  public static void setQueryExecutorData(Object queryExecutor, @Nullable VertxSqlClientData data) {
     QueryExecutorUtil.setData(queryExecutor, data);
   }
 
@@ -116,7 +109,7 @@ public class VertxSqlClientUtil {
   }
 
   public static Future<PreparedStatement> attachPreparedStatementData(
-      Future<PreparedStatement> future, VertxSqlClientData data) {
+      Future<PreparedStatement> future, @Nullable VertxSqlClientData data) {
     return future.map(
         preparedStatement -> {
           PREPARED_STATEMENT_DATA.set(preparedStatement, data);
