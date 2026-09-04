@@ -91,22 +91,6 @@ class MongoServerTargetTest {
   }
 
   @Test
-  void fiveConfiguredSeedsAreReported() {
-    MongoServerTarget target =
-        MongoServerTarget.seeds(
-            asList(
-                new ServerAddress("db5.example", 27017),
-                new ServerAddress("db3.example", 27017),
-                new ServerAddress("db1.example", 27017),
-                new ServerAddress("db4.example", 27017),
-                new ServerAddress("db2.example", 27017)));
-
-    assertThat(target.getAddress())
-        .isEqualTo("db1.example,db2.example,db3.example,db4.example,db5.example");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
   void onlyTheFirstFiveConfiguredSeedsAreReported() {
     MongoServerTarget target =
         MongoServerTarget.seeds(

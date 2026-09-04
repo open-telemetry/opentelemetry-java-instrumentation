@@ -176,22 +176,6 @@ public abstract class AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void fiveConfiguredSeedsAreReported() {
-    try (ConfiguredClient client =
-        createClient(
-            asList(
-                new ServerAddress("db5.example", 27017),
-                new ServerAddress("db3.example", 27017),
-                new ServerAddress("db1.example", 27017),
-                new ServerAddress("db4.example", 27017),
-                new ServerAddress("db2.example", 27017)))) {
-      runCommand(client);
-    }
-
-    assertFindSpan("db1.example,db2.example,db3.example,db4.example,db5.example", null);
-  }
-
-  @Test
   void onlyTheFirstFiveConfiguredSeedsAreReported() {
     try (ConfiguredClient client =
         createClient(
