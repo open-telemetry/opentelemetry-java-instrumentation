@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.clickhouse.client.ClickHouseClient;
+import com.clickhouse.client.ClickHouseNode;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseRequestAccess;
 import com.clickhouse.client.config.ClickHouseDefaults;
@@ -58,14 +59,16 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
         return null;
       }
 
+      ClickHouseNode server = clickHouseRequest.getServer();
+      String host = server.getHost();
+      int port = server.getPort();
       ClickHouseDbRequest request =
           ClickHouseDbRequest.create(
-              clickHouseRequest.getServer().getHost(),
-              clickHouseRequest.getServer().getPort(),
-              clickHouseRequest
-                  .getServer()
-                  .getDatabase()
-                  .orElse(ClickHouseDefaults.DATABASE.getDefaultValue().toString()),
+              host,
+              port,
+              ClickHouseClientV1Singletons.peerEndpoint(host, port),
+              ClickHouseClientV1Singletons.serverTarget(clickHouseRequest),
+              server.getDatabase().orElse(ClickHouseDefaults.DATABASE.getDefaultValue().toString()),
               ClickHouseRequestAccess.getQuery(clickHouseRequest));
 
       return ClickHouseScope.start(instrumenter(), currentContext(), request);

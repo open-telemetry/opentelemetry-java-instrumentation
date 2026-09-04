@@ -6,10 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.Collection;
 import java.util.function.Function;
@@ -61,12 +63,32 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   @Nullable
   @Override
   public String getServerAddress(ClickHouseDbRequest request) {
+    if (emitStableDatabaseSemconv()) {
+      DbServerTarget serverTarget = request.getServerTarget();
+      return serverTarget == null ? null : serverTarget.getAddress();
+    }
     return request.getHost();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(ClickHouseDbRequest request) {
+    if (emitStableDatabaseSemconv()) {
+      DbServerTarget serverTarget = request.getServerTarget();
+      return serverTarget == null ? null : serverTarget.getPort();
+    }
     return request.getPort();
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(ClickHouseDbRequest request, @Nullable Void response) {
+    return emitStableDatabaseSemconv() ? request.getPeerAddress() : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(ClickHouseDbRequest request, @Nullable Void response) {
+    return emitStableDatabaseSemconv() ? request.getPeerPort() : null;
   }
 }
