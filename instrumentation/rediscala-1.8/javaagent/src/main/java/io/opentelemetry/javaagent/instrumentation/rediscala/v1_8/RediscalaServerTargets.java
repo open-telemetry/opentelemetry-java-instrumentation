@@ -67,8 +67,7 @@ public class RediscalaServerTargets {
       findMethod(MUTABLE_POOL_CLASS, "redisServerConnections");
 
   @Nullable
-  static final Class<?> SENTINEL_MASTER_SLAVES_CLASS =
-      findClass(SENTINEL_MASTER_SLAVES_CLASS_NAME);
+  static final Class<?> SENTINEL_MASTER_SLAVES_CLASS = findClass(SENTINEL_MASTER_SLAVES_CLASS_NAME);
 
   @Nullable
   private static final Method SENTINEL_MASTER_SLAVES_SENTINELS =
@@ -123,8 +122,7 @@ public class RediscalaServerTargets {
           POOL_REQUEST_TARGET, (RoundRobinPoolRequest) client);
     }
     if (CLUSTER_CLASS != null && CLUSTER_CLASS.isInstance(client)) {
-      return RediscalaSingletons.getServerTarget(
-          CLUSTER_TARGET, (RedisClientPoolLike) client);
+      return RediscalaSingletons.getServerTarget(CLUSTER_TARGET, (RedisClientPoolLike) client);
     }
     return of(client);
   }
@@ -246,8 +244,7 @@ public class RediscalaServerTargets {
         continue;
       }
       endpoints.add(
-          RedisServerTarget.endpoint(
-              (String) endpoint._1(), ((Number) endpoint._2()).intValue()));
+          RedisServerTarget.endpoint((String) endpoint._1(), ((Number) endpoint._2()).intValue()));
     }
     return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, master);
   }
