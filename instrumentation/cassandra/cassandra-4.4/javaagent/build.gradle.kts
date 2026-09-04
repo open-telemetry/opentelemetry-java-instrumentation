@@ -71,7 +71,7 @@ tasks {
     name: String,
     version: String,
     semconvOptIn: String? = null,
-    responsePeerOnly: Boolean = false,
+    peerSourceOnly: Boolean = false,
   ): org.gradle.api.tasks.TaskProvider<Test> {
     val shadedClasspath =
       configurations.create("${name}RuntimeClasspath") {
@@ -91,7 +91,7 @@ tasks {
       if (otelProps.denyUnsafe) {
         systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
       }
-      if (responsePeerOnly) {
+      if (peerSourceOnly) {
         filter {
           includeTestsMatching("*CassandraTest.responsePeerComesFromTheChannel")
           includeTestsMatching("*CassandraTest.sniNetworkPeerIsTheResponseChannelProxy")
@@ -112,7 +112,7 @@ tasks {
       "testShadedBothSemconv",
       "4.4.0",
       semconvOptIn = "database/dup",
-      responsePeerOnly = true,
+      peerSourceOnly = true,
     )
   val testShadedLatest = registerShadedTest("testShadedLatest", "4.17.0")
   val testShadedLatestStableSemconv =
@@ -122,7 +122,7 @@ tasks {
       "testShadedLatestBothSemconv",
       "4.17.0",
       semconvOptIn = "database/dup",
-      responsePeerOnly = true,
+      peerSourceOnly = true,
     )
 
   check {
