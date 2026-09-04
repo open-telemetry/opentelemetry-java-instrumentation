@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -61,7 +62,7 @@ final class OpenSearchRestAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    OpenSearchServerTarget target = request.getServerTarget();
+    DbServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;
   }
 
@@ -71,7 +72,7 @@ final class OpenSearchRestAttributesGetter
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    OpenSearchServerTarget target = request.getServerTarget();
+    DbServerTarget target = request.getServerTarget();
     return target != null ? target.getPort() : null;
   }
 

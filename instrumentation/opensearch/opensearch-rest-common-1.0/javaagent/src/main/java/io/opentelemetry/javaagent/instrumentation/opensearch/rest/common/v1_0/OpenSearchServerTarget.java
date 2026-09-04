@@ -12,11 +12,8 @@ import javax.annotation.Nullable;
 
 public class OpenSearchServerTarget {
 
-  private final String address;
-  @Nullable private final Integer port;
-
   @Nullable
-  public static OpenSearchServerTarget of(@Nullable List<Endpoint> endpoints) {
+  public static DbServerTarget of(@Nullable List<Endpoint> endpoints) {
     if (endpoints == null || endpoints.isEmpty()) {
       return null;
     }
@@ -25,15 +22,7 @@ public class OpenSearchServerTarget {
     for (Endpoint endpoint : endpoints) {
       builder.addEndpoint(endpoint.host, endpoint.port, defaultPort(endpoint));
     }
-    DbServerTarget target = builder.build();
-    return target == null
-        ? null
-        : new OpenSearchServerTarget(target.getAddress(), target.getPort());
-  }
-
-  private OpenSearchServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
+    return builder.build();
   }
 
   private static int defaultPort(Endpoint endpoint) {
@@ -44,15 +33,6 @@ public class OpenSearchServerTarget {
       return 443;
     }
     return -1;
-  }
-
-  public String getAddress() {
-    return address;
-  }
-
-  @Nullable
-  public Integer getPort() {
-    return port;
   }
 
   public static class Endpoint {
@@ -67,4 +47,6 @@ public class OpenSearchServerTarget {
       this.scheme = scheme;
     }
   }
+
+  private OpenSearchServerTarget() {}
 }
