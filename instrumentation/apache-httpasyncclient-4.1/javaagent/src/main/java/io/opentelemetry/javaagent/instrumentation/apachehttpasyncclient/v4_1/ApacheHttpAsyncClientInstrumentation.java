@@ -86,18 +86,19 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       Context parentContext = currentContext();
       boolean captureNetworkPeer = NetworkPeerCapture.isActive(parentContext);
       HttpContext httpContext = originalHttpContext;
-      HttpAsyncResponseConsumer<?> modifiedResponseConsumer = responseConsumer;
-      if (captureNetworkPeer) {
-        if (httpContext == null) {
-          httpContext = new BasicHttpContext();
-        }
-        modifiedResponseConsumer =
-            new NetworkPeerResponseConsumer<>(parentContext, httpContext, responseConsumer);
+      if (captureNetworkPeer && httpContext == null) {
+        httpContext = new BasicHttpContext();
       }
-
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(
               parentContext, httpContext, futureCallback, captureNetworkPeer);
+      HttpAsyncResponseConsumer<?> modifiedResponseConsumer = responseConsumer;
+      if (captureNetworkPeer) {
+        modifiedResponseConsumer =
+            new NetworkPeerResponseConsumer<>(
+                parentContext, httpContext, responseConsumer, wrappedFutureCallback);
+      }
+
       HttpAsyncRequestProducer modifiedRequestProducer =
           new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
       return new Object[] {
@@ -175,17 +176,22 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final Context parentContext;
     private final HttpContext httpContext;
     private final HttpAsyncResponseConsumer<T> delegate;
+    private final WrappedFutureCallback<?> wrappedFutureCallback;
 
     public NetworkPeerResponseConsumer(
-        Context parentContext, HttpContext httpContext, HttpAsyncResponseConsumer<T> delegate) {
+        Context parentContext,
+        HttpContext httpContext,
+        HttpAsyncResponseConsumer<T> delegate,
+        WrappedFutureCallback<?> wrappedFutureCallback) {
       this.parentContext = parentContext;
       this.httpContext = httpContext;
       this.delegate = delegate;
+      this.wrappedFutureCallback = wrappedFutureCallback;
     }
 
     @Override
     public void responseReceived(HttpResponse response) throws IOException, HttpException {
-      capture(parentContext, httpContext);
+      capture(parentContext, httpContext, wrappedFutureCallback.otelRequest);
       delegate.responseReceived(response);
     }
 
@@ -229,7 +235,10 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       delegate.close();
     }
 
-    private static void capture(Context parentContext, @Nullable HttpContext httpContext) {
+    private static void capture(
+        Context parentContext,
+        @Nullable HttpContext httpContext,
+        @Nullable ApacheHttpClientRequest request) {
       if (httpContext == null) {
         return;
       }
@@ -243,7 +252,11 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       if (remoteAddress == null || remotePort < 0) {
         return;
       }
-      NetworkPeerCapture.capture(parentContext, new InetSocketAddress(remoteAddress, remotePort));
+      InetSocketAddress peerAddress = new InetSocketAddress(remoteAddress, remotePort);
+      NetworkPeerCapture.capture(parentContext, peerAddress);
+      if (request != null) {
+        request.setNetworkPeerAddress(peerAddress);
+      }
     }
   }
 
@@ -289,7 +302,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Override
     public void failed(Exception ex) {
       if (captureNetworkPeer) {
-        NetworkPeerResponseConsumer.capture(parentContext, httpContext);
+        NetworkPeerResponseConsumer.capture(parentContext, httpContext, otelRequest);
       }
       if (context == null) {
         // this is unexpected
@@ -309,7 +322,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Override
     public void cancelled() {
       if (captureNetworkPeer) {
-        NetworkPeerResponseConsumer.capture(parentContext, httpContext);
+        NetworkPeerResponseConsumer.capture(parentContext, httpContext, otelRequest);
       }
       if (context == null) {
         // this is unexpected
