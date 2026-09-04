@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -21,6 +21,9 @@ public class ClickHouseClientV2InstrumentationModule extends InstrumentationModu
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ClickHouseClientV2Instrumentation());
+    return asList(
+        new ClickHouseClientV2Instrumentation(),
+        new ClickHouseClientV2NodeInstrumentation(),
+        new ClickHouseClientV2NodeSelectorInstrumentation());
   }
 }
