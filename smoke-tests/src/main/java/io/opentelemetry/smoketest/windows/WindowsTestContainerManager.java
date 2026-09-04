@@ -138,9 +138,11 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       boolean setServiceName,
+      boolean logOutput,
       List<ResourceMapping> extraResources,
       List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
+      String[] entrypoint,
       String[] cmd) {
     if (extraPorts != null && !extraPorts.isEmpty()) {
       throw new UnsupportedOperationException("extra ports not supported");
@@ -173,6 +175,9 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
                   .withEnv(environment);
               if (cmd != null) {
                 command.withCmd(cmd);
+              }
+              if (entrypoint != null) {
+                command.withEntrypoint(entrypoint);
               }
             },
             containerId -> {
