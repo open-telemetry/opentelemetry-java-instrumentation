@@ -80,15 +80,12 @@ class SpymemcachedRequestTest {
     SpymemcachedRequestHolder.associateOperation(context, initialOperation);
     SpymemcachedRequestHolder.captureHandlingNode(context, initialOperation);
 
-    SpymemcachedRequestHolder.RetryScope retryScope =
-        SpymemcachedRequestHolder.startRetry(initialOperation);
-    assertThat(retryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope retryScope =
+        SpymemcachedRequestHolder.startRetry(initialOperation)) {
+      assertThat(retryScope).isNotNull();
       Operation retryOperation = operation("two.example", 11212);
       SpymemcachedRequestHolder.associateOperation(Context.current(), retryOperation);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), retryOperation);
-    } finally {
-      retryScope.close();
     }
 
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
@@ -105,15 +102,12 @@ class SpymemcachedRequestTest {
     SpymemcachedRequestHolder.associateOperation(context, initialOperation);
     SpymemcachedRequestHolder.captureHandlingNode(context, initialOperation);
 
-    SpymemcachedRequestHolder.RetryScope retryScope =
-        SpymemcachedRequestHolder.startRetry(initialOperation);
-    assertThat(retryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope retryScope =
+        SpymemcachedRequestHolder.startRetry(initialOperation)) {
+      assertThat(retryScope).isNotNull();
       Operation retryOperation = operation("two.example", 11212, "two");
       SpymemcachedRequestHolder.associateOperation(Context.current(), retryOperation);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), retryOperation);
-    } finally {
-      retryScope.close();
     }
 
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
@@ -129,15 +123,12 @@ class SpymemcachedRequestTest {
     SpymemcachedRequestHolder.associateOperation(context, initialOperation);
     SpymemcachedRequestHolder.captureHandlingNode(context, initialOperation);
 
-    SpymemcachedRequestHolder.RetryScope retryScope =
-        SpymemcachedRequestHolder.startRetry(initialOperation);
-    assertThat(retryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope retryScope =
+        SpymemcachedRequestHolder.startRetry(initialOperation)) {
+      assertThat(retryScope).isNotNull();
       Operation retryOperation = operation(node, "two");
       SpymemcachedRequestHolder.associateOperation(Context.current(), retryOperation);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), retryOperation);
-    } finally {
-      retryScope.close();
     }
 
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("one.example", 11211));
@@ -153,18 +144,15 @@ class SpymemcachedRequestTest {
     SpymemcachedRequestHolder.captureHandlingNode(context, initialOperation);
 
     MemcachedNode retryNode = memcachedNode("two.example", 11212);
-    SpymemcachedRequestHolder.RetryScope retryScope =
-        SpymemcachedRequestHolder.startRetry(initialOperation);
-    assertThat(retryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope retryScope =
+        SpymemcachedRequestHolder.startRetry(initialOperation)) {
+      assertThat(retryScope).isNotNull();
       Operation firstRetry = operation(retryNode, "one");
       SpymemcachedRequestHolder.associateOperation(Context.current(), firstRetry);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), firstRetry);
       Operation secondRetry = operation(retryNode, "two");
       SpymemcachedRequestHolder.associateOperation(Context.current(), secondRetry);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondRetry);
-    } finally {
-      retryScope.close();
     }
 
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
@@ -179,18 +167,15 @@ class SpymemcachedRequestTest {
     SpymemcachedRequestHolder.associateOperation(context, initialOperation);
     SpymemcachedRequestHolder.captureHandlingNode(context, initialOperation);
 
-    SpymemcachedRequestHolder.RetryScope retryScope =
-        SpymemcachedRequestHolder.startRetry(initialOperation);
-    assertThat(retryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope retryScope =
+        SpymemcachedRequestHolder.startRetry(initialOperation)) {
+      assertThat(retryScope).isNotNull();
       Operation firstRetry = operation("two.example", 11212, "one");
       SpymemcachedRequestHolder.associateOperation(Context.current(), firstRetry);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), firstRetry);
       Operation secondRetry = operation("three.example", 11213, "two");
       SpymemcachedRequestHolder.associateOperation(Context.current(), secondRetry);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondRetry);
-    } finally {
-      retryScope.close();
     }
 
     assertThat(request.getHandlingNodeAddress()).isNull();
@@ -206,25 +191,19 @@ class SpymemcachedRequestTest {
     SpymemcachedRequestHolder.captureHandlingNode(context, initialOperation);
 
     Operation firstRetry = operation("two.example", 11212, "one");
-    SpymemcachedRequestHolder.RetryScope firstRetryScope =
-        SpymemcachedRequestHolder.startRetry(initialOperation);
-    assertThat(firstRetryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope firstRetryScope =
+        SpymemcachedRequestHolder.startRetry(initialOperation)) {
+      assertThat(firstRetryScope).isNotNull();
       SpymemcachedRequestHolder.associateOperation(Context.current(), firstRetry);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), firstRetry);
-    } finally {
-      firstRetryScope.close();
     }
 
-    SpymemcachedRequestHolder.RetryScope secondRetryScope =
-        SpymemcachedRequestHolder.startRetry(firstRetry);
-    assertThat(secondRetryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope secondRetryScope =
+        SpymemcachedRequestHolder.startRetry(firstRetry)) {
+      assertThat(secondRetryScope).isNotNull();
       Operation secondRetry = operation("three.example", 11213, "one");
       SpymemcachedRequestHolder.associateOperation(Context.current(), secondRetry);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondRetry);
-    } finally {
-      secondRetryScope.close();
     }
 
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("three.example", 11213));
@@ -242,38 +221,29 @@ class SpymemcachedRequestTest {
     MemcachedNode firstRetryNode = memcachedNode("two.example", 11212);
     Operation firstKeyRetry = operation(firstRetryNode, "one");
     Operation secondKeyRetry = operation(firstRetryNode, "two");
-    SpymemcachedRequestHolder.RetryScope firstRetryScope =
-        SpymemcachedRequestHolder.startRetry(initialOperation);
-    assertThat(firstRetryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope firstRetryScope =
+        SpymemcachedRequestHolder.startRetry(initialOperation)) {
+      assertThat(firstRetryScope).isNotNull();
       SpymemcachedRequestHolder.associateOperation(Context.current(), firstKeyRetry);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), firstKeyRetry);
       SpymemcachedRequestHolder.associateOperation(Context.current(), secondKeyRetry);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondKeyRetry);
-    } finally {
-      firstRetryScope.close();
     }
 
-    SpymemcachedRequestHolder.RetryScope firstKeyRetryScope =
-        SpymemcachedRequestHolder.startRetry(firstKeyRetry);
-    assertThat(firstKeyRetryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope firstKeyRetryScope =
+        SpymemcachedRequestHolder.startRetry(firstKeyRetry)) {
+      assertThat(firstKeyRetryScope).isNotNull();
       Operation operation = operation("three.example", 11213, "one");
       SpymemcachedRequestHolder.associateOperation(Context.current(), operation);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), operation);
-    } finally {
-      firstKeyRetryScope.close();
     }
 
-    SpymemcachedRequestHolder.RetryScope secondKeyRetryScope =
-        SpymemcachedRequestHolder.startRetry(secondKeyRetry);
-    assertThat(secondKeyRetryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope secondKeyRetryScope =
+        SpymemcachedRequestHolder.startRetry(secondKeyRetry)) {
+      assertThat(secondKeyRetryScope).isNotNull();
       Operation operation = operation("four.example", 11214, "two");
       SpymemcachedRequestHolder.associateOperation(Context.current(), operation);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), operation);
-    } finally {
-      secondKeyRetryScope.close();
     }
 
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("four.example", 11214));
@@ -296,18 +266,15 @@ class SpymemcachedRequestTest {
     SpymemcachedRequestHolder.propagateOperation(optimizedOperation, firstOperation);
     SpymemcachedRequestHolder.propagateOperation(optimizedOperation, secondOperation);
 
-    SpymemcachedRequestHolder.RetryScope retryScope =
-        SpymemcachedRequestHolder.startRetry(optimizedOperation);
-    assertThat(retryScope).isNotNull();
-    try {
+    try (SpymemcachedRequestHolder.RetryScope retryScope =
+        SpymemcachedRequestHolder.startRetry(optimizedOperation)) {
+      assertThat(retryScope).isNotNull();
       Operation firstRetry = operation("two.example", 11212, "one");
       SpymemcachedRequestHolder.associateOperation(Context.current(), firstRetry);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), firstRetry);
       Operation secondRetry = operation("three.example", 11213, "two");
       SpymemcachedRequestHolder.associateOperation(Context.current(), secondRetry);
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondRetry);
-    } finally {
-      retryScope.close();
     }
 
     assertThat(firstRequest.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
