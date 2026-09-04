@@ -59,14 +59,15 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(openSearchSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}")),
+                                withServer(
+                                    equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                    equalTo(maybeStable(DB_OPERATION), "POST"),
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}"))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -133,14 +134,15 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(openSearchSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message2\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message3\":{\"value\":\"?\"}}}}")),
+                                withServer(
+                                    equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                    equalTo(maybeStable(DB_OPERATION), "POST"),
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message2\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message3\":{\"value\":\"?\"}}}}"))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -216,12 +218,15 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(openSearchSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(maybeStable(DB_STATEMENT), "POST /test-search-index/_doc")),
+                                withServer(
+                                    equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                    equalTo(maybeStable(DB_OPERATION), "POST"),
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "POST /test-search-index/_doc"))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -246,12 +251,13 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(openSearchSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(maybeStable(DB_STATEMENT), expected)),
+                                withServer(
+                                    equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                    equalTo(maybeStable(DB_OPERATION), "POST"),
+                                    equalTo(maybeStable(DB_STATEMENT), expected))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
