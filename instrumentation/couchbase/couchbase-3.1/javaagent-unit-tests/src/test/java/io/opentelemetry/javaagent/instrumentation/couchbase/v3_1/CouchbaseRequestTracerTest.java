@@ -23,12 +23,13 @@ import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.Couchbas
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 
 class CouchbaseRequestTracerTest {
 
   @Test
-  void capturesPeerForLegacyDispatchSpanName() throws Exception {
+  void capturesPeerForLegacyDispatchSpanName() throws UnknownHostException {
     assumeTrue(emitStableDatabaseSemconv());
     RequestTracer tracer =
         CouchbaseRequestTracer.create(OpenTelemetry.noop().getTracer("test-couchbase"));
