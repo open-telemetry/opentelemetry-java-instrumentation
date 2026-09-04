@@ -33,12 +33,12 @@ class LettuceReactiveSubscriptionInstrumentation implements TypeInstrumentation 
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.FieldValue("command") RedisCommand<?, ?, ?> command) {
-      LettuceSingletons.enterReactiveCommand(command);
+      LettuceReactiveCommandContext.enter(command);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit() {
-      LettuceSingletons.exitReactiveCommand();
+      LettuceReactiveCommandContext.exit();
     }
   }
 }
