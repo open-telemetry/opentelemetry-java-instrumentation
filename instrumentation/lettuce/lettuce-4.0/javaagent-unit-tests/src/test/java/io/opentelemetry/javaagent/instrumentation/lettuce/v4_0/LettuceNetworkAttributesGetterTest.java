@@ -90,7 +90,7 @@ class LettuceNetworkAttributesGetterTest {
     ChannelHandlerContext context = mock(ChannelHandlerContext.class);
     when(context.channel()).thenReturn(channel);
 
-    LettuceConnectionInstrumentation.WriteAdvice.onEnter(context, command);
+    LettuceCommandHandlerInstrumentation.WriteAdvice.onEnter(context, command);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
