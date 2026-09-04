@@ -97,6 +97,15 @@ public final class RedisServerTarget {
     this.port = port;
   }
 
+  public String getAddress() {
+    return address;
+  }
+
+  @Nullable
+  public Integer getPort() {
+    return port;
+  }
+
   @Nullable
   private static RedisServerTarget createFromEndpoints(
       @Nullable List<String> endpoints, boolean unordered) {
@@ -258,15 +267,6 @@ public final class RedisServerTarget {
     } else {
       builder.append(host);
     }
-  }
-
-  public String getAddress() {
-    return address;
-  }
-
-  @Nullable
-  public Integer getPort() {
-    return port;
   }
 
   private static final class Endpoint {
