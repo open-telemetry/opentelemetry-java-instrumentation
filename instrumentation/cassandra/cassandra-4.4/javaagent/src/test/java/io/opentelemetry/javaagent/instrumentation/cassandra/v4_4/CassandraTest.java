@@ -135,7 +135,9 @@ class CassandraTest extends AbstractCassandra44Test {
                                       equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
                                       equalTo(DB_SYSTEM_NAME, "cassandra"),
                                       equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                      equalTo(NETWORK_PEER_PORT, cassandraPort)))));
+                                      equalTo(NETWORK_PEER_PORT, cassandraPort),
+                                      equalTo(SERVER_ADDRESS, "localhost"),
+                                      equalTo(SERVER_PORT, cassandraPort)))));
     }
   }
 
