@@ -828,7 +828,11 @@ class VertxSqlClientTest {
                       equalTo(DB_OPERATION, "SELECT"),
                       equalTo(DB_SQL_TABLE, "test"),
                       equalTo(SERVER_ADDRESS, expectedStableAddress),
-                      equalTo(ERROR_TYPE, error != null ? PgException.class.getName() : null));
+                      equalTo(
+                          ERROR_TYPE,
+                          error != null
+                              ? "io.netty.channel.AbstractChannel$AnnotatedConnectException"
+                              : null));
     } else {
       operationSpan =
           span ->
@@ -856,7 +860,7 @@ class VertxSqlClientTest {
                       equalTo(
                           ERROR_TYPE,
                           emitStableDatabaseSemconv() && error != null
-                              ? PgException.class.getName()
+                              ? "io.netty.channel.AbstractChannel$AnnotatedConnectException"
                               : null));
     }
     if (error == null) {
