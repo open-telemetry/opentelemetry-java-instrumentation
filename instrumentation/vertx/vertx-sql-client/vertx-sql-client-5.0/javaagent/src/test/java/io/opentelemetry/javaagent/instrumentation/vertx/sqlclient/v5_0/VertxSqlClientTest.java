@@ -778,7 +778,7 @@ class VertxSqlClientTest {
                                 emitStableDatabaseSemconv() ? null : "test"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, Long.valueOf(port)))));
+                            equalTo(SERVER_PORT, port))));
   }
 
   private static void assertServerGroup(TraceAssert trace, int secondPort) {
@@ -884,7 +884,7 @@ class VertxSqlClientTest {
                     equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
                     equalTo(maybeStablePeerService(), "test-peer-service"),
                     equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, Long.valueOf(port))));
+                    equalTo(SERVER_PORT, port)));
   }
 
   private static void assertSupplierTarget(TraceAssert trace) {
