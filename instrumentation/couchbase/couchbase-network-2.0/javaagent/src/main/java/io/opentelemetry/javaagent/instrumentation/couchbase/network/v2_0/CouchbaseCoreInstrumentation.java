@@ -54,9 +54,9 @@ class CouchbaseCoreInstrumentation implements TypeInstrumentation {
       Context currentContext = Java8BytecodeBridge.currentContext();
       requestInfo = CouchbaseRequestInfo.get(currentContext);
       if (requestInfo != null) {
-        // The scope from the initial rxJava subscribe is not available to the networking layer
-        // To transfer the request info it is added to the context store. Unlike couchbase-2.6,
-        // The core-io versions before 1.6.0 have no CouchbaseRequest.operationId() to record here.
+        // The scope from the initial RxJava subscribe is not available to the networking layer.
+        // To transfer the request info, it is added to the context store. Unlike couchbase-2.6,
+        // the core-io versions before 1.6.0 have no CouchbaseRequest.operationId() to record here.
         COUCHBASE_REQUEST_INFO.set(request, requestInfo);
       }
     }
