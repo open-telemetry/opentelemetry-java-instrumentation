@@ -41,7 +41,7 @@ class CassandraEndpointAttributesTest {
 
   // SniEndPoint.resolve() always looks the proxy host up with
   // InetAddress.getAllByName(proxyAddress.getHostName()), so an unresolved literal keeps every test
-  // offline and deterministic. A resolved address would make getHostName() do a reverse dns lookup
+  // offline and deterministic. A resolved address would make getHostName() do a reverse DNS lookup
   // and the driver would then resolve whatever name came back.
   private static final InetSocketAddress PROXY_ADDRESS =
       InetSocketAddress.createUnresolved("127.0.0.1", 29042);
