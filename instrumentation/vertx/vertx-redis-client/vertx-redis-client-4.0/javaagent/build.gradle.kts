@@ -32,6 +32,12 @@ testing {
     }
 
     register<JvmTestSuite>("test403") {
+      sources {
+        java {
+          srcDir("src/testCompatibility/java")
+        }
+      }
+
       dependencies {
         implementation("io.vertx:vertx-redis-client:4.0.3")
         implementation("io.vertx:vertx-codegen:4.0.3")
@@ -39,6 +45,12 @@ testing {
       }
     }
     register<JvmTestSuite>("test445") {
+      sources {
+        java {
+          srcDir("src/testCompatibility/java")
+        }
+      }
+
       dependencies {
         implementation("io.vertx:vertx-redis-client:4.4.5")
         implementation("io.vertx:vertx-codegen:4.4.5")
@@ -73,8 +85,7 @@ tasks {
         filter {
           includeTestsMatching("*VertxRedisClientTest.setCommand")
           includeTestsMatching("*VertxRedisClientTest.concurrentClientsKeepDistinctConfiguredTargets")
-          includeTestsMatching("*VertxRedisClient403Test.optionsReuseDoesNotChangeClientTarget")
-          includeTestsMatching("*VertxRedisClient445Test.optionsReuseDoesNotChangeClientTarget")
+          includeTestsMatching("*VertxRedisClientTargetTest.optionsReuseDoesNotChangeClientTarget")
         }
 
         jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,service.peer")
