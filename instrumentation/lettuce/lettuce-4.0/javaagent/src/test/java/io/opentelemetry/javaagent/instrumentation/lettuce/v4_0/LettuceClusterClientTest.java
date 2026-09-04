@@ -110,26 +110,26 @@ class LettuceClusterClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, null),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("PIPELINE SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, null),
+                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? Long.valueOf(2) : null))));
