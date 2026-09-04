@@ -200,7 +200,9 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     return UrlParsingUtils.extractHostPort(serverName).port() != null;
   }
 
-  /** Append a SQL Server address, bracketing an unbracketed IPv6 host and preserving its instance. */
+  /**
+   * Append a SQL Server address, bracketing an unbracketed IPv6 host and preserving its instance.
+   */
   private static void appendServerAddress(StringBuilder group, String serverAddress) {
     int instanceStart = serverAddress.indexOf('\\');
     String hostPort = instanceStart < 0 ? serverAddress : serverAddress.substring(0, instanceStart);
