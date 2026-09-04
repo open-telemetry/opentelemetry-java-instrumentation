@@ -38,12 +38,12 @@ public abstract class ClickHouseDbRequest {
 
   @Nullable
   public final String getPeerAddress() {
-    return getPeer().address;
+    return getPeer().value.address;
   }
 
   @Nullable
   public final Integer getPeerPort() {
-    return getPeer().port;
+    return getPeer().value.port;
   }
 
   public final void setPeer(@Nullable String address, @Nullable Integer port) {
@@ -65,15 +65,22 @@ public abstract class ClickHouseDbRequest {
   public abstract String getSql();
 
   public static class Endpoint {
-    @Nullable private volatile String address;
-    @Nullable private volatile Integer port;
+    private volatile EndpointValue value;
 
     private Endpoint(@Nullable String address, @Nullable Integer port) {
-      this.address = address;
-      this.port = port;
+      value = new EndpointValue(address, port);
     }
 
     private void set(@Nullable String address, @Nullable Integer port) {
+      value = new EndpointValue(address, port);
+    }
+  }
+
+  private static class EndpointValue {
+    @Nullable private final String address;
+    @Nullable private final Integer port;
+
+    private EndpointValue(@Nullable String address, @Nullable Integer port) {
       this.address = address;
       this.port = port;
     }
