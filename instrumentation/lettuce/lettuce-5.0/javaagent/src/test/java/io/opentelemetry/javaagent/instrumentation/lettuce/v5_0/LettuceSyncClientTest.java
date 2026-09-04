@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -14,6 +15,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
@@ -189,9 +191,24 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_SYSTEM : DB_SYSTEM_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? REDIS
+                                    : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_STATEMENT : DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET TESTSETKEY ?"
+                                    : null),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_OPERATION : DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET"
+                                    : null))));
 
     if (emitStableDatabaseSemconv()) {
       assertDurationMetric(
