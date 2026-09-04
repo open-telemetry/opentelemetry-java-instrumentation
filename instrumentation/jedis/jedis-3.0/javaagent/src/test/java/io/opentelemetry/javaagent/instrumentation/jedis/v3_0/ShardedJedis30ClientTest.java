@@ -32,7 +32,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.BeforeAll;
@@ -140,23 +139,16 @@ class ShardedJedis30ClientTest {
 
   private static List<AttributeAssertion> attributes(
       String operation, String queryText, String selectedHost, int selectedPort) {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(maybeStable(DB_SYSTEM), REDIS),
-                equalTo(maybeStable(DB_STATEMENT), queryText),
-                equalTo(maybeStable(DB_OPERATION), operation),
-                equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null)));
-    if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(SERVER_ADDRESS, configuredTarget));
-    } else {
-      assertions.add(equalTo(maybeStablePeerService(), "test-peer-service"));
-      assertions.add(equalTo(SERVER_ADDRESS, selectedHost));
-      assertions.add(equalTo(SERVER_PORT, selectedPort));
-    }
-    assertions.add(equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null));
-    assertions.add(equalTo(NETWORK_PEER_ADDRESS, shardIp));
-    assertions.add(satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative));
-    return assertions;
+    return asList(
+        equalTo(maybeStable(DB_SYSTEM), REDIS),
+        equalTo(maybeStable(DB_STATEMENT), queryText),
+        equalTo(maybeStable(DB_OPERATION), operation),
+        equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+        equalTo(maybeStablePeerService(), emitStableDatabaseSemconv() ? null : "test-peer-service"),
+        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? configuredTarget : selectedHost),
+        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) selectedPort),
+        equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+        equalTo(NETWORK_PEER_ADDRESS, shardIp),
+        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative));
   }
 }
