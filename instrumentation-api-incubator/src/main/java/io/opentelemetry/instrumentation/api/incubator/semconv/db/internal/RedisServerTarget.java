@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import javax.annotation.Nullable;
@@ -81,7 +80,7 @@ public final class RedisServerTarget {
     if (rendered.isEmpty()) {
       return ofLogicalName(logicalName);
     }
-    Collections.sort(rendered);
+    rendered.sort(String::compareTo);
     String address = renderEndpointList(rendered);
     if (address == null) {
       return ofLogicalName(logicalName);
