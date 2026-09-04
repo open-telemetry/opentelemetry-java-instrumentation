@@ -38,9 +38,9 @@ testing {
     // pools over a list of servers were added in 4.2, and the module's own tests run against 4.0
     register<JvmTestSuite>("vertx42Test") {
       dependencies {
-        implementation("io.vertx:vertx-sql-client:4.2.0")
-        implementation("io.vertx:vertx-pg-client:4.2.0")
-        implementation("io.vertx:vertx-codegen:4.2.0")
+        implementation("io.vertx:vertx-sql-client:${baseVersion("4.2.0").orLatest("4.+")}")
+        implementation("io.vertx:vertx-pg-client:${baseVersion("4.2.0").orLatest("4.+")}")
+        implementation("io.vertx:vertx-codegen:${baseVersion("4.2.0").orLatest("4.+")}")
         implementation("org.testcontainers:testcontainers")
       }
     }
@@ -62,15 +62,9 @@ tasks {
         systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
       }
     }
-  val testStableSemconv = stableSemconvSuites.first { it.name == "testStableSemconv" }
-  val vertx42TestStableSemconv =
-    stableSemconvSuites.first { it.name == "vertx42TestStableSemconv" }
 
   check {
-    dependsOn(testStableSemconv)
-    if (!otelProps.testLatestDeps) {
-      dependsOn(testing.suites.named("vertx42Test"), vertx42TestStableSemconv)
-    }
+    dependsOn(testing.suites, stableSemconvSuites)
   }
 }
 
