@@ -144,7 +144,11 @@ final class CassandraServerTarget {
       return null;
     }
     String host = contactPoint.substring(0, separator);
-    if (host.startsWith("[") && host.endsWith("]")) {
+    if (host.startsWith("[")) {
+      if (!host.endsWith("]")) {
+        target.addEndpoint((String) null, -1);
+        return null;
+      }
       host = host.substring(1, host.length() - 1);
     }
     try {
