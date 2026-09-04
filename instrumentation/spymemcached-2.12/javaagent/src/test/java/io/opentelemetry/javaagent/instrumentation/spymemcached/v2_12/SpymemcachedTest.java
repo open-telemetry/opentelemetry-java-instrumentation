@@ -1450,13 +1450,11 @@ class SpymemcachedTest {
 
   @Test
   void optimizedRetryUsesReassignedNode() throws Exception {
-    InetSocketAddress retryContainerAddress = startAdditionalMemcached();
-
     ReentrantLock queueLock = new ReentrantLock();
     OperationQueueFactory lockableQueueFactory = () -> getLockableQueue(queueLock);
     MemcachedClient memcached =
         getMemcached(
-            asList(memcachedAddress, retryContainerAddress),
+            asList(memcachedAddress, secondMemcachedAddress),
             builder ->
                 builder
                     .setProtocol(TEXT)
@@ -1534,7 +1532,7 @@ class SpymemcachedTest {
     }
 
     InetSocketAddress retryAddress = observedRetryAddress;
-    String target = configuredTarget(asList(memcachedAddress, retryContainerAddress));
+    String target = configuredTarget(asList(memcachedAddress, secondMemcachedAddress));
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1665,8 +1663,7 @@ class SpymemcachedTest {
 
   @Test
   void partialBulkRetryUsesRetryNode() throws Exception {
-    InetSocketAddress retryContainerAddress = startAdditionalMemcached();
-    List<InetSocketAddress> configuredNodes = asList(memcachedAddress, retryContainerAddress);
+    List<InetSocketAddress> configuredNodes = asList(memcachedAddress, secondMemcachedAddress);
     ReentrantLock queueLock = new ReentrantLock();
     OperationQueueFactory lockableQueueFactory = () -> getLockableQueue(queueLock);
     MemcachedClient memcached =
