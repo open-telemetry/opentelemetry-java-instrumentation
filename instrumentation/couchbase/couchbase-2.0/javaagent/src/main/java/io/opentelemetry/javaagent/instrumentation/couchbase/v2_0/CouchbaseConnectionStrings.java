@@ -133,7 +133,7 @@ class CouchbaseConnectionStrings {
     }
     if (seed instanceof InetSocketAddress) {
       InetSocketAddress address = (InetSocketAddress) seed;
-      // getHostString never triggers a reverse lookup, unlike getHostName
+      // Calling getHostString never triggers a reverse lookup, unlike getHostName
       builder.addEndpoint(cleanHost(address.getHostString()), configuredPort(address.getPort()));
       return;
     }
