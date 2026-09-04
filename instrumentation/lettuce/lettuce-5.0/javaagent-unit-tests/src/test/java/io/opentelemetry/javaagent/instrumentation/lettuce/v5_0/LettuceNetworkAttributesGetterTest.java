@@ -213,7 +213,7 @@ class LettuceNetworkAttributesGetterTest {
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
 
     LettuceSingletons.linkCommandPeer(wrapper);
-    LettuceCommandOutboundHandler.recordCommands(singletonList(wrapper), address);
+    LettuceCommandOutboundHandler.recordCommandPeers(singletonList(wrapper), address);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
     assertThat(LettuceSingletons.commandPeerAddress(wrapper)).isEqualTo(address);
@@ -321,14 +321,14 @@ class LettuceNetworkAttributesGetterTest {
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT);
 
     LettuceSingletons.linkCommandPeer(firstWrapper);
-    LettuceCommandOutboundHandler.recordCommands(firstWrapper, first);
+    LettuceCommandOutboundHandler.recordCommandPeers(firstWrapper, first);
     AsyncCommand<String, String, String> replayWrapper = new AsyncCommand<>(command);
     LettuceSingletons.linkCommandPeer(replayWrapper);
 
     assertThat(LettuceSingletons.commandPeerAddress(firstWrapper)).isEqualTo(first);
     assertThat(LettuceSingletons.commandPeerAddress(replayWrapper)).isNull();
 
-    LettuceCommandOutboundHandler.recordCommands(singletonList(replayWrapper), second);
+    LettuceCommandOutboundHandler.recordCommandPeers(singletonList(replayWrapper), second);
 
     assertThat(LettuceSingletons.commandPeerAddress(firstWrapper)).isEqualTo(first);
     assertThat(LettuceSingletons.commandPeerAddress(replayWrapper)).isEqualTo(second);
