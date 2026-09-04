@@ -76,8 +76,8 @@ public abstract class RedissonRequest {
   }
 
   /**
-   * Creates a request. The database index is resolved by the version specific instrumentation,
-   * because the redisson 3.0 client API does not expose it.
+   * Creates a request. The version-specific instrumentation supplies the database index and
+   * configured server target because the Redisson 3.0 client API does not expose either value.
    */
   public static RedissonRequest create(
       @Nullable InetSocketAddress address,
