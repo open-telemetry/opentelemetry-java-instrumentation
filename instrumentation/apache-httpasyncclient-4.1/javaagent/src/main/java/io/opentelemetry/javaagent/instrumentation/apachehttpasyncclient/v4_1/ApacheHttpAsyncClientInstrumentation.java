@@ -229,7 +229,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       delegate.close();
     }
 
-    public static void capture(Context parentContext, @Nullable HttpContext httpContext) {
+    private static void capture(Context parentContext, @Nullable HttpContext httpContext) {
       if (httpContext == null) {
         return;
       }
