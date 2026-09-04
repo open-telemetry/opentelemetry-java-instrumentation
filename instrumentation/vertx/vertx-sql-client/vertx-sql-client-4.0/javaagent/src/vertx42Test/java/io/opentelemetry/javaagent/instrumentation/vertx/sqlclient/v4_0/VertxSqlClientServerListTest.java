@@ -83,8 +83,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void serverListWithUnixSocketOmitsStableTarget()
-      throws InterruptedException, ExecutionException, TimeoutException {
+  void serverListWithUnixSocketOmitsStableTarget() throws Exception {
     PgConnectOptions first = connectOptions().setPort(port);
     PgConnectOptions second = connectOptions().setHost("/var/run/postgres:primary").setPort(5432);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
@@ -93,8 +92,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void serverListWithIpv6LiteralIsReportedAsOneTarget()
-      throws InterruptedException, ExecutionException, TimeoutException {
+  void serverListWithIpv6LiteralIsReportedAsOneTarget() throws Exception {
     PgConnectOptions first = connectOptions().setPort(port);
     PgConnectOptions second = connectOptions().setHost("2001:db8::1").setPort(5432);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
@@ -103,8 +101,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void clientServerListIsReportedAsOneTarget()
-      throws InterruptedException, ExecutionException, TimeoutException {
+  void clientServerListIsReportedAsOneTarget() throws Exception {
     PgConnectOptions first = connectOptions().setPort(port);
     PgConnectOptions second = connectOptions().setPort(port + 1);
     SqlClient client = PgPool.client(vertx, asList(first, second), poolOptions());
@@ -113,8 +110,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void serverListReportsCompleteLongEndpoint()
-      throws InterruptedException, ExecutionException, TimeoutException {
+  void serverListReportsCompleteLongEndpoint() throws Exception {
     PgConnectOptions first = connectOptions().setPort(port);
     String secondHost = hostOfLength(250);
     PgConnectOptions second = connectOptions().setHost(secondHost).setPort(port + 1);
@@ -124,8 +120,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void preparedStatementServerListIsReportedAsOneTarget()
-      throws InterruptedException, ExecutionException, TimeoutException {
+  void preparedStatementServerListIsReportedAsOneTarget() throws Exception {
     PgConnectOptions first = connectOptions().setPort(port);
     PgConnectOptions second = connectOptions().setPort(port + 1);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
@@ -138,8 +133,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void nullServerDoesNotPoisonLaterPoolTarget()
-      throws InterruptedException, ExecutionException, TimeoutException {
+  void nullServerDoesNotPoisonLaterPoolTarget() throws Exception {
     PgConnectOptions first = connectOptions().setPort(port);
     try {
       Pool malformedPool = PgPool.pool(vertx, asList(first, null), poolOptions());
@@ -190,8 +184,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void oneServerIsReportedAsHostAndPort()
-      throws InterruptedException, ExecutionException, TimeoutException {
+  void oneServerIsReportedAsHostAndPort() throws Exception {
     Pool pool = PgPool.pool(vertx, singletonList(connectOptions().setPort(port)), poolOptions());
     cleanup.deferCleanup(pool::close);
 
@@ -220,8 +213,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void singlePoolBuiltBeforeListPoolKeepsItsOwnTarget()
-      throws InterruptedException, ExecutionException, TimeoutException {
+  void singlePoolBuiltBeforeListPoolKeepsItsOwnTarget() throws Exception {
     PgConnectOptions primary = connectOptions().setPort(port);
     Pool singlePool = PgPool.pool(vertx, primary, poolOptions());
     Pool listPool =
@@ -231,8 +223,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void singlePoolBuiltAfterListPoolKeepsItsOwnTarget()
-      throws InterruptedException, ExecutionException, TimeoutException {
+  void singlePoolBuiltAfterListPoolKeepsItsOwnTarget() throws Exception {
     PgConnectOptions primary = connectOptions().setPort(port);
     Pool listPool =
         PgPool.pool(vertx, asList(primary, connectOptions().setPort(port + 1)), poolOptions());
