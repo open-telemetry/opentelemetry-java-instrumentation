@@ -17,6 +17,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `SelectorConfig.resolve` overloads that do not specify `SelectorConfig.Stability` in favor
+  of overloads that require callers to choose the stability explicitly.
+  ([#19969](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19969))
 - Deprecate `otel.instrumentation.opensearch.capture-search-query`. There is no replacement.
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query` There is no replacement.
   ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
