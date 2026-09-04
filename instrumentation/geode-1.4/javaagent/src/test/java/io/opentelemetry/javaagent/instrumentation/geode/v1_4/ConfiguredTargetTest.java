@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.GEODE;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -105,20 +106,15 @@ class ConfiguredTargetTest {
 
   private static Stream<Arguments> configuredServerCases() {
     return Stream.of(
-        Arguments.argumentSet(
-            "default ports", "default-port-servers", 40404, 40404, "127.0.0.1,127.0.0.2"),
-        Arguments.argumentSet(
+        argumentSet("default ports", "default-port-servers", 40404, 40404, "127.0.0.1,127.0.0.2"),
+        argumentSet(
             "shared non-default port",
             "shared-port-servers",
             40405,
             40405,
             "127.0.0.1:40405,127.0.0.2:40405"),
-        Arguments.argumentSet(
-            "mixed ports",
-            "mixed-port-servers",
-            40404,
-            40405,
-            "127.0.0.1:40404,127.0.0.2:40405"));
+        argumentSet(
+            "mixed ports", "mixed-port-servers", 40404, 40405, "127.0.0.1:40404,127.0.0.2:40405"));
   }
 
   @Test
