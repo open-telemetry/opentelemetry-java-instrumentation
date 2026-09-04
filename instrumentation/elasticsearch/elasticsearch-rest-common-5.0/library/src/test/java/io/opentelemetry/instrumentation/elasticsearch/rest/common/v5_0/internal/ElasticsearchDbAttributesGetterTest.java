@@ -5,23 +5,13 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkPeerCapture;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -41,8 +31,6 @@ class ElasticsearchDbAttributesGetterTest {
   private static final String SEARCH_BODY =
       "{\"query\":{\"match\":{\"title\":\"secret user data\"}}}";
   private static final String SANITIZED_BODY = "{\"query\":{\"match\":{\"title\":\"?\"}}}";
-  private final ElasticsearchDbAttributesGetter getter =
-      new ElasticsearchDbAttributesGetter(false, null);
 
   /** Records the bodies it is given and returns whatever it was configured to return. */
   private static class RecordingSanitizer implements UnaryOperator<String> {
@@ -250,44 +238,6 @@ class ElasticsearchDbAttributesGetterTest {
     assertThat(sanitizer.sanitized).isEmpty();
   }
 
-  @Test
-  void capturesNetworkPeerFromRequest() {
-    ElasticsearchRestRequest request = ElasticsearchRestRequest.create("GET", "/");
-    Context context = request.getNetworkPeerCapture().storeInContext(Context.root());
-    NetworkPeerCapture.capture(
-        context, new InetSocketAddress(InetAddress.getLoopbackAddress(), 9200));
-
-    assertThat(getter.getNetworkPeerAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "127.0.0.1" : null);
-    assertThat(getter.getNetworkPeerPort(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? 9200 : null);
-    assertThat(extractAttributes(request))
-        .isEqualTo(
-            emitStableDatabaseSemconv()
-                ? Attributes.of(NETWORK_PEER_ADDRESS, "127.0.0.1", NETWORK_PEER_PORT, 9200L)
-                : Attributes.empty());
-  }
-
-  @Test
-  void doesNotResolveConfiguredHostname() {
-    ElasticsearchRestRequest request = ElasticsearchRestRequest.create("GET", "/");
-    Context context = request.getNetworkPeerCapture().storeInContext(Context.root());
-    NetworkPeerCapture.capture(context, InetSocketAddress.createUnresolved("search.example", 9200));
-
-    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
-    assertThat(extractAttributes(request)).isEqualTo(Attributes.empty());
-  }
-
-  @Test
-  void handlesMissingPeer() {
-    ElasticsearchRestRequest request = ElasticsearchRestRequest.create("GET", "/");
-
-    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
-    assertThat(extractAttributes(request)).isEqualTo(Attributes.empty());
-  }
-
   private static Stream<Arguments> multiSearchEndpoints() {
     return Stream.of(
         argumentSet("_msearch", "msearch", "/test-index/_msearch", "/{index}/_msearch"),
@@ -304,12 +254,5 @@ class ElasticsearchDbAttributesGetterTest {
         "/test-index/_search",
         new ElasticsearchEndpointDefinition("SEARCH", new String[] {"/{index}/_search"}, true),
         httpEntity);
-  }
-
-  private Attributes extractAttributes(ElasticsearchRestRequest request) {
-    AttributesBuilder attributes = Attributes.builder();
-    DbClientAttributesExtractor.create(getter)
-        .onEnd(attributes, Context.root(), request, null, null);
-    return attributes.build();
   }
 }

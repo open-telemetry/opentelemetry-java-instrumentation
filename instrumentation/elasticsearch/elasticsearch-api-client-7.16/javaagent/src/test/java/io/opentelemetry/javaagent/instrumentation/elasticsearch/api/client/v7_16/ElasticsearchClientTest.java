@@ -15,8 +15,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -46,8 +44,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -76,13 +72,12 @@ class ElasticsearchClientTest {
   static ElasticsearchContainer elasticsearch;
 
   static HttpHost httpHost;
-  static String peerAddress;
 
   static ElasticsearchClient client;
   static ElasticsearchAsyncClient asyncClient;
 
   @BeforeAll
-  static void setUp() throws UnknownHostException {
+  static void setUp() {
     elasticsearch =
         new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.28");
     // limit memory usage
@@ -92,7 +87,6 @@ class ElasticsearchClientTest {
     cleanup.deferAfterAll(elasticsearch::stop);
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
-    peerAddress = InetAddress.getByName(httpHost.getHostName()).getHostAddress();
 
     RestClient restClient =
         RestClient.builder(httpHost)
@@ -132,14 +126,6 @@ class ElasticsearchClientTest {
                             equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "info" : null),
                             equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "info" : null),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort())),
@@ -151,14 +137,6 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
@@ -191,14 +169,6 @@ class ElasticsearchClientTest {
                             equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "index" : null),
                             equalTo(
                                 DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "index" : null),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
@@ -225,14 +195,6 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(
@@ -245,8 +207,6 @@ class ElasticsearchClientTest {
         "io.opentelemetry.elasticsearch-rest-7.0",
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -276,14 +236,6 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/_search?typed_keys=true"),
@@ -298,10 +250,6 @@ class ElasticsearchClientTest {
                 equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                 equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "search" : null),
                 equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "search" : null),
-                equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? peerAddress : null),
-                equalTo(
-                    NETWORK_PEER_PORT,
-                    emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null),
                 equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                 equalTo(SERVER_PORT, httpHost.getPort()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
@@ -362,14 +310,6 @@ class ElasticsearchClientTest {
                                 DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                             equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "info" : null),
                             equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "info" : null),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
@@ -382,14 +322,6 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
@@ -440,10 +372,6 @@ class ElasticsearchClientTest {
                     equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "info" : null),
                     equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "info" : null),
                     equalTo(HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? peerAddress : null),
-                    equalTo(
-                        NETWORK_PEER_PORT,
-                        emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null),
                     equalTo(URL_FULL, httpHost.toURI() + "/"),
                     equalTo(
                         SERVER_ADDRESS,

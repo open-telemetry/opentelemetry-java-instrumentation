@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0.ElasticsearchRest5Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -70,9 +69,6 @@ class RestClientInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = instrumenter().start(parentContext, request);
-        if (emitStableDatabaseSemconv()) {
-          context = request.getNetworkPeerCapture().storeInContext(context);
-        }
         return new AdviceScope(request, parentContext, context, context.makeCurrent());
       }
 

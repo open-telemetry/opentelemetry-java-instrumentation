@@ -29,7 +29,6 @@ class ApacheHttpClientRequest {
 
   private final HttpRequest delegate;
   @Nullable private final HttpHost target;
-  @Nullable private volatile InetSocketAddress networkPeerAddress;
 
   ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
@@ -149,16 +148,8 @@ class ApacheHttpClientRequest {
     }
   }
 
-  void setNetworkPeerAddress(InetSocketAddress networkPeerAddress) {
-    this.networkPeerAddress = networkPeerAddress;
-  }
-
   @Nullable
   InetSocketAddress getNetworkPeerAddress() {
-    InetSocketAddress peerAddress = networkPeerAddress;
-    if (peerAddress != null) {
-      return peerAddress;
-    }
     if (target == null) {
       return null;
     }

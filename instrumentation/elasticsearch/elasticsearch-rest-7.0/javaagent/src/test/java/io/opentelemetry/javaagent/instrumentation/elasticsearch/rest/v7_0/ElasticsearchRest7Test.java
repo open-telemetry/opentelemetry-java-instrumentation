@@ -14,8 +14,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -33,8 +31,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.apache.http.HttpHost;
@@ -60,12 +56,11 @@ class ElasticsearchRest7Test {
   private static ElasticsearchContainer elasticsearch;
 
   private static HttpHost httpHost;
-  private static String peerAddress;
 
   private static RestClient client;
 
   @BeforeAll
-  static void setUp() throws UnknownHostException {
+  static void setUp() {
     elasticsearch =
         new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.10.2");
     cleanup.deferAfterAll(elasticsearch::stop);
@@ -76,7 +71,6 @@ class ElasticsearchRest7Test {
     elasticsearch.start();
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
-    peerAddress = InetAddress.getByName(httpHost.getHostName()).getHostAddress();
 
     client =
         RestClient.builder(httpHost)
@@ -111,14 +105,6 @@ class ElasticsearchRest7Test {
                             equalTo(
                                 DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
@@ -130,14 +116,6 @@ class ElasticsearchRest7Test {
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
@@ -147,8 +125,6 @@ class ElasticsearchRest7Test {
         testing,
         "io.opentelemetry.elasticsearch-rest-7.0",
         DB_SYSTEM_NAME,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -210,14 +186,6 @@ class ElasticsearchRest7Test {
                             equalTo(
                                 DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
@@ -229,14 +197,6 @@ class ElasticsearchRest7Test {
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? peerAddress : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(httpHost.getPort())
-                                    : null),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
@@ -322,10 +282,6 @@ class ElasticsearchRest7Test {
                     equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null),
                     equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null),
                     equalTo(HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? peerAddress : null),
-                    equalTo(
-                        NETWORK_PEER_PORT,
-                        emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null),
                     equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
                     equalTo(SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort())),
                     equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
