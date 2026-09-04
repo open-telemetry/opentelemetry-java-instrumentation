@@ -31,7 +31,6 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -423,8 +422,42 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     assertThat(command.block()).isEqualTo("OK");
 
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(this::assertResubscribedSetSpan),
-        trace -> trace.hasSpansSatisfyingExactly(this::assertResubscribedSetSpan));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "SET resubscribed ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "SET resubscribed ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
 
   @Test
@@ -456,36 +489,42 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     assertThat(second.get(10, SECONDS).getKey()).isEqualTo("overlapping");
 
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(this::assertOverlappingBlpopSpan),
-        trace -> trace.hasSpansSatisfyingExactly(this::assertOverlappingBlpopSpan));
-  }
-
-  private void assertOverlappingBlpopSpan(SpanDataAssert span) {
-    span.hasName(emitStableDatabaseSemconv() ? "BLPOP " + host + ":" + port : "BLPOP")
-        .hasKind(SpanKind.CLIENT)
-        .hasAttributesSatisfyingExactly(
-            equalTo(SERVER_ADDRESS, host),
-            equalTo(SERVER_PORT, port),
-            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-            equalTo(NETWORK_PEER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-            equalTo(maybeStable(DB_SYSTEM), REDIS),
-            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-            equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
-            equalTo(maybeStable(DB_OPERATION), "BLPOP"));
-  }
-
-  private void assertResubscribedSetSpan(SpanDataAssert span) {
-    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
-        .hasKind(SpanKind.CLIENT)
-        .hasAttributesSatisfyingExactly(
-            equalTo(SERVER_ADDRESS, host),
-            equalTo(SERVER_PORT, port),
-            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-            equalTo(NETWORK_PEER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-            equalTo(maybeStable(DB_SYSTEM), REDIS),
-            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-            equalTo(maybeStable(DB_STATEMENT), "SET resubscribed ?"),
-            equalTo(maybeStable(DB_OPERATION), "SET"));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "BLPOP " + host + ":" + port : "BLPOP")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
+                            equalTo(maybeStable(DB_OPERATION), "BLPOP"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "BLPOP " + host + ":" + port : "BLPOP")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
+                            equalTo(maybeStable(DB_OPERATION), "BLPOP"))));
   }
 
   @Test
