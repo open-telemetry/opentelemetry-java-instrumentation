@@ -20,6 +20,11 @@ public class CassandraConfiguredTarget {
 
   private static final int DEFAULT_PORT = 9042;
 
+  private static final VirtualField<Cluster.Builder, ContactPoints> BUILDER_CONTACT_POINTS =
+      VirtualField.find(Cluster.Builder.class, ContactPoints.class);
+  private static final VirtualField<Cluster, DbServerTarget> CLUSTER_TARGET =
+      VirtualField.find(Cluster.class, DbServerTarget.class);
+
   public static void capture(Cluster.Builder builder, Object[] arguments) {
     getOrCreateContactPoints(builder).add(arguments);
   }
@@ -29,25 +34,24 @@ public class CassandraConfiguredTarget {
   }
 
   private static ContactPoints getOrCreateContactPoints(Cluster.Builder builder) {
-    ContactPoints contactPoints = VirtualFields.BUILDER_CONTACT_POINTS.get(builder);
+    ContactPoints contactPoints = BUILDER_CONTACT_POINTS.get(builder);
     if (contactPoints == null) {
       contactPoints = new ContactPoints();
-      VirtualFields.BUILDER_CONTACT_POINTS.set(builder, contactPoints);
+      BUILDER_CONTACT_POINTS.set(builder, contactPoints);
     }
     return contactPoints;
   }
 
   public static void store(Cluster.Builder builder, Cluster cluster, int configuredPort) {
-    DbServerTarget target =
-        create(VirtualFields.BUILDER_CONTACT_POINTS.get(builder), configuredPort);
+    DbServerTarget target = create(BUILDER_CONTACT_POINTS.get(builder), configuredPort);
     if (target != null) {
-      VirtualFields.CLUSTER_TARGET.set(cluster, target);
+      CLUSTER_TARGET.set(cluster, target);
     }
   }
 
   @Nullable
   static DbServerTarget get(Cluster cluster) {
-    return VirtualFields.CLUSTER_TARGET.get(cluster);
+    return CLUSTER_TARGET.get(cluster);
   }
 
   @Nullable
@@ -112,12 +116,5 @@ public class CassandraConfiguredTarget {
       this.host = host;
       this.port = port;
     }
-  }
-
-  private static class VirtualFields {
-    private static final VirtualField<Cluster.Builder, ContactPoints> BUILDER_CONTACT_POINTS =
-        VirtualField.find(Cluster.Builder.class, ContactPoints.class);
-    private static final VirtualField<Cluster, DbServerTarget> CLUSTER_TARGET =
-        VirtualField.find(Cluster.class, DbServerTarget.class);
   }
 }
