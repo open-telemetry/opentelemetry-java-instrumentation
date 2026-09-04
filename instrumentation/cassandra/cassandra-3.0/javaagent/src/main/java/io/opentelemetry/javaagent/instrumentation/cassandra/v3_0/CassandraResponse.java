@@ -33,8 +33,7 @@ class CassandraResponse {
       // round-robin counter, so the actual proxy is not safe to obtain here.
       return new CassandraResponse(executionInfo, null);
     }
-    InetSocketAddress address = coordinator.getSocketAddress();
-    return new CassandraResponse(executionInfo, address);
+    return new CassandraResponse(executionInfo, coordinator.getSocketAddress());
   }
 
   @Nullable
@@ -46,8 +45,7 @@ class CassandraResponse {
     if (emitStableDatabaseSemconv() && CassandraEndPoints.isSniEndPoint(exception)) {
       return new CassandraResponse(null, null);
     }
-    InetSocketAddress address = exception.getAddress();
-    return new CassandraResponse(null, address);
+    return new CassandraResponse(null, exception.getAddress());
   }
 
   @Nullable
