@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.ACTOR_REQUEST_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.CLUSTER_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.POOL_REQUEST_TARGET;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -83,15 +85,6 @@ public class RediscalaServerTargets {
   private static final Method BLOCKING_SENTINELS =
       findMethod(SentinelMonitoredRedisBlockingClient.class, "sentinels");
 
-  private static final VirtualField<ActorRequest, RedisServerTarget> ACTOR_REQUEST_TARGET =
-      VirtualField.find(ActorRequest.class, RedisServerTarget.class);
-
-  private static final VirtualField<RoundRobinPoolRequest, RedisServerTarget> POOL_REQUEST_TARGET =
-      VirtualField.find(RoundRobinPoolRequest.class, RedisServerTarget.class);
-
-  private static final VirtualField<RedisClientPoolLike, RedisServerTarget> CLUSTER_TARGET =
-      VirtualField.find(RedisClientPoolLike.class, RedisServerTarget.class);
-
   @Nullable
   private static Method findRedisServers(Class<?> poolClass) {
     try {
@@ -131,32 +124,21 @@ public class RediscalaServerTargets {
       return of(client);
     }
     if (client instanceof ActorRequest) {
-      return get(ACTOR_REQUEST_TARGET, (ActorRequest) client);
+      return RediscalaSingletons.getServerTarget(ACTOR_REQUEST_TARGET, (ActorRequest) client);
     }
     if (client instanceof RoundRobinPoolRequest) {
-      return get(POOL_REQUEST_TARGET, (RoundRobinPoolRequest) client);
+      return RediscalaSingletons.getServerTarget(
+          POOL_REQUEST_TARGET, (RoundRobinPoolRequest) client);
     }
     if (CLUSTER_CLASS != null && CLUSTER_CLASS.isInstance(client)) {
-      return get(CLUSTER_TARGET, (RedisClientPoolLike) client);
+      return RediscalaSingletons.getServerTarget(
+          CLUSTER_TARGET, (RedisClientPoolLike) client);
     }
     return of(client);
   }
 
   @Nullable
-  private static <T> RedisServerTarget get(
-      VirtualField<T, RedisServerTarget> targetField, T client) {
-    RedisServerTarget target = targetField.get(client);
-    if (target == null) {
-      target = of(client);
-      if (target != null) {
-        targetField.set(client, target);
-      }
-    }
-    return target;
-  }
-
-  @Nullable
-  private static RedisServerTarget of(Object client) {
+  static RedisServerTarget of(Object client) {
     if (client instanceof SentinelMonitoredRedisClient) {
       return ofSentinel(client, SENTINELS, ((SentinelMonitoredRedisClient) client).master());
     }
