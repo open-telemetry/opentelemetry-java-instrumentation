@@ -34,10 +34,24 @@ class VertxSqlAddressGroupTest {
     "oracle.db, 1521",
     "ibm.db2, 50000"
   })
-  void omitsKnownDefaultPortsAndPreservesConfiguredOrder(String dbSystem, int defaultPort) {
-    VertxSqlAddressGroup singleAddress =
+  void omitsKnownDefaultPortFromSingleAddress(String dbSystem, int defaultPort) {
+    VertxSqlAddressGroup addressGroup =
         VertxSqlAddressGroup.of(
             new SqlConnectOptions().setHost("single.example").setPort(defaultPort), dbSystem);
+
+    assertThat(addressGroup.getAddress()).isEqualTo("single.example");
+    assertThat(addressGroup.getPort()).isNull();
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "postgresql, 5432",
+    "mysql, 3306",
+    "microsoft.sql_server, 1433",
+    "oracle.db, 1521",
+    "ibm.db2, 50000"
+  })
+  void omitsKnownDefaultPortsAndPreservesConfiguredOrder(String dbSystem, int defaultPort) {
     VertxSqlAddressGroup addressGroup =
         VertxSqlAddressGroup.of(
             asList(
@@ -45,8 +59,6 @@ class VertxSqlAddressGroupTest {
                 new SqlConnectOptions().setHost("db-a.example").setPort(defaultPort)),
             dbSystem);
 
-    assertThat(singleAddress.getAddress()).isEqualTo("single.example");
-    assertThat(singleAddress.getPort()).isNull();
     assertThat(addressGroup.getAddress()).isEqualTo("db-b.example,db-a.example");
     assertThat(addressGroup.getPort()).isNull();
   }
