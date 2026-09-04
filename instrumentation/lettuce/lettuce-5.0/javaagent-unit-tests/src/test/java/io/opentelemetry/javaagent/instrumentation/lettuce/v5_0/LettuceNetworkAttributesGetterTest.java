@@ -271,10 +271,34 @@ class LettuceNetworkAttributesGetterTest {
     try {
       Future<SocketAddress> first =
           executor.submit(
-              () -> recordReactiveSubscriptionPeer(firstCommand, firstAddress, ready, release));
+              () -> {
+                LettuceSingletons.enterReactiveCommand(firstCommand);
+                try {
+                  RedisCommand<?, ?, ?> command =
+                      requireNonNull(LettuceSingletons.currentReactiveCommand());
+                  LettuceSingletons.recordCommandPeer(command, firstAddress);
+                  ready.countDown();
+                  release.await();
+                  return LettuceSingletons.commandPeerAddress(command);
+                } finally {
+                  LettuceSingletons.exitReactiveCommand();
+                }
+              });
       Future<SocketAddress> second =
           executor.submit(
-              () -> recordReactiveSubscriptionPeer(secondCommand, secondAddress, ready, release));
+              () -> {
+                LettuceSingletons.enterReactiveCommand(secondCommand);
+                try {
+                  RedisCommand<?, ?, ?> command =
+                      requireNonNull(LettuceSingletons.currentReactiveCommand());
+                  LettuceSingletons.recordCommandPeer(command, secondAddress);
+                  ready.countDown();
+                  release.await();
+                  return LettuceSingletons.commandPeerAddress(command);
+                } finally {
+                  LettuceSingletons.exitReactiveCommand();
+                }
+              });
 
       assertThat(ready.await(10, SECONDS)).isTrue();
       release.countDown();
@@ -333,21 +357,4 @@ class LettuceNetworkAttributesGetterTest {
             "2001:db8:0:0:0:0:0:1"));
   }
 
-  private static SocketAddress recordReactiveSubscriptionPeer(
-      RedisCommand<?, ?, ?> subscriptionCommand,
-      InetSocketAddress address,
-      CountDownLatch ready,
-      CountDownLatch release)
-      throws InterruptedException {
-    LettuceSingletons.enterReactiveCommand(subscriptionCommand);
-    try {
-      RedisCommand<?, ?, ?> command = requireNonNull(LettuceSingletons.currentReactiveCommand());
-      LettuceSingletons.recordCommandPeer(command, address);
-      ready.countDown();
-      release.await();
-      return LettuceSingletons.commandPeerAddress(command);
-    } finally {
-      LettuceSingletons.exitReactiveCommand();
-    }
-  }
 }
