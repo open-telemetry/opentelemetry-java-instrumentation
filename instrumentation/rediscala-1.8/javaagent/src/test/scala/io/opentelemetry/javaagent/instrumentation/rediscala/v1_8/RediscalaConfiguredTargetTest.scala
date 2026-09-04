@@ -44,7 +44,7 @@ import redis.{
 
 import java.lang.{Long => JLong}
 import java.net.InetAddress
-import java.util.function.Predicate
+import java.util.function.{Consumer, Predicate}
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 
@@ -473,28 +473,27 @@ class RediscalaConfiguredTargetTest {
         val expectedSpanName =
           if (serverSuffix == null) operationName
           else s"$operationName $serverSuffix"
-        val span = testing
-          .spans()
-          .stream()
-          .filter(new Predicate[SpanData] {
+        assertThat(testing.spans())
+          .filteredOn(new Predicate[SpanData] {
             override def test(span: SpanData): Boolean =
               span.getName == expectedSpanName
           })
-          .findFirst()
-          .orElse(null)
-        assertThat(span).isNotNull
-        assertThatSpan(span)
-          .hasName(expectedSpanName)
-          .hasKind(CLIENT)
-          .hasAttributesSatisfyingExactly(
-            equalTo(maybeStable(DB_SYSTEM), REDIS),
-            equalTo(maybeStable(DB_OPERATION), operationName),
-            equalTo(DB_NAMESPACE, databaseIndex),
-            equalTo(NETWORK_PEER_ADDRESS, null),
-            equalTo(NETWORK_PEER_PORT, null),
-            equalTo(SERVER_ADDRESS, serverAddress),
-            equalTo(SERVER_PORT, serverPort)
-          )
+          .singleElement()
+          .satisfies(new Consumer[SpanData] {
+            override def accept(span: SpanData): Unit =
+              assertThatSpan(span)
+                .hasName(expectedSpanName)
+                .hasKind(CLIENT)
+                .hasAttributesSatisfyingExactly(
+                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                  equalTo(maybeStable(DB_OPERATION), operationName),
+                  equalTo(DB_NAMESPACE, databaseIndex),
+                  equalTo(NETWORK_PEER_ADDRESS, null),
+                  equalTo(NETWORK_PEER_PORT, null),
+                  equalTo(SERVER_ADDRESS, serverAddress),
+                  equalTo(SERVER_PORT, serverPort)
+                )
+          })
       }
     })
 }
