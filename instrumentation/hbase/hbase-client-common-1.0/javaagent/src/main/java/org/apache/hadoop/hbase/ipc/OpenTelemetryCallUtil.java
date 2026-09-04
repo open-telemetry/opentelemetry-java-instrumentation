@@ -12,7 +12,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-// Helper for accessing the virtual field on package-private Call.
+// Helper for accessing the package-private Call class.
 public final class OpenTelemetryCallUtil {
   private static final VirtualField<Call, RequestAndContext> REQUEST_AND_CONTEXT =
       VirtualField.find(Call.class, RequestAndContext.class);
