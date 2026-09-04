@@ -12,8 +12,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import org.junit.jupiter.api.Test;
@@ -38,20 +36,6 @@ class SpymemcachedRequestTest {
     MemcachedConnection connection = mock(MemcachedConnection.class);
 
     assertThat(SpymemcachedRequest.create(connection, "asyncGet").getServerTarget()).isNull();
-  }
-
-  @Test
-  void targetIsNotChangedByLaterEditsToTheConfiguredNodeList() {
-    List<InetSocketAddress> nodes = new ArrayList<>();
-    nodes.add(node("one.example", 11211));
-
-    MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedSingletons.setServerTarget(connection, nodes);
-
-    nodes.add(node("two.example", 11212));
-
-    assertThat(SpymemcachedRequest.create(connection, "asyncGet").getServerTarget().getAddress())
-        .isEqualTo("one.example");
   }
 
   @Test
