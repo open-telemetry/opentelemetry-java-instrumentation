@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.jmx;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
-import static java.util.stream.Collectors.toList;
+import static java.util.logging.Level.INFO;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -47,6 +47,11 @@ public final class JmxTelemetryBuilder {
 
   @Nullable private IncludeExclude stableMetricsSystemFilter = null;
   @Nullable private IncludeExclude unstableMetricsSystemFilter = null;
+  // include all systems by default
+  private IncludeExclude internalMetricsSystemFilter = IncludeExclude.builder().build();
+  // exclude all unstable metrics by default
+  private IncludeExclude internalMetricsUnstableMetricsFilter =
+      IncludeExclude.builder().setExcluded("*").build();
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -81,8 +86,7 @@ public final class JmxTelemetryBuilder {
     if (input == null) {
       throw new IllegalArgumentException("missing JMX rules");
     }
-    RuleParser parserInstance = RuleParser.get();
-    List<MetricDef> metricDefs = parserInstance.parseMetricDefs(input);
+    List<MetricDef> metricDefs = RuleParser.get().parseMetricDefs(input);
 
     for (MetricDef metricDef : metricDefs) {
       metricConfiguration.addMetricDef(metricDef);
@@ -151,6 +155,18 @@ public final class JmxTelemetryBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder internalMetricsSystemFilter(IncludeExclude systemFilter) {
+    internalMetricsSystemFilter = systemFilter;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder internalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
+    internalMetricsUnstableMetricsFilter = metricsFilter;
+    return this;
+  }
+
   /**
    * Sets the {@link ClassLoader} to be used to load SPI implementations and internal resource
    * loading
@@ -165,21 +181,6 @@ public final class JmxTelemetryBuilder {
 
   // package private for testing
   JmxTelemetry build(InternalMetricsDefinitions metricsDefinitions) {
-    Set<String> rulesToLoad = getInternalRulesToLoad(metricsDefinitions);
-    for (String path : rulesToLoad) {
-      logger.log(FINE, "loading embedded JMX rules from {0}", path);
-      try (InputStream input = classLoader.getResourceAsStream(path)) {
-        if (input == null) {
-          // this is not expected to happen as the list of rules to load is generated from the
-          // same classloader, but just in case we prevent a silent failure.
-          throw new IllegalStateException("unable to load rules " + path);
-        }
-        addRules(input);
-      } catch (IOException e) {
-        throw new IllegalStateException("Unable to load embedded JMX rules from: " + path, e);
-      }
-    }
-
     HandlerRegistry handlerRegistry = new HandlerRegistry();
     handlerRegistry.load(componentLoader);
 
@@ -193,21 +194,49 @@ public final class JmxTelemetryBuilder {
           }
         });
 
-    if (logger.isLoggable(FINE)) {
+    // filter on system name let the caller control which systems are supported.
+    metricsDefinitions.loadInternalRules(internalMetricsSystemFilter, handlerRegistry);
+    // all metric defs are loaded and configured, even if metrics may be filtered-out later
+    metricsDefinitions.getAllMetricDefs().forEach(metricConfiguration::addMetricDef);
+
+    Set<String> stableMetrics = metricsDefinitions.getMetricNames(true);
+    Set<String> unstableMetrics = metricsDefinitions.getMetricNames(false);
+
+    // make all internal metrics as registered, but they can be filtered out
+    registeredMetrics.addAll(stableMetrics);
+    registeredMetrics.addAll(unstableMetrics);
+
+    System.out.println("user provided metrics filter: " + metrics);
+    System.out.println("unstable metrics filter " + internalMetricsUnstableMetricsFilter);
+
+    // make the metric filter ignore the non-stable metrics not explicitly in the opt-in filter
+    Set<String> excludePatterns = new HashSet<>(metrics.getExcluded());
+    unstableMetrics.stream()
+        .filter(m -> !internalMetricsUnstableMetricsFilter.matches(m))
+        .filter(m -> metrics.matches(m)) // no need to exclude it if already excluded
+        .forEach(excludePatterns::add);
+
+    IncludeExclude effectiveMetricsFilter =
+        IncludeExclude.builder()
+            .setIncluded(metrics.getIncluded())
+            .setExcluded(excludePatterns)
+            .build();
+
+    if (logger.isLoggable(INFO)) {
       // making it easier to debug include/exclude patterns
-      logger.log(
-          FINE,
-          "Registered JMX metrics: {0}",
-          registeredMetrics.stream().sorted().collect(toList()));
-      if (!metrics.isEmpty()) {
-        List<String> filteredMetrics =
-            registeredMetrics.stream().sorted().filter(m -> !metrics.matches(m)).collect(toList());
-        logger.log(FINE, "Metrics filtered by configuration: {0}", filteredMetrics);
-      }
+      registeredMetrics.forEach(
+          m ->
+              System.out.printf(
+                  "JMX metric '%s' %s by configuration%n",
+                  m, effectiveMetricsFilter.matches(m) ? "included" : "excluded"));
     }
 
     return new JmxTelemetry(
-        openTelemetry, discoveryDelayMs, metricConfiguration, handlerRegistry, metrics);
+        openTelemetry,
+        discoveryDelayMs,
+        metricConfiguration,
+        handlerRegistry,
+        effectiveMetricsFilter);
   }
 
   public JmxTelemetry build() {
