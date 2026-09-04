@@ -205,7 +205,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     Mono<KeyValue<String, String>> command = reactiveCommands.blpop(30, "overlapping");
 
     CompletableFuture<KeyValue<String, String>> first = command.toFuture();
+    cleanup.deferCleanup(() -> first.cancel(true));
     CompletableFuture<KeyValue<String, String>> second = command.toFuture();
+    cleanup.deferCleanup(() -> second.cancel(true));
 
     await()
         .atMost(Duration.ofSeconds(10))
