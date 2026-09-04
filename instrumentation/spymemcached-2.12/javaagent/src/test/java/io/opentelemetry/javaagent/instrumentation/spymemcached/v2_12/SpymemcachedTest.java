@@ -37,9 +37,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,15 +78,14 @@ class SpymemcachedTest {
 
   static GenericContainer<?> memcachedContainer;
   static InetSocketAddress memcachedAddress;
-  // the same server reached through its literal address, so that a client can be configured with
-  // two nodes that are both alive
-  static InetSocketAddress memcachedLiteralAddress;
+  static GenericContainer<?> secondMemcachedContainer;
+  static InetSocketAddress secondMemcachedAddress;
 
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.spymemcached.experimental-span-attributes");
 
   @BeforeAll
-  static void setUp() throws UnknownHostException {
+  static void setUp() {
     memcachedContainer =
         new GenericContainer<>("memcached:1.6.41")
             .withExposedPorts(11211)
@@ -98,10 +95,16 @@ class SpymemcachedTest {
     memcachedAddress =
         new InetSocketAddress(
             memcachedContainer.getHost(), memcachedContainer.getMappedPort(11211));
-    memcachedLiteralAddress =
+
+    secondMemcachedContainer =
+        new GenericContainer<>("memcached:1.6.41")
+            .withExposedPorts(11211)
+            .withStartupTimeout(Duration.ofMinutes(2));
+    secondMemcachedContainer.start();
+    cleanup.deferAfterAll(secondMemcachedContainer::stop);
+    secondMemcachedAddress =
         new InetSocketAddress(
-            InetAddress.getByName(memcachedContainer.getHost()).getHostAddress(),
-            memcachedContainer.getMappedPort(11211));
+            secondMemcachedContainer.getHost(), secondMemcachedContainer.getMappedPort(11211));
   }
 
   private static MemcachedClient getMemcached() {
@@ -1060,7 +1063,7 @@ class SpymemcachedTest {
 
   @Test
   void severalConfiguredNodesAreReportedTogether() {
-    MemcachedClient memcached = getMemcached(asList(memcachedAddress, memcachedLiteralAddress));
+    MemcachedClient memcached = getMemcached(asList(memcachedAddress, secondMemcachedAddress));
     testing.runWithSpan(
         "parent", () -> assertThat(memcached.get(key("test-several-nodes"))).isNull());
 
@@ -1069,9 +1072,9 @@ class SpymemcachedTest {
             + ":"
             + memcachedAddress.getPort()
             + ","
-            + memcachedLiteralAddress.getHostString()
+            + secondMemcachedAddress.getHostString()
             + ":"
-            + memcachedLiteralAddress.getPort();
+            + secondMemcachedAddress.getPort();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1091,14 +1094,20 @@ class SpymemcachedTest {
                                   } else {
                                     val.isIn(
                                         memcachedAddress.getHostString(),
-                                        memcachedLiteralAddress.getHostString());
+                                        secondMemcachedAddress.getHostString());
                                   }
                                 }),
-                            equalTo(
+                            satisfies(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : Long.valueOf(memcachedAddress.getPort())),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isIn(
+                                        (long) memcachedAddress.getPort(),
+                                        (long) secondMemcachedAddress.getPort());
+                                  }
+                                }),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
 
     assertDurationMetric(
@@ -1115,7 +1124,7 @@ class SpymemcachedTest {
     nodes.add(memcachedAddress);
     MemcachedClient memcached = getMemcached(nodes);
 
-    nodes.add(memcachedLiteralAddress);
+    nodes.add(secondMemcachedAddress);
 
     testing.runWithSpan(
         "parent", () -> assertThat(memcached.get(key("test-node-list-mutation"))).isNull());
