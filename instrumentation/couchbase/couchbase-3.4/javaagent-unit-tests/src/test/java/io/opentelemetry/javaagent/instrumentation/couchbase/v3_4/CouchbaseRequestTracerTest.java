@@ -23,7 +23,6 @@ import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.cnc.TracingIdentifiers;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Scope;
-import java.lang.reflect.Constructor;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
@@ -31,7 +30,7 @@ import org.junit.jupiter.api.Test;
 class CouchbaseRequestTracerTest {
 
   @Test
-  void capturesSocketPeerInStableMode() throws ReflectiveOperationException {
+  void capturesSocketPeerInStableMode() {
     assumeTrue(emitStableDatabaseSemconv());
     RequestSpan parent = mock(RequestSpan.class);
     RequestSpan delegateSpan = mock(RequestSpan.class);
@@ -57,7 +56,7 @@ class CouchbaseRequestTracerTest {
   }
 
   @Test
-  void preservesSdkPeerWithoutSocketPeerInStableMode() throws ReflectiveOperationException {
+  void preservesSdkPeerWithoutSocketPeerInStableMode() {
     assumeTrue(emitStableDatabaseSemconv());
     RequestSpan delegateSpan = mock(RequestSpan.class);
     RequestSpan span = tracer(delegateSpan).requestSpan(TracingIdentifiers.SPAN_DISPATCH, null);
@@ -70,7 +69,7 @@ class CouchbaseRequestTracerTest {
   }
 
   @Test
-  void preservesSdkPeerInLegacyMode() throws ReflectiveOperationException {
+  void preservesSdkPeerInLegacyMode() {
     assumeFalse(emitStableDatabaseSemconv());
     RequestSpan delegateSpan = mock(RequestSpan.class);
     RequestSpan span = tracer(delegateSpan).requestSpan(TracingIdentifiers.SPAN_DISPATCH, null);
@@ -82,13 +81,9 @@ class CouchbaseRequestTracerTest {
     verify(delegateSpan).attribute(TracingIdentifiers.ATTR_REMOTE_PORT, 11210);
   }
 
-  private static RequestTracer tracer(RequestSpan delegateSpan)
-      throws ReflectiveOperationException {
+  private static RequestTracer tracer(RequestSpan delegateSpan) {
     RequestTracer delegate = mock(RequestTracer.class);
     when(delegate.requestSpan(anyString(), nullable(RequestSpan.class))).thenReturn(delegateSpan);
-    Constructor<CouchbaseRequestTracer> constructor =
-        CouchbaseRequestTracer.class.getDeclaredConstructor(RequestTracer.class);
-    constructor.setAccessible(true);
-    return constructor.newInstance(delegate);
+    return new CouchbaseRequestTracer(delegate);
   }
 }

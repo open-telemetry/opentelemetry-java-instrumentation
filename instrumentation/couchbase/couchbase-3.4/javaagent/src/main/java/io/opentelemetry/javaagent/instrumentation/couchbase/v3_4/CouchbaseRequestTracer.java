@@ -57,7 +57,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     return new CouchbaseRequestTracer(OpenTelemetryRequestTracer.wrap(openTelemetry));
   }
 
-  private CouchbaseRequestTracer(RequestTracer delegate) {
+  CouchbaseRequestTracer(RequestTracer delegate) {
     this.delegate = delegate;
   }
 
