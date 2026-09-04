@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -181,7 +182,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
           || key.equals(DB_SYSTEM_NAME.getKey())
           || key.equals(NETWORK_PEER_ADDRESS.getKey())
           || key.equals(NETWORK_PEER_PORT.getKey())
-          || key.equals("db.query.summary")) {
+          || key.equals(DB_QUERY_SUMMARY.getKey())) {
         return key;
       }
       if (key.equals(DB_COUCHBASE_COLLECTION)) {

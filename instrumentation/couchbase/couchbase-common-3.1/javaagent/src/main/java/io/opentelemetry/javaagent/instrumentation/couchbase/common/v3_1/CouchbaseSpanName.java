@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+
 import javax.annotation.Nullable;
 
 public class CouchbaseSpanName {
-
-  private static final String DB_COLLECTION_NAME = "db.collection.name";
-  private static final String DB_NAMESPACE = "db.namespace";
-  private static final String DB_OPERATION_NAME = "db.operation.name";
-  private static final String DB_QUERY_SUMMARY = "db.query.summary";
 
   private String operation;
   @Nullable private String querySummary;
@@ -26,13 +26,13 @@ public class CouchbaseSpanName {
   }
 
   public void captureAttribute(String key, @Nullable String value) {
-    if (DB_QUERY_SUMMARY.equals(key)) {
+    if (DB_QUERY_SUMMARY.getKey().equals(key)) {
       querySummary = value;
-    } else if (DB_COLLECTION_NAME.equals(key)) {
+    } else if (DB_COLLECTION_NAME.getKey().equals(key)) {
       collection = value;
-    } else if (DB_NAMESPACE.equals(key)) {
+    } else if (DB_NAMESPACE.getKey().equals(key)) {
       namespace = value;
-    } else if (DB_OPERATION_NAME.equals(key) && value != null) {
+    } else if (DB_OPERATION_NAME.getKey().equals(key) && value != null) {
       operation = value;
     }
   }
