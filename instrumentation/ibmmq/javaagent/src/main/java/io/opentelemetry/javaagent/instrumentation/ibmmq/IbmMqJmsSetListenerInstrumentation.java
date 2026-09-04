@@ -23,12 +23,12 @@ public class IbmMqJmsSetListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.ibm.msg.client.jms.JmsMessageConsumer");
+    return hasClassesNamed("javax.jms.MessageConsumer");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("com.ibm.msg.client.jms.JmsMessageConsumer"));
+    return implementsInterface(named("javax.jms.MessageConsumer"));
   }
 
   @Override

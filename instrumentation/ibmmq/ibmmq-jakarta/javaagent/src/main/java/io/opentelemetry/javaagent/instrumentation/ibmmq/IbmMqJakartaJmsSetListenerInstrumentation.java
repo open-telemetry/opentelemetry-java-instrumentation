@@ -23,12 +23,12 @@ public class IbmMqJakartaJmsSetListenerInstrumentation implements TypeInstrument
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.ibm.msg.client.jakarta.jms.JmsMessageConsumer");
+    return hasClassesNamed("jakarta.jms.MessageConsumer");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("com.ibm.msg.client.jakarta.jms.JmsMessageConsumer"));
+    return implementsInterface(named("jakarta.jms.MessageConsumer"));
   }
 
   @Override
