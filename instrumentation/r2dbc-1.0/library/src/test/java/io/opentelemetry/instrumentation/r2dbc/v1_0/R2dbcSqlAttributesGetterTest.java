@@ -119,13 +119,9 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.PORT, 3306)
                 .build());
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
-      assertThat(getter.getServerPort(dbExecution)).isNull();
-    } else {
-      assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
-      assertThat(getter.getServerPort(dbExecution)).isEqualTo(3306);
-    }
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
+    assertThat(getter.getServerPort(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : 3306);
   }
 
   @Test
