@@ -281,7 +281,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  void configuredServerTarget() {
+  void configuredMasterSlaveServerTarget() {
     String aliasHost = host.equals(ip) ? "localhost" : ip;
     String configuredServerAddress = host + ":" + port + "," + aliasHost + ":" + port;
 
