@@ -62,7 +62,7 @@ public class CouchbaseServerTarget {
   }
 
   @Nullable
-  private static String cleanHost(@Nullable String host) {
+  static String cleanHost(@Nullable String host) {
     if (host == null) {
       return null;
     }

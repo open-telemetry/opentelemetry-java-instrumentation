@@ -52,7 +52,9 @@ public class CouchbaseConnectionStrings {
         if (seed == null) {
           target.addEndpoint(null, -1);
         } else {
-          target.addEndpoint(seed.hostname(), seed.port() > 0 ? seed.port() : -1);
+          target.addEndpoint(
+              CouchbaseServerTarget.cleanHost(seed.hostname()),
+              seed.port() > 0 ? seed.port() : -1);
         }
       }
       return CouchbaseServerTarget.direct(target.build());
