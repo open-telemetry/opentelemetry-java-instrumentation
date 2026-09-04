@@ -31,32 +31,29 @@ public final class VertxRedisServerTargets {
     }
     if (options.getType() == RedisClientType.SENTINEL) {
       return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
-          effectiveEndpoints(options.getEndpoints()), options.getMasterName());
+          discoveryEndpoints(options.getEndpoints()), options.getMasterName());
     }
     if (options.getType() == RedisClientType.STANDALONE) {
-      return RedisServerTarget.ofEndpoint(effectiveEndpoint(options.getEndpoint()));
+      return RedisServerTarget.ofEndpoint(options.getEndpoint());
     }
-    return RedisServerTarget.ofUnorderedEndpoints(effectiveEndpoints(options.getEndpoints()));
+    return RedisServerTarget.ofUnorderedEndpoints(options.getEndpoints());
   }
 
-  private static List<String> effectiveEndpoints(List<String> connectionStrings) {
+  private static List<String> discoveryEndpoints(List<String> connectionStrings) {
     List<String> endpoints = new ArrayList<>(connectionStrings.size());
     for (String connectionString : connectionStrings) {
-      endpoints.add(effectiveEndpoint(connectionString));
+      try {
+        RedisURI redisUri = new RedisURI(connectionString);
+        SocketAddress address = redisUri.socketAddress();
+        endpoints.add(
+            address.isInetSocket()
+                ? RedisServerTarget.endpoint(address.host(), address.port())
+                : connectionString);
+      } catch (IllegalArgumentException ignored) {
+        endpoints.add(connectionString);
+      }
     }
     return endpoints;
-  }
-
-  private static String effectiveEndpoint(String connectionString) {
-    try {
-      RedisURI redisUri = new RedisURI(connectionString);
-      SocketAddress address = redisUri.socketAddress();
-      return address.isInetSocket()
-          ? RedisServerTarget.endpoint(address.host(), address.port())
-          : connectionString;
-    } catch (IllegalArgumentException ignored) {
-      return connectionString;
-    }
   }
 
   public static void set(RedisURI redisUri, @Nullable RedisServerTarget target) {
