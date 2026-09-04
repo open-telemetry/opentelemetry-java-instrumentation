@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.toList;
 
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -209,13 +210,9 @@ public class RuleParser {
    * @return a String describing the probable root cause
    */
   private static String rootCause(Throwable exception) {
-    String rootClass = "";
-    String message = null;
     // Go to the bottom of it
-    for (; exception != null; exception = exception.getCause()) {
-      rootClass = exception.getClass().getSimpleName();
-      message = exception.getMessage();
-    }
-    return message == null ? rootClass : message;
+    Throwable rootCause = CauseUnwrapper.rootCause(exception);
+    String message = rootCause.getMessage();
+    return message == null ? rootCause.getClass().getSimpleName() : message;
   }
 }

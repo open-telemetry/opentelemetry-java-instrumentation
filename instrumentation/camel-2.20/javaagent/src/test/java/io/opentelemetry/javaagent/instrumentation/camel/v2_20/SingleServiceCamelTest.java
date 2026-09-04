@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.SuppressionTest.addNestedHttpClientSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -16,7 +17,11 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
@@ -95,16 +100,17 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
     try {
       clientContext.createProducerTemplate().sendBody("direct:input", "testContent");
 
+      String url = "http://localhost:" + port + "/camelService?sig=REDACTED";
       testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("input").hasKind(SpanKind.INTERNAL),
-                  span ->
-                      span.hasName("GET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttribute(
-                              URL_FULL, "http://localhost:" + port + "/camelService?sig=REDACTED"),
-                  span -> span.hasName("GET /camelService").hasKind(SpanKind.SERVER)));
+          trace -> {
+            List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+            assertions.add(span -> span.hasName("input").hasKind(SpanKind.INTERNAL));
+            assertions.add(
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasAttribute(URL_FULL, url));
+            addNestedHttpClientSpan(assertions, "GET", url, "localhost", port, trace.getSpan(1));
+            assertions.add(span -> span.hasName("GET /camelService").hasKind(SpanKind.SERVER));
+            trace.hasSpansSatisfyingExactly(assertions);
+          });
     } finally {
       clientContext.stop();
     }
@@ -126,16 +132,28 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
       clientContext.createProducerTemplate().sendBody("direct:userInfoInput", "testContent");
 
       testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("userInfoInput").hasKind(SpanKind.INTERNAL),
-                  span ->
-                      span.hasName("POST")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttribute(
-                              URL_FULL,
-                              "http://REDACTED:REDACTED@localhost:" + port + "/camelService"),
-                  span -> span.hasName("POST /camelService").hasKind(SpanKind.SERVER)));
+          trace -> {
+            List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+            assertions.add(span -> span.hasName("userInfoInput").hasKind(SpanKind.INTERNAL));
+            assertions.add(
+                span ->
+                    span.hasName("POST")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttribute(
+                            URL_FULL,
+                            "http://REDACTED:REDACTED@localhost:" + port + "/camelService"));
+            // the http client library strips the user info before the nested http client
+            // instrumentation sees the url
+            addNestedHttpClientSpan(
+                assertions,
+                "POST",
+                "http://localhost:" + port + "/camelService",
+                "localhost",
+                port,
+                trace.getSpan(1));
+            assertions.add(span -> span.hasName("POST /camelService").hasKind(SpanKind.SERVER));
+            trace.hasSpansSatisfyingExactly(assertions);
+          });
     } finally {
       clientContext.stop();
     }

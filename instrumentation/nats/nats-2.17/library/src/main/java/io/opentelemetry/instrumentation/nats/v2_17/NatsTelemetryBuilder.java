@@ -66,6 +66,7 @@ public final class NatsTelemetryBuilder {
     return new NatsTelemetry(
         NatsInstrumenterFactory.createPublishInstrumenter(openTelemetry, headers),
         NatsInstrumenterFactory.createRequestInstrumenter(openTelemetry, headers),
+        NatsInstrumenterFactory.createSettleInstrumenter(openTelemetry, headers),
         NatsInstrumenterFactory.createConsumerProcessInstrumenter(openTelemetry, headers));
   }
 }

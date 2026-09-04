@@ -10,66 +10,71 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 import com.openai.models.chat.completions.ChatCompletion;
-import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.completions.CompletionUsage;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 
 final class ChatAttributesGetter
-    implements GenAiAttributesGetter<ChatCompletionCreateParams, ChatCompletion> {
+    implements GenAiAttributesGetter<ChatCompletionRequest, ChatCompletion> {
 
   ChatAttributesGetter() {}
 
   @Override
-  public String getOperationName(ChatCompletionCreateParams request) {
+  public String getOperationName(ChatCompletionRequest request) {
     return GenAiAttributes.GenAiOperationNameIncubatingValues.CHAT;
   }
 
   @Override
-  public String getSystem(ChatCompletionCreateParams request) {
+  public String getSystem(ChatCompletionRequest request) {
     return GenAiAttributes.GenAiProviderNameIncubatingValues.OPENAI;
   }
 
   @Override
-  public String getRequestModel(ChatCompletionCreateParams request) {
-    return request.model().asString();
+  public String getRequestModel(ChatCompletionRequest request) {
+    return request.getRequest().model().asString();
+  }
+
+  @Override
+  public boolean isRequestStreaming(ChatCompletionRequest request) {
+    return request.isStreaming();
   }
 
   @Nullable
   @Override
-  public Long getRequestSeed(ChatCompletionCreateParams request) {
-    return request.seed().orElse(null);
+  public Long getRequestSeed(ChatCompletionRequest request) {
+    return request.getRequest().seed().orElse(null);
   }
 
   @Nullable
   @Override
-  public List<String> getRequestEncodingFormats(ChatCompletionCreateParams request) {
+  public List<String> getRequestEncodingFormats(ChatCompletionRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Double getRequestFrequencyPenalty(ChatCompletionCreateParams request) {
-    return request.frequencyPenalty().orElse(null);
+  public Double getRequestFrequencyPenalty(ChatCompletionRequest request) {
+    return request.getRequest().frequencyPenalty().orElse(null);
   }
 
   @Nullable
   @Override
-  public Long getRequestMaxTokens(ChatCompletionCreateParams request) {
-    return request.maxCompletionTokens().orElse(null);
+  public Long getRequestMaxTokens(ChatCompletionRequest request) {
+    return request.getRequest().maxCompletionTokens().orElse(null);
   }
 
   @Nullable
   @Override
-  public Double getRequestPresencePenalty(ChatCompletionCreateParams request) {
-    return request.presencePenalty().orElse(null);
+  public Double getRequestPresencePenalty(ChatCompletionRequest request) {
+    return request.getRequest().presencePenalty().orElse(null);
   }
 
   @Nullable
   @Override
-  public List<String> getRequestStopSequences(ChatCompletionCreateParams request) {
+  public List<String> getRequestStopSequences(ChatCompletionRequest request) {
     return request
+        .getRequest()
         .stop()
         .map(
             s -> {
@@ -86,25 +91,25 @@ final class ChatAttributesGetter
 
   @Nullable
   @Override
-  public Double getRequestTemperature(ChatCompletionCreateParams request) {
-    return request.temperature().orElse(null);
+  public Double getRequestTemperature(ChatCompletionRequest request) {
+    return request.getRequest().temperature().orElse(null);
   }
 
   @Nullable
   @Override
-  public Double getRequestTopK(ChatCompletionCreateParams request) {
+  public Double getRequestTopK(ChatCompletionRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Double getRequestTopP(ChatCompletionCreateParams request) {
-    return request.topP().orElse(null);
+  public Double getRequestTopP(ChatCompletionRequest request) {
+    return request.getRequest().topP().orElse(null);
   }
 
   @Override
   public List<String> getResponseFinishReasons(
-      ChatCompletionCreateParams request, @Nullable ChatCompletion response) {
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
     if (response == null) {
       return emptyList();
     }
@@ -115,8 +120,7 @@ final class ChatAttributesGetter
 
   @Override
   @Nullable
-  public String getResponseId(
-      ChatCompletionCreateParams request, @Nullable ChatCompletion response) {
+  public String getResponseId(ChatCompletionRequest request, @Nullable ChatCompletion response) {
     if (response == null) {
       return null;
     }
@@ -125,8 +129,7 @@ final class ChatAttributesGetter
 
   @Override
   @Nullable
-  public String getResponseModel(
-      ChatCompletionCreateParams request, @Nullable ChatCompletion response) {
+  public String getResponseModel(ChatCompletionRequest request, @Nullable ChatCompletion response) {
     if (response == null) {
       return null;
     }
@@ -136,7 +139,7 @@ final class ChatAttributesGetter
   @Override
   @Nullable
   public Long getUsageInputTokens(
-      ChatCompletionCreateParams request, @Nullable ChatCompletion response) {
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
     if (response == null) {
       return null;
     }
@@ -145,11 +148,39 @@ final class ChatAttributesGetter
 
   @Override
   @Nullable
+  public Long getUsageCacheReadInputTokens(
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
+    if (response == null) {
+      return null;
+    }
+    return response
+        .usage()
+        .flatMap(CompletionUsage::promptTokensDetails)
+        .flatMap(CompletionUsage.PromptTokensDetails::cachedTokens)
+        .orElse(null);
+  }
+
+  @Override
+  @Nullable
   public Long getUsageOutputTokens(
-      ChatCompletionCreateParams request, @Nullable ChatCompletion response) {
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
     if (response == null) {
       return null;
     }
     return response.usage().map(CompletionUsage::completionTokens).orElse(null);
+  }
+
+  @Override
+  @Nullable
+  public Long getUsageReasoningOutputTokens(
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
+    if (response == null) {
+      return null;
+    }
+    return response
+        .usage()
+        .flatMap(CompletionUsage::completionTokensDetails)
+        .flatMap(CompletionUsage.CompletionTokensDetails::reasoningTokens)
+        .orElse(null);
   }
 }

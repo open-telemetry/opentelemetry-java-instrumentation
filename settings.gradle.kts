@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.10"
+    id("org.graalvm.buildtools.native") version "1.1.11"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -68,7 +68,7 @@ dependencyResolutionManagement {
   }
 }
 
-val develocityServer = "https://develocity.opentelemetry.io"
+val develocityServer = "https://community.develocity.cloud"
 val isCI = System.getenv("CI") != null
 val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
 val isRemoteBuildCachePushEnabled = isCI && develocityAccessKey.isNotEmpty()
@@ -78,6 +78,7 @@ val shouldDisableLocalBuildCache =
 develocity {
   if (develocityAccessKey.isNotEmpty()) {
     server = develocityServer
+    projectId = "OpenTelemetry"
   }
 
   buildScan {
@@ -200,6 +201,7 @@ include(":instrumentation:akka:akka-http-10.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:library")
 include(":instrumentation:alibaba-druid-1.0:testing")
+include(":instrumentation:apache-commons-pool-2.0:bootstrap")
 include(":instrumentation:apache-commons-pool-2.0:javaagent")
 include(":instrumentation:apache-commons-pool-2.0:library")
 include(":instrumentation:apache-commons-pool-2.0:testing")
@@ -287,7 +289,9 @@ include(":instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-6.4:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-7.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-7.0:library")
+include(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:bootstrap")
 include(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent")
+include(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent-unit-tests")
 include(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:library")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
@@ -529,6 +533,7 @@ include(":instrumentation:openai:openai-java-1.1:testing")
 include(":instrumentation:openai:openai-java-1.1:openai3-testing")
 include(":instrumentation:opencensus-shim:testing")
 include(":instrumentation:opensearch:opensearch-java-3.0:javaagent")
+include(":instrumentation:opensearch:opensearch-java-3.0:javaagent-unit-tests")
 include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent")
@@ -594,6 +599,7 @@ include(":instrumentation:r2dbc-1.0:javaagent")
 include(":instrumentation:r2dbc-1.0:library")
 include(":instrumentation:r2dbc-1.0:library-instrumentation-shaded")
 include(":instrumentation:r2dbc-1.0:testing")
+include(":instrumentation:rabbitmq-2.7:bootstrap")
 include(":instrumentation:rabbitmq-2.7:javaagent")
 include(":instrumentation:ratpack:ratpack-1.4:javaagent")
 include(":instrumentation:ratpack:ratpack-1.4:testing")

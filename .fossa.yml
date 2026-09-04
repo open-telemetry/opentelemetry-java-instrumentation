@@ -63,6 +63,9 @@ targets:
       target: ':instrumentation:alibaba-druid-1.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:bootstrap'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-commons-pool-2.0:javaagent'
     - type: gradle
       path: ./
@@ -262,6 +265,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:r2dbc-1.0:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:rabbitmq-2.7:bootstrap'
     - type: gradle
       path: ./
       target: ':instrumentation:rabbitmq-2.7:javaagent'
@@ -487,6 +493,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-rest-7.0:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:bootstrap'
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent'
