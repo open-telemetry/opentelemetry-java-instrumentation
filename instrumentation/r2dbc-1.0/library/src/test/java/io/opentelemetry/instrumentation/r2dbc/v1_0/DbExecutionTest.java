@@ -305,7 +305,7 @@ class DbExecutionTest {
 
     DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
 
-    assertThat(dbExecution.getSystemName()).isEqualTo("clickhouse");
+    assertThat(dbExecution.getSystemName()).isEqualTo("other_sql");
     assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1,host2");
     assertThat(dbExecution.getConfiguredServerPort()).isNull();
   }
@@ -507,6 +507,7 @@ class DbExecutionTest {
         "host1?email=user@example.com,host2",
         "host1#fragment,host2",
         "[]:5432,host2",
+        "[host1]:5432,host2",
         ":5432,host2",
         "host1,not:an:ipv6",
         "host1,[not:an:ipv6]",

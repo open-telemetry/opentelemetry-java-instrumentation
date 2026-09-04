@@ -112,7 +112,7 @@ public final class DbExecution {
         factoryOptions.hasOption(PROTOCOL) ? (String) factoryOptions.getValue(PROTOCOL) : null;
     String resolvedDriver = resolveDriver(driver, protocol);
     String resolvedProtocol = resolveProtocol(driver, protocol);
-    this.systemName = resolveDbSystemName(resolvedDriver);
+    this.systemName = resolveDbSystemName(driver, protocol);
     this.serverAddress =
         factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
     this.serverPort =
@@ -274,7 +274,8 @@ public final class DbExecution {
     return null;
   }
 
-  private static String resolveDbSystemName(@Nullable String driver) {
-    return driver != null ? DRIVER_TO_SYSTEM_NAME.getOrDefault(driver, OTHER_SQL) : OTHER_SQL;
+  private static String resolveDbSystemName(@Nullable String driver, @Nullable String protocol) {
+    String rawDriver = "pool".equals(driver) && protocol != null ? protocol : driver;
+    return rawDriver != null ? DRIVER_TO_SYSTEM_NAME.getOrDefault(rawDriver, OTHER_SQL) : OTHER_SQL;
   }
 }
