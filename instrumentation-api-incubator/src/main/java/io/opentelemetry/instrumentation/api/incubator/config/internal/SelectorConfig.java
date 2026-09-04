@@ -54,9 +54,10 @@ public final class SelectorConfig {
    * ignored and logged, since that setting matches values literally and never supported wildcards.
    *
    * @deprecated Use {@link #resolve(DeclarativeConfigProperties, String, String, Stability)} and
-   *     specify the selector configuration stability explicitly.
+   *     specify the selector configuration stability explicitly. May be removed in the next minor
+   *     release.
    */
-  @Deprecated
+  @Deprecated // may be removed in the next minor release
   @Nullable
   public static IncludeExclude resolve(
       DeclarativeConfigProperties config, String instrumentationName, String selectorName) {
@@ -73,9 +74,10 @@ public final class SelectorConfig {
    *     declarative configuration does not contain a value. This is needed by library
    *     instrumentation entry points that have no programmatic configuration surface.
    * @deprecated Use {@link #resolve(DeclarativeConfigProperties, String, String, Stability,
-   *     boolean)} and specify the selector configuration stability explicitly.
+   *     boolean)} and specify the selector configuration stability explicitly. May be removed in
+   *     the next minor release.
    */
-  @Deprecated
+  @Deprecated // may be removed in the next minor release
   @Nullable
   public static IncludeExclude resolve(
       DeclarativeConfigProperties config,
