@@ -30,7 +30,6 @@ import javax.annotation.Nullable;
 public final class UrlParsingUtils {
 
   private static final Logger logger = Logger.getLogger(UrlParsingUtils.class.getName());
-  private static final int MAX_SERVER_ADDRESS_ENDPOINTS = 5;
 
   // Source: Regular Expressions Cookbook 2nd edition - 8.17.
   // Matches Standard, Mixed or Compressed notation in a wider body of text
@@ -579,7 +578,9 @@ public final class UrlParsingUtils {
     }
 
     StringBuilder address = new StringBuilder();
-    for (int i = 0; i < endpoints.size() && i < MAX_SERVER_ADDRESS_ENDPOINTS; i++) {
+    for (int i = 0;
+        i < endpoints.size() && i < DbServerTargetBuilder.DEFAULT_MAX_ENDPOINTS;
+        i++) {
       HostPort endpoint = endpoints.get(i);
       if (address.length() > 0) {
         address.append(',');
@@ -594,7 +595,9 @@ public final class UrlParsingUtils {
 
   private static String joinFirstEndpoints(List<String> entries) {
     StringBuilder address = new StringBuilder();
-    for (int i = 0; i < entries.size() && i < MAX_SERVER_ADDRESS_ENDPOINTS; i++) {
+    for (int i = 0;
+        i < entries.size() && i < DbServerTargetBuilder.DEFAULT_MAX_ENDPOINTS;
+        i++) {
       if (address.length() > 0) {
         address.append(',');
       }
