@@ -18,19 +18,20 @@ final class RuntimeFieldBasedImplementationSupplier
 
   @Override
   public <U extends T, V extends F, T, F> VirtualField<U, V> find(
-      Class<T> type, Class<F> fieldType) {
+      String fieldName, Class<T> type, Class<F> fieldType) {
     if (System.getSecurityManager() == null) {
-      return findInternal(type, fieldType);
+      return findInternal(fieldName, type, fieldType);
     }
     return java.security.AccessController.doPrivileged(
-        (PrivilegedAction<VirtualField<U, V>>) () -> findInternal(type, fieldType));
+        (PrivilegedAction<VirtualField<U, V>>) () -> findInternal(fieldName, type, fieldType));
   }
 
   private static <U extends T, V extends F, T, F> VirtualField<U, V> findInternal(
-      Class<T> type, Class<F> fieldType) {
+      String fieldName, Class<T> type, Class<F> fieldType) {
     try {
       String virtualFieldImplClassName =
-          getVirtualFieldImplementationClassName(type.getTypeName(), fieldType.getTypeName());
+          getVirtualFieldImplementationClassName(
+              fieldName, type.getTypeName(), fieldType.getTypeName());
       Class<?> contextStoreClass = Class.forName(virtualFieldImplClassName, false, null);
       Method method = contextStoreClass.getMethod("getVirtualField", Class.class, Class.class);
       @SuppressWarnings("unchecked") // casting reflection result
