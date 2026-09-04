@@ -10,10 +10,8 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStable
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
-  assertThat => assertThatSpan,
-  equalTo
-}
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION
@@ -481,7 +479,8 @@ class RediscalaConfiguredTargetTest {
           .singleElement()
           .satisfies(new Consumer[SpanData] {
             override def accept(span: SpanData): Unit =
-              assertThatSpan(span)
+              OpenTelemetryAssertions
+                .assertThat(span)
                 .hasName(expectedSpanName)
                 .hasKind(CLIENT)
                 .hasAttributesSatisfyingExactly(
