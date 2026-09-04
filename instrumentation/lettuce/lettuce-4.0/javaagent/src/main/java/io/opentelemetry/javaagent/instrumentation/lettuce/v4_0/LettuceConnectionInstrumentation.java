@@ -29,8 +29,7 @@ class LettuceConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("build").and(takesArguments(0)),
-        getClass().getName() + "$BuildAdvice");
+        named("build").and(takesArguments(0)), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -45,5 +44,4 @@ class LettuceConnectionInstrumentation implements TypeInstrumentation {
       }
     }
   }
-
 }

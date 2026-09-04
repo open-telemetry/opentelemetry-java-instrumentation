@@ -199,7 +199,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                                 DB_QUERY_TEXT,
                                 emitStableDatabaseSemconv() ? "SET TESTSETKEY ?" : null),
                             equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "SET" : null),
-                            equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "SET" : null))));
+                            equalTo(
+                                DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "SET" : null))));
 
     if (emitStableDatabaseSemconv()) {
       assertDurationMetric(

@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -210,14 +210,11 @@ class LettuceNetworkAttributesGetterTest {
 
   private static Stream<Arguments> resolvedAddresses() throws UnknownHostException {
     return Stream.of(
-        argumentSet(
-            "ipv4", InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), "10.1.2.3"),
+        argumentSet("ipv4", InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), "10.1.2.3"),
         argumentSet(
             "ipv6",
             InetAddress.getByAddress(
-                new byte[] {
-                  0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
-                }),
+                new byte[] {0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}),
             "2001:db8:0:0:0:0:0:1"));
   }
 }

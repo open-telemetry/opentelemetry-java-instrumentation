@@ -75,8 +75,7 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Override
   public String getNetworkPeerAddress(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
     return emitStableDatabaseSemconv()
-        ? LettuceCommandPeer.getNetworkPeerAddress(
-            LettuceSingletons.commandPeerAddress(request))
+        ? LettuceCommandPeer.getNetworkPeerAddress(LettuceSingletons.commandPeerAddress(request))
         : null;
   }
 
