@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 // Couchbase 2.x moved its connection string type and changed its seed representation three times.
 // Reflection keeps this helper compatible across the full range. Prefer allHosts when available
 // because 2.5.7 through 2.7.7 drop seeds that fail DNS resolution from hosts.
-class CouchbaseConnectionStrings {
+public final class CouchbaseConnectionStrings {
 
   private static final int COUCHBASE_DEFAULT_PORT = 11210;
   private static final int COUCHBASES_DEFAULT_PORT = 11207;
@@ -62,7 +62,7 @@ class CouchbaseConnectionStrings {
       };
 
   @Nullable
-  static DbServerTarget target(@Nullable Object connectionString) {
+  public static DbServerTarget target(@Nullable Object connectionString) {
     if (connectionString == null) {
       return null;
     }
