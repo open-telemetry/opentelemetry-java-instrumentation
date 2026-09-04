@@ -259,7 +259,7 @@ class VertxSqlClientServerListTest {
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
