@@ -47,7 +47,7 @@ class CassandraResponsePeerTest {
   }
 
   @Test
-  void omitsUnresolvedAndNonInetChannelAddresses() throws Exception {
+  void omitsUnresolvedAndNonInetChannelAddresses() {
     ChannelHandlerContext context = mock(ChannelHandlerContext.class);
     Channel channel = mock(Channel.class);
     Frame unresolvedFrame = frame(1);
@@ -128,20 +128,24 @@ class CassandraResponsePeerTest {
     SocketAddress remoteAddress();
   }
 
-  private static class TestContext implements PublicContext {
-    private final PublicChannel channel;
+  private interface InternalContext extends PublicContext {}
 
-    private TestContext(PublicChannel channel) {
+  private interface InternalChannel extends PublicChannel {}
+
+  private static class TestContext implements InternalContext {
+    private final InternalChannel channel;
+
+    private TestContext(InternalChannel channel) {
       this.channel = channel;
     }
 
     @Override
-    public PublicChannel channel() {
+    public InternalChannel channel() {
       return channel;
     }
   }
 
-  private static class TestChannel implements PublicChannel {
+  private static class TestChannel implements InternalChannel {
     private final SocketAddress remoteAddress;
 
     private TestChannel(SocketAddress remoteAddress) {
