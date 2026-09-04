@@ -126,6 +126,9 @@ class JdbcConnectionUrlParserTest {
   @ValueSource(
       strings = {
         "jdbc:postgresql://h1:5432,unexpected=value/db",
+        "jdbc:unknown://valid.host:1234,evil host:1234/db",
+        "jdbc:unknown://address=(host=valid.host)(port=1234),"
+            + "address=(host=evil host)(port=1234)/db",
         "jdbc:h2:tcp://h1:8082,h2:8083/db",
         "jdbc:sqlserver://;failoverPartner=h2",
         "jdbc:sqlserver://h1;failoverPartner=unexpected=value",

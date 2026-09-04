@@ -528,6 +528,17 @@ public final class UrlParsingUtils {
       return target == null ? null : new ServerAddressGroup(target.getAddress());
     }
 
+    for (HostPort endpoint : endpoints) {
+      String host = endpoint.host();
+      if (host.startsWith("/")) {
+        continue;
+      }
+      int instanceStart = host.indexOf('\\');
+      String networkHost = instanceStart < 0 ? host : host.substring(0, instanceStart);
+      if (!DbServerTargetBuilder.isValidHost(networkHost)) {
+        return null;
+      }
+    }
     return renderSpecialServerAddressGroup(entries, endpoints, defaultPort);
   }
 
