@@ -7,7 +7,6 @@ dependencies {
   testImplementation(project(":instrumentation:couchbase:couchbase-3.4:javaagent"))
   testImplementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
   testImplementation("com.couchbase.client:java-client:3.4.0")
-  testImplementation("io.opentelemetry:opentelemetry-api")
 }
 
 tasks {
