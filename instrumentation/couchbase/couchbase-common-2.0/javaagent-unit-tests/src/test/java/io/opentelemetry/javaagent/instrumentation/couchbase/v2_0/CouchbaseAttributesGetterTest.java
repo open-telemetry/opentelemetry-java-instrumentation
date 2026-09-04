@@ -23,7 +23,11 @@ class CouchbaseAttributesGetterTest {
   @Test
   void reportsTheConfiguredTargetRatherThanTheNodeThatAnswered() {
     CouchbaseRequestInfo request =
-        CouchbaseRequestInfo.create("bucket", target("cluster.example", 0), getClass(), "get");
+        CouchbaseRequestInfo.create(
+            "bucket",
+            DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
+            getClass(),
+            "get");
     request.setNode(new InetSocketAddress("192.0.2.1", 32768), "node.example:11210");
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
@@ -35,7 +39,11 @@ class CouchbaseAttributesGetterTest {
   @Test
   void omitsTheDefaultPortOfASingleConfiguredSeed() {
     CouchbaseRequestInfo request =
-        CouchbaseRequestInfo.create("bucket", target("node.example", 11210), getClass(), "get");
+        CouchbaseRequestInfo.create(
+            "bucket",
+            DbServerTarget.builder(11210).addEndpoint("node.example", 11210).build(),
+            getClass(),
+            "get");
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
     assertThat(getter.getServerPort(request)).isNull();
@@ -44,7 +52,11 @@ class CouchbaseAttributesGetterTest {
   @Test
   void reportsANonDefaultPortOnlyInStableMode() {
     CouchbaseRequestInfo request =
-        CouchbaseRequestInfo.create("bucket", target("node.example", 11211), getClass(), "get");
+        CouchbaseRequestInfo.create(
+            "bucket",
+            DbServerTarget.builder(11210).addEndpoint("node.example", 11211).build(),
+            getClass(),
+            "get");
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
     assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? 11211 : null);
@@ -79,7 +91,11 @@ class CouchbaseAttributesGetterTest {
   @Test
   void preservesTheConfiguredTargetInStableMode() {
     CouchbaseRequestInfo request =
-        CouchbaseRequestInfo.create("bucket", target("cluster.example", 0), getClass(), "get");
+        CouchbaseRequestInfo.create(
+            "bucket",
+            DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
+            getClass(),
+            "get");
     request.setNode(new InetSocketAddress("192.0.2.1", 32768), "node.example:11210");
 
     AttributesBuilder attributes = Attributes.builder();
@@ -124,7 +140,11 @@ class CouchbaseAttributesGetterTest {
   @Test
   void keepsTheLastContactedNodeOfEverySubscriptionApart() {
     CouchbaseRequestInfo request =
-        CouchbaseRequestInfo.create("bucket", target("cluster.example", 0), getClass(), "get");
+        CouchbaseRequestInfo.create(
+            "bucket",
+            DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
+            getClass(),
+            "get");
     InetSocketAddress firstPeer = new InetSocketAddress("192.0.2.1", 32768);
     InetSocketAddress secondPeer = new InetSocketAddress("192.0.2.2", 32769);
     request.setNode(secondPeer, "second.example:11211");
@@ -142,16 +162,16 @@ class CouchbaseAttributesGetterTest {
   @Test
   void copyCarriesTheConfiguredTargetOfTheClientThatIssuedIt() {
     CouchbaseRequestInfo request =
-        CouchbaseRequestInfo.create("bucket", target("cluster.example", 0), getClass(), "get");
+        CouchbaseRequestInfo.create(
+            "bucket",
+            DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
+            getClass(),
+            "get");
 
     CouchbaseRequestInfo copy = request.copySupplier().get();
     assertThat(copy.getBucket()).isEqualTo("bucket");
     assertThat(copy.getOperation()).isEqualTo(request.getOperation());
     assertThat(copy.getServerTarget()).isSameAs(request.getServerTarget());
     assertThat(copy.getNode()).isNull();
-  }
-
-  private static DbServerTarget target(String host, int port) {
-    return DbServerTarget.builder(11210).addEndpoint(host, port > 0 ? port : -1).build();
   }
 }
