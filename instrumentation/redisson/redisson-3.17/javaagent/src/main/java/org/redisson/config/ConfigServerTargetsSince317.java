@@ -52,19 +52,20 @@ public class ConfigServerTargetsSince317 {
     }
     SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
     if (sentinelConfig != null) {
-      return ofAddresses(sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
+      return ofSentinelAddresses(
+          sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
     }
     ClusterServersConfig clusterConfig = config.getClusterServersConfig();
     if (clusterConfig != null) {
-      return ofAddresses(clusterConfig.getNodeAddresses());
+      return ofUnorderedAddresses(clusterConfig.getNodeAddresses());
     }
     ReplicatedServersConfig replicatedConfig = config.getReplicatedServersConfig();
     if (replicatedConfig != null) {
-      return ofAddresses(replicatedConfig.getNodeAddresses());
+      return ofUnorderedAddresses(replicatedConfig.getNodeAddresses());
     }
     MasterSlaveServersConfig masterSlaveConfig = config.getMasterSlaveServersConfig();
     if (masterSlaveConfig != null) {
-      return ofAddresses(
+      return ofMasterSlaveAddresses(
           masterSlaveConfig.getMasterAddress(), masterSlaveConfig.getSlaveAddresses());
     }
     return null;
@@ -95,7 +96,7 @@ public class ConfigServerTargetsSince317 {
   }
 
   @Nullable
-  private static RedisServerTarget ofAddresses(@Nullable Collection<String> addresses) {
+  private static RedisServerTarget ofUnorderedAddresses(@Nullable Collection<String> addresses) {
     if (addresses == null || addresses.isEmpty()) {
       return null;
     }
@@ -104,7 +105,7 @@ public class ConfigServerTargetsSince317 {
   }
 
   @Nullable
-  private static RedisServerTarget ofAddresses(
+  private static RedisServerTarget ofMasterSlaveAddresses(
       @Nullable String firstAddress, @Nullable Collection<String> otherAddresses) {
     List<String> endpoints = new ArrayList<>();
     if (firstAddress != null) {
@@ -128,7 +129,7 @@ public class ConfigServerTargetsSince317 {
   }
 
   @Nullable
-  private static RedisServerTarget ofAddresses(
+  private static RedisServerTarget ofSentinelAddresses(
       @Nullable Collection<String> addresses, @Nullable String logicalName) {
     if (addresses == null || addresses.isEmpty()) {
       return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(null, logicalName);
