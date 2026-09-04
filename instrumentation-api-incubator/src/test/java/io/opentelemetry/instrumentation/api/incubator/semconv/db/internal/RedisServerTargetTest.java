@@ -76,6 +76,18 @@ class RedisServerTargetTest {
   }
 
   @Test
+  void discoveryEndpointsKeepOrderAndDuplicatesAndLogicalName() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpointsAndLogicalName(
+            asList("redis://sentinel2:26380", "redis://sentinel1:26379", "redis://sentinel2:26380"),
+            "  mymaster  ");
+
+    assertThat(target.getAddress())
+        .isEqualTo("sentinel2:26380,sentinel1:26379,sentinel2:26380/mymaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void singleDiscoveryEndpointKeepsItsPortInTheAddress() {
     RedisServerTarget target =
         RedisServerTarget.ofUnorderedEndpointsAndLogicalName(

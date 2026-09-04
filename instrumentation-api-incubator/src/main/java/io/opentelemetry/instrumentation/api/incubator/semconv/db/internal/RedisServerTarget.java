@@ -66,8 +66,20 @@ public final class RedisServerTarget {
   }
 
   @Nullable
+  public static RedisServerTarget ofEndpointsAndLogicalName(
+      @Nullable List<String> endpoints, @Nullable String name) {
+    return createFromEndpointsAndLogicalName(endpoints, name, false);
+  }
+
+  @Nullable
   public static RedisServerTarget ofUnorderedEndpointsAndLogicalName(
       @Nullable List<String> endpoints, @Nullable String name) {
+    return createFromEndpointsAndLogicalName(endpoints, name, true);
+  }
+
+  @Nullable
+  private static RedisServerTarget createFromEndpointsAndLogicalName(
+      @Nullable List<String> endpoints, @Nullable String name, boolean unordered) {
     String logicalName = name == null ? "" : name.trim();
     List<Endpoint> parsed = parseConfiguredEndpoints(endpoints, true);
     if (parsed == null) {
@@ -77,10 +89,12 @@ public final class RedisServerTarget {
     for (Endpoint endpoint : parsed) {
       rendered.add(endpoint.renderConfigured());
     }
+    if (unordered) {
+      rendered.sort(String::compareTo);
+    }
     if (rendered.isEmpty()) {
       return ofLogicalName(logicalName);
     }
-    rendered.sort(String::compareTo);
     String address = renderEndpointList(rendered);
     if (address == null) {
       return ofLogicalName(logicalName);
