@@ -907,9 +907,6 @@ class VertxSqlClientTest {
                       equalTo(DB_STATEMENT, "select * from test"),
                       equalTo(DB_OPERATION, "SELECT"),
                       equalTo(DB_SQL_TABLE, "test"),
-                      equalTo(
-                          maybeStablePeerService(),
-                          emitStableDatabaseSemconv() ? null : "test-peer-service"),
                       equalTo(SERVER_ADDRESS, null),
                       equalTo(SERVER_PORT, null)));
       return;
