@@ -107,7 +107,11 @@ class CassandraEndpointAttributesTest {
   void configuredTargetIsAvailableWithoutExecutionInfo() {
     CassandraRequest request =
         CassandraRequest.create(
-            session, target(singletonList("cassandra.example.com:9042")), "SELECT 1");
+            session,
+            emitStableDatabaseSemconv()
+                ? target(singletonList("cassandra.example.com:9042"))
+                : null,
+            "SELECT 1");
     AttributesBuilder builder = Attributes.builder();
 
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
@@ -210,7 +214,9 @@ class CassandraEndpointAttributesTest {
   }
 
   private Attributes serverAttributes(DbServerTarget serverTarget) {
-    CassandraRequest request = CassandraRequest.create(session, serverTarget, "SELECT 1");
+    CassandraRequest request =
+        CassandraRequest.create(
+            session, emitStableDatabaseSemconv() ? serverTarget : null, "SELECT 1");
     AttributesBuilder startAttributes = Attributes.builder();
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
         .onStart(startAttributes, Context.root(), request);

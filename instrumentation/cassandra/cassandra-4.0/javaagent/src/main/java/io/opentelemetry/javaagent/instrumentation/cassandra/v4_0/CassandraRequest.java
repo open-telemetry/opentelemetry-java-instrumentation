@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singleton;
 
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
@@ -92,7 +91,7 @@ abstract class CassandraRequest {
       @Nullable Long batchSize) {
     return new AutoValue_CassandraRequest(
         session,
-        emitStableDatabaseSemconv() ? serverTarget : null,
+        serverTarget,
         queryTexts,
         allQueriesParameterized,
         mixedParameterizedQueries,
