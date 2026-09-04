@@ -29,7 +29,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtr
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -76,7 +75,8 @@ class CassandraEndpointAttributesTest {
       when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
     }
 
-    Attributes attributes = serverAttributes(target(singletonList("cassandra.example.com:9042")));
+    Attributes attributes =
+        serverAttributes(CassandraServerTarget.of(singletonList("cassandra.example.com:9042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("cassandra.example.com");
@@ -93,7 +93,7 @@ class CassandraEndpointAttributesTest {
     }
 
     Attributes attributes =
-        serverAttributes(target(asList("node1.example.com:9042", "[::1]:9042")));
+        serverAttributes(CassandraServerTarget.of(asList("node1.example.com:9042", "[::1]:9042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("::1,node1.example.com");
@@ -109,7 +109,7 @@ class CassandraEndpointAttributesTest {
         CassandraRequest.create(
             session,
             emitStableDatabaseSemconv()
-                ? target(singletonList("cassandra.example.com:9042"))
+                ? CassandraServerTarget.of(singletonList("cassandra.example.com:9042"))
                 : null,
             "SELECT 1");
     AttributesBuilder builder = Attributes.builder();
@@ -129,7 +129,8 @@ class CassandraEndpointAttributesTest {
       when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "host-id"));
     }
 
-    Attributes attributes = serverAttributes(target(singletonList("proxy.example.com:29042")));
+    Attributes attributes =
+        serverAttributes(CassandraServerTarget.of(singletonList("proxy.example.com:29042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("proxy.example.com");
@@ -226,10 +227,6 @@ class CassandraEndpointAttributesTest {
         .putAll(startAttributes.build())
         .putAll(endAttributes.build())
         .build();
-  }
-
-  private static DbServerTarget target(List<String> contactPoints) {
-    return CassandraServerTarget.of(contactPoints);
   }
 
   private static void assertCoordinatorIsServer(Attributes attributes) {
