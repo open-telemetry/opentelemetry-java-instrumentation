@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse;
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DERBY;
@@ -2423,7 +2424,7 @@ class JdbcConnectionUrlParserTest {
 
   @Test
   void invalidUnixSocketInServerAddressGroupFailsClosed() {
-    assertThat(UrlParsingUtils.parseServerAddressGroup("/valid.sock,/invalid?sock", null)).isNull();
+    assertThat(parseServerAddressGroup("/valid.sock,/invalid?sock", null)).isNull();
   }
 
   @ParameterizedTest
