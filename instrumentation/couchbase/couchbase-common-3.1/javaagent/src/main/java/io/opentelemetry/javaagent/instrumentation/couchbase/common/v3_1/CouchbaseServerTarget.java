@@ -37,6 +37,11 @@ public class CouchbaseServerTarget {
     return target == null ? null : new CouchbaseServerTarget(target, canonicalScheme);
   }
 
+  private CouchbaseServerTarget(DbServerTarget target, @Nullable String scheme) {
+    this.target = target;
+    this.scheme = scheme;
+  }
+
   static int defaultPort(@Nullable String scheme) {
     if ("couchbase".equalsIgnoreCase(scheme)) {
       return COUCHBASE_DEFAULT_PORT;
@@ -45,11 +50,6 @@ public class CouchbaseServerTarget {
       return COUCHBASES_DEFAULT_PORT;
     }
     return -1;
-  }
-
-  private CouchbaseServerTarget(DbServerTarget target, @Nullable String scheme) {
-    this.target = target;
-    this.scheme = scheme;
   }
 
   public String getAddress() {
