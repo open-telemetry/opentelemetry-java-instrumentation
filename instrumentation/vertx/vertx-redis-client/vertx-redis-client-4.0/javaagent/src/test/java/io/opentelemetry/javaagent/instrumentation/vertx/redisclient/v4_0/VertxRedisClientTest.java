@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -20,7 +19,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
@@ -589,20 +587,14 @@ class VertxRedisClientTest {
   private static AttributeAssertion[] redisSpanAttributes(
       String operationName, String queryText, Long batchSize) {
     List<AttributeAssertion> assertions = new ArrayList<>();
-    if (emitOldDatabaseSemconv()) {
-      assertions.add(equalTo(DB_SYSTEM, REDIS));
-      assertions.add(equalTo(DB_STATEMENT, queryText));
-      assertions.add(equalTo(DB_OPERATION, operationName));
-      assertions.add(equalTo(DB_REDIS_DATABASE_INDEX, 1));
-    }
-    if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(DB_SYSTEM_NAME, REDIS));
-      assertions.add(equalTo(DB_QUERY_TEXT, queryText));
-      assertions.add(equalTo(DB_OPERATION_NAME, operationName));
-      assertions.add(equalTo(DB_NAMESPACE, "1"));
-      assertions.add(equalTo(DB_OPERATION_BATCH_SIZE, batchSize));
-      assertions.add(equalTo(DB_NAME, emitOldDatabaseSemconv() ? "1" : null));
-    }
+    assertions.add(equalTo(maybeStable(DB_SYSTEM), REDIS));
+    assertions.add(equalTo(maybeStable(DB_STATEMENT), queryText));
+    assertions.add(equalTo(maybeStable(DB_OPERATION), operationName));
+    assertions.add(
+        equalTo(DB_REDIS_DATABASE_INDEX, emitStableDatabaseSemconv() ? null : Long.valueOf(1)));
+    assertions.add(equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null));
+    assertions.add(
+        equalTo(DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? batchSize : null));
     assertions.add(equalTo(SERVER_ADDRESS, host));
     assertions.add(equalTo(SERVER_PORT, port));
     assertions.add(equalTo(maybeStablePeerService(), "test-peer-service"));
