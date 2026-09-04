@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -57,14 +56,14 @@ final class CassandraSqlAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CassandraRequest request) {
-    DbServerTarget serverTarget = getServerTarget(request);
+    DbServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(CassandraRequest request) {
-    DbServerTarget serverTarget = getServerTarget(request);
+    DbServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getPort();
   }
 
@@ -90,13 +89,5 @@ final class CassandraSqlAttributesGetter
   @Override
   public boolean isParameterizedQuery(CassandraRequest request, int queryIndex) {
     return request.isParameterizedQuery(queryIndex);
-  }
-
-  @Nullable
-  private static DbServerTarget getServerTarget(CassandraRequest request) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
-    return request.getServerTarget();
   }
 }
