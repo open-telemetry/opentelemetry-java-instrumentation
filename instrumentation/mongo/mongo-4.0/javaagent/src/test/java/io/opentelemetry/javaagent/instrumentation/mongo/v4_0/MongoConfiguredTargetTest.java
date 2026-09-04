@@ -55,7 +55,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void anSrvHostIsPreferredOverTheSeedsItStandsIn() {
+  void srvHostIsPreferredOverTheSeedsItStandsIn() {
     // SRV settings include a placeholder seed that the client never contacts
     ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =

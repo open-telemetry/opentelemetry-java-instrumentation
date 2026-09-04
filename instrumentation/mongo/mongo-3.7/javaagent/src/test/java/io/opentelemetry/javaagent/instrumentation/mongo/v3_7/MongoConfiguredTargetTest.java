@@ -53,7 +53,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void anSrvConnectionStringDoesNotExposeResolvedHosts() {
+  void srvConnectionStringDoesNotExposeResolvedHosts() {
     ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
@@ -69,7 +69,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void anUnsafeSrvConnectionStringDoesNotFallBackToResolvedHosts() {
+  void unsafeSrvConnectionStringDoesNotFallBackToResolvedHosts() {
     ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
@@ -87,7 +87,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void anSrvHostIsPreferredOverTheSeedsItStandsIn() {
+  void srvHostIsPreferredOverTheSeedsItStandsIn() {
     // srvHost was added in 3.10
     Method srvHost = srvHostSetter();
     assumeTrue(srvHost != null);
