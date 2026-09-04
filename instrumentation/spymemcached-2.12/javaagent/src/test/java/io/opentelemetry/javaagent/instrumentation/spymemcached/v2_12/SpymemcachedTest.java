@@ -1463,14 +1463,15 @@ class SpymemcachedTest {
                     .setFailureMode(Redistribute)
                     .setOpQueueFactory(lockableQueueFactory));
     MemcachedConnection connection = memcached.getConnection();
+    waitForNodes(connection);
     List<MemcachedNode> nodes = new ArrayList<>(connection.getLocator().getAll());
     assertThat(nodes).hasSize(2);
     MemcachedNode failedNode = connection.getLocator().getPrimary(key("optimized-retry-0"));
-    MemcachedNode retryNode = nodes.get(0) == failedNode ? nodes.get(1) : nodes.get(0);
-    InetSocketAddress retryAddress = (InetSocketAddress) retryNode.getSocketAddress();
     List<String> keys = keysForNode(connection, failedNode, 2);
 
     List<GetFuture<Object>> futures;
+    Operation optimizedOperation;
+    InetSocketAddress observedRetryAddress = null;
     queueLock.lock();
     try {
       futures =
@@ -1479,9 +1480,7 @@ class SpymemcachedTest {
               () -> asList(memcached.asyncGet(keys.get(0)), memcached.asyncGet(keys.get(1))));
       Collection<Operation> operations = failedNode.destroyInputQueue();
       assertThat(operations).hasSize(2);
-
       ConnectionFactory optimizerFactory = new ConnectionFactoryBuilder().setProtocol(TEXT).build();
-      Operation optimizedOperation;
       try (SocketChannel channel = SocketChannel.open()) {
         AsciiMemcachedNodeImpl optimizer =
             new AsciiMemcachedNodeImpl(
@@ -1508,6 +1507,24 @@ class SpymemcachedTest {
           .containsExactlyInAnyOrderElementsOf(keys);
       failedNode.reconnecting();
       connection.redistributeOperation(optimizedOperation);
+      for (MemcachedNode node : nodes) {
+        if (node != failedNode) {
+          Collection<Operation> retryOperations = node.destroyInputQueue();
+          if (!retryOperations.isEmpty()) {
+            for (Operation retryOperation : retryOperations) {
+              InetSocketAddress operationAddress =
+                  (InetSocketAddress) retryOperation.getHandlingNode().getSocketAddress();
+              if (observedRetryAddress == null) {
+                observedRetryAddress = operationAddress;
+              } else {
+                assertThat(operationAddress).isEqualTo(observedRetryAddress);
+              }
+            }
+            retryOperations.forEach(node::addOp);
+          }
+        }
+      }
+      assertThat(observedRetryAddress).isNotNull();
     } finally {
       queueLock.unlock();
     }
@@ -1516,6 +1533,7 @@ class SpymemcachedTest {
       assertThat(future.get()).isNull();
     }
 
+    InetSocketAddress retryAddress = observedRetryAddress;
     String target = configuredTarget(asList(memcachedAddress, retryContainerAddress));
     testing.waitAndAssertTraces(
         trace ->
