@@ -1532,7 +1532,14 @@ class SpymemcachedTest {
     }
 
     InetSocketAddress retryAddress = observedRetryAddress;
-    String target = configuredTarget(asList(memcachedAddress, secondMemcachedAddress));
+    String target =
+        memcachedAddress.getHostString()
+            + ":"
+            + memcachedAddress.getPort()
+            + ","
+            + secondMemcachedAddress.getHostString()
+            + ":"
+            + secondMemcachedAddress.getPort();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1630,7 +1637,18 @@ class SpymemcachedTest {
 
     assertThat(future.get()).isNull();
 
-    String target = configuredTarget(configuredNodes);
+    String target =
+        memcachedAddress.getHostString()
+            + ":"
+            + memcachedAddress.getPort()
+            + ","
+            + secondMemcachedAddress.getHostString()
+            + ":"
+            + secondMemcachedAddress.getPort()
+            + ","
+            + retryContainerAddress.getHostString()
+            + ":"
+            + retryContainerAddress.getPort();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1696,7 +1714,14 @@ class SpymemcachedTest {
 
     assertThat(future.get()).isEmpty();
 
-    String target = configuredTarget(configuredNodes);
+    String target =
+        memcachedAddress.getHostString()
+            + ":"
+            + memcachedAddress.getPort()
+            + ","
+            + secondMemcachedAddress.getHostString()
+            + ":"
+            + secondMemcachedAddress.getPort();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1758,7 +1783,18 @@ class SpymemcachedTest {
 
     assertThat(future.get()).isEmpty();
 
-    String target = configuredTarget(configuredNodes);
+    String target =
+        memcachedAddress.getHostString()
+            + ":"
+            + memcachedAddress.getPort()
+            + ","
+            + secondMemcachedAddress.getHostString()
+            + ":"
+            + secondMemcachedAddress.getPort()
+            + ","
+            + retryContainerAddress.getHostString()
+            + ":"
+            + retryContainerAddress.getPort();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1987,23 +2023,6 @@ class SpymemcachedTest {
 
   private static String spanName(String operation, String target) {
     return emitStableDatabaseSemconv() ? operation + " " + target : operation;
-  }
-
-  private static String configuredTarget(List<InetSocketAddress> nodes) {
-    StringBuilder target = new StringBuilder();
-    for (InetSocketAddress node : nodes) {
-      if (target.length() > 0) {
-        target.append(',');
-      }
-      String host = node.getHostString();
-      if (host.indexOf(':') >= 0) {
-        target.append('[').append(host).append(']');
-      } else {
-        target.append(host);
-      }
-      target.append(':').append(node.getPort());
-    }
-    return target.toString();
   }
 
   private static <T> T experimental(T value) {
