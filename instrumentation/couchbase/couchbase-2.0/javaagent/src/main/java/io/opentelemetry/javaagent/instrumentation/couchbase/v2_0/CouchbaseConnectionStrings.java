@@ -20,6 +20,46 @@ class CouchbaseConnectionStrings {
   private static final int COUCHBASE_DEFAULT_PORT = 11210;
   private static final int COUCHBASES_DEFAULT_PORT = 11207;
   private static final int HTTP_DEFAULT_PORT = 8091;
+  private static final ClassValue<Method> ALL_HOSTS =
+      new ClassValue<Method>() {
+        @Nullable
+        @Override
+        protected Method computeValue(Class<?> type) {
+          return method(type, "allHosts");
+        }
+      };
+  private static final ClassValue<Method> HOSTS =
+      new ClassValue<Method>() {
+        @Nullable
+        @Override
+        protected Method computeValue(Class<?> type) {
+          return method(type, "hosts");
+        }
+      };
+  private static final ClassValue<Method> SCHEME =
+      new ClassValue<Method>() {
+        @Nullable
+        @Override
+        protected Method computeValue(Class<?> type) {
+          return method(type, "scheme");
+        }
+      };
+  private static final ClassValue<Method> HOSTNAME =
+      new ClassValue<Method>() {
+        @Nullable
+        @Override
+        protected Method computeValue(Class<?> type) {
+          return method(type, "hostname");
+        }
+      };
+  private static final ClassValue<Method> PORT =
+      new ClassValue<Method>() {
+        @Nullable
+        @Override
+        protected Method computeValue(Class<?> type) {
+          return method(type, "port");
+        }
+      };
 
   @Nullable
   static DbServerTarget target(@Nullable Object connectionString) {
@@ -61,8 +101,8 @@ class CouchbaseConnectionStrings {
   @Nullable
   private static List<?> seeds(Class<?> type, Object connectionString)
       throws ReflectiveOperationException {
-    Method allHosts = method(type, "allHosts");
-    Method hosts = allHosts != null ? allHosts : method(type, "hosts");
+    Method allHosts = ALL_HOSTS.get(type);
+    Method hosts = allHosts != null ? allHosts : HOSTS.get(type);
     if (hosts == null) {
       return null;
     }
@@ -73,7 +113,7 @@ class CouchbaseConnectionStrings {
   @Nullable
   private static String scheme(Class<?> type, Object connectionString)
       throws ReflectiveOperationException {
-    Method scheme = method(type, "scheme");
+    Method scheme = SCHEME.get(type);
     if (scheme == null) {
       return null;
     }
@@ -94,8 +134,8 @@ class CouchbaseConnectionStrings {
       return;
     }
     Class<?> type = seed.getClass();
-    Method hostname = method(type, "hostname");
-    Method port = method(type, "port");
+    Method hostname = HOSTNAME.get(type);
+    Method port = PORT.get(type);
     if (hostname == null || port == null) {
       target.addEndpoint(null, -1);
       return;
