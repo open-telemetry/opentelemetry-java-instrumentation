@@ -13,7 +13,6 @@ import java.net.SocketAddress;
 import java.util.Collection;
 
 public class LettuceCommandOutboundHandler extends ChannelOutboundHandlerAdapter {
-  public static final String NAME = LettuceCommandOutboundHandler.class.getName();
 
   @Override
   public void write(ChannelHandlerContext context, Object message, ChannelPromise promise) {

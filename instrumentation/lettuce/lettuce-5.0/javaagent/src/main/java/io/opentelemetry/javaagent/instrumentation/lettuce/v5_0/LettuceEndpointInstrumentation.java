@@ -209,15 +209,13 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Channel channel) {
-      if (channel.pipeline().get(LettuceCommandOutboundHandler.NAME) == null) {
+      if (channel.pipeline().get(LettuceCommandOutboundHandler.class) == null) {
         ChannelHandlerContext encoder = channel.pipeline().context(CommandEncoder.class);
         if (encoder != null) {
+          LettuceCommandOutboundHandler handler = new LettuceCommandOutboundHandler();
           channel
               .pipeline()
-              .addAfter(
-                  encoder.name(),
-                  LettuceCommandOutboundHandler.NAME,
-                  new LettuceCommandOutboundHandler());
+              .addAfter(encoder.name(), handler.getClass().getName(), handler);
         }
       }
     }
