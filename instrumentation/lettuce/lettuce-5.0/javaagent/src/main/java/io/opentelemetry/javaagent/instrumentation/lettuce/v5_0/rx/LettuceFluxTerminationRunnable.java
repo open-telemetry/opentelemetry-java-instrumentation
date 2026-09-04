@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
+
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -51,7 +53,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
           span.setAttribute("lettuce.command.cancelled", true);
         }
       }
-      LettuceSingletons.instrumenter().end(context, command, null, throwable);
+      instrumenter().end(context, command, null, throwable);
     } else {
       logger.fine(
           "Failed to end this.context, LettuceFluxTerminationRunnable cannot find this.context "
@@ -97,9 +99,9 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
       }
       owner.command = command;
       LettuceSingletons.attachAddress(command, connection);
-      owner.context = LettuceSingletons.instrumenter().start(Context.current(), command);
+      owner.context = instrumenter().start(Context.current(), command);
       if (!expectsResponse) {
-        LettuceSingletons.instrumenter().end(owner.context, command, null, null);
+        instrumenter().end(owner.context, command, null, null);
       }
     }
   }
