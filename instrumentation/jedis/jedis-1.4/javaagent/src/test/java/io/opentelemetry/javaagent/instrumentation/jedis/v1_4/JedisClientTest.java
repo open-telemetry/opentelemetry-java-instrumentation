@@ -5,18 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class JedisClientTest {
@@ -90,6 +93,41 @@ class JedisClientTest {
         DB_OPERATION_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  void pooledCommand() throws Exception {
+    JedisPool pool = new JedisPool(host, port);
+    try {
+      pool.getClass().getMethod("init").invoke(pool);
+    } catch (NoSuchMethodException ignored) {
+      // Jedis 1.5 initializes pools in the constructor.
+    }
+    cleanup.deferAfterAll(pool::destroy);
+    Jedis pooled = pool.getResource();
+    try {
+      pooled.set("pooled", "value");
+    } finally {
+      pool.returnResource(pooled);
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_STATEMENT, emitOldDatabaseSemconv() ? "SET pooled ?" : null),
+                            equalTo(
+                                DB_QUERY_TEXT, emitStableDatabaseSemconv() ? "SET pooled ?" : null),
+                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "SET" : null),
+                            equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "SET" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
