@@ -115,10 +115,12 @@ public class JmxMetricInsightInstaller implements AgentListener {
         jmx.internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
       } else {
         // only opt-in on explicitly configured values
-        jmx.internalMetricsSystemFilter(IncludeExclude.builder().setIncluded(systemsConfig).build());
+        jmx.internalMetricsSystemFilter(
+            IncludeExclude.builder().setIncluded(systemsConfig).build());
       }
 
-      // loaded internal metrics have been explicitly opted-in, so we disable filtering on unstable metrics.
+      // loaded internal metrics have been explicitly opted-in, so we disable filtering on unstable
+      // metrics.
       jmx.internalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
     }
 

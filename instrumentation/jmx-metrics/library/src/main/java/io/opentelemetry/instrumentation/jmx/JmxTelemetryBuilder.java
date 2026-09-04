@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.jmx;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -29,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /** Builder for {@link JmxTelemetry} */
 public final class JmxTelemetryBuilder {
@@ -45,8 +43,6 @@ public final class JmxTelemetryBuilder {
   private final Set<String> registeredHandlers = new HashSet<>();
   private IncludeExclude metrics = IncludeExclude.builder().build();
 
-  @Nullable private IncludeExclude stableMetricsSystemFilter = null;
-  @Nullable private IncludeExclude unstableMetricsSystemFilter = null;
   // include all systems by default
   private IncludeExclude internalMetricsSystemFilter = IncludeExclude.builder().build();
   // exclude all unstable metrics by default
@@ -130,37 +126,24 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Configure loading embedded stable metrics definitions for the specified systems.
+   * Configure which systems should have their internal metrics automatically registered.
    *
-   * @param systemFilter system name filter, use {@code IncludeExclude.builder().build()} to include
-   *     all.
+   * @param systemFilter system filter
    * @return this
    */
-  @CanIgnoreReturnValue
-  public JmxTelemetryBuilder loadStableMetrics(IncludeExclude systemFilter) {
-    this.stableMetricsSystemFilter = systemFilter;
-    return this;
-  }
-
-  /**
-   * Configure loading embedded unstable metrics definitions for the specified systems.
-   *
-   * @param systemFilter system name filter, use {@code IncludeExclude.builder().build()} to include
-   *     all.
-   * @return this
-   */
-  @CanIgnoreReturnValue
-  public JmxTelemetryBuilder loadUnstableMetrics(IncludeExclude systemFilter) {
-    this.unstableMetricsSystemFilter = systemFilter;
-    return this;
-  }
-
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder internalMetricsSystemFilter(IncludeExclude systemFilter) {
     internalMetricsSystemFilter = systemFilter;
     return this;
   }
 
+  /**
+   * Configure which unstable internal metrics should be enabled, unless enabled they are
+   * filtered-out.
+   *
+   * @param metricsFilter metric filter
+   * @return this
+   */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder internalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
     internalMetricsUnstableMetricsFilter = metricsFilter;
@@ -206,9 +189,6 @@ public final class JmxTelemetryBuilder {
     registeredMetrics.addAll(stableMetrics);
     registeredMetrics.addAll(unstableMetrics);
 
-    System.out.println("user provided metrics filter: " + metrics);
-    System.out.println("unstable metrics filter " + internalMetricsUnstableMetricsFilter);
-
     // make the metric filter ignore the non-stable metrics not explicitly in the opt-in filter
     Set<String> excludePatterns = new HashSet<>(metrics.getExcluded());
     unstableMetrics.stream()
@@ -222,13 +202,16 @@ public final class JmxTelemetryBuilder {
             .setExcluded(excludePatterns)
             .build();
 
-    if (logger.isLoggable(INFO)) {
+    if (logger.isLoggable(FINE)) {
       // making it easier to debug include/exclude patterns
       registeredMetrics.forEach(
           m ->
-              System.out.printf(
-                  "JMX metric '%s' %s by configuration%n",
-                  m, effectiveMetricsFilter.matches(m) ? "included" : "excluded"));
+              logger.log(
+                  FINE,
+                  () ->
+                      String.format(
+                          "JMX metric '%s' %s by configuration%n",
+                          m, effectiveMetricsFilter.matches(m) ? "included" : "excluded")));
     }
 
     return new JmxTelemetry(

@@ -7,10 +7,8 @@ package io.opentelemetry.instrumentation.jmx;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -23,7 +21,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Set;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -55,6 +52,7 @@ class JmxTelemetryTest {
   void knownValidYaml() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
     builder.addRules(classpathRules("jmx/rules/jvm-test.yaml"));
+    builder.internalMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm-test").build());
     JmxTelemetry telemetry = builder.build();
     assertThat(telemetry).isNotNull();
 
@@ -66,7 +64,13 @@ class JmxTelemetryTest {
             "jvm.thread.count",
             "jvm.memory.used_after_last_gc");
 
-    checkMetricsIncluded(telemetry.getMetrics(), builder.getRegisteredMetrics());
+    assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
+        .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
+  }
+
+  private static Collection<String> getFilteredMetrics(
+      IncludeExclude filter, Collection<String> registeredMetrics) {
+    return registeredMetrics.stream().filter(filter::matches).collect(toSet());
   }
 
   @Test
@@ -79,20 +83,20 @@ class JmxTelemetryTest {
     assertThat(telemetry).isNotNull();
 
     assertThat(builder.getRegisteredMetrics())
-        .containsExactlyInAnyOrder(
+        .contains(
             "jvm.memory.committed",
             "jvm.memory.used",
             "jvm.memory.limit",
             "jvm.thread.count",
             "jvm.memory.used_after_last_gc");
 
-    checkMetricsIncluded(
-        telemetry.getMetrics(),
-        "jvm.memory.committed",
-        "jvm.memory.used",
-        "jvm.memory.limit",
-        "jvm.memory.used_after_last_gc");
-    checkMetricsExcluded(telemetry.getMetrics(), "jvm.thread.count");
+    assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
+        .containsExactlyInAnyOrder(
+            "jvm.memory.committed",
+            "jvm.memory.used",
+            "jvm.memory.limit",
+            "jvm.memory.used_after_last_gc")
+        .doesNotContain("jvm.thread.count");
   }
 
   @Test
@@ -111,21 +115,22 @@ class JmxTelemetryTest {
     assertThat(builder.getRegisteredMetrics())
         .contains("jvm.memory.used", "jvm.memory.limit", "jvm.thread.count");
 
-    checkMetricsIncluded(telemetry.getMetrics(), "jvm.memory.used");
-    checkMetricsExcluded(telemetry.getMetrics(), "jvm.memory.limit", "jvm.thread.count");
+    assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
+        .containsExactlyInAnyOrder("jvm.memory.used")
+        .doesNotContain("jvm.memory.limit", "jvm.thread.count");
   }
 
   @Test
-  void includeBothStableAndUnstableBySystem() {
+  void legacyIncludeBySystem() {
     // allows to provide a fallback to include embedded metrics per-system
-    IncludeExclude includeInclude = IncludeExclude.builder().setIncluded("jvm-test").build();
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
-            .loadStableMetrics(includeInclude)
-            .loadUnstableMetrics(includeInclude);
+            // only load explicitly listed systems
+            .internalMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm-test").build())
+            // include all unstable metrics (stable ones already included)
+            .internalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
 
-    JmxTelemetry telemetry =
-        stableUnstableTest(builder, "jmx/rules/jvm-test.yaml", "jmx/rules/jvm-test_unstable.yaml");
+    JmxTelemetry telemetry = builder.build(testDefinitions());
 
     assertThat(builder.getRegisteredMetrics())
         .containsExactlyInAnyOrder(
@@ -138,16 +143,14 @@ class JmxTelemetryTest {
             "jvm.memory.used_after_last_gc");
 
     // no filtering is applied here, so we should get all metrics
-    checkMetricsIncluded(telemetry.getMetrics(), builder.getRegisteredMetrics());
+    assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
+        .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
   }
 
   @Test
   void includeAllStableMetrics() {
-    JmxTelemetryBuilder builder =
-        JmxTelemetry.builder(OpenTelemetry.noop())
-            .loadStableMetrics(IncludeExclude.builder().build());
-
-    JmxTelemetry telemetry = stableUnstableTest(builder, "jmx/rules/jvm-test.yaml");
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    JmxTelemetry telemetry = builder.build(testDefinitions());
 
     assertThat(builder.getRegisteredMetrics())
         .containsExactlyInAnyOrder(
@@ -155,36 +158,30 @@ class JmxTelemetryTest {
             "jvm.memory.used",
             "jvm.memory.limit",
             "jvm.thread.count",
-            "jvm.memory.used_after_last_gc");
+            "jvm.memory.used_after_last_gc",
+            // registered, but should be filtered
+            "jvm.file_descriptor.count",
+            "jvm.file_descriptor.limit");
 
-    // no filtering is applied here, so we should get all metrics
-    checkMetricsIncluded(telemetry.getMetrics(), builder.getRegisteredMetrics());
-  }
-
-  @Test
-  void includeAllUnstableMetrics() {
-    JmxTelemetryBuilder builder =
-        JmxTelemetry.builder(OpenTelemetry.noop())
-            .loadUnstableMetrics(IncludeExclude.builder().build());
-
-    JmxTelemetry telemetry = stableUnstableTest(builder, "jmx/rules/jvm-test_unstable.yaml");
-
-    assertThat(builder.getRegisteredMetrics())
-        .containsExactlyInAnyOrder("jvm.file_descriptor.limit", "jvm.file_descriptor.count");
-
-    // no filtering is applied here, so we should get all metrics
-    checkMetricsIncluded(telemetry.getMetrics(), builder.getRegisteredMetrics());
+    // non-stable metrics should be filtered
+    assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
+        .containsExactlyInAnyOrder(
+            "jvm.memory.committed",
+            "jvm.memory.used",
+            "jvm.memory.limit",
+            "jvm.thread.count",
+            "jvm.memory.used_after_last_gc")
+        .doesNotContain("jvm.file_descriptor.count", "jvm.file_descriptor.limit");
   }
 
   @Test
   void includeEveryMetric() {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
-            .loadStableMetrics(IncludeExclude.builder().build())
-            .loadUnstableMetrics(IncludeExclude.builder().build());
+            // every system included by default, we just enable all unstable metrics
+            .internalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
 
-    JmxTelemetry telemetry =
-        stableUnstableTest(builder, "jmx/rules/jvm-test.yaml", "jmx/rules/jvm-test_unstable.yaml");
+    JmxTelemetry telemetry = builder.build(testDefinitions());
 
     assertThat(builder.getRegisteredMetrics())
         .containsExactlyInAnyOrder(
@@ -197,57 +194,26 @@ class JmxTelemetryTest {
             "jvm.thread.count");
 
     // no filtering is applied here, so we should get all metrics
-    checkMetricsIncluded(telemetry.getMetrics(), builder.getRegisteredMetrics());
+    assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
+        .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
   }
 
   @Test
-  void includeNothingByDefault() {
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    stableUnstableTest(builder);
-
+  void includeNothing() {
+    JmxTelemetryBuilder builder =
+        JmxTelemetry.builder(OpenTelemetry.noop())
+            .internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
+    builder.build();
     assertThat(builder.getRegisteredMetrics()).isEmpty();
   }
 
-  private static void checkMetricsIncluded(IncludeExclude metrics, String... metricNames) {
-    checkMetricsIncluded(metrics, asList(metricNames));
-  }
-
-  private static void checkMetricsIncluded(IncludeExclude metrics, Collection<String> metricNames) {
-    Set<String> included = metricNames.stream().filter(metrics::matches).collect(toSet());
-    assertThat(included).containsExactlyInAnyOrderElementsOf(metricNames);
-  }
-
-  private static void checkMetricsExcluded(IncludeExclude metrics, String... metricNames) {
-    Stream.of(metricNames)
-        .forEach(metricName -> assertThat(metrics.matches(metricName)).isEqualTo(false));
-  }
-
-  private static JmxTelemetry stableUnstableTest(
-      JmxTelemetryBuilder builder, String... expectedRules) {
-    TestMetricsDefinitions metricsDefinitions = new TestMetricsDefinitions();
-    assertThat(builder.getInternalRulesToLoad(metricsDefinitions))
-        .containsExactlyInAnyOrder(expectedRules);
-
-    JmxTelemetry telemetry = builder.build(metricsDefinitions);
-    assertThat(telemetry).isNotNull();
-
-    if (expectedRules.length > 0) {
-      // all the jvm metrics should be included
-      assertThat(telemetry.getMetrics().getIncluded()).allMatch(m -> m.startsWith("jvm."));
-    }
-    return telemetry;
-  }
-
-  private static class TestMetricsDefinitions extends InternalMetricsDefinitions {
-
-    private TestMetricsDefinitions() {
-      super(JmxTelemetryTest.class.getClassLoader());
-    }
-
-    @Override
-    public Set<String> getSupportedSystems() {
-      return singleton("jvm-test");
-    }
+  private static InternalMetricsDefinitions testDefinitions() {
+    return new InternalMetricsDefinitions(JmxTelemetryTest.class.getClassLoader()) {
+      @Override
+      public Set<String> getSupportedSystems() {
+        return singleton("jvm-test");
+      }
+    };
   }
 
   private static InputStream classpathRules(String path) {

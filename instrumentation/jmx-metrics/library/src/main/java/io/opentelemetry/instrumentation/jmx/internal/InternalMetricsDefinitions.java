@@ -63,7 +63,6 @@ public class InternalMetricsDefinitions {
    * @param systemFilter filter on supported systems identifiers.
    */
   public void loadInternalRules(IncludeExclude systemFilter, HandlerRegistry handlerRegistry) {
-    System.out.println(">>> system filter = "+systemFilter);
     getSupportedSystems().stream()
         .filter(systemFilter::matches)
         .forEach(
@@ -178,7 +177,7 @@ public class InternalMetricsDefinitions {
    * @return resource path to load rules, or null if no rules matching system and stability are
    *     available
    */
-  @Nullable
+  @Nullable // TODO: deprecate this
   public String getRulesPath(String system, boolean stable) {
     String path = String.format("jmx/rules/%s.yaml", system);
     if (!stable) {
