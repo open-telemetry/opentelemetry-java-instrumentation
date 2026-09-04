@@ -10,8 +10,6 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 /** Container used to carry state between enter and exit advices */
@@ -59,21 +57,11 @@ public class ClickHouseScope {
   public void endOnCompletion(CompletableFuture<?> future) {
     scope.close();
     future.whenComplete(
-        (result, throwable) ->
-            instrumenter.end(context, clickHouseDbRequest, null, unwrap(throwable)));
+        (result, throwable) -> instrumenter.end(context, clickHouseDbRequest, null, throwable));
   }
 
   public void end(@Nullable Throwable throwable) {
     scope.close();
     instrumenter.end(context, clickHouseDbRequest, null, throwable);
-  }
-
-  @Nullable
-  private static Throwable unwrap(@Nullable Throwable throwable) {
-    if ((throwable instanceof CompletionException || throwable instanceof ExecutionException)
-        && throwable.getCause() != null) {
-      return throwable.getCause();
-    }
-    return throwable;
   }
 }
