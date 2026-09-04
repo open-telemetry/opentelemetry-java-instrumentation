@@ -10,7 +10,7 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("modernHbaseTest") {
+    register<JvmTestSuite>("hbase24Test") {
       dependencies {
         implementation(project(":instrumentation-api-incubator"))
         implementation(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent"))

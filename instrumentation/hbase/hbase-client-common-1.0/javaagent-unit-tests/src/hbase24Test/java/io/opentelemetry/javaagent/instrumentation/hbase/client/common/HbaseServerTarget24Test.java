@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.jupiter.api.Test;
 
-class HbaseServerTargetModernTest {
+class HbaseServerTarget24Test {
 
   private static final String REGISTRY_KEY = "hbase.client.registry.impl";
   private static final String MASTER_REGISTRY = "org.apache.hadoop.hbase.client.MasterRegistry";
