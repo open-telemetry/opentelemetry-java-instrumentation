@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
@@ -36,9 +37,7 @@ public class VertxSqlAddressGroup {
     if (endpoint == null) {
       return null;
     }
-    List<Endpoint> endpoints = new ArrayList<>(1);
-    endpoints.add(endpoint);
-    return new VertxSqlAddressGroup(endpoints, dbSystem);
+    return new VertxSqlAddressGroup(singletonList(endpoint), dbSystem);
   }
 
   @Nullable
