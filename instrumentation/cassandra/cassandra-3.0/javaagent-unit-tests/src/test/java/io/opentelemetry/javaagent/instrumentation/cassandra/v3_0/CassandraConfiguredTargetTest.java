@@ -15,7 +15,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 
-class CassandraConfiguredContactPointsTest {
+class CassandraConfiguredTargetTest {
 
   @Test
   void omitsImplicitDefaultPortFromSingleHostTarget() {
