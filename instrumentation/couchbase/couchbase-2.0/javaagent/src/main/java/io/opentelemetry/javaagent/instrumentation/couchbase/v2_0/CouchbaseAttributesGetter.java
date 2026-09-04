@@ -66,7 +66,7 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CouchbaseRequestInfo couchbaseRequest) {
-    // in old-semconv mode onEnd() reports the node that answered instead of the configured target
+    // In old-semconv mode onEnd() reports the node that answered instead of the configured target
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
@@ -81,7 +81,7 @@ final class CouchbaseAttributesGetter
       return null;
     }
     DbServerTarget target = couchbaseRequest.getServerTarget();
-    // a target that names several seeds already carries the port of each of them
+    // A target that names several seeds already carries the port of each of them
     return target == null ? null : target.getPort();
   }
 
