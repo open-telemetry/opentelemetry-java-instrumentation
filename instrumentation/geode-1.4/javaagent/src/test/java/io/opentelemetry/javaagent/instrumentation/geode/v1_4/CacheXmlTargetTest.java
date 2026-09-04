@@ -21,6 +21,7 @@ import static java.util.Collections.emptyMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.apache.geode.cache.Region;
@@ -38,7 +39,7 @@ class CacheXmlTargetTest {
 
   @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
-  void configuredLocatorGroupSurvivesCacheXmlPoolCopy(@TempDir Path tempDir) throws Exception {
+  void configuredLocatorGroupSurvivesCacheXmlPoolCopy(@TempDir Path tempDir) throws IOException {
     Path cacheXml = tempDir.resolve("client-cache.xml");
     Files.write(
         cacheXml,
