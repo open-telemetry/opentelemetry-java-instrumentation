@@ -5,6 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -95,19 +101,19 @@ public class VertxSqlAddressGroup {
   }
 
   private static int defaultPort(@Nullable String dbSystem) {
-    if ("postgresql".equals(dbSystem)) {
+    if (POSTGRESQL.equals(dbSystem)) {
       return 5432;
     }
-    if ("mysql".equals(dbSystem)) {
+    if (MYSQL.equals(dbSystem)) {
       return 3306;
     }
-    if ("microsoft.sql_server".equals(dbSystem)) {
+    if (MICROSOFT_SQL_SERVER.equals(dbSystem)) {
       return 1433;
     }
-    if ("oracle.db".equals(dbSystem)) {
+    if (ORACLE_DB.equals(dbSystem)) {
       return 1521;
     }
-    if ("ibm.db2".equals(dbSystem)) {
+    if (IBM_DB2.equals(dbSystem)) {
       return 50000;
     }
     return -1;
