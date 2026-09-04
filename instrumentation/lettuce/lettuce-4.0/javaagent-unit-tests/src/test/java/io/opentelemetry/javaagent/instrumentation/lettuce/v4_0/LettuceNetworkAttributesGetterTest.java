@@ -38,8 +38,7 @@ class LettuceNetworkAttributesGetterTest {
   @MethodSource("resolvedAddresses")
   void commandUsesResolvedSelectedAddress(InetAddress inetAddress, String expectedAddress) {
     InetSocketAddress address = new InetSocketAddress(inetAddress, PORT);
-    RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(command, new LettucePeerAddress(address));
+    RedisCommand<?, ?, ?> command = commandWithPeer(address);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
@@ -52,9 +51,8 @@ class LettuceNetworkAttributesGetterTest {
 
   @Test
   void commandDropsUnresolvedSelectedAddress() {
-    RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(
-        command, new LettucePeerAddress(InetSocketAddress.createUnresolved("redis.example", PORT)));
+    RedisCommand<?, ?, ?> command =
+        commandWithPeer(InetSocketAddress.createUnresolved("redis.example", PORT));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
@@ -65,7 +63,7 @@ class LettuceNetworkAttributesGetterTest {
   @Test
   void commandRetryUsesLastSelectedAddress() throws UnknownHostException {
     RedisCommand<?, ?, ?> command = command();
-    LettucePeerAddress peerAddress = new LettucePeerAddress();
+    LettuceCommandPeer peerAddress = new LettuceCommandPeer();
     LettuceSingletons.COMMAND_PEER.set(command, peerAddress);
     LettuceSingletons.recordCommandPeers(
         command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
@@ -84,7 +82,7 @@ class LettuceNetworkAttributesGetterTest {
   void commandUsesDomainSocketPath() {
     DomainSocketAddress address = new DomainSocketAddress("/var/run/redis.sock");
     RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(command, new LettucePeerAddress());
+    LettuceSingletons.COMMAND_PEER.set(command, new LettuceCommandPeer());
     Channel channel = mock(Channel.class);
     when(channel.remoteAddress()).thenReturn(address);
     ChannelHandlerContext context = mock(ChannelHandlerContext.class);
@@ -102,10 +100,9 @@ class LettuceNetworkAttributesGetterTest {
   @Test
   void commandThatDoesNotExpectResponseDropsSelectedAddress() throws UnknownHostException {
     RedisCommand<?, ?, ?> command = new Command<>(CommandType.DEBUG, null);
-    LettuceSingletons.COMMAND_PEER.set(
-        command,
-        new LettucePeerAddress(
-            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT)));
+    LettuceCommandPeer peer = new LettuceCommandPeer();
+    peer.record(new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
+    LettuceSingletons.COMMAND_PEER.set(command, peer);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
@@ -205,7 +202,9 @@ class LettuceNetworkAttributesGetterTest {
 
   private static RedisCommand<?, ?, ?> commandWithPeer(SocketAddress address) {
     RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(command, new LettucePeerAddress(address));
+    LettuceCommandPeer peer = new LettuceCommandPeer();
+    peer.record(address);
+    LettuceSingletons.COMMAND_PEER.set(command, peer);
     return command;
   }
 

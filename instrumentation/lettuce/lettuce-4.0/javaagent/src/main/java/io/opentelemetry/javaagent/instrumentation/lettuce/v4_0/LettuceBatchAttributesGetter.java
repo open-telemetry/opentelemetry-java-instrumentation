@@ -82,7 +82,7 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
       return null;
     }
     SocketAddress peerAddress = request.getPeerAddress();
-    return LettucePeerAddress.getNetworkPeerAddress(peerAddress);
+    return LettuceCommandPeer.getNetworkPeerAddress(peerAddress);
   }
 
   @Nullable
@@ -92,6 +92,6 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
       return null;
     }
     SocketAddress peerAddress = request.getPeerAddress();
-    return LettucePeerAddress.getNetworkPeerPort(peerAddress);
+    return LettuceCommandPeer.getNetworkPeerPort(peerAddress);
   }
 }

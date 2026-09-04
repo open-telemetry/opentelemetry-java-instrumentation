@@ -79,7 +79,7 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
       return null;
     }
     SocketAddress peerAddress = LettuceSingletons.commandPeerAddress(request);
-    return LettucePeerAddress.getNetworkPeerAddress(peerAddress);
+    return LettuceCommandPeer.getNetworkPeerAddress(peerAddress);
   }
 
   @Nullable
@@ -89,6 +89,6 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
       return null;
     }
     SocketAddress peerAddress = LettuceSingletons.commandPeerAddress(request);
-    return LettucePeerAddress.getNetworkPeerPort(peerAddress);
+    return LettuceCommandPeer.getNetworkPeerPort(peerAddress);
   }
 }
