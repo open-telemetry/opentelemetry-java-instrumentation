@@ -36,11 +36,6 @@ public final class RedisServerTarget {
   private final String address;
   @Nullable private final Integer port;
 
-  private RedisServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
-
   @Nullable
   public static RedisServerTarget ofLogicalName(@Nullable String name) {
     if (name == null) {
@@ -69,6 +64,11 @@ public final class RedisServerTarget {
   @Nullable
   public static RedisServerTarget ofUnorderedEndpoints(@Nullable List<String> endpoints) {
     return createFromEndpoints(endpoints, true);
+  }
+
+  private RedisServerTarget(String address, @Nullable Integer port) {
+    this.address = address;
+    this.port = port;
   }
 
   @Nullable
