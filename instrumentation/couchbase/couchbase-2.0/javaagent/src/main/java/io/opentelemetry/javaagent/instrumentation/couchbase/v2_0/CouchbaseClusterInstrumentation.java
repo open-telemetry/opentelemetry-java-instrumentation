@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.VirtualFieldHelper.COUCHBASE_SERVER_TARGET;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -14,8 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.java.CouchbaseCluster;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -67,10 +66,7 @@ class CouchbaseClusterInstrumentation implements TypeInstrumentation {
 
       CouchbaseRequestInfo request =
           CouchbaseRequestInfo.create(
-              null,
-              VirtualField.find(ClusterFacade.class, DbServerTarget.class).get(core),
-              declaringClass,
-              methodName);
+              null, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName);
       return Observable.create(
           TracedOnSubscribe.perSubscription(result, instrumenter(), request.copySupplier()));
     }
