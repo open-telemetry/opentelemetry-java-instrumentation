@@ -1,7 +1,8 @@
 # IBM MQ Instrumentation
 
 Adds IBM MQ's Queue Manager Identifier (QMID) to messaging spans, as the opt-in attribute
-`messaging.ibmmq.queue_manager.id`. Queue manager *names* are not globally unique across hosts or
+`messaging.ibmmq.queue_manager.id`, and reports `messaging.system` as `ibmmq` rather than the generic
+`jms`. Queue manager *names* are not globally unique across hosts or
 customers, so a monitoring backend cannot use them to reliably join an application's spans to the
 queue manager infrastructure it talked to; QMID is IBM's own globally-unique identifier for the queue
 manager, generated at creation time.
@@ -19,7 +20,7 @@ references must never land in the same muzzle reference set.
 
 ## Opt-in
 
-The QMID attribute is disabled by default. Enable it with:
+Both attributes are disabled by default. Enable them with:
 
 ```
 -Dotel.instrumentation.ibmmq.experimental-span-attributes=true
@@ -28,8 +29,11 @@ The QMID attribute is disabled by default. Enable it with:
 ## How it works
 
 Applications using `javax.jms`/`jakarta.jms` already get a messaging span from the generic JMS
-instrumentation (`messaging.system=jms`). This module additively enriches that span -- it never
-creates, ends, or otherwise alters it:
+instrumentation (`messaging.system=jms`). This module enriches that span and never creates or ends
+one. It adds the QMID, and it replaces the `messaging.system` value so IBM MQ traffic is
+distinguishable from any other JMS provider and lines up with the IBM MQ instrumentation in other
+languages. Replacing an attribute another instrumentation set has no precedent elsewhere in this
+repository, which is why it stays behind the opt-in flag:
 
 - **Producer**: the QMID is read directly off the producer/connection's already-cached, resolved
   connection property (populated locally by IBM's client during `MQCONN`) -- a local `Map` lookup,
@@ -51,3 +55,6 @@ creates, ends, or otherwise alters it:
 
 - `messaging.ibmmq.queue_manager.id` -- the QMID, trimmed (IBM's `MQCA_Q_MGR_IDENTIFIER` is a fixed
   48-byte, space-padded field). Opt-in; absent unless the flag above is set.
+- `messaging.system` -- set to `ibmmq`, replacing the `jms` the generic JMS instrumentation applies.
+  Opt-in; the value stays `jms` unless the flag above is set. The synchronous `receive()` span keeps
+  `jms` either way, for the reason given above.

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.ibmmq;
 
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
@@ -36,6 +38,22 @@ public class IbmMqQmidSupport {
       Span span = messagingSpan(Context.current());
       if (span != null && span.isRecording()) {
         span.setAttribute(MESSAGING_IBMMQ_QUEUE_MANAGER_ID, qmid);
+      }
+    } catch (Throwable t) {
+      // best-effort
+    }
+  }
+
+  // "ibmmq" is not a value in opentelemetry-semconv-incubating's MessagingSystemIncubatingValues
+  // (only jms, kafka, rabbitmq are) because the messaging.ibmmq.queue_manager.id semantic
+  // convention is not yet ratified, so this overwrite of the generic JMS instrumentation's "jms"
+  // value must stay behind the same experimental flag as the QMID attribute above, gated by the
+  // caller checking enabled() first, the same way stampMessagingSpan(String) above relies on it.
+  public static void stampMessagingSystem() {
+    try {
+      Span span = messagingSpan(Context.current());
+      if (span != null && span.isRecording()) {
+        span.setAttribute(MESSAGING_SYSTEM, "ibmmq");
       }
     } catch (Throwable t) {
       // best-effort

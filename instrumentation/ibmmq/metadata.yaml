@@ -1,6 +1,6 @@
 description: >
   This instrumentation adds the queue manager identifier to IBM MQ JMS producer and consumer
-  messaging spans.
+  messaging spans, and reports messaging.system as ibmmq rather than the generic jms.
 display_name: IBM MQ
 library_link: https://www.ibm.com/products/mq
 semantic_conventions:
@@ -9,9 +9,10 @@ configurations:
   - name: otel.instrumentation.ibmmq.experimental-span-attributes
     declarative_name: java.ibmmq.experimental_span_attributes/development
     description: >
-      Enables the `messaging.ibmmq.queue_manager.id` attribute on IBM MQ messaging spans. The
-      queue manager identifier (QMID) is required to identify a queue manager unambiguously,
-      because queue manager names are not globally unique in federated architectures.
+      Enables the `messaging.ibmmq.queue_manager.id` attribute on IBM MQ messaging spans, and
+      sets `messaging.system` to `ibmmq` in place of the generic `jms`. The queue manager
+      identifier (QMID) is required to identify a queue manager unambiguously, because queue
+      manager names are not globally unique in federated architectures.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled

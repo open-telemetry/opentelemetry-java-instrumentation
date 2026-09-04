@@ -59,6 +59,9 @@ public class IbmMqJmsListenerQmid {
     }
     IbmMqQmid qmid = RECEIVED_QMID.get(message);
     if (qmid != null) {
+      // RECEIVED_QMID is only ever populated from a receive() call on a genuine IBM MQ consumer,
+      // so the system value is known here too.
+      IbmMqQmidSupport.stampMessagingSystem();
       IbmMqQmidSupport.stampMessagingSpan(qmid.value());
     }
   }

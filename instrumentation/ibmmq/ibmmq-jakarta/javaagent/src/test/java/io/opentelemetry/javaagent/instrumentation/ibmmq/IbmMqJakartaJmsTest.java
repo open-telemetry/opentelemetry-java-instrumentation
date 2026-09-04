@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.ibmmq;
 
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -126,6 +127,7 @@ class IbmMqJakartaJmsTest {
 
     SpanData span = awaitSpanOfKind(SpanKind.PRODUCER);
     assertQmid(span);
+    assertMessagingSystem(span);
   }
 
   @Test
@@ -153,6 +155,7 @@ class IbmMqJakartaJmsTest {
 
     SpanData span = awaitSpanOfKind(SpanKind.CONSUMER);
     assertQmid(span);
+    assertMessagingSystem(span);
   }
 
   @Test
@@ -180,6 +183,7 @@ class IbmMqJakartaJmsTest {
 
     SpanData span = awaitSpanForOperation("process");
     assertQmid(span);
+    assertMessagingSystem(span);
   }
 
   private static void assertQmid(SpanData span) {
@@ -187,6 +191,15 @@ class IbmMqJakartaJmsTest {
       assertThat(span.getAttributes().get(QUEUE_MANAGER_ID)).isEqualTo(expectedQmid);
     } else {
       assertThat(span.getAttributes().get(QUEUE_MANAGER_ID)).isNull();
+    }
+  }
+
+  private static void assertMessagingSystem(SpanData span) {
+    if (EXPERIMENTAL) {
+      assertThat(span.getAttributes().get(MESSAGING_SYSTEM)).isEqualTo("ibmmq");
+    } else {
+      // opt_in: the generic JMS instrumentation's "jms" value must be untouched by default.
+      assertThat(span.getAttributes().get(MESSAGING_SYSTEM)).isEqualTo("jms");
     }
   }
 
