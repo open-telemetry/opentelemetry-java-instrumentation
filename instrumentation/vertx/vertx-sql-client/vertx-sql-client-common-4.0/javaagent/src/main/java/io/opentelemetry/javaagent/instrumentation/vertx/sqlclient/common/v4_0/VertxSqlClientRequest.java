@@ -11,10 +11,10 @@ import javax.annotation.Nullable;
 public class VertxSqlClientRequest {
 
   private final String queryText;
-  @Nullable private volatile SqlConnectOptions sqlConnectOptions;
   private final boolean parameterizedQuery;
   private final String dbSystemName;
   @Nullable private final Long operationBatchSize;
+  @Nullable private volatile SqlConnectOptions sqlConnectOptions;
   @Nullable private volatile VertxSqlAddressGroup addressGroup;
   private volatile boolean connectionDataUpdated;
 
