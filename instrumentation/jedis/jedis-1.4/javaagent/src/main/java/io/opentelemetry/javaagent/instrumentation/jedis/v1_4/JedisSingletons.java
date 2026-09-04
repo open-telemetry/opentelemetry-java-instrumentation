@@ -80,7 +80,7 @@ public class JedisSingletons {
         || !(shard instanceof BinaryJedis)) {
       return;
     }
-    setAggregateConnectionTarget(((BinaryJedis) shard).getClient(), shardedTarget(sharded));
+    setConnectionTarget(((BinaryJedis) shard).getClient(), shardedTarget(sharded));
   }
 
   public static void setConnectionTarget(
@@ -94,11 +94,6 @@ public class JedisSingletons {
     } else {
       CONNECTION_TARGET_SUPPRESSED.set(connection, true);
     }
-  }
-
-  private static void setAggregateConnectionTarget(
-      @Nullable Connection connection, @Nullable RedisServerTarget target) {
-    setConnectionTarget(connection, target);
   }
 
   public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
