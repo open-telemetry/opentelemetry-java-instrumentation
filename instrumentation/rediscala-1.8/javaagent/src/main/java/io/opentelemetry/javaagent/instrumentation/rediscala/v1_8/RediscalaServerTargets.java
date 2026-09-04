@@ -108,7 +108,7 @@ public class RediscalaServerTargets {
   }
 
   @Nullable
-  public static RedisServerTarget get(Object client) {
+  public static RedisServerTarget get(@Nullable Object client) {
     if (MUTABLE_POOL_CLASS != null && MUTABLE_POOL_CLASS.isInstance(client)) {
       return ofMutablePool(client);
     }
@@ -130,7 +130,7 @@ public class RediscalaServerTargets {
   }
 
   @Nullable
-  static RedisServerTarget of(Object client) {
+  static RedisServerTarget of(@Nullable Object client) {
     if (client instanceof SentinelMonitoredRedisClient) {
       return ofSentinel(client, SENTINELS, ((SentinelMonitoredRedisClient) client).master());
     }
