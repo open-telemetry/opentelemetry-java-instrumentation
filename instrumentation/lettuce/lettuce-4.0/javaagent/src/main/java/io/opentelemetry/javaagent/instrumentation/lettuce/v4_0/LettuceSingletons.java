@@ -43,7 +43,7 @@ public class LettuceSingletons {
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v4_0-context-key");
 
-  public static final ContextKey<LettucePeerAddress> COMMAND_PEER_KEY =
+  public static final ContextKey<LettuceCommandPeer> COMMAND_PEER_KEY =
       ContextKey.named("opentelemetry-lettuce-v4_0-peer-key");
 
   public static final VirtualField<RedisCommand<?, ?, ?>, Context> CONTEXT =
@@ -56,8 +56,8 @@ public class LettuceSingletons {
   public static final VirtualField<RedisChannelHandler<?, ?>, InetSocketAddress>
       CONNECTION_ADDRESS = VirtualField.find(RedisChannelHandler.class, InetSocketAddress.class);
 
-  public static final VirtualField<RedisCommand<?, ?, ?>, LettucePeerAddress> COMMAND_PEER =
-      VirtualField.find(RedisCommand.class, LettucePeerAddress.class);
+  public static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
+      VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
 
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
       VirtualField.find(RedisCommand.class, InetSocketAddress.class);
@@ -153,7 +153,7 @@ public class LettuceSingletons {
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
-    COMMAND_PEER.set(command, new LettucePeerAddress());
+    COMMAND_PEER.set(command, new LettuceCommandPeer());
     COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));
     COMMAND_TARGET.set(command, serverTarget(connection));
   }
@@ -178,7 +178,7 @@ public class LettuceSingletons {
   }
 
   private static void recordCommandPeer(RedisCommand<?, ?, ?> command, SocketAddress address) {
-    LettucePeerAddress peer = COMMAND_PEER.get(command);
+    LettuceCommandPeer peer = COMMAND_PEER.get(command);
     if (peer != null) {
       peer.record(address);
     }
@@ -189,7 +189,7 @@ public class LettuceSingletons {
     if (!InstrumentationPoints.expectsResponse(command)) {
       return null;
     }
-    LettucePeerAddress peer = COMMAND_PEER.get(command);
+    LettuceCommandPeer peer = COMMAND_PEER.get(command);
     return peer != null ? peer.getAddress() : null;
   }
 
@@ -197,7 +197,7 @@ public class LettuceSingletons {
   static SocketAddress batchPeerAddress(List<RedisCommand<?, ?, ?>> commands) {
     SocketAddress batchPeerAddress = null;
     for (RedisCommand<?, ?, ?> command : commands) {
-      LettucePeerAddress peer = COMMAND_PEER.get(command);
+      LettuceCommandPeer peer = COMMAND_PEER.get(command);
       if (peer == null) {
         return null;
       }

@@ -57,7 +57,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         named("write").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
         getClass().getName() + "$WriteAdvice");
     transformer.applyAdviceToMethod(
-        named("write").and(takesArgument(0, named("java.util.Collection"))),
+        named("write").and(takesArgument(0, Collection.class)),
         getClass().getName() + "$CollectionWriteAdvice");
     transformer.applyAdviceToMethod(
         named("setAutoFlushCommands").and(takesArguments(1)),
@@ -88,9 +88,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-      if (!LettuceBatchContext.prepareCommandPeer(endpoint, command)) {
-        LettuceSingletons.linkCommandPeer(command);
-      }
+      LettuceSingletons.linkCommandPeer(command);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
@@ -104,7 +102,8 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         COMMAND_TARGET.set(command, commandTarget);
       }
 
-      if (LettuceBatchContext.capture(endpoint, command, asyncCommand)) {
+      if (LettuceBatchContext.isBatching(endpoint)) {
+        LettuceBatchContext.capture(endpoint, command, asyncCommand);
         return;
       }
       if (commandTarget == null) {
@@ -210,15 +209,11 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Channel channel) {
-      if (channel.pipeline().get(LettuceCommandOutboundHandler.NAME) == null) {
+      if (channel.pipeline().get(LettuceCommandOutboundHandler.class) == null) {
         ChannelHandlerContext encoder = channel.pipeline().context(CommandEncoder.class);
         if (encoder != null) {
-          channel
-              .pipeline()
-              .addAfter(
-                  encoder.name(),
-                  LettuceCommandOutboundHandler.NAME,
-                  new LettuceCommandOutboundHandler());
+          LettuceCommandOutboundHandler handler = new LettuceCommandOutboundHandler();
+          channel.pipeline().addAfter(encoder.name(), handler.getClass().getName(), handler);
         }
       }
     }

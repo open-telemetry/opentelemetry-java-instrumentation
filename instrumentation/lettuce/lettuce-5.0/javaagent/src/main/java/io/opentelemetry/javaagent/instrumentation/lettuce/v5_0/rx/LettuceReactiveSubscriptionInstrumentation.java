@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
+package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class LettuceReactiveSubscriptionInstrumentation implements TypeInstrumentation {
+public class LettuceReactiveSubscriptionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,12 +33,12 @@ class LettuceReactiveSubscriptionInstrumentation implements TypeInstrumentation 
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.FieldValue("command") RedisCommand<?, ?, ?> command) {
-      LettuceSingletons.enterReactiveCommand(command);
+      LettuceReactiveCommandContext.enter(command);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit() {
-      LettuceSingletons.exitReactiveCommand();
+      LettuceReactiveCommandContext.exit();
     }
   }
 }
