@@ -24,7 +24,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -129,20 +128,13 @@ class ShardedJedisClientTest {
 
   private static List<AttributeAssertion> attributes(
       String operation, String queryText, String selectedHost, int selectedPort) {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(maybeStable(DB_SYSTEM), REDIS),
-                equalTo(maybeStable(DB_STATEMENT), queryText),
-                equalTo(maybeStable(DB_OPERATION), operation),
-                equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null)));
-    if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(SERVER_ADDRESS, configuredTarget));
-    } else {
-      assertions.add(equalTo(maybeStablePeerService(), "test-peer-service"));
-      assertions.add(equalTo(SERVER_ADDRESS, selectedHost));
-      assertions.add(equalTo(SERVER_PORT, selectedPort));
-    }
-    return assertions;
+    return asList(
+        equalTo(maybeStable(DB_SYSTEM), REDIS),
+        equalTo(maybeStable(DB_STATEMENT), queryText),
+        equalTo(maybeStable(DB_OPERATION), operation),
+        equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+        equalTo(maybeStablePeerService(), emitStableDatabaseSemconv() ? null : "test-peer-service"),
+        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? configuredTarget : selectedHost),
+        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) selectedPort));
   }
 }
