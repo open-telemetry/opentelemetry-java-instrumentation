@@ -41,7 +41,18 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*Jedis30ClientTest.pooledCommand")
+    }
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database/dup,service.peer")
+  }
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testBothSemconv)
   }
 }

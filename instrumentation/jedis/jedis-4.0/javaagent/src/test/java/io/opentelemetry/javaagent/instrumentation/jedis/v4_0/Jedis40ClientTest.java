@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -101,9 +102,13 @@ class Jedis40ClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_STATEMENT, emitOldDatabaseSemconv() ? "SET foo ?" : null),
+                            equalTo(
+                                DB_QUERY_TEXT, emitStableDatabaseSemconv() ? "SET foo ?" : null),
+                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "SET" : null),
+                            equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "SET" : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -185,9 +190,13 @@ class Jedis40ClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET pooled ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_STATEMENT, emitOldDatabaseSemconv() ? "SET pooled ?" : null),
+                            equalTo(
+                                DB_QUERY_TEXT, emitStableDatabaseSemconv() ? "SET pooled ?" : null),
+                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "SET" : null),
+                            equalTo(DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "SET" : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
