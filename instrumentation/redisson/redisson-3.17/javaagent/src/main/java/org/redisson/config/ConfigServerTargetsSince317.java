@@ -71,18 +71,6 @@ public class ConfigServerTargetsSince317 {
     return null;
   }
 
-  // Redisson changes the single server address return type across supported versions.
-  @Nullable
-  private static String getAddress(SingleServerConfig config) {
-    try {
-      Object address = config.getClass().getMethod("getAddress").invoke(config);
-      return address != null ? address.toString() : null;
-    } catch (ReflectiveOperationException e) {
-      logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
-      return null;
-    }
-  }
-
   @Nullable
   public static RedisServerTarget ofServiceManager(@Nullable Object serviceManager) {
     if (serviceManager == null || SERVICE_MANAGER_GET_CFG == null) {
@@ -92,6 +80,18 @@ public class ConfigServerTargetsSince317 {
       return of((Config) SERVICE_MANAGER_GET_CFG.invoke(serviceManager));
     } catch (Throwable t) {
       logger.log(FINE, "Failed to read the Redisson configuration from the service manager", t);
+      return null;
+    }
+  }
+
+  // Redisson changes the single server address return type across supported versions.
+  @Nullable
+  private static String getAddress(SingleServerConfig config) {
+    try {
+      Object address = config.getClass().getMethod("getAddress").invoke(config);
+      return address != null ? address.toString() : null;
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
       return null;
     }
   }
