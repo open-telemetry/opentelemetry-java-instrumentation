@@ -41,15 +41,15 @@ public final class VertxRedisServerTargets {
     }
     if (options.getType() == RedisClientType.SENTINEL) {
       return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
-          effectiveEndpoints(options.getEndpoints()), options.getMasterName());
+          discoveryEndpoints(options.getEndpoints()), options.getMasterName());
     }
     if (options.getType() == RedisClientType.STANDALONE) {
-      return RedisServerTarget.ofEndpoint(effectiveEndpoint(options.getEndpoint()));
+      return RedisServerTarget.ofEndpoint(options.getEndpoint());
     }
     if (options.getType() == RedisClientType.REPLICATION && hasStaticTopology(options)) {
-      return RedisServerTarget.ofEndpoints(effectiveEndpoints(options.getEndpoints()));
+      return RedisServerTarget.ofEndpoints(options.getEndpoints());
     }
-    return RedisServerTarget.ofUnorderedEndpoints(effectiveEndpoints(options.getEndpoints()));
+    return RedisServerTarget.ofUnorderedEndpoints(options.getEndpoints());
   }
 
   @Nullable
@@ -59,16 +59,33 @@ public final class VertxRedisServerTargets {
     }
     if (options instanceof RedisSentinelConnectOptions) {
       return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
-          effectiveEndpoints(options.getEndpoints()),
+          discoveryEndpoints(options.getEndpoints()),
           ((RedisSentinelConnectOptions) options).getMasterName());
     }
     if (options instanceof RedisStandaloneConnectOptions) {
-      return RedisServerTarget.ofEndpoint(effectiveEndpoint(options.getEndpoint()));
+      return RedisServerTarget.ofEndpoint(options.getEndpoint());
     }
     if (hasStaticTopology(options)) {
-      return RedisServerTarget.ofEndpoints(effectiveEndpoints(options.getEndpoints()));
+      return RedisServerTarget.ofEndpoints(options.getEndpoints());
     }
-    return RedisServerTarget.ofUnorderedEndpoints(effectiveEndpoints(options.getEndpoints()));
+    return RedisServerTarget.ofUnorderedEndpoints(options.getEndpoints());
+  }
+
+  private static List<String> discoveryEndpoints(List<String> connectionStrings) {
+    List<String> endpoints = new ArrayList<>(connectionStrings.size());
+    for (String connectionString : connectionStrings) {
+      try {
+        RedisURI redisUri = new RedisURI(connectionString);
+        SocketAddress address = redisUri.socketAddress();
+        endpoints.add(
+            address.isInetSocket()
+                ? RedisServerTarget.endpoint(address.host(), address.port())
+                : connectionString);
+      } catch (IllegalArgumentException ignored) {
+        endpoints.add(connectionString);
+      }
+    }
+    return endpoints;
   }
 
   private static boolean hasStaticTopology(Object options) {
@@ -82,26 +99,6 @@ public final class VertxRedisServerTargets {
       return false;
     } catch (IllegalAccessException | InvocationTargetException ignored) {
       return false;
-    }
-  }
-
-  private static List<String> effectiveEndpoints(List<String> connectionStrings) {
-    List<String> endpoints = new ArrayList<>(connectionStrings.size());
-    for (String connectionString : connectionStrings) {
-      endpoints.add(effectiveEndpoint(connectionString));
-    }
-    return endpoints;
-  }
-
-  private static String effectiveEndpoint(String connectionString) {
-    try {
-      RedisURI redisUri = new RedisURI(connectionString);
-      SocketAddress address = redisUri.socketAddress();
-      return address.isInetSocket()
-          ? RedisServerTarget.endpoint(address.host(), address.port())
-          : connectionString;
-    } catch (IllegalArgumentException ignored) {
-      return connectionString;
     }
   }
 
