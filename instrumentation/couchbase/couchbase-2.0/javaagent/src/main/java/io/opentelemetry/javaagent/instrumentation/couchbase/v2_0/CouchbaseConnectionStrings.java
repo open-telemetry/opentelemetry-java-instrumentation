@@ -78,9 +78,13 @@ class CouchbaseConnectionStrings {
         addSeed(target, seed);
       }
       return target.build();
-    } catch (ReflectiveOperationException | RuntimeException ignored) {
-      // Stable semantic conventions omit the server target when parsing fails. Legacy semantic
-      // conventions report the contacted node later.
+    } catch (ReflectiveOperationException ignored) {
+      // An unsupported connection-string shape leaves the stable server target unset. Legacy
+      // semantic conventions report the contacted node later.
+      return null;
+    } catch (RuntimeException ignored) {
+      // Treat malformed driver-provided values as unparseable so instrumentation never disrupts
+      // cluster construction.
       return null;
     }
   }
