@@ -13,7 +13,6 @@ class GeodeServerTargetBuilder {
 
   private static final int DEFAULT_SERVER_PORT = 40404;
   private static final int DEFAULT_LOCATOR_PORT = 10334;
-  private static final int MAX_SERVER_ENDPOINTS = 5;
 
   private DbServerTargetBuilder servers = newServerBuilder();
   private DbServerTargetBuilder locators = newLocatorBuilder();
@@ -55,9 +54,7 @@ class GeodeServerTargetBuilder {
   }
 
   private static DbServerTargetBuilder newServerBuilder() {
-    return DbServerTarget.builder(DEFAULT_SERVER_PORT)
-        .setSorted(true)
-        .setMaxEndpoints(MAX_SERVER_ENDPOINTS);
+    return DbServerTarget.builder(DEFAULT_SERVER_PORT).setSorted(true);
   }
 
   private static DbServerTargetBuilder newLocatorBuilder() {
