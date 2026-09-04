@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 
-class VertxRedisClient445Test {
+class VertxRedisClientTargetTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -64,7 +64,7 @@ class VertxRedisClient445Test {
   }
 
   @Test
-  void capturesTargetFromProviderConnectOptions() {
+  void capturesTargetFromProviderConfiguration() {
     Redis client =
         Redis.createClient(
             vertx,
