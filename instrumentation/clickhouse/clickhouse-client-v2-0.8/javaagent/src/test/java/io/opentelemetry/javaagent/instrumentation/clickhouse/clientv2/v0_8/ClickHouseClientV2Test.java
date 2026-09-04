@@ -666,6 +666,81 @@ class ClickHouseClientV2Test {
   }
 
   @Test
+  void testExhaustedRetryReportsAttemptedEndpoint() throws Exception {
+    assumeTrue(isClassPresent("com.clickhouse.client.api.transport.ClientNodeSelector"));
+
+    int firstUnavailablePort = 1;
+    int secondUnavailablePort = 2;
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint("http://127.0.0.1:" + firstUnavailablePort)
+            .addEndpoint("http://127.0.0.1:" + secondUnavailablePort)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false")
+            .setConnectTimeout(100)
+            .setMaxRetries(1)
+            .useAsyncRequests(true)
+            .build();
+    cleanup.deferCleanup(testClient);
+
+    List<String> configuredAddresses =
+        new ArrayList<>(
+            asList("127.0.0.1:" + firstUnavailablePort, "127.0.0.1:" + secondUnavailablePort));
+    configuredAddresses.sort(String::compareTo);
+    putUnreachableEndpointFirst(testClient, firstUnavailablePort);
+    String currentEndpoint = testClient.getEndpoints().iterator().next();
+    String legacyAddress = UrlParser.getHost(currentEndpoint);
+    Integer legacyPort = UrlParser.getPort(currentEndpoint);
+
+    Throwable thrown = catchThrowable(() -> testClient.query("select * from " + TABLE_NAME).join());
+    assertThat(thrown).isNotNull();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "select test_table"
+                                : "SELECT " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? String.join(",", configuredAddresses)
+                                    : legacyAddress),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() || legacyPort == null
+                                    ? null
+                                    : (long) legacyPort),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? "127.0.0.1" : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) secondUnavailablePort : null),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? thrown.getCause().getClass().getName()
+                                    : null))));
+  }
+
+  @Test
   void testConfiguredHttpAndHttpsDefaultPortsAreOmitted() throws Exception {
     Client httpClient =
         new Client.Builder()

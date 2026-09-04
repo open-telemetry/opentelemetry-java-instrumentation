@@ -22,8 +22,6 @@ public class ClickHouseClientV2InstrumentationModule extends InstrumentationModu
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new ClickHouseClientV2Instrumentation(),
-        new ClickHouseClientV2NodeInstrumentation(),
-        new ClickHouseClientV2NodeSelectorInstrumentation());
+        new ClickHouseClientV2Instrumentation(), new ClickHouseClientV2RequestInstrumentation());
   }
 }
