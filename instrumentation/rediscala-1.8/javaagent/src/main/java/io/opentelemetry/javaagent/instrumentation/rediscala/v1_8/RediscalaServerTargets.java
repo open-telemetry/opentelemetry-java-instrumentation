@@ -67,7 +67,7 @@ public class RediscalaServerTargets {
       findMethod(MUTABLE_POOL_CLASS, "redisServerConnections");
 
   @Nullable
-  private static final Class<?> SENTINEL_MASTER_SLAVES_CLASS =
+  static final Class<?> SENTINEL_MASTER_SLAVES_CLASS =
       findClass(SENTINEL_MASTER_SLAVES_CLASS_NAME);
 
   @Nullable
@@ -87,7 +87,7 @@ public class RediscalaServerTargets {
       findMethod(SentinelMonitoredRedisBlockingClient.class, "sentinels");
 
   @Nullable
-  private static Class<?> findClass(String className) {
+  static Class<?> findClass(String className) {
     try {
       return Class.forName(className, false, RediscalaServerTargets.class.getClassLoader());
     } catch (ClassNotFoundException ignored) {
@@ -96,7 +96,7 @@ public class RediscalaServerTargets {
   }
 
   @Nullable
-  private static Method findMethod(@Nullable Class<?> declaringClass, String methodName) {
+  static Method findMethod(@Nullable Class<?> declaringClass, String methodName) {
     if (declaringClass == null) {
       return null;
     }
