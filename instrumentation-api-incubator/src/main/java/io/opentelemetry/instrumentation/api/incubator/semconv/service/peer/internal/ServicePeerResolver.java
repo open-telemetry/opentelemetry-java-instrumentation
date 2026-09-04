@@ -43,7 +43,7 @@ public class ServicePeerResolver {
       AttributeKey.stringKey("service.peer.name");
   private static final AttributeKey<String> SERVICE_PEER_NAMESPACE =
       AttributeKey.stringKey("service.peer.namespace");
-  private static final Pattern ADDRESS_ENTRY_PATTERN =
+  private static final Pattern PARENTHESIZED_ADDRESS_ENTRY_PATTERN =
       Pattern.compile("\\(\\s*address\\s*=", Pattern.CASE_INSENSITIVE);
 
   private static final Comparator<ServiceMatcher> matcherComparator =
@@ -112,7 +112,7 @@ public class ServicePeerResolver {
         return true;
       }
     }
-    Matcher addressMatcher = ADDRESS_ENTRY_PATTERN.matcher(peer);
+    Matcher addressMatcher = PARENTHESIZED_ADDRESS_ENTRY_PATTERN.matcher(peer);
     if (!addressMatcher.find()) {
       return false;
     }
