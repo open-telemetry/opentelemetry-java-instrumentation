@@ -14,7 +14,7 @@ class LettuceCommandPeer {
   private static final String DOMAIN_SOCKET_ADDRESS_CLASS =
       "io.netty.channel.unix.DomainSocketAddress";
 
-  private static final ClassValue<Method> domainSocketAddressPathMethods =
+  private static final ClassValue<Method> domainSocketAddressPathMethod =
       new ClassValue<Method>() {
         @Nullable
         @Override
@@ -46,7 +46,7 @@ class LettuceCommandPeer {
     }
     if (peerAddress != null
         && peerAddress.getClass().getName().equals(DOMAIN_SOCKET_ADDRESS_CLASS)) {
-      Method pathMethod = domainSocketAddressPathMethods.get(peerAddress.getClass());
+      Method pathMethod = domainSocketAddressPathMethod.get(peerAddress.getClass());
       if (pathMethod == null) {
         return null;
       }
