@@ -32,7 +32,7 @@ public class RedissonInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new RedisExecutorConnectionFutureInstrumentation(),
-        new ConnectionManagerInstrumentation(),
+        new MasterSlaveConnectionManagerInstrumentation(),
         new RedisConnectionInstrumentation(),
         new RedisCommandDataInstrumentation());
   }

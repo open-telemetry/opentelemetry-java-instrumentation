@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
+// This helper is in the Redisson package to access package-private configuration state.
 public class ConfigServerTargetsBefore317 {
 
   private static final Logger logger =
@@ -32,9 +33,26 @@ public class ConfigServerTargetsBefore317 {
       findConfigMethod("getReplicatedServersConfig");
 
   @Nullable
+  private static final Method SINGLE_SERVER_CONFIG_GET_ADDRESS =
+      findPublicMethod(SingleServerConfig.class, "getAddress");
+
+  @Nullable
+  private static final Method MASTER_SLAVE_SERVERS_CONFIG_GET_MASTER_ADDRESS =
+      findPublicMethod(MasterSlaveServersConfig.class, "getMasterAddress");
+
+  @Nullable
   private static Method findConfigMethod(String methodName) {
     try {
       return Config.class.getDeclaredMethod(methodName);
+    } catch (NoSuchMethodException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Method findPublicMethod(Class<?> declaringClass, String methodName) {
+    try {
+      return declaringClass.getMethod(methodName);
     } catch (NoSuchMethodException ignored) {
       return null;
     }
@@ -47,15 +65,16 @@ public class ConfigServerTargetsBefore317 {
     }
     SingleServerConfig singleServerConfig = config.getSingleServerConfig();
     if (singleServerConfig != null) {
-      return ofAddress(getAddress(singleServerConfig));
+      return RedisServerTarget.ofEndpoint(addressString(getAddress(singleServerConfig)));
     }
     SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
     if (sentinelConfig != null) {
-      return ofAddresses(sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
+      return ofSentinelAddresses(
+          sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
     }
     ClusterServersConfig clusterConfig = config.getClusterServersConfig();
     if (clusterConfig != null) {
-      return ofAddresses(clusterConfig.getNodeAddresses());
+      return ofUnorderedAddresses(clusterConfig.getNodeAddresses());
     }
     RedisServerTarget elasticacheTarget =
         ofOptionalServerConfig(config, CONFIG_GET_ELASTICACHE_SERVERS);
@@ -69,22 +88,20 @@ public class ConfigServerTargetsBefore317 {
     }
     MasterSlaveServersConfig masterSlaveConfig = config.getMasterSlaveServersConfig();
     if (masterSlaveConfig != null) {
-      return ofAddresses(
+      return ofMasterSlaveAddresses(
           getMasterAddress(masterSlaveConfig), masterSlaveConfig.getSlaveAddresses());
     }
     return null;
   }
 
-  @Nullable
-  private static RedisServerTarget ofAddress(@Nullable Object address) {
-    return RedisServerTarget.ofEndpoint(addressString(address));
-  }
-
   // Redisson changes the single server address return type across supported versions.
   @Nullable
   private static Object getAddress(SingleServerConfig config) {
+    if (SINGLE_SERVER_CONFIG_GET_ADDRESS == null) {
+      return null;
+    }
     try {
-      return config.getClass().getMethod("getAddress").invoke(config);
+      return SINGLE_SERVER_CONFIG_GET_ADDRESS.invoke(config);
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
       return null;
@@ -103,7 +120,9 @@ public class ConfigServerTargetsBefore317 {
         return null;
       }
       Object addresses = serverConfig.getClass().getMethod("getNodeAddresses").invoke(serverConfig);
-      return addresses instanceof Collection ? ofAddresses((Collection<?>) addresses) : null;
+      return addresses instanceof Collection
+          ? ofUnorderedAddresses((Collection<?>) addresses)
+          : null;
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured Redisson servers", e);
       return null;
@@ -113,8 +132,11 @@ public class ConfigServerTargetsBefore317 {
   // Redisson changes the master address return type across supported versions.
   @Nullable
   private static Object getMasterAddress(MasterSlaveServersConfig config) {
+    if (MASTER_SLAVE_SERVERS_CONFIG_GET_MASTER_ADDRESS == null) {
+      return null;
+    }
     try {
-      return config.getClass().getMethod("getMasterAddress").invoke(config);
+      return MASTER_SLAVE_SERVERS_CONFIG_GET_MASTER_ADDRESS.invoke(config);
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured Redisson master address", e);
       return null;
@@ -123,7 +145,7 @@ public class ConfigServerTargetsBefore317 {
 
   // Redisson stores addresses as URI, URL, or String across supported versions.
   @Nullable
-  private static RedisServerTarget ofAddresses(@Nullable Collection<?> addresses) {
+  private static RedisServerTarget ofUnorderedAddresses(@Nullable Collection<?> addresses) {
     if (addresses == null || addresses.isEmpty()) {
       return null;
     }
@@ -135,7 +157,7 @@ public class ConfigServerTargetsBefore317 {
   }
 
   @Nullable
-  private static RedisServerTarget ofAddresses(
+  private static RedisServerTarget ofMasterSlaveAddresses(
       @Nullable Object firstAddress, @Nullable Collection<?> otherAddresses) {
     List<String> endpoints = new ArrayList<>();
     String firstEndpoint = addressString(firstAddress);
@@ -152,7 +174,9 @@ public class ConfigServerTargetsBefore317 {
         }
         Integer port = target.getPort();
         sortedAddresses.add(
-            RedisServerTarget.endpoint(target.getAddress(), port == null ? -1 : port.intValue()));
+            port == null
+                ? target.getAddress()
+                : RedisServerTarget.endpoint(target.getAddress(), port.intValue()));
       }
     }
     Collections.sort(sortedAddresses);
@@ -161,7 +185,7 @@ public class ConfigServerTargetsBefore317 {
   }
 
   @Nullable
-  private static RedisServerTarget ofAddresses(
+  private static RedisServerTarget ofSentinelAddresses(
       @Nullable Collection<?> addresses, @Nullable String logicalName) {
     if (addresses == null || addresses.isEmpty()) {
       return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(null, logicalName);

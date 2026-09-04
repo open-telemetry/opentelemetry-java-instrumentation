@@ -105,6 +105,7 @@ class LettuceClusterClientTest {
     assertThat(syncCommands.set("CLUSTER_COMMAND_KEY", "value")).isEqualTo("OK");
 
     connection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> connection.setAutoFlushCommands(true));
     RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = connection.async();
     RedisFuture<String> first = asyncCommands.set("CLUSTER_BATCH_KEY_1", "value");
     RedisFuture<String> second = asyncCommands.set("CLUSTER_BATCH_KEY_2", "value");

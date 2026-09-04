@@ -188,7 +188,7 @@ public class JedisSingletons {
       return;
     }
     Connection connection = ((BinaryJedis) jedis).getClient();
-    setAggregateConnectionTarget(connection, target);
+    setConnectionTarget(connection, target);
   }
 
   public static void setConnectionTarget(
@@ -202,11 +202,6 @@ public class JedisSingletons {
     } else {
       CONNECTION_TARGET_SUPPRESSED.set(connection, true);
     }
-  }
-
-  private static void setAggregateConnectionTarget(
-      @Nullable Connection connection, @Nullable RedisServerTarget target) {
-    setConnectionTarget(connection, target);
   }
 
   @Nullable

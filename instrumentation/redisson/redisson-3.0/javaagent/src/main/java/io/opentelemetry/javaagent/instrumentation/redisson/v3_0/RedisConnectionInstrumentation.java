@@ -59,7 +59,9 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
                 remoteAddress,
                 arg,
                 null,
-                emitStableDatabaseSemconv() ? RedissonServerTargets.of(connection) : null);
+                emitStableDatabaseSemconv()
+                    ? RedissonServerTargets.connectionTarget(connection)
+                    : null);
         PromiseWrapper<?> promise = request.getPromiseWrapper();
         if (promise == null) {
           return null;

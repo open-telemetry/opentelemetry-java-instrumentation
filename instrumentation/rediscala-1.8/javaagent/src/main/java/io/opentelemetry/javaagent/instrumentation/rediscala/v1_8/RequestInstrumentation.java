@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -80,16 +81,14 @@ class RequestInstrumentation implements TypeInstrumentation {
         }
 
         ServerEndpoint endpoint = null;
+        RedisServerTarget serverTarget = null;
         if (emitStableDatabaseSemconv()) {
           endpoint = ServerEndpoint.create(action, cmd.isMasterOnly());
+          serverTarget = RediscalaServerTargets.get(action);
         } else if (action instanceof RedisClientActorLike) {
           endpoint = ServerEndpoint.create((RedisClientActorLike) action);
         }
-        RediscalaRequest request =
-            RediscalaRequest.create(
-                cmd,
-                endpoint,
-                emitStableDatabaseSemconv() ? RediscalaServerTargets.get(action) : null);
+        RediscalaRequest request = RediscalaRequest.create(cmd, endpoint, serverTarget);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

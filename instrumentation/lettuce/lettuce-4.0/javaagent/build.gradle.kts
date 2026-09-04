@@ -58,6 +58,7 @@ tasks {
     }
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database/dup,service.peer")
   }
 
   val testConnectionTelemetryEnabledStableSemconv =
@@ -78,8 +79,8 @@ tasks {
     dependsOn(
       testConnectionTelemetryEnabled,
       testConnectionTelemetryEnabledStableSemconv,
-      testBothSemconv,
       testStableSemconv,
+      testBothSemconv,
       testExperimental
     )
   }

@@ -5,21 +5,29 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-public class LettucePeerAddress {
+public class LettuceCommandPeer {
   private static final String DOMAIN_SOCKET_ADDRESS_CLASS =
       "io.netty.channel.unix.DomainSocketAddress";
 
+  private static final ClassValue<Method> domainSocketAddressPathMethod =
+      new ClassValue<Method>() {
+        @Nullable
+        @Override
+        protected Method computeValue(Class<?> type) {
+          try {
+            return type.getMethod("path");
+          } catch (NoSuchMethodException | SecurityException ignored) {
+            return null;
+          }
+        }
+      };
+
   @Nullable private SocketAddress address;
-
-  LettucePeerAddress() {}
-
-  LettucePeerAddress(SocketAddress address) {
-    this.address = address;
-  }
 
   synchronized void record(SocketAddress address) {
     this.address = address;
@@ -38,9 +46,15 @@ public class LettucePeerAddress {
     }
     if (peerAddress != null
         && peerAddress.getClass().getName().equals(DOMAIN_SOCKET_ADDRESS_CLASS)) {
+      Method pathMethod = domainSocketAddressPathMethod.get(peerAddress.getClass());
+      if (pathMethod == null) {
+        return null;
+      }
       try {
-        return (String) peerAddress.getClass().getMethod("path").invoke(peerAddress);
-      } catch (ReflectiveOperationException ignored) {
+        return (String) pathMethod.invoke(peerAddress);
+      } catch (ReflectiveOperationException
+          | IllegalArgumentException
+          | ClassCastException ignored) {
         return null;
       }
     }

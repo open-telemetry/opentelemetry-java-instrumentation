@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -23,33 +24,35 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class LettuceNetworkAttributesGetterTest {
 
   private static final int PORT = 6379;
 
-  @Test
-  void commandUsesResolvedSelectedAddress() throws UnknownHostException {
-    InetSocketAddress address =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
-    RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(command, new LettucePeerAddress(address));
+  @ParameterizedTest
+  @MethodSource("resolvedAddresses")
+  void commandUsesResolvedSelectedAddress(InetAddress inetAddress, String expectedAddress) {
+    InetSocketAddress address = new InetSocketAddress(inetAddress, PORT);
+    RedisCommand<?, ?, ?> command = commandWithPeer(address);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
     assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
+        .isEqualTo(emitStableDatabaseSemconv() ? expectedAddress : null);
     assertThat(getter.getNetworkPeerPort(command, null))
         .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
   }
 
   @Test
   void commandDropsUnresolvedSelectedAddress() {
-    RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(
-        command, new LettucePeerAddress(InetSocketAddress.createUnresolved("redis.example", PORT)));
+    RedisCommand<?, ?, ?> command =
+        commandWithPeer(InetSocketAddress.createUnresolved("redis.example", PORT));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
@@ -60,7 +63,7 @@ class LettuceNetworkAttributesGetterTest {
   @Test
   void commandRetryUsesLastSelectedAddress() throws UnknownHostException {
     RedisCommand<?, ?, ?> command = command();
-    LettucePeerAddress peerAddress = new LettucePeerAddress();
+    LettuceCommandPeer peerAddress = new LettuceCommandPeer();
     LettuceSingletons.COMMAND_PEER.set(command, peerAddress);
     LettuceSingletons.recordCommandPeers(
         command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
@@ -79,13 +82,13 @@ class LettuceNetworkAttributesGetterTest {
   void commandUsesDomainSocketPath() {
     DomainSocketAddress address = new DomainSocketAddress("/var/run/redis.sock");
     RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(command, new LettucePeerAddress());
+    LettuceSingletons.COMMAND_PEER.set(command, new LettuceCommandPeer());
     Channel channel = mock(Channel.class);
     when(channel.remoteAddress()).thenReturn(address);
     ChannelHandlerContext context = mock(ChannelHandlerContext.class);
     when(context.channel()).thenReturn(channel);
 
-    LettuceConnectionInstrumentation.WriteAdvice.onEnter(context, command);
+    LettuceCommandHandlerInstrumentation.WriteAdvice.onEnter(context, command);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
@@ -95,31 +98,11 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void commandUsesResolvedIpv6Address() throws UnknownHostException {
-    RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(
-        command,
-        new LettucePeerAddress(
-            new InetSocketAddress(
-                InetAddress.getByAddress(
-                    new byte[] {0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}),
-                PORT)));
-
-    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-
-    assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "2001:db8:0:0:0:0:0:1" : null);
-    assertThat(getter.getNetworkPeerPort(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
-  }
-
-  @Test
   void commandThatDoesNotExpectResponseDropsSelectedAddress() throws UnknownHostException {
     RedisCommand<?, ?, ?> command = new Command<>(CommandType.DEBUG, null);
-    LettuceSingletons.COMMAND_PEER.set(
-        command,
-        new LettucePeerAddress(
-            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT)));
+    LettuceCommandPeer peer = new LettuceCommandPeer();
+    peer.record(new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
+    LettuceSingletons.COMMAND_PEER.set(command, peer);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
@@ -219,7 +202,19 @@ class LettuceNetworkAttributesGetterTest {
 
   private static RedisCommand<?, ?, ?> commandWithPeer(SocketAddress address) {
     RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_PEER.set(command, new LettucePeerAddress(address));
+    LettuceCommandPeer peer = new LettuceCommandPeer();
+    peer.record(address);
+    LettuceSingletons.COMMAND_PEER.set(command, peer);
     return command;
+  }
+
+  private static Stream<Arguments> resolvedAddresses() throws UnknownHostException {
+    return Stream.of(
+        argumentSet("ipv4", InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), "10.1.2.3"),
+        argumentSet(
+            "ipv6",
+            InetAddress.getByAddress(
+                new byte[] {0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}),
+            "2001:db8:0:0:0:0:0:1"));
   }
 }

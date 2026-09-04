@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
+// This helper is in the Redisson package to access package-private configuration state.
 public class ConfigServerTargetsSince317 {
 
   private static final Logger logger =
@@ -52,33 +53,23 @@ public class ConfigServerTargetsSince317 {
     }
     SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
     if (sentinelConfig != null) {
-      return ofAddresses(sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
+      return ofSentinelAddresses(
+          sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
     }
     ClusterServersConfig clusterConfig = config.getClusterServersConfig();
     if (clusterConfig != null) {
-      return ofAddresses(clusterConfig.getNodeAddresses());
+      return ofUnorderedAddresses(clusterConfig.getNodeAddresses());
     }
     ReplicatedServersConfig replicatedConfig = config.getReplicatedServersConfig();
     if (replicatedConfig != null) {
-      return ofAddresses(replicatedConfig.getNodeAddresses());
+      return ofUnorderedAddresses(replicatedConfig.getNodeAddresses());
     }
     MasterSlaveServersConfig masterSlaveConfig = config.getMasterSlaveServersConfig();
     if (masterSlaveConfig != null) {
-      return ofAddresses(
+      return ofMasterSlaveAddresses(
           masterSlaveConfig.getMasterAddress(), masterSlaveConfig.getSlaveAddresses());
     }
     return null;
-  }
-
-  @Nullable
-  private static String getAddress(SingleServerConfig config) {
-    try {
-      Object address = config.getClass().getMethod("getAddress").invoke(config);
-      return address != null ? address.toString() : null;
-    } catch (ReflectiveOperationException e) {
-      logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
-      return null;
-    }
   }
 
   @Nullable
@@ -94,8 +85,20 @@ public class ConfigServerTargetsSince317 {
     }
   }
 
+  // Redisson changes the single server address return type across supported versions.
   @Nullable
-  private static RedisServerTarget ofAddresses(@Nullable Collection<String> addresses) {
+  private static String getAddress(SingleServerConfig config) {
+    try {
+      Object address = config.getClass().getMethod("getAddress").invoke(config);
+      return address != null ? address.toString() : null;
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
+      return null;
+    }
+  }
+
+  @Nullable
+  private static RedisServerTarget ofUnorderedAddresses(@Nullable Collection<String> addresses) {
     if (addresses == null || addresses.isEmpty()) {
       return null;
     }
@@ -104,7 +107,7 @@ public class ConfigServerTargetsSince317 {
   }
 
   @Nullable
-  private static RedisServerTarget ofAddresses(
+  private static RedisServerTarget ofMasterSlaveAddresses(
       @Nullable String firstAddress, @Nullable Collection<String> otherAddresses) {
     List<String> endpoints = new ArrayList<>();
     if (firstAddress != null) {
@@ -119,7 +122,9 @@ public class ConfigServerTargetsSince317 {
         }
         Integer port = target.getPort();
         sortedAddresses.add(
-            RedisServerTarget.endpoint(target.getAddress(), port == null ? -1 : port.intValue()));
+            port == null
+                ? target.getAddress()
+                : RedisServerTarget.endpoint(target.getAddress(), port.intValue()));
       }
     }
     Collections.sort(sortedAddresses);
@@ -128,7 +133,7 @@ public class ConfigServerTargetsSince317 {
   }
 
   @Nullable
-  private static RedisServerTarget ofAddresses(
+  private static RedisServerTarget ofSentinelAddresses(
       @Nullable Collection<String> addresses, @Nullable String logicalName) {
     if (addresses == null || addresses.isEmpty()) {
       return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(null, logicalName);

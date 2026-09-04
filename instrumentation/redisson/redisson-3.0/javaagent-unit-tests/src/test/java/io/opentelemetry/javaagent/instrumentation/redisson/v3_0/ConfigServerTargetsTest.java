@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -19,7 +20,6 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.redisson.config.Config;
 import org.redisson.config.ConfigServerTargetsBefore317;
@@ -120,9 +120,7 @@ class ConfigServerTargetsTest {
             .setMasterAddress(redisAddress("master:6379"))
             .addSlaveAddress(redisAddress("replica:6380"));
     Object validReplica = serverConfig.getSlaveAddresses().iterator().next();
-    Set<Object> replicas = new LinkedHashSet<>();
-    replicas.add(validReplica);
-    replicas.add(invalidReplica);
+    Set<Object> replicas = new LinkedHashSet<>(asList(validReplica, invalidReplica));
     serverConfig
         .getClass()
         .getMethod("setSlaveAddresses", Set.class)
@@ -156,17 +154,17 @@ class ConfigServerTargetsTest {
     assertThat(target.getPort()).isNull();
   }
 
-  @ParameterizedTest
-  @CsvSource({"user:password@secure.example:6380/2?timeout=5s, secure.example, 6380"})
-  void singleServerUsesSanitizedConfiguredAddress(
-      String configuredAddress, String expectedAddress, int expectedPort) {
+  @Test
+  void singleServerUsesSanitizedConfiguredAddress() {
     Config config = new Config();
-    config.useSingleServer().setAddress(redisAddress(configuredAddress));
+    config
+        .useSingleServer()
+        .setAddress(redisAddress("user:password@secure.example:6380/2?timeout=5s"));
 
     RedisServerTarget target = ConfigServerTargetsBefore317.of(config);
 
-    assertThat(target.getAddress()).isEqualTo(expectedAddress);
-    assertThat(target.getPort()).isEqualTo(expectedPort);
+    assertThat(target.getAddress()).isEqualTo("secure.example");
+    assertThat(target.getPort()).isEqualTo(6380);
   }
 
   @Test

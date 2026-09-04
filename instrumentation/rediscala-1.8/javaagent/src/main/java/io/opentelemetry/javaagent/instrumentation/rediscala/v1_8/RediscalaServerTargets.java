@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.ACTOR_REQUEST_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.CLUSTER_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.POOL_REQUEST_TARGET;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,7 +47,8 @@ public class RediscalaServerTargets {
   // Scala collection return types differ between the Scala 2.12 and 2.13 builds, so
   // collection-returning methods are resolved reflectively rather than called directly.
   @Nullable
-  private static final Method POOL_REDIS_SERVERS = findRedisServers(RedisClientPool.class);
+  private static final Method POOL_REDIS_SERVERS =
+      findMethod(RedisClientPool.class, "redisServers");
 
   // Some rediscala forks drop the master and slaves accessors from RedisClientMasterSlaves, so both
   // are resolved reflectively and the client is skipped when either one is missing.
@@ -64,8 +67,7 @@ public class RediscalaServerTargets {
       findMethod(MUTABLE_POOL_CLASS, "redisServerConnections");
 
   @Nullable
-  private static final Class<?> SENTINEL_MASTER_SLAVES_CLASS =
-      findClass(SENTINEL_MASTER_SLAVES_CLASS_NAME);
+  static final Class<?> SENTINEL_MASTER_SLAVES_CLASS = findClass(SENTINEL_MASTER_SLAVES_CLASS_NAME);
 
   @Nullable
   private static final Method SENTINEL_MASTER_SLAVES_SENTINELS =
@@ -83,26 +85,8 @@ public class RediscalaServerTargets {
   private static final Method BLOCKING_SENTINELS =
       findMethod(SentinelMonitoredRedisBlockingClient.class, "sentinels");
 
-  private static final VirtualField<ActorRequest, RedisServerTarget> ACTOR_REQUEST_TARGET =
-      VirtualField.find(ActorRequest.class, RedisServerTarget.class);
-
-  private static final VirtualField<RoundRobinPoolRequest, RedisServerTarget> POOL_REQUEST_TARGET =
-      VirtualField.find(RoundRobinPoolRequest.class, RedisServerTarget.class);
-
-  private static final VirtualField<RedisClientPoolLike, RedisServerTarget> CLUSTER_TARGET =
-      VirtualField.find(RedisClientPoolLike.class, RedisServerTarget.class);
-
   @Nullable
-  private static Method findRedisServers(Class<?> poolClass) {
-    try {
-      return poolClass.getMethod("redisServers");
-    } catch (NoSuchMethodException ignored) {
-      return null;
-    }
-  }
-
-  @Nullable
-  private static Class<?> findClass(String className) {
+  static Class<?> findClass(String className) {
     try {
       return Class.forName(className, false, RediscalaServerTargets.class.getClassLoader());
     } catch (ClassNotFoundException ignored) {
@@ -111,7 +95,7 @@ public class RediscalaServerTargets {
   }
 
   @Nullable
-  private static Method findMethod(@Nullable Class<?> declaringClass, String methodName) {
+  static Method findMethod(@Nullable Class<?> declaringClass, String methodName) {
     if (declaringClass == null) {
       return null;
     }
@@ -123,7 +107,7 @@ public class RediscalaServerTargets {
   }
 
   @Nullable
-  public static RedisServerTarget get(Object client) {
+  public static RedisServerTarget get(@Nullable Object client) {
     if (MUTABLE_POOL_CLASS != null && MUTABLE_POOL_CLASS.isInstance(client)) {
       return ofMutablePool(client);
     }
@@ -131,32 +115,20 @@ public class RediscalaServerTargets {
       return of(client);
     }
     if (client instanceof ActorRequest) {
-      return get(ACTOR_REQUEST_TARGET, (ActorRequest) client);
+      return RediscalaSingletons.getServerTarget(ACTOR_REQUEST_TARGET, (ActorRequest) client);
     }
     if (client instanceof RoundRobinPoolRequest) {
-      return get(POOL_REQUEST_TARGET, (RoundRobinPoolRequest) client);
+      return RediscalaSingletons.getServerTarget(
+          POOL_REQUEST_TARGET, (RoundRobinPoolRequest) client);
     }
     if (CLUSTER_CLASS != null && CLUSTER_CLASS.isInstance(client)) {
-      return get(CLUSTER_TARGET, (RedisClientPoolLike) client);
+      return RediscalaSingletons.getServerTarget(CLUSTER_TARGET, (RedisClientPoolLike) client);
     }
     return of(client);
   }
 
   @Nullable
-  private static <T> RedisServerTarget get(
-      VirtualField<T, RedisServerTarget> targetField, T client) {
-    RedisServerTarget target = targetField.get(client);
-    if (target == null) {
-      target = of(client);
-      if (target != null) {
-        targetField.set(client, target);
-      }
-    }
-    return target;
-  }
-
-  @Nullable
-  private static RedisServerTarget of(Object client) {
+  static RedisServerTarget of(@Nullable Object client) {
     if (client instanceof SentinelMonitoredRedisClient) {
       return ofSentinel(client, SENTINELS, ((SentinelMonitoredRedisClient) client).master());
     }
@@ -222,10 +194,11 @@ public class RediscalaServerTargets {
     Iterator<?> iterator = ((Iterable<?>) slaves).iterator();
     while (iterator.hasNext()) {
       Object slave = iterator.next();
-      if (slave instanceof RedisServer) {
-        RedisServer redisServer = (RedisServer) slave;
-        slaveEndpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
+      if (!(slave instanceof RedisServer)) {
+        return null;
       }
+      RedisServer redisServer = (RedisServer) slave;
+      slaveEndpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
     }
     // the master always leads, the replicas behind it carry no meaningful order
     Collections.sort(slaveEndpoints);
@@ -261,14 +234,17 @@ public class RediscalaServerTargets {
     Iterator<?> iterator = ((Iterable<?>) sentinels).iterator();
     while (iterator.hasNext()) {
       Object sentinel = iterator.next();
-      if (sentinel instanceof Tuple2) {
-        Tuple2<?, ?> endpoint = (Tuple2<?, ?>) sentinel;
-        if (endpoint._1() instanceof String && endpoint._2() instanceof Number) {
-          endpoints.add(
-              RedisServerTarget.endpoint(
-                  (String) endpoint._1(), ((Number) endpoint._2()).intValue()));
-        }
+      if (!(sentinel instanceof Tuple2)) {
+        endpoints.add(null);
+        continue;
       }
+      Tuple2<?, ?> endpoint = (Tuple2<?, ?>) sentinel;
+      if (!(endpoint._1() instanceof String) || !(endpoint._2() instanceof Number)) {
+        endpoints.add(null);
+        continue;
+      }
+      endpoints.add(
+          RedisServerTarget.endpoint((String) endpoint._1(), ((Number) endpoint._2()).intValue()));
     }
     return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, master);
   }
@@ -292,10 +268,12 @@ public class RediscalaServerTargets {
     Iterator<?> iterator = ((Iterable<?>) servers).iterator();
     while (iterator.hasNext()) {
       Object server = iterator.next();
-      if (server instanceof RedisServer) {
-        RedisServer redisServer = (RedisServer) server;
-        endpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
+      if (!(server instanceof RedisServer)) {
+        endpoints.add(null);
+        continue;
       }
+      RedisServer redisServer = (RedisServer) server;
+      endpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
     }
     return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
@@ -320,13 +298,17 @@ public class RediscalaServerTargets {
       Iterator<?> iterator = ((Iterable<?>) connections).iterator();
       while (iterator.hasNext()) {
         Object entry = iterator.next();
-        if (entry instanceof Tuple2) {
-          Object server = ((Tuple2<?, ?>) entry)._1();
-          if (server instanceof RedisServer) {
-            RedisServer redisServer = (RedisServer) server;
-            endpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
-          }
+        if (!(entry instanceof Tuple2)) {
+          endpoints.add(null);
+          continue;
         }
+        Object server = ((Tuple2<?, ?>) entry)._1();
+        if (!(server instanceof RedisServer)) {
+          endpoints.add(null);
+          continue;
+        }
+        RedisServer redisServer = (RedisServer) server;
+        endpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
       }
     }
     return RedisServerTarget.ofUnorderedEndpoints(endpoints);

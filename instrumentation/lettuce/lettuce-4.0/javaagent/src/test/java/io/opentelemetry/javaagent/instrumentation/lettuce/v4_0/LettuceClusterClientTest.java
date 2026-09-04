@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -112,10 +113,10 @@ class LettuceClusterClientTest {
     assertThat(asyncCommands.set(routedKey, "value").get(10, SECONDS)).isEqualTo("OK");
 
     asyncCommands.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
     RedisFuture<String> first = asyncCommands.set(firstBatchKey, "value");
     RedisFuture<String> second = asyncCommands.set(secondBatchKey, "value");
     asyncCommands.flushCommands();
-    asyncCommands.setAutoFlushCommands(true);
     assertThat(first.get(10, SECONDS)).isEqualTo("OK");
     assertThat(second.get(10, SECONDS)).isEqualTo("OK");
 
@@ -126,10 +127,16 @@ class LettuceClusterClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, null),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(
+                                        testLatestDeps() ? secondRedisServer.getPort() : port)),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv() ? secondRedisServer.getHost() : null),
@@ -137,25 +144,25 @@ class LettuceClusterClientTest {
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
                                     ? Long.valueOf(secondRedisServer.getPort())
-                                    : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+                                    : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("PIPELINE SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
-                            equalTo(NETWORK_PEER_ADDRESS, null),
-                            equalTo(NETWORK_PEER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
                             equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
+                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(
+                                        testLatestDeps() ? secondRedisServer.getPort() : port)),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? Long.valueOf(2) : null))));

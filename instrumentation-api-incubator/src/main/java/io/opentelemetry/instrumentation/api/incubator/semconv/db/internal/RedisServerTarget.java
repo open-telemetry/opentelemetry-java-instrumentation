@@ -10,12 +10,22 @@ import static java.util.Collections.emptyList;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("OtelInternalJavadoc")
+/**
+ * The logical Redis server a client was configured to talk to, rendered as {@code server.address}
+ * and {@code server.port}.
+ *
+ * <p>Configured members are normalized before they are rendered: schemes, credentials, and URL
+ * suffixes are stripped, while host names, IPv4 literals, IPv6 literals, and Unix socket paths are
+ * preserved. A member that cannot be normalized drops the whole target, because a partial list
+ * describes a deployment the client was never pointed at.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public final class RedisServerTarget {
 
   private static final int DEFAULT_PORT = 6379;
@@ -24,11 +34,6 @@ public final class RedisServerTarget {
 
   private final String address;
   @Nullable private final Integer port;
-
-  private RedisServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
 
   @Nullable
   public static RedisServerTarget ofLogicalName(@Nullable String name) {
@@ -58,6 +63,60 @@ public final class RedisServerTarget {
   @Nullable
   public static RedisServerTarget ofUnorderedEndpoints(@Nullable List<String> endpoints) {
     return createFromEndpoints(endpoints, true);
+  }
+
+  @Nullable
+  public static RedisServerTarget ofEndpointsAndLogicalName(
+      @Nullable List<String> endpoints, @Nullable String name) {
+    return createFromEndpointsAndLogicalName(endpoints, name, false);
+  }
+
+  @Nullable
+  public static RedisServerTarget ofUnorderedEndpointsAndLogicalName(
+      @Nullable List<String> endpoints, @Nullable String name) {
+    return createFromEndpointsAndLogicalName(endpoints, name, true);
+  }
+
+  @Nullable
+  private static RedisServerTarget createFromEndpointsAndLogicalName(
+      @Nullable List<String> endpoints, @Nullable String name, boolean unordered) {
+    String logicalName = name == null ? "" : name.trim();
+    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints, true);
+    if (parsed == null) {
+      return null;
+    }
+    List<String> rendered = new ArrayList<>(parsed.size());
+    for (Endpoint endpoint : parsed) {
+      rendered.add(endpoint.renderConfigured());
+    }
+    if (unordered) {
+      rendered.sort(String::compareTo);
+    }
+    if (rendered.isEmpty()) {
+      return ofLogicalName(logicalName);
+    }
+    String address = renderEndpointList(rendered);
+    if (address == null) {
+      return ofLogicalName(logicalName);
+    }
+    if (!isSafeLogicalName(logicalName)) {
+      return new RedisServerTarget(address, null);
+    }
+    return new RedisServerTarget(address + "/" + logicalName, null);
+  }
+
+  private RedisServerTarget(String address, @Nullable Integer port) {
+    this.address = address;
+    this.port = port;
+  }
+
+  public String getAddress() {
+    return address;
+  }
+
+  @Nullable
+  public Integer getPort() {
+    return port;
   }
 
   @Nullable
@@ -151,46 +210,6 @@ public final class RedisServerTarget {
   }
 
   @Nullable
-  public static RedisServerTarget ofEndpointsAndLogicalName(
-      @Nullable List<String> endpoints, @Nullable String name) {
-    return createFromEndpointsAndLogicalName(endpoints, name, false);
-  }
-
-  @Nullable
-  public static RedisServerTarget ofUnorderedEndpointsAndLogicalName(
-      @Nullable List<String> endpoints, @Nullable String name) {
-    return createFromEndpointsAndLogicalName(endpoints, name, true);
-  }
-
-  @Nullable
-  private static RedisServerTarget createFromEndpointsAndLogicalName(
-      @Nullable List<String> endpoints, @Nullable String name, boolean unordered) {
-    String logicalName = name == null ? "" : name.trim();
-    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints, true);
-    if (parsed == null) {
-      return null;
-    }
-    List<String> rendered = new ArrayList<>(parsed.size());
-    for (Endpoint endpoint : parsed) {
-      rendered.add(endpoint.renderConfigured());
-    }
-    if (unordered) {
-      Collections.sort(rendered);
-    }
-    if (rendered.isEmpty()) {
-      return ofLogicalName(logicalName);
-    }
-    String address = renderEndpointList(rendered);
-    if (address == null) {
-      return ofLogicalName(logicalName);
-    }
-    if (!isSafeLogicalName(logicalName)) {
-      return new RedisServerTarget(address, null);
-    }
-    return new RedisServerTarget(address + "/" + logicalName, null);
-  }
-
-  @Nullable
   private static String renderEndpointList(List<String> endpoints) {
     if (endpoints.size() > MAX_ENDPOINTS) {
       endpoints.subList(MAX_ENDPOINTS, endpoints.size()).clear();
@@ -261,15 +280,6 @@ public final class RedisServerTarget {
     } else {
       builder.append(host);
     }
-  }
-
-  public String getAddress() {
-    return address;
-  }
-
-  @Nullable
-  public Integer getPort() {
-    return port;
   }
 
   private static final class Endpoint {

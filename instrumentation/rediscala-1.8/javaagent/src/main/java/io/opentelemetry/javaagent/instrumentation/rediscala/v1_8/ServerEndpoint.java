@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaServerTargets.SENTINEL_MASTER_SLAVES_CLASS;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaServerTargets.findMethod;
 import static java.util.logging.Level.FINE;
 
 import java.lang.reflect.Method;
@@ -17,13 +19,6 @@ import scala.Option;
 
 public class ServerEndpoint {
   private static final Logger logger = Logger.getLogger(ServerEndpoint.class.getName());
-
-  private static final String SENTINEL_MASTER_SLAVES_CLASS_NAME =
-      "redis.SentinelMonitoredRedisClientMasterSlaves";
-
-  @Nullable
-  private static final Class<?> SENTINEL_MASTER_SLAVES_CLASS =
-      findClass(SENTINEL_MASTER_SLAVES_CLASS_NAME);
 
   @Nullable
   private static final Method SENTINEL_MASTER_SLAVES_MASTER_CLIENT =
@@ -38,12 +33,12 @@ public class ServerEndpoint {
   }
 
   @Nullable
-  public static ServerEndpoint create(Object client) {
+  public static ServerEndpoint create(@Nullable Object client) {
     return create(client, true);
   }
 
   @Nullable
-  public static ServerEndpoint create(Object client, boolean useMasterClient) {
+  public static ServerEndpoint create(@Nullable Object client, boolean useMasterClient) {
     if (client instanceof RedisClientActorLike) {
       return create((RedisClientActorLike) client);
     }
@@ -83,27 +78,6 @@ public class ServerEndpoint {
     return masterClient instanceof RedisClientActorLike
         ? create((RedisClientActorLike) masterClient)
         : null;
-  }
-
-  @Nullable
-  private static Class<?> findClass(String className) {
-    try {
-      return Class.forName(className, false, ServerEndpoint.class.getClassLoader());
-    } catch (ClassNotFoundException ignored) {
-      return null;
-    }
-  }
-
-  @Nullable
-  private static Method findMethod(@Nullable Class<?> declaringClass, String methodName) {
-    if (declaringClass == null) {
-      return null;
-    }
-    try {
-      return declaringClass.getMethod(methodName);
-    } catch (NoSuchMethodException ignored) {
-      return null;
-    }
   }
 
   String getHost() {
