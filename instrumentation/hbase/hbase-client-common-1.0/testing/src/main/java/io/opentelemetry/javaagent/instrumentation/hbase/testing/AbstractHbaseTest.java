@@ -315,10 +315,11 @@ public abstract class AbstractHbaseTest {
     List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
     for (int i = 0; i < getMetaScanTraceCount(); i++) {
       traceAssertions.add(
-          traceAssertConsumer(META, SCAN, REGION_SERVER_PORT, true, expectedServerTarget));
+          traceAssertConsumerForTarget(META, SCAN, REGION_SERVER_PORT, true, expectedServerTarget));
     }
     traceAssertions.add(
-        traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true, expectedServerTarget));
+        traceAssertConsumerForTarget(
+            TABLE_NAME, GET, REGION_SERVER_PORT, true, expectedServerTarget));
     testing().waitAndAssertTraces(traceAssertions);
   }
 
@@ -671,14 +672,14 @@ public abstract class AbstractHbaseTest {
     }
   }
 
+  private Consumer<TraceAssert> traceAssertConsumerForTarget(
+      TableName table, String operation, int port, boolean hasTable, String expectedServerTarget) {
+    return traceAssertConsumer(table, operation, port, hasTable, null, expectedServerTarget);
+  }
+
   protected Consumer<TraceAssert> traceAssertConsumer(
       TableName table, String operation, int port, boolean hasTable) {
     return traceAssertConsumer(table, operation, port, hasTable, null, serverTarget);
-  }
-
-  private Consumer<TraceAssert> traceAssertConsumer(
-      TableName table, String operation, int port, boolean hasTable, String expectedServerTarget) {
-    return traceAssertConsumer(table, operation, port, hasTable, null, expectedServerTarget);
   }
 
   private Consumer<TraceAssert> traceAssertConsumer(
