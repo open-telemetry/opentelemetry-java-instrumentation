@@ -70,10 +70,21 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   when `value` is already an `int` — the `equalTo(AttributeKey<Long>, int)`
   overload exists.
 
-## [Testing] Inline Conditional Expected Values
+## [Testing] Mode-Dependent Expected Values
 
-- Keep short conditional expected values directly in the assertion, especially
-  span names and attribute values:
+- Use an established semconv test utility when it directly represents the
+  expected key mapping. For database attributes whose old and stable keys carry
+  the same value, use `SemconvStabilityUtil.maybeStable(...)`:
+
+  ```java
+  equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH);
+  equalTo(maybeStable(DB_OPERATION), "info");
+  ```
+
+  Do not expand these into separate null-gated assertions for the old and stable
+  keys.
+- Keep short conditional expected values directly in the assertion when the
+  expected values differ by mode or an attribute exists in only one mode:
 
   ```java
   span.hasName(emitStableMessagingSemconv() ? "send orders" : "orders publish");
@@ -81,9 +92,9 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   ```
 
 - Do not extract the ternary into a helper such as `spanName(...)`,
-  `oldOrExperimental(value)`, or `expectedNamespace()`. Inline it even when
-  several assertions repeat the same condition. Seeing both expected values at
-  the assertion is more useful than deduplicating a short expression.
+  `oldOrExperimental(value)`, or `expectedNamespace()` when no established
+  semconv utility applies. Seeing both expected values at the assertion is more
+  useful than deduplicating a short expression.
 - The conventional `experimental(value)` helper is the one exception: keep it.
   Its name unambiguously means the value is expected only when experimental
   attributes are enabled, and `null` otherwise, so it reads clearer than the
