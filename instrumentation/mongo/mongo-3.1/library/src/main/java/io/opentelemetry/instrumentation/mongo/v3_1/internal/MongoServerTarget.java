@@ -30,7 +30,7 @@ public class MongoServerTarget {
   @Nullable private final Integer port;
 
   @Nullable
-  public static MongoServerTarget srvHost(@Nullable String srvHost) {
+  static MongoServerTarget srvHost(@Nullable String srvHost) {
     if (srvHost == null || srvHost.isEmpty()) {
       return null;
     }
@@ -43,7 +43,7 @@ public class MongoServerTarget {
   }
 
   @Nullable
-  public static MongoServerTarget srvConnectionString(@Nullable String connectionString) {
+  static MongoServerTarget srvConnectionString(@Nullable String connectionString) {
     if (!isSrvConnectionString(connectionString)) {
       return null;
     }
@@ -98,17 +98,17 @@ public class MongoServerTarget {
     this.port = port;
   }
 
-  public static boolean isSrvConnectionString(@Nullable String connectionString) {
+  static boolean isSrvConnectionString(@Nullable String connectionString) {
     return connectionString != null
         && connectionString.regionMatches(true, 0, SRV_SCHEME, 0, SRV_SCHEME.length());
   }
 
-  public String getAddress() {
+  String getAddress() {
     return address;
   }
 
   @Nullable
-  public Integer getPort() {
+  Integer getPort() {
     return port;
   }
 
