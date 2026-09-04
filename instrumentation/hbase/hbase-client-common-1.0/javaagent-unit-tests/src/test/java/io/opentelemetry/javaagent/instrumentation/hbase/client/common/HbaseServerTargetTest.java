@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.zookeeper.ZKConfig;
 import org.junit.jupiter.api.Test;
 
 class HbaseServerTargetTest {
@@ -31,8 +32,10 @@ class HbaseServerTargetTest {
     configuration.set("hbase.zookeeper.property.clientPort", "2182");
     configuration.set("zookeeper.znode.parent", "/external");
 
-    assertThat(HbaseServerTarget.from(configuration))
-        .isEqualTo("external-zk-a,external-zk-b,external-zk-b:3218:/external");
+    String serverTarget = HbaseServerTarget.from(configuration);
+    assertThat(serverTarget).isEqualTo("external-zk-a,external-zk-b,external-zk-b:3218:/external");
+    assertThat(inlineZooKeeperPorts(serverTarget))
+        .containsExactlyInAnyOrder(ZKConfig.getZKQuorumServersString(configuration).split(",", -1));
   }
 
   @Test
@@ -234,5 +237,16 @@ class HbaseServerTargetTest {
     masterConfiguration.set("hbase.masters", "master-a");
     masterConfiguration.set("hbase.master.port", "not-a-port");
     assertThat(HbaseServerTarget.from(masterConfiguration, false, true, true)).isNull();
+  }
+
+  private static String[] inlineZooKeeperPorts(String serverTarget) {
+    int znodeSeparator = serverTarget.lastIndexOf(':');
+    int portSeparator = serverTarget.lastIndexOf(':', znodeSeparator - 1);
+    String port = serverTarget.substring(portSeparator + 1, znodeSeparator);
+    String[] endpoints = serverTarget.substring(0, portSeparator).split(",", -1);
+    for (int i = 0; i < endpoints.length; i++) {
+      endpoints[i] += ":" + port;
+    }
+    return endpoints;
   }
 }

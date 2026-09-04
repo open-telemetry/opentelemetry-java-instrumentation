@@ -8,12 +8,24 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.zookeeper.ZKConfig;
 import org.junit.jupiter.api.Test;
 
 class HbaseServerTarget24Test {
 
   private static final String REGISTRY_KEY = "hbase.client.registry.impl";
   private static final String MASTER_REGISTRY = "org.apache.hadoop.hbase.client.MasterRegistry";
+
+  @Test
+  void matchesHbaseZooKeeperClusterKey() {
+    Configuration configuration = new Configuration(false);
+    configuration.set("hbase.zookeeper.quorum", "zk-a,zk-b");
+    configuration.set("hbase.zookeeper.property.clientPort", "2182");
+    configuration.set("zookeeper.znode.parent", "/production");
+
+    assertThat(HbaseServerTarget.from(configuration))
+        .isEqualTo(ZKConfig.getZooKeeperClusterKey(configuration));
+  }
 
   @Test
   void rendersConfiguredMasterRegistryTarget() {
@@ -41,6 +53,7 @@ class HbaseServerTarget24Test {
     configuration.set("hbase.client.zookeeper.quorum", "client-zk");
     configuration.set("hbase.client.zookeeper.property.clientPort", "2183");
 
-    assertThat(HbaseServerTarget.from(configuration)).isEqualTo("client-zk:2183:/hbase");
+    assertThat(HbaseServerTarget.from(configuration))
+        .isEqualTo(ZKConfig.getClientZKQuorumServersString(configuration) + ":/hbase");
   }
 }
