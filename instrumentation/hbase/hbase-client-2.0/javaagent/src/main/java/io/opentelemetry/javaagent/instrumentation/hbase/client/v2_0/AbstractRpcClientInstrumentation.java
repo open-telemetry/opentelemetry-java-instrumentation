@@ -96,10 +96,15 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
         operation = batchMetadata.getOperation();
         batchSize = batchMetadata.getOperationBatchSize();
       }
-      String serverTarget = HbaseServerTarget.get(client);
       HbaseRequest request =
           HbaseRequest.create(
-              operation, getTableName(), ticket.getName(), hostname, port, serverTarget, batchSize);
+              operation,
+              getTableName(),
+              ticket.getName(),
+              hostname,
+              port,
+              HbaseServerTarget.get(client),
+              batchSize);
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
