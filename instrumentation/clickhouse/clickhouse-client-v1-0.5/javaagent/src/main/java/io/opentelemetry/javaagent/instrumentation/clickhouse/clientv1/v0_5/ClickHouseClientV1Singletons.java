@@ -65,6 +65,12 @@ public class ClickHouseClientV1Singletons {
     return target == null ? null : target.target.getPort();
   }
 
+  public static ClickHouseDbRequest.Endpoint peerEndpoint(String host, int port) {
+    DbServerTarget target = DbServerTarget.builder(port).addEndpoint(extractHost(host), -1).build();
+    return ClickHouseDbRequest.endpoint(
+        target == null ? null : target.getAddress(), target == null ? null : port);
+  }
+
   public static void captureConfiguredNodes(
       ClickHouseNodes nodes, Collection<ClickHouseNode> configuredNodes) {
     NODES_SERVER_TARGET.set(nodes, createServerTarget(configuredNodes));
@@ -123,11 +129,7 @@ public class ClickHouseClientV1Singletons {
         || host.indexOf('=') >= 0) {
       return null;
     }
-    int userInfoEnd = host.indexOf('@');
-    if (userInfoEnd < 0) {
-      return host;
-    }
-    return userInfoEnd == host.lastIndexOf('@') ? host.substring(userInfoEnd + 1) : null;
+    return host.indexOf('@') < 0 ? host : null;
   }
 
   private static class ServerTarget {

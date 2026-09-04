@@ -23,7 +23,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -884,7 +883,7 @@ class ClickHouseClientV2Test {
   }
 
   @Test
-  void testMultipleEndpointsExcludeCredentialsAndUrlComponents() throws Exception {
+  void testMultipleEndpointsRejectCredentials() throws Exception {
     List<String> endpoints =
         new ArrayList<>(
             asList(
@@ -902,6 +901,7 @@ class ClickHouseClientV2Test {
     }
     Client testClient = builder.build();
     cleanup.deferCleanup(testClient);
+    replaceServerInfo(testClient, endpoints.toArray(new String[0]));
     String currentEndpoint = testClient.getEndpoints().iterator().next();
     String legacyAddress = UrlParser.getHost(currentEndpoint);
     Integer legacyPort = UrlParser.getPort(currentEndpoint);
@@ -921,10 +921,7 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? "2001:db8::1,host.example"
-                                    : legacyAddress),
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : legacyAddress),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() || legacyPort == null
@@ -1056,12 +1053,12 @@ class ClickHouseClientV2Test {
     }
   }
 
-  private static void replaceServerInfo(Client client, String endpoint) throws Exception {
+  private static void replaceServerInfo(Client client, String... endpoints) throws Exception {
     Class<?> singletons = singletons(client);
     Class<?> serverInfoClass = serverInfo(client).getClass();
     Method of = serverInfoClass.getDeclaredMethod("of", Set.class);
     of.setAccessible(true);
-    Object replacement = of.invoke(null, singleton(endpoint));
+    Object replacement = of.invoke(null, new HashSet<>(asList(endpoints)));
 
     Field serverInfoField = singletons.getDeclaredField("SERVER_INFO_FIELD");
     serverInfoField.setAccessible(true);

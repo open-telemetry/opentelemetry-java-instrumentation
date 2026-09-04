@@ -925,12 +925,11 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testConfiguredNodeHostsRemoveCredentials() throws Exception {
+  void testConfiguredNodeHostsExcludeCredentials() throws Exception {
     ClickHouseNode credentialNode =
         ClickHouseNode.builder(server).host("user:secret@configured.example").build();
     ClickHouseNodes nodes = createNodes(ImmutableList.of(server, credentialNode));
     nodes.update(credentialNode, ClickHouseNode.Status.FAULTY);
-    String addressGroup = host + ":" + port + ",configured.example:" + port;
 
     ClickHouseResponse response =
         client
@@ -948,8 +947,7 @@ class ClickHouseClientV1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
-                            equalTo(
-                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
+                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),

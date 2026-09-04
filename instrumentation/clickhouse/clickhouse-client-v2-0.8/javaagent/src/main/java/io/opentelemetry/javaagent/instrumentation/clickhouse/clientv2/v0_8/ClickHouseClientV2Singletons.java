@@ -73,7 +73,11 @@ public class ClickHouseClientV2Singletons {
     Class<?> selectedNodeClass = selectedNode.getClass();
     String host = (String) selectedNodeClass.getMethod("getHost").invoke(selectedNode);
     int port = (Integer) selectedNodeClass.getMethod("getPort").invoke(selectedNode);
-    DbServerTarget target = DbServerTarget.builder(port).addEndpoint(host, -1).build();
+    EndpointTarget extracted = ServerInfo.extractEndpoint(host);
+    DbServerTarget target =
+        extracted == null
+            ? null
+            : DbServerTarget.builder(port).addEndpoint(extracted.address, -1).build();
     request.setPeer(target == null ? null : target.getAddress(), target == null ? null : port);
   }
 
@@ -167,9 +171,8 @@ public class ClickHouseClientV2Singletons {
           break;
         }
       }
-      int userInfoEnd = endpoint.lastIndexOf('@', authorityEnd - 1);
-      if (userInfoEnd >= authorityStart) {
-        authorityStart = userInfoEnd + 1;
+      if (endpoint.lastIndexOf('@', authorityEnd - 1) >= authorityStart) {
+        return null;
       }
       String authority = endpoint.substring(authorityStart, authorityEnd);
       if (authority.indexOf('=') >= 0 || hasUnsafePercentEscape(authority)) {
