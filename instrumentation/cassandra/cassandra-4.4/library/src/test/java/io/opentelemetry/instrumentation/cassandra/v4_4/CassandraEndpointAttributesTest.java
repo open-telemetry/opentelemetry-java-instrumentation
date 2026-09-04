@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtr
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -65,7 +64,8 @@ class CassandraEndpointAttributesTest {
       when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
     }
 
-    Attributes attributes = serverAttributes(target(singletonList("cassandra.example.com:9042")));
+    Attributes attributes =
+        serverAttributes(CassandraServerTarget.of(singletonList("cassandra.example.com:9042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("cassandra.example.com");
@@ -82,7 +82,8 @@ class CassandraEndpointAttributesTest {
     }
 
     Attributes attributes =
-        serverAttributes(target(asList("node1.example.com:9042", "node2.example.com:9042")));
+        serverAttributes(
+            CassandraServerTarget.of(asList("node1.example.com:9042", "node2.example.com:9042")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com,node2.example.com");
@@ -99,7 +100,8 @@ class CassandraEndpointAttributesTest {
     }
 
     Attributes attributes =
-        serverAttributes(target(asList("node1.example.com:9142", "node2.example.com:9142")));
+        serverAttributes(
+            CassandraServerTarget.of(asList("node1.example.com:9142", "node2.example.com:9142")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS))
@@ -116,7 +118,8 @@ class CassandraEndpointAttributesTest {
       when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
     }
 
-    Attributes attributes = serverAttributes(target(asList("[::1]:9042", "10.0.0.5:9142")));
+    Attributes attributes =
+        serverAttributes(CassandraServerTarget.of(asList("[::1]:9042", "10.0.0.5:9142")));
 
     if (emitStableDatabaseSemconv()) {
       assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("10.0.0.5:9142,[::1]:9042");
@@ -132,7 +135,7 @@ class CassandraEndpointAttributesTest {
         CassandraRequest.create(
             session,
             emitStableDatabaseSemconv()
-                ? target(singletonList("cassandra.example.com:9042"))
+                ? CassandraServerTarget.of(singletonList("cassandra.example.com:9042"))
                 : null,
             "SELECT 1");
     AttributesBuilder builder = Attributes.builder();
@@ -167,7 +170,8 @@ class CassandraEndpointAttributesTest {
     when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
 
-    Attributes attributes = serverAttributes(target(singletonList("configured.example.com:9142")));
+    Attributes attributes =
+        serverAttributes(CassandraServerTarget.of(singletonList("configured.example.com:9142")));
     InetSocketAddress peer =
         new CassandraSqlAttributesGetter()
             .getNetworkPeerInetSocketAddress(
@@ -197,10 +201,6 @@ class CassandraEndpointAttributesTest {
         .putAll(startAttributes.build())
         .putAll(endAttributes.build())
         .build();
-  }
-
-  private static DbServerTarget target(List<String> contactPoints) {
-    return CassandraServerTarget.of(contactPoints);
   }
 
   private static void assertCoordinatorIsServer(Attributes attributes) {
