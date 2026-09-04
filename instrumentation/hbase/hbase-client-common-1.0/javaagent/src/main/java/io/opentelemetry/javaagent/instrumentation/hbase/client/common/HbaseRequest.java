@@ -12,7 +12,6 @@ import org.apache.hadoop.hbase.TableName;
 @AutoValue
 public abstract class HbaseRequest {
 
-  @SuppressWarnings("TooManyParameters")
   public static HbaseRequest create(
       @Nullable String operation,
       @Nullable TableName tableName,
@@ -20,8 +19,6 @@ public abstract class HbaseRequest {
       @Nullable String serverAddress,
       @Nullable Integer serverPort,
       @Nullable String serverTarget,
-      @Nullable String networkPeerAddress,
-      @Nullable Integer networkPeerPort,
       @Nullable Long operationBatchSize) {
     return new AutoValue_HbaseRequest(
         operation,
@@ -30,8 +27,8 @@ public abstract class HbaseRequest {
         serverAddress,
         serverPort,
         serverTarget,
-        networkPeerAddress,
-        networkPeerPort,
+        null,
+        null,
         operationBatchSize);
   }
 
