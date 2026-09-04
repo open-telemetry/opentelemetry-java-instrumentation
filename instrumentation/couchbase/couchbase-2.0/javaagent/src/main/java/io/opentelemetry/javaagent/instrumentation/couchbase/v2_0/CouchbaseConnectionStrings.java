@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
@@ -15,14 +15,14 @@ import javax.annotation.Nullable;
 // Couchbase 2.x moved its connection string type and changed its seed representation three times.
 // Reflection keeps this helper compatible across the full range. Prefer allHosts when available
 // because 2.5.7 through 2.7.7 drop seeds that fail DNS resolution from hosts.
-public class CouchbaseConnectionStrings {
+class CouchbaseConnectionStrings {
 
   private static final int COUCHBASE_DEFAULT_PORT = 11210;
   private static final int COUCHBASES_DEFAULT_PORT = 11207;
   private static final int HTTP_DEFAULT_PORT = 8091;
 
   @Nullable
-  public static DbServerTarget target(@Nullable Object connectionString) {
+  static DbServerTarget target(@Nullable Object connectionString) {
     if (connectionString == null) {
       return null;
     }

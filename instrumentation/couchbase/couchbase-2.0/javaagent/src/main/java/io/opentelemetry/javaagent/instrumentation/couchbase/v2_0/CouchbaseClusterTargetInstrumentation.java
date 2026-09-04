@@ -13,8 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.couchbase.client.core.ClusterFacade;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseConnectionStrings;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseCoreTargets;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
