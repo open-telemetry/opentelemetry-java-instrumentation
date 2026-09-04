@@ -20,6 +20,7 @@ class GeodeServerTargetBuilderTest {
     builder.addServer("cache.example", 40404);
 
     DbServerTarget target = builder.build();
+    assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("cache.example");
     assertThat(target.getPort()).isNull();
   }
@@ -45,6 +46,7 @@ class GeodeServerTargetBuilderTest {
     builder.setServerGroup("orders");
 
     DbServerTarget target = builder.build();
+    assertThat(target).isNotNull();
     assertThat(target.getAddress())
         .isEqualTo(
             "a.example:10334,b.example:10334,c.example:10334,d.example:10334,"
@@ -63,6 +65,7 @@ class GeodeServerTargetBuilderTest {
     builder.addServer("a.example", 40404);
 
     DbServerTarget target = builder.build();
+    assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("a.example,b.example,c.example,d.example,e.example");
     assertThat(target.getPort()).isNull();
   }
@@ -78,8 +81,10 @@ class GeodeServerTargetBuilderTest {
     assertThat(builder.build()).isNull();
 
     builder.addServer("two.example", 40405);
-    assertThat(builder.build().getAddress()).isEqualTo("two.example");
-    assertThat(builder.build().getPort()).isEqualTo(40405);
+    DbServerTarget target = builder.build();
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("two.example");
+    assertThat(target.getPort()).isEqualTo(40405);
   }
 
   @Test
@@ -88,12 +93,15 @@ class GeodeServerTargetBuilderTest {
     builder.addServer("one.example", 40404);
 
     DbServerTarget target = builder.build();
+    assertThat(target).isNotNull();
 
     builder.addServer("two.example", 40405);
     builder.setServerGroup("orders");
 
+    DbServerTarget updatedTarget = builder.build();
+    assertThat(updatedTarget).isNotNull();
     assertThat(target.getAddress()).isEqualTo("one.example");
     assertThat(target.getPort()).isNull();
-    assertThat(builder.build().getAddress()).isEqualTo("one.example:40404,two.example:40405");
+    assertThat(updatedTarget.getAddress()).isEqualTo("one.example:40404,two.example:40405");
   }
 }
