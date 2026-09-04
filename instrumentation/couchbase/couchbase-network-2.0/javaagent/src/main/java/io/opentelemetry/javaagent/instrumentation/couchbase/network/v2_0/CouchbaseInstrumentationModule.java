@@ -24,8 +24,7 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // NetworkResolution was added in core-io 1.6.0, which ships with Couchbase 2.6. Its absence
-    // distinguishes the core-io 1.0-1.5 line handled by this module.
+    // added in 2.6.0 (via com.couchbase.client:core-io 1.6.0)
     return not(hasClassesNamed("com.couchbase.client.core.env.NetworkResolution"));
   }
 
