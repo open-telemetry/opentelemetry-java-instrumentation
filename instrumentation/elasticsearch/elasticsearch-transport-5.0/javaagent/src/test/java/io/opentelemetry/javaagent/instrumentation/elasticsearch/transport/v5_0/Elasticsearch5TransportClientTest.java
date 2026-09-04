@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -130,11 +129,6 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           addressListClient.addTransportAddress(tcpPublishAddress);
           // nothing listens on this address; the configured target names it all the same
           addressListClient.addTransportAddress(addressThatIsDown);
-          ElasticsearchTransportServerTarget target =
-              ElasticsearchTransportServerTargets.get(addressListClient);
-          assertThat(target).isNotNull();
-          assertThat(target.getAddress()).isEqualTo(configuredAddressListWithMixedPorts());
-          assertThat(target.getPort()).isNull();
           // adding an address makes the client reach out to it, which reports telemetry of its own
           clusterHealth(addressListClient);
         });

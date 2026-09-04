@@ -11,6 +11,7 @@ import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTarget.Endpoint;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -41,7 +42,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void oneAddressKeepsItsNonDefaultPort() {
-    ElasticsearchTransportServerTarget target =
+    DbServerTarget target =
         ElasticsearchTransportServerTarget.of(singletonList(new Endpoint("10.0.0.1", 9301)));
 
     assertThat(target).isNotNull();
@@ -51,7 +52,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void oneAddressOmitsTheDefaultPort() {
-    ElasticsearchTransportServerTarget target =
+    DbServerTarget target =
         ElasticsearchTransportServerTarget.of(singletonList(new Endpoint("10.0.0.1", 9300)));
 
     assertThat(target).isNotNull();
@@ -61,10 +62,10 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void configuredTransportAddressOrderDoesNotChangeTarget() {
-    ElasticsearchTransportServerTarget first =
+    DbServerTarget first =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("::1", 9301), new Endpoint("10.0.0.1", 9300)));
-    ElasticsearchTransportServerTarget second =
+    DbServerTarget second =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("10.0.0.1", 9300), new Endpoint("::1", 9301)));
 
@@ -77,7 +78,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void duplicateAddressesWithTheDefaultPortArePreserved() {
-    ElasticsearchTransportServerTarget target =
+    DbServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("10.0.0.1", 9300), new Endpoint("10.0.0.1", 9300)));
 
@@ -88,7 +89,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void duplicateEndpointsArePreserved() {
-    ElasticsearchTransportServerTarget target =
+    DbServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(
                 new Endpoint("duplicate.example", 9300), new Endpoint("duplicate.example", 9300)));
@@ -100,7 +101,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void exactlyFiveEndpointsAreReportedAfterSorting() {
-    ElasticsearchTransportServerTarget target =
+    DbServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(
                 new Endpoint("e.example", 9300),
@@ -116,7 +117,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void onlyFirstFiveOfSixEndpointsUseConfigurationPortModeAfterSorting() {
-    ElasticsearchTransportServerTarget target =
+    DbServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(
                 new Endpoint("f.example", 9400),
@@ -137,7 +138,7 @@ class ElasticsearchTransportServerTargetTest {
   void invalidEndpointLengthDropsTarget() {
     String longHost = repeat("a", 256);
 
-    ElasticsearchTransportServerTarget target =
+    DbServerTarget target =
         ElasticsearchTransportServerTarget.of(singletonList(new Endpoint(longHost, 9300)));
 
     assertThat(target).isNull();
@@ -145,7 +146,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void sharedNonDefaultPortIsIncludedWithEachIpv4AndIpv6Address() {
-    ElasticsearchTransportServerTarget target =
+    DbServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("::1", 9301), new Endpoint("10.0.0.1", 9301)));
 
@@ -156,7 +157,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void literalIpv6AddressesOmitTheDefaultPort() {
-    ElasticsearchTransportServerTarget target =
+    DbServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("::1", 9300), new Endpoint("[fe80::1]", 9300)));
 

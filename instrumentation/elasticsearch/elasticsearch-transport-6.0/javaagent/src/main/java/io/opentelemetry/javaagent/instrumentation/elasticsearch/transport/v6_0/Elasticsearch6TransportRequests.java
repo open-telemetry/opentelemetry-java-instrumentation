@@ -18,12 +18,8 @@ public class Elasticsearch6TransportRequests {
 
   static ElasticTransportRequest request(
       AbstractClient client, Object action, Object actionRequest) {
-    ElasticsearchTransportServerTarget target = ElasticsearchTransportServerTargets.get(client);
     return ElasticTransportRequest.create(
-        action,
-        actionRequest,
-        target == null ? null : target.getAddress(),
-        target == null ? null : target.getPort());
+        action, actionRequest, ElasticsearchTransportServerTargets.get(client));
   }
 
   public static void updateServerTarget(TransportClient client) {

@@ -90,7 +90,7 @@ class ElasticsearchTransportAttributesGetterTest {
     extractor.onEnd(
         attributes,
         Context.root(),
-        ElasticTransportRequest.create(new Object(), new Object(), null, null),
+        ElasticTransportRequest.create(new Object(), new Object(), null),
         null,
         error);
     return attributes.build();

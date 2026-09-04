@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.commo
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 import org.elasticsearch.ElasticsearchException;
@@ -65,12 +66,14 @@ public class ElasticsearchTransportAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(ElasticTransportRequest request) {
-    return emitStableDatabaseSemconv() ? request.getServerAddress() : null;
+    DbServerTarget target = request.getServerTarget();
+    return emitStableDatabaseSemconv() && target != null ? target.getAddress() : null;
   }
 
   @Override
   @Nullable
   public Integer getServerPort(ElasticTransportRequest request) {
-    return emitStableDatabaseSemconv() ? request.getServerPort() : null;
+    DbServerTarget target = request.getServerTarget();
+    return emitStableDatabaseSemconv() && target != null ? target.getPort() : null;
   }
 }

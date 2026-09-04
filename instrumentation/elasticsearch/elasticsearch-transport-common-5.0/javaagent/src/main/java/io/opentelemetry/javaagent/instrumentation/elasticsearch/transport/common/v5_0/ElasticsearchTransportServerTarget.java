@@ -14,11 +14,8 @@ public class ElasticsearchTransportServerTarget {
 
   private static final int DEFAULT_PORT = 9300;
 
-  private final String address;
-  @Nullable private final Integer port;
-
   @Nullable
-  public static ElasticsearchTransportServerTarget of(@Nullable List<Endpoint> endpoints) {
+  public static DbServerTarget of(@Nullable List<Endpoint> endpoints) {
     if (endpoints == null || endpoints.isEmpty()) {
       return null;
     }
@@ -27,24 +24,7 @@ public class ElasticsearchTransportServerTarget {
     for (Endpoint endpoint : endpoints) {
       builder.addEndpoint(endpoint.host, endpoint.port);
     }
-    DbServerTarget target = builder.build();
-    return target == null
-        ? null
-        : new ElasticsearchTransportServerTarget(target.getAddress(), target.getPort());
-  }
-
-  private ElasticsearchTransportServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
-
-  public String getAddress() {
-    return address;
-  }
-
-  @Nullable
-  public Integer getPort() {
-    return port;
+    return builder.build();
   }
 
   public static class Endpoint {
@@ -57,4 +37,6 @@ public class ElasticsearchTransportServerTarget {
       this.port = port;
     }
   }
+
+  private ElasticsearchTransportServerTarget() {}
 }
