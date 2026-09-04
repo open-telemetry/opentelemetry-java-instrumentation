@@ -19,33 +19,35 @@ import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
 import org.junit.jupiter.api.Test;
 
-class VertxRedisClientRequestTest {
+class VertxRedisClientAttributesGetterTest {
 
   private static final String SELECTED_HOST = "selected-node";
   private static final int SELECTED_PORT = 6379;
   private static final String PEER_HOST = "127.0.0.1";
   private static final int PEER_PORT = 6380;
 
+  private final VertxRedisClientAttributesGetter getter = new VertxRedisClientAttributesGetter();
+
   @Test
-  void requestWithoutTargetUsesSelectedEndpointOnlyForLegacySemconv() {
+  void withoutTargetUsesSelectedEndpointOnlyForLegacySemconv() {
     VertxRedisClientRequest request = request(null);
 
-    assertThat(request.getServerAddress())
+    assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? null : SELECTED_HOST);
-    assertThat(request.getServerPort())
+    assertThat(getter.getServerPort(request))
         .isEqualTo(emitStableDatabaseSemconv() ? null : SELECTED_PORT);
     assertThat(request.getPeerAddress()).isEqualTo(PEER_HOST);
     assertThat(request.getPeerPort()).isEqualTo(PEER_PORT);
   }
 
   @Test
-  void requestWithTargetUsesConfiguredTargetOnlyForStableSemconv() {
+  void withTargetUsesConfiguredTargetOnlyForStableSemconv() {
     VertxRedisClientRequest request =
         request(RedisServerTarget.ofHostAndPort("configured-node", 6381));
 
-    assertThat(request.getServerAddress())
+    assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? "configured-node" : SELECTED_HOST);
-    assertThat(request.getServerPort())
+    assertThat(getter.getServerPort(request))
         .isEqualTo(emitStableDatabaseSemconv() ? 6381 : SELECTED_PORT);
     assertThat(request.getPeerAddress()).isEqualTo(PEER_HOST);
     assertThat(request.getPeerPort()).isEqualTo(PEER_PORT);

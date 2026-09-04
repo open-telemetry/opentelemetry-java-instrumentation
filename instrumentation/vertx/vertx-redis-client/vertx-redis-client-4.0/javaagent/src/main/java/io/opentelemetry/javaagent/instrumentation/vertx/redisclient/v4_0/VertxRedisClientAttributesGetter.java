@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
@@ -63,12 +64,20 @@ class VertxRedisClientAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(VertxRedisClientRequest request) {
+    if (emitStableDatabaseSemconv()) {
+      RedisServerTarget target = request.getServerTarget();
+      return target != null ? target.getAddress() : null;
+    }
     return request.getServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(VertxRedisClientRequest request) {
+    if (emitStableDatabaseSemconv()) {
+      RedisServerTarget target = request.getServerTarget();
+      return target != null ? target.getPort() : null;
+    }
     return request.getServerPort();
   }
 
