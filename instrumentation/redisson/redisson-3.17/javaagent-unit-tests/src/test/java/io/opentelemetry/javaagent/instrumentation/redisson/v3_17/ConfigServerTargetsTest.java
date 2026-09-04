@@ -114,8 +114,7 @@ class ConfigServerTargetsTest {
     Config config = new Config();
     MasterSlaveServersConfig serverConfig =
         config.useMasterSlaveServers().setMasterAddress("redis://master:6379");
-    Set<String> replicas =
-        new LinkedHashSet<>(asList("redis://replica:6380", invalidReplica));
+    Set<String> replicas = new LinkedHashSet<>(asList("redis://replica:6380", invalidReplica));
     serverConfig.setSlaveAddresses(replicas);
 
     assertThat(ConfigServerTargetsSince317.of(config)).isNull();
