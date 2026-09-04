@@ -13,9 +13,9 @@ import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.protocol.internal.Frame;
-import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -43,7 +43,8 @@ class CassandraResponsePeerTest {
     DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(firstExecutionInfo, firstFrame);
 
     assertThat(CassandraNetworkPeer.getExecutionInfoPeer(firstExecutionInfo)).isEqualTo(firstPeer);
-    assertThat(CassandraNetworkPeer.getExecutionInfoPeer(secondExecutionInfo)).isEqualTo(secondPeer);
+    assertThat(CassandraNetworkPeer.getExecutionInfoPeer(secondExecutionInfo))
+        .isEqualTo(secondPeer);
   }
 
   @Test
