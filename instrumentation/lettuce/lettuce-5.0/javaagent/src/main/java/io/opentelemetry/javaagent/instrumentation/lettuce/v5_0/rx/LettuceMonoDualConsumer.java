@@ -25,13 +25,13 @@ public class LettuceMonoDualConsumer<T>
   private static final Logger logger = Logger.getLogger(LettuceMonoDualConsumer.class.getName());
 
   private final StatefulConnection<?, ?> connection;
-  private final boolean finishSpanOnClose;
+  private final boolean expectsResponse;
   @Nullable private RedisCommand<?, ?, ?> command;
   @Nullable private Context context;
 
-  private LettuceMonoDualConsumer(StatefulConnection<?, ?> connection, boolean finishSpanOnClose) {
+  private LettuceMonoDualConsumer(StatefulConnection<?, ?> connection, boolean expectsResponse) {
     this.connection = connection;
-    this.finishSpanOnClose = finishSpanOnClose;
+    this.expectsResponse = expectsResponse;
   }
 
   @Override
@@ -44,7 +44,7 @@ public class LettuceMonoDualConsumer<T>
     command = subscriptionCommand;
     LettuceSingletons.attachAddress(subscriptionCommand, connection);
     context = instrumenter().start(Context.current(), subscriptionCommand);
-    if (finishSpanOnClose) {
+    if (!expectsResponse) {
       instrumenter().end(context, subscriptionCommand, null, null);
     }
   }
@@ -79,7 +79,7 @@ public class LettuceMonoDualConsumer<T>
     return Mono.defer(
         () -> {
           LettuceMonoDualConsumer<T> handler =
-              new LettuceMonoDualConsumer<>(connection, !expectsResponse);
+              new LettuceMonoDualConsumer<>(connection, expectsResponse);
           Mono<T> monitoredPublisher = publisher.doOnSubscribe(handler);
           return expectsResponse
               ? handler.finishSpanOnTerminal(monitoredPublisher)
