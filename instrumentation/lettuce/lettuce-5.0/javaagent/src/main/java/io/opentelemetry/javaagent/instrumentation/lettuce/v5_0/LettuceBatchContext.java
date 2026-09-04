@@ -45,14 +45,8 @@ public final class LettuceBatchContext {
     BATCH_STATE.set(endpoint, batching ? new BatchState() : null);
   }
 
-  public static boolean prepareCommandPeer(
-      DefaultEndpoint endpoint, RedisCommand<?, ?, ?> command) {
-    BatchState state = BATCH_STATE.get(endpoint);
-    if (state == null) {
-      return false;
-    }
-    LettuceSingletons.linkCommandPeer(command);
-    return true;
+  public static boolean isBatching(DefaultEndpoint endpoint) {
+    return BATCH_STATE.get(endpoint) != null;
   }
 
   public static boolean capture(
