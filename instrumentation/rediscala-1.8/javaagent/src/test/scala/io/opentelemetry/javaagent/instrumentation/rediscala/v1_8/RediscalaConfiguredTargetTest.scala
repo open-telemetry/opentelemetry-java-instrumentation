@@ -188,16 +188,7 @@ class RediscalaConfiguredTargetTest {
       RedisServer(host, port.intValue()),
       RedisServer(alternateHost(host), port.intValue())
     )
-    val client = classOf[RedisClientMasterSlaves].getConstructors
-      .find(_.getParameterCount == 4)
-      .get
-      .newInstance(
-        master,
-        slaves,
-        system,
-        RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
-      )
-      .asInstanceOf[RedisClientMasterSlaves]
+    val client = createMasterSlavesClient(master, slaves)
     try {
       val result = client.set("master-slaves-target", "value")
       Await.result(result, Duration("3 second"))
@@ -219,16 +210,7 @@ class RediscalaConfiguredTargetTest {
       RedisServer(host, port.intValue()),
       RedisServer(alternateHost(host), port.intValue())
     )
-    val client = classOf[RedisClientMasterSlaves].getConstructors
-      .find(_.getParameterCount == 4)
-      .get
-      .newInstance(
-        master,
-        slaves,
-        system,
-        RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
-      )
-      .asInstanceOf[RedisClientMasterSlaves]
+    val client = createMasterSlavesClient(master, slaves)
     try {
       val transaction = client.multi()
       transaction.set("master-slaves-transaction-target", "value")
@@ -255,16 +237,7 @@ class RediscalaConfiguredTargetTest {
       RedisServer(host, port.intValue()),
       RedisServer(alternateHost(host), port.intValue())
     )
-    val client = classOf[RedisClientMasterSlaves].getConstructors
-      .find(_.getParameterCount == 4)
-      .get
-      .newInstance(
-        master,
-        slaves,
-        system,
-        RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
-      )
-      .asInstanceOf[RedisClientMasterSlaves]
+    val client = createMasterSlavesClient(master, slaves)
     try {
       Await.result(
         client.get[String]("master-slaves-replica-target"),
@@ -421,6 +394,21 @@ class RediscalaConfiguredTargetTest {
 
   private def namespace(databaseIndex: Int): String =
     if (emitStableDatabaseSemconv()) databaseIndex.toString else null
+
+  private def createMasterSlavesClient(
+      master: RedisServer,
+      slaves: Seq[RedisServer]
+  ): RedisClientMasterSlaves =
+    classOf[RedisClientMasterSlaves].getConstructors
+      .find(_.getParameterCount == 4)
+      .get
+      .newInstance(
+        master,
+        slaves,
+        system,
+        RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
+      )
+      .asInstanceOf[RedisClientMasterSlaves]
 
   private def createSentinelClient(
       sentinelHosts: Seq[String]
