@@ -40,13 +40,8 @@ public final class LettuceBatchContext {
     BATCH_STATE.set(commands, batching ? new BatchState() : null);
   }
 
-  public static boolean prepareCommandPeer(
-      AbstractRedisAsyncCommands<?, ?> commands, RedisCommand<?, ?, ?> command) {
-    BatchState state = BATCH_STATE.get(commands);
-    if (state == null) {
-      return false;
-    }
-    return true;
+  public static boolean isBatching(AbstractRedisAsyncCommands<?, ?> commands) {
+    return BATCH_STATE.get(commands) != null;
   }
 
   public static boolean capture(
