@@ -96,7 +96,7 @@ class CassandraEndpointAttributesTest {
         serverAttributes(CassandraServerTarget.of(asList("node1.example.com:9042", "[::1]:9042")));
 
     if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("::1,node1.example.com");
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com,::1");
       assertThat(attributes.get(SERVER_PORT)).isNull();
     } else {
       assertCoordinatorIsServer(attributes);
