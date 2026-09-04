@@ -28,7 +28,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -296,7 +295,7 @@ public abstract class AbstractOpenSearchRestTest {
   }
 
   private String nodeList() {
-    return httpHost.getHost() + ":" + httpHost.getPort() + ",127.0.0.1:" + httpHost.getPort();
+    return "127.0.0.1:" + httpHost.getPort() + "," + httpHost.getHost() + ":" + httpHost.getPort();
   }
 
   private void assertConfiguredTarget(
