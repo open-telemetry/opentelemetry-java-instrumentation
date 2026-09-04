@@ -113,10 +113,7 @@ class ConfigServerTargetsTest {
   void masterAndReplicasFailClosedWhenAnyReplicaIsInvalid(String invalidReplica) {
     Config config = new Config();
     MasterSlaveServersConfig serverConfig =
-        config
-            .useMasterSlaveServers()
-            .setMasterAddress("redis://master:6379")
-            .addSlaveAddress("redis://replica:6380");
+        config.useMasterSlaveServers().setMasterAddress("redis://master:6379");
     Set<String> replicas =
         new LinkedHashSet<>(asList("redis://replica:6380", invalidReplica));
     serverConfig.setSlaveAddresses(replicas);
