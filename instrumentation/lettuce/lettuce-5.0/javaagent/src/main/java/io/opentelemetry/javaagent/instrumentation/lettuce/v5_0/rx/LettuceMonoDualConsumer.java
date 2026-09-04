@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSin
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceReactiveCommandContext;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
