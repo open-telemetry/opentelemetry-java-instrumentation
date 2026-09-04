@@ -83,6 +83,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
         hasConfiguredPort(jdbcUrl, urlParams, ctx.props()));
   }
 
+  /** Build the configured primary and failover partner group. */
   private static void applyFailoverPartnerGroup(
       ParseContext ctx,
       Map<String, String> params,
@@ -112,6 +113,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     ctx.serverAddressGroup(serverAddressGroup);
   }
 
+  /** Returns whether a server was configured by the data source, parameters, or URL authority. */
   private static boolean hasConfiguredServer(
       String jdbcUrl, Map<String, String> params, @Nullable Properties properties) {
     if (properties != null) {
@@ -135,6 +137,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     return pathLoc < 0 ? !urlServerName.isEmpty() : pathLoc > 0;
   }
 
+  /** Append the effective primary server, including its configured port or instance. */
   private static void appendPrimary(
       StringBuilder group,
       ParseContext ctx,
@@ -152,6 +155,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     appendServerAddress(group, host + "\\" + instanceName);
   }
 
+  /** Resolve the effective instance name using SQL Server property precedence. */
   @Nullable
   private static String resolveInstanceName(
       @Nullable Properties properties,
@@ -172,6 +176,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     return propertyServerName == null || propertyServerName.isEmpty() ? instanceName : null;
   }
 
+  /** Returns whether a port was configured by the data source, parameters, or URL authority. */
   private static boolean hasConfiguredPort(
       String jdbcUrl, Map<String, String> params, @Nullable Properties properties) {
     if (properties != null
@@ -195,6 +200,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     return UrlParsingUtils.extractHostPort(serverName).port() != null;
   }
 
+  /** Append a SQL Server address, bracketing an unbracketed IPv6 host and preserving its instance. */
   private static void appendServerAddress(StringBuilder group, String serverAddress) {
     int instanceStart = serverAddress.indexOf('\\');
     String hostPort = instanceStart < 0 ? serverAddress : serverAddress.substring(0, instanceStart);

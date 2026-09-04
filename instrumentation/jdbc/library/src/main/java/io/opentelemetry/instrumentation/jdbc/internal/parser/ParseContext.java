@@ -115,6 +115,7 @@ public final class ParseContext {
     this.port = port;
   }
 
+  /** Set a normalized configured server group when parsing succeeds. */
   public void serverAddressGroup(@Nullable ServerAddressGroup serverAddressGroup) {
     if (serverAddressGroup == null) {
       return;
@@ -123,6 +124,7 @@ public final class ParseContext {
     multiTarget = true;
   }
 
+  /** Mark the connection as having multiple configured targets. */
   public void multiTarget() {
     multiTarget = true;
   }
