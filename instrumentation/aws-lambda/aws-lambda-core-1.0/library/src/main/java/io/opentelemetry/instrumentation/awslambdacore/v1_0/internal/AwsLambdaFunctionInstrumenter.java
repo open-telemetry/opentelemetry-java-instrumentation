@@ -27,13 +27,7 @@ public class AwsLambdaFunctionInstrumenter {
 
   private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
   private static final String GET_XRAY_TRACE_ID_METHOD = "getXrayTraceId";
-  private static final ClassValue<MethodHandleHolder> getXrayTraceIdMethodHandleCache =
-      new ClassValue<MethodHandleHolder>() {
-        @Override
-        protected MethodHandleHolder computeValue(Class<?> type) {
-          return new MethodHandleHolder(findGetXrayTraceId(type));
-        }
-      };
+  @Nullable private static final MethodHandle getXrayTraceIdMethod = findGetXrayTraceId();
   private static final MapGetter mapGetter = new MapGetter();
 
   private final OpenTelemetry openTelemetry;
@@ -93,40 +87,24 @@ public class AwsLambdaFunctionInstrumenter {
     if (awsContext == null) {
       return null;
     }
-    MethodHandle getXrayTraceId =
-        getXrayTraceIdMethodHandleCache.get(awsContext.getClass()).methodHandle;
-    if (getXrayTraceId == null) {
+    if (getXrayTraceIdMethod == null) {
       return null;
     }
     try {
-      Object traceId = getXrayTraceId.invoke(awsContext);
-      return traceId instanceof String ? (String) traceId : null;
+      return (String) getXrayTraceIdMethod.invoke(awsContext);
     } catch (Throwable ignored) {
       return null;
     }
   }
 
   @Nullable
-  private static MethodHandle findGetXrayTraceId(Class<?> type) {
-    MethodHandle methodHandle = findPublicGetXrayTraceId(type);
-    if (methodHandle != null) {
-      return methodHandle;
-    }
-    for (Class<?> interfaceType : type.getInterfaces()) {
-      methodHandle = findGetXrayTraceId(interfaceType);
-      if (methodHandle != null) {
-        return methodHandle;
-      }
-    }
-    Class<?> superClass = type.getSuperclass();
-    return superClass == null ? null : findGetXrayTraceId(superClass);
-  }
-
-  @Nullable
-  private static MethodHandle findPublicGetXrayTraceId(Class<?> type) {
+  private static MethodHandle findGetXrayTraceId() {
     try {
       return MethodHandles.publicLookup()
-          .findVirtual(type, GET_XRAY_TRACE_ID_METHOD, MethodType.methodType(String.class));
+          .findVirtual(
+              com.amazonaws.services.lambda.runtime.Context.class,
+              GET_XRAY_TRACE_ID_METHOD,
+              MethodType.methodType(String.class));
     } catch (NoSuchMethodException | IllegalAccessException | SecurityException ignored) {
       return null;
     }
@@ -134,14 +112,6 @@ public class AwsLambdaFunctionInstrumenter {
 
   private static boolean isEmptyOrNull(@Nullable String value) {
     return value == null || value.isEmpty();
-  }
-
-  private static class MethodHandleHolder {
-    @Nullable private final MethodHandle methodHandle;
-
-    private MethodHandleHolder(@Nullable MethodHandle methodHandle) {
-      this.methodHandle = methodHandle;
-    }
   }
 
   private static class MapGetter implements TextMapGetter<Map<String, String>> {

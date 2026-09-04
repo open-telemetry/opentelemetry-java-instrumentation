@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -56,6 +57,8 @@ class InstrumenterExtractionTest {
 
   @Test
   void useXrayTraceIdFromAwsContext() {
+    assumeTrue(hasXrayTraceIdApi(), "requires aws-lambda-java-core with getXrayTraceId()");
+
     String xrayTraceId =
         "Root=1-00000001-d188f8fa79d48a391a778fa6;Parent=53995c3f42cd8ad8;Sampled=1";
     AtomicReference<String> extractedTraceHeader = new AtomicReference<>();
@@ -70,6 +73,15 @@ class InstrumenterExtractionTest {
     instr.extract(input);
 
     assertThat(extractedTraceHeader.get()).isEqualTo(xrayTraceId);
+  }
+
+  private static boolean hasXrayTraceIdApi() {
+    try {
+      com.amazonaws.services.lambda.runtime.Context.class.getMethod("getXrayTraceId");
+      return true;
+    } catch (NoSuchMethodException | SecurityException ignored) {
+      return false;
+    }
   }
 
   private static final class TraceHeaderPropagator implements TextMapPropagator {
