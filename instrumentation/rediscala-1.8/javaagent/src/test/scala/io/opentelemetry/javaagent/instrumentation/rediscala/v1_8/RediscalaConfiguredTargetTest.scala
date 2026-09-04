@@ -471,7 +471,7 @@ class RediscalaConfiguredTargetTest {
         val expectedSpanName =
           if (serverSuffix == null) operationName
           else s"$operationName $serverSuffix"
-        assertThat(testing.spans())
+        assertThat(testing.spans(): java.lang.Iterable[SpanData])
           .filteredOn(new Predicate[SpanData] {
             override def test(span: SpanData): Boolean =
               span.getName == expectedSpanName
