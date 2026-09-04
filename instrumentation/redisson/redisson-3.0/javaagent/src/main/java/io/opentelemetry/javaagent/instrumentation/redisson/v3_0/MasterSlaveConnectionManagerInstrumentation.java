@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
+package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,10 +19,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisClient;
 import org.redisson.config.Config;
-import org.redisson.config.ConfigServerTargetsSince317;
+import org.redisson.config.ConfigServerTargetsBefore317;
 import org.redisson.connection.MasterSlaveConnectionManager;
 
-class ConnectionManagerInstrumentation implements TypeInstrumentation {
+class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -37,10 +37,6 @@ class ConnectionManagerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("org.redisson.config.Config"))),
         getClass().getName() + "$ConfigSecondConstructorAdvice");
-    // redisson 3.20 through 3.27 hand the manager the service manager the configuration lives in
-    transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(1, named("org.redisson.connection.ServiceManager"))),
-        getClass().getName() + "$ServiceManagerConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("createClient").and(returns(named("org.redisson.client.RedisClient"))),
         getClass().getName() + "$CreateClientAdvice");
@@ -54,7 +50,7 @@ class ConnectionManagerInstrumentation implements TypeInstrumentation {
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(0) @Nullable Config config) {
       // a Config is mutable, so the target is rendered here and kept immutable
-      RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetsSince317.of(config));
+      RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetsBefore317.of(config));
     }
   }
 
@@ -65,19 +61,7 @@ class ConnectionManagerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(1) @Nullable Config config) {
-      RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetsSince317.of(config));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class ServiceManagerConstructorAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This MasterSlaveConnectionManager manager,
-        @Advice.Argument(1) @Nullable Object serviceManager) {
-      RedissonServerTargets.setManagerTarget(
-          manager, ConfigServerTargetsSince317.ofServiceManager(serviceManager));
+      RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetsBefore317.of(config));
     }
   }
 
