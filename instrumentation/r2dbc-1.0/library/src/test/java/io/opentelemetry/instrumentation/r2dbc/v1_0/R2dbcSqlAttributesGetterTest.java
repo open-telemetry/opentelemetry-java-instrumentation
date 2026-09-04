@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // testing old database semantic conventions
 class R2dbcSqlAttributesGetterTest {
@@ -167,6 +168,22 @@ class R2dbcSqlAttributesGetterTest {
 
     assertThat(getter.getServerAddress(dbExecution))
         .isEqualTo(emitStableDatabaseSemconv() ? null : "host1:invalid,host2");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"[host1]:5432", "[host1]:5432,host2"})
+  void bracketedNonIpv6OptionsOmitTheStableTarget(String host) {
+    DbExecution dbExecution =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.builder()
+                .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+                .option(ConnectionFactoryOptions.HOST, host)
+                .build());
+
+    assertThat(getter.getServerAddress(dbExecution))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : host);
+    assertThat(getter.getServerPort(dbExecution)).isNull();
   }
 
   @Test

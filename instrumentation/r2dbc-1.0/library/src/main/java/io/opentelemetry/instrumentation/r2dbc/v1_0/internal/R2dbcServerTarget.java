@@ -102,12 +102,14 @@ final class R2dbcServerTarget {
       if (closingBracket < 0 || host.indexOf(']', closingBracket + 1) >= 0) {
         return null;
       }
+      String bracketedHost = host.substring(1, closingBracket);
+      if (bracketedHost.indexOf(':') < 0) {
+        return null;
+      }
       String rest = host.substring(closingBracket + 1);
       Integer port =
           rest.isEmpty() ? serverPort : parsePort(rest.startsWith(":") ? rest.substring(1) : "");
-      return !rest.isEmpty() && port == null
-          ? null
-          : new ParsedEndpoint(host.substring(1, closingBracket), port);
+      return !rest.isEmpty() && port == null ? null : new ParsedEndpoint(bracketedHost, port);
     }
     if (host.indexOf('[') >= 0 || host.indexOf(']') >= 0) {
       return null;
