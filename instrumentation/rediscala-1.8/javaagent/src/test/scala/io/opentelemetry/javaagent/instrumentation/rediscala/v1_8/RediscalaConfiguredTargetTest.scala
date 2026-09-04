@@ -54,6 +54,7 @@ class RediscalaConfiguredTargetTest {
   @RegisterExtension val testing = AgentInstrumentationExtension.create
 
   private val defaultDbIndex = 0
+  private val masterName = "mymaster"
 
   var system: Object = null
   var redisServer: GenericContainer[_] = null
@@ -78,7 +79,7 @@ class RediscalaConfiguredTargetTest {
     sentinelServer.withCommand(
       "sh",
       "-c",
-      s"redis-server --port $port --daemonize yes && printf 'port 26379\\nsentinel resolve-hostnames yes\\nsentinel announce-hostnames yes\\nsentinel monitor mymaster $host $port 1\\n' > /tmp/sentinel.conf && exec redis-server /tmp/sentinel.conf --sentinel"
+      s"redis-server --port $port --daemonize yes && printf 'port 26379\\nsentinel resolve-hostnames yes\\nsentinel announce-hostnames yes\\nsentinel monitor $masterName $host $port 1\\n' > /tmp/sentinel.conf && exec redis-server /tmp/sentinel.conf --sentinel"
     )
     sentinelServer.start()
     sentinelHost = sentinelServer.getHost
@@ -421,7 +422,7 @@ class RediscalaConfiguredTargetTest {
     val arguments =
       Seq[Object](
         sentinelHosts.map((_, sentinelPort.intValue())),
-        "mymaster"
+        masterName
       ) ++
         options ++
         Seq[Object](
@@ -442,7 +443,7 @@ class RediscalaConfiguredTargetTest {
       .get
       .newInstance(
         sentinelHosts.map((_, sentinelPort.intValue())),
-        "mymaster",
+        masterName,
         system,
         RedisDispatcher("rediscala.rediscala-client-worker-dispatcher")
       )
@@ -451,7 +452,7 @@ class RediscalaConfiguredTargetTest {
   private def sentinelTarget(sentinelHosts: Seq[String]): String =
     sentinelHosts.sorted
       .map(serverHost => s"$serverHost:$sentinelPort")
-      .mkString(",") + "/mymaster"
+      .mkString(",") + s"/$masterName"
 
   private def alternateHost(serverHost: String): String = {
     val resolvedHost = InetAddress.getByName(serverHost).getHostAddress
