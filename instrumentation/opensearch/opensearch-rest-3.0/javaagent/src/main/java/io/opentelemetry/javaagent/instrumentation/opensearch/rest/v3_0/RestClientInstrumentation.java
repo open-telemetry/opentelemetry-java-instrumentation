@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0.OpenSearchRestSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -72,10 +73,10 @@ class RestClientInstrumentation implements TypeInstrumentation {
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return null;
       }
-      Context context =
-          otelRequest
-              .getPeerState()
-              .storeInContext(instrumenter().start(parentContext, otelRequest));
+      Context context = instrumenter().start(parentContext, otelRequest);
+      if (emitStableDatabaseSemconv()) {
+        context = otelRequest.getPeerState().storeInContext(context);
+      }
       return new AdviceScope(otelRequest, parentContext, context, context.makeCurrent());
     }
 
