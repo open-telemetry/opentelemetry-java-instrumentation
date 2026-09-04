@@ -5,11 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV6;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -24,6 +30,9 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.net.Inet4Address;
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,6 +41,7 @@ import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
+import redis.clients.jedis.ShardedJedisPipeline;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class ShardedJedisClientTest {
@@ -49,11 +59,9 @@ class ShardedJedisClientTest {
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
   private static ShardedJedis sharded;
+  private static Jedis shard;
 
   private static String configuredTarget;
-
-  private static String shardHost;
-  private static int shardPort;
 
   @BeforeAll
   static void setup() {
@@ -79,9 +87,7 @@ class ShardedJedisClientTest {
     sharded = new ShardedJedis(shards);
     cleanup.deferAfterAll(sharded::disconnect);
 
-    Jedis shard = sharded.getShard("foo");
-    shardHost = shard.getClient().getHost();
-    shardPort = shard.getClient().getPort();
+    shard = sharded.getShard("foo");
   }
 
   @Test
@@ -97,22 +103,18 @@ class ShardedJedisClientTest {
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            attributes("SET", "SET foo ?", shardHost, shardPort))),
+                        .hasAttributesSatisfyingExactly(attributes("SET", "SET foo ?", shard))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "GET " + configuredTarget : "GET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            attributes("GET", "GET foo", shardHost, shardPort))));
+                        .hasAttributesSatisfyingExactly(attributes("GET", "GET foo", shard))));
   }
 
   @Test
   void commandFromAllShardsUsesConfiguredTarget() {
     Jedis shard = sharded.getAllShards().iterator().next();
-    String selectedHost = shard.getClient().getHost();
-    int selectedPort = shard.getClient().getPort();
 
     shard.set("all-shards", "bar");
 
@@ -123,18 +125,127 @@ class ShardedJedisClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            attributes("SET", "SET all-shards ?", selectedHost, selectedPort))));
+                            attributes("SET", "SET all-shards ?", shard))));
+  }
+
+  @Test
+  void shardedPipelineFanOutWithinOneScopeKeepsPerCommandPeers() {
+    List<Jedis> shards = new ArrayList<>(sharded.getAllShards());
+    Jedis firstShard = shards.get(0);
+    Jedis secondShard = shards.get(1);
+    String firstKey = keyForShard(firstShard, "same-scope-first");
+    String secondKey = keyForShard(secondShard, "same-scope-second");
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          sharded.pipelined(
+              new ShardedJedisPipeline() {
+                @Override
+                public void execute() {
+                  set(firstKey, "first");
+                  set(secondKey, "second");
+                }
+              });
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET " + firstKey + " ?", firstShard)),
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET " + secondKey + " ?", secondShard))));
+  }
+
+  @Test
+  void shardedPipelineFanOutAcrossScopesKeepsPerCommandPeers() {
+    List<Jedis> shards = new ArrayList<>(sharded.getAllShards());
+    Jedis firstShard = shards.get(0);
+    Jedis secondShard = shards.get(1);
+    String firstKey = keyForShard(firstShard, "cross-scope-first");
+    String secondKey = keyForShard(secondShard, "cross-scope-second");
+
+    sharded.pipelined(
+        new ShardedJedisPipeline() {
+          @Override
+          public void execute() {
+            testing.runWithSpan("first parent", () -> set(firstKey, "first"));
+            testing.runWithSpan("second parent", () -> set(secondKey, "second"));
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("first parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET " + firstKey + " ?", firstShard))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("second parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributes("SET", "SET " + secondKey + " ?", secondShard))));
+  }
+
+  private static String keyForShard(Jedis selectedShard, String prefix) {
+    for (int i = 0; i < 1000; i++) {
+      String key = prefix + "-" + i;
+      if (sharded.getShard(key) == selectedShard) {
+        return key;
+      }
+    }
+    throw new AssertionError("Could not find a key for selected shard");
   }
 
   private static List<AttributeAssertion> attributes(
-      String operation, String queryText, String selectedHost, int selectedPort) {
-    return asList(
-        equalTo(maybeStable(DB_SYSTEM), REDIS),
-        equalTo(maybeStable(DB_STATEMENT), queryText),
-        equalTo(maybeStable(DB_OPERATION), operation),
-        equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-        equalTo(maybeStablePeerService(), emitStableDatabaseSemconv() ? null : "test-peer-service"),
-        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? configuredTarget : selectedHost),
-        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) selectedPort));
+      String operation, String queryText, Jedis selectedShard) {
+    String selectedHost = selectedShard.getClient().getHost();
+    int selectedPort = selectedShard.getClient().getPort();
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(maybeStable(DB_SYSTEM), REDIS),
+                equalTo(maybeStable(DB_STATEMENT), queryText),
+                equalTo(maybeStable(DB_OPERATION), operation),
+                equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null)));
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
+      assertions.add(equalTo(DB_SYSTEM, REDIS));
+      assertions.add(equalTo(DB_STATEMENT, queryText));
+      assertions.add(equalTo(DB_OPERATION, operation));
+    }
+    if (emitStableDatabaseSemconv()) {
+      InetSocketAddress peerAddress =
+          (InetSocketAddress) selectedShard.getClient().getSocket().getRemoteSocketAddress();
+      assertions.add(equalTo(SERVER_ADDRESS, configuredTarget));
+      assertions.add(equalTo(NETWORK_PEER_ADDRESS, peerAddress.getAddress().getHostAddress()));
+      assertions.add(equalTo(NETWORK_PEER_PORT, peerAddress.getPort()));
+      if (emitOldDatabaseSemconv()) {
+        assertions.add(
+            equalTo(NETWORK_TYPE, peerAddress.getAddress() instanceof Inet4Address ? IPV4 : IPV6));
+      }
+    } else {
+      assertions.add(equalTo(maybeStablePeerService(), "test-peer-service"));
+      assertions.add(equalTo(SERVER_ADDRESS, selectedHost));
+      assertions.add(equalTo(SERVER_PORT, selectedPort));
+    }
+    return assertions;
   }
 }

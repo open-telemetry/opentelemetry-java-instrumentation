@@ -16,6 +16,11 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV6;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -29,6 +34,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.net.Inet4Address;
+import java.net.InetSocketAddress;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
@@ -81,6 +88,7 @@ class JedisClientTest {
   @Test
   void setCommand() {
     jedis.set("foo", "bar");
+    InetSocketAddress peerAddress = peerAddress();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -92,19 +100,114 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_SYSTEM : DB_SYSTEM_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? REDIS
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_STATEMENT : DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET foo ?"
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_OPERATION : DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET"
+                                    : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null),
+                            equalTo(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? peerNetworkType(peerAddress)
+                                    : null))));
 
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.jedis-2.0",
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        DB_NAMESPACE,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+    if (emitStableDatabaseSemconv()) {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.jedis-2.0",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          SERVER_ADDRESS,
+          SERVER_PORT,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT);
+    } else {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.jedis-2.0",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          SERVER_ADDRESS,
+          SERVER_PORT);
+    }
+  }
+
+  @Test
+  void reconnectUsesNewlyConnectedSocket() {
+    jedis.disconnect();
+    jedis.set("foo", "bar");
+    InetSocketAddress peerAddress = peerAddress();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_SYSTEM : DB_SYSTEM_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? REDIS
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_STATEMENT : DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET foo ?"
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_OPERATION : DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET"
+                                    : null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null),
+                            equalTo(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? peerNetworkType(peerAddress)
+                                    : null))));
   }
 
   @Test
@@ -112,8 +215,10 @@ class JedisClientTest {
     JedisPool pool = new JedisPool(host, port);
     cleanup.deferAfterAll(pool::destroy);
     Jedis pooled = pool.getResource();
+    InetSocketAddress pooledPeerAddress;
     try {
       pooled.set("pooled", "value");
+      pooledPeerAddress = peerAddress(pooled);
     } finally {
       pool.returnResource(pooled);
     }
@@ -135,13 +240,29 @@ class JedisClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? pooledPeerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(pooledPeerAddress.getPort())
+                                    : null),
+                            equalTo(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? peerNetworkType(pooledPeerAddress)
+                                    : null))));
   }
 
   @Test
   void getCommand() {
     jedis.set("foo", "bar");
     String value = jedis.get("foo");
+    InetSocketAddress peerAddress = peerAddress();
 
     assertThat(value).isEqualTo("bar");
 
@@ -155,10 +276,40 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_SYSTEM : DB_SYSTEM_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? REDIS
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_STATEMENT : DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET foo ?"
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_OPERATION : DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET"
+                                    : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null),
+                            equalTo(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? peerNetworkType(peerAddress)
+                                    : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -168,16 +319,47 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_SYSTEM : DB_SYSTEM_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? REDIS
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_STATEMENT : DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "GET foo"
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_OPERATION : DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "GET"
+                                    : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null),
+                            equalTo(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? peerNetworkType(peerAddress)
+                                    : null))));
   }
 
   @Test
   void commandWithNoArguments() {
     jedis.set("foo", "bar");
     String value = jedis.randomKey();
+    InetSocketAddress peerAddress = peerAddress();
 
     assertThat(value).isEqualTo("foo");
 
@@ -191,10 +373,40 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_SYSTEM : DB_SYSTEM_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? REDIS
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_STATEMENT : DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET foo ?"
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_OPERATION : DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET"
+                                    : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null),
+                            equalTo(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? peerNetworkType(peerAddress)
+                                    : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -207,10 +419,40 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_SYSTEM : DB_SYSTEM_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? REDIS
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_STATEMENT : DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "RANDOMKEY"
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_OPERATION : DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "RANDOMKEY"
+                                    : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null),
+                            equalTo(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? peerNetworkType(peerAddress)
+                                    : null))));
   }
 
   @Test
@@ -223,6 +465,7 @@ class JedisClientTest {
     testing.clearData();
 
     jedis.set("foo", "bar");
+    InetSocketAddress peerAddress = peerAddress();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -234,10 +477,40 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_SYSTEM : DB_SYSTEM_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? REDIS
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_STATEMENT : DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET foo ?"
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_OPERATION : DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? "SET"
+                                    : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null),
+                            equalTo(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? peerNetworkType(peerAddress)
+                                    : null))));
   }
 
   @ParameterizedTest
@@ -251,6 +524,7 @@ class JedisClientTest {
       assertThat(testing.spans()).isEmpty();
       return;
     }
+    InetSocketAddress peerAddress = peerAddress();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -265,13 +539,43 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_SYSTEM : DB_SYSTEM_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? REDIS
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_STATEMENT : DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? scenario.queryText
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_OPERATION : DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? scenario.operationName
+                                    : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null),
+                            equalTo(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? peerNetworkType(peerAddress)
+                                    : null))));
   }
 
   @ParameterizedTest
@@ -288,6 +592,7 @@ class JedisClientTest {
       assertThat(testing.spans()).isEmpty();
       return;
     }
+    InetSocketAddress peerAddress = peerAddress();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -302,13 +607,43 @@ class JedisClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_SYSTEM : DB_SYSTEM_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? REDIS
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_STATEMENT : DB_QUERY_TEXT,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? scenario.queryText
+                                    : null),
+                            equalTo(
+                                emitStableDatabaseSemconv() ? DB_OPERATION : DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? scenario.operationName
+                                    : null),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null),
+                            equalTo(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv() && emitOldDatabaseSemconv()
+                                    ? peerNetworkType(peerAddress)
+                                    : null))));
   }
 
   @Test
@@ -321,6 +656,18 @@ class JedisClientTest {
     transaction.discard();
 
     assertThat(testing.spans()).isEmpty();
+  }
+
+  private static String peerNetworkType(InetSocketAddress peerAddress) {
+    return peerAddress.getAddress() instanceof Inet4Address ? IPV4 : IPV6;
+  }
+
+  private static InetSocketAddress peerAddress() {
+    return peerAddress(jedis);
+  }
+
+  private static InetSocketAddress peerAddress(Jedis client) {
+    return (InetSocketAddress) client.getClient().getSocket().getRemoteSocketAddress();
   }
 
   private static Stream<Arguments> batchScenarios() {

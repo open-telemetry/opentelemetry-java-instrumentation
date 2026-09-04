@@ -74,39 +74,62 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceScope {
-    private final Context context;
-    private final Scope scope;
+    @Nullable private final Context context;
+    @Nullable private final Scope scope;
     private final JedisRequest request;
+    @Nullable private final JedisClusterCommandContext clusterCommandContext;
 
-    private AdviceScope(Context context, Scope scope, JedisRequest request) {
+    private AdviceScope(
+        @Nullable Context context,
+        @Nullable Scope scope,
+        JedisRequest request,
+        @Nullable JedisClusterCommandContext clusterCommandContext) {
       this.context = context;
       this.scope = scope;
       this.request = request;
+      this.clusterCommandContext = clusterCommandContext;
     }
 
     @Nullable
     public static AdviceScope start(JedisRequest request) {
       if (JedisPipelineContext.inTransactionFraming()) {
         // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI batch
-        // span rather than getting their own spans.
-        return null;
+        // span rather than getting their own spans. Keep the request until method exit so a
+        // connected EXEC socket observed at method exit can become the transaction's last peer.
+        return new AdviceScope(null, null, request, null);
       }
       Context parentContext = Context.current();
       if (JedisPipelineContext.capture(request)) {
-        // A pipeline or transaction is active, so this command is captured and aggregated into the
-        // batch span created at sync()/exec() rather than getting its own span.
-        return null;
+        // Keep the request until method exit so its post-send peer snapshot is available to the
+        // batch span created at sync()/exec().
+        return new AdviceScope(null, null, request, null);
+      }
+      JedisClusterCommandContext clusterCommandContext = JedisClusterCommandContext.current();
+      if (clusterCommandContext != null && clusterCommandContext.hasRequest()) {
+        return new AdviceScope(null, null, request, clusterCommandContext);
       }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
       Context context = instrumenter().start(parentContext, request);
-      return new AdviceScope(context, context.makeCurrent(), request);
+      return new AdviceScope(context, context.makeCurrent(), request, clusterCommandContext);
     }
 
     public void end(@Nullable Throwable throwable) {
-      scope.close();
-      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+      try {
+        request.capturePeerAddress();
+        JedisPipelineContext.captureTransactionFramingPeer(request);
+      } finally {
+        Context context = this.context;
+        if (scope != null) {
+          scope.close();
+        }
+        if (clusterCommandContext != null) {
+          clusterCommandContext.capture(context, request);
+        } else if (context != null) {
+          JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+        }
+      }
     }
   }
 
