@@ -17,13 +17,12 @@ import io.lettuce.core.AbstractRedisReactiveCommands;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -54,12 +53,10 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
   public static class CreateMonoAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
-        @Advice.This AbstractRedisReactiveCommands<K, V> commands,
+    @AssignReturned.ToArguments(@ToArgument(0))
+    public static <K, V, T> LettuceReactiveCommandSupplier<K, V, T> wrapCommandSupplier(
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
-      RedisCommand<K, V, T> command = supplier.get();
-      LettuceSingletons.attachAddress(command, commands.getConnection());
-      return command;
+      return new LettuceReactiveCommandSupplier<>(supplier);
     }
 
     // throwables wouldn't matter here, because no spans have been started due to redis command not
@@ -67,17 +64,12 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V, T> Mono<T> monitorSpan(
-        @Advice.Return Mono<T> originalPublisher, @Advice.Enter RedisCommand<K, V, T> command) {
-      Mono<T> publisher = originalPublisher;
-      boolean finishSpanOnClose = !expectsResponse(command);
-      LettuceMonoDualConsumer<? super Subscription, T> mdc =
-          new LettuceMonoDualConsumer<>(command, finishSpanOnClose);
-      publisher = publisher.doOnSubscribe(mdc);
-      // register the call back to close the span only if necessary
-      if (!finishSpanOnClose) {
-        publisher = mdc.finishSpanOnTerminal(publisher);
-      }
-      return publisher;
+        @Advice.This AbstractRedisReactiveCommands<K, V> commands,
+        @Advice.Return Mono<T> originalPublisher,
+        @Advice.Enter LettuceReactiveCommandSupplier<K, V, T> commandSupplier) {
+      boolean commandExpectsResponse = expectsResponse(commandSupplier.getTracingCommand());
+      return LettuceMonoDualConsumer.monitor(
+          originalPublisher, commands.getConnection(), commandExpectsResponse);
     }
   }
 
@@ -85,33 +77,22 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
   public static class CreateFluxAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
-        @Advice.This AbstractRedisReactiveCommands<K, V> commands,
+    @AssignReturned.ToArguments(@ToArgument(0))
+    public static <K, V, T> LettuceReactiveCommandSupplier<K, V, T> wrapCommandSupplier(
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
-      RedisCommand<K, V, T> command = supplier.get();
-      LettuceSingletons.attachAddress(command, commands.getConnection());
-      return command;
+      return new LettuceReactiveCommandSupplier<>(supplier);
     }
 
     // if there is an exception thrown, then don't make spans
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V, T> Flux<T> monitorSpan(
-        @Advice.Return Flux<T> originalPublisher, @Advice.Enter RedisCommand<K, V, T> command) {
-      Flux<T> publisher = originalPublisher;
-
-      boolean expectsResponse = expectsResponse(command);
-      LettuceFluxTerminationRunnable handler =
-          new LettuceFluxTerminationRunnable(command, expectsResponse);
-      publisher = publisher.doOnSubscribe(handler.getOnSubscribeConsumer());
-      // don't register extra callbacks to finish the spans if the command being instrumented is one
-      // of those that return
-      // Mono<Void> (In here a flux is created first and then converted to Mono<Void>)
-      if (expectsResponse) {
-        publisher = publisher.doOnEach(handler);
-        publisher = publisher.doOnCancel(handler);
-      }
-      return publisher;
+        @Advice.This AbstractRedisReactiveCommands<K, V> commands,
+        @Advice.Return Flux<T> originalPublisher,
+        @Advice.Enter LettuceReactiveCommandSupplier<K, V, T> commandSupplier) {
+      boolean commandExpectsResponse = expectsResponse(commandSupplier.getTracingCommand());
+      return LettuceFluxTerminationRunnable.monitor(
+          originalPublisher, commands.getConnection(), commandExpectsResponse);
     }
   }
 }

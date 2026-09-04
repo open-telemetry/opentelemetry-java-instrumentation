@@ -16,6 +16,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -49,6 +51,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +104,7 @@ class LettuceAsyncClientTest {
           .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
 
   private static String host;
+  private static String ip;
   private static int port;
   private static int incorrectPort;
   private static String dbUriNonExistent;
@@ -117,10 +122,11 @@ class LettuceAsyncClientTest {
   private static RedisAsyncCommands<String, String> nonDefaultDbCommands;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws UnknownHostException {
     redisServer.start();
     cleanup.deferAfterAll(redisServer::stop);
     host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
@@ -239,7 +245,11 @@ class LettuceAsyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -262,7 +272,12 @@ class LettuceAsyncClientTest {
                               equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                               equalTo(maybeStable(DB_OPERATION), "SELECT"),
                               equalTo(SERVER_ADDRESS, host),
-                              equalTo(SERVER_PORT, port))),
+                              equalTo(SERVER_PORT, port),
+                              equalTo(
+                                  NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                              equalTo(
+                                  NETWORK_PEER_PORT,
+                                  emitStableDatabaseSemconv() ? Long.valueOf(port) : null))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -273,7 +288,12 @@ class LettuceAsyncClientTest {
                               equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                               equalTo(maybeStable(DB_OPERATION), "SET"),
                               equalTo(SERVER_ADDRESS, host),
-                              equalTo(SERVER_PORT, port))));
+                              equalTo(SERVER_PORT, port),
+                              equalTo(
+                                  NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                              equalTo(
+                                  NETWORK_PEER_PORT,
+                                  emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
     } finally {
       connection.sync().select(0);
       testing.waitForTraces(3);
@@ -311,7 +331,11 @@ class LettuceAsyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -376,7 +400,11 @@ class LettuceAsyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName("callback1")
                         .hasKind(SpanKind.INTERNAL)
@@ -423,7 +451,11 @@ class LettuceAsyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -471,7 +503,11 @@ class LettuceAsyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "HMSET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -485,7 +521,11 @@ class LettuceAsyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "HGETALL"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -524,7 +564,10 @@ class LettuceAsyncClientTest {
                 equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                 equalTo(maybeStable(DB_OPERATION), "DEL"),
                 equalTo(SERVER_ADDRESS, host),
-                equalTo(SERVER_PORT, port)));
+                equalTo(SERVER_PORT, port),
+                equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                equalTo(
+                    NETWORK_PEER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(port) : null)));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "java.lang.IllegalStateException"));
     }
@@ -574,7 +617,8 @@ class LettuceAsyncClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "SADD " + host + ":" + port : "SADD")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
+                        // The outbound write may record the peer before or after cancellation.
+                        .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SADD"),
@@ -626,6 +670,10 @@ class LettuceAsyncClientTest {
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
@@ -649,7 +697,11 @@ class LettuceAsyncClientTest {
                             equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -681,6 +733,10 @@ class LettuceAsyncClientTest {
                             equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? 2L : null))));
@@ -715,7 +771,11 @@ class LettuceAsyncClientTest {
                       equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
                       equalTo(maybeStable(DB_OPERATION), "SELECT"),
                       equalTo(SERVER_ADDRESS, host),
-                      equalTo(SERVER_PORT, port));
+                      equalTo(SERVER_PORT, port),
+                      equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                      equalTo(
+                          NETWORK_PEER_PORT,
+                          emitStableDatabaseSemconv() ? Long.valueOf(port) : null));
             });
   }
 
@@ -854,7 +914,9 @@ class LettuceAsyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "DEBUG"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, serverPort))));
+                            equalTo(SERVER_PORT, serverPort),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null))));
   }
 
   @Test
@@ -896,6 +958,8 @@ class LettuceAsyncClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, shutdownServerPort))));
+                            equalTo(SERVER_PORT, shutdownServerPort),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null))));
   }
 }

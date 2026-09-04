@@ -7,9 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -25,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.lambdaworks.redis.RedisFuture;
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.cluster.RedisClusterClient;
+import com.lambdaworks.redis.cluster.SlotHash;
 import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
 import com.lambdaworks.redis.cluster.api.async.RedisAdvancedClusterAsyncCommands;
 import com.lambdaworks.redis.cluster.models.partitions.Partitions;
@@ -58,31 +62,41 @@ import org.junit.jupiter.api.extension.RegisterExtension;
     named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
     matches = "true")
 class LettuceClusterClientTest {
-  private static final String NODE_ID = "0000000000000000000000000000000000000000";
+  private static final String FIRST_NODE_ID = "0000000000000000000000000000000000000000";
+  private static final String SECOND_NODE_ID = "1111111111111111111111111111111111111111";
+  private static final int SLOT_SPLIT = SlotHash.SLOT_COUNT / 2;
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private static TestRedisCluster redisServer;
+  private static TestRedisCluster firstRedisServer;
+  private static TestRedisCluster secondRedisServer;
   private static StatefulRedisClusterConnection<String, String> connection;
   private static String host;
   private static int port;
 
   @BeforeAll
   static void setUp() throws Exception {
-    redisServer = new TestRedisCluster();
-    cleanup.deferAfterAll(redisServer);
+    firstRedisServer = new TestRedisCluster();
+    cleanup.deferAfterAll(firstRedisServer);
+    secondRedisServer = new TestRedisCluster();
+    cleanup.deferAfterAll(secondRedisServer);
 
-    host = redisServer.getHost();
-    port = redisServer.getPort();
+    host = firstRedisServer.getHost();
+    port = firstRedisServer.getPort();
 
     RedisURI nodeUri = RedisURI.create("redis://" + host + ":" + port);
     RedisURI invalidSeedUri = RedisURI.create("redis://invalid:6379");
     invalidSeedUri.setHost("invalid,host");
     List<RedisURI> seedUris = asList(nodeUri, invalidSeedUri);
-    RedisClusterClient client = new TestRedisClusterClient(seedUris, nodeUri);
+    List<RedisURI> nodeUris =
+        asList(
+            nodeUri,
+            RedisURI.create(
+                "redis://" + secondRedisServer.getHost() + ":" + secondRedisServer.getPort()));
+    RedisClusterClient client = new TestRedisClusterClient(seedUris, nodeUris);
     cleanup.deferAfterAll(() -> client.shutdown(0, 15, SECONDS));
 
     connection = client.connect();
@@ -91,14 +105,17 @@ class LettuceClusterClientTest {
   }
 
   @Test
-  void invalidConfiguredSeedOmitsTargetForCommandsAndBatches() throws Exception {
+  void invalidConfiguredSeedOmitsTargetForRoutedCommandsAndBatches() throws Exception {
     RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = connection.async();
-    assertThat(asyncCommands.set("CLUSTER_COMMAND_KEY", "value").get(10, SECONDS)).isEqualTo("OK");
+    String routedKey = keyInSlotRange("routed", SLOT_SPLIT, SlotHash.SLOT_COUNT);
+    String firstBatchKey = keyInSlotRange("first-batch", 0, SLOT_SPLIT);
+    String secondBatchKey = keyInSlotRange("second-batch", SLOT_SPLIT, SlotHash.SLOT_COUNT);
+    assertThat(asyncCommands.set(routedKey, "value").get(10, SECONDS)).isEqualTo("OK");
 
     asyncCommands.setAutoFlushCommands(false);
     cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
-    RedisFuture<String> first = asyncCommands.set("CLUSTER_BATCH_KEY_1", "value");
-    RedisFuture<String> second = asyncCommands.set("CLUSTER_BATCH_KEY_2", "value");
+    RedisFuture<String> first = asyncCommands.set(firstBatchKey, "value");
+    RedisFuture<String> second = asyncCommands.set(secondBatchKey, "value");
     asyncCommands.flushCommands();
     assertThat(first.get(10, SECONDS)).isEqualTo("OK");
     assertThat(second.get(10, SECONDS)).isEqualTo("OK");
@@ -116,7 +133,18 @@ class LettuceClusterClientTest {
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))),
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(
+                                        testLatestDeps() ? secondRedisServer.getPort() : port)),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? secondRedisServer.getHost() : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(secondRedisServer.getPort())
+                                    : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -129,45 +157,70 @@ class LettuceClusterClientTest {
                             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? null : host),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(
+                                        testLatestDeps() ? secondRedisServer.getPort() : port)),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? Long.valueOf(2) : null))));
 
-    redisServer.assertNoFailure();
+    firstRedisServer.assertReceivedSet(firstBatchKey);
+    secondRedisServer.assertReceivedSet(routedKey, secondBatchKey);
+    firstRedisServer.assertNoFailure();
+    secondRedisServer.assertNoFailure();
+  }
+
+  private static String keyInSlotRange(String prefix, int startInclusive, int endExclusive) {
+    for (int i = 0; ; i++) {
+      String key = prefix + "-" + i;
+      int slot = SlotHash.getSlot(key);
+      if (slot >= startInclusive && slot < endExclusive) {
+        return key;
+      }
+    }
   }
 
   private static class TestRedisClusterClient extends RedisClusterClient {
-    private final RedisURI nodeUri;
+    private final List<RedisURI> nodeUris;
 
-    private TestRedisClusterClient(List<RedisURI> seedUris, RedisURI nodeUri) {
+    private TestRedisClusterClient(List<RedisURI> seedUris, List<RedisURI> nodeUris) {
       super(seedUris);
-      this.nodeUri = nodeUri;
+      this.nodeUris = nodeUris;
     }
 
     @Override
     protected Partitions loadPartitions() {
-      List<Integer> slots = new ArrayList<>(16384);
-      for (int slot = 0; slot < 16384; slot++) {
+      Partitions partitions = new Partitions();
+      partitions.addPartition(newNode(nodeUris.get(0), FIRST_NODE_ID, 0, SLOT_SPLIT));
+      partitions.addPartition(
+          newNode(nodeUris.get(1), SECOND_NODE_ID, SLOT_SPLIT, SlotHash.SLOT_COUNT));
+      partitions.updateCache();
+      return partitions;
+    }
+
+    private static RedisClusterNode newNode(
+        RedisURI uri, String nodeId, int startInclusive, int endExclusive) {
+      List<Integer> slots = new ArrayList<>(endExclusive - startInclusive);
+      for (int slot = startInclusive; slot < endExclusive; slot++) {
         slots.add(slot);
       }
       RedisClusterNode node = new RedisClusterNode();
-      node.setUri(nodeUri);
-      node.setNodeId(NODE_ID);
+      node.setUri(uri);
+      node.setNodeId(nodeId);
       node.setConnected(true);
       node.setSlots(slots);
       node.setFlags(EnumSet.of(NodeFlag.MASTER));
-
-      Partitions partitions = new Partitions();
-      partitions.addPartition(node);
-      partitions.updateCache();
-      return partitions;
+      return node;
     }
   }
 
   private static class TestRedisCluster implements AutoCloseable {
     private final ServerSocket serverSocket;
     private final Set<Socket> connections = ConcurrentHashMap.newKeySet();
+    private final Set<String> receivedSetKeys = ConcurrentHashMap.newKeySet();
     private final AtomicReference<Throwable> failure = new AtomicReference<>();
     private final Thread acceptThread;
     private volatile boolean closed;
@@ -229,14 +282,18 @@ class LettuceClusterClientTest {
           && command.size() > 1
           && "NODES".equals(command.get(1).toUpperCase(Locale.ROOT))) {
         String nodes =
-            NODE_ID
+            FIRST_NODE_ID
                 + " "
                 + getHost()
                 + ":"
                 + getPort()
                 + " myself,master - 0 0 1 connected 0-16383\n";
         write(output, "$" + nodes.getBytes(UTF_8).length + "\r\n" + nodes + "\r\n");
-      } else if ("SET".equals(name) || "CLIENT".equals(name)) {
+      } else if ("SET".equals(name)) {
+        String key = command.get(1);
+        receivedSetKeys.add(key);
+        write(output, "+OK\r\n");
+      } else if ("CLIENT".equals(name)) {
         write(output, "+OK\r\n");
       } else if ("COMMAND".equals(name)) {
         write(output, "*0\r\n");
@@ -296,6 +353,10 @@ class LettuceClusterClientTest {
 
     private void assertNoFailure() {
       assertThat(failure.get()).isNull();
+    }
+
+    private void assertReceivedSet(String... keys) {
+      assertThat(receivedSetKeys).contains(keys);
     }
 
     @Override

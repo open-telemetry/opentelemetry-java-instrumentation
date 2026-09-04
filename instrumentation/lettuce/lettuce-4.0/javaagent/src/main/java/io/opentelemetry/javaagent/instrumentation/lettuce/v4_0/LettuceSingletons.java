@@ -28,6 +28,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.Collection;
+import java.util.List;
 import javax.annotation.Nullable;
 
 public class LettuceSingletons {
@@ -40,6 +43,9 @@ public class LettuceSingletons {
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v4_0-context-key");
 
+  public static final ContextKey<LettuceCommandPeer> COMMAND_PEER_KEY =
+      ContextKey.named("opentelemetry-lettuce-v4_0-peer-key");
+
   public static final VirtualField<RedisCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(RedisCommand.class, Context.class);
 
@@ -49,6 +55,9 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisChannelHandler<?, ?>, InetSocketAddress>
       CONNECTION_ADDRESS = VirtualField.find(RedisChannelHandler.class, InetSocketAddress.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
+      VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
 
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
       VirtualField.find(RedisCommand.class, InetSocketAddress.class);
@@ -144,6 +153,7 @@ public class LettuceSingletons {
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
+    COMMAND_PEER.set(command, new LettuceCommandPeer());
     COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));
     COMMAND_TARGET.set(command, serverTarget(connection));
   }
@@ -153,6 +163,55 @@ public class LettuceSingletons {
     return connection instanceof RedisChannelHandler
         ? CONNECTION_ADDRESS.get((RedisChannelHandler<?, ?>) connection)
         : null;
+  }
+
+  public static void recordCommandPeers(Object message, SocketAddress address) {
+    if (message instanceof RedisCommand) {
+      recordCommandPeer((RedisCommand<?, ?, ?>) message, address);
+    } else if (message instanceof Collection) {
+      for (Object item : (Collection<?>) message) {
+        if (item instanceof RedisCommand) {
+          recordCommandPeer((RedisCommand<?, ?, ?>) item, address);
+        }
+      }
+    }
+  }
+
+  private static void recordCommandPeer(RedisCommand<?, ?, ?> command, SocketAddress address) {
+    LettuceCommandPeer peer = COMMAND_PEER.get(command);
+    if (peer != null) {
+      peer.record(address);
+    }
+  }
+
+  @Nullable
+  static SocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
+    if (!InstrumentationPoints.expectsResponse(command)) {
+      return null;
+    }
+    LettuceCommandPeer peer = COMMAND_PEER.get(command);
+    return peer != null ? peer.getAddress() : null;
+  }
+
+  @Nullable
+  static SocketAddress batchPeerAddress(List<RedisCommand<?, ?, ?>> commands) {
+    SocketAddress batchPeerAddress = null;
+    for (RedisCommand<?, ?, ?> command : commands) {
+      LettuceCommandPeer peer = COMMAND_PEER.get(command);
+      if (peer == null) {
+        return null;
+      }
+      SocketAddress commandPeerAddress = peer.getAddress();
+      if (commandPeerAddress == null) {
+        return null;
+      }
+      if (batchPeerAddress == null) {
+        batchPeerAddress = commandPeerAddress;
+      } else if (!batchPeerAddress.equals(commandPeerAddress)) {
+        return null;
+      }
+    }
+    return batchPeerAddress;
   }
 
   @Nullable

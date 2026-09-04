@@ -7,13 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 
+import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Signal;
@@ -24,21 +27,35 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
           .getBoolean("experimental_span_attributes/development", false);
+  private static final Logger logger =
+      Logger.getLogger(LettuceFluxTerminationRunnable.class.getName());
 
   private final FluxOnSubscribeConsumer onSubscribeConsumer;
-  private Context context;
+  @Nullable private RedisCommand<?, ?, ?> command;
+  @Nullable private Context context;
   private int numResults;
 
-  public LettuceFluxTerminationRunnable(RedisCommand<?, ?, ?> command, boolean expectsResponse) {
-    onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, expectsResponse);
+  public static <T> Flux<T> monitor(
+      Flux<T> publisher, StatefulConnection<?, ?> connection, boolean expectsResponse) {
+    return Flux.defer(
+        () -> {
+          LettuceFluxTerminationRunnable handler =
+              new LettuceFluxTerminationRunnable(connection, expectsResponse);
+          Flux<T> monitoredPublisher = publisher.doOnSubscribe(handler.onSubscribeConsumer);
+          if (expectsResponse) {
+            monitoredPublisher = monitoredPublisher.doOnEach(handler).doOnCancel(handler);
+          }
+          return monitoredPublisher;
+        });
   }
 
-  public Consumer<Subscription> getOnSubscribeConsumer() {
-    return onSubscribeConsumer;
+  private LettuceFluxTerminationRunnable(
+      StatefulConnection<?, ?> connection, boolean expectsResponse) {
+    onSubscribeConsumer = new FluxOnSubscribeConsumer(this, connection, expectsResponse);
   }
 
   private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
-    if (context != null) {
+    if (context != null && command != null) {
       if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
         Span span = Span.fromContext(context);
         span.setAttribute("lettuce.command.results.count", numResults);
@@ -46,12 +63,11 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
           span.setAttribute("lettuce.command.cancelled", true);
         }
       }
-      instrumenter().end(context, onSubscribeConsumer.command, null, throwable);
+      instrumenter().end(context, command, null, throwable);
     } else {
-      Logger.getLogger(Flux.class.getName())
-          .severe(
-              "Failed to end this.context, LettuceFluxTerminationRunnable cannot find this.context "
-                  + "because it probably wasn't started.");
+      logger.fine(
+          "Failed to end this.context, LettuceFluxTerminationRunnable cannot find this.context "
+              + "because it probably wasn't started.");
     }
   }
 
@@ -69,23 +85,30 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
     finishSpan(/* isCommandCancelled= */ true, null);
   }
 
-  public static class FluxOnSubscribeConsumer implements Consumer<Subscription> {
+  private static class FluxOnSubscribeConsumer implements Consumer<Subscription> {
 
     private final LettuceFluxTerminationRunnable owner;
-    private final RedisCommand<?, ?, ?> command;
+    private final StatefulConnection<?, ?> connection;
     private final boolean expectsResponse;
 
-    public FluxOnSubscribeConsumer(
+    private FluxOnSubscribeConsumer(
         LettuceFluxTerminationRunnable owner,
-        RedisCommand<?, ?, ?> command,
+        StatefulConnection<?, ?> connection,
         boolean expectsResponse) {
       this.owner = owner;
-      this.command = command;
+      this.connection = connection;
       this.expectsResponse = expectsResponse;
     }
 
     @Override
     public void accept(Subscription subscription) {
+      RedisCommand<?, ?, ?> command = LettuceReactiveCommandContext.current();
+      if (command == null) {
+        logger.fine("Failed to correlate a Lettuce reactive subscription with its command.");
+        return;
+      }
+      owner.command = command;
+      LettuceSingletons.attachAddress(command, connection);
       owner.context = instrumenter().start(Context.current(), command);
       if (!expectsResponse) {
         instrumenter().end(owner.context, command, null, null);

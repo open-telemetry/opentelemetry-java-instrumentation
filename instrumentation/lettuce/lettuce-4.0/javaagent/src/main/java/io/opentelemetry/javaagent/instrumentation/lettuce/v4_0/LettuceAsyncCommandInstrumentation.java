@@ -6,12 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_PEER;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import com.lambdaworks.redis.protocol.AsyncCommand;
+import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -41,11 +43,14 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
   public static class SaveContextAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void saveContext(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
+    public static void saveContext(
+        @Advice.This AsyncCommand<?, ?, ?> asyncCommand,
+        @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       Context context = Java8BytecodeBridge.currentContext();
       // get the context that submitted this command and attach it, it will be used to run callbacks
       context = context.get(COMMAND_CONTEXT_KEY);
       CONTEXT.set(asyncCommand, context);
+      COMMAND_PEER.set(asyncCommand, COMMAND_PEER.get(command));
     }
   }
 

@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_PEER;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_PEER_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -54,10 +56,13 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This RedisCommand<?, ?, ?> command) {
+    public static void onExit(
+        @Advice.This RedisCommand<?, ?, ?> observableCommand,
+        @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       Context context = Java8BytecodeBridge.currentContext();
       if (context.get(COMMAND_CONTEXT_KEY) != null) {
-        CONTEXT.set(command, context);
+        CONTEXT.set(observableCommand, context);
+        COMMAND_PEER.set(observableCommand, context.get(COMMAND_PEER_KEY));
       }
     }
   }

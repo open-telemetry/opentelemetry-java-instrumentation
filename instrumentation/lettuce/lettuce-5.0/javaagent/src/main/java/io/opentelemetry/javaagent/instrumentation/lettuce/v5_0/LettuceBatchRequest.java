@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -27,6 +28,7 @@ final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
+  private final List<RedisCommand<?, ?, ?>> commands;
   @Nullable private final InetSocketAddress serverAddress;
   @Nullable private final Integer databaseIndex;
   @Nullable private final RedisServerTarget serverTarget;
@@ -35,12 +37,14 @@ final class LettuceBatchRequest {
       String operationName,
       @Nullable String queryText,
       @Nullable Long batchSize,
+      List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
       @Nullable Integer databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
+    this.commands = commands;
     this.serverAddress = serverAddress;
     this.databaseIndex = databaseIndex;
     this.serverTarget = serverTarget;
@@ -55,6 +59,7 @@ final class LettuceBatchRequest {
         operationName(commands),
         queryText(commands),
         commands.size() != 1 ? (long) commands.size() : null,
+        commands,
         serverAddress,
         databaseIndex,
         serverTarget);
@@ -77,6 +82,12 @@ final class LettuceBatchRequest {
   @Nullable
   InetSocketAddress getServerAddress() {
     return serverAddress;
+  }
+
+  @Nullable
+  SocketAddress getPeerAddress() {
+    // Read when the span ends so an outbound write after the flush can still supply the peer.
+    return LettuceSingletons.batchPeerAddress(commands);
   }
 
   @Nullable
