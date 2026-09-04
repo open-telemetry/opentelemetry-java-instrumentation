@@ -124,12 +124,6 @@ public class VertxSqlAddressGroup {
     private final int port;
     private final boolean unixSocket;
 
-    private Endpoint(String host, int port, boolean unixSocket) {
-      this.host = host;
-      this.port = port;
-      this.unixSocket = unixSocket;
-    }
-
     @Nullable
     private static Endpoint from(@Nullable SqlConnectOptions database) {
       if (database == null || database.getHost() == null) {
@@ -150,6 +144,12 @@ public class VertxSqlAddressGroup {
         return null;
       }
       return new Endpoint(host, port, unixSocket);
+    }
+
+    private Endpoint(String host, int port, boolean unixSocket) {
+      this.host = host;
+      this.port = port;
+      this.unixSocket = unixSocket;
     }
   }
 }
