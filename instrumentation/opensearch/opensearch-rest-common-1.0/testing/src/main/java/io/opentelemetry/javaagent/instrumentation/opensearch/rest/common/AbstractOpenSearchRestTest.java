@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -275,7 +276,7 @@ public abstract class AbstractOpenSearchRestTest {
             emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null),
         equalTo(
             NETWORK_TYPE,
-            !emitStableDatabaseSemconv() && expectedPeerAddress != null
+            emitOldDatabaseSemconv() && expectedPeerAddress != null
                 ? (expectedPeerAddress.contains(":") ? "ipv6" : "ipv4")
                 : null),
         equalTo(SERVER_ADDRESS, serverAddress),
