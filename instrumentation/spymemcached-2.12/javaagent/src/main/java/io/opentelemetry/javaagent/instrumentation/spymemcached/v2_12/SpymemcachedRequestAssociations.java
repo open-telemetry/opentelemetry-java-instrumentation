@@ -18,6 +18,12 @@ import java.util.Set;
 import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 
+/**
+ * Each instance tracks the {@link SpymemcachedRequest} objects associated with one request context
+ * or one third-party {@link Operation}, including per-key associations used when optimized
+ * operations merge requests and retries split them. Operation-scoped instances are attached through
+ * the {@code VirtualField} in {@link SpymemcachedRequestHolder}; instances are not a global cache.
+ */
 class SpymemcachedRequestAssociations {
 
   private final RequestList requests = new RequestList();
