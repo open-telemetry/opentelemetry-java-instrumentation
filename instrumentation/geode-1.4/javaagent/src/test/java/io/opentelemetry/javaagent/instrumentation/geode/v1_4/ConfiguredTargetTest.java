@@ -28,6 +28,7 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.apache.geode.cache.Region;
 import org.apache.geode.cache.client.ClientCache;
 import org.apache.geode.cache.client.ClientCacheFactory;
@@ -38,6 +39,9 @@ import org.apache.geode.cache.client.PoolManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * The pools here name servers nobody is listening on. Only {@code putAll} with an empty map is run
@@ -75,63 +79,46 @@ class ConfiguredTargetTest {
         SERVER_ADDRESS);
   }
 
-  @Test
-  void configuredServersUsingTheDefaultPortOmitPorts() {
+  @ParameterizedTest
+  @MethodSource("configuredServerCases")
+  void configuredServerPortsAreRenderedConsistently(
+      String regionName, int firstPort, int secondPort, String expectedAddress) {
     Region<Object, Object> region =
         createRegion(
-            "default-port-servers",
+            regionName,
             poolFactory -> {
-              poolFactory.addServer("127.0.0.1", 40404);
-              poolFactory.addServer("127.0.0.2", 40404);
+              poolFactory.addServer("127.0.0.1", firstPort);
+              poolFactory.addServer("127.0.0.2", secondPort);
             });
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(operation(region, "127.0.0.1,127.0.0.2", null));
+    testing.waitAndAssertTraces(operation(region, expectedAddress, null));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.geode-1.4",
+        DB_SYSTEM_NAME,
+        DB_COLLECTION_NAME,
+        DB_OPERATION_NAME,
+        SERVER_ADDRESS);
   }
 
-  @Test
-  void configuredServersUsingACommonNonDefaultPortEmbedEveryPort() {
-    Region<Object, Object> region =
-        createRegion(
+  private static Stream<Arguments> configuredServerCases() {
+    return Stream.of(
+        Arguments.argumentSet(
+            "default ports", "default-port-servers", 40404, 40404, "127.0.0.1,127.0.0.2"),
+        Arguments.argumentSet(
+            "shared non-default port",
             "shared-port-servers",
-            poolFactory -> {
-              poolFactory.addServer("127.0.0.1", 40405);
-              poolFactory.addServer("127.0.0.2", 40405);
-            });
-
-    region.putAll(emptyMap());
-
-    testing.waitAndAssertTraces(operation(region, "127.0.0.1:40405,127.0.0.2:40405", null));
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.geode-1.4",
-        DB_SYSTEM_NAME,
-        DB_COLLECTION_NAME,
-        DB_OPERATION_NAME,
-        SERVER_ADDRESS);
-  }
-
-  @Test
-  void configuredServersUsingDifferentPortsEmbedEveryPort() {
-    Region<Object, Object> region =
-        createRegion(
+            40405,
+            40405,
+            "127.0.0.1:40405,127.0.0.2:40405"),
+        Arguments.argumentSet(
+            "mixed ports",
             "mixed-port-servers",
-            poolFactory -> {
-              poolFactory.addServer("127.0.0.1", 40404);
-              poolFactory.addServer("127.0.0.2", 40405);
-            });
-
-    region.putAll(emptyMap());
-
-    testing.waitAndAssertTraces(operation(region, "127.0.0.1:40404,127.0.0.2:40405", null));
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.geode-1.4",
-        DB_SYSTEM_NAME,
-        DB_COLLECTION_NAME,
-        DB_OPERATION_NAME,
-        SERVER_ADDRESS);
+            40404,
+            40405,
+            "127.0.0.1:40404,127.0.0.2:40405"));
   }
 
   @Test
