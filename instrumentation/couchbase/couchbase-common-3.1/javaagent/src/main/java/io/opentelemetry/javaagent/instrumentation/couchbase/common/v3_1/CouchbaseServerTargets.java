@@ -10,7 +10,7 @@ import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.env.SeedNode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
-import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,31 +18,35 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-// Targets are keyed by core because clusters with different targets can share an environment. Weak
-// keys scope entries to the cluster lifecycle. Through 3.2, the seed set bridges target parsing to
-// core construction.
+// Targets are attached to each core because clusters with different targets can share an
+// environment. Through 3.2, the seed set carries the parsed target until core construction.
 public class CouchbaseServerTargets {
 
-  private static final Cache<Set<SeedNode>, CouchbaseServerTarget> seedNodeTargets = Cache.weak();
-  private static final Cache<Core, CouchbaseServerTarget> coreTargets = Cache.weak();
+  // Set.class cannot retain the SeedNode type argument.
+  @SuppressWarnings("rawtypes")
+  private static final VirtualField<Set, CouchbaseServerTarget> SEED_NODE_TARGETS =
+      VirtualField.find(Set.class, CouchbaseServerTarget.class);
+
+  private static final VirtualField<Core, CouchbaseServerTarget> CORE_TARGETS =
+      VirtualField.find(Core.class, CouchbaseServerTarget.class);
 
   public static void registerSeedNodes(
       Set<SeedNode> seedNodes, @Nullable CouchbaseServerTarget target) {
     if (target != null) {
-      seedNodeTargets.put(seedNodes, target);
+      SEED_NODE_TARGETS.set(seedNodes, target);
     }
   }
 
   public static void register(Core core, @Nullable CouchbaseServerTarget target) {
     if (target != null) {
-      coreTargets.put(core, target);
+      CORE_TARGETS.set(core, target);
     }
   }
 
   public static void registerFromSeedNodes(
       Core core, @Nullable Set<SeedNode> seedNodes, @Nullable CoreEnvironment environment) {
     if (seedNodes != null) {
-      CouchbaseServerTarget target = seedNodeTargets.get(seedNodes);
+      CouchbaseServerTarget target = SEED_NODE_TARGETS.get(seedNodes);
       if (target == null && environment != null) {
         target = target(seedNodes, environment.securityConfig().tlsEnabled());
       }
@@ -99,7 +103,7 @@ public class CouchbaseServerTargets {
 
   @Nullable
   public static CouchbaseServerTarget get(@Nullable Core core) {
-    return core == null ? null : coreTargets.get(core);
+    return core == null ? null : CORE_TARGETS.get(core);
   }
 
   private CouchbaseServerTargets() {}
