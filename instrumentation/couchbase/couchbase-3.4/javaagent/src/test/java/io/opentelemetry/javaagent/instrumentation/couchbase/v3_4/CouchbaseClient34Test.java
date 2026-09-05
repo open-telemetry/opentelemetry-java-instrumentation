@@ -13,10 +13,13 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -41,8 +44,12 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -99,11 +106,39 @@ class CouchbaseClient34Test {
   }
 
   @Test
-  void testEmitsSpans() {
+  void testEmitsSpans() throws UnknownHostException {
     try {
       collection.get("id");
     } catch (DocumentNotFoundException ignored) {
       // Expected
+    }
+
+    List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
+    dispatchAttributes.add(equalTo(maybeStable(DB_SYSTEM), "couchbase"));
+    dispatchAttributes.add(equalTo(maybeStable(DB_NAME), "test"));
+    dispatchAttributes.add(equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"));
+    if (emitOldDatabaseSemconv() || EXPERIMENTAL_ATTRIBUTES) {
+      dispatchAttributes.add(equalTo(stringKey("db.couchbase.document_id"), "id"));
+      dispatchAttributes.add(
+          satisfies(stringKey("db.couchbase.local_id"), val -> val.isNotBlank()));
+      dispatchAttributes.add(
+          satisfies(longKey("db.couchbase.operation_id"), val -> val.isNotNegative()));
+      dispatchAttributes.add(equalTo(stringKey("db.couchbase.scope"), "_default"));
+      dispatchAttributes.add(
+          satisfies(longKey("db.couchbase.server_duration"), val -> val.isNotNegative()));
+    }
+    if (emitOldDatabaseSemconv()) {
+      dispatchAttributes.add(satisfies(stringKey("net.host.name"), val -> val.isNotBlank()));
+      dispatchAttributes.add(satisfies(longKey("net.host.port"), val -> val.isPositive()));
+      dispatchAttributes.add(satisfies(stringKey("net.peer.name"), val -> val.isNotBlank()));
+      dispatchAttributes.add(satisfies(longKey("net.peer.port"), val -> val.isPositive()));
+      dispatchAttributes.add(equalTo(stringKey("net.transport"), "IP.TCP"));
+    }
+    if (emitStableDatabaseSemconv()) {
+      dispatchAttributes.add(
+          equalTo(
+              NETWORK_PEER_ADDRESS, InetAddress.getByName(couchbase.getHost()).getHostAddress()));
+      dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, serverPort()));
     }
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
@@ -125,7 +160,9 @@ class CouchbaseClient34Test {
                           equalTo(SERVER_ADDRESS, serverAddress()),
                           equalTo(SERVER_PORT, serverPort()));
                 },
-                span -> span.hasName("dispatch_to_server")));
+                span ->
+                    span.hasName("dispatch_to_server")
+                        .hasAttributesSatisfyingExactly(dispatchAttributes)));
   }
 
   @ParameterizedTest

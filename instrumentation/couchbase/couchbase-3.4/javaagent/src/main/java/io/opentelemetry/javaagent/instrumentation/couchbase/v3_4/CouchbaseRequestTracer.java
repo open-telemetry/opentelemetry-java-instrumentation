@@ -24,10 +24,13 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 
 import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.cnc.RequestTracer;
+import com.couchbase.client.core.cnc.TracingIdentifiers;
 import com.couchbase.client.core.msg.RequestContext;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Peer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSpanName;
@@ -42,8 +45,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   private static final String COUCHBASE_COLLECTION_NAME = "couchbase.collection.name";
   private static final String DB_COUCHBASE_COLLECTION = "db.couchbase.collection";
-  private static final String NET_PEER_NAME = "net.peer.name";
-  private static final String NET_PEER_PORT = "net.peer.port";
+  private static final String LEGACY_DISPATCH_SPAN_NAME = "cb.dispatch_to_server";
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase")
@@ -55,17 +57,21 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     return new CouchbaseRequestTracer(OpenTelemetryRequestTracer.wrap(openTelemetry));
   }
 
-  private CouchbaseRequestTracer(RequestTracer delegate) {
+  CouchbaseRequestTracer(RequestTracer delegate) {
     this.delegate = delegate;
   }
 
   @Override
   public RequestSpan requestSpan(String name, RequestSpan parent) {
+    Peer peer =
+        name.equals(TracingIdentifiers.SPAN_DISPATCH) || name.equals(LEGACY_DISPATCH_SPAN_NAME)
+            ? CouchbaseRequestPeers.consume(parent)
+            : null;
     RequestSpan unwrappedParent = parent;
     if (parent instanceof TranslatingRequestSpan) {
       unwrappedParent = ((TranslatingRequestSpan) parent).delegate;
     }
-    return new TranslatingRequestSpan(name, delegate.requestSpan(name, unwrappedParent));
+    return new TranslatingRequestSpan(name, delegate.requestSpan(name, unwrappedParent), peer);
   }
 
   @Override
@@ -82,10 +88,16 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     private final CouchbaseSpanName spanName;
     private final RequestSpan delegate;
+    private final boolean hasCapturedPeer;
 
-    private TranslatingRequestSpan(String name, RequestSpan delegate) {
+    private TranslatingRequestSpan(String name, RequestSpan delegate, @Nullable Peer peer) {
       spanName = new CouchbaseSpanName(name);
       this.delegate = delegate;
+      this.hasCapturedPeer = peer != null;
+      if (emitStableDatabaseSemconv() && peer != null) {
+        delegate.attribute(NETWORK_PEER_ADDRESS.getKey(), peer.getAddress());
+        delegate.attribute(NETWORK_PEER_PORT.getKey(), (long) peer.getPort());
+      }
     }
 
     @Override
@@ -99,7 +111,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
           delegate.attribute(key, value);
         }
       }
-      if (emitOldDatabaseSemconv()) {
+      if (emitOldDatabaseSemconv() && !isStableNetworkPeerKey(key)) {
         delegate.attribute(key, value);
       }
     }
@@ -114,7 +126,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
           delegate.attribute(key, value);
         }
       }
-      if (emitOldDatabaseSemconv()) {
+      if (emitOldDatabaseSemconv() && !isStableNetworkPeerKey(key)) {
         delegate.attribute(key, value);
       }
     }
@@ -129,7 +141,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
           delegate.attribute(key, value);
         }
       }
-      if (emitOldDatabaseSemconv()) {
+      if (emitOldDatabaseSemconv() && !isStableNetworkPeerKey(key)) {
         delegate.attribute(key, value);
       }
     }
@@ -180,7 +192,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     }
 
     @SuppressWarnings("deprecation") // using deprecated semconv
-    private static String stableKey(String key) {
+    private String stableKey(String key) {
       if (key.equals(DB_COLLECTION_NAME.getKey())
           || key.equals(DB_NAMESPACE.getKey())
           || key.equals(DB_OPERATION_NAME.getKey())
@@ -206,13 +218,17 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       if (key.equals(DB_SYSTEM.getKey())) {
         return DB_SYSTEM_NAME.getKey();
       }
-      if (key.equals(NET_PEER_NAME)) {
+      if (!hasCapturedPeer && key.equals(TracingIdentifiers.ATTR_REMOTE_HOSTNAME)) {
         return NETWORK_PEER_ADDRESS.getKey();
       }
-      if (key.equals(NET_PEER_PORT)) {
+      if (!hasCapturedPeer && key.equals(TracingIdentifiers.ATTR_REMOTE_PORT)) {
         return NETWORK_PEER_PORT.getKey();
       }
       return null;
+    }
+
+    private static boolean isStableNetworkPeerKey(String key) {
+      return key.equals(NETWORK_PEER_ADDRESS.getKey()) || key.equals(NETWORK_PEER_PORT.getKey());
     }
 
     private static boolean captureExperimentalAttribute(String key) {

@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -15,11 +17,33 @@ import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.msg.RequestContext;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Scope;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 
 class CouchbaseRequestTracerTest {
+
+  @Test
+  void capturesPeerForLegacyDispatchSpanName() throws UnknownHostException {
+    assumeTrue(emitStableDatabaseSemconv());
+    RequestTracer tracer =
+        CouchbaseRequestTracer.create(OpenTelemetry.noop().getTracer("test-couchbase"));
+    RequestSpan parent = tracer.requestSpan("test", null);
+    Scope scope =
+        CouchbaseRequestPeers.open(
+            parent,
+            new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 11210));
+
+    assertThat(scope).isNotNull();
+    tracer.requestSpan("cb.dispatch_to_server", parent);
+    assertThat(CouchbaseRequestPeers.consume(parent)).isNull();
+    scope.close();
+  }
 
   @Test
   void settingConfiguredPortDoesNotThrowWithoutRequestSpanLongOverload() {

@@ -5,18 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Collections.singleton;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.env.TimeoutConfig;
@@ -29,9 +34,14 @@ import com.couchbase.client.java.env.ClusterEnvironment;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -61,6 +71,7 @@ class CouchbaseClient31Test {
   private static String seedAddress;
   private static int kvPort;
   private static int clusterManagerPort;
+  private static int queryPort;
   private static Cluster cluster;
   private static Collection collection;
 
@@ -69,8 +80,8 @@ class CouchbaseClient31Test {
     couchbase =
         new CouchbaseContainer("couchbase/server:7.6.0")
             .withExposedPorts(8091)
-            .withEnabledServices(CouchbaseService.KV)
-            .withBucket(new BucketDefinition("test"))
+            .withEnabledServices(CouchbaseService.KV, CouchbaseService.QUERY)
+            .withBucket(new BucketDefinition("test").withPrimaryIndex(false))
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupAttempts(5)
             .withStartupTimeout(Duration.ofMinutes(2));
@@ -89,6 +100,7 @@ class CouchbaseClient31Test {
     seedAddress = seed.substring(0, portSeparator);
     kvPort = Integer.parseInt(seed.substring(portSeparator + 1));
     clusterManagerPort = couchbase.getMappedPort(8091);
+    queryPort = couchbase.getMappedPort(8093);
     cluster =
         Cluster.connect(
             singleton(
@@ -105,11 +117,35 @@ class CouchbaseClient31Test {
   }
 
   @Test
-  void testEmitsSpans() {
+  void testEmitsSpans() throws UnknownHostException {
     try {
       collection.get("id");
     } catch (DocumentNotFoundException ignored) {
       // Expected
+    }
+
+    List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
+    dispatchAttributes.add(equalTo(maybeStable(DB_SYSTEM), "couchbase"));
+    if (emitOldDatabaseSemconv() || EXPERIMENTAL_ATTRIBUTES) {
+      dispatchAttributes.add(
+          satisfies(stringKey("db.couchbase.local_id"), val -> val.isNotBlank()));
+      dispatchAttributes.add(
+          satisfies(longKey("db.couchbase.operation_id"), val -> val.isNotNegative()));
+      dispatchAttributes.add(
+          satisfies(longKey("db.couchbase.server_duration"), val -> val.isNotNegative()));
+    }
+    if (emitOldDatabaseSemconv()) {
+      dispatchAttributes.add(satisfies(stringKey("net.host.name"), val -> val.isNotBlank()));
+      dispatchAttributes.add(satisfies(longKey("net.host.port"), val -> val.isPositive()));
+      dispatchAttributes.add(satisfies(stringKey("net.peer.name"), val -> val.isNotBlank()));
+      dispatchAttributes.add(satisfies(longKey("net.peer.port"), val -> val.isPositive()));
+      dispatchAttributes.add(equalTo(stringKey("net.transport"), "IP.TCP"));
+    }
+    if (emitStableDatabaseSemconv()) {
+      dispatchAttributes.add(
+          equalTo(
+              NETWORK_PEER_ADDRESS, InetAddress.getByName(couchbase.getHost()).getHostAddress()));
+      dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, kvPort));
     }
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
@@ -130,7 +166,35 @@ class CouchbaseClient31Test {
                           equalTo(SERVER_ADDRESS, serverAddress()),
                           equalTo(SERVER_PORT, null));
                 },
-                span -> span.hasName("dispatch_to_server")));
+                span ->
+                    span.hasName("dispatch_to_server")
+                        .hasAttributesSatisfyingExactly(dispatchAttributes)));
+  }
+
+  @Test
+  void capturesQueryPeerThroughChunkedHttpHandler() throws UnknownHostException {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    cluster.query("SELECT 1");
+    String hostAddress = InetAddress.getByName(couchbase.getHost()).getHostAddress();
+
+    List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
+    dispatchAttributes.add(equalTo(maybeStable(DB_SYSTEM), "couchbase"));
+    if (EXPERIMENTAL_ATTRIBUTES) {
+      // The chunked HTTP handler reports a textual operation id, unlike the key-value handler
+      dispatchAttributes.add(
+          satisfies(stringKey("db.couchbase.operation_id"), val -> val.isNotBlank()));
+    }
+    dispatchAttributes.add(equalTo(NETWORK_PEER_ADDRESS, hostAddress));
+    dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, queryPort));
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("query " + serverAddress()),
+                span ->
+                    span.hasName("dispatch_to_server")
+                        .hasAttributesSatisfyingExactly(dispatchAttributes)));
   }
 
   private static String serverAddress() {
