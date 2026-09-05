@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.network.v2_0;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.javaagent.instrumentation.couchbase.network.v2_0.VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.CouchbaseNetworkVirtualFields.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -50,9 +50,9 @@ class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) CouchbaseRequest request) {
 
       // The core-io versions before 1.6.0 have no reliable, version-stable way to read the node
-      // string the driver considers itself connected to, so unlike couchbase-2.6 this only records
-      // the actual peer connection. The old semantic conventions describe these spans with that
-      // node string, so they are left as they are.
+      // string the driver considers itself connected to, so this only records the actual peer
+      // connection. The old semantic conventions describe these spans with that node string, so
+      // they are left as they are.
       if (!emitStableDatabaseSemconv()) {
         return;
       }
