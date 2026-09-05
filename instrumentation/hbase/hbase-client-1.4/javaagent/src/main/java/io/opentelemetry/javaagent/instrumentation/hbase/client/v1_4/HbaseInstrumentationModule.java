@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -23,6 +22,7 @@ public class HbaseInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   private static final String CALL_UTIL = "org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil";
+  private static final String CALL_STATE = CALL_UTIL + "$CallState";
 
   public HbaseInstrumentationModule() {
     super("hbase-client", "hbase-client-1.4");
@@ -38,12 +38,12 @@ public class HbaseInstrumentationModule extends InstrumentationModule
 
   @Override
   public boolean isHelperClass(String className) {
-    return CALL_UTIL.equals(className);
+    return CALL_UTIL.equals(className) || CALL_STATE.equals(className);
   }
 
   @Override
   public List<String> injectedClassNames() {
-    return singletonList(CALL_UTIL);
+    return asList(CALL_UTIL, CALL_STATE);
   }
 
   @Override

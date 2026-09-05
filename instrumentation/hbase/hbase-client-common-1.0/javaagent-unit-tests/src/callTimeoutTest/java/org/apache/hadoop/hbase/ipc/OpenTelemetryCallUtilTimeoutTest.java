@@ -25,9 +25,13 @@ class OpenTelemetryCallUtilTimeoutTest {
 
     call.setTimeout(timeoutError);
 
-    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(call, timeoutError))
+    assertThat(
+            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
+                call, call.error, timeoutError))
         .isSameAs(requestAndContext);
-    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(call, timeoutError))
+    assertThat(
+            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
+                call, call.error, timeoutError))
         .isNull();
   }
 
@@ -41,7 +45,9 @@ class OpenTelemetryCallUtilTimeoutTest {
 
     call.setTimeout(timeoutError);
 
-    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(call, timeoutError))
+    assertThat(
+            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
+                call, call.error, timeoutError))
         .isNull();
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
         .isSameAs(requestAndContext);
@@ -57,9 +63,30 @@ class OpenTelemetryCallUtilTimeoutTest {
 
     call.setTimeout(timeoutError);
 
-    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(call, timeoutError))
+    assertThat(
+            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
+                call, call.error, timeoutError))
         .isNull();
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
+        .isSameAs(requestAndContext);
+  }
+
+  @Test
+  void rejectsTimeoutWithDifferentErrorIdentity() {
+    Call call = newCall();
+    RequestAndContext requestAndContext = requestAndContext();
+    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
+    IOException timeoutError = new IOException("timeout");
+
+    call.setTimeout(timeoutError);
+
+    assertThat(
+            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
+                call, call.error, new IOException("timeout")))
+        .isNull();
+    assertThat(
+            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
+                call, call.error, timeoutError))
         .isSameAs(requestAndContext);
   }
 

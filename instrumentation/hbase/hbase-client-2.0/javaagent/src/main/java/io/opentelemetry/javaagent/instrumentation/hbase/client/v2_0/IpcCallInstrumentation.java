@@ -54,9 +54,11 @@ class IpcCallInstrumentation implements TypeInstrumentation {
   public static class SetTimeoutAdvice {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.This Object call, @Advice.Argument(0) IOException timeoutError) {
+        @Advice.This Object call,
+        @Advice.Argument(0) IOException timeoutError,
+        @Advice.FieldValue(value = "error") @Nullable IOException callError) {
       RequestAndContext requestAndContext =
-          OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(call, timeoutError);
+          OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(call, callError, timeoutError);
       if (requestAndContext == null) {
         return;
       }
