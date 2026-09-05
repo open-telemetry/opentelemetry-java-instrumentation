@@ -19,7 +19,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 
-// capture the initial hosts before RestClient.setHosts can replace them
+// Preserve the hosts configured at construction for telemetry. setHosts() can later replace
+// the client's active host list.
 class RestClientConstructorInstrumentation implements TypeInstrumentation {
 
   @Override

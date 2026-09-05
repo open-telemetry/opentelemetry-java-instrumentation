@@ -272,7 +272,8 @@ class ElasticsearchRest6Test {
   void theTargetDoesNotFollowLaterNodeChanges() throws IOException {
     RestClient singleNodeClient = RestClient.builder(httpHost).build();
     cleanup.deferCleanup(singleNodeClient);
-    // a client is given new nodes when it is sniffed; the configured target must not follow them
+    // Simulate automatic node discovery replacing the active node list. The configured target must
+    // continue to reflect the nodes supplied when the client was built.
     singleNodeClient.setNodes(asList(new Node(httpHost), new Node(deadHost())));
 
     singleNodeClient.performRequest(new Request("GET", "_cluster/health"));

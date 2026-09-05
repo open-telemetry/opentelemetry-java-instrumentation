@@ -273,8 +273,8 @@ class ElasticsearchRest5Test {
   void theTargetDoesNotFollowLaterHostChanges() throws IOException {
     RestClient hostListClient = hostListClient();
     cleanup.deferCleanup(hostListClient);
-    // a client is given new hosts when it is sniffed; the configured target must not shrink to the
-    // single host this one is left with
+    // Simulate automatic node discovery replacing the active host list. The configured target must
+    // continue to reflect the hosts supplied when the client was built.
     hostListClient.setHosts(httpHost);
 
     hostListClient.performRequest("GET", "_cluster/health");
