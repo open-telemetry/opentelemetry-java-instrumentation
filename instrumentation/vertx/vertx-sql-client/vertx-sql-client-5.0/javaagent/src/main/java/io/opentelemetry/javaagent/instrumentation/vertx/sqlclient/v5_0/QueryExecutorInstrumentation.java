@@ -29,7 +29,6 @@ import io.vertx.core.internal.PromiseInternal;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.internal.PreparedStatement;
 import java.util.Collection;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -74,16 +73,55 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class QueryAdvice {
     public static class AdviceScope implements VertxSqlClientSingletons.ConnectionDataListener {
+      static final class ConnectionInfoState {
+        private final Object lock = new Object();
+        private boolean terminal;
+        private boolean connectionInfoInProgress;
+        @Nullable private Throwable deferredTerminalThrowable;
+
+        boolean startConnectionInfo() {
+          synchronized (lock) {
+            if (terminal || connectionInfoInProgress) {
+              return false;
+            }
+            connectionInfoInProgress = true;
+            return true;
+          }
+        }
+
+        @Nullable
+        Throwable finishConnectionInfo() {
+          synchronized (lock) {
+            connectionInfoInProgress = false;
+            Throwable terminalThrowable = deferredTerminalThrowable;
+            deferredTerminalThrowable = null;
+            return terminalThrowable;
+          }
+        }
+
+        boolean claimTerminal(Throwable throwable) {
+          synchronized (lock) {
+            if (terminal) {
+              return false;
+            }
+            terminal = true;
+            if (connectionInfoInProgress) {
+              deferredTerminalThrowable = throwable;
+              return false;
+            }
+            return true;
+          }
+        }
+      }
+
       private final CallDepth callDepth;
       @Nullable private final VertxSqlClientInfoCapture infoCapture;
       @Nullable private final Promise<?> promise;
-      private final Object stateLock = new Object();
+      private final ConnectionInfoState connectionInfoState = new ConnectionInfoState();
       private final AtomicBoolean endClaimed = new AtomicBoolean();
       @Nullable private volatile VertxSqlClientRequest otelRequest;
       @Nullable private volatile Context context;
       @Nullable private Scope scope;
-      private boolean terminal;
-      @Nullable private CountDownLatch connectionInfoCompletion;
 
       private AdviceScope(CallDepth callDepth) {
         this(callDepth, null, null);
@@ -184,19 +222,15 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
       @Override
       @Nullable
       public Context onConnectionInfo(VertxSqlClientInfo info) {
-        CountDownLatch completion = new CountDownLatch(1);
         VertxSqlClientInfoCapture capture;
         VertxSqlClientRequest request;
         Context spanContext;
-        synchronized (stateLock) {
-          if (terminal || connectionInfoCompletion != null) {
-            return null;
-          }
-          connectionInfoCompletion = completion;
-          capture = infoCapture;
-          request = otelRequest;
-          spanContext = context;
+        if (!connectionInfoState.startConnectionInfo()) {
+          return null;
         }
+        capture = infoCapture;
+        request = otelRequest;
+        spanContext = context;
 
         try {
           if (capture != null) {
@@ -210,28 +244,10 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           }
           return spanContext;
         } finally {
-          synchronized (stateLock) {
-            connectionInfoCompletion = null;
+          Throwable terminalThrowable = connectionInfoState.finishConnectionInfo();
+          if (terminalThrowable != null) {
+            endSpan(terminalThrowable);
           }
-          completion.countDown();
-        }
-      }
-
-      private static void awaitConnectionInfoCompletion(@Nullable CountDownLatch completion) {
-        if (completion == null) {
-          return;
-        }
-        boolean interrupted = false;
-        while (true) {
-          try {
-            completion.await();
-            break;
-          } catch (InterruptedException e) {
-            interrupted = true;
-          }
-        }
-        if (interrupted) {
-          Thread.currentThread().interrupt();
         }
       }
 
@@ -256,21 +272,13 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        Scope executionScope;
-        CountDownLatch completion = null;
-        synchronized (stateLock) {
-          executionScope = scope;
-          scope = null;
-          if (throwable != null) {
-            terminal = true;
-            completion = connectionInfoCompletion;
-          }
-        }
-        awaitConnectionInfoCompletion(completion);
+        Scope executionScope = scope;
+        scope = null;
+        boolean endSpan = throwable != null && connectionInfoState.claimTerminal(throwable);
         if (executionScope != null) {
           executionScope.close();
         }
-        if (throwable != null) {
+        if (endSpan) {
           if (infoCapture != null) {
             infoCapture.removeConnectionRequest(this);
           }
