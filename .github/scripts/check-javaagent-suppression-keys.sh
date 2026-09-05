@@ -33,10 +33,6 @@ for file in $(find instrumentation -name "*Module.java"); do
     # TODO module is missing a base version
     continue
   fi
-  if [[ "$simple_module_name" == couchbase-network ]]; then
-    # supplements couchbase-2.0 and shares its enablement key
-    simple_module_name="couchbase"
-  fi
   if [[ "$simple_module_name" == spring-cloud-gateway-webmvc ]]; then
     # webmvc variant uses spring-cloud-gateway as base name
     simple_module_name="spring-cloud-gateway"
