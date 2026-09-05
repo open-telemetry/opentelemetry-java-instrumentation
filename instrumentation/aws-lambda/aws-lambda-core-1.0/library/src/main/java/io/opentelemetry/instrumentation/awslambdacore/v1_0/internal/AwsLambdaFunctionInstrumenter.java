@@ -26,8 +26,7 @@ import javax.annotation.Nullable;
 public class AwsLambdaFunctionInstrumenter {
 
   private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
-  private static final String GET_XRAY_TRACE_ID_METHOD = "getXrayTraceId";
-  @Nullable private static final MethodHandle getXrayTraceIdMethod = findGetXrayTraceId();
+  @Nullable private static final MethodHandle GET_XRAY_TRACE_ID = findGetXrayTraceId();
   private static final MapGetter mapGetter = new MapGetter();
 
   private final OpenTelemetry openTelemetry;
@@ -71,7 +70,7 @@ public class AwsLambdaFunctionInstrumenter {
         headers.putAll(customContext);
       }
       if (!isEmptyOrNull(xrayTraceId)) {
-        headers.put(AWS_TRACE_HEADER_PROP, xrayTraceId);
+        headers.put(AWS_TRACE_HEADER_PROP.toLowerCase(Locale.ROOT), xrayTraceId);
       }
     }
 
@@ -87,11 +86,11 @@ public class AwsLambdaFunctionInstrumenter {
     if (awsContext == null) {
       return null;
     }
-    if (getXrayTraceIdMethod == null) {
+    if (GET_XRAY_TRACE_ID == null) {
       return null;
     }
     try {
-      return (String) getXrayTraceIdMethod.invoke(awsContext);
+      return (String) GET_XRAY_TRACE_ID.invoke(awsContext);
     } catch (Throwable ignored) {
       return null;
     }
@@ -103,7 +102,7 @@ public class AwsLambdaFunctionInstrumenter {
       return MethodHandles.publicLookup()
           .findVirtual(
               com.amazonaws.services.lambda.runtime.Context.class,
-              GET_XRAY_TRACE_ID_METHOD,
+              "getXrayTraceId",
               MethodType.methodType(String.class));
     } catch (NoSuchMethodException | IllegalAccessException | SecurityException ignored) {
       return null;
@@ -127,8 +126,7 @@ public class AwsLambdaFunctionInstrumenter {
       if (map == null) {
         return null;
       }
-      String value = map.get(s);
-      return value != null ? value : map.get(s.toLowerCase(Locale.ROOT));
+      return map.get(s.toLowerCase(Locale.ROOT));
     }
   }
 }
