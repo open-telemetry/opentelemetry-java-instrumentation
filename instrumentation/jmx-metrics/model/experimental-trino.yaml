@@ -1,0 +1,130 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.24.2/schemas/semconv.schema.json
+
+groups:
+  - id: attributes.trino
+    type: attribute_group
+    brief: Trino attributes
+    attributes:
+      - id: trino.memory.pool.name
+        type: string
+        stability: development
+        brief: The name of the Trino memory pool.
+        examples:
+          - "general"
+      - id: trino.query.failure.type
+        type: string
+        stability: development
+        brief: The type of Trino query failure.
+        examples:
+          - "internal"
+          - "external"
+          - "user_error"
+          - "insufficient_resources"
+
+  - id: metric.trino.node.active.count
+    metric_name: trino.node.active.count
+    stability: development
+    type: metric
+    brief: The number of active Trino nodes monitored by the failure detector, excluding the reporting node.
+    unit: "{node}"
+    instrument: updowncounter
+
+  - id: metric.trino.memory.pool.free
+    metric_name: trino.memory.pool.free
+    stability: development
+    type: metric
+    brief: The amount of distributed memory currently free in the memory pool.
+    unit: "By"
+    instrument: updowncounter
+    attributes:
+      - ref: trino.memory.pool.name
+
+  - id: metric.trino.memory.query.killed.count
+    metric_name: trino.memory.query.killed.count
+    stability: development
+    type: metric
+    brief: The number of queries killed due to running out of memory.
+    unit: "{query}"
+    instrument: counter
+
+  - id: metric.trino.query.running.count
+    metric_name: trino.query.running.count
+    stability: development
+    type: metric
+    brief: The number of queries currently running.
+    unit: "{query}"
+    instrument: updowncounter
+
+  - id: metric.trino.query.started.count
+    metric_name: trino.query.started.count
+    stability: development
+    type: metric
+    brief: The number of queries started in the last five minutes.
+    unit: "{query}"
+    instrument: gauge
+
+  - id: metric.trino.query.failed.count
+    metric_name: trino.query.failed.count
+    stability: development
+    type: metric
+    brief: The number of failed queries in the last five minutes.
+    unit: "{query}"
+    instrument: gauge
+
+  - id: metric.trino.query.failure.count
+    metric_name: trino.query.failure.count
+    stability: development
+    type: metric
+    brief: The number of failed queries in the last five minutes by failure type.
+    unit: "{query}"
+    instrument: gauge
+    attributes:
+      - ref: trino.query.failure.type
+
+  - id: metric.trino.query.execution.duration.p50
+    metric_name: trino.query.execution.duration.p50
+    stability: development
+    type: metric
+    brief: The 50th percentile query execution duration over the last five minutes.
+    unit: "s"
+    instrument: gauge
+
+  - id: metric.trino.query.input.rate.p90
+    metric_name: trino.query.input.rate.p90
+    stability: development
+    type: metric
+    brief: The 90th percentile wall-clock input data rate over the last five minutes.
+    unit: "By/s"
+    instrument: gauge
+
+  - id: metric.trino.query.waiting_for_resources.count
+    metric_name: trino.query.waiting_for_resources.count
+    stability: development
+    type: metric
+    brief: The number of queries currently waiting for resources.
+    unit: "{query}"
+    instrument: updowncounter
+
+  - id: metric.trino.query.waiting_for_resources.duration.max
+    metric_name: trino.query.waiting_for_resources.duration.max
+    stability: development
+    type: metric
+    brief: The longest time a query has been waiting for resources.
+    unit: "s"
+    instrument: gauge
+
+  - id: metric.trino.task.input.data.size
+    metric_name: trino.task.input.data.size
+    stability: development
+    type: metric
+    brief: The input data size processed by tasks in the last five minutes.
+    unit: "By"
+    instrument: gauge
+
+  - id: metric.trino.task.input.row.count
+    metric_name: trino.task.input.row.count
+    stability: development
+    type: metric
+    brief: The number of input rows processed by tasks in the last five minutes.
+    unit: "{row}"
+    instrument: gauge
