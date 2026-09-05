@@ -7,6 +7,7 @@ package org.apache.hadoop.hbase.ipc;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -55,6 +56,21 @@ public final class OpenTelemetryCallUtil {
     synchronized (call) {
       RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get((Call) call);
       REQUEST_AND_CONTEXT.set((Call) call, null);
+      return requestAndContext;
+    }
+  }
+
+  @Nullable
+  public static RequestAndContext getAndClearRequestAndContextIfError(
+      Object call, IOException expectedError) {
+    synchronized (call) {
+      Call hbaseCall = (Call) call;
+      if (expectedError == null || hbaseCall.error != expectedError) {
+        return null;
+      }
+
+      RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get(hbaseCall);
+      REQUEST_AND_CONTEXT.set(hbaseCall, null);
       return requestAndContext;
     }
   }
