@@ -10,6 +10,12 @@ muzzle {
     assertInverse.set(true)
   }
   pass {
+    group.set("com.datastax.oss")
+    module.set("java-driver-core-shaded")
+    versions.set("[4.4,)")
+    assertInverse.set(true)
+  }
+  pass {
     group.set("org.apache.cassandra")
     module.set("java-driver-core")
     versions.set("(,)")
@@ -49,7 +55,50 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  fun registerShadedTest(
+    name: String,
+    version: String,
+    semconvOptIn: String? = null,
+  ): org.gradle.api.tasks.TaskProvider<Test> {
+    val shadedClasspath =
+      configurations.create("${name}RuntimeClasspath") {
+        isCanBeConsumed = false
+        isCanBeResolved = true
+        extendsFrom(configurations.testRuntimeClasspath.get())
+        resolutionStrategy.dependencySubstitution {
+          substitute(module("com.datastax.oss:java-driver-core"))
+            .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
+          substitute(module("org.apache.cassandra:java-driver-core"))
+            .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
+        }
+      }
+    return register<Test>(name) {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = files(sourceSets.test.get().output, shadedClasspath)
+      if (otelProps.denyUnsafe) {
+        systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
+      }
+      if (semconvOptIn != null) {
+        jvmArgs("-Dotel.semconv-stability.opt-in=$semconvOptIn")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=$semconvOptIn")
+      }
+    }
+  }
+
+  val testShaded = registerShadedTest("testShaded", "4.4.0")
+  val testShadedStableSemconv =
+    registerShadedTest("testShadedStableSemconv", "4.4.0", semconvOptIn = "database")
+  val testShadedLatest = registerShadedTest("testShadedLatest", "4.17.0")
+  val testShadedLatestStableSemconv =
+    registerShadedTest("testShadedLatestStableSemconv", "4.17.0", semconvOptIn = "database")
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(
+      testStableSemconv,
+      testShaded,
+      testShadedStableSemconv,
+      testShadedLatest,
+      testShadedLatestStableSemconv,
+    )
   }
 }
