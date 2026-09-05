@@ -147,7 +147,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()))));
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()))));
   }
 
   @ParameterizedTest
@@ -207,9 +208,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()),
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
+                                stringKey("couchbase.operation_id"),
+                                experimentalOperationIdAttribute()))));
   }
 
   @ParameterizedTest
@@ -276,8 +279,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()),
-                            satisfies(stringKey("couchbase.operation_id"), operationIdAttribute())),
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()),
+                            satisfies(
+                                stringKey("couchbase.operation_id"),
+                                experimentalOperationIdAttribute())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -295,9 +301,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()),
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
+                                stringKey("couchbase.operation_id"),
+                                experimentalOperationIdAttribute()))));
   }
 
   @Test
@@ -364,9 +372,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()),
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
+                                stringKey("couchbase.operation_id"),
+                                experimentalOperationIdAttribute()))));
   }
 
   @ParameterizedTest
@@ -428,7 +438,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
             satisfies(SERVER_ADDRESS, serverAddress()),
             satisfies(SERVER_PORT, serverPort()),
-            satisfies(stringKey("couchbase.local.address"), localAddressAttribute()),
-            satisfies(stringKey("couchbase.operation_id"), operationIdAttribute()));
+            satisfies(stringKey("couchbase.local.address"), experimentalLocalAddressAttribute()),
+            satisfies(stringKey("couchbase.operation_id"), experimentalOperationIdAttribute()));
   }
 }
