@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation")
 class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -57,6 +58,11 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @Override
+  protected boolean supportsNetworkPeer() {
+    return true;
   }
 
   @Override

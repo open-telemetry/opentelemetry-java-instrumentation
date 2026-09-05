@@ -12,6 +12,7 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation(project(":instrumentation:mongo:mongo-3.1:testing"))
+  testImplementation("com.github.jnr:jnr-unixsocket:0.18")
 }
 
 tasks {
