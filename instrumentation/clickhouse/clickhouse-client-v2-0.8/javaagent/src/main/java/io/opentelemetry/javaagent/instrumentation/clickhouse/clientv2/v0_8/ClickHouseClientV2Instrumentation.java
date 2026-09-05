@@ -76,8 +76,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
           ClickHouseDbRequest.create(
               currentServerInfo.getAddress(),
               currentServerInfo.getPort(),
-              ClickHouseDbRequest.endpoint(
-                  currentServerInfo.getPeerAddress(), currentServerInfo.getPeerPort()),
+              currentServerInfo.getPeer(),
               serverTarget,
               database,
               sqlQuery);

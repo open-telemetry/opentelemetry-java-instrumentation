@@ -88,31 +88,22 @@ public class ClickHouseClientV2Singletons {
     String host = (String) selectedNodeClass.getMethod("getHost").invoke(selectedNode);
     int port = (Integer) selectedNodeClass.getMethod("getPort").invoke(selectedNode);
     EndpointTarget extracted = CurrentServerInfo.extractEndpoint(host);
-    DbServerTarget target =
-        extracted == null
-            ? null
-            : DbServerTarget.builder(port).addEndpoint(extracted.address, -1).build();
-    request.setPeer(target == null ? null : target.getAddress(), target == null ? null : port);
+    request.setPeer(
+        extracted == null ? null : CurrentServerInfo.peerServerTarget(extracted.address, port));
   }
 
   public static class CurrentServerInfo {
-
-    private static final CurrentServerInfo EMPTY = new CurrentServerInfo(null, null, null, null);
+    private static final CurrentServerInfo EMPTY = new CurrentServerInfo(null, null, null);
 
     @Nullable private final String address;
     @Nullable private final Integer port;
-    @Nullable private final String peerAddress;
-    @Nullable private final Integer peerPort;
+    @Nullable private final DbServerTarget peer;
 
     private CurrentServerInfo(
-        @Nullable String address,
-        @Nullable Integer port,
-        @Nullable String peerAddress,
-        @Nullable Integer peerPort) {
+        @Nullable String address, @Nullable Integer port, @Nullable DbServerTarget peer) {
       this.address = address;
       this.port = port;
-      this.peerAddress = peerAddress;
-      this.peerPort = peerPort;
+      this.peer = peer;
     }
 
     private static CurrentServerInfo of(Set<String> endpoints) {
@@ -121,17 +112,20 @@ public class ClickHouseClientV2Singletons {
       }
       String endpoint = endpoints.iterator().next();
       EndpointTarget extracted = extractEndpoint(endpoint);
-      DbServerTarget peer =
-          extracted == null
-              ? null
-              : DbServerTarget.builder(extracted.defaultPort())
-                  .addEndpoint(extracted.address, extracted.port == null ? -1 : extracted.port)
-                  .build();
-      return new CurrentServerInfo(
-          UrlParser.getHost(endpoint),
-          UrlParser.getPort(endpoint),
-          peer == null ? null : peer.getAddress(),
-          extracted == null ? null : extracted.port);
+      DbServerTarget peer = extracted == null ? null : peerServerTarget(extracted);
+      return new CurrentServerInfo(UrlParser.getHost(endpoint), UrlParser.getPort(endpoint), peer);
+    }
+
+    @Nullable
+    private static DbServerTarget peerServerTarget(EndpointTarget endpoint) {
+      return endpoint.port == null
+          ? DbServerTarget.builder(endpoint.defaultPort()).addEndpoint(endpoint.address, -1).build()
+          : peerServerTarget(endpoint.address, endpoint.port);
+    }
+
+    @Nullable
+    private static DbServerTarget peerServerTarget(String address, int port) {
+      return DbServerTarget.builder(-1).addEndpoint(address, port).build();
     }
 
     @Nullable
@@ -240,13 +234,8 @@ public class ClickHouseClientV2Singletons {
     }
 
     @Nullable
-    public String getPeerAddress() {
-      return peerAddress;
-    }
-
-    @Nullable
-    public Integer getPeerPort() {
-      return peerPort;
+    public DbServerTarget getPeer() {
+      return peer;
     }
   }
 

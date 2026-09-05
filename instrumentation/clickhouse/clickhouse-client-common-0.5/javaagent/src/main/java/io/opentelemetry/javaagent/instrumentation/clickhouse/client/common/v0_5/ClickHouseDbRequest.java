@@ -11,19 +11,19 @@ import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class ClickHouseDbRequest {
+  @Nullable private volatile DbServerTarget peer;
 
   public static ClickHouseDbRequest create(
       @Nullable String host,
       @Nullable Integer port,
-      Endpoint peer,
+      @Nullable DbServerTarget peer,
       @Nullable DbServerTarget serverTarget,
       @Nullable String namespace,
       String sql) {
-    return new AutoValue_ClickHouseDbRequest(host, port, peer, serverTarget, namespace, sql);
-  }
-
-  public static Endpoint endpoint(@Nullable String address, @Nullable Integer port) {
-    return new Endpoint(address, port);
+    ClickHouseDbRequest request =
+        new AutoValue_ClickHouseDbRequest(host, port, serverTarget, namespace, sql);
+    request.peer = peer;
+    return request;
   }
 
   @Nullable
@@ -32,20 +32,20 @@ public abstract class ClickHouseDbRequest {
   @Nullable
   public abstract Integer getPort();
 
-  abstract Endpoint getPeer();
-
   @Nullable
   public final String getPeerAddress() {
-    return getPeer().value.address;
+    DbServerTarget peer = this.peer;
+    return peer == null ? null : peer.getAddress();
   }
 
   @Nullable
   public final Integer getPeerPort() {
-    return getPeer().value.port;
+    DbServerTarget peer = this.peer;
+    return peer == null ? null : peer.getPort();
   }
 
-  public final void setPeer(@Nullable String address, @Nullable Integer port) {
-    getPeer().set(address, port);
+  public final void setPeer(@Nullable DbServerTarget peer) {
+    this.peer = peer;
   }
 
   @Nullable
@@ -55,26 +55,4 @@ public abstract class ClickHouseDbRequest {
   public abstract String getNamespace();
 
   public abstract String getSql();
-
-  public static class Endpoint {
-    private volatile EndpointValue value;
-
-    private Endpoint(@Nullable String address, @Nullable Integer port) {
-      value = new EndpointValue(address, port);
-    }
-
-    private void set(@Nullable String address, @Nullable Integer port) {
-      value = new EndpointValue(address, port);
-    }
-  }
-
-  private static class EndpointValue {
-    @Nullable private final String address;
-    @Nullable private final Integer port;
-
-    private EndpointValue(@Nullable String address, @Nullable Integer port) {
-      this.address = address;
-      this.port = port;
-    }
-  }
 }
