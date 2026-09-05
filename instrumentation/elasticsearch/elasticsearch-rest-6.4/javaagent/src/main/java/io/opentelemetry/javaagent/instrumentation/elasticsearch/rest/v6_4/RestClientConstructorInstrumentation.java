@@ -21,7 +21,8 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.Node;
 import org.elasticsearch.client.RestClient;
 
-// capture the initial nodes before sniffing or RestClient.setNodes can replace them
+// Preserve the nodes configured at construction for telemetry. Automatic node discovery or
+// setNodes() can later replace the client's active node list.
 class RestClientConstructorInstrumentation implements TypeInstrumentation {
 
   @Override
