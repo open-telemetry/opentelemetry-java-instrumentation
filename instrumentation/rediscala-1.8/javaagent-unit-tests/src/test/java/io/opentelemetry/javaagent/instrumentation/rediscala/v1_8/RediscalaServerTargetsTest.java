@@ -22,6 +22,7 @@ import redis.SentinelMonitoredRedisClient;
 import scala.Option;
 import scala.Tuple2;
 import scala.collection.Seq;
+import scala.collection.mutable.HashMap;
 
 class RediscalaServerTargetsTest {
 
@@ -77,6 +78,36 @@ class RediscalaServerTargetsTest {
     when(client.redisServers()).thenReturn(sequence());
 
     assertThat(RediscalaServerTargets.of(client)).isNull();
+  }
+
+  @Test
+  void mutablePoolStatePreservesEndpointMultiplicity() {
+    RedisServer first = server("node", 7000);
+    RedisServer second = new RedisServer("node", 7000, Option.apply("password"), Option.apply(1));
+    HashMap<RedisServer, Object> connections = new HashMap<>();
+    connections.$plus$eq(new Tuple2<>(first, new Object()));
+    connections.$plus$eq(new Tuple2<>(second, new Object()));
+
+    RediscalaServerTargets.MutablePoolState state =
+        RediscalaServerTargets.MutablePoolState.fromMap(connections);
+
+    assertTarget(state.target(), "node:7000,node:7000", null);
+    state.remove(RediscalaServerTargets.endpoint(first));
+    assertTarget(state.target(), "node", 7000);
+    state.add(RediscalaServerTargets.endpoint(second));
+    assertTarget(state.target(), "node:7000,node:7000", null);
+  }
+
+  @Test
+  void mutablePoolStateFailsClosedWhenUnavailable() {
+    HashMap<Object, Object> connections = new HashMap<>();
+    connections.$plus$eq(new Tuple2<>(new Object(), new Object()));
+
+    RediscalaServerTargets.MutablePoolState state =
+        RediscalaServerTargets.MutablePoolState.fromMap(connections);
+
+    assertThat(state.target()).isNull();
+    assertThat(state.isAvailable()).isFalse();
   }
 
   @Test
