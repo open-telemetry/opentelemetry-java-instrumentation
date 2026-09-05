@@ -12,12 +12,14 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappingsBuilder;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
+import java.util.function.BiConsumer;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JedisInstrumentationModule extends InstrumentationModule {
+public class JedisInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public JedisInstrumentationModule() {
     super("jedis", "jedis-4.0");
@@ -29,27 +31,13 @@ public class JedisInstrumentationModule extends InstrumentationModule {
     return hasClassesNamed("redis.clients.jedis.CommandArguments");
   }
 
-  public void registerMuzzleVirtualFields(VirtualFieldMappingsBuilder builder) {
-    String configuredTarget =
-        "io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons$ConfiguredTarget";
-    builder
-        .register(
-            "redis.clients.jedis.Connection",
-            "io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisConnectionInfo")
-        .register(
-            "redis.clients.jedis.Connection",
-            "io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget")
-        .register("redis.clients.jedis.Connection", "java.lang.Boolean")
-        .register(
-            "redis.clients.jedis.util.Pool",
-            "io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget")
-        .register("redis.clients.jedis.util.Pool", "java.lang.Boolean")
-        .register("redis.clients.jedis.providers.JedisConnectionProvider", configuredTarget)
-        .register("redis.clients.jedis.providers.ConnectionProvider", configuredTarget)
-        .register("redis.clients.jedis.JedisClusterInfoCache", configuredTarget)
-        .register("redis.clients.jedis.Pipeline", "java.util.List")
-        .register("redis.clients.jedis.Transaction", "java.util.List")
-        .register("redis.clients.jedis.JedisSocketFactory", "redis.clients.jedis.HostAndPort");
+  @Override
+  public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
+    String configuredTarget = JedisSingletons.ConfiguredTarget.class.getName();
+    virtualFieldRegistrar.accept(
+        "redis.clients.jedis.providers.JedisConnectionProvider", configuredTarget);
+    virtualFieldRegistrar.accept(
+        "redis.clients.jedis.providers.ConnectionProvider", configuredTarget);
   }
 
   @Override
