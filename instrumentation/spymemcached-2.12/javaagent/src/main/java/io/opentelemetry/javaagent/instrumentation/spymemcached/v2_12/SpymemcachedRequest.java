@@ -34,6 +34,7 @@ public abstract class SpymemcachedRequest {
   public abstract DbServerTarget getServerTarget();
 
   private final Object lock = new Object();
+  @Nullable private MemcachedNode handlingNode;
   @Nullable private InetSocketAddress handlingNodeAddress;
   @Nullable private NodeCapture wholeRequestCapture;
   @Nullable private Map<String, NodeCapture> handlingNodesByKey;
@@ -54,14 +55,15 @@ public abstract class SpymemcachedRequest {
     if (node == null) {
       return;
     }
+    CaptureToken token = beginCapture();
     List<String> keySnapshot = new ArrayList<>(keys);
     if (keySnapshot.isEmpty()) {
-      setHandlingNode(node);
-      return;
+      NodeCapture capture = captureNode(node, token.ticket);
+      applyCapture(token, capture, new String[0]);
+    } else {
+      NodeCapture capture = captureNode(node, token.ticket);
+      applyCapture(token, capture, keySnapshot.toArray(new String[0]));
     }
-    CaptureToken token = beginCapture();
-    NodeCapture capture = captureNode(node, token.ticket);
-    applyCapture(token, capture, keySnapshot.toArray(new String[0]));
   }
 
   public void setRetryHandlingNode(@Nullable MemcachedNode node) {
@@ -75,6 +77,7 @@ public abstract class SpymemcachedRequest {
       wholeRequestCapture = null;
       handlingNodesByKey = null;
       hasMultipleHandlingNodes = false;
+      handlingNode = null;
       handlingNodeAddress = null;
     }
     NodeCapture capture = captureNode(node, token.ticket);
@@ -88,6 +91,7 @@ public abstract class SpymemcachedRequest {
       hasMultipleHandlingNodes = true;
       wholeRequestCapture = null;
       handlingNodesByKey = null;
+      handlingNode = null;
       handlingNodeAddress = null;
     }
   }
@@ -121,26 +125,30 @@ public abstract class SpymemcachedRequest {
       }
 
       if (keys.length == 0) {
+        if (wholeRequestCapture != null && wholeRequestCapture.node != capture.node) {
+          markMultipleHandlingNodes();
+          return;
+        }
         if (wholeRequestCapture != null && wholeRequestCapture.ticket > capture.ticket) {
           return;
         }
-        if (wholeRequestCapture != null && wholeRequestCapture.node != capture.node) {
-          hasMultipleHandlingNodes = true;
-          wholeRequestCapture = null;
-          handlingNodesByKey = null;
-          handlingNodeAddress = null;
+        if (handlingNode != null && handlingNode != capture.node) {
+          markMultipleHandlingNodes();
           return;
         }
         wholeRequestCapture = capture;
-      } else {
-        if (handlingNodesByKey == null) {
-          handlingNodesByKey = new HashMap<>();
-        }
-        for (String key : keys) {
-          NodeCapture existing = handlingNodesByKey.get(key);
-          if (existing == null || existing.ticket <= capture.ticket) {
-            handlingNodesByKey.put(key, capture);
-          }
+        handlingNode = capture.node;
+        handlingNodeAddress = capture.address;
+        return;
+      }
+
+      if (handlingNodesByKey == null) {
+        handlingNodesByKey = new HashMap<>();
+      }
+      for (String key : keys) {
+        NodeCapture existing = handlingNodesByKey.get(key);
+        if (existing == null || existing.ticket <= capture.ticket) {
+          handlingNodesByKey.put(key, capture);
         }
       }
 
@@ -153,20 +161,34 @@ public abstract class SpymemcachedRequest {
       NodeCapture singleCapture = null;
       for (NodeCapture capture : handlingNodesByKey.values()) {
         if (singleCapture != null && singleCapture.node != capture.node) {
+          handlingNode = null;
           handlingNodeAddress = null;
           return;
         }
-        singleCapture = capture;
+        if (singleCapture == null || capture.ticket > singleCapture.ticket) {
+          singleCapture = capture;
+        }
       }
+      handlingNode = singleCapture.node;
       handlingNodeAddress = singleCapture.address;
       return;
     }
 
     if (wholeRequestCapture == null) {
+      handlingNode = null;
       handlingNodeAddress = null;
     } else {
+      handlingNode = wholeRequestCapture.node;
       handlingNodeAddress = wholeRequestCapture.address;
     }
+  }
+
+  private void markMultipleHandlingNodes() {
+    hasMultipleHandlingNodes = true;
+    wholeRequestCapture = null;
+    handlingNodesByKey = null;
+    handlingNode = null;
+    handlingNodeAddress = null;
   }
 
   private static class CaptureToken {
