@@ -108,6 +108,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
         return;
       }
       owner.command = command;
+      LettuceSingletons.initializeCommandPeerForSubscription(command);
       LettuceSingletons.attachAddress(command, connection);
       owner.context = instrumenter().start(Context.current(), command);
       if (!expectsResponse) {

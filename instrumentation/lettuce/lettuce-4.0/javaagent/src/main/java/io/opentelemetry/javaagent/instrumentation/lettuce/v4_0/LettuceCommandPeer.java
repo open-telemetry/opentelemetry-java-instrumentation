@@ -27,14 +27,14 @@ public class LettuceCommandPeer {
         }
       };
 
-  @Nullable private SocketAddress address;
+  @Nullable private volatile SocketAddress address;
 
-  synchronized void record(SocketAddress address) {
+  void record(SocketAddress address) {
     this.address = address;
   }
 
   @Nullable
-  synchronized SocketAddress getAddress() {
+  SocketAddress getAddress() {
     return address;
   }
 

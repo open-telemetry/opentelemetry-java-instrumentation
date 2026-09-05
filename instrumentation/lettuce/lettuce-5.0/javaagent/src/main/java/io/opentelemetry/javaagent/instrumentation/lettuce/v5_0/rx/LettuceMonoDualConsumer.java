@@ -54,6 +54,7 @@ public class LettuceMonoDualConsumer<T>
       return;
     }
     command = subscriptionCommand;
+    LettuceSingletons.initializeCommandPeerForSubscription(subscriptionCommand);
     LettuceSingletons.attachAddress(subscriptionCommand, connection);
     context = instrumenter().start(Context.current(), subscriptionCommand);
     if (!expectsResponse) {

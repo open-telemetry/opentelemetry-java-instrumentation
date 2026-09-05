@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 class LettuceCommandPeer {
@@ -27,15 +28,20 @@ class LettuceCommandPeer {
         }
       };
 
-  @Nullable private SocketAddress address;
+  private final AtomicBoolean spanStarted = new AtomicBoolean();
+  @Nullable private volatile SocketAddress address;
 
-  synchronized void record(SocketAddress address) {
+  void record(SocketAddress address) {
     this.address = address;
   }
 
   @Nullable
-  synchronized SocketAddress getAddress() {
+  SocketAddress getAddress() {
     return address;
+  }
+
+  boolean markSpanStarted() {
+    return spanStarted.compareAndSet(false, true);
   }
 
   @Nullable
