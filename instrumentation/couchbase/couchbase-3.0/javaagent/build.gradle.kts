@@ -23,7 +23,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
 
-  latestDepTestLibrary("com.couchbase.client:java-client:3.0.10")
+  latestDepTestLibrary("com.couchbase.client:java-client:3.0.10") // no longer applicable
 }
 
 tasks {
