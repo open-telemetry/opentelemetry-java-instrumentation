@@ -31,7 +31,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Collection;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -57,9 +56,6 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         named("write").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
         getClass().getName() + "$WriteAdvice");
     transformer.applyAdviceToMethod(
-        named("write").and(takesArgument(0, Collection.class)),
-        getClass().getName() + "$CollectionWriteAdvice");
-    transformer.applyAdviceToMethod(
         named("setAutoFlushCommands").and(takesArguments(1)),
         getClass().getName() + "$SetAutoFlushAdvice");
     transformer.applyAdviceToMethod(
@@ -70,26 +66,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class CollectionWriteAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(0) Collection<?> commands) {
-      for (Object command : commands) {
-        if (command instanceof RedisCommand) {
-          LettuceSingletons.linkCommandPeer((RedisCommand<?, ?, ?>) command);
-        }
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
   public static class WriteAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-      LettuceSingletons.linkCommandPeer(command);
-    }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
