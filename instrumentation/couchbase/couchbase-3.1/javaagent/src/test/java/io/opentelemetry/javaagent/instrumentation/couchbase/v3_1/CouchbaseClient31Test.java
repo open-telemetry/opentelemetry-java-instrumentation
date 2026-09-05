@@ -9,12 +9,14 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.DocumentNotFoundException;
@@ -98,25 +100,33 @@ class CouchbaseClient31Test {
     }
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
-                      .hasName("get")
-                      .hasStatus(
-                          StatusData.unset()) // later version of couchbase gives correct behavior
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(maybeStable(DB_SYSTEM), "couchbase"),
-                          equalTo(maybeStable(DB_NAME), "test"),
-                          equalTo(maybeStable(DB_OPERATION), "get"),
-                          equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
-                          equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
-                          equalTo(
-                              longKey("db.couchbase.retries"),
-                              oldOrExperimental(testLatestDeps() ? 0L : null)),
-                          equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")));
-                },
-                span -> span.hasName("dispatch_to_server")));
+        trace -> {
+          assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
+              .isEqualTo(
+                  testLatestDeps()
+                      ? "com.couchbase.client.jvm"
+                      : v3Preview()
+                          ? "io.opentelemetry.couchbase-3.1"
+                          : "io.opentelemetry.javaagent.couchbase-3.1");
+          trace.hasSpansSatisfyingExactly(
+              span -> {
+                span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
+                    .hasName("get")
+                    .hasStatus(
+                        StatusData.unset()) // later version of couchbase gives correct behavior
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(maybeStable(DB_SYSTEM), "couchbase"),
+                        equalTo(maybeStable(DB_NAME), "test"),
+                        equalTo(maybeStable(DB_OPERATION), "get"),
+                        equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
+                        equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
+                        equalTo(
+                            longKey("db.couchbase.retries"),
+                            oldOrExperimental(testLatestDeps() ? 0L : null)),
+                        equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")));
+              },
+              span -> span.hasName("dispatch_to_server"));
+        });
   }
 
   private static <T> T oldOrExperimental(T value) {
