@@ -41,6 +41,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Cluster;
@@ -48,6 +50,7 @@ import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SimpleStatement;
@@ -214,6 +217,122 @@ class CassandraClientTest {
                                 emitStableDatabaseSemconv()
                                     ? InvalidQueryException.class.getName()
                                     : null))));
+  }
+
+  @Test
+  void singleConfiguredContactPointIsStableTarget() {
+    Cluster namedContactPointCluster =
+        Cluster.builder().addContactPoint("LOCALHOST").withPort(cassandraPort).build();
+
+    assertConfiguredTarget(namedContactPointCluster, "LOCALHOST", cassandraPort);
+  }
+
+  @Test
+  void multipleConfiguredContactPointsWithSharedNonDefaultPortAreStableTarget() {
+    Cluster multiContactPointCluster =
+        Cluster.builder()
+            .addContactPoints(cassandraHost, "127.0.0.2")
+            .withPort(cassandraPort)
+            .build();
+
+    String expectedAddress = cassandraHost + ":" + cassandraPort + ",127.0.0.2:" + cassandraPort;
+    assertConfiguredTarget(multiContactPointCluster, expectedAddress, null);
+  }
+
+  @Test
+  void multipleConfiguredContactPointsWithMixedPortsAreStableTarget() {
+    Cluster multiContactPointCluster =
+        Cluster.builder()
+            .addContactPointsWithPorts(
+                new InetSocketAddress(cassandraHost, cassandraPort),
+                // unreachable on purpose: only the configuration is under test
+                new InetSocketAddress("127.0.0.2", 9042))
+            .build();
+
+    String expectedAddress = cassandraHost + ":" + cassandraPort + ",127.0.0.2:9042";
+    assertConfiguredTarget(multiContactPointCluster, expectedAddress, null);
+  }
+
+  @Test
+  void emptyConfiguredContactPointDropsTarget() {
+    Cluster emptyContactPointCluster =
+        Cluster.builder().addContactPoints(cassandraHost, "").withPort(cassandraPort).build();
+
+    assertConfiguredTarget(emptyContactPointCluster, null, null);
+  }
+
+  @Test
+  void exceptionalPartialContactPointMutationDropsTarget() {
+    Cluster.Builder builder = Cluster.builder();
+    String[] contactPoints = {"127.0.0.2", null};
+    assertThatThrownBy(() -> builder.addContactPoints(contactPoints))
+        .isInstanceOf(NullPointerException.class);
+
+    Cluster configuredCluster =
+        builder.addContactPoint(cassandraHost).withPort(cassandraPort).build();
+
+    assertConfiguredTarget(configuredCluster, null, null);
+  }
+
+  private static void assertConfiguredTarget(
+      Cluster configuredCluster, String expectedAddress, Integer expectedPort) {
+    cleanup.deferCleanup(configuredCluster);
+    Session session = configuredCluster.connect();
+    cleanup.deferCleanup(session);
+
+    ResultSet resultSet = session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
+    InetSocketAddress coordinatorAddress =
+        resultSet.getExecutionInfo().getQueriedHost().getSocketAddress();
+    Long expectedServerPort =
+        emitStableDatabaseSemconv()
+            ? (expectedPort == null ? null : Long.valueOf(expectedPort))
+            : Long.valueOf(coordinatorAddress.getPort());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "DROP KEYSPACE" : "DROP")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                NETWORK_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? val -> val.isNull()
+                                    : val -> val.isIn("ipv4", "ipv6")),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? expectedAddress
+                                    : coordinatorAddress.getHostString()),
+                            equalTo(SERVER_PORT, expectedServerPort),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                coordinatorAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, coordinatorAddress.getPort()),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "DROP KEYSPACE IF EXISTS contact_points_test"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "DROP KEYSPACE" : null),
+                            equalTo(maybeStable(DB_OPERATION), "DROP"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                            satisfies(
+                                maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                coordinatorIdAvailable
+                                    ? val -> val.isInstanceOf(String.class)
+                                    : val -> val.isNull()),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                            satisfies(
+                                maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                speculativeExecutionCountAvailable
+                                    ? val -> val.isEqualTo(0)
+                                    : val -> val.isNull()))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -672,7 +791,10 @@ class CassandraClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "cassandra" : "DB Query")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? cassandraHost + ":" + cassandraPort
+                                : "DB Query")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
@@ -703,6 +825,44 @@ class CassandraClientTest {
                                 ERROR_TYPE,
                                 emitStableDatabaseSemconv()
                                     ? SyntaxError.class.getName()
+                                    : null))));
+  }
+
+  @Test
+  void failureWithoutCoordinatorUsesConfiguredTargetOnlyForStableSemconv() {
+    Cluster configuredCluster =
+        Cluster.builder().addContactPoint("LOCALHOST").withPort(4242).build();
+    cleanup.deferCleanup(configuredCluster);
+    Session delegate = mock(Session.class);
+    when(delegate.getCluster()).thenReturn(configuredCluster);
+    RuntimeException failure = new RuntimeException("failed before execution");
+    when(delegate.execute("invalid")).thenThrow(failure);
+    Session session = new TracingSession(delegate);
+
+    assertThatThrownBy(() -> session.execute("invalid")).isSameAs(failure);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "LOCALHOST:4242" : "DB Query")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(failure)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "LOCALHOST" : null),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? 4242L : null),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(maybeStable(DB_STATEMENT), "invalid"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? RuntimeException.class.getName()
                                     : null))));
   }
 
