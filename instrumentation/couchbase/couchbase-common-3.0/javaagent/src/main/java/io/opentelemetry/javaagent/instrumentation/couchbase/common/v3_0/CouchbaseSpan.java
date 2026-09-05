@@ -41,8 +41,7 @@ public final class CouchbaseSpan {
   private final boolean makeCurrentOnEnd;
   private final boolean mapLegacyNetworkPeerAttributes;
 
-  CouchbaseSpan(
-      Span span, boolean makeCurrentOnEnd, boolean mapLegacyNetworkPeerAttributes) {
+  CouchbaseSpan(Span span, boolean makeCurrentOnEnd, boolean mapLegacyNetworkPeerAttributes) {
     this.span = span;
     this.makeCurrentOnEnd = makeCurrentOnEnd;
     this.mapLegacyNetworkPeerAttributes = mapLegacyNetworkPeerAttributes;
@@ -135,7 +134,7 @@ public final class CouchbaseSpan {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Nullable
-  private @Nullable String stableKey(String key) {
+  private String stableKey(String key) {
     if (key.equals(DB_COUCHBASE_COLLECTION)) {
       return DB_COLLECTION_NAME.getKey();
     }
