@@ -13,7 +13,6 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -249,16 +248,7 @@ class ElasticsearchClientTest {
     if (V3_PREVIEW) {
       assertions.add(
           equalTo(
-              DB_STATEMENT,
-              emitOldDatabaseSemconv()
-                  ? "{\"query\":{\"match\":{\"name\":{\"query\":\"?\"}}}}"
-                  : null));
-      assertions.add(
-          equalTo(
-              DB_QUERY_TEXT,
-              emitStableDatabaseSemconv()
-                  ? "{\"query\":{\"match\":{\"name\":{\"query\":\"?\"}}}}"
-                  : null));
+              maybeStable(DB_STATEMENT), "{\"query\":{\"match\":{\"name\":{\"query\":\"?\"}}}}"));
     }
     return assertions;
   }
