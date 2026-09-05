@@ -16,9 +16,11 @@ import javax.annotation.Nullable;
 public class SmokeTestOptions<T> {
 
   Function<T, String> getImage;
+  String[] entrypoint;
   String[] command;
   String jvmArgsEnvVarName = "JAVA_TOOL_OPTIONS";
   boolean setServiceName = true;
+  boolean logOutput = true;
   final Map<String, String> extraEnv = new HashMap<>();
   List<ResourceMapping> extraResources = List.of();
   TargetWaitStrategy waitStrategy;
@@ -52,6 +54,13 @@ public class SmokeTestOptions<T> {
     return this;
   }
 
+  /** Sets the entrypoint to run in the target container. */
+  @CanIgnoreReturnValue
+  public SmokeTestOptions<T> entrypoint(String... entrypoint) {
+    this.entrypoint = entrypoint;
+    return this;
+  }
+
   /** Sets the environment variable name used to pass JVM arguments to the target application. */
   @CanIgnoreReturnValue
   public SmokeTestOptions<T> jvmArgsEnvVarName(String jvmArgsEnvVarName) {
@@ -63,6 +72,13 @@ public class SmokeTestOptions<T> {
   @CanIgnoreReturnValue
   public SmokeTestOptions<T> setServiceName(boolean setServiceName) {
     this.setServiceName = setServiceName;
+    return this;
+  }
+
+  /** Enables or disables logging the target container output while retaining it for assertions. */
+  @CanIgnoreReturnValue
+  public SmokeTestOptions<T> logOutput(boolean logOutput) {
+    this.logOutput = logOutput;
     return this;
   }
 
