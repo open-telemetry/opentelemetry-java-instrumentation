@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.UrlParams;
 import java.util.Map;
 import java.util.Properties;
@@ -28,6 +29,8 @@ public final class ParseContext {
   @Nullable private String subtype;
   @Nullable private String host;
   @Nullable private Integer port;
+  @Nullable private String serverAddressGroup;
+  private boolean multiTarget;
   @Nullable private String user;
   @Nullable private String databaseName;
   @Nullable private String namespace;
@@ -110,6 +113,20 @@ public final class ParseContext {
   /** Set the port value. */
   public void port(@Nullable Integer port) {
     this.port = port;
+  }
+
+  /** Set a normalized configured server group when parsing succeeds. */
+  public void serverAddressGroup(@Nullable ServerAddressGroup serverAddressGroup) {
+    if (serverAddressGroup == null) {
+      return;
+    }
+    this.serverAddressGroup = serverAddressGroup.address();
+    multiTarget = true;
+  }
+
+  /** Mark the connection as having multiple configured targets. */
+  public void multiTarget() {
+    multiTarget = true;
   }
 
   /** The user value accumulated so far. */
@@ -315,7 +332,8 @@ public final class ParseContext {
   public DbInfo toDbInfo() {
     // oldSemconvSystem falls back to system when not explicitly set (i.e., when both are the same)
     String oldSystem = oldSemconvSystem != null ? oldSemconvSystem : system;
-    DbInfo.Builder builder = DbInfo.builder().dbSystemName(system).dbSystem(oldSystem);
+    DbInfo.Builder builder =
+        DbInfo.builder().dbSystemName(system).dbSystem(oldSystem).multiTarget(multiTarget);
     if (host != null) {
       builder.serverAddress(host);
     }
@@ -338,6 +356,9 @@ public final class ParseContext {
       builder.dbName(namespace);
     }
     builder.dbConnectionString(buildShortUrl(type, subtype, host, port));
+    if (serverAddressGroup != null) {
+      builder.serverAddressGroup(serverAddressGroup);
+    }
     return builder.build();
   }
 }

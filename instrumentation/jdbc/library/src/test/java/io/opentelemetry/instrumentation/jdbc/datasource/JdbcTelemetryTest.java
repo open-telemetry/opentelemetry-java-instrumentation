@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -78,6 +79,82 @@ class JdbcTelemetryTest {
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @ParameterizedTest
+  @MethodSource("groupTargets")
+  void groupTargetUsesNormalizedPortsOnlyInStableSemconv(
+      String url, String stableAddress, Long stablePort) throws SQLException {
+    JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
+    DataSource dataSource = telemetry.wrap(new TestDataSource(url));
+
+    testing.runWithSpan(
+        "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasAttributesSatisfyingExactly(
+                        equalTo(maybeStable(DB_SYSTEM), POSTGRESQL),
+                        equalTo(maybeStable(DB_NAME), "dbname"),
+                        equalTo(
+                            DB_CONNECTION_STRING,
+                            emitStableDatabaseSemconv() ? null : "postgresql://localhost:5432"),
+                        equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"),
+                        equalTo(DB_OPERATION, emitStableDatabaseSemconv() ? null : "SELECT"),
+                        equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
+                        // the old semconv value is the one the parser has always reported for a
+                        // multi host url: the driver default, because such a url names no single
+                        // server
+                        equalTo(
+                            SERVER_ADDRESS,
+                            emitStableDatabaseSemconv() ? stableAddress : "localhost"),
+                        equalTo(
+                            SERVER_PORT,
+                            emitStableDatabaseSemconv() ? stablePort : Long.valueOf(5432)))));
+  }
+
+  private static Stream<Arguments> groupTargets() {
+    return Stream.of(
+        argumentSet(
+            "default ports",
+            "jdbc:postgresql://pg.host1,pg.host2:5432/dbname",
+            "pg.host1,pg.host2",
+            null),
+        argumentSet(
+            "shared non-default port",
+            "jdbc:postgresql://pg.host1:15432,pg.host2:15432/dbname",
+            "pg.host1:15432,pg.host2:15432",
+            null),
+        argumentSet(
+            "mixed ports",
+            "jdbc:postgresql://pg.host1:5432,pg.host2:15432/dbname",
+            "pg.host1:5432,pg.host2:15432",
+            null));
+  }
+
+  @Test
+  void spanNameFallsBackToGroupTarget() throws SQLException {
+    JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
+    DataSource dataSource =
+        telemetry.wrap(new TestDataSource("jdbc:postgresql://pg.host1:15432,pg.host2:15432"));
+
+    testing.runWithSpan(
+        "parent", () -> dataSource.getConnection().createStatement().execute("invalid"));
+
+    // span naming is unchanged: a query that has no summary and no namespace falls back to
+    // server.address, which now holds the whole configured target
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasName(
+                        emitStableDatabaseSemconv()
+                            ? "pg.host1:15432,pg.host2:15432"
+                            : "DB Query")));
   }
 
   @ParameterizedTest

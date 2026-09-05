@@ -34,7 +34,8 @@ import javax.annotation.Nullable;
  */
 public class DbServerTargetBuilder {
 
-  private static final int DEFAULT_MAX_ENDPOINTS = 5;
+  public static final int MAX_ENDPOINTS = 5;
+
   private static final int MIN_PORT = 1;
   private static final int MAX_PORT = 65535;
   private static final int MAX_HOST_NAME_LENGTH = 253;
@@ -42,7 +43,6 @@ public class DbServerTargetBuilder {
 
   private final int defaultPort;
   private final List<Endpoint> endpoints = new ArrayList<>();
-  private int maxEndpoints = DEFAULT_MAX_ENDPOINTS;
   private boolean sorted;
   private boolean portAlwaysInline;
   @Nullable private String suffix;
@@ -52,6 +52,11 @@ public class DbServerTargetBuilder {
     this.defaultPort = defaultPort;
   }
 
+  /** Returns whether {@code host} can be represented safely as a database server host. */
+  public static boolean isValidHost(@Nullable String host) {
+    return sanitizeHost(host) != null;
+  }
+
   /**
    * Sort the rendered endpoints in natural string order. Default is to preserve the configured
    * order. Turn sorting on only when endpoint order carries no semantic meaning.
@@ -59,16 +64,6 @@ public class DbServerTargetBuilder {
   @CanIgnoreReturnValue
   public DbServerTargetBuilder setSorted(boolean sorted) {
     this.sorted = sorted;
-    return this;
-  }
-
-  /** Render at most {@code maxEndpoints} endpoints. Default is 5. */
-  @CanIgnoreReturnValue
-  public DbServerTargetBuilder setMaxEndpoints(int maxEndpoints) {
-    if (maxEndpoints < 1) {
-      throw new IllegalArgumentException("maxEndpoints must be positive");
-    }
-    this.maxEndpoints = maxEndpoints;
     return this;
   }
 
@@ -171,7 +166,7 @@ public class DbServerTargetBuilder {
     if (sorted) {
       rendered.sort(String::compareTo);
     }
-    return String.join(",", rendered.subList(0, Math.min(maxEndpoints, rendered.size())));
+    return String.join(",", rendered.subList(0, Math.min(MAX_ENDPOINTS, rendered.size())));
   }
 
   private DbServerTarget target(String address, @Nullable Integer port) {
