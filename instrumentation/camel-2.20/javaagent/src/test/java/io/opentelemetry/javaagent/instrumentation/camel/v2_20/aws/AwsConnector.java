@@ -147,11 +147,21 @@ class AwsConnector {
     sqsClient.sendMessage(send);
   }
 
-  void receiveMessage(String queueUrl) {
+  Message receiveMessage(String queueUrl) {
     logger.info("Receive message from queue {}", queueUrl);
     ReceiveMessageResult receiveMessageResult =
-        sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20));
-    for (Message ignored : receiveMessageResult.getMessages()) {}
+        sqsClient.receiveMessage(
+            new ReceiveMessageRequest(queueUrl)
+                .withWaitTimeSeconds(20)
+                .withMessageAttributeNames("All"));
+    Message receivedMessage = null;
+    for (Message message : receiveMessageResult.getMessages()) {
+      receivedMessage = message;
+    }
+    if (receivedMessage == null) {
+      throw new IllegalStateException("No message received from " + queueUrl);
+    }
+    return receivedMessage;
   }
 
   void disconnect() {

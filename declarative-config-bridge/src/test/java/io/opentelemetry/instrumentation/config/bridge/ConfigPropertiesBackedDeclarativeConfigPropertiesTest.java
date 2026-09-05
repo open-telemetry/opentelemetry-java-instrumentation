@@ -5,14 +5,21 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
@@ -78,11 +85,11 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
   @Test
   void testJmxPrefix() {
-    DeclarativeConfigProperties config = createConfig("otel.jmx.enabled", "true");
+    DeclarativeConfigProperties config = createConfig("otel.jmx.config", "/path/to/config.yaml");
 
-    assertThat(config.getStructured("java").getStructured("jmx").getBoolean("enabled"))
+    assertThat(config.getStructured("java").getStructured("jmx").getString("config"))
         .isNotNull()
-        .isTrue();
+        .isEqualTo("/path/to/config.yaml");
   }
 
   @Test
@@ -159,6 +166,50 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
         .containsExactly("c");
     assertThat(messaging.getScalarList("capture_headers/development", String.class))
         .containsExactly("legacy");
+  }
+
+  @Test
+  void testMessagingBatchSendMessageCreationSpansMapping() {
+    DeclarativeConfigProperties config =
+        createConfig(
+            "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled", "false");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("messaging")
+                .getStructured("batch_send")
+                .getStructured("message_creation_spans")
+                .getBoolean("enabled"))
+        .isFalse();
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchSendMessageCreationSpansCases")
+  void testBatchSendMessageCreationSpansPrecedence(
+      Map<String, String> properties, boolean expected) {
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(properties));
+
+    boolean common =
+        config
+            .getStructured("java")
+            .getStructured("common")
+            .getStructured("messaging")
+            .getStructured("batch_send")
+            .getStructured("message_creation_spans")
+            .getBoolean("enabled", true);
+    boolean aws =
+        config
+            .getStructured("java")
+            .getStructured("aws_sdk")
+            .getStructured("batch_send")
+            .getStructured("message_creation_spans")
+            .getBoolean("enabled", common);
+
+    assertThat(aws).isEqualTo(expected);
   }
 
   @Test
@@ -374,6 +425,31 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("producer_propagation")
                 .getBoolean("enabled"))
         .isNull();
+  }
+
+  private static Stream<Arguments> batchSendMessageCreationSpansCases() {
+    Map<String, String> awsTrueCommonFalse = new HashMap<>();
+    awsTrueCommonFalse.put(
+        "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled", "false");
+    awsTrueCommonFalse.put(
+        "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled", "true");
+
+    Map<String, String> awsFalseCommonTrue = new HashMap<>();
+    awsFalseCommonTrue.put(
+        "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled", "true");
+    awsFalseCommonTrue.put(
+        "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled", "false");
+
+    return Stream.of(
+        argumentSet("default", emptyMap(), true),
+        argumentSet(
+            "common fallback",
+            singletonMap(
+                "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled",
+                "false"),
+            false),
+        argumentSet("AWS true overrides common false", awsTrueCommonFalse, true),
+        argumentSet("AWS false overrides common true", awsFalseCommonTrue, false));
   }
 
   private static DeclarativeConfigProperties createConfig(String key, String value) {

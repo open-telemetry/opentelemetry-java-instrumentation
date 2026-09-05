@@ -21,6 +21,8 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -47,6 +49,7 @@ public final class MessagingProducerMetrics implements OperationListener {
   private static final Logger logger = Logger.getLogger(MessagingProducerMetrics.class.getName());
 
   private final boolean supportsStableSemconv;
+  private final boolean sentMessagesOnly;
   private final boolean enabled;
   @Nullable private final DoubleHistogram publishDurationHistogram;
   @Nullable private final DoubleHistogram clientOperationDurationHistogram;
@@ -54,13 +57,17 @@ public final class MessagingProducerMetrics implements OperationListener {
 
   private MessagingProducerMetrics(Meter meter, Variant variant) {
     supportsStableSemconv = variant != Variant.LEGACY;
+    sentMessagesOnly = variant == Variant.SENT_MESSAGES_ONLY;
     boolean emitOldSemconv =
         variant == Variant.LEGACY
             || (variant == Variant.STABLE_AND_OLD && emitOldMessagingSemconv());
     boolean emitStableSemconv = supportsStableSemconv && emitStableMessagingSemconv();
-    publishDurationHistogram = emitOldSemconv ? buildPublishDuration(meter) : null;
+    publishDurationHistogram =
+        !sentMessagesOnly && emitOldSemconv ? buildPublishDuration(meter) : null;
     clientOperationDurationHistogram =
-        emitStableSemconv ? MessagingMetricsAdvice.buildClientOperationDuration(meter) : null;
+        !sentMessagesOnly && emitStableSemconv
+            ? MessagingMetricsAdvice.buildClientOperationDuration(meter)
+            : null;
     sentMessagesCounter = emitStableSemconv ? buildSentMessages(meter) : null;
     enabled =
         publishDurationHistogram != null
@@ -106,15 +113,44 @@ public final class MessagingProducerMetrics implements OperationListener {
         "messaging producer", meter -> new MessagingProducerMetrics(meter, Variant.STABLE_AND_OLD));
   }
 
+  /** Returns only the stable sent-messages metric. */
+  public static OperationMetrics getSentMessages() {
+    return OperationMetricsUtil.create(
+        "messaging sent messages",
+        meter -> new MessagingProducerMetrics(meter, Variant.SENT_MESSAGES_ONLY));
+  }
+
   @Override
   @CanIgnoreReturnValue
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     if (!enabled) {
       return context;
     }
+    MessagingOperationType operationType =
+        MessagingOperationType.fromValue(startAttributes.get(MESSAGING_OPERATION_TYPE));
+    boolean recordClientOperationDuration =
+        clientOperationDurationHistogram != null
+            && !MessagingTelemetryState.contains(
+                context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
+    boolean recordSentMessages =
+        sentMessagesCounter != null
+            && operationType == MessagingOperationType.SEND
+            && !MessagingTelemetryState.contains(
+                context, MessagingOperationType.SEND, MessagingTelemetrySignal.SENT_MESSAGES);
+    if (recordClientOperationDuration) {
+      context =
+          MessagingTelemetryState.addIfEnabled(
+              context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
+    }
+    if (recordSentMessages) {
+      context =
+          MessagingTelemetryState.addIfEnabled(
+              context, MessagingOperationType.SEND, MessagingTelemetrySignal.SENT_MESSAGES);
+    }
     return context.with(
         MESSAGING_PRODUCER_METRICS_STATE,
-        new AutoValue_MessagingProducerMetrics_State(startAttributes, startNanos));
+        new AutoValue_MessagingProducerMetrics_State(
+            startAttributes, startNanos, recordClientOperationDuration, recordSentMessages));
   }
 
   @Override
@@ -146,11 +182,10 @@ public final class MessagingProducerMetrics implements OperationListener {
         clientOperationDurationHistogram != null || sentMessagesCounter != null
             ? MessagingMetricsAdvice.filterAttributes(attributes)
             : attributes;
-    if (clientOperationDurationHistogram != null) {
+    if (clientOperationDurationHistogram != null && state.recordClientOperationDuration()) {
       clientOperationDurationHistogram.record(duration, filteredAttributes, context);
     }
-    if (sentMessagesCounter != null
-        && MessagingOperationType.SEND.value().equals(attributes.get(MESSAGING_OPERATION_TYPE))) {
+    if (sentMessagesCounter != null && state.recordSentMessages()) {
       Long batchMessageCount = attributes.get(MESSAGING_BATCH_MESSAGE_COUNT);
       long sentMessagesCount = batchMessageCount == null ? 1 : batchMessageCount;
       if (sentMessagesCount > 0) {
@@ -186,6 +221,10 @@ public final class MessagingProducerMetrics implements OperationListener {
     abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
+
+    abstract boolean recordClientOperationDuration();
+
+    abstract boolean recordSentMessages();
   }
 
   private enum Variant {
@@ -197,6 +236,8 @@ public final class MessagingProducerMetrics implements OperationListener {
      * Extractors configured with {@link MessagingOperationType} that also keep emitting the
      * deprecated instruments.
      */
-    STABLE_AND_OLD
+    STABLE_AND_OLD,
+    /** Only the stable sent-messages counter. */
+    SENT_MESSAGES_ONLY
   }
 }

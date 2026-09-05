@@ -25,26 +25,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:lettuce:lettuce-5.0:javaagent"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.lettuce.experimental.command-encoding-events.enabled=true")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}
-
 testing {
   suites {
     register<JvmTestSuite>("testCompatibility") {
@@ -55,11 +35,36 @@ testing {
         implementation(project(":instrumentation:lettuce:lettuce-5.1:testing"))
       }
     }
+    register<JvmTestSuite>("testLettuce60") {
+      dependencies {
+        implementation("io.lettuce:lettuce-core:6.0.2.RELEASE")
+        implementation("org.testcontainers:testcontainers")
+        implementation(project(":instrumentation:lettuce:lettuce-5.1:testing"))
+      }
+    }
   }
 }
 
 tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.lettuce.experimental.command-encoding-events.enabled=true")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      }
+    }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, stableSemconvSuites)
   }
 }

@@ -1,0 +1,8 @@
+display_name: Apache Commons Pool
+description: >
+  This instrumentation enables object pool metrics for Apache Commons Pool
+  GenericObjectPool and GenericKeyedObjectPool instances. When Apache DBCP instrumentation is
+  enabled, metrics for the GenericObjectPool backing an Apache DBCP BasicDataSource are excluded
+  because the DBCP instrumentation already reports database connection pool metrics for it.
+library_link: https://commons.apache.org/proper/commons-pool/
+disabled_by_default: true

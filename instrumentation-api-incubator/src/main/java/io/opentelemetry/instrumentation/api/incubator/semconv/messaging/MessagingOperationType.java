@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents a <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#operation-types">messaging
@@ -27,6 +29,20 @@ public enum MessagingOperationType {
 
   String value() {
     return value;
+  }
+
+  /**
+   * Returns the operation type with the given {@code messaging.operation.type} value, or {@code
+   * null} when no operation type uses it.
+   */
+  @Nullable
+  static MessagingOperationType fromValue(@Nullable String value) {
+    for (MessagingOperationType operationType : values()) {
+      if (operationType.value.equals(value)) {
+        return operationType;
+      }
+    }
+    return null;
   }
 
   /**

@@ -23,10 +23,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons.getSpanDecorator;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons.instrumenter;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -44,20 +46,25 @@ final class CamelRoutePolicy extends RoutePolicySupport {
   private static Context spanOnExchangeBegin(
       Route route, Exchange exchange, SpanDecorator sd, Context parentContext) {
     Span activeSpan = Span.fromContext(parentContext);
-    if (!activeSpan.getSpanContext().isValid()) {
-      parentContext =
-          CamelPropagationUtil.extractParent(exchange.getIn().getHeaders(), route.getEndpoint());
-    }
-
     SpanKind spanKind = spanKind(activeSpan, sd);
     CamelRequest request =
         CamelRequest.create(sd, exchange, route.getEndpoint(), CamelDirection.INBOUND, spanKind);
+    if (!activeSpan.getSpanContext().isValid()
+        && !(request.isMessaging() && emitStableMessagingSemconv())) {
+      parentContext =
+          CamelPropagationUtil.extractParent(exchange.getIn().getHeaders(), route.getEndpoint());
+    }
     sd.updateServerSpanName(parentContext, exchange, route.getEndpoint(), CamelDirection.INBOUND);
 
-    if (!instrumenter().shouldStart(parentContext, request)) {
+    if (!instrumenter(request).shouldStart(parentContext, request)) {
+      if (request.isMessaging()
+          && emitStableMessagingSemconv()
+          && !InstrumentationUtil.shouldSuppressInstrumentation(parentContext)) {
+        CamelProcessMetrics.start(route, parentContext, request);
+      }
       return null;
     }
-    Context context = instrumenter().start(parentContext, request);
+    Context context = instrumenter(request).start(parentContext, request);
     ActiveContextManager.activate(context, request);
     return context;
   }
@@ -82,6 +89,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
   /** Route exchange done. Get active CAMEL span, finish, remove from CAMEL holder. */
   @Override
   public void onExchangeDone(Route route, Exchange exchange) {
+    CamelProcessMetrics.end(route, exchange);
     Context context = ActiveContextManager.deactivate(exchange);
     logger.log(FINE, "[Route finished] Receiver span finished {0}", context);
   }

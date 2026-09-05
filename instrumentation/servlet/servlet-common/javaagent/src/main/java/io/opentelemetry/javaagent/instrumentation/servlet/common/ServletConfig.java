@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
+import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.EXPERIMENTAL;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -24,7 +26,8 @@ class ServletConfig {
   }
 
   ServletConfig(DeclarativeConfigProperties config, boolean v3Preview) {
-    requestParameters = SelectorConfig.resolve(config, "servlet", "request-parameters");
+    requestParameters =
+        SelectorConfig.resolve(config, "servlet", "request-parameters", EXPERIMENTAL);
     captureExperimentalAttributes =
         config.getBoolean("experimental_span_attributes/development", false);
     traceIdRequestAttributeEnabled =

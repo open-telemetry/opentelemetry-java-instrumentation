@@ -10,7 +10,7 @@ Respond with a single JSON object matching exactly this schema and
 nothing else (no prose). A surrounding `json` code fence is tolerated
 by the parser but discouraged — prefer a bare JSON object:
 
-```
+```text
 {
   "decision": "include" | "omit",
   "section": "breaking" | "deprecations" | "new-javaagent" | "new-library" | "enhancements" | "bug-fixes" | null,
@@ -28,10 +28,11 @@ as `\n`. Pay particular attention to Java string literals copied into
 
 ## Core rule
 
-Classify every PR from its diff only. PR titles, manifest `subject`,
-draft-script bullet text, scratch-bucket headings, file lists, and
-`--stat` summaries are indexing metadata, not evidence. If the diff and
-the metadata disagree, the diff wins.
+Classify every PR from its diff only. The classifier removes `CHANGELOG.md`
+changes before sending the diff to the model, so existing hand-written entries
+cannot steer the generated result. PR titles, manifest `subject`, scratch-bucket
+headings, file lists, and `--stat` summaries are indexing metadata, not
+evidence. If the diff and the metadata disagree, the diff wins.
 
 ## Breaking changes to non-stable APIs
 
@@ -42,6 +43,11 @@ interface in a non-stable (`-alpha`) module or in `javaagent-extension-api`
 - removal of a non-`@Deprecated` method,
 - removal of a `default` method from an internal interface,
 - signature change even when the method never carried `@Deprecated`.
+
+Omit compatibility changes to APIs introduced after the previous release. If
+the prompt's release context says the API-diff snapshot marks both signatures
+as new, and changing that API is the PR's only user-visible effect, the
+decision must be `omit`.
 
 Treat non-private `Experimental*` helpers in published `:library`
 artifacts as incubating public API even when their package name
@@ -65,6 +71,11 @@ Adds `@Deprecated` to a user-facing API, or renames a config property /
 YAML key while keeping the old one. Name both the old and new user-facing
 flat property; include the YAML key when relevant.
 
+If a PR both adds replacement functionality and deprecates the old surface,
+classify it under Deprecations and describe the migration, not the new feature.
+Name every user-facing property, API, configuration key, and artifact that the
+PR newly deprecates, along with the replacement for each.
+
 Configuration property renames always go here, never in Enhancements.
 Stability policy:
 
@@ -74,8 +85,16 @@ Stability policy:
   with `/development`): may be deprecated in one release and removed in
   the next.
 
-If an unlinked summary bullet at the top of Deprecations already covers
-the rename, do not add a duplicate PR-linked bullet.
+Omit changes that only adjust the planned removal version or wording for APIs
+that are already deprecated.
+
+Every deprecation bullet must begin with `Deprecate` and use the form
+`Deprecate <old> in favor of <replacement>.` Do not mention when the deprecated
+surface may be removed. Do not restate how the deprecated surface behaves
+unless that behavior is needed to migrate to the replacement.
+For span suppression, name the programmatic
+`Experimental.setSpanSuppressionStrategy(...)` replacement without adding
+declarative instrumentation configuration as another alternative.
 
 ## New javaagent / library instrumentation
 
@@ -93,6 +112,10 @@ opt-ins, cite the flag value (for example
 `otel.semconv-stability.opt-in=messaging`) — the known values in this
 repo are `database`, `messaging`, `http`, `jvm`, `rpc`. Gated changes go
 here, never under Breaking.
+
+Never cite `otel.semconv-stability.preview`; it is an internal implementation
+name, not a user-facing property. Translate it to
+`otel.semconv-stability.opt-in=<value>`.
 
 ## Bug fixes
 
@@ -175,6 +198,8 @@ keep the PR.
 - For `v3-preview`-gated changes, cite the user-facing property name
   `otel.instrumentation.common.v3-preview`, not the internal
   `v3_preview` key.
+- When behavior is disabled by default or gated by an opt-in, name the exact
+  user-facing property and value needed to enable it.
 - Do not describe implementation details ("refactored", "moved",
   "simplified") unless that is the user-visible change.
 - Do not credit authors.
@@ -182,12 +207,7 @@ keep the PR.
 The merger renders bullets with the PR link on the second line, indented
 two spaces:
 
-```
+```text
 - Short user-facing description
   ([#NNNN](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/NNNN))
 ```
-
-Grouping multiple PRs into one logical bullet is done by hand after
-merging — edit `CHANGELOG.md` directly to combine trailing PR links, or
-set identical `bullet` text on each `decision.json` and collapse by hand
-after running the merger.

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx.internal;
 
 import io.opentelemetry.api.metrics.Meter;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Supplier;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
@@ -33,6 +34,13 @@ public interface ExperimentalJmxMetricHandler {
    * Name of the handler that can be used in yaml configuration to specify which handlers to use.
    */
   String getName();
+
+  /**
+   * Returns the list of metric names that this handler produces for metric registration
+   *
+   * @return the list of metric names that this handler produces
+   */
+  List<String> getMetricNames();
 
   /**
    * A helper class that provides access to MBeanServerConnection and ObjectName for the MBeans of

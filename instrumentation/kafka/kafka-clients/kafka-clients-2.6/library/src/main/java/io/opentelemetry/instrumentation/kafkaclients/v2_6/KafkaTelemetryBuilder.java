@@ -150,6 +150,9 @@ public final class KafkaTelemetryBuilder {
         instrumenterFactory.createProducerInstrumenter(producerAttributesExtractors),
         instrumenterFactory.createConsumerReceiveInstrumenter(consumerReceiveAttributesExtractors),
         instrumenterFactory.createConsumerProcessInstrumenter(consumerProcessAttributesExtractors),
+        instrumenterFactory.createProducerInterceptorInstrumenter(producerAttributesExtractors),
+        instrumenterFactory.createConsumerReceiveInterceptorInstrumenter(
+            consumerReceiveAttributesExtractors),
         propagationEnabled);
   }
 }

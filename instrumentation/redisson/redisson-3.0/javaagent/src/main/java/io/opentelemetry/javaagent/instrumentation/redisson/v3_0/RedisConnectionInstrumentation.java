@@ -51,7 +51,8 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(RedisConnection connection, Object arg) {
         InetSocketAddress remoteAddress =
             (InetSocketAddress) connection.getChannel().remoteAddress();
-        RedissonRequest request = RedissonRequest.create(remoteAddress, arg);
+        // the redisson 3.0 client API does not expose the database index
+        RedissonRequest request = RedissonRequest.create(remoteAddress, arg, null);
         PromiseWrapper<?> promise = request.getPromiseWrapper();
         if (promise == null) {
           return null;

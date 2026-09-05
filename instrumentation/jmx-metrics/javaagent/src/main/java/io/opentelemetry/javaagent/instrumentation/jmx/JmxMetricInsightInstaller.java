@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,24 +37,33 @@ public class JmxMetricInsightInstaller implements AgentListener {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
 
-    if (config.getBoolean("enabled", true)) {
-      JmxTelemetryBuilder jmx =
-          JmxTelemetry.builder(GlobalOpenTelemetry.get())
-              .beanDiscoveryDelay(
-                  Duration.ofMillis(
-                      config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
-
-      config.getScalarList("config", String.class, emptyList()).stream()
-          .map(Paths::get)
-          .forEach(path -> addFileRules(path, jmx));
-
-      config
-          .get("target")
-          .getScalarList("system", String.class, emptyList())
-          .forEach(target -> addClasspathRules(target, jmx));
-
-      jmx.build().start();
+    boolean v3Preview = AgentCommonConfig.get().isV3Preview();
+    if (v3Preview) {
+      if (!AgentDistributionConfig.get().isInstrumentationEnabled("jmx")) {
+        return;
+      }
+    } else {
+      if (!config.getBoolean("enabled", true)) {
+        return;
+      }
     }
+
+    JmxTelemetryBuilder jmx =
+        JmxTelemetry.builder(GlobalOpenTelemetry.get())
+            .beanDiscoveryDelay(
+                Duration.ofMillis(
+                    config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
+
+    config.getScalarList("config", String.class, emptyList()).stream()
+        .map(Paths::get)
+        .forEach(path -> addFileRules(path, jmx));
+
+    config
+        .get("target")
+        .getScalarList("system", String.class, emptyList())
+        .forEach(target -> addClasspathRules(target, jmx));
+
+    jmx.build().start();
   }
 
   private static void addFileRules(Path path, JmxTelemetryBuilder builder) {

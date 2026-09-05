@@ -116,6 +116,14 @@ definitions:
             type: boolean
             description: Whether this rule overrides an already-applied template.
             default: false
+    messaging.batch-send.message-creation-spans.enabled:
+      name: otel.instrumentation.messaging.batch-send.message-creation-spans.enabled
+      declarative_name: java.common.messaging.batch_send.message_creation_spans.enabled
+      description: Provides the default for whether to create a producer span for
+        each eligible message in a batch send when stable messaging semantic conventions
+        are enabled. An instrumentation-specific setting takes precedence.
+      type: boolean
+      default: true
     messaging.capture-headers:
       name: otel.instrumentation.messaging.experimental.capture-headers
       declarative_name: java.common.messaging.capture_headers/development
@@ -179,6 +187,14 @@ definitions:
       description: Flush timeout in milliseconds.
       type: int
       default: 10000
+    otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled:
+      name: otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
+      declarative_name: java.aws_sdk.batch_send.message_creation_spans.enabled
+      description: Determines whether to create a producer span for each eligible
+        message in an SQS batch send when stable messaging semantic conventions are
+        enabled. Overrides `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled`.
+      type: boolean
+      default: true
     otel.instrumentation.aws-sdk.experimental-record-individual-http-error:
       name: otel.instrumentation.aws-sdk.experimental-record-individual-http-error
       declarative_name: java.aws_sdk.record_individual_http_error/development
@@ -306,17 +322,11 @@ definitions:
         Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`. Different operation types receive different experimental attributes.
       type: boolean
       default: false
-    otel.instrumentation.dropwizard-metrics.enabled:
-      name: otel.instrumentation.dropwizard-metrics.enabled
-      declarative_name: java.dropwizard_metrics.enabled
-      description: Enables the dropwizard metrics instrumentation.
-      type: boolean
-      default: false
     otel.instrumentation.elasticsearch.capture-search-query:
       name: otel.instrumentation.elasticsearch.capture-search-query
       declarative_name: java.elasticsearch.capture_search_query
       description: |
-        Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
+        Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this to capture or omit search query bodies. Under v3-preview and in 3.0, the setting is ignored and search query bodies are always captured. Sanitization remains separately configurable with otel.instrumentation.elasticsearch.query-sanitization.enabled.
       type: boolean
       default: false
     otel.instrumentation.elasticsearch.experimental-span-attributes-4728abdb:
@@ -340,6 +350,13 @@ definitions:
         Enable the capture of the experimental span attributes `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.write.routing`, `elasticsearch.request.write.type`, `elasticsearch.response.status`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version`.
       type: boolean
       default: false
+    otel.instrumentation.elasticsearch.query-sanitization.enabled:
+      name: otel.instrumentation.elasticsearch.query-sanitization.enabled
+      declarative_name: java.elasticsearch.query_sanitization.enabled
+      description: |
+        Enables sanitization of the captured search query bodies. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+      type: boolean
+      default: true
     otel.instrumentation.executors.include:
       name: otel.instrumentation.executors.include
       declarative_name: java.executors.include
@@ -514,6 +531,13 @@ definitions:
         and `hystrix.group` span attributes.
       type: boolean
       default: false
+    otel.instrumentation.influxdb.query-sanitization.enabled:
+      name: otel.instrumentation.influxdb.query-sanitization.enabled
+      declarative_name: java.influxdb.query_sanitization.enabled
+      description: |
+        Enables query sanitization for InfluxDB queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+      type: boolean
+      default: true
     otel.instrumentation.java-util-logging.experimental-log-attributes:
       name: otel.instrumentation.java-util-logging.experimental-log-attributes
       declarative_name: java.java_util_logging.experimental_log_attributes/development
@@ -1074,7 +1098,14 @@ definitions:
       name: otel.instrumentation.opensearch.capture-search-query
       declarative_name: java.opensearch.capture_search_query
       description: |
-        Enable the capture of sanitized search query bodies. Search queries may contain personal or sensitive information.
+        Deprecated and will be removed in 3.0, when search query bodies are always captured. There is no replacement. Until then, set this to false to disable capture. Search queries may contain personal or sensitive information.
+      type: boolean
+      default: true
+    otel.instrumentation.opensearch.query-sanitization.enabled:
+      name: otel.instrumentation.opensearch.query-sanitization.enabled
+      declarative_name: java.opensearch.query_sanitization.enabled
+      description: |
+        Enables sanitization of captured search query bodies. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled. When disabled, bodies are captured verbatim and may contain personal or sensitive information.
       type: boolean
       default: true
     otel.instrumentation.opentelemetry-annotations.exclude-methods:
@@ -1414,6 +1445,55 @@ definitions:
       type: list
       default: AWSAccessKeyId,Signature,X-Amz-Signature,X-Amz-Credential,X-Amz-Security-Token,sig,X-Goog-Signature
   metrics:
+    apache_commons_pool.object.count-0fb5f06e:
+      name: apache_commons_pool.object.count
+      description: The number of objects currently in the state described by the state
+        attribute.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: '{object}'
+      attributes:
+      - name: apache_commons_pool.object.state
+        type: STRING
+      - name: apache_commons_pool.pool.name
+        type: STRING
+    apache_commons_pool.object.idle.max-093d8b45:
+      name: apache_commons_pool.object.idle.max
+      description: The maximum number of idle objects allowed in the pool.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: '{object}'
+      attributes:
+      - name: apache_commons_pool.pool.name
+        type: STRING
+    apache_commons_pool.object.idle.min-000062da:
+      name: apache_commons_pool.object.idle.min
+      description: The minimum number of idle objects allowed in the pool.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: '{object}'
+      attributes:
+      - name: apache_commons_pool.pool.name
+        type: STRING
+    apache_commons_pool.object.max-94992d6e:
+      name: apache_commons_pool.object.max
+      description: The maximum number of objects allowed in the pool.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: '{object}'
+      attributes:
+      - name: apache_commons_pool.pool.name
+        type: STRING
+    apache_commons_pool.object.pending_requests-87e07907:
+      name: apache_commons_pool.object.pending_requests
+      description: The number of requests currently waiting for an object from the
+        pool.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: '{request}'
+      attributes:
+      - name: apache_commons_pool.pool.name
+        type: STRING
     db.client.connection.count-2e6ba9b7:
       name: db.client.connection.count
       description: The number of connections that are currently in state described
@@ -1692,7 +1772,7 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    db.client.operation.duration-7714cbf7:
+    db.client.operation.duration-6dc4ed81:
       name: db.client.operation.duration
       description: Duration of database client operations.
       instrument: histogram
@@ -1703,9 +1783,15 @@ definitions:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: error.type
+        type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
         type: LONG
     db.client.operation.duration-8ae2b8ce:
       name: db.client.operation.duration
@@ -1773,6 +1859,23 @@ definitions:
       attributes:
       - name: db.collection.name
         type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-fce1854c:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
       - name: db.namespace
         type: STRING
       - name: db.operation.name
@@ -2304,6 +2407,1760 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes: []
+    kafka.consumer.assigned_partitions-e3b3c651:
+      name: kafka.consumer.assigned_partitions
+      description: The number of partitions currently assigned to this consumer
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.bytes_consumed_rate-788b545f:
+      name: kafka.consumer.bytes_consumed_rate
+      description: The average number of bytes consumed per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.bytes_consumed_total-30a5a048:
+      name: kafka.consumer.bytes_consumed_total
+      description: The total number of bytes consumed
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.commit_latency_avg-cabde37e:
+      name: kafka.consumer.commit_latency_avg
+      description: The average time taken for a commit request
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.commit_latency_max-48f9f567:
+      name: kafka.consumer.commit_latency_max
+      description: The max time taken for a commit request
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.commit_rate-a4b078ce:
+      name: kafka.consumer.commit_rate
+      description: The number of commit calls per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.commit_sync_time_ns_total-9e1880b8:
+      name: kafka.consumer.commit_sync_time_ns_total
+      description: The total time the consumer has spent in commitSync in nanoseconds
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.commit_total-24a80858:
+      name: kafka.consumer.commit_total
+      description: The total number of commit calls
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.committed_time_ns_total-1ad0caf0:
+      name: kafka.consumer.committed_time_ns_total
+      description: The total time the consumer has spent in committed in nanoseconds
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.connection_close_rate-43e33f77:
+      name: kafka.consumer.connection_close_rate
+      description: The number of connections closed per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.connection_close_total-d3225ce7:
+      name: kafka.consumer.connection_close_total
+      description: The total number of connections closed
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.connection_count-45f83f51:
+      name: kafka.consumer.connection_count
+      description: The current number of active connections.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.connection_creation_rate-c70d12ca:
+      name: kafka.consumer.connection_creation_rate
+      description: The number of new connections established per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.connection_creation_total-43f8f997:
+      name: kafka.consumer.connection_creation_total
+      description: The total number of new connections established
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.failed_authentication_rate-4fcf4e4f:
+      name: kafka.consumer.failed_authentication_rate
+      description: The number of connections with failed authentication per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.failed_authentication_total-f0126b29:
+      name: kafka.consumer.failed_authentication_total
+      description: The total number of connections with failed authentication
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.failed_reauthentication_rate-5365793d:
+      name: kafka.consumer.failed_reauthentication_rate
+      description: The number of failed re-authentication of connections per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.failed_reauthentication_total-16119175:
+      name: kafka.consumer.failed_reauthentication_total
+      description: The total number of failed re-authentication of connections
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.failed_rebalance_rate_per_hour-8417e8a7:
+      name: kafka.consumer.failed_rebalance_rate_per_hour
+      description: The number of failed rebalance events per hour
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.failed_rebalance_total-8bca5b42:
+      name: kafka.consumer.failed_rebalance_total
+      description: The total number of failed rebalance events
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.fetch_latency_avg-4cb03d45:
+      name: kafka.consumer.fetch_latency_avg
+      description: The average time taken for a fetch request.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.fetch_latency_max-ddb000f3:
+      name: kafka.consumer.fetch_latency_max
+      description: The max time taken for any fetch request.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.fetch_rate-de362f7b:
+      name: kafka.consumer.fetch_rate
+      description: The number of fetch requests per second.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.fetch_size_avg-53a6cde3:
+      name: kafka.consumer.fetch_size_avg
+      description: The average number of bytes fetched per request
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.fetch_size_max-2fc55d0c:
+      name: kafka.consumer.fetch_size_max
+      description: The maximum number of bytes fetched per request
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.fetch_throttle_time_avg-3f72019f:
+      name: kafka.consumer.fetch_throttle_time_avg
+      description: The average throttle time in ms
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.fetch_throttle_time_max-25ea21b8:
+      name: kafka.consumer.fetch_throttle_time_max
+      description: The maximum throttle time in ms
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.fetch_total-7db71e3f:
+      name: kafka.consumer.fetch_total
+      description: The total number of fetch requests.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.heartbeat_rate-12d81990:
+      name: kafka.consumer.heartbeat_rate
+      description: The number of heartbeats per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.heartbeat_response_time_max-e3333d1e:
+      name: kafka.consumer.heartbeat_response_time_max
+      description: The max time taken to receive a response to a heartbeat request
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.heartbeat_total-5c57e127:
+      name: kafka.consumer.heartbeat_total
+      description: The total number of heartbeats
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.incoming_byte_rate-7de5fad6:
+      name: kafka.consumer.incoming_byte_rate
+      description: The number of bytes read off all sockets per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.incoming_byte_total-a66ec19e:
+      name: kafka.consumer.incoming_byte_total
+      description: The total number of bytes read off all sockets
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.io_ratio-8cc0c241:
+      name: kafka.consumer.io_ratio
+      description: The fraction of time the I/O thread spent doing I/O
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.io_time_ns_avg-beba6173:
+      name: kafka.consumer.io_time_ns_avg
+      description: The average length of time for I/O per select call in nanoseconds.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.io_time_ns_total-5085f4db:
+      name: kafka.consumer.io_time_ns_total
+      description: The total time the I/O thread spent doing I/O
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.io_wait_ratio-50616d5b:
+      name: kafka.consumer.io_wait_ratio
+      description: The fraction of time the I/O thread spent waiting
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.io_wait_time_ns_avg-59bade1c:
+      name: kafka.consumer.io_wait_time_ns_avg
+      description: The average length of time the I/O thread spent waiting for a socket
+        ready for reads or writes in nanoseconds.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.io_wait_time_ns_total-3d555ba7:
+      name: kafka.consumer.io_wait_time_ns_total
+      description: The total time the I/O thread spent waiting
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.io_waittime_total-b1496622:
+      name: kafka.consumer.io_waittime_total
+      description: The total time the I/O thread spent waiting
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.iotime_total-0ad81be3:
+      name: kafka.consumer.iotime_total
+      description: The total time the I/O thread spent doing I/O
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.join_rate-7b04102f:
+      name: kafka.consumer.join_rate
+      description: The number of group joins per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.join_time_avg-d4edd17f:
+      name: kafka.consumer.join_time_avg
+      description: The average time taken for a group rejoin
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.join_time_max-b7cbed01:
+      name: kafka.consumer.join_time_max
+      description: The max time taken for a group rejoin
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.join_total-29388d85:
+      name: kafka.consumer.join_total
+      description: The total number of group joins
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.last_heartbeat_seconds_ago-6abc4330:
+      name: kafka.consumer.last_heartbeat_seconds_ago
+      description: The number of seconds since the last coordinator heartbeat was
+        sent
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.last_poll_seconds_ago-979e631a:
+      name: kafka.consumer.last_poll_seconds_ago
+      description: The number of seconds since the last poll() invocation.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.last_rebalance_seconds_ago-97474aaa:
+      name: kafka.consumer.last_rebalance_seconds_ago
+      description: The number of seconds since the last successful rebalance event
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.network_io_rate-5eda9dd5:
+      name: kafka.consumer.network_io_rate
+      description: The number of network operations (reads or writes) on all connections
+        per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.network_io_total-0518722a:
+      name: kafka.consumer.network_io_total
+      description: The total number of network operations (reads or writes) on all
+        connections
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.outgoing_byte_rate-e7b44a21:
+      name: kafka.consumer.outgoing_byte_rate
+      description: The number of outgoing bytes sent to all servers per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.outgoing_byte_total-7b2c9723:
+      name: kafka.consumer.outgoing_byte_total
+      description: The total number of outgoing bytes sent to all servers
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.partition_assigned_latency_avg-74b486ef:
+      name: kafka.consumer.partition_assigned_latency_avg
+      description: The average time taken for a partition-assigned rebalance listener
+        callback
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.partition_assigned_latency_max-3faefba1:
+      name: kafka.consumer.partition_assigned_latency_max
+      description: The max time taken for a partition-assigned rebalance listener
+        callback
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.poll_idle_ratio_avg-65c9a7ca:
+      name: kafka.consumer.poll_idle_ratio_avg
+      description: The average fraction of time the consumer's poll() is idle as opposed
+        to waiting for the user code to process records.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.rebalance_latency_avg-6cdb4a17:
+      name: kafka.consumer.rebalance_latency_avg
+      description: The average time taken for a group to complete a successful rebalance,
+        which may be composed of several failed re-trials until it succeeded
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.rebalance_latency_max-49d58046:
+      name: kafka.consumer.rebalance_latency_max
+      description: The max time taken for a group to complete a successful rebalance,
+        which may be composed of several failed re-trials until it succeeded
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.rebalance_latency_total-c2692cd0:
+      name: kafka.consumer.rebalance_latency_total
+      description: The total number of milliseconds this consumer has spent in successful
+        rebalances since creation
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.rebalance_rate_per_hour-528d47c8:
+      name: kafka.consumer.rebalance_rate_per_hour
+      description: The number of successful rebalance events per hour, each event
+        is composed of several failed re-trials until it succeeded
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.rebalance_total-4400dbbd:
+      name: kafka.consumer.rebalance_total
+      description: The total number of successful rebalance events, each event is
+        composed of several failed re-trials until it succeeded
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.records_consumed_rate-1443ccc3:
+      name: kafka.consumer.records_consumed_rate
+      description: The average number of records consumed per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_consumed_total-1b24b8fd:
+      name: kafka.consumer.records_consumed_total
+      description: The total number of records consumed
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lag-8faf1056:
+      name: kafka.consumer.records_lag
+      description: 'The latest lag of the partition. Note: For topic names with periods
+        (.), an additional metric with underscores is emitted. However, the periods
+        replaced metric is deprecated. Please use the metric with actual topic name
+        instead.'
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lag-b525c481:
+      name: kafka.consumer.records_lag
+      description: The latest lag of the partition
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lag_avg-6ff171a2:
+      name: kafka.consumer.records_lag_avg
+      description: The average lag of the partition
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lag_avg-ec373d24:
+      name: kafka.consumer.records_lag_avg
+      description: 'The average lag of the partition. Note: For topic names with periods
+        (.), an additional metric with underscores is emitted. However, the periods
+        replaced metric is deprecated. Please use the metric with actual topic name
+        instead.'
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lag_max-3b7e1946:
+      name: kafka.consumer.records_lag_max
+      description: 'The maximum lag in terms of number of records for any partition
+        in this window. NOTE: This is based on current offset and not committed offset'
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lag_max-426cca3d:
+      name: kafka.consumer.records_lag_max
+      description: The maximum lag in terms of number of records for any partition
+        in this window
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lead-46d059c9:
+      name: kafka.consumer.records_lead
+      description: The latest lead of the partition
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lead-b2e4658c:
+      name: kafka.consumer.records_lead
+      description: 'The latest lead of the partition. Note: For topic names with periods
+        (.), an additional metric with underscores is emitted. However, the periods
+        replaced metric is deprecated. Please use the metric with actual topic name
+        instead.'
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lead_avg-6cf6fda0:
+      name: kafka.consumer.records_lead_avg
+      description: 'The average lead of the partition. Note: For topic names with
+        periods (.), an additional metric with underscores is emitted. However, the
+        periods replaced metric is deprecated. Please use the metric with actual topic
+        name instead.'
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lead_avg-a49015a0:
+      name: kafka.consumer.records_lead_avg
+      description: The average lead of the partition
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_lead_min-164f7dee:
+      name: kafka.consumer.records_lead_min
+      description: The minimum lead in terms of number of records for any partition
+        in this window
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: partition
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.records_per_request_avg-de235a29:
+      name: kafka.consumer.records_per_request_avg
+      description: The average number of records in each request
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.consumer.request_latency_avg-d06bce67:
+      name: kafka.consumer.request_latency_avg
+      description: ''
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.request_latency_max-6cf6d8e4:
+      name: kafka.consumer.request_latency_max
+      description: ''
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.request_rate-a3f44891:
+      name: kafka.consumer.request_rate
+      description: The number of requests sent per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.request_size_avg-39520cc6:
+      name: kafka.consumer.request_size_avg
+      description: The average size of requests sent.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.request_size_max-912b673e:
+      name: kafka.consumer.request_size_max
+      description: The maximum size of any request sent.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.request_total-2e0b47ac:
+      name: kafka.consumer.request_total
+      description: The total number of requests sent
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.response_rate-488b7e36:
+      name: kafka.consumer.response_rate
+      description: The number of responses received per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.response_total-7853794c:
+      name: kafka.consumer.response_total
+      description: The total number of responses received
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.consumer.select_rate-5492f932:
+      name: kafka.consumer.select_rate
+      description: The number of times the I/O layer checked for new I/O to perform
+        per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.select_total-20be5806:
+      name: kafka.consumer.select_total
+      description: The total number of times the I/O layer checked for new I/O to
+        perform
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.successful_authentication_no_reauth_total-889db2f2:
+      name: kafka.consumer.successful_authentication_no_reauth_total
+      description: The total number of connections with successful authentication
+        where the client does not support re-authentication
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.successful_authentication_rate-9fd22b63:
+      name: kafka.consumer.successful_authentication_rate
+      description: The number of connections with successful authentication per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.successful_authentication_total-055dadf5:
+      name: kafka.consumer.successful_authentication_total
+      description: The total number of connections with successful authentication
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.successful_reauthentication_rate-459b149f:
+      name: kafka.consumer.successful_reauthentication_rate
+      description: The number of successful re-authentication of connections per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.successful_reauthentication_total-50fad86f:
+      name: kafka.consumer.successful_reauthentication_total
+      description: The total number of successful re-authentication of connections
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.sync_rate-403f4044:
+      name: kafka.consumer.sync_rate
+      description: The number of group syncs per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.sync_time_avg-e18ea91b:
+      name: kafka.consumer.sync_time_avg
+      description: The average time taken for a group sync
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.sync_time_max-edbf3548:
+      name: kafka.consumer.sync_time_max
+      description: The max time taken for a group sync
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.sync_total-59c8eda7:
+      name: kafka.consumer.sync_total
+      description: The total number of group syncs
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.time_between_poll_avg-9d41637b:
+      name: kafka.consumer.time_between_poll_avg
+      description: The average delay between invocations of poll() in milliseconds.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.time_between_poll_avg-b34e6509:
+      name: kafka.consumer.time_between_poll_avg
+      description: The average delay between invocations of poll().
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.time_between_poll_max-2cf85d78:
+      name: kafka.consumer.time_between_poll_max
+      description: The max delay between invocations of poll().
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.consumer.time_between_poll_max-f0de6ca7:
+      name: kafka.consumer.time_between_poll_max
+      description: The max delay between invocations of poll() in milliseconds.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.batch_size_avg-a0fe78a1:
+      name: kafka.producer.batch_size_avg
+      description: The average number of bytes sent per partition per-request.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.batch_size_max-4908449e:
+      name: kafka.producer.batch_size_max
+      description: The max number of bytes sent per partition per-request.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.batch_split_rate-619e53d4:
+      name: kafka.producer.batch_split_rate
+      description: The average number of batch splits per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.batch_split_total-0df6cf7b:
+      name: kafka.producer.batch_split_total
+      description: The total number of batch splits
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.buffer_available_bytes-22b15270:
+      name: kafka.producer.buffer_available_bytes
+      description: The total amount of buffer memory that is not being used (either
+        unallocated or in the free list).
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.buffer_exhausted_rate-78d81530:
+      name: kafka.producer.buffer_exhausted_rate
+      description: The average per-second number of record sends that are dropped
+        due to buffer exhaustion
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.buffer_exhausted_total-b70d19d1:
+      name: kafka.producer.buffer_exhausted_total
+      description: The total number of record sends that are dropped due to buffer
+        exhaustion
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.buffer_total_bytes-5ca43450:
+      name: kafka.producer.buffer_total_bytes
+      description: The maximum amount of buffer memory the client can use (whether
+        or not it is currently used).
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.bufferpool_wait_ratio-b902490b:
+      name: kafka.producer.bufferpool_wait_ratio
+      description: The fraction of time an appender waits for space allocation.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.bufferpool_wait_time_ns_total-93427f7d:
+      name: kafka.producer.bufferpool_wait_time_ns_total
+      description: The total time in nanoseconds an appender waits for space allocation.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.bufferpool_wait_time_total-4e80b9a2:
+      name: kafka.producer.bufferpool_wait_time_total
+      description: The total time an appender waits for space allocation.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.byte_rate-abfe4757:
+      name: kafka.producer.byte_rate
+      description: The average number of bytes sent per second for a topic.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.producer.byte_total-710f7401:
+      name: kafka.producer.byte_total
+      description: The total number of bytes sent for a topic.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.producer.compression_rate-bba3a1d0:
+      name: kafka.producer.compression_rate
+      description: The average compression rate of record batches for a topic.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.producer.compression_rate-cbbdba28:
+      name: kafka.producer.compression_rate
+      description: The average compression rate of record batches for a topic, defined
+        as the average ratio of the compressed batch size over the uncompressed size.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.producer.compression_rate_avg-a3368faf:
+      name: kafka.producer.compression_rate_avg
+      description: The average compression rate of record batches.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.compression_rate_avg-e851a106:
+      name: kafka.producer.compression_rate_avg
+      description: The average compression rate of record batches, defined as the
+        average ratio of the compressed batch size over the uncompressed size.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.connection_close_rate-450badbc:
+      name: kafka.producer.connection_close_rate
+      description: The number of connections closed per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.connection_close_total-54d6e6ca:
+      name: kafka.producer.connection_close_total
+      description: The total number of connections closed
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.connection_count-0ba79caf:
+      name: kafka.producer.connection_count
+      description: The current number of active connections.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.connection_creation_rate-00815afe:
+      name: kafka.producer.connection_creation_rate
+      description: The number of new connections established per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.connection_creation_total-9a13f0bf:
+      name: kafka.producer.connection_creation_total
+      description: The total number of new connections established
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.failed_authentication_rate-6c98dd77:
+      name: kafka.producer.failed_authentication_rate
+      description: The number of connections with failed authentication per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.failed_authentication_total-5c4f0671:
+      name: kafka.producer.failed_authentication_total
+      description: The total number of connections with failed authentication
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.failed_reauthentication_rate-a77061c6:
+      name: kafka.producer.failed_reauthentication_rate
+      description: The number of failed re-authentication of connections per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.failed_reauthentication_total-64658c10:
+      name: kafka.producer.failed_reauthentication_total
+      description: The total number of failed re-authentication of connections
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.flush_time_ns_total-9a762524:
+      name: kafka.producer.flush_time_ns_total
+      description: Total time producer has spent in flush in nanoseconds.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.incoming_byte_rate-e6e7f945:
+      name: kafka.producer.incoming_byte_rate
+      description: The number of bytes read off all sockets per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.incoming_byte_total-7b833178:
+      name: kafka.producer.incoming_byte_total
+      description: The total number of bytes read off all sockets
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.io_ratio-74565aa4:
+      name: kafka.producer.io_ratio
+      description: The fraction of time the I/O thread spent doing I/O
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.io_time_ns_avg-dbad8d7f:
+      name: kafka.producer.io_time_ns_avg
+      description: The average length of time for I/O per select call in nanoseconds.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.io_time_ns_total-03b095e4:
+      name: kafka.producer.io_time_ns_total
+      description: The total time the I/O thread spent doing I/O
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.io_wait_ratio-2f66a255:
+      name: kafka.producer.io_wait_ratio
+      description: The fraction of time the I/O thread spent waiting
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.io_wait_time_ns_avg-55749400:
+      name: kafka.producer.io_wait_time_ns_avg
+      description: The average length of time the I/O thread spent waiting for a socket
+        ready for reads or writes in nanoseconds.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.io_wait_time_ns_total-820514f6:
+      name: kafka.producer.io_wait_time_ns_total
+      description: The total time the I/O thread spent waiting
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.io_waittime_total-698e04f6:
+      name: kafka.producer.io_waittime_total
+      description: The total time the I/O thread spent waiting
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.iotime_total-967989a1:
+      name: kafka.producer.iotime_total
+      description: The total time the I/O thread spent doing I/O
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.metadata_age-2c4880f5:
+      name: kafka.producer.metadata_age
+      description: The age in seconds of the current producer metadata being used.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.metadata_wait_time_ns_total-520394cf:
+      name: kafka.producer.metadata_wait_time_ns_total
+      description: Total time producer has spent waiting on topic metadata in nanoseconds.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.network_io_rate-f9184658:
+      name: kafka.producer.network_io_rate
+      description: The number of network operations (reads or writes) on all connections
+        per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.network_io_total-1077c3f0:
+      name: kafka.producer.network_io_total
+      description: The total number of network operations (reads or writes) on all
+        connections
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.outgoing_byte_rate-c98c5cd9:
+      name: kafka.producer.outgoing_byte_rate
+      description: The number of outgoing bytes sent to all servers per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.outgoing_byte_total-4751f1d9:
+      name: kafka.producer.outgoing_byte_total
+      description: The total number of outgoing bytes sent to all servers
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.produce_throttle_time_avg-d888390c:
+      name: kafka.producer.produce_throttle_time_avg
+      description: The average time in ms a request was throttled by a broker
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.produce_throttle_time_max-d18aaece:
+      name: kafka.producer.produce_throttle_time_max
+      description: The maximum time in ms a request was throttled by a broker
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.record_error_rate-3b4547e5:
+      name: kafka.producer.record_error_rate
+      description: The average per-second number of record sends that resulted in
+        errors
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.producer.record_error_total-6f4cbcdd:
+      name: kafka.producer.record_error_total
+      description: The total number of record sends that resulted in errors
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.producer.record_queue_time_avg-ebdb31d2:
+      name: kafka.producer.record_queue_time_avg
+      description: The average time in ms record batches spent in the send buffer.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.record_queue_time_max-f49196f7:
+      name: kafka.producer.record_queue_time_max
+      description: The maximum time in ms record batches spent in the send buffer.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.record_retry_rate-2e0fbc79:
+      name: kafka.producer.record_retry_rate
+      description: The average per-second number of retried record sends
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.producer.record_retry_total-d768e40d:
+      name: kafka.producer.record_retry_total
+      description: The total number of retried record sends
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.producer.record_send_rate-10250bfc:
+      name: kafka.producer.record_send_rate
+      description: The average number of records sent per second.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.producer.record_send_total-6044a25f:
+      name: kafka.producer.record_send_total
+      description: The total number of records sent.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: topic
+        type: STRING
+    kafka.producer.record_size_avg-cb055c97:
+      name: kafka.producer.record_size_avg
+      description: The average record size
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.record_size_max-3490a312:
+      name: kafka.producer.record_size_max
+      description: The maximum record size
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.records_per_request_avg-5f16a1ef:
+      name: kafka.producer.records_per_request_avg
+      description: The average number of records per request.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.request_latency_avg-e4870408:
+      name: kafka.producer.request_latency_avg
+      description: The average request latency in ms
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.request_latency_max-3d4c1654:
+      name: kafka.producer.request_latency_max
+      description: The maximum request latency in ms
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.request_rate-09340ae2:
+      name: kafka.producer.request_rate
+      description: The number of requests sent per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.request_size_avg-874761ec:
+      name: kafka.producer.request_size_avg
+      description: The average size of requests sent.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.request_size_max-700b542c:
+      name: kafka.producer.request_size_max
+      description: The maximum size of any request sent.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.request_total-c33b92e8:
+      name: kafka.producer.request_total
+      description: The total number of requests sent
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.requests_in_flight-ab853b92:
+      name: kafka.producer.requests_in_flight
+      description: The current number of in-flight requests awaiting a response.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.response_rate-08886f1c:
+      name: kafka.producer.response_rate
+      description: The number of responses received per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.response_total-21678f7f:
+      name: kafka.producer.response_total
+      description: The total number of responses received
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: node-id
+        type: STRING
+    kafka.producer.select_rate-362ab6ec:
+      name: kafka.producer.select_rate
+      description: The number of times the I/O layer checked for new I/O to perform
+        per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.select_total-cd81e759:
+      name: kafka.producer.select_total
+      description: The total number of times the I/O layer checked for new I/O to
+        perform
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.successful_authentication_no_reauth_total-e725183f:
+      name: kafka.producer.successful_authentication_no_reauth_total
+      description: The total number of connections with successful authentication
+        where the client does not support re-authentication
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.successful_authentication_rate-3053fc35:
+      name: kafka.producer.successful_authentication_rate
+      description: The number of connections with successful authentication per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.successful_authentication_total-33d0362d:
+      name: kafka.producer.successful_authentication_total
+      description: The total number of connections with successful authentication
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.successful_reauthentication_rate-9e3f4722:
+      name: kafka.producer.successful_reauthentication_rate
+      description: The number of successful re-authentication of connections per second
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.successful_reauthentication_total-6600f061:
+      name: kafka.producer.successful_reauthentication_total
+      description: The total number of successful re-authentication of connections
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.txn_abort_time_ns_total-88d96b5c:
+      name: kafka.producer.txn_abort_time_ns_total
+      description: Total time producer has spent in abortTransaction in nanoseconds.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.txn_begin_time_ns_total-67814cea:
+      name: kafka.producer.txn_begin_time_ns_total
+      description: Total time producer has spent in beginTransaction in nanoseconds.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.txn_commit_time_ns_total-176bfd64:
+      name: kafka.producer.txn_commit_time_ns_total
+      description: Total time producer has spent in commitTransaction in nanoseconds.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.txn_init_time_ns_total-56ec36a4:
+      name: kafka.producer.txn_init_time_ns_total
+      description: Total time producer has spent in initTransactions in nanoseconds.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.txn_prepare_time_ns_total-27dd6ed2:
+      name: kafka.producer.txn_prepare_time_ns_total
+      description: Total time producer has spent in prepareTransaction in nanoseconds.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.txn_send_offsets_time_ns_total-dba88b13:
+      name: kafka.producer.txn_send_offsets_time_ns_total
+      description: Total time producer has spent in sendOffsetsToTransaction in nanoseconds.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+    kafka.producer.waiting_threads-e7152d0f:
+      name: kafka.producer.waiting_threads
+      description: The number of user threads blocked waiting for buffer memory to
+        enqueue their records
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
     messaging.client.consumed.messages-2353494f:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -2314,6 +4171,40 @@ definitions:
       - name: error.type
         type: STRING
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.consumed.messages-471caf5c:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.client.consumed.messages-554a6d90:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -2353,6 +4244,21 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.consumed.messages-83bc8813:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.consumed.messages-bda2d99f:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -2370,6 +4276,23 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.consumed.messages-c0fc17f6:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.consumed.messages-e8268bc3:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -2383,6 +4306,25 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.consumed.messages-f3bb81cb:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     messaging.client.operation.duration-4afb25bc:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -2417,7 +4359,7 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
-    messaging.client.operation.duration-df200871:
+    messaging.client.operation.duration-bcc65266:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
         client.
@@ -2427,7 +4369,41 @@ definitions:
       attributes:
       - name: messaging.destination.name
         type: STRING
-      - name: messaging.destination.subscription.name
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.operation.duration-d165a8db:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.operation.duration-dab7c60a:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -2474,6 +4450,21 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.sent.messages-4c72bd1e:
+      name: messaging.client.sent.messages
+      description: Number of messages producer attempted to send to the broker.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.sent.messages-a16c8de0:
       name: messaging.client.sent.messages
       description: Number of messages producer attempted to send to the broker.
@@ -2482,6 +4473,76 @@ definitions:
       unit: '{message}'
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.sent.messages-fec1f156:
+      name: messaging.client.sent.messages
+      description: Number of messages producer attempted to send to the broker.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.process.duration-049f91c8:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.process.duration-0ca61f76:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.process.duration-43b43ca1:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -2504,6 +4565,38 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.process.duration-5301bc21:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.process.duration-6404ad2a:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.process.duration-800050f8:
       name: messaging.process.duration
       description: Duration of processing operation.
@@ -2564,6 +4657,23 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.process.duration-e08d4dc8:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     messaging.publish.duration-05731f17:
       name: messaging.publish.duration
       description: Measures the duration of publish operation.
@@ -3121,6 +5231,10 @@ libraries:
         type: LONG
       - name: http.route
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: network.protocol.version
         type: STRING
       - name: server.address
@@ -3170,6 +5284,10 @@ libraries:
         type: LONG
       - name: http.route
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: network.protocol.version
         type: STRING
       - name: server.address
@@ -3215,6 +5333,27 @@ libraries:
     - db.client.connection.idle.min-73bdafbc
     - db.client.connection.max-c7917942
     - db.client.connection.pending_requests-a0f41111
+- name: apache-commons-pool-2.0
+  display_name: Apache Commons Pool
+  description: |
+    This instrumentation enables object pool metrics for Apache Commons Pool GenericObjectPool and GenericKeyedObjectPool instances. When Apache DBCP instrumentation is enabled, metrics for the GenericObjectPool backing an Apache DBCP BasicDataSource are excluded because the DBCP instrumentation already reports database connection pool metrics for it.
+  library_link: https://commons.apache.org/proper/commons-pool/
+  disabled_by_default: true
+  source_path: instrumentation/apache-commons-pool-2.0
+  scope:
+    name: io.opentelemetry.apache-commons-pool-2.0
+  has_standalone_library: true
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.commons:commons-pool2:[2.0,)
+  telemetry:
+  - when: otel.instrumentation.apache-commons-pool.enabled=true
+    metric_refs:
+    - apache_commons_pool.object.count-0fb5f06e
+    - apache_commons_pool.object.idle.max-093d8b45
+    - apache_commons_pool.object.idle.min-000062da
+    - apache_commons_pool.object.max-94992d6e
+    - apache_commons_pool.object.pending_requests-87e07907
 - name: apache-dbcp-2.0
   display_name: Apache DBCP
   description: |
@@ -4531,9 +6670,11 @@ libraries:
   - com.amazonaws:aws-java-sdk-core:[1.10.33,)
   - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
   configuration_refs:
+  - messaging.batch-send.message-creation-spans.enabled
   - messaging.capture-headers
   - messaging.headers.excluded
   - messaging.headers.included
+  - otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
   - otel.instrumentation.aws-sdk.experimental-span-attributes-f30ad240
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -4760,6 +6901,11 @@ libraries:
       - name: url.full
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-471caf5c
+    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-e08d4dc8
     spans:
     - span_kind: CLIENT
       attributes:
@@ -4899,9 +7045,11 @@ libraries:
   - software.amazon.awssdk:sns:[2.2.0,)
   - software.amazon.awssdk:sqs:[2.2.0,)
   configuration_refs:
+  - messaging.batch-send.message-creation-spans.enabled
   - messaging.capture-headers
   - messaging.headers.excluded
   - messaging.headers.included
+  - otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
   - otel.instrumentation.aws-sdk.experimental-record-individual-http-error
   - otel.instrumentation.aws-sdk.experimental-span-attributes-0c4c01de
   - otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
@@ -4977,6 +7125,8 @@ libraries:
         type: STRING
       - name: gen_ai.request.stop_sequences
         type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
       - name: gen_ai.request.temperature
         type: DOUBLE
       - name: gen_ai.request.top_p
@@ -5210,6 +7360,11 @@ libraries:
       - name: url.full
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-471caf5c
+    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-e08d4dc8
     spans:
     - span_kind: CLIENT
       attributes:
@@ -5397,7 +7552,7 @@ libraries:
 - name: camel-2.20
   display_name: Apache Camel
   description: |
-    This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+    This instrumentation enables tracing and messaging metrics for Apache Camel 2.x applications. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
   semantic_conventions:
   - HTTP_CLIENT_SPANS
   - HTTP_SERVER_SPANS
@@ -5513,7 +7668,12 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=database
+  - when: otel.instrumentation.common.v3-preview=true
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
     spans:
     - span_kind: CLIENT
       attributes:
@@ -5521,6 +7681,16 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
       - name: url.full
         type: STRING
     - span_kind: CONSUMER
@@ -5529,19 +7699,29 @@ libraries:
         type: STRING
       - name: messaging.message.id
         type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     - span_kind: INTERNAL
       attributes:
       - name: http.request.method
-        type: STRING
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.message.id
         type: STRING
       - name: url.full
         type: STRING
     - span_kind: PRODUCER
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
         type: STRING
     - span_kind: SERVER
       attributes:
@@ -5551,6 +7731,81 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=database,messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: INTERNAL
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.opt-in=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
+  - when: otel.semconv-stability.opt-in=messaging/dup
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
 - name: cassandra-3.0
   display_name: Cassandra Driver
   description: |
@@ -6016,6 +8271,10 @@ libraries:
         type: LONG
       - name: network.type
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.couchbase.experimental-span-attributes=true
     spans:
     - span_kind: CLIENT
@@ -6038,9 +8297,13 @@ libraries:
         type: LONG
       - name: network.type
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-7714cbf7
+    - db.client.operation.duration-bfd9d23c
     spans:
     - span_kind: CLIENT
       attributes:
@@ -6057,6 +8320,10 @@ libraries:
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
         type: LONG
 - name: couchbase-3.1
   display_name: Couchbase Client
@@ -6459,8 +8726,6 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - io.dropwizard.metrics:metrics-core:[4.0.0,)
-  configuration_refs:
-  - otel.instrumentation.dropwizard-metrics.enabled
 - name: dropwizard-views-0.7
   display_name: Dropwizard Views
   description: |
@@ -6484,7 +8749,7 @@ libraries:
 - name: elasticsearch-api-client-7.16
   display_name: Elasticsearch API Client
   description: |
-    This instrumentation enriches Elasticsearch database client spans generated by the elasticsearch-rest-7.0 instrumentation by adding `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes. It does not emit any telemetry on its own. Versions 8.10 and later of the Elasticsearch Java client have native OpenTelemetry support.
+    This instrumentation enriches Elasticsearch database client spans generated by the elasticsearch-rest-7.0 instrumentation by adding `db.operation.parameter.id` and `db.operation.parameter.index` attributes, or the deprecated `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes when the old database semantic conventions are in use. It does not emit any telemetry on its own. Versions 7.17.20 and later on the 7.x line, and versions 8.10 and later, have native OpenTelemetry support.
   library_link: https://www.elastic.co/docs/reference/elasticsearch/clients/java
   source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
   scope:
@@ -6520,11 +8785,11 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
-      - name: db.elasticsearch.path_parts.id
-        type: STRING
-      - name: db.elasticsearch.path_parts.index
-        type: STRING
       - name: db.operation.name
+        type: STRING
+      - name: db.operation.parameter.id
+        type: STRING
+      - name: db.operation.parameter.index
         type: STRING
       - name: db.system.name
         type: STRING
@@ -6552,8 +8817,10 @@ libraries:
   - org.elasticsearch.client:elasticsearch-rest-client:[5.0,6.4)
   - org.elasticsearch.client:rest:[5.0,6.4)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - http.known-methods
   - otel.instrumentation.elasticsearch.capture-search-query
+  - otel.instrumentation.elasticsearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -6600,8 +8867,10 @@ libraries:
   javaagent_target_versions:
   - org.elasticsearch.client:elasticsearch-rest-client:[6.4,7.0)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - http.known-methods
   - otel.instrumentation.elasticsearch.capture-search-query
+  - otel.instrumentation.elasticsearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -6649,8 +8918,10 @@ libraries:
   javaagent_target_versions:
   - org.elasticsearch.client:elasticsearch-rest-client:[7.0,)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - http.known-methods
   - otel.instrumentation.elasticsearch.capture-search-query
+  - otel.instrumentation.elasticsearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -7039,9 +9310,13 @@ libraries:
         type: STRING
       - name: db.system
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-556e77d6
+    - db.client.operation.duration-5d89ffb2
     spans:
     - span_kind: CLIENT
       attributes:
@@ -7053,6 +9328,10 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: google-http-client-1.19
   display_name: Google HTTP Client
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -7958,6 +10237,7 @@ libraries:
   - org.influxdb:influxdb-java:[2.4,)
   configuration_refs:
   - common.db.query-sanitization.enabled
+  - otel.instrumentation.influxdb.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -8788,10 +11068,12 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database,service.peer
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-fce1854c
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
@@ -8848,10 +11130,12 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database,service.peer
     metric_refs:
-    - db.client.operation.duration-bfd9d23c
+    - db.client.operation.duration-8ae2b8ce
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
@@ -9320,6 +11604,11 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-ab13a22e
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9338,6 +11627,8 @@ libraries:
     - span_kind: CONSUMER
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
         type: STRING
       - name: messaging.destination.temporary
         type: BOOLEAN
@@ -9408,10 +11699,17 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-ab13a22e
     spans:
     - span_kind: CLIENT
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
         type: STRING
       - name: messaging.message.id
         type: STRING
@@ -9424,6 +11722,8 @@ libraries:
     - span_kind: CONSUMER
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
         type: STRING
       - name: messaging.message.id
         type: STRING
@@ -9752,6 +12052,173 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - kafka.consumer.assigned_partitions-e3b3c651
+    - kafka.consumer.bytes_consumed_rate-788b545f
+    - kafka.consumer.bytes_consumed_total-30a5a048
+    - kafka.consumer.commit_latency_avg-cabde37e
+    - kafka.consumer.commit_latency_max-48f9f567
+    - kafka.consumer.commit_rate-a4b078ce
+    - kafka.consumer.commit_sync_time_ns_total-9e1880b8
+    - kafka.consumer.commit_total-24a80858
+    - kafka.consumer.committed_time_ns_total-1ad0caf0
+    - kafka.consumer.connection_close_rate-43e33f77
+    - kafka.consumer.connection_close_total-d3225ce7
+    - kafka.consumer.connection_count-45f83f51
+    - kafka.consumer.connection_creation_rate-c70d12ca
+    - kafka.consumer.connection_creation_total-43f8f997
+    - kafka.consumer.failed_authentication_rate-4fcf4e4f
+    - kafka.consumer.failed_authentication_total-f0126b29
+    - kafka.consumer.failed_reauthentication_rate-5365793d
+    - kafka.consumer.failed_reauthentication_total-16119175
+    - kafka.consumer.failed_rebalance_rate_per_hour-8417e8a7
+    - kafka.consumer.failed_rebalance_total-8bca5b42
+    - kafka.consumer.fetch_latency_avg-4cb03d45
+    - kafka.consumer.fetch_latency_max-ddb000f3
+    - kafka.consumer.fetch_rate-de362f7b
+    - kafka.consumer.fetch_size_avg-53a6cde3
+    - kafka.consumer.fetch_size_max-2fc55d0c
+    - kafka.consumer.fetch_throttle_time_avg-3f72019f
+    - kafka.consumer.fetch_throttle_time_max-25ea21b8
+    - kafka.consumer.fetch_total-7db71e3f
+    - kafka.consumer.heartbeat_rate-12d81990
+    - kafka.consumer.heartbeat_response_time_max-e3333d1e
+    - kafka.consumer.heartbeat_total-5c57e127
+    - kafka.consumer.incoming_byte_rate-7de5fad6
+    - kafka.consumer.incoming_byte_total-a66ec19e
+    - kafka.consumer.io_ratio-8cc0c241
+    - kafka.consumer.io_time_ns_avg-beba6173
+    - kafka.consumer.io_time_ns_total-5085f4db
+    - kafka.consumer.io_wait_ratio-50616d5b
+    - kafka.consumer.io_wait_time_ns_avg-59bade1c
+    - kafka.consumer.io_wait_time_ns_total-3d555ba7
+    - kafka.consumer.join_rate-7b04102f
+    - kafka.consumer.join_time_avg-d4edd17f
+    - kafka.consumer.join_time_max-b7cbed01
+    - kafka.consumer.join_total-29388d85
+    - kafka.consumer.last_heartbeat_seconds_ago-6abc4330
+    - kafka.consumer.last_poll_seconds_ago-979e631a
+    - kafka.consumer.last_rebalance_seconds_ago-97474aaa
+    - kafka.consumer.network_io_rate-5eda9dd5
+    - kafka.consumer.network_io_total-0518722a
+    - kafka.consumer.outgoing_byte_rate-e7b44a21
+    - kafka.consumer.outgoing_byte_total-7b2c9723
+    - kafka.consumer.partition_assigned_latency_avg-74b486ef
+    - kafka.consumer.partition_assigned_latency_max-3faefba1
+    - kafka.consumer.poll_idle_ratio_avg-65c9a7ca
+    - kafka.consumer.rebalance_latency_avg-6cdb4a17
+    - kafka.consumer.rebalance_latency_max-49d58046
+    - kafka.consumer.rebalance_latency_total-c2692cd0
+    - kafka.consumer.rebalance_rate_per_hour-528d47c8
+    - kafka.consumer.rebalance_total-4400dbbd
+    - kafka.consumer.records_consumed_rate-1443ccc3
+    - kafka.consumer.records_consumed_total-1b24b8fd
+    - kafka.consumer.records_lag-8faf1056
+    - kafka.consumer.records_lag_avg-ec373d24
+    - kafka.consumer.records_lag_max-3b7e1946
+    - kafka.consumer.records_lead-b2e4658c
+    - kafka.consumer.records_lead_avg-6cf6fda0
+    - kafka.consumer.records_lead_min-164f7dee
+    - kafka.consumer.records_per_request_avg-de235a29
+    - kafka.consumer.request_latency_avg-d06bce67
+    - kafka.consumer.request_latency_max-6cf6d8e4
+    - kafka.consumer.request_rate-a3f44891
+    - kafka.consumer.request_size_avg-39520cc6
+    - kafka.consumer.request_size_max-912b673e
+    - kafka.consumer.request_total-2e0b47ac
+    - kafka.consumer.response_rate-488b7e36
+    - kafka.consumer.response_total-7853794c
+    - kafka.consumer.select_rate-5492f932
+    - kafka.consumer.select_total-20be5806
+    - kafka.consumer.successful_authentication_no_reauth_total-889db2f2
+    - kafka.consumer.successful_authentication_rate-9fd22b63
+    - kafka.consumer.successful_authentication_total-055dadf5
+    - kafka.consumer.successful_reauthentication_rate-459b149f
+    - kafka.consumer.successful_reauthentication_total-50fad86f
+    - kafka.consumer.sync_rate-403f4044
+    - kafka.consumer.sync_time_avg-e18ea91b
+    - kafka.consumer.sync_time_max-edbf3548
+    - kafka.consumer.sync_total-59c8eda7
+    - kafka.consumer.time_between_poll_avg-9d41637b
+    - kafka.consumer.time_between_poll_max-f0de6ca7
+    - kafka.producer.batch_size_avg-a0fe78a1
+    - kafka.producer.batch_size_max-4908449e
+    - kafka.producer.batch_split_rate-619e53d4
+    - kafka.producer.batch_split_total-0df6cf7b
+    - kafka.producer.buffer_available_bytes-22b15270
+    - kafka.producer.buffer_exhausted_rate-78d81530
+    - kafka.producer.buffer_exhausted_total-b70d19d1
+    - kafka.producer.buffer_total_bytes-5ca43450
+    - kafka.producer.bufferpool_wait_ratio-b902490b
+    - kafka.producer.bufferpool_wait_time_ns_total-93427f7d
+    - kafka.producer.byte_rate-abfe4757
+    - kafka.producer.byte_total-710f7401
+    - kafka.producer.compression_rate-cbbdba28
+    - kafka.producer.compression_rate_avg-e851a106
+    - kafka.producer.connection_close_rate-450badbc
+    - kafka.producer.connection_close_total-54d6e6ca
+    - kafka.producer.connection_count-0ba79caf
+    - kafka.producer.connection_creation_rate-00815afe
+    - kafka.producer.connection_creation_total-9a13f0bf
+    - kafka.producer.failed_authentication_rate-6c98dd77
+    - kafka.producer.failed_authentication_total-5c4f0671
+    - kafka.producer.failed_reauthentication_rate-a77061c6
+    - kafka.producer.failed_reauthentication_total-64658c10
+    - kafka.producer.flush_time_ns_total-9a762524
+    - kafka.producer.incoming_byte_rate-e6e7f945
+    - kafka.producer.incoming_byte_total-7b833178
+    - kafka.producer.io_ratio-74565aa4
+    - kafka.producer.io_time_ns_avg-dbad8d7f
+    - kafka.producer.io_time_ns_total-03b095e4
+    - kafka.producer.io_wait_ratio-2f66a255
+    - kafka.producer.io_wait_time_ns_avg-55749400
+    - kafka.producer.io_wait_time_ns_total-820514f6
+    - kafka.producer.metadata_age-2c4880f5
+    - kafka.producer.metadata_wait_time_ns_total-520394cf
+    - kafka.producer.network_io_rate-f9184658
+    - kafka.producer.network_io_total-1077c3f0
+    - kafka.producer.outgoing_byte_rate-c98c5cd9
+    - kafka.producer.outgoing_byte_total-4751f1d9
+    - kafka.producer.produce_throttle_time_avg-d888390c
+    - kafka.producer.produce_throttle_time_max-d18aaece
+    - kafka.producer.record_error_rate-3b4547e5
+    - kafka.producer.record_error_total-6f4cbcdd
+    - kafka.producer.record_queue_time_avg-ebdb31d2
+    - kafka.producer.record_queue_time_max-f49196f7
+    - kafka.producer.record_retry_rate-2e0fbc79
+    - kafka.producer.record_retry_total-d768e40d
+    - kafka.producer.record_send_rate-10250bfc
+    - kafka.producer.record_send_total-6044a25f
+    - kafka.producer.record_size_avg-cb055c97
+    - kafka.producer.record_size_max-3490a312
+    - kafka.producer.records_per_request_avg-5f16a1ef
+    - kafka.producer.request_latency_avg-e4870408
+    - kafka.producer.request_latency_max-3d4c1654
+    - kafka.producer.request_rate-09340ae2
+    - kafka.producer.request_size_avg-874761ec
+    - kafka.producer.request_size_max-700b542c
+    - kafka.producer.request_total-c33b92e8
+    - kafka.producer.requests_in_flight-ab853b92
+    - kafka.producer.response_rate-08886f1c
+    - kafka.producer.response_total-21678f7f
+    - kafka.producer.select_rate-362ab6ec
+    - kafka.producer.select_total-cd81e759
+    - kafka.producer.successful_authentication_no_reauth_total-e725183f
+    - kafka.producer.successful_authentication_rate-3053fc35
+    - kafka.producer.successful_authentication_total-33d0362d
+    - kafka.producer.successful_reauthentication_rate-9e3f4722
+    - kafka.producer.successful_reauthentication_total-6600f061
+    - kafka.producer.txn_abort_time_ns_total-88d96b5c
+    - kafka.producer.txn_begin_time_ns_total-67814cea
+    - kafka.producer.txn_commit_time_ns_total-176bfd64
+    - kafka.producer.txn_init_time_ns_total-56ec36a4
+    - kafka.producer.txn_prepare_time_ns_total-27dd6ed2
+    - kafka.producer.txn_send_offsets_time_ns_total-dba88b13
+    - kafka.producer.waiting_threads-e7152d0f
+    - messaging.client.consumed.messages-554a6d90
+    - messaging.client.operation.duration-bcc65266
+    - messaging.client.sent.messages-fec1f156
+    - messaging.process.duration-6404ad2a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9762,6 +12229,8 @@ libraries:
       - name: messaging.consumer.group.name
         type: STRING
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -9866,6 +12335,160 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - kafka.consumer.assigned_partitions-e3b3c651
+    - kafka.consumer.bytes_consumed_rate-788b545f
+    - kafka.consumer.bytes_consumed_total-30a5a048
+    - kafka.consumer.commit_latency_avg-cabde37e
+    - kafka.consumer.commit_latency_max-48f9f567
+    - kafka.consumer.commit_rate-a4b078ce
+    - kafka.consumer.commit_total-24a80858
+    - kafka.consumer.connection_close_rate-43e33f77
+    - kafka.consumer.connection_close_total-d3225ce7
+    - kafka.consumer.connection_count-45f83f51
+    - kafka.consumer.connection_creation_rate-c70d12ca
+    - kafka.consumer.connection_creation_total-43f8f997
+    - kafka.consumer.failed_authentication_rate-4fcf4e4f
+    - kafka.consumer.failed_authentication_total-f0126b29
+    - kafka.consumer.failed_reauthentication_rate-5365793d
+    - kafka.consumer.failed_reauthentication_total-16119175
+    - kafka.consumer.failed_rebalance_rate_per_hour-8417e8a7
+    - kafka.consumer.failed_rebalance_total-8bca5b42
+    - kafka.consumer.fetch_latency_avg-4cb03d45
+    - kafka.consumer.fetch_latency_max-ddb000f3
+    - kafka.consumer.fetch_rate-de362f7b
+    - kafka.consumer.fetch_size_avg-53a6cde3
+    - kafka.consumer.fetch_size_max-2fc55d0c
+    - kafka.consumer.fetch_throttle_time_avg-3f72019f
+    - kafka.consumer.fetch_throttle_time_max-25ea21b8
+    - kafka.consumer.fetch_total-7db71e3f
+    - kafka.consumer.heartbeat_rate-12d81990
+    - kafka.consumer.heartbeat_total-5c57e127
+    - kafka.consumer.incoming_byte_rate-7de5fad6
+    - kafka.consumer.incoming_byte_total-a66ec19e
+    - kafka.consumer.io_ratio-8cc0c241
+    - kafka.consumer.io_time_ns_avg-beba6173
+    - kafka.consumer.io_wait_ratio-50616d5b
+    - kafka.consumer.io_wait_time_ns_avg-59bade1c
+    - kafka.consumer.io_waittime_total-b1496622
+    - kafka.consumer.iotime_total-0ad81be3
+    - kafka.consumer.join_rate-7b04102f
+    - kafka.consumer.join_time_avg-d4edd17f
+    - kafka.consumer.join_time_max-b7cbed01
+    - kafka.consumer.join_total-29388d85
+    - kafka.consumer.last_heartbeat_seconds_ago-6abc4330
+    - kafka.consumer.last_poll_seconds_ago-979e631a
+    - kafka.consumer.last_rebalance_seconds_ago-97474aaa
+    - kafka.consumer.network_io_rate-5eda9dd5
+    - kafka.consumer.network_io_total-0518722a
+    - kafka.consumer.outgoing_byte_rate-e7b44a21
+    - kafka.consumer.outgoing_byte_total-7b2c9723
+    - kafka.consumer.partition_assigned_latency_avg-74b486ef
+    - kafka.consumer.partition_assigned_latency_max-3faefba1
+    - kafka.consumer.poll_idle_ratio_avg-65c9a7ca
+    - kafka.consumer.rebalance_latency_avg-6cdb4a17
+    - kafka.consumer.rebalance_latency_max-49d58046
+    - kafka.consumer.rebalance_latency_total-c2692cd0
+    - kafka.consumer.rebalance_rate_per_hour-528d47c8
+    - kafka.consumer.rebalance_total-4400dbbd
+    - kafka.consumer.records_consumed_rate-1443ccc3
+    - kafka.consumer.records_consumed_total-1b24b8fd
+    - kafka.consumer.records_lag-b525c481
+    - kafka.consumer.records_lag_avg-6ff171a2
+    - kafka.consumer.records_lag_max-426cca3d
+    - kafka.consumer.records_lead-46d059c9
+    - kafka.consumer.records_lead_avg-a49015a0
+    - kafka.consumer.records_lead_min-164f7dee
+    - kafka.consumer.records_per_request_avg-de235a29
+    - kafka.consumer.request_rate-a3f44891
+    - kafka.consumer.request_size_avg-39520cc6
+    - kafka.consumer.request_size_max-912b673e
+    - kafka.consumer.request_total-2e0b47ac
+    - kafka.consumer.response_rate-488b7e36
+    - kafka.consumer.response_total-7853794c
+    - kafka.consumer.select_rate-5492f932
+    - kafka.consumer.select_total-20be5806
+    - kafka.consumer.successful_authentication_no_reauth_total-889db2f2
+    - kafka.consumer.successful_authentication_rate-9fd22b63
+    - kafka.consumer.successful_authentication_total-055dadf5
+    - kafka.consumer.successful_reauthentication_rate-459b149f
+    - kafka.consumer.successful_reauthentication_total-50fad86f
+    - kafka.consumer.sync_rate-403f4044
+    - kafka.consumer.sync_time_avg-e18ea91b
+    - kafka.consumer.sync_time_max-edbf3548
+    - kafka.consumer.sync_total-59c8eda7
+    - kafka.consumer.time_between_poll_avg-b34e6509
+    - kafka.consumer.time_between_poll_max-2cf85d78
+    - kafka.producer.batch_size_avg-a0fe78a1
+    - kafka.producer.batch_size_max-4908449e
+    - kafka.producer.batch_split_rate-619e53d4
+    - kafka.producer.batch_split_total-0df6cf7b
+    - kafka.producer.buffer_available_bytes-22b15270
+    - kafka.producer.buffer_exhausted_rate-78d81530
+    - kafka.producer.buffer_exhausted_total-b70d19d1
+    - kafka.producer.buffer_total_bytes-5ca43450
+    - kafka.producer.bufferpool_wait_ratio-b902490b
+    - kafka.producer.bufferpool_wait_time_total-4e80b9a2
+    - kafka.producer.byte_rate-abfe4757
+    - kafka.producer.byte_total-710f7401
+    - kafka.producer.compression_rate-bba3a1d0
+    - kafka.producer.compression_rate_avg-a3368faf
+    - kafka.producer.connection_close_rate-450badbc
+    - kafka.producer.connection_close_total-54d6e6ca
+    - kafka.producer.connection_count-0ba79caf
+    - kafka.producer.connection_creation_rate-00815afe
+    - kafka.producer.connection_creation_total-9a13f0bf
+    - kafka.producer.failed_authentication_rate-6c98dd77
+    - kafka.producer.failed_authentication_total-5c4f0671
+    - kafka.producer.failed_reauthentication_rate-a77061c6
+    - kafka.producer.failed_reauthentication_total-64658c10
+    - kafka.producer.incoming_byte_rate-e6e7f945
+    - kafka.producer.incoming_byte_total-7b833178
+    - kafka.producer.io_ratio-74565aa4
+    - kafka.producer.io_time_ns_avg-dbad8d7f
+    - kafka.producer.io_wait_ratio-2f66a255
+    - kafka.producer.io_wait_time_ns_avg-55749400
+    - kafka.producer.io_waittime_total-698e04f6
+    - kafka.producer.iotime_total-967989a1
+    - kafka.producer.metadata_age-2c4880f5
+    - kafka.producer.network_io_rate-f9184658
+    - kafka.producer.network_io_total-1077c3f0
+    - kafka.producer.outgoing_byte_rate-c98c5cd9
+    - kafka.producer.outgoing_byte_total-4751f1d9
+    - kafka.producer.produce_throttle_time_avg-d888390c
+    - kafka.producer.produce_throttle_time_max-d18aaece
+    - kafka.producer.record_error_rate-3b4547e5
+    - kafka.producer.record_error_total-6f4cbcdd
+    - kafka.producer.record_queue_time_avg-ebdb31d2
+    - kafka.producer.record_queue_time_max-f49196f7
+    - kafka.producer.record_retry_rate-2e0fbc79
+    - kafka.producer.record_retry_total-d768e40d
+    - kafka.producer.record_send_rate-10250bfc
+    - kafka.producer.record_send_total-6044a25f
+    - kafka.producer.record_size_avg-cb055c97
+    - kafka.producer.record_size_max-3490a312
+    - kafka.producer.records_per_request_avg-5f16a1ef
+    - kafka.producer.request_latency_avg-e4870408
+    - kafka.producer.request_latency_max-3d4c1654
+    - kafka.producer.request_rate-09340ae2
+    - kafka.producer.request_size_avg-874761ec
+    - kafka.producer.request_size_max-700b542c
+    - kafka.producer.request_total-c33b92e8
+    - kafka.producer.requests_in_flight-ab853b92
+    - kafka.producer.response_rate-08886f1c
+    - kafka.producer.response_total-21678f7f
+    - kafka.producer.select_rate-362ab6ec
+    - kafka.producer.select_total-cd81e759
+    - kafka.producer.successful_authentication_no_reauth_total-e725183f
+    - kafka.producer.successful_authentication_rate-3053fc35
+    - kafka.producer.successful_authentication_total-33d0362d
+    - kafka.producer.successful_reauthentication_rate-9e3f4722
+    - kafka.producer.successful_reauthentication_total-6600f061
+    - kafka.producer.waiting_threads-e7152d0f
+    - messaging.client.consumed.messages-554a6d90
+    - messaging.client.operation.duration-bcc65266
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-6404ad2a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9946,6 +12569,11 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:connect-api:[2.6.0,)
+  telemetry:
+  - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-83bc8813
+    - messaging.process.duration-5301bc21
 - name: kafka-streams-0.11
   display_name: Apache Kafka Streams
   description: This instrumentation enables messaging spans for Kafka Streams processing.
@@ -10012,6 +12640,8 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.process.duration-6404ad2a
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -10518,10 +13148,12 @@ libraries:
         type: LONG
   - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=database,service.peer
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-fce1854c
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
@@ -10552,10 +13184,12 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database,service.peer
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-fce1854c
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
@@ -10604,10 +13238,12 @@ libraries:
         type: LONG
   - when: otel.instrumentation.common.v3-preview=true
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-fce1854c
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
@@ -10640,10 +13276,12 @@ libraries:
         type: LONG
   - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=database,service.peer
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-fce1854c
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
@@ -10680,10 +13318,12 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database,service.peer
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-fce1854c
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
@@ -10741,7 +13381,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-bfd9d23c
+    - db.client.operation.duration-6dc4ed81
     spans:
     - span_kind: CLIENT
       attributes:
@@ -11260,6 +13900,8 @@ libraries:
         type: STRING
       - name: messaging.destination.name
         type: STRING
+      - name: messaging.destination.template
+        type: STRING
       - name: messaging.destination.temporary
         type: BOOLEAN
       - name: messaging.message.body.size
@@ -11275,6 +13917,20 @@ libraries:
     - messaging.client.sent.messages-a16c8de0
     - messaging.process.duration-800050f8
     spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.template
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     - span_kind: CONSUMER
       attributes:
       - name: messaging.client.id
@@ -11944,18 +14600,6 @@ libraries:
         type: STRING
       - name: gen_ai.request.encoding_formats
         type: STRING_ARRAY
-      - name: gen_ai.request.model
-        type: STRING
-      - name: gen_ai.response.model
-        type: STRING
-      - name: gen_ai.usage.input_tokens
-        type: LONG
-    - span_kind: INTERNAL
-      attributes:
-      - name: gen_ai.operation.name
-        type: STRING
-      - name: gen_ai.provider.name
-        type: STRING
       - name: gen_ai.request.frequency_penalty
         type: DOUBLE
       - name: gen_ai.request.max_tokens
@@ -11968,6 +14612,8 @@ libraries:
         type: LONG
       - name: gen_ai.request.stop_sequences
         type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
       - name: gen_ai.request.temperature
         type: DOUBLE
       - name: gen_ai.request.top_p
@@ -11978,9 +14624,13 @@ libraries:
         type: STRING
       - name: gen_ai.response.model
         type: STRING
+      - name: gen_ai.usage.cache_read.input_tokens
+        type: LONG
       - name: gen_ai.usage.input_tokens
         type: LONG
       - name: gen_ai.usage.output_tokens
+        type: LONG
+      - name: gen_ai.usage.reasoning.output_tokens
         type: LONG
 - name: opensearch-java-3.0
   display_name: OpenSearch Java Client
@@ -11998,7 +14648,9 @@ libraries:
   javaagent_target_versions:
   - org.opensearch.client:opensearch-java:[3.0,)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - otel.instrumentation.opensearch.capture-search-query
+  - otel.instrumentation.opensearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -12021,6 +14673,8 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
 - name: opensearch-rest-1.0
   display_name: OpenSearch REST Client
@@ -12256,6 +14910,10 @@ libraries:
         type: LONG
       - name: http.route
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: network.protocol.version
         type: STRING
       - name: server.address
@@ -12270,6 +14928,21 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+- name: pekko-remote-1.0
+  display_name: Pekko Remote
+  description: |
+    This instrumentation propagates context between the nodes of a Pekko cluster, over artery and over classic remoting, it does not emit any telemetry on its own.
+  library_link: https://pekko.apache.org/docs/pekko/current/remoting-artery.html
+  features:
+  - CONTEXT_PROPAGATION
+  source_path: instrumentation/pekko/pekko-remote-1.0
+  scope:
+    name: io.opentelemetry.pekko-remote-1.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.pekko:pekko-remote_2.12:[1.0,)
+  - org.apache.pekko:pekko-remote_2.13:[1.0,)
+  - org.apache.pekko:pekko-remote_3:[1.0,)
 - name: play-mvc-2.4
   display_name: Play MVC
   description: |
@@ -12626,7 +15299,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-df200871
+    - messaging.client.operation.duration-dab7c60a
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
@@ -13124,7 +15797,7 @@ libraries:
         type: STRING
   - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13137,6 +15810,8 @@ libraries:
       - name: http.response.status_code
         type: LONG
       - name: http.route
+        type: STRING
+      - name: network.protocol.version
         type: STRING
       - name: peer.service
         type: STRING
@@ -13148,7 +15823,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=service.peer
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13161,6 +15836,8 @@ libraries:
       - name: http.response.status_code
         type: LONG
       - name: http.route
+        type: STRING
+      - name: network.protocol.version
         type: STRING
       - name: server.address
         type: STRING
@@ -13219,7 +15896,27 @@ libraries:
   - otel.instrumentation.kafka.experimental-span-attributes-956cabd8
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
-  - when: otel.instrumentation.kafka.experimental-span-attributes=true
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.client_id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.message.offset
+        type: LONG
+      - name: messaging.message.body.size
+        type: LONG
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -13241,27 +15938,9 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
-    spans:
-    - span_kind: CONSUMER
-      attributes:
-      - name: messaging.client_id
-        type: STRING
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.destination.partition.id
-        type: STRING
-      - name: messaging.kafka.message.key
-        type: STRING
-      - name: messaging.kafka.message.offset
-        type: LONG
-      - name: messaging.message.body.size
-        type: LONG
-      - name: messaging.operation
-        type: STRING
-      - name: messaging.system
-        type: STRING
-  - when: otel.semconv-stability.preview=messaging
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.process.duration-5301bc21
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -13415,10 +16094,12 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-fce1854c
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
@@ -13523,10 +16204,12 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-bfd9d23c
+    - db.client.operation.duration-8ae2b8ce
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
@@ -13543,6 +16226,33 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+- name: redisson-metrics-3.18
+  display_name: Redisson
+  description: This instrumentation enables database connection pool metrics for Redisson.
+  semantic_conventions:
+  - DATABASE_POOL_METRICS
+  library_link: https://github.com/redisson/redisson
+  source_path: instrumentation/redisson/redisson-metrics-3.18
+  scope:
+    name: io.opentelemetry.redisson-metrics-3.18
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.redisson:redisson:[3.18.0,3.26.0)
+  configuration_refs:
+  - otel.semconv-stability.opt-in
+  telemetry:
+  - when: default
+    metric_refs:
+    - db.client.connections.idle.min-f04d4083
+    - db.client.connections.max-ddde65fe
+    - db.client.connections.pending_requests-a0698f55
+    - db.client.connections.usage-5ef1d5ef
+  - when: otel.semconv-stability.opt-in=database
+    metric_refs:
+    - db.client.connection.count-2e6ba9b7
+    - db.client.connection.idle.min-73bdafbc
+    - db.client.connection.max-c7917942
+    - db.client.connection.pending_requests-a0f41111
 - name: redisson-metrics-3.26
   display_name: Redisson
   description: This instrumentation enables database connection pool metrics for Redisson.
@@ -14624,6 +17334,8 @@ libraries:
       attributes:
       - name: messaging.destination.name
         type: STRING
+      - name: messaging.destination.subscription.name
+        type: STRING
       - name: messaging.message.id
         type: STRING
       - name: messaging.operation.name
@@ -14669,6 +17381,8 @@ libraries:
     - span_kind: CONSUMER
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
         type: STRING
       - name: messaging.message.id
         type: STRING
@@ -14750,6 +17464,8 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.process.duration-43b43ca1
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -14856,9 +17572,16 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
-    - messaging.process.duration-800050f8
+    - messaging.client.consumed.messages-f3bb81cb
+    - messaging.process.duration-049f91c8
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -14874,6 +17597,16 @@ libraries:
         type: LONG
       - name: messaging.system
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: spring-rmi-4.0
   display_name: Spring RMI
   description: This instrumentation enables RPC client and RPC server spans for Spring
@@ -15050,7 +17783,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15060,6 +17793,8 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: network.protocol.version
+        type: STRING
       - name: peer.service
         type: STRING
       - name: server.address
@@ -15086,7 +17821,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=service.peer
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15096,6 +17831,8 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: network.protocol.version
+        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
@@ -16191,6 +18928,8 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.process.duration-5301bc21
     spans:
     - span_kind: CONSUMER
       attributes:

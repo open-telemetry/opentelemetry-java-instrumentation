@@ -100,6 +100,6 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
     if (registryAddress == null) {
       return invoker;
     }
-    return new RegistryCapturingInvoker<>(invoker, registryAddress);
+    return RegistryCapturingInvoker.wrap(invoker, registryAddress);
   }
 }

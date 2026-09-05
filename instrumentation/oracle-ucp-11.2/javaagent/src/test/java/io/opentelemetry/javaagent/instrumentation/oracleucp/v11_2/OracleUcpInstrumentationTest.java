@@ -26,4 +26,11 @@ class OracleUcpInstrumentationTest extends AbstractOracleUcpInstrumentationTest 
 
   @Override
   protected void shutdown(PoolDataSource connectionPool) {}
+
+  @Override
+  protected String expectedPoolName(PoolDataSource connectionPool, boolean explicitPoolName) {
+    return explicitPoolName
+        ? connectionPool.getConnectionPoolName()
+        : expectedDefaultMetricPoolName();
+  }
 }

@@ -185,6 +185,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.http.")
         .allowClass("org.springframework.http.client.reactive.AbstractClientHttpRequest$$Lambda")
         .allowClass("org.springframework.http.client.reactive.ReactorClientHttpConnector$$Lambda")
+        .allowClass("org.springframework.http.client.reactive.ReactorClientHttpResponse")
         .allowClass("org.springframework.http.codec.multipart.FileStorage$TempFileStorage$$Lambda")
         // There are some Mono implementation that get instrumented
         .allowClass("org.springframework.http.server.reactive.");

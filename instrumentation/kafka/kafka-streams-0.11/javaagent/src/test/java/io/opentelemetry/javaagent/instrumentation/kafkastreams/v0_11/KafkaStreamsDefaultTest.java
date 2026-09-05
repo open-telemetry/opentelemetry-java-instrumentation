@@ -9,6 +9,9 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -84,10 +87,12 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     cleanup.deferCleanup(() -> streams.close());
     streams.start();
 
+    awaitUntilConsumerIsReady();
+    testing.clearData();
+
     String greeting = "TESTING TESTING 123!";
     producer.send(new ProducerRecord<>(STREAM_PENDING, 10, greeting));
 
-    awaitUntilConsumerIsReady();
     @SuppressWarnings("PreferJavaTimeOverload")
     ConsumerRecords<Integer, String> records = poll(Duration.ofSeconds(10));
     Headers receivedHeaders = null;
@@ -235,6 +240,24 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                         .hasLinks(receiveRecordLink(producerProcessedRef.get(), "10"))
                         .hasAttributesSatisfyingExactly(assertions));
           });
+      assertProcessMetrics(
+          testing,
+          "io.opentelemetry.kafka-streams-0.11",
+          STREAM_PENDING,
+          testLatestDeps() ? "test-application" : null,
+          "0",
+          1,
+          null);
+      assertReceiveMetrics(
+          testing,
+          "io.opentelemetry.kafka-clients-0.11",
+          STREAM_PENDING,
+          testLatestDeps() ? "test-application" : null,
+          "0",
+          1,
+          1,
+          null);
+      assertTotalConsumedMessages(testing, "io.opentelemetry.kafka-clients-0.11", 2);
       return;
     }
 
@@ -360,6 +383,24 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       .hasLinks(LinkData.create(producerProcessedRef.get().getSpanContext()))
                       .hasAttributesSatisfyingExactly(assertions);
                 }));
+    assertProcessMetrics(
+        testing,
+        "io.opentelemetry.kafka-streams-0.11",
+        STREAM_PENDING,
+        testLatestDeps() ? "test-application" : null,
+        "0",
+        1,
+        null);
+    assertReceiveMetrics(
+        testing,
+        "io.opentelemetry.kafka-clients-0.11",
+        STREAM_PENDING,
+        testLatestDeps() ? "test-application" : null,
+        "0",
+        1,
+        1,
+        null);
+    assertTotalConsumedMessages(testing, "io.opentelemetry.kafka-clients-0.11", 2);
   }
 
   private static List<AttributeAssertion> producerAttributes(String topic, boolean includeKey) {

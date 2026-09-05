@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.commo
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionResponse;
 
 public class ElasticsearchTransportAttributesGetter
@@ -31,7 +32,31 @@ public class ElasticsearchTransportAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getDbOperationName(ElasticTransportRequest request) {
+    return ElasticsearchActionNames.wireName(request.getAction());
+  }
+
+  @Override
+  @SuppressWarnings("deprecation") // old database semconv still use db.operation
+  public String getDbOperation(ElasticTransportRequest request) {
     return request.getAction().getClass().getSimpleName();
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ElasticTransportRequest request,
+      @Nullable ActionResponse response,
+      @Nullable Throwable error) {
+    if (!(error instanceof ElasticsearchException)) {
+      return null;
+    }
+    // Elasticsearch wraps the failure that actually occurred, such as IndexNotFoundException, in a
+    // generic wrapper such as RemoteTransportException. unwrapCause() peels off the classes that
+    // Elasticsearch itself marks as wrappers, leaving the exception that identifies the failure.
+    Throwable cause = ((ElasticsearchException) error).unwrapCause();
+    // Returning null lets DbClientAttributesExtractor fall back to the exception class name.
+    return cause != error ? cause.getClass().getName() : null;
   }
 }

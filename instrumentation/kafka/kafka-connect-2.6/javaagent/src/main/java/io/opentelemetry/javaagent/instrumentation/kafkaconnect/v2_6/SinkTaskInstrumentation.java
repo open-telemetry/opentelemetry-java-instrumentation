@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6.KafkaConnectSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
@@ -58,6 +59,14 @@ class SinkTaskInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(Collection<SinkRecord> records) {
+        // Kafka Connect calls put() on every worker iteration, including when the preceding poll
+        // returned nothing. An empty batch delivers no message, so under stable/v3 semconv it does
+        // not start a process operation at all, matching kafka-clients, which attaches no process
+        // context to an empty poll. Legacy behavior is preserved: it kept spanning empty batches.
+        if (records.isEmpty() && emitStableMessagingSemconv()) {
+          return null;
+        }
+
         Context parentContext = Context.current();
 
         KafkaConnectTask task = new KafkaConnectTask(records);
