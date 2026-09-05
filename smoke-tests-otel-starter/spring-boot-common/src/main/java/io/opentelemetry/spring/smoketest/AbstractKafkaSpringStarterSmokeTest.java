@@ -6,6 +6,7 @@
 package io.opentelemetry.spring.smoketest;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -36,8 +37,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
 
   @Autowired protected KafkaTemplate<String, String> kafkaTemplate;
 
-  private static final AttributeKey<String> MESSAGING_CLIENT_ID =
-      AttributeKey.stringKey("messaging.client_id");
+  private static final AttributeKey<String> MESSAGING_CLIENT_ID = stringKey("messaging.client_id");
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
@@ -80,7 +80,10 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                   satisfies(
                                       MESSAGING_KAFKA_MESSAGE_OFFSET,
                                       AbstractLongAssert::isNotNegative),
-                                  equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")),
+                                  equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                                  satisfies(
+                                      stringKey("messaging.kafka.cluster.id"),
+                                      AbstractStringAssert::isNotEmpty)),
                       span ->
                           span.hasName("testTopic process")
                               .hasKind(SpanKind.CONSUMER)

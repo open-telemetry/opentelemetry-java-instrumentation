@@ -86,6 +86,10 @@ abstract class KafkaStreamsBaseTest {
 
     producer = new KafkaProducer<>(producerProps(kafka.getBootstrapServers()));
     cleanup.deferAfterAll(producer);
+    // Trigger metadata fetch so cluster id is available before the first send. Without this,
+    // KafkaUtil.clusterIdFromMetadata returns null on the very first send because the broker has
+    // not yet responded with a metadata message containing the cluster resource.
+    producer.partitionsFor(STREAM_PENDING);
 
     Map<String, Object> consumerProps =
         ImmutableMap.of(
