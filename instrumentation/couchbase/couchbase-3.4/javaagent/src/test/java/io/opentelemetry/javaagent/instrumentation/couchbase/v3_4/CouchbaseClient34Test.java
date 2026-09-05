@@ -9,24 +9,49 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.couchbase.client.core.Core;
+import com.couchbase.client.core.env.PasswordAuthenticator;
+import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.ClusterOptions;
 import com.couchbase.client.java.Collection;
+import com.couchbase.client.java.env.ClusterEnvironment;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -49,6 +74,7 @@ class CouchbaseClient34Test {
   private static final Logger logger = LoggerFactory.getLogger("couchbase-container");
 
   private static CouchbaseContainer couchbase;
+  private static String connectionString;
   private static Cluster cluster;
   private static Collection collection;
 
@@ -63,10 +89,9 @@ class CouchbaseClient34Test {
             .withStartupTimeout(Duration.ofMinutes(2));
     couchbase.start();
     cleanup.deferAfterAll(couchbase::stop);
+    connectionString = couchbase.getConnectionString();
 
-    cluster =
-        Cluster.connect(
-            couchbase.getConnectionString(), couchbase.getUsername(), couchbase.getPassword());
+    cluster = Cluster.connect(connectionString, couchbase.getUsername(), couchbase.getPassword());
     cleanup.deferAfterAll(cluster::disconnect);
     Bucket bucket = cluster.bucket("test");
     collection = bucket.defaultCollection();
@@ -86,7 +111,7 @@ class CouchbaseClient34Test {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   span.hasKind(CLIENT)
-                      .hasName("get")
+                      .hasName(spanName())
                       .hasStatus(StatusData.error())
                       .hasAttributesSatisfyingExactly(
                           equalTo(maybeStable(DB_SYSTEM), "couchbase"),
@@ -96,9 +121,99 @@ class CouchbaseClient34Test {
                           equalTo(stringKey("db.couchbase.document_id"), oldOrExperimental("id")),
                           equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
                           equalTo(longKey("db.couchbase.retries"), oldOrExperimental(0L)),
-                          equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")));
+                          equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")),
+                          equalTo(SERVER_ADDRESS, serverAddress()),
+                          equalTo(SERVER_PORT, serverPort()));
                 },
                 span -> span.hasName("dispatch_to_server")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"DATABASE", "DATABASE_DUP"})
+  void latestCollectionNameUsesStableSemconv(String conventionName)
+      throws ReflectiveOperationException {
+    assumeTrue(testLatestDeps() && emitStableDatabaseSemconv() && !EXPERIMENTAL_ATTRIBUTES);
+
+    ClusterEnvironment.Builder environmentBuilder = ClusterEnvironment.builder();
+    Class<?> conventionClass =
+        Class.forName("com.couchbase.client.core.cnc.tracing.ObservabilitySemanticConvention");
+    Object convention =
+        conventionClass.getMethod("valueOf", String.class).invoke(null, conventionName);
+    environmentBuilder
+        .getClass()
+        .getMethod("observabilitySemanticConventions", List.class)
+        .invoke(environmentBuilder, singletonList(convention));
+    ClusterEnvironment environment = environmentBuilder.build();
+    cleanup.deferCleanup(environment::shutdown);
+    Cluster latestCluster =
+        Cluster.connect(
+            connectionString,
+            ClusterOptions.clusterOptions(couchbase.getUsername(), couchbase.getPassword())
+                .environment(environment));
+    cleanup.deferCleanup(latestCluster::disconnect);
+    Bucket bucket = latestCluster.bucket("test");
+    Collection latestCollection = bucket.defaultCollection();
+    bucket.waitUntilReady(Duration.ofSeconds(30));
+
+    try {
+      latestCollection.get("id");
+    } catch (DocumentNotFoundException ignored) {
+      // Expected
+    }
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("get _default")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "couchbase"),
+                            equalTo(DB_NAMESPACE, "test"),
+                            equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_COLLECTION_NAME, "_default"),
+                            equalTo(SERVER_ADDRESS, serverAddress()),
+                            equalTo(SERVER_PORT, serverPort())),
+                span -> span.hasName("dispatch_to_server")));
+  }
+
+  @Test
+  void directSeedSetHasDeterministicServerAddress() {
+    Set<SeedNode> seedNodes =
+        new LinkedHashSet<>(
+            asList(
+                SeedNode.create("two.example", Optional.of(11211), Optional.empty()),
+                SeedNode.create("one.example", Optional.of(11210), Optional.of(8091)),
+                SeedNode.create("one.example", Optional.of(11210), Optional.of(8092))));
+    Core core =
+        Core.create(
+            cluster.environment(),
+            PasswordAuthenticator.create(couchbase.getUsername(), couchbase.getPassword()),
+            seedNodes);
+    cleanup.deferCleanup(() -> core.shutdown().block());
+
+    CouchbaseServerTarget target = CouchbaseServerTargets.get(core);
+    assertThat(target.getAddress())
+        .isEqualTo("one.example:11210,one.example:8091,one.example:8092,two.example:11211");
+    assertThat(target.getPort()).isNull();
+  }
+
+  private static String serverAddress() {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    String seed = connectionString.substring(connectionString.indexOf("://") + 3);
+    return seed.substring(0, seed.lastIndexOf(':'));
+  }
+
+  private static Long serverPort() {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    return Long.valueOf(connectionString.substring(connectionString.lastIndexOf(':') + 1));
+  }
+
+  private static String spanName() {
+    return emitStableDatabaseSemconv() ? "get _default" : "get";
   }
 
   private static <T> T oldOrExperimental(T value) {

@@ -9,8 +9,11 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -52,6 +55,7 @@ class CouchbaseClient316Test {
   private static final Logger logger = LoggerFactory.getLogger("couchbase-container");
 
   private static CouchbaseContainer couchbase;
+  private static String connectionString;
   private static Cluster cluster;
   private static Collection collection;
 
@@ -67,6 +71,7 @@ class CouchbaseClient316Test {
             .withStartupTimeout(Duration.ofMinutes(2));
     couchbase.start();
     cleanup.deferAfterAll(couchbase::stop);
+    connectionString = couchbase.getConnectionString();
 
     ClusterEnvironment environment =
         ClusterEnvironment.builder()
@@ -76,7 +81,7 @@ class CouchbaseClient316Test {
 
     cluster =
         Cluster.connect(
-            couchbase.getConnectionString(),
+            connectionString,
             ClusterOptions.clusterOptions(couchbase.getUsername(), couchbase.getPassword())
                 .environment(environment));
     cleanup.deferAfterAll(cluster::disconnect);
@@ -101,7 +106,7 @@ class CouchbaseClient316Test {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
-                      .hasName("get")
+                      .hasName(spanName())
                       .hasStatus(
                           StatusData.unset()) // later version of couchbase gives correct behavior
                       .hasAttributesSatisfyingExactly(
@@ -111,9 +116,30 @@ class CouchbaseClient316Test {
                           equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
                           equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
                           equalTo(longKey("db.couchbase.retries"), oldOrExperimental(0L)),
-                          equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")));
+                          equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")),
+                          equalTo(SERVER_ADDRESS, serverAddress()),
+                          equalTo(SERVER_PORT, serverPort()));
                 },
                 span -> span.hasName("dispatch_to_server")));
+  }
+
+  private static String serverAddress() {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    String seed = connectionString.substring(connectionString.indexOf("://") + 3);
+    return seed.substring(0, seed.lastIndexOf(':'));
+  }
+
+  private static Long serverPort() {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    return Long.valueOf(connectionString.substring(connectionString.lastIndexOf(':') + 1));
+  }
+
+  private static String spanName() {
+    return emitStableDatabaseSemconv() ? "get _default" : "get";
   }
 
   private static <T> T oldOrExperimental(T value) {
