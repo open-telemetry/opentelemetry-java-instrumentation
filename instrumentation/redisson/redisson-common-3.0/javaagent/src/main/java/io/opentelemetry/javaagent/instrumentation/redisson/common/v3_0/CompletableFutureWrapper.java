@@ -27,7 +27,7 @@ public class CompletableFutureWrapper<T> extends CompletableFuture<T> implements
   @Nullable private volatile EndOperationListener<T> endOperationListener;
 
   private CompletableFutureWrapper(CompletableFuture<T> delegate) {
-    Context context = Context.current();
+    Context context = RedissonBatchContext.clearMarker(Context.current());
     this.whenComplete(
         (result, error) -> {
           EndOperationListener<T> endOperationListener = this.endOperationListener;
