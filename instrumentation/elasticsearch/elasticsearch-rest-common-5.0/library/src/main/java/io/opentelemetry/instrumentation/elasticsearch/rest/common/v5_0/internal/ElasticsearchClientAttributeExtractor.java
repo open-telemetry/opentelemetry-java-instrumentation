@@ -50,6 +50,9 @@ final class ElasticsearchClientAttributeExtractor
   }
 
   private static void setServerAttributes(AttributesBuilder attributes, Response response) {
+    if (emitStableDatabaseSemconv()) {
+      return;
+    }
     HttpHost host = response.getHost();
     if (host != null) {
       attributes.put(SERVER_ADDRESS, host.getHostName());

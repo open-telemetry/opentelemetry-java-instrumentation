@@ -5,13 +5,17 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.v7_0;
 
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
+import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchServerTarget;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.RestResponseListener;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -25,17 +29,20 @@ import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.InvocationHandlerAdapter;
 import org.apache.http.Header;
+import org.apache.http.HttpHost;
 import org.elasticsearch.client.Node;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestClientPackageAccess;
 
 class RestClientWrapper {
   private static final Class<?> proxyClass = createProxyClass();
   private static final Field targetField = getTargetField(proxyClass);
   private static final Field instrumenterSupplierField = getInstrumenterSupplierField(proxyClass);
+  private static final Field serverTargetSupplierField = getProxyField(proxyClass, "serverTarget");
   private static final Function<RestClient, RestClient> proxyFactory = getProxyFactory(proxyClass);
 
   private static Class<?> createProxyClass() {
@@ -46,6 +53,9 @@ class RestClientWrapper {
         // are in a child class loader of RestClient's class loader and Instrumenter is not visible
         // for RestClient
         .defineField("instrumenterSupplier", Supplier.class, Visibility.PUBLIC)
+        // the target the wrapped client was configured with, held behind a Supplier for the same
+        // class loader visibility reason
+        .defineField("serverTarget", Supplier.class, Visibility.PUBLIC)
         .method(any())
         .intercept(
             InvocationHandlerAdapter.of(
@@ -67,7 +77,11 @@ class RestClientWrapper {
                     Context parentContext = Context.current();
                     ElasticsearchRestRequest otelRequest =
                         ElasticsearchRestRequest.create(
-                            request.getMethod(), request.getEndpoint(), null, request.getEntity());
+                            request.getMethod(),
+                            request.getEndpoint(),
+                            null,
+                            request.getEntity(),
+                            getServerTarget(proxy));
                     if (!instrumenter.shouldStart(parentContext, otelRequest)) {
                       return method.invoke(target, args);
                     }
@@ -94,7 +108,11 @@ class RestClientWrapper {
                     Context parentContext = Context.current();
                     ElasticsearchRestRequest otelRequest =
                         ElasticsearchRestRequest.create(
-                            request.getMethod(), request.getEndpoint(), null, request.getEntity());
+                            request.getMethod(),
+                            request.getEndpoint(),
+                            null,
+                            request.getEntity(),
+                            getServerTarget(proxy));
                     if (!instrumenter.shouldStart(parentContext, otelRequest)) {
                       return method.invoke(target, args);
                     }
@@ -130,6 +148,14 @@ class RestClientWrapper {
 
   private static Field getInstrumenterSupplierField(Class<?> clazz) {
     return getProxyField(clazz, "instrumenterSupplier");
+  }
+
+  @SuppressWarnings("unchecked") // casting reflection result
+  @Nullable
+  private static DbServerTarget getServerTarget(Object proxy) throws IllegalAccessException {
+    Supplier<DbServerTarget> supplier =
+        (Supplier<DbServerTarget>) serverTargetSupplierField.get(proxy);
+    return supplier != null ? supplier.get() : null;
   }
 
   private static Field getProxyField(Class<?> clazz, String fieldName) {
@@ -188,13 +214,45 @@ class RestClientWrapper {
   }
 
   static RestClient wrap(
+      RestClientBuilder restClientBuilder,
+      Instrumenter<ElasticsearchRestRequest, Response> instrumenter) {
+    RestClient restClient = restClientBuilder.build();
+    try {
+      return wrapWithTarget(restClient, instrumenter, null);
+    } catch (RuntimeException | Error e) {
+      try {
+        restClient.close();
+      } catch (IOException f) {
+        e.addSuppressed(f);
+      }
+      throw e;
+    }
+  }
+
+  static RestClient wrap(
       RestClient restClient, Instrumenter<ElasticsearchRestRequest, Response> instrumenter) {
+    return wrapWithTarget(restClient, instrumenter, null);
+  }
+
+  static RestClient wrap(
+      RestClient restClient,
+      Instrumenter<ElasticsearchRestRequest, Response> instrumenter,
+      HttpHost... configuredHosts) {
+    return wrapWithTarget(
+        restClient, instrumenter, ElasticsearchServerTarget.of(asList(configuredHosts)));
+  }
+
+  private static RestClient wrapWithTarget(
+      RestClient restClient,
+      Instrumenter<ElasticsearchRestRequest, Response> instrumenter,
+      @Nullable DbServerTarget serverTarget) {
     RestClient wrapped = proxyFactory.apply(restClient);
     try {
       // set wrapped RestClient instance and the instrumenter on the proxy
       targetField.set(wrapped, restClient);
       instrumenterSupplierField.set(
           wrapped, (Supplier<Instrumenter<ElasticsearchRestRequest, Response>>) () -> instrumenter);
+      serverTargetSupplierField.set(wrapped, (Supplier<DbServerTarget>) () -> serverTarget);
       return wrapped;
     } catch (Exception e) {
       throw new IllegalStateException("Failed to construct proxy instance", e);
