@@ -43,10 +43,9 @@ public final class OpenTelemetryCallUtil {
     synchronized (call) {
       RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get(call);
       if (requestAndContext != null) {
-        REQUEST_AND_CONTEXT.set(
-            call,
-            requestAndContext.withNetworkPeer(
-                inetAddress.getHostAddress(), inetSocketAddress.getPort()));
+        requestAndContext
+            .getRequest()
+            .setNetworkPeer(inetAddress.getHostAddress(), inetSocketAddress.getPort());
       }
     }
   }
