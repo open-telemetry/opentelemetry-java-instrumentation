@@ -15,14 +15,13 @@ import javax.annotation.Nullable;
 
 // Helper for accessing the package-private Call class.
 public final class OpenTelemetryCallUtil {
-  private static final VirtualField<Call, RequestAndContext> REQUEST_AND_CONTEXT =
-      VirtualField.find(Call.class, RequestAndContext.class);
+  private static final VirtualField<Call, CallState> CALL_STATE =
+      VirtualField.find(Call.class, CallState.class);
 
   public static void setRequestAndContext(
       Object call, @Nullable RequestAndContext requestAndContext) {
-    synchronized (call) {
-      REQUEST_AND_CONTEXT.set((Call) call, requestAndContext);
-    }
+    CALL_STATE.set(
+        (Call) call, requestAndContext == null ? null : new CallState(requestAndContext));
   }
 
   public static boolean isCall(Object message) {
@@ -41,36 +40,79 @@ public final class OpenTelemetryCallUtil {
     }
 
     Call call = (Call) message;
-    synchronized (call) {
-      RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get(call);
-      if (requestAndContext != null) {
-        requestAndContext
-            .getRequest()
-            .setNetworkPeer(inetAddress.getHostAddress(), inetSocketAddress.getPort());
-      }
+    CallState callState = CALL_STATE.get(call);
+    if (callState != null) {
+      callState.setNetworkPeer(inetAddress.getHostAddress(), inetSocketAddress.getPort());
     }
   }
 
   @Nullable
   public static RequestAndContext getAndClearRequestAndContext(Object call) {
-    synchronized (call) {
-      RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get((Call) call);
-      REQUEST_AND_CONTEXT.set((Call) call, null);
-      return requestAndContext;
+    Call hbaseCall = (Call) call;
+    CallState callState = CALL_STATE.get(hbaseCall);
+    if (callState == null) {
+      return null;
     }
+
+    RequestAndContext requestAndContext = callState.claim();
+    CALL_STATE.set(hbaseCall, null);
+    return requestAndContext;
   }
 
   @Nullable
   public static RequestAndContext getAndClearRequestAndContextIfError(
-      Object call, IOException expectedError) {
-    synchronized (call) {
-      Call hbaseCall = (Call) call;
-      if (expectedError == null || hbaseCall.error != expectedError) {
-        return null;
+      Object call, @Nullable IOException callError, IOException expectedError) {
+    Call hbaseCall = (Call) call;
+    if (expectedError == null || callError != expectedError) {
+      return null;
+    }
+
+    CallState callState = CALL_STATE.get(hbaseCall);
+    if (callState == null) {
+      return null;
+    }
+
+    RequestAndContext requestAndContext = callState.claim();
+    CALL_STATE.set(hbaseCall, null);
+    return requestAndContext;
+  }
+
+  static final class CallState {
+    private final RequestAndContext requestAndContext;
+    private final Object lock = new Object();
+    @Nullable private String networkPeerAddress;
+    private int networkPeerPort;
+    private boolean completed;
+
+    CallState(RequestAndContext requestAndContext) {
+      this.requestAndContext = requestAndContext;
+    }
+
+    void setNetworkPeer(String networkPeerAddress, int networkPeerPort) {
+      synchronized (lock) {
+        if (!completed) {
+          this.networkPeerAddress = networkPeerAddress;
+          this.networkPeerPort = networkPeerPort;
+        }
+      }
+    }
+
+    @Nullable
+    RequestAndContext claim() {
+      String networkPeerAddress;
+      int networkPeerPort;
+      synchronized (lock) {
+        if (completed) {
+          return null;
+        }
+        completed = true;
+        networkPeerAddress = this.networkPeerAddress;
+        networkPeerPort = this.networkPeerPort;
       }
 
-      RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get(hbaseCall);
-      REQUEST_AND_CONTEXT.set(hbaseCall, null);
+      if (networkPeerAddress != null) {
+        requestAndContext.getRequest().setNetworkPeer(networkPeerAddress, networkPeerPort);
+      }
       return requestAndContext;
     }
   }
