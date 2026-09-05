@@ -19,8 +19,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.Map;
 import javax.annotation.Nullable;
 import redis.clients.jedis.BinaryJedis;
@@ -48,10 +48,9 @@ public class JedisSingletons {
   private static final VirtualField<Pool<?>, Boolean> POOL_TARGET_CONFIGURED =
       VirtualField.find(Pool.class, Boolean.class);
 
-  // the cluster connection handler was added in jedis 2.4, so it has no type that spans this
-  // module's whole version range and cannot carry a virtual field
-  private static final Cache<Object, RedisServerTarget> clusterTargets = Cache.weak();
-  private static final Cache<Object, Boolean> configuredClusterHandlers = Cache.weak();
+  @Nullable
+  private static final VirtualField<Object, ConfiguredTarget> CLUSTER_CONFIGURED_TARGET =
+      getClusterConfiguredTargetVirtualField();
 
   private static final ContextKey<ConfiguredTarget> CURRENT_CONFIGURED_TARGET =
       ContextKey.named("opentelemetry-jedis-configured-target");
@@ -99,9 +98,8 @@ public class JedisSingletons {
   }
 
   public static void setClusterTarget(Object handler, @Nullable RedisServerTarget target) {
-    configuredClusterHandlers.put(handler, true);
-    if (target != null) {
-      clusterTargets.put(handler, target);
+    if (CLUSTER_CONFIGURED_TARGET != null) {
+      CLUSTER_CONFIGURED_TARGET.set(handler, new ConfiguredTarget(target));
     }
   }
 
@@ -118,28 +116,28 @@ public class JedisSingletons {
   }
 
   public static void attachClusterTarget(Object handler, @Nullable Object connection) {
-    if (Boolean.TRUE.equals(configuredClusterHandlers.get(handler))) {
-      attach(clusterTargets.get(handler), connection);
+    ConfiguredTarget configuredTarget = getClusterConfiguredTarget(handler);
+    if (configuredTarget != null) {
+      attach(configuredTarget.target, connection);
     }
   }
 
   public static void attachClusterTargetToPools(Object handler, @Nullable Map<?, ?> pools) {
-    if (!Boolean.TRUE.equals(configuredClusterHandlers.get(handler)) || pools == null) {
+    ConfiguredTarget configuredTarget = getClusterConfiguredTarget(handler);
+    if (configuredTarget == null || pools == null) {
       return;
     }
-    RedisServerTarget target = clusterTargets.get(handler);
     for (Object pool : pools.values()) {
       if (pool instanceof Pool<?>) {
-        setPoolTarget((Pool<?>) pool, target);
+        setPoolTarget((Pool<?>) pool, configuredTarget.target);
       }
     }
   }
 
   @Nullable
   public static Scope openClusterTargetScope(Object handler) {
-    return Boolean.TRUE.equals(configuredClusterHandlers.get(handler))
-        ? openConfiguredTargetScope(clusterTargets.get(handler))
-        : null;
+    ConfiguredTarget configuredTarget = getClusterConfiguredTarget(handler);
+    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
   }
 
   @Nullable
@@ -153,6 +151,28 @@ public class JedisSingletons {
     return Context.current()
         .with(CURRENT_CONFIGURED_TARGET, new ConfiguredTarget(target))
         .makeCurrent();
+  }
+
+  @NoMuzzle // the carrier class was added after the beginning of this module's version range
+  @SuppressWarnings("unchecked")
+  @Nullable
+  private static VirtualField<Object, ConfiguredTarget> getClusterConfiguredTargetVirtualField() {
+    try {
+      Class<?> handlerClass =
+          Class.forName(
+              "redis.clients.jedis.JedisClusterConnectionHandler",
+              false,
+              JedisSingletons.class.getClassLoader());
+      return (VirtualField<Object, ConfiguredTarget>)
+          VirtualField.find(handlerClass, ConfiguredTarget.class);
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static ConfiguredTarget getClusterConfiguredTarget(Object handler) {
+    return CLUSTER_CONFIGURED_TARGET != null ? CLUSTER_CONFIGURED_TARGET.get(handler) : null;
   }
 
   private static void attach(@Nullable RedisServerTarget target, @Nullable Object jedis) {
@@ -190,7 +210,7 @@ public class JedisSingletons {
 
   private JedisSingletons() {}
 
-  private static final class ConfiguredTarget {
+  static final class ConfiguredTarget {
     @Nullable private final RedisServerTarget target;
 
     private ConfiguredTarget(@Nullable RedisServerTarget target) {

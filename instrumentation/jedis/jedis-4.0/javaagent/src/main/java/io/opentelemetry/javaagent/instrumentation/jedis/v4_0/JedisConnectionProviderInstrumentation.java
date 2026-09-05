@@ -38,6 +38,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.JedisClusterInfoCache;
 import redis.clients.jedis.util.Pool;
 
 class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
@@ -150,7 +151,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This Object provider,
-        @Advice.FieldValue("cache") @Nullable Object cache,
+        @Advice.FieldValue("cache") @Nullable JedisClusterInfoCache cache,
         @Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
       RedisServerTarget target = JedisServerTargets.ofNodes(nodes);
       JedisSingletons.setProviderTarget(provider, target);
@@ -226,7 +227,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.FieldValue("this$0") Object cache) {
+    public static Scope onEnter(@Advice.FieldValue("this$0") JedisClusterInfoCache cache) {
       return JedisSingletons.openTopologyTargetScope(cache);
     }
 
@@ -340,7 +341,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
                     Opcodes.INVOKESTATIC,
                     Type.getInternalName(JedisSingletons.class),
                     "setTopologyTargetFromNodes",
-                    "(Ljava/lang/Object;Ljava/util/Collection;)V",
+                    "(Lredis/clients/jedis/JedisClusterInfoCache;Ljava/util/Collection;)V",
                     false);
               }
               super.visitTypeInsn(opcode, type);

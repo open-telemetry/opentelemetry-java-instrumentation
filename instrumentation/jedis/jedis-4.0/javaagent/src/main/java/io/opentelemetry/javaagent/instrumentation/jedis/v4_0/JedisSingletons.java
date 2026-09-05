@@ -18,13 +18,14 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisClusterInfoCache;
 import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.util.Pool;
 
@@ -45,13 +46,12 @@ public class JedisSingletons {
   private static final VirtualField<Pool<?>, Boolean> POOL_TARGET_CONFIGURED =
       VirtualField.find(Pool.class, Boolean.class);
 
-  // the connection provider interface was renamed between jedis 4.0.0-beta1 and 4.0.0, so it has no
-  // type that spans this module's whole version range and cannot carry a virtual field
-  private static final Cache<Object, RedisServerTarget> providerTargets = Cache.weak();
-  private static final Cache<Object, Boolean> configuredProviders = Cache.weak();
+  private static final VirtualField<Object, ConfiguredTarget> PROVIDER_CONFIGURED_TARGET =
+      getProviderConfiguredTargetVirtualField();
 
-  private static final Cache<Object, RedisServerTarget> topologyTargets = Cache.weak();
-  private static final Cache<Object, Boolean> configuredTopologyOwners = Cache.weak();
+  private static final VirtualField<JedisClusterInfoCache, ConfiguredTarget>
+      TOPOLOGY_CONFIGURED_TARGET =
+          VirtualField.find(JedisClusterInfoCache.class, ConfiguredTarget.class);
 
   private static final ContextKey<ConfiguredTarget> CURRENT_CONFIGURED_TARGET =
       ContextKey.named("opentelemetry-jedis-configured-target");
@@ -103,24 +103,19 @@ public class JedisSingletons {
   }
 
   public static void setProviderTarget(Object provider, @Nullable RedisServerTarget target) {
-    configuredProviders.put(provider, true);
-    if (target != null) {
-      providerTargets.put(provider, target);
-    }
+    PROVIDER_CONFIGURED_TARGET.set(provider, new ConfiguredTarget(target));
   }
 
   public static void setTopologyTarget(
-      @Nullable Object topologyOwner, @Nullable RedisServerTarget target) {
+      @Nullable JedisClusterInfoCache topologyOwner, @Nullable RedisServerTarget target) {
     if (topologyOwner == null) {
       return;
     }
-    configuredTopologyOwners.put(topologyOwner, true);
-    if (target != null) {
-      topologyTargets.put(topologyOwner, target);
-    }
+    TOPOLOGY_CONFIGURED_TARGET.set(topologyOwner, new ConfiguredTarget(target));
   }
 
-  public static void setTopologyTargetFromNodes(Object topologyOwner, Collection<?> startNodes) {
+  public static void setTopologyTargetFromNodes(
+      JedisClusterInfoCache topologyOwner, Collection<?> startNodes) {
     setTopologyTarget(topologyOwner, JedisServerTargets.ofNodes(startNodes));
   }
 
@@ -140,34 +135,33 @@ public class JedisSingletons {
   }
 
   public static void attachProviderTarget(Object provider, @Nullable Connection connection) {
-    if (Boolean.TRUE.equals(configuredProviders.get(provider))) {
-      setConnectionTarget(connection, providerTargets.get(provider));
+    ConfiguredTarget configuredTarget = PROVIDER_CONFIGURED_TARGET.get(provider);
+    if (configuredTarget != null) {
+      setConnectionTarget(connection, configuredTarget.target);
     }
   }
 
   public static void attachProviderTargetToPools(
       Object provider, @Nullable Map<?, ? extends Pool<?>> pools) {
-    if (!Boolean.TRUE.equals(configuredProviders.get(provider)) || pools == null) {
+    ConfiguredTarget configuredTarget = PROVIDER_CONFIGURED_TARGET.get(provider);
+    if (configuredTarget == null || pools == null) {
       return;
     }
-    RedisServerTarget target = providerTargets.get(provider);
     for (Pool<?> pool : pools.values()) {
-      setPoolTarget(pool, target);
+      setPoolTarget(pool, configuredTarget.target);
     }
   }
 
   @Nullable
   public static Scope openProviderTargetScope(Object provider) {
-    return Boolean.TRUE.equals(configuredProviders.get(provider))
-        ? openConfiguredTargetScope(providerTargets.get(provider))
-        : null;
+    ConfiguredTarget configuredTarget = PROVIDER_CONFIGURED_TARGET.get(provider);
+    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
   }
 
   @Nullable
-  public static Scope openTopologyTargetScope(Object topologyOwner) {
-    return Boolean.TRUE.equals(configuredTopologyOwners.get(topologyOwner))
-        ? openConfiguredTargetScope(topologyTargets.get(topologyOwner))
-        : null;
+  public static Scope openTopologyTargetScope(JedisClusterInfoCache topologyOwner) {
+    ConfiguredTarget configuredTarget = TOPOLOGY_CONFIGURED_TARGET.get(topologyOwner);
+    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
   }
 
   @Nullable
@@ -181,6 +175,27 @@ public class JedisSingletons {
     return Context.current()
         .with(CURRENT_CONFIGURED_TARGET, new ConfiguredTarget(target))
         .makeCurrent();
+  }
+
+  @NoMuzzle // the carrier interface was renamed after the beta release
+  @SuppressWarnings("unchecked")
+  private static VirtualField<Object, ConfiguredTarget> getProviderConfiguredTargetVirtualField() {
+    ClassLoader classLoader = JedisSingletons.class.getClassLoader();
+    Class<?> providerClass;
+    try {
+      providerClass =
+          Class.forName("redis.clients.jedis.providers.ConnectionProvider", false, classLoader);
+    } catch (ClassNotFoundException ignored) {
+      try {
+        providerClass =
+            Class.forName(
+                "redis.clients.jedis.providers.JedisConnectionProvider", false, classLoader);
+      } catch (ClassNotFoundException e) {
+        throw new IllegalStateException("Jedis connection provider interface not found", e);
+      }
+    }
+    return (VirtualField<Object, ConfiguredTarget>)
+        VirtualField.find(providerClass, ConfiguredTarget.class);
   }
 
   private static void setConnectionTarget(
@@ -210,7 +225,7 @@ public class JedisSingletons {
 
   private JedisSingletons() {}
 
-  private static final class ConfiguredTarget {
+  static final class ConfiguredTarget {
     @Nullable private final RedisServerTarget target;
 
     private ConfiguredTarget(@Nullable RedisServerTarget target) {
