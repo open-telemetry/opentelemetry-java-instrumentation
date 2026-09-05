@@ -8,19 +8,60 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
+import redis.clients.jedis.BinaryJedis;
+import redis.clients.jedis.Connection;
+import redis.clients.jedis.JedisClusterConnectionHandler;
+import redis.clients.jedis.util.Pool;
+import redis.clients.jedis.util.Sharded;
 
 public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-3.0";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
+
+  private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
+      VirtualField.find(Connection.class, RedisServerTarget.class);
+  private static final VirtualField<Connection, Boolean> CONNECTION_TARGET_SUPPRESSED =
+      VirtualField.find(Connection.class, Boolean.class);
+
+  private static final VirtualField<Sharded<?, ?>, RedisServerTarget> SHARDED_TARGET =
+      VirtualField.find(Sharded.class, RedisServerTarget.class);
+  private static final VirtualField<Sharded<?, ?>, Boolean> SHARDED_TARGET_CONFIGURED =
+      VirtualField.find(Sharded.class, Boolean.class);
+
+  private static final VirtualField<Pool<?>, RedisServerTarget> POOL_TARGET =
+      VirtualField.find(Pool.class, RedisServerTarget.class);
+  private static final VirtualField<Pool<?>, Boolean> POOL_TARGET_CONFIGURED =
+      VirtualField.find(Pool.class, Boolean.class);
+
+  private static final VirtualField<Set<?>, Collection<?>> CONFIGURED_SENTINELS =
+      VirtualField.find(Set.class, Collection.class);
+
+  private static final VirtualField<JedisClusterConnectionHandler, RedisServerTarget>
+      CLUSTER_TARGET =
+          VirtualField.find(JedisClusterConnectionHandler.class, RedisServerTarget.class);
+  private static final VirtualField<JedisClusterConnectionHandler, Boolean>
+      CLUSTER_TARGET_CONFIGURED =
+          VirtualField.find(JedisClusterConnectionHandler.class, Boolean.class);
+
+  private static final ContextKey<ConfiguredTarget> CURRENT_CONFIGURED_TARGET =
+      ContextKey.named("opentelemetry-jedis-configured-target");
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -54,5 +95,134 @@ public class JedisSingletons {
     return instrumenter;
   }
 
+  public static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
+    SHARDED_TARGET.set(sharded, target);
+    SHARDED_TARGET_CONFIGURED.set(sharded, true);
+  }
+
+  public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
+    POOL_TARGET.set(pool, target);
+    POOL_TARGET_CONFIGURED.set(pool, true);
+  }
+
+  public static void attachConfiguredSentinels(
+      @Nullable Set<?> parsedSentinels, @Nullable Collection<?> configuredSentinels) {
+    if (parsedSentinels != null && configuredSentinels != null) {
+      CONFIGURED_SENTINELS.set(parsedSentinels, configuredSentinels);
+    }
+  }
+
+  @Nullable
+  public static RedisServerTarget sentinelTarget(
+      @Nullable String masterName, @Nullable Collection<?> sentinels) {
+    Collection<?> configuredSentinels = sentinels;
+    if (sentinels instanceof Set<?>) {
+      Collection<?> originalSentinels = CONFIGURED_SENTINELS.get((Set<?>) sentinels);
+      if (originalSentinels != null) {
+        configuredSentinels = originalSentinels;
+      }
+    }
+    return JedisServerTargets.ofSentinels(masterName, configuredSentinels);
+  }
+
+  public static void setClusterTarget(
+      JedisClusterConnectionHandler handler, @Nullable RedisServerTarget target) {
+    CLUSTER_TARGET.set(handler, target);
+    CLUSTER_TARGET_CONFIGURED.set(handler, true);
+  }
+
+  public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
+    if (Boolean.TRUE.equals(SHARDED_TARGET_CONFIGURED.get(sharded))) {
+      attach(SHARDED_TARGET.get(sharded), shard);
+    }
+  }
+
+  public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
+    if (Boolean.TRUE.equals(POOL_TARGET_CONFIGURED.get(pool))) {
+      attach(POOL_TARGET.get(pool), resource);
+    }
+  }
+
+  public static void attachClusterTarget(
+      JedisClusterConnectionHandler handler, @Nullable Object connection) {
+    if (Boolean.TRUE.equals(CLUSTER_TARGET_CONFIGURED.get(handler))) {
+      attach(CLUSTER_TARGET.get(handler), connection);
+    }
+  }
+
+  public static void attachClusterTargetToPools(
+      JedisClusterConnectionHandler handler, @Nullable Map<?, ?> pools) {
+    if (!Boolean.TRUE.equals(CLUSTER_TARGET_CONFIGURED.get(handler)) || pools == null) {
+      return;
+    }
+    RedisServerTarget target = CLUSTER_TARGET.get(handler);
+    for (Object pool : pools.values()) {
+      if (pool instanceof Pool<?>) {
+        setPoolTarget((Pool<?>) pool, target);
+      }
+    }
+  }
+
+  @Nullable
+  public static Scope openClusterTargetScope(JedisClusterConnectionHandler handler) {
+    return Boolean.TRUE.equals(CLUSTER_TARGET_CONFIGURED.get(handler))
+        ? openConfiguredTargetScope(CLUSTER_TARGET.get(handler))
+        : null;
+  }
+
+  @Nullable
+  public static Scope openPoolTargetScope(Pool<?> pool) {
+    return Boolean.TRUE.equals(POOL_TARGET_CONFIGURED.get(pool))
+        ? openConfiguredTargetScope(POOL_TARGET.get(pool))
+        : null;
+  }
+
+  public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
+    return Context.current()
+        .with(CURRENT_CONFIGURED_TARGET, new ConfiguredTarget(target))
+        .makeCurrent();
+  }
+
+  private static void attach(@Nullable RedisServerTarget target, @Nullable Object jedis) {
+    if (!(jedis instanceof BinaryJedis)) {
+      return;
+    }
+    Connection connection = ((BinaryJedis) jedis).getClient();
+    setConnectionTarget(connection, target);
+  }
+
+  public static void setConnectionTarget(
+      @Nullable Connection connection, @Nullable RedisServerTarget target) {
+    if (connection == null) {
+      return;
+    }
+    if (target != null) {
+      CONNECTION_TARGET.set(connection, target);
+      CONNECTION_TARGET_SUPPRESSED.set(connection, null);
+    } else {
+      CONNECTION_TARGET_SUPPRESSED.set(connection, true);
+    }
+  }
+
+  @Nullable
+  static RedisServerTarget connectionTarget(Connection connection) {
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    if (configuredTarget != null) {
+      return configuredTarget.target;
+    }
+    if (Boolean.TRUE.equals(CONNECTION_TARGET_SUPPRESSED.get(connection))) {
+      return null;
+    }
+    return CONNECTION_TARGET.get(connection);
+  }
+
   private JedisSingletons() {}
+
+  private static final class ConfiguredTarget {
+    @Nullable private final RedisServerTarget target;
+
+    private ConfiguredTarget(@Nullable RedisServerTarget target) {
+      this.target = target;
+    }
+  }
 }
