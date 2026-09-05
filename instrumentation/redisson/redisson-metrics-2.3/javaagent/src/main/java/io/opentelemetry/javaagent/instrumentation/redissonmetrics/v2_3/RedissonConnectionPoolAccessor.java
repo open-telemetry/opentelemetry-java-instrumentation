@@ -27,7 +27,7 @@ class RedissonConnectionPoolAccessor {
     } catch (NoSuchMethodException ignored) {
       // Field fallback is safe only on versions that do not expose queueSize().
       field = findAsyncSemaphoreField("listeners");
-    } catch (RuntimeException ignored) {
+    } catch (SecurityException ignored) {
       // ignored
     }
     queueSizeMethod = method;
@@ -90,7 +90,7 @@ class RedissonConnectionPoolAccessor {
           return ((Number) counter).intValue();
         }
       }
-    } catch (IllegalAccessException | RuntimeException ignored) {
+    } catch (IllegalAccessException ignored) {
       // ignored
     }
     return null;
