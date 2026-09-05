@@ -23,18 +23,17 @@ public class Elasticsearch53TransportRequests {
   }
 
   public static void updateServerTarget(TransportClient client) {
-    Object updateLock = ElasticsearchTransportServerTargets.getUpdateLock(client);
-    if (updateLock == null) {
+    ElasticsearchTransportServerTargets.UpdateToken token =
+        ElasticsearchTransportServerTargets.beginUpdate(client);
+    if (token == null) {
       return;
     }
-    synchronized (updateLock) {
-      List<ElasticsearchTransportServerTarget.Endpoint> endpoints = new ArrayList<>();
-      for (TransportAddress address : client.transportAddresses()) {
-        endpoints.add(
-            new ElasticsearchTransportServerTarget.Endpoint(address.getHost(), address.getPort()));
-      }
-      ElasticsearchTransportServerTargets.update(client, endpoints);
+    List<ElasticsearchTransportServerTarget.Endpoint> endpoints = new ArrayList<>();
+    for (TransportAddress address : client.transportAddresses()) {
+      endpoints.add(
+          new ElasticsearchTransportServerTarget.Endpoint(address.getHost(), address.getPort()));
     }
+    ElasticsearchTransportServerTargets.update(client, token, endpoints);
   }
 
   private Elasticsearch53TransportRequests() {}
