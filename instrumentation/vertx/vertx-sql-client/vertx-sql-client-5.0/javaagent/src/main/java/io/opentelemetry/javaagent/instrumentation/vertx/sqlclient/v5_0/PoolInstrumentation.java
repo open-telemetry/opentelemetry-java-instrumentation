@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.isKnownDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.resolveDbSystemName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientInfoProvider;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolClientInfoProvider;
@@ -73,22 +75,39 @@ class PoolInstrumentation implements TypeInstrumentation {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() == 0) {
         String dbSystemName = resolveDbSystemName(sqlConnectOptions, declaringTypeName);
-        setClientInfoProvider(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
+        VertxSqlClientInfoCapture infoCapture = new VertxSqlClientInfoCapture();
+        infoCapture.setDbSystemName(dbSystemName);
+        infoCapture.setInfo(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
+        setClientInfoProvider(infoCapture);
+        VertxSqlClientSingletons.setBuildingSupplierCapture(infoCapture);
       }
       return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Return @Nullable Pool pool, @Advice.Enter CallDepth callDepth) {
+        @Advice.Return @Nullable Pool pool,
+        @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
+        @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
+      VertxSqlClientInfoProvider infoProvider = getClientInfoProvider();
+      if (pool != null && infoProvider instanceof VertxSqlClientInfoCapture) {
+        VertxSqlClientInfoCapture infoCapture = (VertxSqlClientInfoCapture) infoProvider;
+        String dbSystemName = infoCapture.getDbSystemName();
+        if (dbSystemName == null || !isKnownDbSystem(dbSystemName)) {
+          dbSystemName = getDbSystemNameFromClassName(pool);
+          infoCapture.setDbSystemName(dbSystemName);
+        }
+        infoCapture.setInfo(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
+      }
       if (pool != null) {
-        setPoolClientInfoProvider(pool, getClientInfoProvider());
+        setPoolClientInfoProvider(pool, infoProvider);
       }
       setClientInfoProvider(null);
+      VertxSqlClientSingletons.setBuildingSupplierCapture(null);
     }
   }
 
