@@ -31,6 +31,14 @@ public class DbServerTarget {
   }
 
   /**
+   * Returns a builder for a target whose default port is unknown. Endpoints without configured
+   * ports are kept without ports.
+   */
+  public static DbServerTargetBuilder builder() {
+    return new DbServerTargetBuilder(null);
+  }
+
+  /**
    * Returns a target for an already-extracted Unix socket path, or {@code null} when the path is
    * invalid. Accepted paths are preserved verbatim and are not parsed as URIs or connection
    * strings.

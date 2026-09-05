@@ -24,8 +24,9 @@ import javax.annotation.Nullable;
  *
  * <p>Duplicate endpoints are kept. A single endpoint is rendered as a bare host with its port
  * reported separately, and it is reported only when it differs from the default port. Several
- * endpoints are rendered as a comma separated list, and their ports are omitted only when every
- * endpoint listens on its default port; otherwise every endpoint carries its port.
+ * endpoints are rendered as a comma separated list. Their ports are omitted when every endpoint
+ * listens on its default port. Otherwise known ports are included, while endpoints without either a
+ * configured or known default port remain bare.
  *
  * <p>Instances are not thread safe.
  *
@@ -40,7 +41,7 @@ public class DbServerTargetBuilder {
   private static final int MAX_HOST_NAME_LENGTH = 253;
   private static final int MAX_HOST_NAME_SEGMENT_LENGTH = 63;
 
-  private final int defaultPort;
+  @Nullable private final Integer defaultPort;
   private final List<Endpoint> endpoints = new ArrayList<>();
   private int maxEndpoints = DEFAULT_MAX_ENDPOINTS;
   private boolean sorted;
@@ -48,7 +49,7 @@ public class DbServerTargetBuilder {
   @Nullable private String suffix;
   private boolean complete = true;
 
-  DbServerTargetBuilder(int defaultPort) {
+  DbServerTargetBuilder(@Nullable Integer defaultPort) {
     this.defaultPort = defaultPort;
   }
 
@@ -96,12 +97,12 @@ public class DbServerTargetBuilder {
   }
 
   /**
-   * Add an endpoint. A negative {@code port} means that the endpoint has no configured port and
-   * listens on the default port.
+   * Add an endpoint. A negative {@code port} means that the endpoint has no configured port. The
+   * target's default port is used when known.
    */
   @CanIgnoreReturnValue
   public DbServerTargetBuilder addEndpoint(@Nullable String host, int port) {
-    return addEndpoint(host, port, defaultPort);
+    return addEndpointInternal(host, port, defaultPort);
   }
 
   /**
@@ -110,14 +111,7 @@ public class DbServerTargetBuilder {
    */
   @CanIgnoreReturnValue
   public DbServerTargetBuilder addEndpoint(@Nullable String host, int port, int defaultPort) {
-    String sanitizedHost = sanitizeHost(host);
-    int effectivePort = port < 0 ? defaultPort : port;
-    if (sanitizedHost == null || !isValidPort(effectivePort)) {
-      complete = false;
-      return this;
-    }
-    endpoints.add(new Endpoint(sanitizedHost, effectivePort, effectivePort == defaultPort));
-    return this;
+    return addEndpointInternal(host, port, defaultPort);
   }
 
   /**
@@ -132,6 +126,23 @@ public class DbServerTargetBuilder {
       return this;
     }
     return addEndpoint(address.getHostString(), address.getPort());
+  }
+
+  @CanIgnoreReturnValue
+  private DbServerTargetBuilder addEndpointInternal(
+      @Nullable String host, int port, @Nullable Integer defaultPort) {
+    String sanitizedHost = sanitizeHost(host);
+    Integer effectivePort = port < 0 ? defaultPort : Integer.valueOf(port);
+    if (sanitizedHost == null || (effectivePort != null && !isValidPort(effectivePort))) {
+      complete = false;
+      return this;
+    }
+    endpoints.add(
+        new Endpoint(
+            sanitizedHost,
+            effectivePort,
+            port < 0 || (defaultPort != null && port == defaultPort)));
+    return this;
   }
 
   /** Returns the target, or {@code null} when it cannot be rendered safely. */
@@ -166,7 +177,10 @@ public class DbServerTargetBuilder {
   private String render(boolean includePort) {
     List<String> rendered = new ArrayList<>(endpoints.size());
     for (Endpoint endpoint : endpoints) {
-      rendered.add(includePort ? renderHostAndPort(endpoint.host, endpoint.port) : endpoint.host);
+      rendered.add(
+          includePort && endpoint.port != null
+              ? renderHostAndPort(endpoint.host, endpoint.port)
+              : endpoint.host);
     }
     if (sorted) {
       rendered.sort(String::compareTo);
@@ -361,10 +375,10 @@ public class DbServerTargetBuilder {
   private static class Endpoint {
 
     private final String host;
-    private final int port;
+    @Nullable private final Integer port;
     private final boolean defaultPort;
 
-    private Endpoint(String host, int port, boolean defaultPort) {
+    private Endpoint(String host, @Nullable Integer port, boolean defaultPort) {
       this.host = host;
       this.port = port;
       this.defaultPort = defaultPort;

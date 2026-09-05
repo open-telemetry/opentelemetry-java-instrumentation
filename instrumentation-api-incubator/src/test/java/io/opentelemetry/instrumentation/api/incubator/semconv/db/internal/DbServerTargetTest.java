@@ -127,6 +127,38 @@ class DbServerTargetTest {
   }
 
   @Test
+  void unknownDefaultPortKeepsEndpointWithoutConfiguredPort() {
+    DbServerTarget target = DbServerTarget.builder().addEndpoint("unknown.example.com", -1).build();
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("unknown.example.com");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void unknownDefaultPortReportsSingleConfiguredPortSeparately() {
+    DbServerTarget target =
+        DbServerTarget.builder().addEndpoint("unknown.example.com", 1234).build();
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("unknown.example.com");
+    assertThat(target.getPort()).isEqualTo(1234);
+  }
+
+  @Test
+  void unknownDefaultPortRendersOnlyConfiguredPortsForMultipleEndpoints() {
+    DbServerTarget target =
+        DbServerTarget.builder()
+            .addEndpoint("host1.example.com", 1234)
+            .addEndpoint("2001:db8::1", -1)
+            .build();
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("host1.example.com:1234,2001:db8::1");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void multipleEndpointsOnDefaultPortsOmitEveryPort() {
     DbServerTarget target =
         builder()
