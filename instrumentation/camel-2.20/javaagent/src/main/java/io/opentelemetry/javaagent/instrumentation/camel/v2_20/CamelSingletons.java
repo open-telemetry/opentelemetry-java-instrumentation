@@ -6,8 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -15,7 +20,10 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
@@ -39,7 +47,8 @@ class CamelSingletons {
       createMessagingInstrumenter(SEND, "send", true);
   private static final Instrumenter<CamelRequest, Void> messagingPublishInstrumenter =
       createMessagingInstrumenter(SEND, "publish", true);
-  // AWS SQS sends rely on the nested AWS SDK producer span to inject propagation.
+  // AWS SQS sends rely on the nested AWS SDK producer span to inject propagation, while Camel
+  // records the messaging operation metrics.
   private static final Instrumenter<CamelRequest, Void> keylessMessagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", false);
   private static final Instrumenter<CamelRequest, Void> messagingProcessInstrumenter =
@@ -79,9 +88,20 @@ class CamelSingletons {
           exposeSpanKey
               ? attributesExtractor
               : new KeylessAttributesExtractor(attributesExtractor));
+      builder.addContextCustomizer((context, request, startAttributes) -> enable(context));
     }
 
+    if (operationType == SEND) {
+      builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+    }
     if (operationType == PROCESS && emitStableMessagingSemconv()) {
+      builder.addOperationMetrics(MessagingProcessMetrics.get());
+      builder.addContextCustomizer(
+          (context, request, startAttributes) ->
+              messageTelemetry().contains(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
+                  ? add(context, RECEIVE, CONSUMED_MESSAGES)
+                  : context);
+      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
       return MessagingProcessInstrumenterFactory.create(
           builder,
           CamelPropagationUtil.messagingPropagator(),

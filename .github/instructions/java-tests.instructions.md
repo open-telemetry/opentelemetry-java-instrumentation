@@ -70,6 +70,30 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   when `value` is already an `int` — the `equalTo(AttributeKey<Long>, int)`
   overload exists.
 
+## [Testing] Inline Conditional Expected Values
+
+- Keep short conditional expected values directly in the assertion, especially
+  span names and attribute values:
+
+  ```java
+  span.hasName(emitStableMessagingSemconv() ? "send orders" : "orders publish");
+  equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null);
+  ```
+
+- Do not extract the ternary into a helper such as `spanName(...)`,
+  `oldOrExperimental(value)`, or `expectedNamespace()`. Inline it even when
+  several assertions repeat the same condition. Seeing both expected values at
+  the assertion is more useful than deduplicating a short expression.
+- The conventional `experimental(value)` helper is the one exception: keep it.
+  Its name unambiguously means the value is expected only when experimental
+  attributes are enabled, and `null` otherwise, so it reads clearer than the
+  inlined ternary it would otherwise become.
+- A helper may still obtain the mode flag or perform nontrivial derivation from
+  test data. It should not choose between short expected values on the
+  assertion's behalf.
+- Put the ternary around the narrowest value that changes. Do not duplicate a
+  whole assertion chain or attribute block for each mode.
+
 ## [Testing] `satisfies()` Lambda Parameters
 
 Inside a `satisfies(AttributeKey, lambda)` attribute-assertion the lambda
