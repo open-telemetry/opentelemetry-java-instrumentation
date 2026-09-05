@@ -5,15 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -21,13 +25,18 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.AfterAll;
@@ -56,6 +65,8 @@ abstract class AbstractOpenSearchTest {
 
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected InstrumentationExtension getTesting() {
     return testing;
@@ -91,12 +102,9 @@ abstract class AbstractOpenSearchTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName(openSearchSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
+                            .hasAttributesSatisfyingExactly(clusterHealthAttributes()),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -137,13 +145,10 @@ abstract class AbstractOpenSearchTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(openSearchSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
+                            .hasAttributesSatisfyingExactly(clusterHealthAttributes()),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -170,6 +175,66 @@ abstract class AbstractOpenSearchTest {
     getTesting().waitForTraces(1);
 
     assertDurationMetric(
-        getTesting(), "io.opentelemetry.opensearch-java-3.0", DB_OPERATION_NAME, DB_SYSTEM_NAME);
+        getTesting(),
+        "io.opentelemetry.opensearch-java-3.0",
+        DB_OPERATION_NAME,
+        DB_SYSTEM_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+  }
+
+  String openSearchSpanName(String method) {
+    return openSearchSpanName(method, httpHost.getHost(), Long.valueOf(httpHost.getPort()));
+  }
+
+  String openSearchSpanName(String method, String serverAddress, Long serverPort) {
+    return emitStableDatabaseSemconv()
+        ? method + " " + serverAddress + (serverPort != null ? ":" + serverPort : "")
+        : method;
+  }
+
+  List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
+    List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
+    result.add(equalTo(NETWORK_TYPE, null));
+    if (emitStableDatabaseSemconv()) {
+      result.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
+      result.add(equalTo(SERVER_PORT, httpHost.getPort()));
+    }
+    return result;
+  }
+
+  List<AttributeAssertion> clusterHealthAttributes() {
+    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
+    return withServer(assertions.toArray(new AttributeAssertion[0]));
+  }
+
+  List<AttributeAssertion> databaseAttributes(String operation, String queryText) {
+    List<AttributeAssertion> result = new ArrayList<>();
+    if (emitOldDatabaseSemconv()) {
+      result.add(equalTo(DB_SYSTEM, OPENSEARCH));
+      result.add(equalTo(DB_OPERATION, operation));
+      result.add(equalTo(DB_STATEMENT, queryText));
+    }
+    if (emitStableDatabaseSemconv()) {
+      result.add(equalTo(DB_SYSTEM_NAME, OPENSEARCH));
+      result.add(equalTo(DB_OPERATION_NAME, operation));
+      result.add(equalTo(DB_QUERY_TEXT, queryText));
+    }
+    return result;
+  }
+
+  void assertNodeListTarget(String nodeList) {
+    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
+    assertions.add(equalTo(NETWORK_TYPE, null));
+    assertions.add(equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null));
+    assertions.add(equalTo(SERVER_PORT, null));
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                assertThat(trace.getSpan(0))
+                    .hasName(openSearchSpanName("GET", nodeList, null))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(assertions));
   }
 }

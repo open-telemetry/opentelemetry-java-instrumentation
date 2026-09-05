@@ -51,14 +51,15 @@ class OpenSearchQuerySanitizationDisabledTest extends AbstractOpenSearchQueryTes
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(openSearchSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"test\"}}}}")),
+                                withServer(
+                                    equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                    equalTo(maybeStable(DB_OPERATION), "POST"),
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "{\"query\":{\"match\":{\"message\":{\"query\":\"test\"}}}}"))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
