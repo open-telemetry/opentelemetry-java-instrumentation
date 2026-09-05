@@ -25,7 +25,7 @@ public final class VertxServerTarget {
     if (connectOptions == null) {
       return null;
     }
-    String host = normalizedHost(connectOptions);
+    String host = connectOptions.getHost();
     if (host != null && host.startsWith("/")) {
       return DbServerTarget.unixSocket(host);
     }
@@ -44,7 +44,7 @@ public final class VertxServerTarget {
 
     DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort(dbSystemName));
     for (SqlConnectOptions options : connectOptions) {
-      String host = normalizedHost(options);
+      String host = options != null ? options.getHost() : null;
       if (host != null && host.startsWith("/")) {
         return null;
       }
@@ -58,16 +58,7 @@ public final class VertxServerTarget {
     if (connectOptions == null) {
       return builder.addEndpoint(null, -1);
     }
-    int configuredPort = connectOptions.getPort();
-    return builder.addEndpoint(connectOptions.getHost(), configuredPort > 0 ? configuredPort : -1);
-  }
-
-  @Nullable
-  private static String normalizedHost(@Nullable SqlConnectOptions connectOptions) {
-    if (connectOptions == null || connectOptions.getHost() == null) {
-      return null;
-    }
-    return connectOptions.getHost().trim();
+    return builder.addEndpoint(connectOptions.getHost(), connectOptions.getPort());
   }
 
   private static int defaultPort(String dbSystemName) {

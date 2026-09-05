@@ -91,6 +91,17 @@ class VertxServerTargetTest {
   }
 
   @Test
+  void rejectsWhitespacePrefixedUnixDomainSocket() {
+    assertThat(VertxServerTarget.from(options(" /var/run/postgres:primary", 5432), "postgresql"))
+        .isNull();
+  }
+
+  @Test
+  void rejectsExplicitPortZero() {
+    assertThat(VertxServerTarget.from(options("db.example", 0), "postgresql")).isNull();
+  }
+
+  @Test
   void rejectsMultiServerTargetContainingUnixDomainSocket() {
     assertThat(
             VertxServerTarget.from(
