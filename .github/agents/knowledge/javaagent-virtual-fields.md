@@ -159,6 +159,9 @@ atomicity or synchronization, or redesign the ownership transition. Do not choos
 for `computeIfAbsent` without first deciding whether concurrent updates and duplicate construction
 are actually valid for the instrumentation.
 
+For synchronization around compound instrumentation state transitions, see
+[Lock Ownership and Critical Sections](javaagent-locking.md).
+
 ## Review Guidance
 
 Flag a new weak or identity-keyed registry when all of the following are true:
