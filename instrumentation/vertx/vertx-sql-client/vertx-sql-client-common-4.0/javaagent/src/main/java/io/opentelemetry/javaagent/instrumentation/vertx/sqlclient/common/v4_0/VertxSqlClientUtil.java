@@ -25,6 +25,7 @@ import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientUtil {
@@ -180,19 +181,17 @@ public class VertxSqlClientUtil {
       Instrumenter<VertxSqlClientRequest, Void> instrumenter,
       Promise<?> promise,
       @Nullable Throwable throwable) {
-    RequestData requestData;
-    synchronized (promise) {
-      requestData = REQUEST_DATA.get(promise);
-      if (requestData == null) {
-        return null;
-      }
-      REQUEST_DATA.set(promise, null);
+    RequestData requestData = REQUEST_DATA.get(promise);
+    if (requestData == null || !requestData.tryClaim()) {
+      return null;
     }
+    REQUEST_DATA.set(promise, null);
     instrumenter.end(requestData.context, requestData.request, null, throwable);
     return requestData.parentContext.makeCurrent();
   }
 
   private static class RequestData {
+    private final AtomicBoolean ended = new AtomicBoolean();
     private final VertxSqlClientRequest request;
     private final Context context;
     private final Context parentContext;
@@ -201,6 +200,10 @@ public class VertxSqlClientUtil {
       this.request = request;
       this.context = context;
       this.parentContext = parentContext;
+    }
+
+    private boolean tryClaim() {
+      return ended.compareAndSet(false, true);
     }
   }
 
