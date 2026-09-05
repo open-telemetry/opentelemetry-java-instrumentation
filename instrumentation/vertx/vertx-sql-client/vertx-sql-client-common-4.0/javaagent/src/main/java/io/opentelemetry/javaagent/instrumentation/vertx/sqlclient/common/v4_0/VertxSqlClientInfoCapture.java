@@ -14,6 +14,7 @@ public final class VertxSqlClientInfoCapture implements VertxSqlClientInfoProvid
 
   private final Deque<Object> connectionRequests = new ArrayDeque<>();
   @Nullable private volatile String dbSystemName;
+  @Nullable private volatile VertxSqlClientInfo info;
 
   public void setDbSystemName(@Nullable String dbSystemName) {
     this.dbSystemName = dbSystemName;
@@ -22,6 +23,10 @@ public final class VertxSqlClientInfoCapture implements VertxSqlClientInfoProvid
   @Nullable
   public String getDbSystemName() {
     return dbSystemName;
+  }
+
+  public void setInfo(@Nullable VertxSqlClientInfo info) {
+    this.info = info;
   }
 
   public synchronized void addConnectionRequest(Object request) {
@@ -40,6 +45,6 @@ public final class VertxSqlClientInfoCapture implements VertxSqlClientInfoProvid
   @Override
   @Nullable
   public VertxSqlClientInfo getInfo() {
-    return null;
+    return info;
   }
 }

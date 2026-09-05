@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolClientInfoProvider;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.isKnownDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.resolveDbSystemName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientInfoProvider;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolClientInfoProvider;
@@ -27,6 +29,8 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoCapture;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoProvider;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -89,18 +93,34 @@ class PoolInstrumentation implements TypeInstrumentation {
       }
 
       String dbSystemName = resolveDbSystemName(sqlConnectOptions, declaringTypeName);
-      setClientInfoProvider(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
+      VertxSqlClientInfoCapture infoCapture = new VertxSqlClientInfoCapture();
+      infoCapture.setDbSystemName(dbSystemName);
+      infoCapture.setInfo(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
+      setClientInfoProvider(infoCapture);
       return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Return Pool pool, @Advice.Enter CallDepth callDepth) {
+    public static void onExit(
+        @Advice.Return Pool pool,
+        @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
+        @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
+      VertxSqlClientInfoProvider infoProvider = getClientInfoProvider();
+      if (pool != null && infoProvider instanceof VertxSqlClientInfoCapture) {
+        VertxSqlClientInfoCapture infoCapture = (VertxSqlClientInfoCapture) infoProvider;
+        String dbSystemName = infoCapture.getDbSystemName();
+        if (dbSystemName == null || !isKnownDbSystem(dbSystemName)) {
+          dbSystemName = getDbSystemNameFromClassName(pool);
+          infoCapture.setDbSystemName(dbSystemName);
+        }
+        infoCapture.setInfo(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
+      }
       if (pool != null) {
-        setPoolClientInfoProvider(pool, getClientInfoProvider());
+        setPoolClientInfoProvider(pool, infoProvider);
       }
       setClientInfoProvider(null);
     }
@@ -119,18 +139,34 @@ class PoolInstrumentation implements TypeInstrumentation {
 
       SqlConnectOptions first = databases == null || databases.isEmpty() ? null : databases.get(0);
       String dbSystemName = resolveDbSystemName(first, declaringTypeName);
-      setClientInfoProvider(VertxSqlClientInfo.create(databases, dbSystemName));
+      VertxSqlClientInfoCapture infoCapture = new VertxSqlClientInfoCapture();
+      infoCapture.setDbSystemName(dbSystemName);
+      infoCapture.setInfo(VertxSqlClientInfo.create(databases, dbSystemName));
+      setClientInfoProvider(infoCapture);
       return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Return Object client, @Advice.Enter CallDepth callDepth) {
+    public static void onExit(
+        @Advice.Return Object client,
+        @Advice.Argument(1) List<SqlConnectOptions> databases,
+        @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
+      VertxSqlClientInfoProvider infoProvider = getClientInfoProvider();
+      if (client != null && infoProvider instanceof VertxSqlClientInfoCapture) {
+        VertxSqlClientInfoCapture infoCapture = (VertxSqlClientInfoCapture) infoProvider;
+        String dbSystemName = infoCapture.getDbSystemName();
+        if (dbSystemName == null || !isKnownDbSystem(dbSystemName)) {
+          dbSystemName = getDbSystemNameFromClassName(client);
+          infoCapture.setDbSystemName(dbSystemName);
+        }
+        infoCapture.setInfo(VertxSqlClientInfo.create(databases, dbSystemName));
+      }
       if (client instanceof Pool) {
-        setPoolClientInfoProvider((Pool) client, getClientInfoProvider());
+        setPoolClientInfoProvider((Pool) client, infoProvider);
       }
       setClientInfoProvider(null);
     }
