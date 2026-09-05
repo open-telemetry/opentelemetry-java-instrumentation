@@ -91,7 +91,7 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"),
-                                experimentalLocalAddressAttribute()))));
+                                experimentalLocalAddress()))));
 
     assertDurationMetric(
         testing,

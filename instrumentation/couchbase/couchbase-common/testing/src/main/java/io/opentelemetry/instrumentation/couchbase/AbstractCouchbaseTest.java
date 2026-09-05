@@ -179,13 +179,13 @@ public abstract class AbstractCouchbaseTest {
     return emitStableDatabaseSemconv() ? operation + " " + configuredServerAddress() : operation;
   }
 
-  protected StringAssertConsumer experimentalOperationIdAttribute() {
+  protected StringAssertConsumer experimentalOperationId() {
     return includesExperimentalAttributes() && includesExperimentalOperationIdAttribute()
         ? val -> val.isNotNull()
         : val -> val.isNull();
   }
 
-  protected StringAssertConsumer experimentalLocalAddressAttribute() {
+  protected StringAssertConsumer experimentalLocalAddress() {
     return includesExperimentalAttributes() && includesExperimentalLocalAddressAttribute()
         ? val -> val.isNotNull()
         : val -> val.isNull();
