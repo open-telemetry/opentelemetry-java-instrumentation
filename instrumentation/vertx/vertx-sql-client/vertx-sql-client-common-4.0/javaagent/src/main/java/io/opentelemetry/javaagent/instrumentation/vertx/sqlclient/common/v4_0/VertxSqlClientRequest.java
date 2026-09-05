@@ -5,28 +5,39 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
-import io.vertx.sqlclient.SqlConnectOptions;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientRequest {
 
   private final String queryText;
-  @Nullable private final SqlConnectOptions sqlConnectOptions;
   private final boolean parameterizedQuery;
-  private final String dbSystemName;
   @Nullable private final Long operationBatchSize;
+  private final VertxSqlClientInfo initialInfo;
+  private volatile VertxSqlClientInfo info;
 
   public VertxSqlClientRequest(
       String queryText,
-      @Nullable SqlConnectOptions sqlConnectOptions,
+      VertxSqlClientInfo info,
       boolean parameterizedQuery,
-      String dbSystemName,
       @Nullable Long operationBatchSize) {
     this.queryText = queryText;
-    this.sqlConnectOptions = sqlConnectOptions;
     this.parameterizedQuery = parameterizedQuery;
-    this.dbSystemName = dbSystemName;
     this.operationBatchSize = operationBatchSize;
+    this.initialInfo = info;
+    this.info = info;
+  }
+
+  public synchronized boolean replaceInfo(VertxSqlClientInfo info) {
+    if (this.info.isConfigurationCaptured()) {
+      return false;
+    }
+    this.info = info;
+    return true;
+  }
+
+  public boolean isInfoUpdated() {
+    return info != initialInfo;
   }
 
   public String getQueryText() {
@@ -35,22 +46,38 @@ public class VertxSqlClientRequest {
 
   @Nullable
   public String getUser() {
-    return sqlConnectOptions != null ? sqlConnectOptions.getUser() : null;
+    return info.getUser();
   }
 
   @Nullable
   public String getDatabase() {
-    return sqlConnectOptions != null ? sqlConnectOptions.getDatabase() : null;
+    return info.getNamespace();
   }
 
   @Nullable
   public String getHost() {
-    return sqlConnectOptions != null ? sqlConnectOptions.getHost() : null;
+    return info.getLegacyServerAddress();
   }
 
   @Nullable
   public Integer getPort() {
-    return sqlConnectOptions != null ? sqlConnectOptions.getPort() : null;
+    return info.getLegacyServerPort();
+  }
+
+  @Nullable
+  public String getConfiguredServerAddress() {
+    DbServerTarget serverTarget = info.getServerTarget();
+    return serverTarget != null ? serverTarget.getAddress() : null;
+  }
+
+  @Nullable
+  public Integer getConfiguredServerPort() {
+    DbServerTarget serverTarget = info.getServerTarget();
+    return serverTarget != null ? serverTarget.getPort() : null;
+  }
+
+  public boolean isServerTargetCaptured() {
+    return info.isServerTargetCaptured();
   }
 
   public boolean isParameterizedQuery() {
@@ -58,7 +85,7 @@ public class VertxSqlClientRequest {
   }
 
   public String getDbSystemName() {
-    return dbSystemName;
+    return info.getDbSystemName();
   }
 
   @Nullable
