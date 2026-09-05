@@ -276,11 +276,35 @@ site.
 | `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
 
-### Inline conditional expected values
+### Mode-dependent expected values
 
-Push the ternary as deep as possible — into the `equalTo` value or single attribute key —
-rather than duplicating two whole `hasAttributesSatisfyingExactly(...)` blocks under a
-`flag ? a : b`. The assertion API treats `null` as "expect attribute absent":
+Database instrumentation tests run either the default or stable database
+semconv mode. Do not add `database/dup` test tasks or expand assertions to
+cover both modes at once. Duplicate-mode coverage belongs in tests for the
+semconv stability API itself.
+
+Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
+carry the same expected value:
+
+```java
+equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH)
+equalTo(maybeStable(DB_OPERATION), "info")
+```
+
+Do not replace these with separate null-gated assertions for the old and stable
+keys:
+
+```java
+equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null)
+equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null)
+```
+
+When no established semconv utility applies, put the ternary inside the
+`equalTo` value or single attribute key. Do not duplicate two whole
+`hasAttributesSatisfyingExactly(...)` blocks under a `flag ? a : b`. This
+includes attributes that exist in only one mode and attributes whose expected
+values differ by mode. The assertion API treats `null` as "expect attribute
+absent":
 
 ```java
 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
@@ -290,13 +314,15 @@ span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
 .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
 ```
 
-Keep short conditional expected values directly in the assertion, even when several
-assertions repeat the same condition. Do not extract the branch selection into helpers such
-as `spanName(...)`, `oldOrExperimental(value)`, or `expectedNamespace()`. Those helpers hide
-the expected values at the point where a reader needs them. The conventional
-`experimental(value)` helper is the exception — it unambiguously means the value is expected
-only when experimental attributes are enabled, and `null` otherwise, so keep it instead of
-inlining `EXPERIMENTAL_ATTRIBUTES ? value : null`.
+Keep short conditional expected values directly in the assertion when no
+established semconv utility applies, even when several assertions repeat the
+same condition. Do not extract the branch selection into helpers such as
+`spanName(...)`, `oldOrExperimental(value)`, or `expectedNamespace()`. Those
+helpers hide the expected values at the point where a reader needs them. The
+conventional `experimental(value)` helper is the exception. It means the value
+is expected only when experimental attributes are enabled, and `null`
+otherwise, so keep it instead of inlining
+`EXPERIMENTAL_ATTRIBUTES ? value : null`.
 
-A helper may obtain the mode flag or perform nontrivial derivation from test data. It should
+A helper may obtain the mode flag or derive a value from test data. It should
 not choose between short expected values on the assertion's behalf.
