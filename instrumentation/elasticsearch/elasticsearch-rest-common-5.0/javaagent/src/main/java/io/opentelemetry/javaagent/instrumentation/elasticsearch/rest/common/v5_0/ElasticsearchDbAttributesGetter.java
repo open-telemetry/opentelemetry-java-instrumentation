@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
@@ -20,11 +20,6 @@ import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 import org.elasticsearch.client.Response;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-@SuppressWarnings("deprecation")
 final class ElasticsearchDbAttributesGetter
     implements DbClientAttributesGetter<ElasticsearchRestRequest, Response> {
 

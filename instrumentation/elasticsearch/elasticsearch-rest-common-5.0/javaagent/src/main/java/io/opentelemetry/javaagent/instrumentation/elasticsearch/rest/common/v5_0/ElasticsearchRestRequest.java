@@ -3,21 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
 import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- *
- * @deprecated The Elasticsearch REST library instrumentation is deprecated. Use the Elasticsearch
- *     Java API Client's native OpenTelemetry support when migrating clients, or use the javaagent
- *     for direct REST client instrumentation. May be removed in the next minor release.
- */
-@Deprecated // may be removed in the next minor release
 @AutoValue
 public abstract class ElasticsearchRestRequest {
 

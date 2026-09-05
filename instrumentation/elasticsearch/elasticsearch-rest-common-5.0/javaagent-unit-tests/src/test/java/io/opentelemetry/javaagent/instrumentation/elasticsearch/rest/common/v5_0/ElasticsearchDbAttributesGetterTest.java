@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +26,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@SuppressWarnings("deprecation") // testing deprecated API
 class ElasticsearchDbAttributesGetterTest {
 
   private static final String SEARCH_BODY =
@@ -116,8 +115,6 @@ class ElasticsearchDbAttributesGetterTest {
 
   @Test
   void dropsBodyWhenTheSanitizerRejectsIt() {
-    // the sanitizer returns null when it cannot sanitize the body, which must never fall back to
-    // capturing it raw
     RecordingSanitizer sanitizer = new RecordingSanitizer(null);
     ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
 
@@ -146,7 +143,6 @@ class ElasticsearchDbAttributesGetterTest {
             new StringEntity(body, ContentType.APPLICATION_JSON));
 
     assertThat(getter.getDbQueryText(request)).isEqualTo(SANITIZED_BODY);
-    // the line breaks are dropped while reading, so the sanitizer sees the values back to back
     assertThat(sanitizer.sanitized)
         .containsExactly(
             "{\"index\":\"private-index\"}"
@@ -157,7 +153,6 @@ class ElasticsearchDbAttributesGetterTest {
 
   @Test
   void capturesRawBodyWhenSanitizationDisabled() {
-    // sanitization explicitly disabled: capture the body verbatim
     ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, null);
 
     assertThat(
@@ -195,7 +190,6 @@ class ElasticsearchDbAttributesGetterTest {
 
   @Test
   void doesNotReadNonRepeatableEntity() {
-    // a non-repeatable entity must never be read, otherwise the request body would be consumed
     RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
     ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
     HttpEntity entity =

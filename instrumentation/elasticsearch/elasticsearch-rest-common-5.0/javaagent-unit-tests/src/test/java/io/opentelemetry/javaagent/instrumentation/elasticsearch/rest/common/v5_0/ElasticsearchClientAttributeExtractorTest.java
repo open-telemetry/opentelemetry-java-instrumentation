@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static java.util.Collections.singleton;
@@ -22,7 +22,6 @@ import org.apache.http.message.BasicRequestLine;
 import org.elasticsearch.client.Response;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // testing deprecated API
 class ElasticsearchClientAttributeExtractorTest {
 
   @Test
