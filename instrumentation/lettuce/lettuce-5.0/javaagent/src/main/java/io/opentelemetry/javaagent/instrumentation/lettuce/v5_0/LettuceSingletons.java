@@ -162,7 +162,6 @@ public class LettuceSingletons {
 
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
-    ensureCommandPeer(command);
     if (!(connection instanceof RedisChannelHandler)) {
       return;
     }
@@ -199,29 +198,27 @@ public class LettuceSingletons {
   }
 
   public static boolean markCommandSpanStarted(AsyncCommand<?, ?, ?> command) {
-    return ensureCommandPeer(command).markSpanStarted();
+    LettuceCommandPeer peer = findCommandPeer(command);
+    return peer != null && peer.markSpanStarted();
   }
 
   static void recordCommandPeer(RedisCommand<?, ?, ?> command, SocketAddress peerAddress) {
-    ensureCommandPeer(command).record(peerAddress);
-  }
-
-  public static void linkCommandPeer(RedisCommand<?, ?, ?> command) {
-    ensureCommandPeer(command);
+    LettuceCommandPeer peer = findCommandPeer(command);
+    if (peer != null) {
+      peer.record(peerAddress);
+    }
   }
 
   public static void initializeCommandPeer(RedisCommand<?, ?, ?> command) {
-    COMMAND_PEER.set(command, new LettuceCommandPeer());
+    if (COMMAND_PEER.get(command) == null) {
+      COMMAND_PEER.set(command, new LettuceCommandPeer());
+    }
   }
 
-  private static LettuceCommandPeer ensureCommandPeer(RedisCommand<?, ?, ?> command) {
-    LettuceCommandPeer peer = findCommandPeer(command);
-    if (peer != null) {
-      return peer;
+  public static void initializeCommandPeerForSubscription(RedisCommand<?, ?, ?> command) {
+    if (findCommandPeer(command) == null) {
+      COMMAND_PEER.set(command, new LettuceCommandPeer());
     }
-    peer = new LettuceCommandPeer();
-    COMMAND_PEER.set(command, peer);
-    return peer;
   }
 
   @Nullable

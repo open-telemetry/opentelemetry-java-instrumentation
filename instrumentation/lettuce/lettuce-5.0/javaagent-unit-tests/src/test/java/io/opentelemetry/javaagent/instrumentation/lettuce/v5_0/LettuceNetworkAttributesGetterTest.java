@@ -16,6 +16,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.Command;
 import io.lettuce.core.protocol.CommandType;
@@ -74,8 +75,29 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
+  void peerAccessDoesNotInstallStateOnAnUnownedCommand() {
+    RedisCommand<?, ?, ?> command = new Command<>(CommandType.GET, null);
+
+    assertThat(LettuceSingletons.commandPeerAddress(command)).isNull();
+
+    LettuceSingletons.recordCommandPeer(command, new InetSocketAddress("localhost", PORT));
+
+    assertThat(LettuceSingletons.commandPeerAddress(command)).isNull();
+  }
+
+  @Test
+  void addressAttachmentDoesNotInstallStateOnAnUnownedCommand() {
+    RedisCommand<?, ?, ?> command = new Command<>(CommandType.GET, null);
+
+    LettuceSingletons.attachAddress(command, mock(StatefulConnection.class));
+
+    assertThat(LettuceSingletons.commandPeerAddress(command)).isNull();
+  }
+
+  @Test
   void commandThatDoesNotExpectResponseDropsSelectedAddress() throws UnknownHostException {
     RedisCommand<?, ?, ?> command = new Command<>(CommandType.DEBUG, null);
+    LettuceSingletons.initializeCommandPeer(command);
     LettuceSingletons.recordCommandPeer(
         command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
 
@@ -214,7 +236,7 @@ class LettuceNetworkAttributesGetterTest {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
 
-    LettuceSingletons.linkCommandPeer(wrapper);
+    LettuceSingletons.initializeCommandPeer(wrapper);
     LettuceCommandOutboundHandler.recordCommandPeers(singletonList(wrapper), address);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
@@ -347,6 +369,18 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
+  void initializingCommandPeerDoesNotResetExistingState() {
+    AsyncCommand<String, String, String> command = new AsyncCommand<>(command());
+    LettuceSingletons.initializeCommandPeer(command);
+
+    assertThat(LettuceSingletons.markCommandSpanStarted(command)).isTrue();
+
+    LettuceSingletons.initializeCommandPeer(command);
+
+    assertThat(LettuceSingletons.markCommandSpanStarted(command)).isFalse();
+  }
+
+  @Test
   void newWrapperDoesNotReusePreviousPeer() throws UnknownHostException {
     RedisCommand<String, String, String> command = command();
     AsyncCommand<String, String, String> firstWrapper = new AsyncCommand<>(command);
@@ -355,10 +389,10 @@ class LettuceNetworkAttributesGetterTest {
     InetSocketAddress second =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT);
 
-    LettuceSingletons.linkCommandPeer(firstWrapper);
+    LettuceSingletons.initializeCommandPeer(firstWrapper);
     LettuceCommandOutboundHandler.recordCommandPeers(firstWrapper, first);
     AsyncCommand<String, String, String> replayWrapper = new AsyncCommand<>(command);
-    LettuceSingletons.linkCommandPeer(replayWrapper);
+    LettuceSingletons.initializeCommandPeer(replayWrapper);
 
     assertThat(LettuceSingletons.commandPeerAddress(firstWrapper)).isEqualTo(first);
     assertThat(LettuceSingletons.commandPeerAddress(replayWrapper)).isNull();
@@ -370,7 +404,9 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   private static RedisCommand<String, String, String> command() {
-    return new Command<>(CommandType.GET, null);
+    RedisCommand<String, String, String> command = new Command<>(CommandType.GET, null);
+    LettuceSingletons.initializeCommandPeer(command);
+    return command;
   }
 
   private static RedisCommand<?, ?, ?> commandWithPeer(SocketAddress address) {
