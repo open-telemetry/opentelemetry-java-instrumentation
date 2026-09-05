@@ -38,18 +38,27 @@ abstract class AbstractHttpServerInstrumentationTest
   override protected def configure(
       options: HttpServerTestOptions
   ): Unit = {
+    configure(options, hasRoute = false)
+  }
+
+  protected def configure(
+      options: HttpServerTestOptions,
+      hasRoute: Boolean
+  ): Unit = {
     options.setTestCaptureHttpHeaders(false)
-    options.setHttpAttributes(
-      new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
-        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
-          val set = new util.HashSet[AttributeKey[_]](
-            HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
-          )
-          set.remove(HttpAttributes.HTTP_ROUTE)
-          set
+    if (!hasRoute) {
+      options.setHttpAttributes(
+        new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
+          override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
+            val set = new util.HashSet[AttributeKey[_]](
+              HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
+            )
+            set.remove(HttpAttributes.HTTP_ROUTE)
+            set
+          }
         }
-      }
-    )
+      )
+    }
     options.setHasResponseCustomizer(
       new Predicate[ServerEndpoint] {
         override def test(t: ServerEndpoint): Boolean =
