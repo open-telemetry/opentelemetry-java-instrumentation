@@ -12,6 +12,9 @@ import org.apache.hadoop.hbase.TableName;
 @AutoValue
 public abstract class HbaseRequest {
 
+  @Nullable private String networkPeerAddress;
+  @Nullable private Integer networkPeerPort;
+
   public static HbaseRequest create(
       @Nullable String operation,
       @Nullable TableName tableName,
@@ -21,28 +24,12 @@ public abstract class HbaseRequest {
       @Nullable String serverTarget,
       @Nullable Long operationBatchSize) {
     return new AutoValue_HbaseRequest(
-        operation,
-        tableName,
-        user,
-        serverAddress,
-        serverPort,
-        serverTarget,
-        null,
-        null,
-        operationBatchSize);
+        operation, tableName, user, serverAddress, serverPort, serverTarget, operationBatchSize);
   }
 
-  HbaseRequest withNetworkPeer(String networkPeerAddress, int networkPeerPort) {
-    return new AutoValue_HbaseRequest(
-        getOperation(),
-        getTableName(),
-        getUser(),
-        getServerAddress(),
-        getServerPort(),
-        getServerTarget(),
-        networkPeerAddress,
-        networkPeerPort,
-        getOperationBatchSize());
+  public void setNetworkPeer(String networkPeerAddress, int networkPeerPort) {
+    this.networkPeerAddress = networkPeerAddress;
+    this.networkPeerPort = networkPeerPort;
   }
 
   @Nullable
@@ -64,10 +51,14 @@ public abstract class HbaseRequest {
   public abstract String getServerTarget();
 
   @Nullable
-  public abstract String getNetworkPeerAddress();
+  public String getNetworkPeerAddress() {
+    return networkPeerAddress;
+  }
 
   @Nullable
-  public abstract Integer getNetworkPeerPort();
+  public Integer getNetworkPeerPort() {
+    return networkPeerPort;
+  }
 
   @Nullable
   public abstract Long getOperationBatchSize();

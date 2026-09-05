@@ -30,7 +30,8 @@ class OpenTelemetryCallUtilTest {
         call, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234));
 
     RequestAndContext updated = OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
-    assertThat(updated).isNotNull();
+    assertThat(updated).isSameAs(requestAndContext);
+    assertThat(updated.getRequest()).isSameAs(requestAndContext.getRequest());
     assertThat(updated.getRequest().getNetworkPeerAddress()).isEqualTo("10.20.30.40");
     assertThat(updated.getRequest().getNetworkPeerPort()).isEqualTo(1234);
     assertThat(updated.getRequest().getServerTarget()).isEqualTo("logical-target");
@@ -69,14 +70,18 @@ class OpenTelemetryCallUtilTest {
   @Test
   void updatesPeerWhenBufferedCallIsWrittenAgain() throws UnknownHostException {
     Call call = mock(Call.class);
-    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext());
+    RequestAndContext requestAndContext = requestAndContext();
+    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
 
     OpenTelemetryCallUtil.setNetworkPeer(
         call, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234));
     OpenTelemetryCallUtil.setNetworkPeer(
         call, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 41}), 5678));
 
-    HbaseRequest request = OpenTelemetryCallUtil.getAndClearRequestAndContext(call).getRequest();
+    RequestAndContext updated = OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
+    assertThat(updated).isSameAs(requestAndContext);
+    HbaseRequest request = updated.getRequest();
+    assertThat(request).isSameAs(requestAndContext.getRequest());
     assertThat(request.getNetworkPeerAddress()).isEqualTo("10.20.30.41");
     assertThat(request.getNetworkPeerPort()).isEqualTo(5678);
   }
