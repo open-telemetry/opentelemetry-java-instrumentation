@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -35,7 +36,7 @@ import org.testcontainers.couchbase.BucketDefinition;
 import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.couchbase.CouchbaseService;
 
-// Couchbase instrumentation is owned upstream, so limited testing is performed here.
+// The agent owns the bridge while the Couchbase client produces the request spans.
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient32Test {
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
@@ -86,8 +87,7 @@ class CouchbaseClient32Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
-                      .hasName("get");
+                  span.hasKind(testLatestDeps() ? CLIENT : INTERNAL).hasName("get");
                   if (testLatestDeps()) {
                     span.hasStatus(StatusData.error());
                   }
