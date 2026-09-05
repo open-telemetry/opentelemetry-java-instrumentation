@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import jvmbootstraptest.AotTestApplication;
+import jvmbootstraptest.AotTestPostPremainRunnable;
 import org.junit.jupiter.api.Test;
 
 class AotCacheTest {
@@ -29,7 +30,10 @@ class AotCacheTest {
     File applicationJar =
         new File(
             IntegrationTestUtils.createJarWithClasses(
-                    AotTestApplication.class.getName(), AotTestApplication.class, Trace.class)
+                    AotTestApplication.class.getName(),
+                    AotTestApplication.class,
+                    AotTestPostPremainRunnable.class,
+                    Trace.class)
                 .toURI());
     Path tempDirectory = Files.createTempDirectory("otel-aot-test");
     Path configuration = tempDirectory.resolve("app.aotconf");
@@ -65,9 +69,10 @@ class AotCacheTest {
       runArguments.add("-XX:AOTMode=on");
       runArguments.add("-XX:AOTCache=" + cache);
       runArguments.add("-javaagent:" + IntegrationTestUtils.getAgentJarPath());
-      runArguments.add("-Dotel.javaagent.experimental.field-injection.enabled=false");
+      runArguments.add("-Dotel.aot.test.production=true");
       runArguments.add("-Dotel.instrumentation.common.default-enabled=false");
       runArguments.add("-Dotel.instrumentation.external-annotations.enabled=true");
+      runArguments.add("-Dotel.instrumentation.executors.enabled=true");
       runArguments.add("-Dotel.traces.exporter=logging");
       runArguments.add("-Dotel.metrics.exporter=none");
       runArguments.add("-Dotel.logs.exporter=none");
@@ -86,6 +91,8 @@ class AotCacheTest {
           .contains(AotTestApplication.class.getName() + " source: shared objects file")
           .contains("Transformed " + AotTestApplication.class.getName())
           .contains("'AotTestApplication.traced'")
+          .contains("AOT_CACHED_CLASS_MAP_BACKED")
+          .contains("AOT_POST_PREMAIN_CLASS_FIELD_BACKED")
           .contains("AOT_INSTRUMENTATION_MARKER");
     } finally {
       Files.deleteIfExists(cache);

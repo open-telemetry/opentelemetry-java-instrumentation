@@ -107,7 +107,6 @@ export JAVA_TOOL_OPTIONS="$production_java_tool_options \
   --add-modules=java.instrument \
   -Xbootclasspath/a:$agent_jar \
   -Dotel.javaagent.debug=false \
-  -Dotel.javaagent.experimental.field-injection.enabled=false \
   -Djdk.instrument.traceUsage=true \
   -Xlog:aot=debug,class+load=info"
 
