@@ -34,10 +34,6 @@ import javax.annotation.Nullable;
  */
 public class DbServerTargetBuilder {
 
-  /**
-   * Maximum number of endpoints rendered in a configured database target. This implementation limit
-   * is not configurable.
-   */
   public static final int MAX_ENDPOINTS = 5;
 
   private static final int MIN_PORT = 1;
