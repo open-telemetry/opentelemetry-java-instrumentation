@@ -32,8 +32,6 @@ import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientPackageAccess;
 
-// The wrapper must keep using the deprecated library common types for binary compatibility.
-@SuppressWarnings("deprecation")
 class RestClientWrapper {
   private static final Class<?> proxyClass = createProxyClass();
   private static final Field targetField = getTargetField(proxyClass);

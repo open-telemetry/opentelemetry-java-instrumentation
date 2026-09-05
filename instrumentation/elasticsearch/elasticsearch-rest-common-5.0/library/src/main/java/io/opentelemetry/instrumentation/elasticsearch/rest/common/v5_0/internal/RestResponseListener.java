@@ -14,13 +14,7 @@ import org.elasticsearch.client.ResponseListener;
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
- *
- * @deprecated The Elasticsearch REST library instrumentation is deprecated. Use the Elasticsearch
- *     Java API Client's native OpenTelemetry support when migrating clients, or use the javaagent
- *     for direct REST client instrumentation. May be removed in the next minor release.
  */
-@Deprecated // may be removed in the next minor release
-@SuppressWarnings("deprecation")
 public final class RestResponseListener implements ResponseListener {
 
   private final ResponseListener listener;
