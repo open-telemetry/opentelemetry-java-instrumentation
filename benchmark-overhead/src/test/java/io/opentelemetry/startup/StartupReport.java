@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 final class StartupReport {
   private static final String CSV_HEADER =
@@ -25,8 +27,11 @@ final class StartupReport {
   private static final int CHART_HEIGHT = 520;
   private static final int CHART_LEFT = 90;
   private static final int CHART_RIGHT = 35;
-  private static final int CHART_TOP = 70;
+  private static final int CHART_TOP = 100;
   private static final int CHART_BOTTOM = 95;
+  private static final Pattern JDK_VERSION = Pattern.compile("openjdk version \"([^\"]+)\"");
+  private static final Pattern SPRING_VERSION =
+      Pattern.compile("spring-boot-([0-9][A-Za-z0-9.\\-]*)\\.jar");
 
   private final Path directory;
 
@@ -77,7 +82,7 @@ final class StartupReport {
     Map<Variant, Statistics> statistics = statistics(measured);
     Files.writeString(
         directory.resolve("summary.md"), renderSummary(statistics, samples, metadata), UTF_8);
-    Files.writeString(directory.resolve("startup.svg"), renderChart(statistics), UTF_8);
+    Files.writeString(directory.resolve("startup.svg"), renderChart(statistics, metadata), UTF_8);
   }
 
   static double quantile(List<Double> values, double quantile) {
@@ -160,6 +165,7 @@ final class StartupReport {
     result.append(
         "Primary metric: JVM uptime at Spring startup completion, including agent premain and "
             + "work before Spring's timer starts. Values are seconds.\n\n");
+    result.append("Environment: ").append(environmentCaption(metadata)).append("\n\n");
     result.append(
         "| Variant | Measured | Discarded | JVM median | JVM p25 | JVM p75 | Spring median | "
             + "Spring p25 | Spring p75 | HTTP median | HTTP p25 | HTTP p75 |\n");
@@ -212,6 +218,12 @@ final class StartupReport {
         "With agent",
         statistics.get(Variant.NORMAL_AGENT),
         statistics.get(Variant.AOT_AGENT));
+    appendInterpretation(
+        result,
+        statistics.get(Variant.NORMAL_NO_AGENT),
+        statistics.get(Variant.AOT_NO_AGENT),
+        statistics.get(Variant.NORMAL_AGENT),
+        statistics.get(Variant.AOT_AGENT));
     result.append("\n## Caveats\n\n");
     result.append(
         "- Repeated fresh-process starts with warmed filesystem and image caches; this is not "
@@ -222,6 +234,12 @@ final class StartupReport {
     result.append(
         "- The normal agent case uses the AOT-compatible bootstrap preload without an AOT cache; "
             + "the comparison is not an isolated transformer-installation measurement.\n");
+    result.append(
+        "- Traces, metrics, and logs exporters are disabled while instrumentation and the SDK "
+            + "remain active.\n");
+    result.append(
+        "- Image pull, application packaging, cache training/creation, and diagnostics are "
+            + "excluded from timed startup samples.\n");
     String command = metadata.getProperty("reproduction.command");
     if (command != null) {
       result.append("\nReproduction: `").append(command).append("`\n");
@@ -246,7 +264,47 @@ final class StartupReport {
         .append("% |\n");
   }
 
-  private static String renderChart(Map<Variant, Statistics> statistics) {
+  private static void appendInterpretation(
+      StringBuilder result,
+      Statistics normalNoAgent,
+      Statistics aotNoAgent,
+      Statistics normalAgent,
+      Statistics aotAgent) {
+    double noAgentSaved = normalNoAgent.jvm().median() - aotNoAgent.jvm().median();
+    double agentSaved = normalAgent.jvm().median() - aotAgent.jvm().median();
+    double noAgentReduction = noAgentSaved / normalNoAgent.jvm().median() * 100;
+    double agentReduction = agentSaved / normalAgent.jvm().median() * 100;
+    result.append("\nMeasured result: ");
+    if (noAgentSaved > 0 && agentSaved > 0 && agentReduction < noAgentReduction) {
+      result
+          .append("AOT's relative reduction was smaller with the agent (")
+          .append(format(agentReduction))
+          .append("% versus ")
+          .append(format(noAgentReduction))
+          .append("% without it), while the absolute time saved was larger (")
+          .append(format(agentSaved))
+          .append(" seconds versus ")
+          .append(format(noAgentSaved))
+          .append(" seconds).\n");
+    } else if (noAgentSaved < 0 || agentSaved < 0) {
+      result
+          .append("AOT was slower than normal in ")
+          .append(noAgentSaved < 0 && agentSaved < 0 ? "both" : "one")
+          .append(" comparison pair")
+          .append(noAgentSaved < 0 && agentSaved < 0 ? "s" : "")
+          .append("; the signed reductions above retain that result.\n");
+    } else {
+      result
+          .append("AOT saved ")
+          .append(format(noAgentSaved))
+          .append(" seconds without the agent and ")
+          .append(format(agentSaved))
+          .append(
+              " seconds with the agent; the paired reductions above are the measured result.\n");
+    }
+  }
+
+  private static String renderChart(Map<Variant, Statistics> statistics, Properties metadata) {
     double max = 0;
     for (Statistics stats : statistics.values()) {
       max = Math.max(max, stats.jvm().p75());
@@ -267,18 +325,23 @@ final class StartupReport {
                     + " "
                     + CHART_HEIGHT
                     + "\">\n")
-            .append("<title>JDK 25 Spring startup comparison</title>\n")
+            .append("<title>JDK 25 JVM uptime at Spring startup completion</title>\n")
             .append(
                 "<style>text{font-family:Arial,sans-serif;fill:#202124} .bar{fill:#4c78a8} "
                     + ".iqr{stroke:#202124;stroke-width:3} .grid{stroke:#d9d9d9}</style>\n")
             .append("<text x=\"")
             .append(CHART_WIDTH / 2)
             .append(
-                "\" y=\"30\" text-anchor=\"middle\" font-size=\"20\">JDK 25 Spring startup comparison</text>\n");
+                "\" y=\"25\" text-anchor=\"middle\" font-size=\"20\">JDK 25 JVM uptime at Spring startup completion</text>\n");
     svg.append("<text x=\"")
-        .append(CHART_WIDTH - CHART_RIGHT)
+        .append(CHART_WIDTH / 2)
+        .append("\" y=\"47\" text-anchor=\"middle\" font-size=\"11\">")
+        .append(xml(environmentCaption(metadata)))
+        .append("</text>\n");
+    svg.append("<text x=\"")
+        .append(CHART_WIDTH / 2)
         .append(
-            "\" y=\"30\" text-anchor=\"end\" font-size=\"12\">bars: median; lines: p25-p75 (IQR)</text>\n");
+            "\" y=\"67\" text-anchor=\"middle\" font-size=\"12\">bars: median; labels: measured count; lines: p25-p75 (IQR)</text>\n");
     for (int tick = 0; tick <= 4; tick++) {
       double value = max * tick / 4;
       int y = CHART_TOP + plotHeight - (int) Math.round(value / max * plotHeight);
@@ -307,6 +370,16 @@ final class StartupReport {
       {Variant.NORMAL_AGENT, Variant.AOT_AGENT}
     };
     for (int group = 0; group < groups.length; group++) {
+      Statistics normal = statistics.get(groups[group][0]);
+      Statistics aot = statistics.get(groups[group][1]);
+      svg.append("<text x=\"")
+          .append(centers[group])
+          .append("\" y=\"84\" text-anchor=\"middle\" font-size=\"12\">AOT: ")
+          .append(format(normal.jvm().median() - aot.jvm().median()))
+          .append(" s saved (")
+          .append(
+              format((normal.jvm().median() - aot.jvm().median()) / normal.jvm().median() * 100))
+          .append("%)</text>\n");
       svg.append("<text x=\"")
           .append(centers[group])
           .append("\" y=\"")
@@ -350,6 +423,15 @@ final class StartupReport {
         svg.append("<text x=\"")
             .append(center)
             .append("\" y=\"")
+            .append(Math.max(y - 8, CHART_TOP + 12))
+            .append("\" text-anchor=\"middle\" font-size=\"11\">")
+            .append(format(stats.jvm().median()))
+            .append(" s (n=")
+            .append(stats.jvm().size())
+            .append(")</text>\n");
+        svg.append("<text x=\"")
+            .append(center)
+            .append("\" y=\"")
             .append(base + 20)
             .append("\" text-anchor=\"middle\" font-size=\"12\">")
             .append(variant.aot() ? "AOT" : "Normal")
@@ -364,8 +446,52 @@ final class StartupReport {
         .append(CHART_LEFT - 55)
         .append(" ")
         .append(CHART_TOP + plotHeight / 2)
-        .append(")\">JVM uptime (seconds)</text>\n");
+        .append(")\">JVM uptime at Spring startup completion (seconds)</text>\n");
     return svg.append("</svg>\n").toString();
+  }
+
+  private static String environmentCaption(Properties metadata) {
+    String jdk = extract(JDK_VERSION, metadata.getProperty("jvm.version"), "unknown");
+    String spring = extract(SPRING_VERSION, metadata.getProperty("spring.version"), "unknown");
+    String agent = metadata.getProperty("agent.version", "unknown");
+    String cpus = metadata.getProperty("cpus", "unknown");
+    String memory = metadata.getProperty("memory.bytes");
+    String memoryLabel =
+        memory == null
+            ? "unknown memory"
+            : String.format(
+                Locale.ROOT, "%.0f GiB", Double.parseDouble(memory) / (1024 * 1024 * 1024));
+    String heap = metadata.getProperty("heap", "unknown heap");
+    return "JDK "
+        + jdk
+        + "; Spring Boot "
+        + spring
+        + "; agent "
+        + agent
+        + "; resources "
+        + cpus
+        + " CPU / "
+        + memoryLabel
+        + " / "
+        + heap
+        + "; traces/metrics/logs exporters disabled; instrumentation active";
+  }
+
+  private static String extract(Pattern pattern, String value, String fallback) {
+    if (value == null) {
+      return fallback;
+    }
+    Matcher matcher = pattern.matcher(value);
+    return matcher.find() ? matcher.group(1) : fallback;
+  }
+
+  private static String xml(String value) {
+    return value
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&apos;");
   }
 
   static String csv(String value) {
