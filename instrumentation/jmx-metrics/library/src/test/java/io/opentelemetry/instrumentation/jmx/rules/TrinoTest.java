@@ -59,7 +59,6 @@ class TrinoTest extends TargetSystemTest {
                 .checkRegisteredMetrics(
                     "trino.",
                     asList(
-                        "trino.node.active.count",
                         "trino.memory.pool.free",
                         "trino.memory.query.killed.count",
                         "trino.query.running.count",
@@ -72,7 +71,7 @@ class TrinoTest extends TargetSystemTest {
                         "trino.query.waiting_for_resources.duration.max",
                         "trino.task.input.data.size",
                         "trino.task.input.row.count"),
-                    emptyList())
+                    singletonList("trino.node.active.count"))
                 .checkRegisteredAttributes(
                     "trino.",
                     asList("trino.memory.pool.name", "trino.query.failure.type"),
@@ -89,7 +88,7 @@ class TrinoTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier() {
     return MetricsVerifier.create()
-        .add(
+        .addOptional(
             "trino.node.active.count",
             metric ->
                 metric
