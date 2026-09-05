@@ -97,6 +97,11 @@ public class RabbitSingletons {
     if (messagingOperation && emitStableMessagingSemconv()) {
       builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
     }
+    if (RabbitConnectionAttributes.enabled()) {
+      builder.addAttributesExtractor(
+          new RabbitConnectionAttributesExtractor<ChannelAndMethod, Void>(
+              channelAndMethod -> channelAndMethod.getChannel().getConnection()));
+    }
     return builder;
   }
 
@@ -170,6 +175,9 @@ public class RabbitSingletons {
     if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
     }
+    if (RabbitConnectionAttributes.enabled()) {
+      extractors.add(new RabbitConnectionAttributesExtractor<>(ReceiveRequest::getConnection));
+    }
 
     SpanNameExtractor<ReceiveRequest> spanNameExtractor =
         emitStableMessagingSemconv()
@@ -207,6 +215,9 @@ public class RabbitSingletons {
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
+    }
+    if (RabbitConnectionAttributes.enabled()) {
+      extractors.add(new RabbitConnectionAttributesExtractor<>(DeliveryRequest::getConnection));
     }
 
     SpanNameExtractor<DeliveryRequest> spanNameExtractor =
