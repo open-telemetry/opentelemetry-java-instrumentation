@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -53,6 +54,11 @@ class HbaseClient20Test extends AbstractHbaseTest {
   @Override
   protected int getMetaScanTraceCount() {
     return testLatestDeps() ? 2 : 1;
+  }
+
+  @Override
+  protected boolean reportsNetworkPeerAddress() {
+    return emitStableDatabaseSemconv();
   }
 
   @Override
