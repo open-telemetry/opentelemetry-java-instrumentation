@@ -12,6 +12,7 @@ import static java.util.logging.Level.WARNING;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
@@ -24,6 +25,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.List;
 import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
@@ -62,6 +64,16 @@ public class JmxMetricInsightInstaller implements AgentListener {
         .get("target")
         .getScalarList("system", String.class, emptyList())
         .forEach(target -> addClasspathRules(target, jmx));
+
+    // include/exclude metrics by name
+    List<String> metricsInclude =
+        config.get("metrics").getScalarList("included", String.class, emptyList());
+    List<String> metricsExclude =
+        config.get("metrics").getScalarList("excluded", String.class, emptyList());
+    if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
+      jmx.setMetrics(
+          IncludeExclude.builder().setIncluded(metricsInclude).setExcluded(metricsExclude).build());
+    }
 
     jmx.build().start();
   }

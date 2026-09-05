@@ -41,13 +41,14 @@ import java.time.Duration;
 OpenTelemetry openTelemetry = ...;
 
 JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
-  // Configure included metrics (optional)
-  .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("jmx/rules/jetty.yaml"), "jetty")
-  .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("jmx/rules/tomcat.yaml"), "tomcat")
-  // Configure custom metrics (optional)
+  // Load metrics from classpath resource (optional)
+  .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("rules/tomcat.yaml"))
+  // Load custom metrics by path (optional)
   .addRules(Paths.get("/path/to/custom-jmx.yaml"))
   // delay bean discovery by 5 seconds
   .beanDiscoveryDelay(Duration.ofSeconds(5))
+  // filter captured metrics by their name (optional), will affect all loaded metric definitions
+  .setMetrics(IncludeExclude.builder().setIncluded("tomcat.*", "jvm.*").setExcluded("kafka.connect.*").build())
   .build();
 
 jmxTelemetry.start();
