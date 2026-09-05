@@ -29,7 +29,10 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new CouchbaseBucketInstrumentation(), new CouchbaseClusterInstrumentation());
+    return asList(
+        new CouchbaseBucketInstrumentation(),
+        new CouchbaseClusterInstrumentation(),
+        new CouchbaseClusterTargetInstrumentation());
   }
 
   @Override
