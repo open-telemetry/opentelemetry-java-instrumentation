@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -36,7 +38,7 @@ import org.testcontainers.couchbase.BucketDefinition;
 import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.couchbase.CouchbaseService;
 
-// Couchbase instrumentation is owned upstream, so limited testing is performed here.
+// The agent owns the bridge while the Couchbase client produces the request spans.
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient31Test {
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
@@ -109,6 +111,9 @@ class CouchbaseClient31Test {
                           equalTo(maybeStable(DB_OPERATION), "get"),
                           equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
                           equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
+                          equalTo(
+                              longKey("db.couchbase.retries"),
+                              oldOrExperimental(testLatestDeps() ? 0L : null)),
                           equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")));
                 },
                 span -> span.hasName("dispatch_to_server")));

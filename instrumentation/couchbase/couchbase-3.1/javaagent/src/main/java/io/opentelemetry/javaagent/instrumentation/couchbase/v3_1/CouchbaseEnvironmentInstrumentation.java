@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.couchbase.client.core.env.CoreEnvironment;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -34,12 +35,30 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This CoreEnvironment.Builder<?> builder) {
-      String instrumentationName =
-          SemconvStability.v3Preview()
-              ? "io.opentelemetry.couchbase-3.1"
-              : "io.opentelemetry.javaagent.couchbase-3.1";
+      OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+      boolean legacyBridge = isLegacyBridge(builder.getClass().getClassLoader());
+      String instrumentationName;
+      if (legacyBridge) {
+        instrumentationName =
+            SemconvStability.v3Preview()
+                ? "io.opentelemetry.couchbase-3.1"
+                : "io.opentelemetry.javaagent.couchbase-3.1";
+      } else {
+        instrumentationName = "com.couchbase.client.jvm";
+      }
       builder.requestTracer(
-          CouchbaseRequestTracer.create(GlobalOpenTelemetry.getTracer(instrumentationName)));
+          CouchbaseRequestTracer.create(
+              openTelemetry.getTracer(instrumentationName), legacyBridge));
+    }
+
+    @SuppressWarnings("EffectivelyPrivate")
+    public static boolean isLegacyBridge(ClassLoader classLoader) {
+      try {
+        Class.forName("com.couchbase.client.core.endpoint.EventingEndpoint", false, classLoader);
+        return false;
+      } catch (ClassNotFoundException ignored) {
+        return true;
+      }
     }
   }
 }

@@ -6,45 +6,30 @@ muzzle {
   pass {
     group.set("com.couchbase.client")
     module.set("java-client")
-    versions.set("[3.1,3.1.6)")
+    versions.set("[3.1,3.2)")
     assertInverse.set(true)
   }
 }
 
-sourceSets {
-  main {
-    val shadedDep = project(":instrumentation:couchbase:couchbase-3.1:tracing-opentelemetry-shaded")
-    output.dir(
-      shadedDep.file("build/extracted/shadow"),
-      "builtBy" to ":instrumentation:couchbase:couchbase-3.1:tracing-opentelemetry-shaded:extractShadowJar",
-    )
-  }
-}
-
 dependencies {
+  implementation(project(":instrumentation:couchbase:couchbase-common-3.0:javaagent"))
   compileOnly(project(":muzzle")) // For @NoMuzzle
-  compileOnly(
-    project(
-      path = ":instrumentation:couchbase:couchbase-3.1:tracing-opentelemetry-shaded",
-      configuration = "shadow",
-    ),
-  )
 
   // 3.1.4 (instead of 3.1.0) needed for test stability and for compatibility with server versions that run on M1 processors
   library("com.couchbase.client:java-client:3.1.4")
 
   testInstrumentation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1.6:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.4:javaagent"))
   testImplementation("org.testcontainers:testcontainers-couchbase")
 
-  latestDepTestLibrary("com.couchbase.client:java-client:3.1.5") // see couchbase-3.1.6 module
+  latestDepTestLibrary("com.couchbase.client:java-client:3.1.+") // see couchbase-3.2 module
 }
 
 tasks {
   withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
