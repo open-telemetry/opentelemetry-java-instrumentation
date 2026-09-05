@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 
 import com.mongodb.MongoException;
@@ -136,21 +137,29 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public String getServerAddress(CommandStartedEvent event) {
-    if (event.getConnectionDescription() != null
-        && event.getConnectionDescription().getServerAddress() != null) {
-      return event.getConnectionDescription().getServerAddress().getHost();
+    if (emitStableDatabaseSemconv()) {
+      MongoServerTarget target = MongoClusterTargets.get(event);
+      return target == null ? null : target.getAddress();
     }
-    return null;
+    ServerAddress serverAddress = selectedServerAddress(event);
+    return serverAddress == null ? null : serverAddress.getHost();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(CommandStartedEvent event) {
-    if (event.getConnectionDescription() != null
-        && event.getConnectionDescription().getServerAddress() != null) {
-      return event.getConnectionDescription().getServerAddress().getPort();
+    if (emitStableDatabaseSemconv()) {
+      MongoServerTarget target = MongoClusterTargets.get(event);
+      return target == null ? null : target.getPort();
     }
-    return null;
+    ServerAddress serverAddress = selectedServerAddress(event);
+    return serverAddress == null ? null : serverAddress.getPort();
+  }
+
+  @Nullable
+  private static ServerAddress selectedServerAddress(CommandStartedEvent event) {
+    ConnectionDescription connectionDescription = event.getConnectionDescription();
+    return connectionDescription == null ? null : connectionDescription.getServerAddress();
   }
 
   @Nullable

@@ -5,12 +5,17 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
+import static java.util.Collections.singletonList;
+
+import com.mongodb.ServerAddress;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoServerTarget;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
+import java.util.List;
 
 // TODO this class is used for all Mongo versions. Extract to mongo-common module
 /** Entrypoint to OpenTelemetry instrumentation of the MongoDB client. */
@@ -45,5 +50,29 @@ public final class MongoTelemetry {
    */
   public CommandListener createCommandListener() {
     return new TracingCommandListener(instrumenter);
+  }
+
+  /**
+   * Returns a new {@link CommandListener} for a client configured with exactly the given server
+   * address.
+   *
+   * <p>Where stable database conventions are emitted, the configured address is reported as the
+   * logical server target. Where the old conventions are emitted, {@code db.connection_string}
+   * describes the server that the driver selected.
+   */
+  public CommandListener createCommandListener(ServerAddress configuredServerAddress) {
+    return createCommandListener(singletonList(configuredServerAddress));
+  }
+
+  /**
+   * Returns a new {@link CommandListener} for a client configured with the given seed list.
+   *
+   * <p>Where stable database conventions are emitted, the configured seeds are reported as the
+   * logical server target. Where the old conventions are emitted, {@code db.connection_string}
+   * describes the server that the driver selected.
+   */
+  public CommandListener createCommandListener(List<ServerAddress> configuredServerAddresses) {
+    return new TracingCommandListener(
+        instrumenter, MongoServerTarget.seeds(configuredServerAddresses));
   }
 }
