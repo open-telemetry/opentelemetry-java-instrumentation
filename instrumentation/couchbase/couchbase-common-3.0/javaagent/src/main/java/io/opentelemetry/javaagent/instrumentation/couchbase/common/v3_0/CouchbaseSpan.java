@@ -104,6 +104,10 @@ public final class CouchbaseSpan {
     span.setAttribute(key, value);
   }
 
+  public void updateName(String name) {
+    span.updateName(name);
+  }
+
   public void addEvent(String name, Instant timestamp) {
     span.addEvent(name, timestamp);
   }
