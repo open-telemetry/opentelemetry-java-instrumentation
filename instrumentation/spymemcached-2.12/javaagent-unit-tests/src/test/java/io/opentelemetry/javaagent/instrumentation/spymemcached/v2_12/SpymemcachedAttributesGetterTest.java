@@ -18,7 +18,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
@@ -117,6 +119,46 @@ class SpymemcachedAttributesGetterTest {
         .isEqualTo("one.example:11212,two.example:11212");
   }
 
+  @Test
+  void resolvedHandlingNodeIsTheStableNetworkPeer() throws UnknownHostException {
+    SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
+    InetSocketAddress peer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 11211);
+    request.setHandlingNode(memcachedNode(peer));
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? peer : null);
+    assertThat(getter.getNetworkPeerAddress(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "10.20.30.40" : null);
+    assertThat(getter.getNetworkPeerPort(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? 11211 : null);
+  }
+
+  @Test
+  void unresolvedHandlingNodeIsNotResolved() {
+    SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
+    InetSocketAddress unresolved = node("unresolved.example", 11211);
+    request.setHandlingNode(memcachedNode(unresolved));
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+  }
+
+  @Test
+  void severalHandlingNodesHaveNoNetworkPeer() throws UnknownHostException {
+    SpymemcachedRequest request =
+        request(asList(node("one.example", 11211), node("two.example", 11212)));
+    InetSocketAddress firstPeer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 11211);
+    InetSocketAddress secondPeer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 41}), 11212);
+    request.setHandlingNode(memcachedNode(firstPeer));
+    request.setHandlingNode(memcachedNode(secondPeer));
+
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
+  }
+
   private static SpymemcachedRequest request(List<InetSocketAddress> nodes) {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedSingletons.setServerTarget(connection, nodes);
@@ -124,8 +166,12 @@ class SpymemcachedAttributesGetterTest {
   }
 
   private static MemcachedNode memcachedNode(String host, int port) {
+    return memcachedNode(node(host, port));
+  }
+
+  private static MemcachedNode memcachedNode(InetSocketAddress address) {
     MemcachedNode node = mock(MemcachedNode.class);
-    when(node.getSocketAddress()).thenReturn(node(host, port));
+    when(node.getSocketAddress()).thenReturn(address);
     return node;
   }
 
