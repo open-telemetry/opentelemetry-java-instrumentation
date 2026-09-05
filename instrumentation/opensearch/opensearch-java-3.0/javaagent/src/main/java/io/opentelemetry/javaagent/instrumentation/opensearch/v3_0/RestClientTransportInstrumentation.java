@@ -18,7 +18,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.transport.OpenSearchTransport;
 
-// capture the initial nodes before sniffing or setNodes can replace them
+// Preserve the nodes configured at construction for telemetry. Automatic node discovery or
+// setNodes() can later replace the client's active node list.
 class RestClientTransportInstrumentation implements TypeInstrumentation {
 
   @Override
