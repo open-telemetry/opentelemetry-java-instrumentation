@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
@@ -89,8 +90,7 @@ class CouchbaseClient32Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
-                      .hasName(spanName());
+                  span.hasKind(testLatestDeps() ? CLIENT : INTERNAL).hasName(spanName());
                   if (testLatestDeps()) {
                     span.hasStatus(StatusData.error());
                   }

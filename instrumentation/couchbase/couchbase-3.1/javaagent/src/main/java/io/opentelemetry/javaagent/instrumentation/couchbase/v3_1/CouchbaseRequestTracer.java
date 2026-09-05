@@ -91,6 +91,9 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod"})
     public void attribute(String key, String value) {
+      if (emitStableDatabaseSemconv()) {
+        spanName.captureAttribute(key, value);
+      }
       delegate.setAttribute(key, value);
     }
 
