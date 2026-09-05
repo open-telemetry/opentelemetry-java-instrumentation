@@ -212,12 +212,7 @@ public class IntegrationTestUtils {
     arguments.add(classpath);
     arguments.add(mainClassName);
     arguments.addAll(asList(mainMethodArgs));
-    return runJava(arguments, envVars, printOutputStreams);
-  }
 
-  static ProcessResult runJava(
-      List<String> arguments, Map<String, String> envVars, boolean printOutputStreams)
-      throws Exception {
     String separator = System.getProperty("file.separator");
     String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
 
