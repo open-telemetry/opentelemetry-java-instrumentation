@@ -97,6 +97,7 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.65:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:executors-metrics:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-application-logger:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent", configuration = "shaded"))

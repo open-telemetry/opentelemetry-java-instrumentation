@@ -108,6 +108,8 @@ readonly INSTRUMENTATIONS=(
   "elasticsearch:elasticsearch-transport-6.0:javaagent:elasticsearch7Test"
   "elasticsearch:elasticsearch-transport-6.0:javaagent:elasticsearch7TestExperimental"
   "elasticsearch:elasticsearch-transport-6.0:javaagent:elasticsearch7TestStableSemconv"
+  "executors-metrics:javaagent:test"
+  "executors-metrics:javaagent:testAllThreadNameNormalization"
   "failsafe-3.0:library:test"
   "finagle-http-23.11:javaagent:test"
   "finatra-2.9:javaagent:test"
