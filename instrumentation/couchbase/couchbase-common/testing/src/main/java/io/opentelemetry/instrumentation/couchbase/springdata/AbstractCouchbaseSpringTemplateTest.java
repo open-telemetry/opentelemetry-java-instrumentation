@@ -125,8 +125,11 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()),
-                            satisfies(stringKey("couchbase.operation_id"), operationIdAttribute())),
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()),
+                            satisfies(
+                                stringKey("couchbase.operation_id"),
+                                experimentalOperationIdAttribute())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -144,9 +147,11 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()),
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
+                                stringKey("couchbase.operation_id"),
+                                experimentalOperationIdAttribute()))));
   }
 
   @ParameterizedTest
@@ -181,8 +186,11 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()),
-                            satisfies(stringKey("couchbase.operation_id"), operationIdAttribute())),
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()),
+                            satisfies(
+                                stringKey("couchbase.operation_id"),
+                                experimentalOperationIdAttribute())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -200,9 +208,11 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()),
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
+                                stringKey("couchbase.operation_id"),
+                                experimentalOperationIdAttribute()))));
 
     testing.clearData();
 
@@ -229,8 +239,10 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()),
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), operationIdAttribute()))));
+                                stringKey("couchbase.operation_id"),
+                                experimentalOperationIdAttribute()))));
   }
 }

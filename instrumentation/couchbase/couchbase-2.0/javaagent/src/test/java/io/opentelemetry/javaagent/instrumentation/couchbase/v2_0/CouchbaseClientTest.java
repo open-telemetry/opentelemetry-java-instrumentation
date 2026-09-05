@@ -45,13 +45,13 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
   }
 
   @Override
-  protected boolean includesLocalAddressAttribute() {
+  protected boolean includesExperimentalLocalAddressAttribute() {
     // The core-io versions before 1.6.0 have no localSocket field to capture it from.
     return false;
   }
 
   @Override
-  protected boolean includesOperationIdAttribute() {
+  protected boolean includesExperimentalOperationIdAttribute() {
     // The core-io versions before 1.6.0 have no CouchbaseRequest.operationId() to correlate with.
     return false;
   }
@@ -90,7 +90,8 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), localAddressAttribute()))));
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddressAttribute()))));
 
     assertDurationMetric(
         testing,

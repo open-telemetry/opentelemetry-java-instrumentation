@@ -28,13 +28,13 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseSpringRepositoryTes
   }
 
   @Override
-  protected boolean includesLocalAddressAttribute() {
+  protected boolean includesExperimentalLocalAddressAttribute() {
     // The core-io versions before 1.6.0 have no localSocket field to capture it from.
     return false;
   }
 
   @Override
-  protected boolean includesOperationIdAttribute() {
+  protected boolean includesExperimentalOperationIdAttribute() {
     // The core-io versions before 1.6.0 have no CouchbaseRequest.operationId() to correlate with.
     return false;
   }

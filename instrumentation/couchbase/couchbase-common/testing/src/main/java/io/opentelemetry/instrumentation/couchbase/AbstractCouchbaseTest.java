@@ -113,7 +113,7 @@ public abstract class AbstractCouchbaseTest {
    * {@link #includesNetworkAttributes()} since every other subclass that has one also has the
    * other.
    */
-  protected boolean includesLocalAddressAttribute() {
+  protected boolean includesExperimentalLocalAddressAttribute() {
     return includesNetworkAttributes();
   }
 
@@ -123,7 +123,7 @@ public abstract class AbstractCouchbaseTest {
    * (e.g., 2.0-2.5). Defaults to {@link #includesNetworkAttributes()} since every other subclass
    * that has one also has the other.
    */
-  protected boolean includesOperationIdAttribute() {
+  protected boolean includesExperimentalOperationIdAttribute() {
     return includesNetworkAttributes();
   }
 
@@ -179,14 +179,14 @@ public abstract class AbstractCouchbaseTest {
     return emitStableDatabaseSemconv() ? operation + " " + configuredServerAddress() : operation;
   }
 
-  protected StringAssertConsumer operationIdAttribute() {
-    return includesExperimentalAttributes() && includesOperationIdAttribute()
+  protected StringAssertConsumer experimentalOperationIdAttribute() {
+    return includesExperimentalAttributes() && includesExperimentalOperationIdAttribute()
         ? val -> val.isNotNull()
         : val -> val.isNull();
   }
 
-  protected StringAssertConsumer localAddressAttribute() {
-    return includesExperimentalAttributes() && includesLocalAddressAttribute()
+  protected StringAssertConsumer experimentalLocalAddressAttribute() {
+    return includesExperimentalAttributes() && includesExperimentalLocalAddressAttribute()
         ? val -> val.isNotNull()
         : val -> val.isNull();
   }
