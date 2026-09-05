@@ -8,49 +8,78 @@ package io.opentelemetry.javaagent.tooling.field;
 import static net.bytebuddy.jar.asm.Type.getType;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class GeneratedVirtualFieldNamesTest {
 
-  @Test
-  void virtualFieldImplementation() {
+  @ParameterizedTest
+  @CsvSource({
+    "'', io.opentelemetry.javaagent.bootstrap.field.VirtualFieldImpl$java$lang$Runnable$java$lang$String____",
+    "test, io.opentelemetry.javaagent.bootstrap.field.VirtualFieldImpl$test$java$lang$Runnable$java$lang$String____"
+  })
+  void virtualFieldImplementation(String fieldName, String expected) {
     assertThat(
             GeneratedVirtualFieldNames.getVirtualFieldImplementationClassName(
-                getType(Runnable.class).getClassName(), getType(String[][].class).getClassName()))
-        .isEqualTo(
-            "io.opentelemetry.javaagent.bootstrap.field.VirtualFieldImpl$java$lang$Runnable$java$lang$String____");
+                fieldName,
+                getType(Runnable.class).getClassName(),
+                getType(String[][].class).getClassName()))
+        .isEqualTo(expected);
   }
 
-  @Test
-  void accessorInterface() {
+  @ParameterizedTest
+  @CsvSource({
+    "'', io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessor$java$lang$Runnable$java$lang$String__",
+    "test, io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessor$test$java$lang$Runnable$java$lang$String__"
+  })
+  void accessorInterface(String fieldName, String expected) {
     assertThat(
             GeneratedVirtualFieldNames.getFieldAccessorInterfaceName(
-                getType(Runnable.class).getClassName(), getType(String[].class).getClassName()))
-        .isEqualTo(
-            "io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessor$java$lang$Runnable$java$lang$String__");
+                fieldName,
+                getType(Runnable.class).getClassName(),
+                getType(String[].class).getClassName()))
+        .isEqualTo(expected);
   }
 
-  @Test
-  void field() {
+  @ParameterizedTest
+  @CsvSource({
+    "'', __opentelemetryVirtualField$java$lang$Runnable$java$lang$String__",
+    "test, __opentelemetryVirtualField$test$java$lang$Runnable$java$lang$String__"
+  })
+  void field(String fieldName, String expected) {
     assertThat(
             GeneratedVirtualFieldNames.getRealFieldName(
-                getType(Runnable.class).getClassName(), getType(String[].class).getClassName()))
-        .isEqualTo("__opentelemetryVirtualField$java$lang$Runnable$java$lang$String__");
+                fieldName,
+                getType(Runnable.class).getClassName(),
+                getType(String[].class).getClassName()))
+        .isEqualTo(expected);
   }
 
-  @Test
-  void setter() {
+  @ParameterizedTest
+  @CsvSource({
+    "'', __set__opentelemetryVirtualField$java$lang$Runnable$java$lang$String__",
+    "test, __set__opentelemetryVirtualField$test$java$lang$Runnable$java$lang$String__"
+  })
+  void setter(String fieldName, String expected) {
     assertThat(
             GeneratedVirtualFieldNames.getRealSetterName(
-                getType(Runnable.class).getClassName(), getType(String[].class).getClassName()))
-        .isEqualTo("__set__opentelemetryVirtualField$java$lang$Runnable$java$lang$String__");
+                fieldName,
+                getType(Runnable.class).getClassName(),
+                getType(String[].class).getClassName()))
+        .isEqualTo(expected);
   }
 
-  @Test
-  void getter() {
+  @ParameterizedTest
+  @CsvSource({
+    "'', __get__opentelemetryVirtualField$java$lang$Runnable$java$lang$String__",
+    "test, __get__opentelemetryVirtualField$test$java$lang$Runnable$java$lang$String__"
+  })
+  void getter(String fieldName, String expected) {
     assertThat(
             GeneratedVirtualFieldNames.getRealGetterName(
-                getType(Runnable.class).getClassName(), getType(String[].class).getClassName()))
-        .isEqualTo("__get__opentelemetryVirtualField$java$lang$Runnable$java$lang$String__");
+                fieldName,
+                getType(Runnable.class).getClassName(),
+                getType(String[].class).getClassName()))
+        .isEqualTo(expected);
   }
 }

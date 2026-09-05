@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
+import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings.Mapping;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -49,10 +50,13 @@ final class VirtualFieldImplementationsGenerator {
       VirtualFieldMappings virtualFieldMappings, FieldAccessorInterfaces fieldAccessorInterfaces) {
     Map<String, DynamicType.Unloaded<?>> virtualFieldImplementations =
         new HashMap<>(virtualFieldMappings.size());
-    for (Map.Entry<String, String> entry : virtualFieldMappings.entrySet()) {
+    for (Mapping mapping : virtualFieldMappings.getMappings()) {
       DynamicType.Unloaded<?> type =
           makeVirtualFieldImplementationClass(
-              entry.getKey(), entry.getValue(), fieldAccessorInterfaces);
+              mapping.getFieldName(),
+              mapping.getTypeName(),
+              mapping.getFieldTypeName(),
+              fieldAccessorInterfaces);
       virtualFieldImplementations.put(type.getTypeDescription().getName(), type);
     }
     return new VirtualFieldImplementations(virtualFieldImplementations);
@@ -67,13 +71,17 @@ final class VirtualFieldImplementationsGenerator {
    * @return unloaded dynamic type containing generated class
    */
   private DynamicType.Unloaded<?> makeVirtualFieldImplementationClass(
-      String typeName, String fieldTypeName, FieldAccessorInterfaces fieldAccessorInterfaces) {
+      String fieldName,
+      String typeName,
+      String fieldTypeName,
+      FieldAccessorInterfaces fieldAccessorInterfaces) {
     return byteBuddy
         .rebase(VirtualFieldImplementationTemplate.class)
         .modifiers(Visibility.PUBLIC, TypeManifestation.FINAL, SyntheticState.SYNTHETIC)
-        .name(getVirtualFieldImplementationClassName(typeName, fieldTypeName))
+        .name(getVirtualFieldImplementationClassName(fieldName, typeName, fieldTypeName))
         .visit(
-            getVirtualFieldImplementationVisitor(typeName, fieldTypeName, fieldAccessorInterfaces))
+            getVirtualFieldImplementationVisitor(
+                fieldName, typeName, fieldTypeName, fieldAccessorInterfaces))
         .make();
   }
 
@@ -82,12 +90,16 @@ final class VirtualFieldImplementationsGenerator {
    * VirtualFieldImplementationsGenerator.VirtualFieldImplementationTemplate} for given key class
    * name and context class name.
    *
+   * @param fieldName field name
    * @param typeName key class name
    * @param fieldTypeName context class name
    * @return visitor that adds implementation for methods that need to be generated
    */
   private AsmVisitorWrapper getVirtualFieldImplementationVisitor(
-      String typeName, String fieldTypeName, FieldAccessorInterfaces fieldAccessorInterfaces) {
+      String fieldName,
+      String typeName,
+      String fieldTypeName,
+      FieldAccessorInterfaces fieldAccessorInterfaces) {
     return new AsmVisitorWrapper() {
 
       @Override
@@ -114,7 +126,7 @@ final class VirtualFieldImplementationsGenerator {
         return new ClassVisitor(AsmApi.VERSION, classVisitor) {
 
           private final TypeDescription accessorInterface =
-              fieldAccessorInterfaces.find(typeName, fieldTypeName);
+              fieldAccessorInterfaces.find(fieldName, typeName, fieldTypeName);
           private final String accessorInterfaceInternalName = accessorInterface.getInternalName();
           private final String instrumentedTypeInternalName = instrumentedType.getInternalName();
           private final boolean frames =
@@ -155,7 +167,7 @@ final class VirtualFieldImplementationsGenerator {
            * @param name name of the method being visited
            */
           private void generateRealGetMethod(String name) {
-            String getterName = getRealGetterName(typeName, fieldTypeName);
+            String getterName = getRealGetterName(fieldName, typeName, fieldTypeName);
             Label elseLabel = new Label();
             MethodVisitor mv = getMethodVisitor(name);
             mv.visitCode();
@@ -208,7 +220,7 @@ final class VirtualFieldImplementationsGenerator {
            * @param name name of the method being visited
            */
           private void generateRealPutMethod(String name) {
-            String setterName = getRealSetterName(typeName, fieldTypeName);
+            String setterName = getRealSetterName(fieldName, typeName, fieldTypeName);
             Label elseLabel = new Label();
             Label endLabel = new Label();
             MethodVisitor mv = getMethodVisitor(name);

@@ -21,9 +21,9 @@ final class VirtualFieldImplementations {
     this.virtualFieldImplementations = virtualFieldImplementations;
   }
 
-  TypeDescription find(String typeName, String fieldTypeName) {
+  TypeDescription find(String fieldName, String typeName, String fieldTypeName) {
     String virtualFieldImplementationClassName =
-        getVirtualFieldImplementationClassName(typeName, fieldTypeName);
+        getVirtualFieldImplementationClassName(fieldName, typeName, fieldTypeName);
     DynamicType.Unloaded<?> type =
         virtualFieldImplementations.get(virtualFieldImplementationClassName);
     if (type == null) {
