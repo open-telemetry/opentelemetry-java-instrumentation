@@ -229,6 +229,7 @@
     "io.vertx:vertx-kafka-client#3.+": "3.9.16",
     "io.vertx:vertx-kafka-client#4.+": "4.5.33",
     "io.vertx:vertx-lang-kotlin-coroutines#+": "5.1.7",
+    "io.vertx:vertx-oracle-client#+": "5.1.7",
     "io.vertx:vertx-pg-client#+": "5.1.7",
     "io.vertx:vertx-pg-client#4.+": "4.5.33",
     "io.vertx:vertx-pg-client#5.0.+": "5.0.12",

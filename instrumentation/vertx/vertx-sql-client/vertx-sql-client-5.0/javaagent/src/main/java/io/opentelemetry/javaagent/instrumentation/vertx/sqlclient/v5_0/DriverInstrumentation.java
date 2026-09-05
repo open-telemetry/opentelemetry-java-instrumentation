@@ -12,13 +12,18 @@ import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.vertx.sqlclient.Pool;
-import javax.annotation.Nullable;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoCapture;
+import io.vertx.core.Future;
+import io.vertx.sqlclient.SqlConnectOptions;
+import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -40,6 +45,7 @@ class DriverInstrumentation implements TypeInstrumentation {
         named("newPool")
             .and(not(isStatic()))
             .and(takesArguments(6))
+            .and(takesArgument(1, named("java.util.function.Supplier")))
             .and(returns(named("io.vertx.sqlclient.Pool"))),
         getClass().getName() + "$NewPoolAdvice");
   }
@@ -47,11 +53,22 @@ class DriverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class NewPoolAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object driver, @Advice.Return @Nullable Pool pool) {
-      if (pool != null) {
-        VertxSqlClientSingletons.storePoolDbSystem(pool, getDbSystemNameFromClassName(driver));
+    @AssignReturned.ToArguments(@ToArgument(1))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Supplier<Future<SqlConnectOptions>> onEnter(
+        @Advice.This Object driver,
+        @Advice.Argument(1) Supplier<Future<SqlConnectOptions>> connectOptionsSupplier) {
+      Supplier<Future<SqlConnectOptions>> result = connectOptionsSupplier;
+      String dbSystem = getDbSystemNameFromClassName(driver);
+      VertxSqlClientInfoCapture supplierCapture =
+          VertxSqlClientSingletons.getBuildingSupplierCapture();
+      if (supplierCapture != null) {
+        supplierCapture.setDbSystemName(dbSystem);
+        result =
+            VertxSqlClientSingletons.wrapConnectOptionsSupplier(
+                connectOptionsSupplier, supplierCapture);
       }
+      return result;
     }
   }
 }
