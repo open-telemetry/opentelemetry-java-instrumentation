@@ -5,6 +5,7 @@
 
 package jvmbootstraptest;
 
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker;
 import io.opentracing.contrib.dropwizard.Trace;
 
 public class AotTestApplication implements Runnable {
@@ -36,13 +37,8 @@ public class AotTestApplication implements Runnable {
   }
 
   static boolean hasInjectedField(Class<?> type) {
-    for (Class<?> interfaceType : type.getInterfaces()) {
-      if ("io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker"
-          .equals(interfaceType.getName())) {
-        return true;
-      }
-    }
-    return false;
+    // Class.getInterfaces() hides this internal marker when reflection instrumentation is active.
+    return VirtualFieldInstalledMarker.class.isAssignableFrom(type);
   }
 
   private AotTestApplication() {}
