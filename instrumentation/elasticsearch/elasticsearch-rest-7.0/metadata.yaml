@@ -1,5 +1,8 @@
 display_name: Elasticsearch REST Client
-description: This instrumentation enables database client spans and database client metrics for Elasticsearch REST clients.
+description: >
+  This instrumentation enables database client spans and database client metrics for Elasticsearch
+  REST clients. The library artifacts are deprecated and may be removed in the next minor release;
+  javaagent support remains supported for direct REST-client users.
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS

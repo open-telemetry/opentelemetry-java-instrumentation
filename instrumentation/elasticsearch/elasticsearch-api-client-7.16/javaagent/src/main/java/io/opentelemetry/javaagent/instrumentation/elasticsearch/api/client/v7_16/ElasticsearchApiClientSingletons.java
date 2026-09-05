@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchEndpointDefinition;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0.ElasticsearchEndpointDefinition;
 import org.elasticsearch.client.Request;
 
 public class ElasticsearchApiClientSingletons {

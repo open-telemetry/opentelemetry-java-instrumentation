@@ -3,15 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-@SuppressWarnings("deprecation")
 final class ElasticsearchSpanNameExtractor implements SpanNameExtractor<ElasticsearchRestRequest> {
 
   private final ElasticsearchDbAttributesGetter dbAttributesGetter;

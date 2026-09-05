@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -15,16 +15,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- *
- * @deprecated The Elasticsearch REST library instrumentation is deprecated. Use the Elasticsearch
- *     Java API Client's native OpenTelemetry support when migrating clients, or use the javaagent
- *     for direct REST client instrumentation. May be removed in the next minor release.
- */
-@Deprecated // may be removed in the next minor release
 public final class ElasticsearchEndpointDefinition {
 
   private static final String UNDERSCORE_REPLACEMENT = "0";
@@ -72,16 +64,12 @@ public final class ElasticsearchEndpointDefinition {
     return routes;
   }
 
-  /**
-   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
-   * any time.
-   */
   // Visible for testing
   public static final class Route {
     private final String name;
     private final boolean hasParameters;
 
-    private volatile EndpointPattern epPattern;
+    @Nullable private volatile EndpointPattern epPattern;
 
     public Route(String name) {
       this.name = name;
@@ -115,10 +103,6 @@ public final class ElasticsearchEndpointDefinition {
     }
   }
 
-  /**
-   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
-   * any time.
-   */
   // Visible for testing
   public static final class EndpointPattern {
     private static final Pattern PATH_PART_NAMES_PATTERN = Pattern.compile("\\{([^}]+)}");
