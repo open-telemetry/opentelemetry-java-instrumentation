@@ -50,7 +50,7 @@ public final class PostgresqlUrlParser implements JdbcUrlParser {
     ctx.applyUserProperty();
 
     // Delegate to generic parser for standard URL parsing
-    GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx);
+    GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx, DEFAULT_PORT);
 
     String schema = extractCurrentSchema(jdbcUrl);
     if (schema == null) {

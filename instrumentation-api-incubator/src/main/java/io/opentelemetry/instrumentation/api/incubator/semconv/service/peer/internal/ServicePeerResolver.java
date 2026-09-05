@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -41,6 +43,8 @@ public class ServicePeerResolver {
       AttributeKey.stringKey("service.peer.name");
   private static final AttributeKey<String> SERVICE_PEER_NAMESPACE =
       AttributeKey.stringKey("service.peer.namespace");
+  private static final Pattern PARENTHESIZED_ADDRESS_ENTRY_PATTERN =
+      Pattern.compile("\\(\\s*address\\s*=", Pattern.CASE_INSENSITIVE);
 
   private static final Comparator<ServiceMatcher> matcherComparator =
       nullsFirst(
@@ -48,6 +52,7 @@ public class ServicePeerResolver {
               .thenComparing(ServiceMatcher::getPath, nullsFirst(naturalOrder())));
 
   private final Map<String, Map<ServiceMatcher, ServicePeer>> servicePeerMapping = new HashMap<>();
+  private final Map<String, ServicePeer> exactServicePeerMapping = new HashMap<>();
 
   public ServicePeerResolver(OpenTelemetry openTelemetry) {
     DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
@@ -84,13 +89,38 @@ public class ServicePeerResolver {
     String host = UrlParser.getHost(url);
     Integer port = UrlParser.getPort(url);
     String path = UrlParser.getPath(url);
+    if (!peer.equals(host)) {
+      exactServicePeerMapping.putIfAbsent(peer, info);
+      if (hasMultipleEndpoints(peer)) {
+        return;
+      }
+    }
     Map<ServiceMatcher, ServicePeer> matchers =
         servicePeerMapping.computeIfAbsent(host, x -> new HashMap<>());
     matchers.putIfAbsent(ServiceMatcher.create(port, path), info);
   }
 
+  private static boolean hasMultipleEndpoints(String peer) {
+    int schemeEnd = peer.indexOf("://");
+    int authorityStart = schemeEnd < 0 ? 0 : schemeEnd + 3;
+    for (int i = authorityStart; i < peer.length(); i++) {
+      char c = peer.charAt(i);
+      if (c == '/' || c == '?' || c == '#') {
+        return false;
+      }
+      if (c == ',') {
+        return true;
+      }
+    }
+    Matcher addressMatcher = PARENTHESIZED_ADDRESS_ENTRY_PATTERN.matcher(peer);
+    if (!addressMatcher.find()) {
+      return false;
+    }
+    return addressMatcher.find();
+  }
+
   public boolean isEmpty() {
-    return servicePeerMapping.isEmpty();
+    return servicePeerMapping.isEmpty() && exactServicePeerMapping.isEmpty();
   }
 
   @SuppressWarnings("deprecation") // old semconv
@@ -124,6 +154,10 @@ public class ServicePeerResolver {
   @Nullable
   private ServicePeer resolveServicePeer(
       String host, @Nullable Integer port, Supplier<String> pathSupplier) {
+    ServicePeer exactMatch = exactServicePeerMapping.get(host);
+    if (exactMatch != null) {
+      return exactMatch;
+    }
     Map<ServiceMatcher, ServicePeer> matchers = servicePeerMapping.get(host);
     if (matchers == null) {
       return null;

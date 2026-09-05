@@ -5,17 +5,27 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Parses standard URL-like JDBC connection strings using Java's URI parser.
  *
  * <p>Used by database-specific parsers to handle standard URL formats like: {@code
  * type://host:port/db?user=username}
+ *
+ * <p>An authority that lists more than one host, e.g. {@code type://h1:5432,h2:5432/db}, is not a
+ * server-based URI. Its host list is kept as the configured group target; every other value comes
+ * from the URI parse, which reports such an authority as registry-based and therefore leaves the
+ * host and the port alone.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -34,8 +44,16 @@ public final class GenericUrlParser implements JdbcUrlParser {
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
+    parse(jdbcUrl, ctx, null);
+  }
+
+  public void parse(String jdbcUrl, ParseContext ctx, @Nullable Integer defaultPort) {
     if (ctx.system() == null) {
       ctx.system(OTHER_SQL);
+    }
+
+    if (!applyHostGroup(jdbcUrl, ctx, defaultPort)) {
+      return;
     }
 
     URI uri;
@@ -79,5 +97,19 @@ public final class GenericUrlParser implements JdbcUrlParser {
     // 4. Query params (highest precedence)
     // URL is lowercased by JdbcConnectionUrlParser, so check lowercase param names
     ctx.applyCommonParams(jdbcUrl, "?", "&");
+  }
+
+  private static boolean applyHostGroup(
+      String jdbcUrl, ParseContext ctx, @Nullable Integer defaultPort) {
+    String authority = extractAuthority(jdbcUrl);
+    if (authority == null) {
+      authority = extractAuthorityWithQueryAt(jdbcUrl);
+      if (authority == null) {
+        return jdbcUrl.indexOf("://") < 0;
+      }
+    }
+    ServerAddressGroup hostList = parseServerAddressGroup(authority, defaultPort);
+    ctx.serverAddressGroup(hostList);
+    return true;
   }
 }

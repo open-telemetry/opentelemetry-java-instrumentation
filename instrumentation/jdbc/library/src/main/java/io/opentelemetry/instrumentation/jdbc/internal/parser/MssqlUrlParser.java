@@ -5,8 +5,12 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
+
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import java.util.Map;
+import java.util.Properties;
 import javax.annotation.Nullable;
 
 /**
@@ -66,9 +70,152 @@ public final class MssqlUrlParser implements JdbcUrlParser {
 
     // DataSource properties applied last — SQL Server driver gives DataSource precedence over URL
     ctx.applyDataSourceProperties();
+    String targetInstanceName = resolveInstanceName(ctx.props(), urlParams, instanceName);
 
     // Namespace depends on the effective databaseName, so derive it after DataSource overrides.
     setNamespace(ctx, instanceName);
+
+    applyFailoverPartnerGroup(
+        ctx,
+        urlParams,
+        targetInstanceName,
+        hasConfiguredServer(jdbcUrl, urlParams, ctx.props()),
+        hasConfiguredPort(jdbcUrl, urlParams, ctx.props()));
+  }
+
+  /** Build the configured primary and failover partner group. */
+  private static void applyFailoverPartnerGroup(
+      ParseContext ctx,
+      Map<String, String> params,
+      @Nullable String instanceName,
+      boolean serverConfigured,
+      boolean portConfigured) {
+    String failoverPartner = null;
+    if (ctx.props() != null) {
+      failoverPartner = ctx.props().getProperty("failoverPartner");
+    }
+    if (failoverPartner == null || failoverPartner.isEmpty()) {
+      failoverPartner = params.get("failoverpartner");
+    }
+    if (failoverPartner == null || failoverPartner.isEmpty()) {
+      return;
+    }
+    ctx.multiTarget();
+    String host = ctx.host();
+    if (!serverConfigured || host == null) {
+      return;
+    }
+    StringBuilder group = new StringBuilder();
+    appendPrimary(group, ctx, host, instanceName, portConfigured);
+    group.append(',');
+    appendServerAddress(group, failoverPartner);
+    ServerAddressGroup serverAddressGroup = parseServerAddressGroup(group.toString(), DEFAULT_PORT);
+    ctx.serverAddressGroup(serverAddressGroup);
+  }
+
+  /** Returns whether a server was configured by the data source, parameters, or URL authority. */
+  private static boolean hasConfiguredServer(
+      String jdbcUrl, Map<String, String> params, @Nullable Properties properties) {
+    if (properties != null) {
+      String serverName = properties.getProperty("serverName");
+      if (serverName != null && !serverName.isEmpty()) {
+        return true;
+      }
+    }
+    String serverName = params.get("servername");
+    if (serverName != null && !serverName.isEmpty()) {
+      return true;
+    }
+
+    String urlPart = jdbcUrl.split(";", 2)[0];
+    int hostIndex = urlPart.indexOf("://");
+    if (hostIndex <= 0) {
+      return false;
+    }
+    String urlServerName = urlPart.substring(hostIndex + 3);
+    int pathLoc = urlServerName.indexOf('/');
+    return pathLoc < 0 ? !urlServerName.isEmpty() : pathLoc > 0;
+  }
+
+  /** Append the effective primary server, including its configured port or instance. */
+  private static void appendPrimary(
+      StringBuilder group,
+      ParseContext ctx,
+      String host,
+      @Nullable String instanceName,
+      boolean portConfigured) {
+    if (portConfigured) {
+      UrlParsingUtils.appendHostPort(group, host, ctx.port());
+      return;
+    }
+    if (instanceName == null || instanceName.isEmpty()) {
+      UrlParsingUtils.appendHostPort(group, host, null);
+      return;
+    }
+    appendServerAddress(group, host + "\\" + instanceName);
+  }
+
+  /** Resolve the effective instance name using SQL Server property precedence. */
+  @Nullable
+  private static String resolveInstanceName(
+      @Nullable Properties properties,
+      Map<String, String> params,
+      @Nullable String parsedInstanceName) {
+    String instanceName = parsedInstanceName;
+    if (instanceName == null || instanceName.isEmpty()) {
+      instanceName = params.get("instancename");
+    }
+    if (properties == null) {
+      return instanceName;
+    }
+    String propertyInstanceName = properties.getProperty("instanceName");
+    if (propertyInstanceName != null && !propertyInstanceName.isEmpty()) {
+      return propertyInstanceName;
+    }
+    String propertyServerName = properties.getProperty("serverName");
+    return propertyServerName == null || propertyServerName.isEmpty() ? instanceName : null;
+  }
+
+  /** Returns whether a port was configured by the data source, parameters, or URL authority. */
+  private static boolean hasConfiguredPort(
+      String jdbcUrl, Map<String, String> params, @Nullable Properties properties) {
+    if (properties != null
+        && UrlParsingUtils.parsePort(properties.getProperty("portNumber")) != null) {
+      return true;
+    }
+    if (UrlParsingUtils.parsePort(params.get("portnumber")) != null) {
+      return true;
+    }
+
+    String urlPart = jdbcUrl.split(";", 2)[0];
+    int hostIndex = urlPart.indexOf("://");
+    if (hostIndex <= 0) {
+      return false;
+    }
+    String serverName = urlPart.substring(hostIndex + 3);
+    int pathLoc = serverName.indexOf('/');
+    if (pathLoc > 0) {
+      serverName = serverName.substring(0, pathLoc);
+    }
+    return UrlParsingUtils.extractHostPort(serverName).port() != null;
+  }
+
+  /**
+   * Append a SQL Server address, bracketing an unbracketed IPv6 host and preserving its instance.
+   */
+  private static void appendServerAddress(StringBuilder group, String serverAddress) {
+    int instanceStart = serverAddress.indexOf('\\');
+    String hostPort = instanceStart < 0 ? serverAddress : serverAddress.substring(0, instanceStart);
+    boolean unbracketedIpv6 =
+        !hostPort.startsWith("[") && hostPort.indexOf(':') != hostPort.lastIndexOf(':');
+    if (unbracketedIpv6) {
+      group.append('[').append(hostPort).append(']');
+    } else {
+      group.append(hostPort);
+    }
+    if (instanceStart >= 0) {
+      group.append(serverAddress, instanceStart, serverAddress.length());
+    }
   }
 
   /**

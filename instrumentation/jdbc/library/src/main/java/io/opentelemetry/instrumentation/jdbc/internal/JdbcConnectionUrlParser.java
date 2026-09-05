@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -136,6 +137,9 @@ public final class JdbcConnectionUrlParser {
     String type = jdbcUrl.substring(0, typeLoc);
     JdbcUrlParser parser = typeParsers.get(type);
     ParseContext ctx = ParseContext.of(type, props);
+    if (hasMultipleTargets(jdbcUrl)) {
+      ctx.multiTarget();
+    }
 
     try {
       if (parser == null) {

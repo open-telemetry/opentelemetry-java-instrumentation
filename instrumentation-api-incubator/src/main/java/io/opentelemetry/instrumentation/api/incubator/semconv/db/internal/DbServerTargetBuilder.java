@@ -34,7 +34,9 @@ import javax.annotation.Nullable;
  */
 public class DbServerTargetBuilder {
 
-  private static final int DEFAULT_MAX_ENDPOINTS = 5;
+  /** Default maximum number of endpoints rendered in a configured database target. */
+  public static final int DEFAULT_MAX_ENDPOINTS = 5;
+
   private static final int MIN_PORT = 1;
   private static final int MAX_PORT = 65535;
   private static final int MAX_HOST_NAME_LENGTH = 253;
@@ -50,6 +52,11 @@ public class DbServerTargetBuilder {
 
   DbServerTargetBuilder(int defaultPort) {
     this.defaultPort = defaultPort;
+  }
+
+  /** Returns whether {@code host} can be represented safely as a database server host. */
+  public static boolean isValidHost(@Nullable String host) {
+    return sanitizeHost(host) != null;
   }
 
   /**
