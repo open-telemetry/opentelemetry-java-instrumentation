@@ -42,8 +42,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
   @Override
   public RequestSpan requestSpan(String name, RequestSpan parent) {
     Peer peer =
-        TracingIdentifiers.SPAN_DISPATCH.equals(name)
-                || "cb.dispatch_to_server".equals(name)
+        TracingIdentifiers.SPAN_DISPATCH.equals(name) || "cb.dispatch_to_server".equals(name)
             ? CouchbaseRequestPeers.consume(parent)
             : null;
     CouchbaseSpan parentSpan = null;
@@ -118,6 +117,9 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     public void attribute(String key, String value) {
       if (emitStableDatabaseSemconv()) {
         spanName.captureAttribute(key, value);
+        if (!hasCapturedPeer && TracingIdentifiers.ATTR_REMOTE_HOSTNAME.equals(key)) {
+          delegate.setRawAttribute(NETWORK_PEER_ADDRESS.getKey(), value);
+        }
       }
       delegate.setAttribute(key, value);
     }
@@ -129,6 +131,11 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod"})
     public void attribute(String key, long value) {
+      if (emitStableDatabaseSemconv()
+          && !hasCapturedPeer
+          && TracingIdentifiers.ATTR_REMOTE_PORT.equals(key)) {
+        delegate.setRawAttribute(NETWORK_PEER_PORT.getKey(), value);
+      }
       delegate.setAttribute(key, value);
     }
 

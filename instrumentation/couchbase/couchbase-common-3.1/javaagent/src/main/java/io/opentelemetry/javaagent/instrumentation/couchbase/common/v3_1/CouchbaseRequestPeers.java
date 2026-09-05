@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import com.couchbase.client.core.cnc.RequestSpan;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -18,7 +20,9 @@ public class CouchbaseRequestPeers {
 
   @Nullable
   public static Scope open(@Nullable RequestSpan parent, @Nullable SocketAddress remoteAddress) {
-    if (parent == null || !(remoteAddress instanceof InetSocketAddress)) {
+    if (!emitStableDatabaseSemconv()
+        || parent == null
+        || !(remoteAddress instanceof InetSocketAddress)) {
       return null;
     }
     InetSocketAddress socketAddress = (InetSocketAddress) remoteAddress;

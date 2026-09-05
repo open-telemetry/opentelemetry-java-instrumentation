@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.Mockito.mock;
 
 import com.couchbase.client.core.cnc.RequestSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Peer;
