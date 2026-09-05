@@ -18,7 +18,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public CouchbaseInstrumentationModule() {
-    super("couchbase", expandDeprecatedNames("couchbase-3.2|deprecated:couchbase-3.4"));
+    super(
+        "couchbase", expandDeprecatedNames("couchbase-3.2|deprecated:couchbase-3.4", "couchbase"));
   }
 
   @Override
