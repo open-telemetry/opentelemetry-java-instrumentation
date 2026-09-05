@@ -10,6 +10,17 @@ muzzle {
     // these versions were released as ".bundle" instead of ".jar"
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
+
+    excludeInstrumentationName("couchbase-2.0-network")
+  }
+  pass {
+    name.set("Pre-2.6 network instrumentation")
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2,2.6)")
+    assertInverse.set(true)
+
+    excludeInstrumentationName("couchbase-2.0-core")
   }
   fail {
     group.set("com.couchbase.client")
@@ -31,7 +42,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.4:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-network-2.0:javaagent"))
 
   latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see couchbase-2.6 module
   latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see couchbase-2.6 module
