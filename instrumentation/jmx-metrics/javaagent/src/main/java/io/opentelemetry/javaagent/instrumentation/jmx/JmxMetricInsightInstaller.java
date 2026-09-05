@@ -8,22 +8,24 @@ package io.opentelemetry.javaagent.instrumentation.jmx;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
+import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.List;
 import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
@@ -31,6 +33,7 @@ import java.util.logging.Logger;
 public class JmxMetricInsightInstaller implements AgentListener {
 
   private static final Logger logger = Logger.getLogger(JmxMetricInsightInstaller.class.getName());
+  private static final String EXPERIMENTAL_PREFIX = "experimental-";
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
@@ -58,10 +61,78 @@ public class JmxMetricInsightInstaller implements AgentListener {
         .map(Paths::get)
         .forEach(path -> addFileRules(path, jmx));
 
-    config
-        .get("target")
-        .getScalarList("system", String.class, emptyList())
-        .forEach(target -> addClasspathRules(target, jmx));
+    // otel.jmx.target.system support will be removed in v3
+    List<String> systemsConfig =
+        config.get("target").getScalarList("system", String.class, emptyList());
+    if (!systemsConfig.isEmpty()) {
+      logger.log(WARNING, "'otel.jmx.target.system' is deprecated and will be removed in 3.x.");
+    }
+
+    if (v3Preview) {
+      // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
+      jmx.internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
+
+      // TODO: rename config option to 'metrics.experimental.included' ???
+      List<String> unstableInclude =
+          config.get("experimental").getScalarList("included", String.class, emptyList());
+
+      if (!unstableInclude.isEmpty()) {
+        // only include explicitly opted-in, others will be excluded
+        jmx.internalMetricsUnstableMetricsFilter(
+            IncludeExclude.builder().setIncluded(unstableInclude).build());
+      }
+
+    } else {
+      // pre-v3 compatibility
+      InternalMetricsDefinitions metricsDefinitions =
+          new InternalMetricsDefinitions(JmxMetricInsightInstaller.class.getClassLoader());
+
+      // mapping of 'experimental-' deprecated prefix in target system
+      systemsConfig =
+          systemsConfig.stream()
+              .map(
+                  s ->
+                      s.startsWith(EXPERIMENTAL_PREFIX)
+                          ? s.substring(EXPERIMENTAL_PREFIX.length())
+                          : s)
+              .collect(toList());
+
+      // warn about unsupported systems
+      systemsConfig.forEach(
+          system -> {
+            if (!metricsDefinitions.getSupportedSystems().contains(system)) {
+              logger.log(
+                  WARNING,
+                  "JMX target system "
+                      + system
+                      + " is not supported. Supported systems are: "
+                      + metricsDefinitions.getSupportedSystems());
+            }
+          });
+
+      if (systemsConfig.isEmpty()) {
+        // exclude everything by default
+        jmx.internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
+      } else {
+        // only opt-in on explicitly configured values
+        jmx.internalMetricsSystemFilter(
+            IncludeExclude.builder().setIncluded(systemsConfig).build());
+      }
+
+      // loaded internal metrics have been explicitly opted-in, so we disable filtering on unstable
+      // metrics.
+      jmx.internalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+    }
+
+    // include/exclude metrics by name
+    List<String> metricsInclude =
+        config.get("metrics").getScalarList("included", String.class, emptyList());
+    List<String> metricsExclude =
+        config.get("metrics").getScalarList("excluded", String.class, emptyList());
+    if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
+      jmx.setMetrics(
+          IncludeExclude.builder().setIncluded(metricsInclude).setExcluded(metricsExclude).build());
+    }
 
     jmx.build().start();
   }
@@ -73,36 +144,5 @@ public class JmxMetricInsightInstaller implements AgentListener {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
       logger.log(SEVERE, "Error while loading JMX configuration from " + path, e);
     }
-  }
-
-  private static void addClasspathRules(String target, JmxTelemetryBuilder builder) {
-    ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
-    String resource = targetSystemResource(target, AgentCommonConfig.get().isV3Preview());
-    try (InputStream input = classLoader.getResourceAsStream(resource)) {
-      if (input == null) {
-        logger.log(SEVERE, "JMX configuration not found on classpath " + resource);
-        return;
-      }
-      builder.addRules(input);
-    } catch (IOException | RuntimeException e) {
-      // for now only log JMX metric configuration errors as they do not prevent agent startup
-      logger.log(SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
-    }
-  }
-
-  private static String targetSystemResource(String target, boolean v3Preview) {
-    if (target.equals("kafka-broker") && !v3Preview) {
-      logger.log(
-          WARNING,
-          "The kafka-broker JMX target system has been renamed to experimental-kafka-broker.");
-      return "jmx/rules/experimental-kafka-broker.yaml";
-    }
-    if (target.equals("kafka-connect") && !v3Preview) {
-      logger.log(
-          WARNING,
-          "The kafka-connect JMX target system has been renamed to experimental-kafka-connect.");
-      return "jmx/rules/experimental-kafka-connect.yaml";
-    }
-    return String.format("jmx/rules/%s.yaml", target);
   }
 }

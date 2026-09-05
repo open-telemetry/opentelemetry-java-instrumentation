@@ -11,7 +11,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
 
 import com.linecorp.armeria.server.ServerBuilder;
@@ -20,16 +19,12 @@ import com.linecorp.armeria.testing.junit5.server.ServerExtension;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
-import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
-import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
+import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse;
 import io.opentelemetry.proto.collector.metrics.v1.MetricsServiceGrpc;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,6 +34,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -179,12 +175,37 @@ public class TargetSystemTest {
   }
 
   /**
-   * Generates otel configuration for JMX testing with instrumentation agent
+   * Generates otel configuration for JMX testing with custom yaml configuration files
    *
    * @param yamlFiles JMX metrics definitions in YAML
    * @return map of otel configuration properties for JMX testing
    */
-  protected static Map<String, String> otelConfigProperties(List<String> yamlFiles) {
+  protected static Map<String, String> otelConfigProperties(Collection<String> yamlFiles) {
+    Map<String, String> config = commonOtelConfig();
+    assertThat(yamlFiles).isNotEmpty();
+    // set yaml config files to test
+    config.put(
+        "otel.jmx.config",
+        yamlFiles.stream().map(TargetSystemTest::containerYamlPath).collect(joining(",")));
+    return config;
+  }
+
+  /**
+   * Generates otel configuration for JMX testing with opt-in for experimental unstable metrics
+   *
+   * @param experimentalInclude comma-separated list of systems for which we need to enable
+   *     non-stable metrics
+   * @return map of otel configuration properties for JMX testing
+   */
+  protected Map<String, String> otelConfigPropertiesExperimentalOptIn(String experimentalInclude) {
+    Map<String, String> config = commonOtelConfig();
+    config.put("otel.jmx.experimental.included", experimentalInclude);
+    // v3 preview, not necessary anymore after 3.0 release
+    config.put("otel.instrumentation.common.v3-preview", "true");
+    return config;
+  }
+
+  private static Map<String, String> commonOtelConfig() {
     Map<String, String> config = new HashMap<>();
     // only export metrics
     config.put("otel.logs.exporter", "none");
@@ -197,10 +218,6 @@ public class TargetSystemTest {
     config.put("otel.metric.export.interval", "5s");
     // the agent only provides the machinery, the JMX instrumentation is added on top of it
     config.put("otel.javaagent.experimental.initializer.jar", JMX_INSTRUMENTATION_PATH);
-    // set yaml config files to test
-    config.put(
-        "otel.jmx.config",
-        yamlFiles.stream().map(TargetSystemTest::containerYamlPath).collect(joining(",")));
     return config;
   }
 
@@ -246,7 +263,8 @@ public class TargetSystemTest {
         MountableFile.forHostPath(jmxInstrumentationPath), JMX_INSTRUMENTATION_PATH);
   }
 
-  protected static void copyYamlFilesToTarget(GenericContainer<?> target, List<String> yamlFiles) {
+  protected static void copyYamlFilesToTarget(
+      GenericContainer<?> target, Collection<String> yamlFiles) {
     for (String file : yamlFiles) {
       String resourcePath = yamlResourcePath(file);
       String destPath = containerYamlPath(file);
@@ -266,41 +284,14 @@ public class TargetSystemTest {
   }
 
   private static String yamlResourcePath(String yaml) {
+    if (yaml.startsWith("jmx/rules/")) {
+      return yaml;
+    }
     return "jmx/rules/" + yaml;
   }
 
   private static String containerYamlPath(String yaml) {
     return "/" + yaml;
-  }
-
-  /**
-   * Validates YAML definition by parsing it to check for syntax errors
-   *
-   * @param yaml path to YAML resource (in classpath)
-   */
-  protected void validateYamlSyntax(String yaml) {
-    String path = yamlResourcePath(yaml);
-    try (InputStream input = TargetSystemTest.class.getClassLoader().getResourceAsStream(path)) {
-      JmxConfig config;
-      // try-catch to provide a slightly better error
-      try {
-        config = RuleParser.get().loadConfig(input);
-      } catch (RuntimeException e) {
-        fail("Failed to parse yaml file " + path, e);
-        throw e;
-      }
-
-      // make sure all the rules in that file are valid
-      for (JmxRule rule : config.getRules()) {
-        try {
-          rule.buildMetricDef();
-        } catch (Exception e) {
-          fail("Failed to build metric definition " + rule.getBeans(), e);
-        }
-      }
-    } catch (IOException e) {
-      fail("Failed to read yaml file " + path, e);
-    }
   }
 
   protected void verifyMetrics(MetricsVerifier metricsVerifier) {
@@ -335,6 +326,13 @@ public class TargetSystemTest {
                         metricsVerifier.verify(metrics);
                       });
             });
+  }
+
+  protected static Set<String> getAllRulesForSystem(String system) {
+    InternalMetricsDefinitions definitions =
+        new InternalMetricsDefinitions(TargetSystemTest.class.getClassLoader());
+    Set<String> rules = definitions.getRulesForSystem(system, true, true);
+    return rules;
   }
 
   /** Minimal OTLP gRPC backend to capture metrics */

@@ -19,6 +19,7 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import java.util.Collection;
@@ -37,15 +38,20 @@ class MetricRegistrar implements AutoCloseable {
 
   private final Meter meter;
   private final Collection<AutoCloseable> instruments = ConcurrentHashMap.newKeySet();
+  private final IncludeExclude metrics;
 
   MetricRegistrar(
-      OpenTelemetry openTelemetry, String instrumentationScope, String versionLookupName) {
+      OpenTelemetry openTelemetry,
+      String instrumentationScope,
+      String versionLookupName,
+      IncludeExclude metrics) {
+    this.metrics = metrics;
     MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationScope);
     String version = EmbeddedInstrumentationProperties.findVersion(versionLookupName);
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
-    meter = meterBuilder.build();
+    meter = new FilteringMeter(meterBuilder.build(), metrics);
   }
 
   /**
@@ -70,9 +76,17 @@ class MetricRegistrar implements AutoCloseable {
       return;
     }
 
-    boolean recordDoubleValue = attributeInfo.usesDoubleValues();
     MetricInfo metricInfo = extractor.getInfo();
     String metricName = metricInfo.getMetricName();
+
+    if (!metrics.matches(metricName)) {
+      // shortcut: when metric is excluded, we don't even need to attempt building it nor let the
+      // meter filter the metrics.
+      logger.log(FINE, "Metric {0} is excluded by configuration", metricName);
+      return;
+    }
+
+    boolean recordDoubleValue = attributeInfo.usesDoubleValues();
     MetricInfo.Type instrumentType = metricInfo.getType();
     String description =
         metricInfo.getDescription() != null
