@@ -95,14 +95,11 @@ public final class OpenTelemetryAgent {
 
     // verification is very slow before the JIT compiler starts up, which on Java 8 is not until
     // after premain execution completes
-    if (loadedByBootstrap) {
-      try (JarFile agentJar = new JarFile(javaagentFile, false)) {
-        verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
-      }
-    } else {
-      JarFile agentJar = new JarFile(javaagentFile, false);
+    try (JarFile agentJar = new JarFile(javaagentFile, false)) {
       verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
-      inst.appendToBootstrapClassLoaderSearch(agentJar);
+      if (!loadedByBootstrap) {
+        inst.appendToBootstrapClassLoaderSearch(agentJar);
+      }
     }
     return javaagentFile;
   }
