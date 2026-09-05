@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   library("redis.clients:jedis:2.0.0")
 
-  compileOnly(project(":muzzle")) // For @NoMuzzle and custom VirtualField registration
+  compileOnly(project(":muzzle")) // For @NoMuzzle
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
