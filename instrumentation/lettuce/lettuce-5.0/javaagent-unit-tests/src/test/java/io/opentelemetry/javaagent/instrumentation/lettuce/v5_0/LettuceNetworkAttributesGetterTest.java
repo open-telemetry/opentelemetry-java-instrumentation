@@ -314,6 +314,39 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
+  void concurrentSpanStartHasOneWinner() throws Exception {
+    AsyncCommand<String, String, String> command = new AsyncCommand<>(command());
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch release = new CountDownLatch(1);
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+    try {
+      Future<Boolean> first =
+          executor.submit(
+              () -> {
+                ready.countDown();
+                release.await();
+                return LettuceSingletons.markCommandSpanStarted(command);
+              });
+      Future<Boolean> second =
+          executor.submit(
+              () -> {
+                ready.countDown();
+                release.await();
+                return LettuceSingletons.markCommandSpanStarted(command);
+              });
+
+      assertThat(ready.await(10, SECONDS)).isTrue();
+      release.countDown();
+
+      assertThat(asList(first.get(10, SECONDS), second.get(10, SECONDS)))
+          .containsExactlyInAnyOrder(true, false);
+    } finally {
+      release.countDown();
+      executor.shutdownNow();
+    }
+  }
+
+  @Test
   void newWrapperDoesNotReusePreviousPeer() throws UnknownHostException {
     RedisCommand<String, String, String> command = command();
     AsyncCommand<String, String, String> firstWrapper = new AsyncCommand<>(command);

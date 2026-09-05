@@ -48,9 +48,6 @@ public class LettuceSingletons {
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
 
-  private static final VirtualField<AsyncCommand<?, ?, ?>, Boolean> COMMAND_SPAN_STARTED =
-      VirtualField.find(AsyncCommand.class, Boolean.class);
-
   public static final VirtualField<DefaultEndpoint, InetSocketAddress> ENDPOINT_ADDRESS =
       VirtualField.find(DefaultEndpoint.class, InetSocketAddress.class);
 
@@ -165,6 +162,7 @@ public class LettuceSingletons {
 
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
+    ensureCommandPeer(command);
     if (!(connection instanceof RedisChannelHandler)) {
       return;
     }
@@ -201,43 +199,29 @@ public class LettuceSingletons {
   }
 
   public static boolean markCommandSpanStarted(AsyncCommand<?, ?, ?> command) {
-    synchronized (command) {
-      if (COMMAND_SPAN_STARTED.get(command) != null) {
-        return false;
-      }
-      COMMAND_SPAN_STARTED.set(command, true);
-      return true;
-    }
+    return ensureCommandPeer(command).markSpanStarted();
   }
 
   static void recordCommandPeer(RedisCommand<?, ?, ?> command, SocketAddress peerAddress) {
-    commandPeer(command).record(peerAddress);
+    ensureCommandPeer(command).record(peerAddress);
   }
 
   public static void linkCommandPeer(RedisCommand<?, ?, ?> command) {
-    if (COMMAND_PEER.get(command) != null) {
-      return;
-    }
-    synchronized (command) {
-      if (COMMAND_PEER.get(command) == null) {
-        attachCommandPeer(command, new LettuceCommandPeer());
-      }
-    }
+    ensureCommandPeer(command);
   }
 
-  private static LettuceCommandPeer commandPeer(RedisCommand<?, ?, ?> command) {
+  public static void initializeCommandPeer(RedisCommand<?, ?, ?> command) {
+    COMMAND_PEER.set(command, new LettuceCommandPeer());
+  }
+
+  private static LettuceCommandPeer ensureCommandPeer(RedisCommand<?, ?, ?> command) {
     LettuceCommandPeer peer = findCommandPeer(command);
     if (peer != null) {
       return peer;
     }
-    synchronized (command) {
-      peer = findCommandPeer(command);
-      if (peer == null) {
-        peer = new LettuceCommandPeer();
-        attachCommandPeer(command, peer);
-      }
-      return peer;
-    }
+    peer = new LettuceCommandPeer();
+    COMMAND_PEER.set(command, peer);
+    return peer;
   }
 
   @Nullable
@@ -254,17 +238,6 @@ public class LettuceSingletons {
               : null;
     }
     return null;
-  }
-
-  private static void attachCommandPeer(RedisCommand<?, ?, ?> command, LettuceCommandPeer peer) {
-    RedisCommand<?, ?, ?> current = command;
-    while (current != null) {
-      COMMAND_PEER.set(current, peer);
-      current =
-          current instanceof DecoratedCommand
-              ? ((DecoratedCommand<?, ?, ?>) current).getDelegate()
-              : null;
-    }
   }
 
   @Nullable
