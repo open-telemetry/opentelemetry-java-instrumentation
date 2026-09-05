@@ -4276,6 +4276,23 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.consumed.messages-c0fc17f6:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.consumed.messages-e8268bc3:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -4360,6 +4377,24 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.operation.duration-d165a8db:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.operation.duration-dab7c60a:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -4415,6 +4450,21 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.sent.messages-4c72bd1e:
+      name: messaging.client.sent.messages
+      description: Number of messages producer attempted to send to the broker.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.sent.messages-a16c8de0:
       name: messaging.client.sent.messages
       description: Number of messages producer attempted to send to the broker.
@@ -4462,6 +4512,23 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.process.duration-0ca61f76:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.process.duration-43b43ca1:
       name: messaging.process.duration
       description: Duration of processing operation.
@@ -7485,7 +7552,7 @@ libraries:
 - name: camel-2.20
   display_name: Apache Camel
   description: |
-    This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+    This instrumentation enables tracing and messaging metrics for Apache Camel 2.x applications. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
   semantic_conventions:
   - HTTP_CLIENT_SPANS
   - HTTP_SERVER_SPANS
@@ -7601,7 +7668,12 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=database
+  - when: otel.instrumentation.common.v3-preview=true
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
     spans:
     - span_kind: CLIENT
       attributes:
@@ -7609,6 +7681,16 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
       - name: url.full
         type: STRING
     - span_kind: CONSUMER
@@ -7617,19 +7699,29 @@ libraries:
         type: STRING
       - name: messaging.message.id
         type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     - span_kind: INTERNAL
       attributes:
       - name: http.request.method
-        type: STRING
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.message.id
         type: STRING
       - name: url.full
         type: STRING
     - span_kind: PRODUCER
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
         type: STRING
     - span_kind: SERVER
       attributes:
@@ -7639,6 +7731,81 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=database,messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: INTERNAL
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.opt-in=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
+  - when: otel.semconv-stability.opt-in=messaging/dup
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
 - name: cassandra-3.0
   display_name: Cassandra Driver
   description: |
@@ -14457,9 +14624,13 @@ libraries:
         type: STRING
       - name: gen_ai.response.model
         type: STRING
+      - name: gen_ai.usage.cache_read.input_tokens
+        type: LONG
       - name: gen_ai.usage.input_tokens
         type: LONG
       - name: gen_ai.usage.output_tokens
+        type: LONG
+      - name: gen_ai.usage.reasoning.output_tokens
         type: LONG
 - name: opensearch-java-3.0
   display_name: OpenSearch Java Client
@@ -14757,6 +14928,21 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+- name: pekko-remote-1.0
+  display_name: Pekko Remote
+  description: |
+    This instrumentation propagates context between the nodes of a Pekko cluster, over artery and over classic remoting, it does not emit any telemetry on its own.
+  library_link: https://pekko.apache.org/docs/pekko/current/remoting-artery.html
+  features:
+  - CONTEXT_PROPAGATION
+  source_path: instrumentation/pekko/pekko-remote-1.0
+  scope:
+    name: io.opentelemetry.pekko-remote-1.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.pekko:pekko-remote_2.12:[1.0,)
+  - org.apache.pekko:pekko-remote_2.13:[1.0,)
+  - org.apache.pekko:pekko-remote_3:[1.0,)
 - name: play-mvc-2.4
   display_name: Play MVC
   description: |
