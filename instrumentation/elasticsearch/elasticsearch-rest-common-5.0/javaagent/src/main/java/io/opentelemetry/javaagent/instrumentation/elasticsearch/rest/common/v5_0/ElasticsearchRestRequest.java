@@ -9,6 +9,10 @@ import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 @AutoValue
 public abstract class ElasticsearchRestRequest {
 
