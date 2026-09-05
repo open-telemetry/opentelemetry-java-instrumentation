@@ -115,6 +115,8 @@ class ElasticsearchDbAttributesGetterTest {
 
   @Test
   void dropsBodyWhenTheSanitizerRejectsIt() {
+    // the sanitizer returns null when it cannot sanitize the body, which must never fall back to
+    // capturing it raw
     RecordingSanitizer sanitizer = new RecordingSanitizer(null);
     ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
 
@@ -143,6 +145,7 @@ class ElasticsearchDbAttributesGetterTest {
             new StringEntity(body, ContentType.APPLICATION_JSON));
 
     assertThat(getter.getDbQueryText(request)).isEqualTo(SANITIZED_BODY);
+    // the line breaks are dropped while reading, so the sanitizer sees the values back to back
     assertThat(sanitizer.sanitized)
         .containsExactly(
             "{\"index\":\"private-index\"}"
@@ -153,6 +156,7 @@ class ElasticsearchDbAttributesGetterTest {
 
   @Test
   void capturesRawBodyWhenSanitizationDisabled() {
+    // sanitization explicitly disabled: capture the body verbatim
     ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, null);
 
     assertThat(
@@ -190,6 +194,7 @@ class ElasticsearchDbAttributesGetterTest {
 
   @Test
   void doesNotReadNonRepeatableEntity() {
+    // a non-repeatable entity must never be read, otherwise the request body would be consumed
     RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
     ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
     HttpEntity entity =

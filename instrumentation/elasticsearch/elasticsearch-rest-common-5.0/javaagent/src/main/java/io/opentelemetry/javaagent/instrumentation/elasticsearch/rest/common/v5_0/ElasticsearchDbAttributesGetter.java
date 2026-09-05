@@ -20,6 +20,10 @@ import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 import org.elasticsearch.client.Response;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 final class ElasticsearchDbAttributesGetter
     implements DbClientAttributesGetter<ElasticsearchRestRequest, Response> {
 

@@ -26,6 +26,10 @@ import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 final class ElasticsearchClientAttributeExtractor
     implements AttributesExtractor<ElasticsearchRestRequest, Response> {
 

@@ -17,6 +17,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class ElasticsearchEndpointDefinition {
 
   private static final String UNDERSCORE_REPLACEMENT = "0";
@@ -64,6 +68,10 @@ public final class ElasticsearchEndpointDefinition {
     return routes;
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   // Visible for testing
   public static final class Route {
     private final String name;
@@ -103,6 +111,10 @@ public final class ElasticsearchEndpointDefinition {
     }
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   // Visible for testing
   public static final class EndpointPattern {
     private static final Pattern PATH_PART_NAMES_PATTERN = Pattern.compile("\\{([^}]+)}");
