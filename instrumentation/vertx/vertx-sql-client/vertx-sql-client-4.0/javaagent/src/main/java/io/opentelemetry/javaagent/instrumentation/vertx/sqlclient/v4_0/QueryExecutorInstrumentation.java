@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
+import io.vertx.core.Promise;
 import io.vertx.core.impl.future.PromiseInternal;
 import io.vertx.sqlclient.impl.PreparedStatement;
 import java.util.Collection;
@@ -56,19 +57,16 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      @Nullable private final VertxSqlClientRequest otelRequest;
-      @Nullable private final Context context;
+      @Nullable private final Promise<?> promise;
       @Nullable private final Scope scope;
 
       private AdviceScope(CallDepth callDepth) {
-        this(callDepth, null, null, null);
+        this(callDepth, null, null);
       }
 
-      private AdviceScope(
-          CallDepth callDepth, VertxSqlClientRequest otelRequest, Context context, Scope scope) {
+      private AdviceScope(CallDepth callDepth, Promise<?> promise, Scope scope) {
         this.callDepth = callDepth;
-        this.otelRequest = otelRequest;
-        this.context = context;
+        this.promise = promise;
         this.scope = scope;
       }
 
@@ -118,20 +116,23 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
         Context context = instrumenter().start(parentContext, otelRequest);
         VertxSqlClientUtil.attachRequest(promiseInternal, otelRequest, context, parentContext);
-        return new AdviceScope(callDepth, otelRequest, context, context.makeCurrent());
+        return new AdviceScope(callDepth, promiseInternal, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
-        if (scope == null || context == null || otelRequest == null) {
+        if (scope == null || promise == null) {
           return;
         }
 
         scope.close();
         if (throwable != null) {
-          instrumenter().end(context, otelRequest, null, throwable);
+          Scope parentScope = VertxSqlClientUtil.endQuerySpan(instrumenter(), promise, throwable);
+          if (parentScope != null) {
+            parentScope.close();
+          }
         }
         // span will be ended in QueryResultBuilderInstrumentation
       }
