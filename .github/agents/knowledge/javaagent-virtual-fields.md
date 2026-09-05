@@ -159,8 +159,9 @@ atomicity or synchronization, or redesign the ownership transition. Do not choos
 for `computeIfAbsent` without first deciding whether concurrent updates and duplicate construction
 are actually valid for the instrumentation.
 
-For synchronization around compound instrumentation state transitions, see
-[Lock Ownership and Critical Sections](javaagent-locking.md).
+For synchronization around compound state transitions and external-call ordering, see
+[Lock Ownership and Critical Sections](javaagent-locking.md). That guidance also applies to library
+instrumentation; the `VirtualField` recommendation in this article remains javaagent-specific.
 
 ## Review Guidance
 
