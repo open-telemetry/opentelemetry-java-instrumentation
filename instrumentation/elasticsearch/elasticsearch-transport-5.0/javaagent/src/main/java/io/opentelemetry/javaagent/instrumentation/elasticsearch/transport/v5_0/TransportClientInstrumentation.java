@@ -37,7 +37,7 @@ class TransportClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This TransportClient client) {
-      ElasticsearchTransportServerTargets.initializeUpdateLock(client);
+      ElasticsearchTransportServerTargets.initializeUpdateState(client);
     }
   }
 
