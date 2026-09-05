@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.cnc.RequestTracer;
@@ -13,6 +14,8 @@ import com.couchbase.client.core.msg.RequestContext;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseTracer;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConfiguredTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSpanName;
 import java.time.Duration;
 import java.time.Instant;
 import reactor.core.publisher.Mono;
@@ -40,7 +43,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       }
       parentSpan = ((AgentRequestSpan) parent).delegate;
     }
-    return new AgentRequestSpan(tracer.startSpan(name, parentSpan));
+    return new AgentRequestSpan(name, tracer.startSpan(name, parentSpan));
   }
 
   @Override
@@ -56,13 +59,18 @@ public final class CouchbaseRequestTracer implements RequestTracer {
   private static final class AgentRequestSpan implements RequestSpan {
 
     private final CouchbaseSpan delegate;
+    private final CouchbaseSpanName spanName;
 
-    private AgentRequestSpan(CouchbaseSpan delegate) {
+    private AgentRequestSpan(String name, CouchbaseSpan delegate) {
       this.delegate = delegate;
+      this.spanName = new CouchbaseSpanName(name);
     }
 
     @Override
     public void setAttribute(String key, String value) {
+      if (emitStableDatabaseSemconv()) {
+        spanName.captureAttribute(key, value);
+      }
       delegate.setAttribute(key, value);
     }
 
@@ -103,10 +111,15 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void end() {
+      if (spanName.isDatabaseRequest()) {
+        delegate.updateName(spanName.spanName());
+      }
       delegate.end();
     }
 
     @Override
-    public void requestContext(RequestContext requestContext) {}
+    public void requestContext(RequestContext requestContext) {
+      CouchbaseConfiguredTarget.capture(delegate, spanName, requestContext);
+    }
   }
 }
