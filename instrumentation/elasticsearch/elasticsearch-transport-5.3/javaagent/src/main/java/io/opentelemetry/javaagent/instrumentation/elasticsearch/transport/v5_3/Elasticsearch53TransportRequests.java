@@ -1,0 +1,41 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3;
+
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticTransportRequest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTarget;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTargets;
+import java.util.ArrayList;
+import java.util.List;
+import org.elasticsearch.client.support.AbstractClient;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.transport.TransportAddress;
+
+public class Elasticsearch53TransportRequests {
+
+  static ElasticTransportRequest request(
+      AbstractClient client, Object action, Object actionRequest) {
+    return ElasticTransportRequest.create(
+        action, actionRequest, ElasticsearchTransportServerTargets.get(client));
+  }
+
+  public static void updateServerTarget(TransportClient client) {
+    Object updateLock = ElasticsearchTransportServerTargets.getUpdateLock(client);
+    if (updateLock == null) {
+      return;
+    }
+    synchronized (updateLock) {
+      List<ElasticsearchTransportServerTarget.Endpoint> endpoints = new ArrayList<>();
+      for (TransportAddress address : client.transportAddresses()) {
+        endpoints.add(
+            new ElasticsearchTransportServerTarget.Endpoint(address.getHost(), address.getPort()));
+      }
+      ElasticsearchTransportServerTargets.update(client, endpoints);
+    }
+  }
+
+  private Elasticsearch53TransportRequests() {}
+}
