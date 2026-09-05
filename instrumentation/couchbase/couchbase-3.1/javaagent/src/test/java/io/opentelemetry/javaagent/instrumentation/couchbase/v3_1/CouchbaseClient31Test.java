@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -127,6 +129,9 @@ class CouchbaseClient31Test {
                           equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
                           equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
                           equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")),
+                          equalTo(
+                              longKey("db.couchbase.retries"),
+                              oldOrExperimental(testLatestDeps() ? 0L : null)),
                           equalTo(SERVER_ADDRESS, serverAddress()),
                           equalTo(SERVER_PORT, null));
                 },
