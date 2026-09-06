@@ -154,10 +154,12 @@ State state = STATE.get(carrier);
 STATE.set(carrier, update(state));
 ```
 
-If multiple threads can update the same carrier, make the attached state provide the required
-atomicity or synchronization, or redesign the ownership transition. Do not choose `Cache` solely
-for `computeIfAbsent` without first deciding whether concurrent updates and duplicate construction
-are actually valid for the instrumentation.
+If supported callers can update the same carrier concurrently and the behavior requires a compound
+invariant, make the attached state provide the required atomicity or synchronization, or redesign
+the ownership transition. Do not infer that every multi-threaded accessor needs a new protocol:
+first establish the actual lifecycle and whether missing or stale optional metadata is acceptable.
+Do not choose `Cache` solely for `computeIfAbsent` without deciding whether concurrent updates and
+duplicate construction are valid for the instrumentation.
 
 For synchronization around compound state transitions and external-call ordering, see
 [Lock Ownership and Critical Sections](javaagent-locking.md). That guidance also applies to library
