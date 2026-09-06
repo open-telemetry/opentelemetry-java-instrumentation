@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import static io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12.SpymemcachedSingletons.instrumenter;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -13,6 +14,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 public abstract class CompletionListener<T> {
 
@@ -24,6 +27,7 @@ public abstract class CompletionListener<T> {
   private static final String MEMCACHED_RESULT = "spymemcached.result";
   private static final String HIT = "hit";
   private static final String MISS = "miss";
+  private static final Logger logger = Logger.getLogger(CompletionListener.class.getName());
 
   private final SpymemcachedRequest request;
   private final Context context;
@@ -64,12 +68,23 @@ public abstract class CompletionListener<T> {
       // This should never happen, just in case to make sure we cover all unexpected exceptions
       error = t;
     } finally {
-      instrumenter().end(context, request, future, error);
+      endSpan(future, error);
     }
   }
 
   protected void closeSyncSpan(Throwable thrown) {
-    instrumenter().end(context, request, null, thrown);
+    endSpan(null, thrown);
+  }
+
+  private void endSpan(@Nullable T response, @Nullable Throwable error) {
+    try {
+      request.captureHandlingNodeAddress();
+    } catch (Throwable t) {
+      // Keep completion isolated from a custom MemcachedNode address getter.
+      logger.log(FINE, "Unable to capture the Memcached peer address", t);
+    } finally {
+      instrumenter().end(context, request, response, error);
+    }
   }
 
   protected abstract void processResult(Span span, T future)

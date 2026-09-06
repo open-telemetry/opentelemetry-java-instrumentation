@@ -42,8 +42,11 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -56,8 +59,13 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import net.spy.memcached.BinaryConnectionFactory;
 import net.spy.memcached.CASResponse;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.ConnectionFactory;
@@ -68,6 +76,7 @@ import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.NodeLocator;
+import net.spy.memcached.OperationTimeoutException;
 import net.spy.memcached.internal.BulkFuture;
 import net.spy.memcached.internal.CheckedOperationTimeoutException;
 import net.spy.memcached.internal.GetFuture;
@@ -183,6 +192,16 @@ class SpymemcachedTest {
     ConnectionFactory connectionFactory = connectionFactoryBuilder.build();
     try {
       MemcachedClient memcached = new MemcachedClient(connectionFactory, nodes);
+      cleanup.deferCleanup(memcached::shutdown);
+      return memcached;
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private static MemcachedClient getMemcachedWithFactory(ThrowingAddressConnectionFactory factory) {
+    try {
+      MemcachedClient memcached = new MemcachedClient(factory, singletonList(memcachedAddress));
       cleanup.deferCleanup(memcached::shutdown);
       return memcached;
     } catch (IOException e) {
@@ -316,6 +335,151 @@ class SpymemcachedTest {
                             equalTo(
                                 booleanKey("spymemcached.command.cancelled"),
                                 experimental(true)))));
+  }
+
+  @Test
+  void syncCompletionPreservesOperationErrorWhenPeerAddressFails() throws Exception {
+    ReentrantLock queueLock = new ReentrantLock();
+    ThrowingAddressConnectionFactory factory =
+        new ThrowingAddressConnectionFactory(queueLock, TIMING_OUT_OPERATION_TIMEOUT_MILLIS);
+    MemcachedClient memcached = getMemcachedWithFactory(factory);
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    try {
+      Future<?> result;
+      queueLock.lock();
+      try {
+        result =
+            executor.submit(
+                () ->
+                    assertThatThrownBy(() -> memcached.get(key("sync-timeout")))
+                        .isInstanceOf(OperationTimeoutException.class));
+        factory.throwAddress.set(true);
+        result.get();
+      } finally {
+        queueLock.unlock();
+      }
+    } finally {
+      executor.shutdownNow();
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(spanName("get"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? CheckedOperationTimeoutException.class.getName()
+                                    : null),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? memcachedAddress.getHostString()
+                                    : null),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? (long) memcachedAddress.getPort()
+                                    : null))
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            EXCEPTION_TYPE,
+                                            CheckedOperationTimeoutException.class.getName()),
+                                        equalTo(
+                                            EXCEPTION_MESSAGE,
+                                            "Operation timed out. - failing node: "
+                                                + memcachedAddress),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            value -> value.isInstanceOf(String.class))))));
+    assertThat(factory.addressFailures.get()).isGreaterThan(0);
+  }
+
+  @Test
+  void asyncCompletionEndsSpanWhenPeerAddressFails() throws Exception {
+    ThrowingAddressConnectionFactory factory = new ThrowingAddressConnectionFactory(null, 0);
+    MemcachedClient memcached = getMemcachedWithFactory(factory);
+    factory.throwAddress.set(true);
+
+    assertThat(memcached.asyncGet(key("async-miss")).get()).isNull();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(spanName("get"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? memcachedAddress.getHostString()
+                                    : null),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? (long) memcachedAddress.getPort()
+                                    : null),
+                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+    assertThat(factory.addressFailures.get()).isGreaterThan(0);
+  }
+
+  @Test
+  void asyncCancellationEndsSpanWhenPeerAddressFails() {
+    ReentrantLock queueLock = new ReentrantLock();
+    ThrowingAddressConnectionFactory factory = new ThrowingAddressConnectionFactory(queueLock, 0);
+    MemcachedClient memcached = getMemcachedWithFactory(factory);
+    factory.throwAddress.set(true);
+
+    queueLock.lock();
+    try {
+      assertThat(memcached.asyncGet(key("async-cancel")).cancel(true)).isTrue();
+    } finally {
+      queueLock.unlock();
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(spanName("get"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? memcachedAddress.getHostString()
+                                    : null),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? (long) memcachedAddress.getPort()
+                                    : null),
+                            equalTo(
+                                booleanKey("spymemcached.command.cancelled"),
+                                experimental(true)))));
+    assertThat(factory.addressFailures.get()).isGreaterThan(0);
   }
 
   @Test
@@ -2057,6 +2221,60 @@ class SpymemcachedTest {
     private QueuedOperation(MemcachedNode node, Operation operation) {
       this.node = node;
       this.operation = operation;
+    }
+  }
+
+  private static class ThrowingAddressConnectionFactory extends BinaryConnectionFactory {
+    private final ReentrantLock queueLock;
+    private final long operationTimeout;
+    private final AtomicBoolean throwAddress = new AtomicBoolean();
+    private final AtomicInteger addressFailures = new AtomicInteger();
+
+    private ThrowingAddressConnectionFactory(ReentrantLock queueLock, long operationTimeout) {
+      this.queueLock = queueLock;
+      this.operationTimeout = operationTimeout;
+    }
+
+    @Override
+    public BlockingQueue<Operation> createOperationQueue() {
+      return queueLock == null ? super.createOperationQueue() : getLockableQueue(queueLock);
+    }
+
+    @Override
+    public long getOperationTimeout() {
+      return operationTimeout == 0 ? super.getOperationTimeout() : operationTimeout;
+    }
+
+    @Override
+    public ExecutorService getListenerExecutorService() {
+      return MoreExecutors.newDirectExecutorService();
+    }
+
+    @Override
+    public MemcachedNode createMemcachedNode(SocketAddress sa, SocketChannel c, int bufSize) {
+      MemcachedNode delegate = super.createMemcachedNode(sa, c, bufSize);
+      return (MemcachedNode)
+          Proxy.newProxyInstance(
+              MemcachedNode.class.getClassLoader(),
+              new Class<?>[] {MemcachedNode.class},
+              (proxy, method, args) -> {
+                if (method.getName().equals("getSocketAddress")
+                    && throwAddress.get()
+                    && Arrays.stream(Thread.currentThread().getStackTrace())
+                        .anyMatch(
+                            element ->
+                                element
+                                    .getClassName()
+                                    .equals(SpymemcachedRequest.class.getName()))) {
+                  addressFailures.incrementAndGet();
+                  throw new IllegalStateException("address unavailable");
+                }
+                try {
+                  return method.invoke(delegate, args);
+                } catch (InvocationTargetException e) {
+                  throw e.getCause();
+                }
+              });
     }
   }
 

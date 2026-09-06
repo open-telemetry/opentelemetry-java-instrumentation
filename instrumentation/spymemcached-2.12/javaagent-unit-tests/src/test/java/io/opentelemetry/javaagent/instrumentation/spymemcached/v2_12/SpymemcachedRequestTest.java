@@ -7,17 +7,18 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.context.Context;
 import java.net.InetSocketAddress;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.ops.KeyedOperation;
@@ -55,6 +56,7 @@ class SpymemcachedRequestTest {
 
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
     assertThat(request.getServerTarget().getAddress())
         .isEqualTo("one.example:11211,two.example:11212");
@@ -69,6 +71,7 @@ class SpymemcachedRequestTest {
 
     request.setHandlingNode(memcachedNode("one.example", 11211));
     request.setHandlingNode(memcachedNode("two.example", 11212));
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isNull();
     assertThat(request.getServerTarget().getAddress())
         .isEqualTo("one.example:11211,two.example:11212");
@@ -93,6 +96,7 @@ class SpymemcachedRequestTest {
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), retryOperation);
     }
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
     assertThat(request.getServerTarget().getAddress())
         .isEqualTo("one.example:11211,two.example:11212");
@@ -115,6 +119,7 @@ class SpymemcachedRequestTest {
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), retryOperation);
     }
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
   }
 
@@ -136,6 +141,7 @@ class SpymemcachedRequestTest {
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), retryOperation);
     }
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("one.example", 11211));
   }
 
@@ -160,6 +166,7 @@ class SpymemcachedRequestTest {
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondRetry);
     }
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
   }
 
@@ -183,6 +190,7 @@ class SpymemcachedRequestTest {
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondRetry);
     }
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
@@ -211,6 +219,7 @@ class SpymemcachedRequestTest {
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondRetry);
     }
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("three.example", 11213));
   }
 
@@ -251,6 +260,7 @@ class SpymemcachedRequestTest {
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), operation);
     }
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("four.example", 11214));
   }
 
@@ -282,6 +292,8 @@ class SpymemcachedRequestTest {
       SpymemcachedRequestHolder.captureHandlingNode(Context.current(), secondRetry);
     }
 
+    firstRequest.captureHandlingNodeAddress();
+    secondRequest.captureHandlingNodeAddress();
     assertThat(firstRequest.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
     assertThat(secondRequest.getHandlingNodeAddress()).isEqualTo(node("three.example", 11213));
   }
@@ -295,6 +307,8 @@ class SpymemcachedRequestTest {
     SpymemcachedRequest second = SpymemcachedRequest.create(connection, "asyncGet");
     first.setHandlingNode(memcachedNode("one.example", 11211));
 
+    second.captureHandlingNodeAddress();
+    first.captureHandlingNodeAddress();
     assertThat(second.getHandlingNodeAddress()).isNull();
     assertThat(first.getHandlingNodeAddress()).isEqualTo(node("one.example", 11211));
   }
@@ -303,24 +317,19 @@ class SpymemcachedRequestTest {
   void concurrentUnkeyedCapturesPreserveMultiNodeAmbiguity() throws Exception {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
-    CountDownLatch capturesStarted = new CountDownLatch(2);
-    CountDownLatch releaseCaptures = new CountDownLatch(1);
-    MemcachedNode firstNode =
-        blockingMemcachedNode("one.example", 11211, capturesStarted, releaseCaptures);
-    MemcachedNode secondNode =
-        blockingMemcachedNode("two.example", 11212, capturesStarted, releaseCaptures);
     ExecutorService executor = Executors.newFixedThreadPool(2);
     try {
-      Future<?> first = executor.submit(() -> request.setHandlingNode(firstNode));
-      Future<?> second = executor.submit(() -> request.setHandlingNode(secondNode));
-      assertThat(capturesStarted.await(10, SECONDS)).isTrue();
-      releaseCaptures.countDown();
+      Future<?> first =
+          executor.submit(() -> request.setHandlingNode(memcachedNode("one.example", 11211)));
+      Future<?> second =
+          executor.submit(() -> request.setHandlingNode(memcachedNode("two.example", 11212)));
       first.get();
       second.get();
     } finally {
       executor.shutdownNow();
     }
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
@@ -328,84 +337,53 @@ class SpymemcachedRequestTest {
   void concurrentDisjointKeyCapturesPreserveMultiNodeAmbiguity() throws Exception {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
-    CountDownLatch capturesStarted = new CountDownLatch(2);
-    CountDownLatch releaseCaptures = new CountDownLatch(1);
-    MemcachedNode firstNode =
-        blockingMemcachedNode("one.example", 11211, capturesStarted, releaseCaptures);
-    MemcachedNode secondNode =
-        blockingMemcachedNode("two.example", 11212, capturesStarted, releaseCaptures);
     ExecutorService executor = Executors.newFixedThreadPool(2);
     try {
       Future<?> first =
-          executor.submit(() -> request.setHandlingNode(firstNode, singletonList("one")));
+          executor.submit(
+              () ->
+                  request.setHandlingNode(
+                      memcachedNode("one.example", 11211), singletonList("one")));
       Future<?> second =
-          executor.submit(() -> request.setHandlingNode(secondNode, singletonList("two")));
-      assertThat(capturesStarted.await(10, SECONDS)).isTrue();
-      releaseCaptures.countDown();
+          executor.submit(
+              () ->
+                  request.setHandlingNode(
+                      memcachedNode("two.example", 11212), singletonList("two")));
       first.get();
       second.get();
     } finally {
       executor.shutdownNow();
     }
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
   @Test
-  void staleCaptureBeforeClearCannotRestoreHandlingNode() throws Exception {
+  void clearHandlingNodeRemainsAmbiguousAfterLateObservation() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
-    CountDownLatch captureStarted = new CountDownLatch(1);
-    CountDownLatch releaseCapture = new CountDownLatch(1);
-    MemcachedNode oldNode =
-        blockingMemcachedNode("old.example", 11211, captureStarted, releaseCapture);
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    try {
-      Future<?> capture = executor.submit(() -> request.setHandlingNode(oldNode));
-      assertThat(captureStarted.await(10, SECONDS)).isTrue();
-      request.clearHandlingNode();
-      releaseCapture.countDown();
-      capture.get();
-    } finally {
-      executor.shutdownNow();
-    }
+    request.setHandlingNode(memcachedNode("old.example", 11211));
+    request.clearHandlingNode();
+    request.setHandlingNode(memcachedNode("new.example", 11212));
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
   @Test
-  void sameKeyCaptureUsesCallOrderWhenAddressReadsCompleteOutOfOrder() throws Exception {
+  void sameKeyCaptureUsesTheLatestNode() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
-    CountDownLatch firstCaptureStarted = new CountDownLatch(1);
-    CountDownLatch secondCaptureStarted = new CountDownLatch(1);
-    CountDownLatch releaseFirstCapture = new CountDownLatch(1);
-    CountDownLatch releaseSecondCapture = new CountDownLatch(1);
-    MemcachedNode firstNode =
-        blockingMemcachedNode("one.example", 11211, firstCaptureStarted, releaseFirstCapture);
-    MemcachedNode secondNode =
-        blockingMemcachedNode("two.example", 11212, secondCaptureStarted, releaseSecondCapture);
-    ExecutorService executor = Executors.newFixedThreadPool(2);
-    try {
-      Future<?> first =
-          executor.submit(() -> request.setHandlingNode(firstNode, singletonList("key")));
-      assertThat(firstCaptureStarted.await(10, SECONDS)).isTrue();
-      Future<?> second =
-          executor.submit(() -> request.setHandlingNode(secondNode, singletonList("key")));
-      assertThat(secondCaptureStarted.await(10, SECONDS)).isTrue();
-      releaseSecondCapture.countDown();
-      second.get();
-      releaseFirstCapture.countDown();
-      first.get();
-    } finally {
-      executor.shutdownNow();
-    }
+    request.setHandlingNode(memcachedNode("one.example", 11211), singletonList("key"));
+    request.setHandlingNode(memcachedNode("two.example", 11212), singletonList("key"));
 
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
   }
 
   @Test
-  void sameNodeKeyCapturesUseTheNewestAddress() {
+  void addressIsReadOnceForMultipleKeys() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
     MemcachedNode node = mock(MemcachedNode.class);
@@ -415,7 +393,25 @@ class SpymemcachedRequestTest {
     request.setHandlingNode(node, singletonList("one"));
     request.setHandlingNode(node, singletonList("two"));
 
-    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("one.example", 11212));
+    verify(node, never()).getSocketAddress();
+    request.captureHandlingNodeAddress();
+    verify(node).getSocketAddress();
+    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("one.example", 11211));
+  }
+
+  @Test
+  void mutableNodeAddressIsSampledAtCompletionPreparation() {
+    MemcachedConnection connection = mock(MemcachedConnection.class);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
+    AtomicReference<InetSocketAddress> address = new AtomicReference<>(node("one.example", 11211));
+    MemcachedNode node = mock(MemcachedNode.class);
+    when(node.getSocketAddress()).thenAnswer(invocation -> address.get());
+
+    request.setHandlingNode(node);
+    address.set(node("two.example", 11212));
+    request.captureHandlingNodeAddress();
+
+    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
   }
 
   @Test
@@ -426,6 +422,21 @@ class SpymemcachedRequestTest {
     request.setHandlingNode(memcachedNode("one.example", 11211), singletonList("one"));
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
+    request.captureHandlingNodeAddress();
+    assertThat(request.getHandlingNodeAddress()).isNull();
+  }
+
+  @Test
+  void unkeyedCaptureCannotHideExistingKeyFanout() {
+    MemcachedConnection connection = mock(MemcachedConnection.class);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
+    MemcachedNode firstNode = memcachedNode("one.example", 11211);
+
+    request.setHandlingNode(firstNode, singletonList("one"));
+    request.setHandlingNode(memcachedNode("two.example", 11212), singletonList("two"));
+    request.setHandlingNode(firstNode);
+
+    request.captureHandlingNodeAddress();
     assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
@@ -440,47 +451,50 @@ class SpymemcachedRequestTest {
     request.setHandlingNode(node, singletonList("one"));
     request.setHandlingNode(node);
 
-    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("one.example", 11212));
+    request.captureHandlingNodeAddress();
+    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("one.example", 11211));
   }
 
   @Test
-  void staleCaptureBeforeRetryCannotRestoreThePreviousPeer() throws Exception {
+  void lateInitialObservationAfterRetryRemainsAmbiguous() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
-    CountDownLatch captureStarted = new CountDownLatch(1);
-    CountDownLatch releaseCapture = new CountDownLatch(1);
-    MemcachedNode oldNode =
-        blockingMemcachedNode("old.example", 11211, captureStarted, releaseCapture);
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    try {
-      Future<?> capture = executor.submit(() -> request.setHandlingNode(oldNode));
-      assertThat(captureStarted.await(10, SECONDS)).isTrue();
-      request.setRetryHandlingNode(memcachedNode("retry.example", 11212));
-      releaseCapture.countDown();
-      capture.get();
-    } finally {
-      executor.shutdownNow();
-    }
+    request.setRetryHandlingNode(memcachedNode("retry.example", 11212));
+    request.setHandlingNode(memcachedNode("late.example", 11213));
 
-    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("retry.example", 11212));
+    request.captureHandlingNodeAddress();
+    assertThat(request.getHandlingNodeAddress()).isNull();
+  }
+
+  @Test
+  void lateInitialKeyObservationAfterRetryUsesItsSelectedNode() {
+    MemcachedConnection connection = mock(MemcachedConnection.class);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
+    request.setRetryHandlingNode(memcachedNode("retry.example", 11212));
+    request.setHandlingNode(memcachedNode("late.example", 11213), singletonList("keyB"));
+
+    request.captureHandlingNodeAddress();
+    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("late.example", 11213));
+  }
+
+  @Test
+  void retryNodeAndLaterSameNodeObservationRemainAmbiguousWithOtherKey() {
+    MemcachedConnection connection = mock(MemcachedConnection.class);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
+    MemcachedNode retryNode = memcachedNode("retry.example", 11212);
+    MemcachedNode laterNode = memcachedNode("late.example", 11213);
+
+    request.setRetryHandlingNode(retryNode);
+    request.setHandlingNode(laterNode, singletonList("keyB"));
+    request.setHandlingNode(laterNode);
+
+    request.captureHandlingNodeAddress();
+    assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
   private static MemcachedNode memcachedNode(String host, int port) {
     MemcachedNode node = mock(MemcachedNode.class);
     when(node.getSocketAddress()).thenReturn(node(host, port));
-    return node;
-  }
-
-  private static MemcachedNode blockingMemcachedNode(
-      String host, int port, CountDownLatch started, CountDownLatch release) {
-    MemcachedNode node = mock(MemcachedNode.class);
-    when(node.getSocketAddress())
-        .thenAnswer(
-            invocation -> {
-              started.countDown();
-              release.await();
-              return node(host, port);
-            });
     return node;
   }
 

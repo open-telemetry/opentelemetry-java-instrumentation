@@ -11,7 +11,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
@@ -36,59 +35,59 @@ public abstract class SpymemcachedRequest {
   @Nullable private MemcachedNode handlingNode;
   @Nullable private InetSocketAddress handlingNodeAddress;
   @Nullable private MemcachedNode wholeRequestNode;
-  private long wholeRequestTicket = -1;
-  @Nullable private Map<String, NodeCapture> handlingNodesByKey;
+  @Nullable private Map<String, MemcachedNode> handlingNodesByKey;
   private boolean hasMultipleHandlingNodes;
-  private long generation;
-  private long nextTicket;
 
   public void setHandlingNode(@Nullable MemcachedNode node) {
     if (node == null) {
       return;
     }
-    CaptureToken token = beginCapture();
-    InetSocketAddress address = captureNodeAddress(node);
-    applyCapture(token, node, address, null);
+    synchronized (lock) {
+      applyHandlingNode(node);
+    }
   }
 
   public void setHandlingNode(@Nullable MemcachedNode node, Collection<String> keys) {
     if (node == null) {
       return;
     }
-    CaptureToken token = beginCapture();
-    InetSocketAddress address = captureNodeAddress(node);
-    applyCapture(token, node, address, keys);
+    synchronized (lock) {
+      if (keys.isEmpty()) {
+        applyHandlingNode(node);
+        return;
+      }
+      if (hasMultipleHandlingNodes) {
+        return;
+      }
+      // Request associations provide a stable, instrumentation-owned key set at this boundary.
+      if (handlingNodesByKey == null) {
+        handlingNodesByKey = new HashMap<>();
+      }
+      for (String key : keys) {
+        handlingNodesByKey.put(key, node);
+      }
+      updateHandlingNode(handlingNodesByKey);
+    }
   }
 
   public void setRetryHandlingNode(@Nullable MemcachedNode node) {
     if (node == null) {
       return;
     }
-    CaptureToken token;
     synchronized (lock) {
-      generation++;
-      token = new CaptureToken(generation, ++nextTicket);
       handlingNodesByKey = null;
       hasMultipleHandlingNodes = false;
-      handlingNode = null;
-      handlingNodeAddress = null;
-      wholeRequestNode = null;
-      wholeRequestTicket = -1;
+      wholeRequestNode = node;
+      handlingNode = node;
     }
-    InetSocketAddress address = captureNodeAddress(node);
-    applyCapture(token, node, address, null);
   }
 
   public void clearHandlingNode() {
     synchronized (lock) {
-      generation++;
-      nextTicket++;
       hasMultipleHandlingNodes = true;
       handlingNodesByKey = null;
       handlingNode = null;
-      handlingNodeAddress = null;
       wholeRequestNode = null;
-      wholeRequestTicket = -1;
     }
   }
 
@@ -99,112 +98,65 @@ public abstract class SpymemcachedRequest {
     }
   }
 
-  private CaptureToken beginCapture() {
+  void captureHandlingNodeAddress() {
+    MemcachedNode node;
     synchronized (lock) {
-      return new CaptureToken(generation, ++nextTicket);
+      node = handlingNode;
+      handlingNodeAddress = null;
+    }
+    if (node == null) {
+      return;
+    }
+    InetSocketAddress address = captureNodeAddress(node);
+    synchronized (lock) {
+      handlingNodeAddress = address;
     }
   }
 
+  // The endpoint is sampled at completion, so custom nodes expose their then-current address.
   @Nullable
   private static InetSocketAddress captureNodeAddress(MemcachedNode node) {
     SocketAddress socketAddress = node.getSocketAddress();
     return socketAddress instanceof InetSocketAddress ? (InetSocketAddress) socketAddress : null;
   }
 
-  private void applyCapture(
-      CaptureToken token,
-      MemcachedNode node,
-      @Nullable InetSocketAddress address,
-      @Nullable Collection<String> keys) {
-    synchronized (lock) {
-      if (token.generation != generation || hasMultipleHandlingNodes) {
-        return;
-      }
-
-      if (keys == null || keys.isEmpty()) {
-        if (wholeRequestNode != null && wholeRequestNode != node) {
-          markMultipleHandlingNodes();
-          return;
-        }
-        if (wholeRequestNode != null && wholeRequestTicket > token.ticket) {
-          return;
-        }
-        if (handlingNode != null && handlingNode != node) {
-          markMultipleHandlingNodes();
-          return;
-        }
-        wholeRequestNode = node;
-        wholeRequestTicket = token.ticket;
-        handlingNode = node;
-        handlingNodeAddress = address;
-        return;
-      }
-
-      NodeCapture capture = new NodeCapture(node, address, token.ticket);
-      Map<String, NodeCapture> nodesByKey = handlingNodesByKey;
-      if (nodesByKey == null) {
-        nodesByKey = new HashMap<>();
-        handlingNodesByKey = nodesByKey;
-      }
-      // Request associations provide an instrumentation-owned, stable key set.
-      for (String key : keys) {
-        NodeCapture existing = nodesByKey.get(key);
-        if (existing == null || existing.ticket <= capture.ticket) {
-          nodesByKey.put(key, capture);
-        }
-      }
-
-      updateHandlingNode(nodesByKey);
+  private void applyHandlingNode(MemcachedNode node) {
+    if (hasMultipleHandlingNodes) {
+      return;
     }
+    if (handlingNode == null && handlingNodesByKey != null) {
+      markMultipleHandlingNodes();
+      return;
+    }
+    if (wholeRequestNode != null && wholeRequestNode != node) {
+      markMultipleHandlingNodes();
+      return;
+    }
+    if (handlingNode != null && handlingNode != node) {
+      markMultipleHandlingNodes();
+      return;
+    }
+    wholeRequestNode = node;
+    handlingNode = node;
   }
 
-  private void updateHandlingNode(Map<String, NodeCapture> nodesByKey) {
-    Iterator<NodeCapture> iterator = nodesByKey.values().iterator();
-    NodeCapture singleCapture = iterator.next();
-    while (iterator.hasNext()) {
-      NodeCapture capture = iterator.next();
-      if (singleCapture.node != capture.node) {
+  private void updateHandlingNode(Map<String, MemcachedNode> nodesByKey) {
+    MemcachedNode singleNode = null;
+    for (MemcachedNode node : nodesByKey.values()) {
+      if (singleNode != null && singleNode != node) {
         handlingNode = null;
-        handlingNodeAddress = null;
         return;
       }
-      if (capture.ticket > singleCapture.ticket) {
-        singleCapture = capture;
-      }
+      singleNode = node;
     }
-    handlingNode = singleCapture.node;
-    handlingNodeAddress = singleCapture.address;
+    handlingNode = singleNode;
   }
 
   private void markMultipleHandlingNodes() {
     hasMultipleHandlingNodes = true;
     handlingNodesByKey = null;
     handlingNode = null;
-    handlingNodeAddress = null;
     wholeRequestNode = null;
-    wholeRequestTicket = -1;
-  }
-
-  private static class CaptureToken {
-    private final long generation;
-    private final long ticket;
-
-    private CaptureToken(long generation, long ticket) {
-      this.generation = generation;
-      this.ticket = ticket;
-    }
-  }
-
-  private static class NodeCapture {
-    private final MemcachedNode node;
-    @Nullable private final InetSocketAddress address;
-    private final long ticket;
-
-    private NodeCapture(MemcachedNode node, @Nullable InetSocketAddress address, long ticket) {
-      this.node = node;
-      this.address = address;
-      this.ticket = ticket;
-    }
   }
 
   /** Returns the memcached command that corresponds to the client method. */
