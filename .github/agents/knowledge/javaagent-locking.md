@@ -35,6 +35,17 @@ as transient.
 
 ## Choose the Simplest Representation
 
+Before adding capture, generations, or synchronization, reconsider the observation design. Separate
+the identity or topology that selects the carrier, request, or peer from metadata derived from that
+identity: existing immutable values or one lifecycle-appropriate snapshot may avoid repeated
+publication. For example, selected node identities can be recorded under a short lock and their
+addresses read outside it at a valid extraction boundary. This is an option, not a terminal-sampling
+rule.
+
+Prove carrier lifetime and reuse, library ordering of selection and retries, getter stability or
+extensibility, and consistent related-attribute extraction; the selected peer must be the one
+actually used. Moving observation time is semantic, so retain earlier capture when timing matters.
+
 After deciding the required guarantee, use the simplest state model that supplies it:
 
 | Requirement | Prefer | Required proof |
@@ -50,12 +61,13 @@ one; it is not mandatory for attaching an independent value. Preserve carrier re
 initialization, and fallback-storage behavior. Existing sequential or reentrant invocation may
 require clearing state without requiring CAS.
 
-Consider cost and scope explicitly: per-request or per-observation hot paths differ from rare
-configuration updates. Account for nested, skipped, and disabled advice paths, retained memory,
-broadened instrumented types, extra objects, and CAS retries. Reuse immutable objects and existing
-state where possible. A configuration-time snapshot is not automatically a hot-path allocation,
-and a simple justified lock need not be replaced by complex lock-free code. Do not invent
-performance numbers or require a benchmark for every small edit.
+Consider whether simplifying or removing a protocol is better than merely trimming its allocations:
+per-request or per-observation hot paths differ from rare configuration updates. Account for nested,
+skipped, and disabled advice paths, retained memory, broadened instrumented types, extra objects,
+and CAS retries. Reuse immutable objects and existing state where possible. A configuration-time
+snapshot is not automatically a hot-path allocation, and a simple justified lock need not be
+replaced by complex lock-free code. Do not invent performance numbers or require a benchmark for
+every small edit.
 
 ## Keep Necessary Locks Safe
 
@@ -84,8 +96,9 @@ and custom implementations still need review.
 
 ## Capture and Publish Conditionally
 
-Only when the agreed accuracy requires rejecting stale updates, reserve ownership or a generation
-before raced input capture, including empty-input paths. For example:
+If the observation redesign still requires split capture and publication, and the agreed accuracy
+requires rejecting stale updates, reserve ownership or a generation before raced input capture,
+including empty-input paths. For example:
 
 ```java
 Reservation reservation;
