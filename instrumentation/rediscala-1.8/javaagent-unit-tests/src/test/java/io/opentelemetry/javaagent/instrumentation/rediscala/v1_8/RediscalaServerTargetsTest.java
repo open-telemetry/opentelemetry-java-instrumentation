@@ -81,7 +81,7 @@ class RediscalaServerTargetsTest {
   }
 
   @Test
-  void mutablePoolStatePreservesEndpointMultiplicity() {
+  void mutablePoolStateRefreshesFromMap() {
     RedisServer first = server("node", 7000);
     RedisServer second = new RedisServer("node", 7000, Option.apply("password"), Option.apply(1));
     HashMap<RedisServer, Object> connections = new HashMap<>();
@@ -93,9 +93,17 @@ class RediscalaServerTargetsTest {
 
     assertTarget(state.target(), "node:7000,node:7000", null);
     synchronized (connections) {
-      state.remove(RediscalaServerTargets.endpoint(first));
+      connections.remove(server("missing", 7001));
+      state.refresh(connections);
+      assertTarget(state.target(), "node:7000,node:7000", null);
+      connections.remove(first);
+      state.refresh(connections);
       assertTarget(state.target(), "node", 7000);
-      state.add(RediscalaServerTargets.endpoint(second));
+      connections.$plus$eq(new Tuple2<>(second, new Object()));
+      state.refresh(connections);
+      assertTarget(state.target(), "node", 7000);
+      connections.$plus$eq(new Tuple2<>(first, new Object()));
+      state.refresh(connections);
     }
     assertTarget(state.target(), "node:7000,node:7000", null);
   }
@@ -103,13 +111,35 @@ class RediscalaServerTargetsTest {
   @Test
   void mutablePoolStateFailsClosedWhenUnavailable() {
     HashMap<Object, Object> connections = new HashMap<>();
-    connections.$plus$eq(new Tuple2<>(new Object(), new Object()));
+    RedisServer server = server("node", 7000);
+    connections.$plus$eq(new Tuple2<>(server, new Object()));
 
     RediscalaServerTargets.MutablePoolState state =
         RediscalaServerTargets.MutablePoolState.fromMap(connections);
 
+    assertThat(state.target()).isNotNull();
+    connections.$plus$eq(new Tuple2<>(new Object(), new Object()));
+    state.refresh(connections);
     assertThat(state.target()).isNull();
-    assertThat(state.isAvailable()).isFalse();
+    connections.clear();
+    connections.$plus$eq(new Tuple2<>(server, new Object()));
+    state.refresh(connections);
+    assertTarget(state.target(), "node", 7000);
+  }
+
+  @Test
+  void mutablePoolStateRefreshesAfterBeingMarkedUnavailable() {
+    RedisServer server = server("node", 7000);
+    HashMap<RedisServer, Object> connections = new HashMap<>();
+    connections.$plus$eq(new Tuple2<>(server, new Object()));
+
+    RediscalaServerTargets.MutablePoolState state =
+        RediscalaServerTargets.MutablePoolState.fromMap(connections);
+
+    state.markUnavailable();
+    assertThat(state.target()).isNull();
+    state.refresh(connections);
+    assertTarget(state.target(), "node", 7000);
   }
 
   @Test
