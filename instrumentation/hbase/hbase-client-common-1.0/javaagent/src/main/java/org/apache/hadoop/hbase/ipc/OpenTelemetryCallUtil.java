@@ -15,13 +15,14 @@ import javax.annotation.Nullable;
 
 // Helper for accessing the package-private Call class.
 public final class OpenTelemetryCallUtil {
-  private static final VirtualField<Call, CallState> CALL_STATE =
-      VirtualField.find(Call.class, CallState.class);
+  // HBase's native Call completion guard ensures only one terminal advice consumes this
+  // association.
+  private static final VirtualField<Call, RequestAndContext> REQUEST_AND_CONTEXT =
+      VirtualField.find(Call.class, RequestAndContext.class);
 
   public static void setRequestAndContext(
       Object call, @Nullable RequestAndContext requestAndContext) {
-    CALL_STATE.set(
-        (Call) call, requestAndContext == null ? null : new CallState(requestAndContext));
+    REQUEST_AND_CONTEXT.set((Call) call, requestAndContext);
   }
 
   public static boolean isCall(Object message) {
@@ -39,23 +40,21 @@ public final class OpenTelemetryCallUtil {
       return;
     }
 
-    Call call = (Call) message;
-    CallState callState = CALL_STATE.get(call);
-    if (callState != null) {
-      callState.setNetworkPeer(inetAddress.getHostAddress(), inetSocketAddress.getPort());
+    RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get((Call) message);
+    if (requestAndContext != null) {
+      requestAndContext.getRequest().setNetworkPeer(inetSocketAddress);
     }
   }
 
   @Nullable
   public static RequestAndContext getAndClearRequestAndContext(Object call) {
     Call hbaseCall = (Call) call;
-    CallState callState = CALL_STATE.get(hbaseCall);
-    if (callState == null) {
+    RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get(hbaseCall);
+    if (requestAndContext == null) {
       return null;
     }
 
-    RequestAndContext requestAndContext = callState.claim();
-    CALL_STATE.set(hbaseCall, null);
+    REQUEST_AND_CONTEXT.set(hbaseCall, null);
     return requestAndContext;
   }
 
@@ -67,54 +66,13 @@ public final class OpenTelemetryCallUtil {
       return null;
     }
 
-    CallState callState = CALL_STATE.get(hbaseCall);
-    if (callState == null) {
+    RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get(hbaseCall);
+    if (requestAndContext == null) {
       return null;
     }
 
-    RequestAndContext requestAndContext = callState.claim();
-    CALL_STATE.set(hbaseCall, null);
+    REQUEST_AND_CONTEXT.set(hbaseCall, null);
     return requestAndContext;
-  }
-
-  static final class CallState {
-    private final RequestAndContext requestAndContext;
-    private final Object lock = new Object();
-    @Nullable private String networkPeerAddress;
-    private int networkPeerPort;
-    private boolean completed;
-
-    CallState(RequestAndContext requestAndContext) {
-      this.requestAndContext = requestAndContext;
-    }
-
-    void setNetworkPeer(String networkPeerAddress, int networkPeerPort) {
-      synchronized (lock) {
-        if (!completed) {
-          this.networkPeerAddress = networkPeerAddress;
-          this.networkPeerPort = networkPeerPort;
-        }
-      }
-    }
-
-    @Nullable
-    RequestAndContext claim() {
-      String networkPeerAddress;
-      int networkPeerPort;
-      synchronized (lock) {
-        if (completed) {
-          return null;
-        }
-        completed = true;
-        networkPeerAddress = this.networkPeerAddress;
-        networkPeerPort = this.networkPeerPort;
-      }
-
-      if (networkPeerAddress != null) {
-        requestAndContext.getRequest().setNetworkPeer(networkPeerAddress, networkPeerPort);
-      }
-      return requestAndContext;
-    }
   }
 
   private OpenTelemetryCallUtil() {}
