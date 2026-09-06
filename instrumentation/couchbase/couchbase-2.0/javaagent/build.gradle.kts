@@ -39,8 +39,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
+  // Keep configured-target instrumentation out of 2.x test agents.
 
   latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see couchbase-2.6 module
   latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see couchbase-2.6 module
