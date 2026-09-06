@@ -49,6 +49,11 @@ Define the observation point required by the telemetry contract: a snapshot vali
 not become invalid merely because the source changes later. Revalidate or coordinate again only when
 later freshness or coherence is part of the guarantee.
 
+For infrequent configuration or topology updates, compare recomputing the complete target from
+canonical state at a proven observation boundary with maintaining incremental deltas, counts, or
+reservations. Include work already performed, preserve required key identity and multiplicity, and
+confirm snapshot availability and extension safety before choosing the simpler design.
+
 After deciding the required guarantee, use the simplest state model that supplies it:
 
 | Requirement | Prefer | Required proof |
@@ -162,6 +167,8 @@ and class-loading caveats explicit but concise.
 
 Tests should establish the selected guarantees on supported reachable call chains. Force races in
 those chains when necessary, and cover any explicitly approved omission or stale-metadata policy.
+Assert that the intended hook, failure, and ordering path actually ran, not only that a plausible
+span or lifecycle result appeared.
 Do not make an exhaustive synthetic-race checklist mandatory for every change, and do not treat a
 mockable slow leaf getter or arbitrary mutable input as evidence without a supported caller.
 Report confidence accurately; do not present an unproven deadlock as reproduced.
