@@ -22,8 +22,10 @@ public class SpymemcachedInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new BaseOperationInstrumentation(),
         new ConnectionFactoryInstrumentation(),
         new MemcachedClientInstrumentation(),
-        new MemcachedConnectionInstrumentation());
+        new MemcachedConnectionInstrumentation(),
+        new OptimizedOperationInstrumentation());
   }
 }
