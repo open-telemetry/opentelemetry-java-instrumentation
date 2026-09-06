@@ -30,7 +30,6 @@ class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // encode(ChannelHandlerContext ctx, REQUEST msg, List<Object> out)
     transformer.applyAdviceToMethod(
         named("encode")
             .and(takesArguments(3))
