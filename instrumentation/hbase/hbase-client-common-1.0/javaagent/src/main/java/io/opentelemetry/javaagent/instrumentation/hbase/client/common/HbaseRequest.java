@@ -6,14 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
 import com.google.auto.value.AutoValue;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.hadoop.hbase.TableName;
 
 @AutoValue
 public abstract class HbaseRequest {
 
-  @Nullable private String networkPeerAddress;
-  @Nullable private Integer networkPeerPort;
+  // Retries create a new Call/request, and each Call is sent through one connection.
+  @Nullable private volatile InetSocketAddress networkPeer;
 
   public static HbaseRequest create(
       @Nullable String operation,
@@ -27,9 +28,8 @@ public abstract class HbaseRequest {
         operation, tableName, user, serverAddress, serverPort, serverTarget, operationBatchSize);
   }
 
-  public void setNetworkPeer(String networkPeerAddress, int networkPeerPort) {
-    this.networkPeerAddress = networkPeerAddress;
-    this.networkPeerPort = networkPeerPort;
+  public void setNetworkPeer(InetSocketAddress networkPeer) {
+    this.networkPeer = networkPeer;
   }
 
   @Nullable
@@ -52,12 +52,14 @@ public abstract class HbaseRequest {
 
   @Nullable
   public String getNetworkPeerAddress() {
-    return networkPeerAddress;
+    InetSocketAddress networkPeer = this.networkPeer;
+    return networkPeer == null ? null : networkPeer.getAddress().getHostAddress();
   }
 
   @Nullable
   public Integer getNetworkPeerPort() {
-    return networkPeerPort;
+    InetSocketAddress networkPeer = this.networkPeer;
+    return networkPeer == null ? null : networkPeer.getPort();
   }
 
   @Nullable

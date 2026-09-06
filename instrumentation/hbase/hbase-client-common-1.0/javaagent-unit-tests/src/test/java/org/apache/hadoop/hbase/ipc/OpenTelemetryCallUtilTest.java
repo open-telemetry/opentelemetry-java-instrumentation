@@ -16,8 +16,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 class OpenTelemetryCallUtilTest {
@@ -117,55 +115,6 @@ class OpenTelemetryCallUtilTest {
     assertThat(requestAndContext.getRequest().getNetworkPeerAddress()).isEqualTo("10.20.30.40");
     assertThat(requestAndContext.getRequest().getNetworkPeerPort()).isEqualTo(1234);
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call)).isNull();
-  }
-
-  @Test
-  void claimsStateOnceWhenPeerUpdateRacesWithCompletion() throws InterruptedException {
-    RequestAndContext requestAndContext = requestAndContext();
-    OpenTelemetryCallUtil.CallState callState =
-        new OpenTelemetryCallUtil.CallState(requestAndContext);
-    CountDownLatch ready = new CountDownLatch(2);
-    CountDownLatch start = new CountDownLatch(1);
-    AtomicReference<RequestAndContext> claimed = new AtomicReference<>();
-
-    Thread peerUpdate =
-        new Thread(
-            () -> {
-              ready.countDown();
-              await(start);
-              callState.setNetworkPeer("10.20.30.40", 1234);
-            });
-    Thread completion =
-        new Thread(
-            () -> {
-              ready.countDown();
-              await(start);
-              claimed.set(callState.claim());
-            });
-    peerUpdate.start();
-    completion.start();
-
-    ready.await();
-    start.countDown();
-    peerUpdate.join();
-    completion.join();
-
-    assertThat(claimed.get()).isSameAs(requestAndContext);
-    assertThat(callState.claim()).isNull();
-    String peerAddress = requestAndContext.getRequest().getNetworkPeerAddress();
-    assertThat(peerAddress == null || peerAddress.equals("10.20.30.40")).isTrue();
-    if (peerAddress != null) {
-      assertThat(requestAndContext.getRequest().getNetworkPeerPort()).isEqualTo(1234);
-    }
-  }
-
-  private static void await(CountDownLatch latch) {
-    try {
-      latch.await();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new AssertionError(e);
-    }
   }
 
   private static RequestAndContext requestAndContext() {
