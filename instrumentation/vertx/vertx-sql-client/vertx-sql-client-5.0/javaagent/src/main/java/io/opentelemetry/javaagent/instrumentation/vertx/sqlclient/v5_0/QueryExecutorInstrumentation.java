@@ -29,7 +29,6 @@ import io.vertx.core.internal.PromiseInternal;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.internal.PreparedStatement;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -117,8 +116,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
       private final CallDepth callDepth;
       @Nullable private final VertxSqlClientInfoCapture infoCapture;
       @Nullable private final Promise<?> promise;
-      private final ConnectionInfoState connectionInfoState = new ConnectionInfoState();
-      private final AtomicBoolean endClaimed = new AtomicBoolean();
+      @Nullable private final ConnectionInfoState connectionInfoState;
       @Nullable private volatile VertxSqlClientRequest otelRequest;
       @Nullable private volatile Context context;
       @Nullable private Scope scope;
@@ -134,6 +132,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         this.callDepth = callDepth;
         this.infoCapture = infoCapture;
         this.promise = promiseInternal;
+        this.connectionInfoState = infoCapture == null ? null : new ConnectionInfoState();
       }
 
       public static AdviceScope start(Object queryExecutor, String methodName, Object[] arguments) {
@@ -225,7 +224,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         VertxSqlClientInfoCapture capture;
         VertxSqlClientRequest request;
         Context spanContext;
-        if (!connectionInfoState.startConnectionInfo()) {
+        ConnectionInfoState state = connectionInfoState;
+        if (state == null || !state.startConnectionInfo()) {
           return null;
         }
         capture = infoCapture;
@@ -244,7 +244,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           }
           return spanContext;
         } finally {
-          Throwable terminalThrowable = connectionInfoState.finishConnectionInfo();
+          Throwable terminalThrowable = state.finishConnectionInfo();
           if (terminalThrowable != null) {
             endSpan(terminalThrowable);
           }
@@ -262,9 +262,6 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
       }
 
       public void end(@Nullable Throwable throwable) {
-        if (!endClaimed.compareAndSet(false, true)) {
-          return;
-        }
         if (infoCapture != null) {
           VertxSqlClientSingletons.setPendingConnectionDataListener(null);
         }
@@ -274,7 +271,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
         Scope executionScope = scope;
         scope = null;
-        boolean endSpan = throwable != null && connectionInfoState.claimTerminal(throwable);
+        ConnectionInfoState state = connectionInfoState;
+        boolean endSpan = throwable != null && (state == null || state.claimTerminal(throwable));
         if (executionScope != null) {
           executionScope.close();
         }
