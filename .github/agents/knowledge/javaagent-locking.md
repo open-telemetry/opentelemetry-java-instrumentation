@@ -45,6 +45,9 @@ rule.
 Prove carrier lifetime and reuse, library ordering of selection and retries, getter stability or
 extensibility, and consistent related-attribute extraction; the selected peer must be the one
 actually used. Moving observation time is semantic, so retain earlier capture when timing matters.
+Define the observation point required by the telemetry contract: a snapshot valid at that point does
+not become invalid merely because the source changes later. Revalidate or coordinate again only when
+later freshness or coherence is part of the guarantee.
 
 After deciding the required guarantee, use the simplest state model that supplies it:
 
@@ -147,7 +150,9 @@ waiting on a latch, future, or spin retains the dependency. If the required orde
 handoff and the lifecycle permits it, an in-flight updater can finish terminal work without
 waiting. SDK `Span.end` idempotency does not
 prove that instrumenter end, metrics, or callbacks are idempotent. Preserve library-owned timeout
-and error identity and synchronous throws.
+and error identity and synchronous throws. If optional metadata acquisition is moved, its failure
+must not bypass required instrumenter or span ending, scope closure, or other cleanup; preserve
+application-error behavior rather than silently catching failures.
 
 ## Review and Test the Supported Lifecycle
 
