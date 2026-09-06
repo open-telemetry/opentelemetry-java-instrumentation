@@ -33,7 +33,22 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This CoreEnvironment.Builder<?> builder) {
-      builder.requestTracer(CouchbaseRequestTracer.create(GlobalOpenTelemetry.get()));
+      builder.requestTracer(
+          CouchbaseRequestTracer.create(
+              GlobalOpenTelemetry.get(), hasClientSpans(builder.getClass().getClassLoader())));
+    }
+
+    @SuppressWarnings("EffectivelyPrivate")
+    public static boolean hasClientSpans(ClassLoader classLoader) {
+      try {
+        Class.forName(
+            "com.couchbase.client.core.transaction.components.CoreTransactionRequest",
+            false,
+            classLoader);
+        return true;
+      } catch (ClassNotFoundException ignored) {
+        return false;
+      }
     }
   }
 }
