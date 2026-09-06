@@ -92,9 +92,11 @@ class RediscalaServerTargetsTest {
         RediscalaServerTargets.MutablePoolState.fromMap(connections);
 
     assertTarget(state.target(), "node:7000,node:7000", null);
-    state.remove(RediscalaServerTargets.endpoint(first));
-    assertTarget(state.target(), "node", 7000);
-    state.add(RediscalaServerTargets.endpoint(second));
+    synchronized (connections) {
+      state.remove(RediscalaServerTargets.endpoint(first));
+      assertTarget(state.target(), "node", 7000);
+      state.add(RediscalaServerTargets.endpoint(second));
+    }
     assertTarget(state.target(), "node:7000,node:7000", null);
   }
 

@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import redis.ActorRequest;
@@ -363,10 +362,11 @@ public class RediscalaServerTargets {
   public static final class MutablePoolState {
     private static final Snapshot UNAVAILABLE = new Snapshot(false, emptyMap(), null);
 
-    private final AtomicReference<Snapshot> snapshot;
+    // Supported pool writers hold the library-owned carrier or pool monitor through the map commit.
+    private volatile Snapshot snapshot;
 
     private MutablePoolState(Snapshot snapshot) {
-      this.snapshot = new AtomicReference<>(snapshot);
+      this.snapshot = snapshot;
     }
 
     static MutablePoolState fromMap(scala.collection.mutable.HashMap<?, ?> map) {
@@ -392,7 +392,7 @@ public class RediscalaServerTargets {
 
     @Nullable
     RedisServerTarget target() {
-      Snapshot current = snapshot.get();
+      Snapshot current = snapshot;
       return current.available ? current.target : null;
     }
 
@@ -405,11 +405,11 @@ public class RediscalaServerTargets {
     }
 
     public void markUnavailable() {
-      snapshot.set(UNAVAILABLE);
+      snapshot = UNAVAILABLE;
     }
 
     public boolean isAvailable() {
-      return snapshot.get().available;
+      return snapshot.available;
     }
 
     private void update(String endpoint, int delta) {
@@ -418,36 +418,32 @@ public class RediscalaServerTargets {
         return;
       }
 
-      while (true) {
-        Snapshot current = snapshot.get();
-        if (!current.available) {
-          return;
-        }
-
-        Map<String, Integer> counts = new HashMap<>(current.counts);
-        int count = counts.getOrDefault(endpoint, 0);
-        int updatedCount = count + delta;
-        if (updatedCount < 0) {
-          markUnavailable();
-          return;
-        }
-        if (updatedCount == 0) {
-          counts.remove(endpoint);
-        } else {
-          counts.put(endpoint, updatedCount);
-        }
-
-        Snapshot updated;
-        try {
-          updated = Snapshot.available(counts);
-        } catch (RuntimeException e) {
-          markUnavailable();
-          return;
-        }
-        if (snapshot.compareAndSet(current, updated)) {
-          return;
-        }
+      Snapshot current = snapshot;
+      if (!current.available) {
+        return;
       }
+
+      Map<String, Integer> counts = new HashMap<>(current.counts);
+      int count = counts.getOrDefault(endpoint, 0);
+      int updatedCount = count + delta;
+      if (updatedCount < 0) {
+        markUnavailable();
+        return;
+      }
+      if (updatedCount == 0) {
+        counts.remove(endpoint);
+      } else {
+        counts.put(endpoint, updatedCount);
+      }
+
+      Snapshot updated;
+      try {
+        updated = Snapshot.available(counts);
+      } catch (RuntimeException e) {
+        markUnavailable();
+        return;
+      }
+      snapshot = updated;
     }
 
     private static final class Snapshot {
@@ -478,7 +474,7 @@ public class RediscalaServerTargets {
           }
         }
         RedisServerTarget target = RedisServerTarget.ofUnorderedEndpoints(endpoints);
-        return new Snapshot(true, Collections.unmodifiableMap(new HashMap<>(counts)), target);
+        return new Snapshot(true, Collections.unmodifiableMap(counts), target);
       }
     }
   }
