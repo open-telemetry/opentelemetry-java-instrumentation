@@ -56,10 +56,10 @@ class InstrumenterExtractionTest {
   }
 
   @Test
-  void useXrayTraceIdFromAwsContext() {
-    assumeTrue(hasXrayTraceIdApi(), "requires aws-lambda-java-core with getXrayTraceId()");
+  void useTraceHeaderFromAwsContext() {
+    assumeTrue(hasTraceHeaderApi(), "requires aws-lambda-java-core with getTraceHeader()");
 
-    String xrayTraceId =
+    String traceHeader =
         "Root=1-00000001-d188f8fa79d48a391a778fa6;Parent=53995c3f42cd8ad8;Sampled=1";
     AtomicReference<String> extractedTraceHeader = new AtomicReference<>();
     AwsLambdaFunctionInstrumenter instr =
@@ -68,16 +68,16 @@ class InstrumenterExtractionTest {
                 ContextPropagators.create(new TraceHeaderPropagator(extractedTraceHeader))));
 
     AwsLambdaRequest input =
-        AwsLambdaRequest.create(new ContextWithXrayTraceId(xrayTraceId), new Object(), emptyMap());
+        AwsLambdaRequest.create(new ContextWithTraceHeader(traceHeader), new Object(), emptyMap());
 
     instr.extract(input);
 
-    assertThat(extractedTraceHeader.get()).isEqualTo(xrayTraceId);
+    assertThat(extractedTraceHeader.get()).isEqualTo(traceHeader);
   }
 
-  private static boolean hasXrayTraceIdApi() {
+  private static boolean hasTraceHeaderApi() {
     try {
-      com.amazonaws.services.lambda.runtime.Context.class.getMethod("getXrayTraceId");
+      com.amazonaws.services.lambda.runtime.Context.class.getMethod("getTraceHeader");
       return true;
     } catch (NoSuchMethodException | SecurityException ignored) {
       return false;
@@ -106,18 +106,18 @@ class InstrumenterExtractionTest {
     }
   }
 
-  private static final class ContextWithXrayTraceId
-      implements com.amazonaws.services.lambda.runtime.Context, XrayTraceIdContext {
-    private final String xrayTraceId;
+  private static final class ContextWithTraceHeader
+      implements com.amazonaws.services.lambda.runtime.Context, TraceHeaderContext {
+    private final String traceHeader;
 
-    private ContextWithXrayTraceId(String xrayTraceId) {
-      this.xrayTraceId = xrayTraceId;
+    private ContextWithTraceHeader(String traceHeader) {
+      this.traceHeader = traceHeader;
     }
 
     @Override
     @SuppressWarnings("EffectivelyPrivate")
-    public String getXrayTraceId() {
-      return xrayTraceId;
+    public String getTraceHeader() {
+      return traceHeader;
     }
 
     @Override

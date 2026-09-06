@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 public class AwsLambdaFunctionInstrumenter {
 
   private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
-  @Nullable private static final MethodHandle GET_XRAY_TRACE_ID = findGetXrayTraceId();
+  @Nullable private static final MethodHandle GET_TRACE_HEADER = findGetTraceHeader();
   private static final MapGetter mapGetter = new MapGetter();
 
   private final OpenTelemetry openTelemetry;
@@ -63,14 +63,14 @@ public class AwsLambdaFunctionInstrumenter {
     if (awsContext != null && awsContext.getClientContext() != null) {
       customContext = awsContext.getClientContext().getCustom();
     }
-    String xrayTraceId = getXrayTraceId(awsContext);
-    if (customContext != null || !isEmptyOrNull(xrayTraceId)) {
+    String traceHeader = getTraceHeader(awsContext);
+    if (customContext != null || !isEmptyOrNull(traceHeader)) {
       headers = new HashMap<>(headers);
       if (customContext != null) {
         headers.putAll(customContext);
       }
-      if (!isEmptyOrNull(xrayTraceId)) {
-        headers.put(AWS_TRACE_HEADER_PROP.toLowerCase(Locale.ROOT), xrayTraceId);
+      if (!isEmptyOrNull(traceHeader)) {
+        headers.put(AWS_TRACE_HEADER_PROP.toLowerCase(Locale.ROOT), traceHeader);
       }
     }
 
@@ -81,28 +81,28 @@ public class AwsLambdaFunctionInstrumenter {
   }
 
   @Nullable
-  private static String getXrayTraceId(
+  private static String getTraceHeader(
       @Nullable com.amazonaws.services.lambda.runtime.Context awsContext) {
     if (awsContext == null) {
       return null;
     }
-    if (GET_XRAY_TRACE_ID == null) {
+    if (GET_TRACE_HEADER == null) {
       return null;
     }
     try {
-      return (String) GET_XRAY_TRACE_ID.invoke(awsContext);
+      return (String) GET_TRACE_HEADER.invoke(awsContext);
     } catch (Throwable ignored) {
       return null;
     }
   }
 
   @Nullable
-  private static MethodHandle findGetXrayTraceId() {
+  private static MethodHandle findGetTraceHeader() {
     try {
       return MethodHandles.publicLookup()
           .findVirtual(
               com.amazonaws.services.lambda.runtime.Context.class,
-              "getXrayTraceId",
+              "getTraceHeader",
               MethodType.methodType(String.class));
     } catch (NoSuchMethodException | IllegalAccessException | SecurityException ignored) {
       return null;
