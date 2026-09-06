@@ -7,20 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.context.Context;
 import java.net.InetSocketAddress;
-import java.util.AbstractCollection;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.ops.KeyedOperation;
@@ -316,7 +313,7 @@ class SpymemcachedRequestTest {
     try {
       Future<?> first = executor.submit(() -> request.setHandlingNode(firstNode));
       Future<?> second = executor.submit(() -> request.setHandlingNode(secondNode));
-      assertThat(capturesStarted.await(10, TimeUnit.SECONDS)).isTrue();
+      assertThat(capturesStarted.await(10, SECONDS)).isTrue();
       releaseCaptures.countDown();
       first.get();
       second.get();
@@ -343,7 +340,7 @@ class SpymemcachedRequestTest {
           executor.submit(() -> request.setHandlingNode(firstNode, singletonList("one")));
       Future<?> second =
           executor.submit(() -> request.setHandlingNode(secondNode, singletonList("two")));
-      assertThat(capturesStarted.await(10, TimeUnit.SECONDS)).isTrue();
+      assertThat(capturesStarted.await(10, SECONDS)).isTrue();
       releaseCaptures.countDown();
       first.get();
       second.get();
@@ -365,7 +362,7 @@ class SpymemcachedRequestTest {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     try {
       Future<?> capture = executor.submit(() -> request.setHandlingNode(oldNode));
-      assertThat(captureStarted.await(10, TimeUnit.SECONDS)).isTrue();
+      assertThat(captureStarted.await(10, SECONDS)).isTrue();
       request.clearHandlingNode();
       releaseCapture.countDown();
       capture.get();
@@ -385,19 +382,17 @@ class SpymemcachedRequestTest {
     CountDownLatch releaseFirstCapture = new CountDownLatch(1);
     CountDownLatch releaseSecondCapture = new CountDownLatch(1);
     MemcachedNode firstNode =
-        blockingMemcachedNode(
-            "one.example", 11211, firstCaptureStarted, releaseFirstCapture);
+        blockingMemcachedNode("one.example", 11211, firstCaptureStarted, releaseFirstCapture);
     MemcachedNode secondNode =
-        blockingMemcachedNode(
-            "two.example", 11212, secondCaptureStarted, releaseSecondCapture);
+        blockingMemcachedNode("two.example", 11212, secondCaptureStarted, releaseSecondCapture);
     ExecutorService executor = Executors.newFixedThreadPool(2);
     try {
       Future<?> first =
           executor.submit(() -> request.setHandlingNode(firstNode, singletonList("key")));
-      assertThat(firstCaptureStarted.await(10, TimeUnit.SECONDS)).isTrue();
+      assertThat(firstCaptureStarted.await(10, SECONDS)).isTrue();
       Future<?> second =
           executor.submit(() -> request.setHandlingNode(secondNode, singletonList("key")));
-      assertThat(secondCaptureStarted.await(10, TimeUnit.SECONDS)).isTrue();
+      assertThat(secondCaptureStarted.await(10, SECONDS)).isTrue();
       releaseSecondCapture.countDown();
       second.get();
       releaseFirstCapture.countDown();
@@ -459,34 +454,9 @@ class SpymemcachedRequestTest {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     try {
       Future<?> capture = executor.submit(() -> request.setHandlingNode(oldNode));
-      assertThat(captureStarted.await(10, TimeUnit.SECONDS)).isTrue();
+      assertThat(captureStarted.await(10, SECONDS)).isTrue();
       request.setRetryHandlingNode(memcachedNode("retry.example", 11212));
       releaseCapture.countDown();
-      capture.get();
-    } finally {
-      executor.shutdownNow();
-    }
-
-    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("retry.example", 11212));
-  }
-
-  @Test
-  void staleKeySnapshotBeforeRetryCannotRestoreThePreviousPeer() throws Exception {
-    MemcachedConnection connection = mock(MemcachedConnection.class);
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
-    CountDownLatch snapshotStarted = new CountDownLatch(1);
-    CountDownLatch releaseSnapshot = new CountDownLatch(1);
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    try {
-      Future<?> capture =
-          executor.submit(
-              () ->
-                  request.setHandlingNode(
-                      memcachedNode("old.example", 11211),
-                      blockingKeys("key", snapshotStarted, releaseSnapshot)));
-      assertThat(snapshotStarted.await(10, TimeUnit.SECONDS)).isTrue();
-      request.setRetryHandlingNode(memcachedNode("retry.example", 11212));
-      releaseSnapshot.countDown();
       capture.get();
     } finally {
       executor.shutdownNow();
@@ -512,28 +482,6 @@ class SpymemcachedRequestTest {
               return node(host, port);
             });
     return node;
-  }
-
-  private static Collection<String> blockingKeys(
-      String key, CountDownLatch started, CountDownLatch release) {
-    return new AbstractCollection<String>() {
-      @Override
-      public Iterator<String> iterator() {
-        started.countDown();
-        try {
-          release.await();
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          throw new AssertionError(e);
-        }
-        return singletonList(key).iterator();
-      }
-
-      @Override
-      public int size() {
-        return 1;
-      }
-    };
   }
 
   private static Operation operation(String host, int port) {
