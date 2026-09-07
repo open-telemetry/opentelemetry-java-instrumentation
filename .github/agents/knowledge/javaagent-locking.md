@@ -36,6 +36,10 @@ can be imagined.
 
 ## Keep Instrumentation Locks Narrow
 
+Base the lock scope on the supported library lifecycle. Do not retain a lock or add a snapshot,
+handoff, or terminal claim for calls that the library does not make concurrently in legitimate
+usage.
+
 Instrumentation-owned locks should protect only short reads, writes, and ownership transitions. Do
 not hold them across:
 
@@ -50,32 +54,15 @@ JVM class-loading locks are an exception. A library-owned or carrier-owned monit
 when instrumentation must coordinate with the library or with other instrumentation using the same
 carrier, but that ownership and lock ordering must be verified and documented.
 
-## Separate Capture from Completion
+Keep external effects out of metadata locks: do not hold one while performing instrumenter, SDK,
+callback, logging, I/O, waits, or scope operations. If supported terminal paths overlap, claim
+completion under the lock and perform external effects afterward. Otherwise, do not add a terminal
+claim just to guard against hypothetical duplicate calls. Preserve thread-affine scope closure,
+synchronous throws, application errors, and library-owned timeout and error identity.
 
-Keep these two questions separate:
-
-1. **What information belongs to the operation?** Capture it at the lifecycle point required by the
-   telemetry contract.
-2. **Which call is responsible for finishing the operation?** If supported terminal paths can
-   overlap, claim cleanup and completion exactly once. If the lifecycle guarantees one terminal
-   path, no claim is needed.
-
-If capturing information and publishing it require separate steps, use a snapshot only when
-supported callbacks can overlap or external completion will read mutable state after the lock is
-released. Reserve the update before reading input that can change. Publish only a valid snapshot,
-and abort or recover the reservation if capture fails or the updater disappears. Use generation
-checks only to discard a superseded complete replacement; preserve independent facts, such as
-carrier identity and peer metadata, when the contract requires them.
-
-Do not hold the metadata lock while performing instrumenter, SDK, callback, or scope operations.
-When terminal paths overlap, claim the work under the lock and perform the external effects
-afterward. When there is only one terminal path, perform those effects without an unnecessary
-claim. In both cases, preserve thread-affine scope closure, synchronous throws, application errors,
-and library-owned timeout and error identity.
-
-Global hooks need the same care: define who owns the previous hook, how hooks compose, and what
-happens on reentrancy, reset, or partial failure. Do not report a hook as installed until the
-complete transition succeeds, and roll back changes that were made before a failure.
+Global hooks need explicit ownership, composition, failure, reentrancy, and reset behavior. Do not
+report a hook as installed until the complete transition succeeds, and roll back changes that were
+made before a failure.
 
 ## Test Reachable Guarantees
 
