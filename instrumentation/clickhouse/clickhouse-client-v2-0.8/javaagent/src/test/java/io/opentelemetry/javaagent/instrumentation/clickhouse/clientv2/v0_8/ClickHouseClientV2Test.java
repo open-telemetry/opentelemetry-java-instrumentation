@@ -309,7 +309,9 @@ class ClickHouseClientV2Test {
 
   @Test
   void testUnsafePeerEndpointIsOmitted() throws Exception {
-    Class<?> endpointTarget = Class.forName(singletons().getName() + "$EndpointTarget");
+    Class<?> singletons = singletons();
+    Class<?> endpointTarget =
+        Class.forName(singletons.getName() + "$EndpointTarget", true, singletons.getClassLoader());
     Method parse = endpointTarget.getDeclaredMethod("parse", String.class);
     parse.setAccessible(true);
 
