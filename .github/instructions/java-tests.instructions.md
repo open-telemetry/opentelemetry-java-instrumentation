@@ -70,10 +70,23 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   when `value` is already an `int` — the `equalTo(AttributeKey<Long>, int)`
   overload exists.
 
-## [Testing] Inline Conditional Expected Values
+## [Testing] Mode-Dependent Expected Values
 
-- Keep short conditional expected values directly in the assertion, especially
-  span names and attribute values:
+- Database instrumentation tests run either the default or stable database
+  semconv mode. Do not add `database/dup` test tasks or expand assertions to
+  cover both modes at once.
+- Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
+  carry the same expected value:
+
+  ```java
+  equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH);
+  equalTo(maybeStable(DB_OPERATION), "info");
+  ```
+
+  Do not replace these with separate null-gated assertions for the old and
+  stable keys.
+- Keep short conditional expected values directly in the assertion when the
+  expected values differ by mode or an attribute exists in only one mode:
 
   ```java
   span.hasName(emitStableMessagingSemconv() ? "send orders" : "orders publish");
@@ -81,9 +94,32 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   ```
 
 - Do not extract the ternary into a helper such as `spanName(...)`,
-  `oldOrExperimental(value)`, or `expectedNamespace()`. Inline it even when
-  several assertions repeat the same condition. Seeing both expected values at
-  the assertion is more useful than deduplicating a short expression.
+  `oldOrExperimental(value)`, or `expectedNamespace()` when no established
+  semconv utility applies. Seeing both expected values at the assertion is more
+  useful than deduplicating a short expression.
+- Do not hide mode-dependent expectations in a helper that builds or augments a
+  `List<AttributeAssertion>`, such as `databaseAttributes()`, and passes it to
+  an assertion helper. Keep each individual attribute expectation at the
+  assertion site; retain helpers only for genuinely nontrivial derivation:
+
+  ```java
+  // Bad: the helper conditionally builds a list and hides the expected shape.
+  private static List<AttributeAssertion> databaseAttributes() {
+    List<AttributeAssertion> attributes = new ArrayList<>();
+    if (emitStableDatabaseSemconv()) {
+      attributes.add(equalTo(DB_SYSTEM_NAME, ELASTICSEARCH));
+    }
+    return attributes;
+  }
+  assertNodeListTarget(span, databaseAttributes());
+
+  // Good: each mode-dependent expectation remains visible at the assertion.
+  assertNodeListTarget(
+      span,
+      equalTo(DB_SYSTEM, emitStableDatabaseSemconv() ? null : ELASTICSEARCH),
+      equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null));
+  ```
+
 - The conventional `experimental(value)` helper is the one exception: keep it.
   Its name unambiguously means the value is expected only when experimental
   attributes are enabled, and `null` otherwise, so it reads clearer than the
