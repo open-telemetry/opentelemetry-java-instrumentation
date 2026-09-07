@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -17,6 +18,10 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -24,14 +29,12 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Stream;
@@ -176,17 +179,6 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
     HealthResponse healthResponse = client.cluster().health();
     assertThat(healthResponse).isNotNull();
 
-    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
-    assertions.add(equalTo(NETWORK_PEER_ADDRESS, null));
-    assertions.add(equalTo(NETWORK_PEER_PORT, null));
-    assertions.add(equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? "os.example" : null));
-    assertions.add(
-        equalTo(
-            SERVER_PORT,
-            emitStableDatabaseSemconv() && expectedPort != null
-                ? Long.valueOf(expectedPort)
-                : null));
-
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -199,7 +191,20 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                                         + (expectedPort == null ? "" : ":" + expectedPort)
                                     : "GET")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(assertions)));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "GET"),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(NETWORK_PEER_ADDRESS, null),
+                                equalTo(NETWORK_PEER_PORT, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? "os.example" : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    (emitStableDatabaseSemconv() && expectedPort != null)
+                                        ? Long.valueOf(expectedPort)
+                                        : null))));
   }
 
   private static Stream<Arguments> bareAuthorityCases() {
@@ -257,14 +262,6 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
     countDownLatch.await();
     HealthResponse healthResponse = responseCompletableFuture.get();
     assertThat(healthResponse).isNotNull();
-    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
-    assertions.add(equalTo(NETWORK_TYPE, null));
-    assertions.add(
-        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? httpHost.getHost() : null));
-    assertions.add(
-        equalTo(
-            SERVER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null));
-
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -277,7 +274,19 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                                     : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(assertions),
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "GET"),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)

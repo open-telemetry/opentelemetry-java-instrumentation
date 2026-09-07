@@ -6,11 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,10 +23,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.stream.IntStream;
 import javax.net.ssl.SSLContext;
@@ -224,17 +227,8 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
     assertErrorTypeSpan();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private void assertErrorTypeSpan() {
-    List<AttributeAssertion> databaseAssertions =
-        databaseAttributes("GET", "GET /invalid-index/_doc/1");
-    databaseAssertions.add(equalTo(NETWORK_TYPE, null));
-    databaseAssertions.add(
-        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? httpHost.getHost() : null));
-    databaseAssertions.add(
-        equalTo(
-            SERVER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null));
-    databaseAssertions.add(equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "404" : null));
-
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -245,7 +239,20 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
                                     ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
                                     : "GET")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(databaseAssertions),
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "GET"),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /invalid-index/_doc/1"),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null),
+                                equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "404" : null)),
                     span ->
                         span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
