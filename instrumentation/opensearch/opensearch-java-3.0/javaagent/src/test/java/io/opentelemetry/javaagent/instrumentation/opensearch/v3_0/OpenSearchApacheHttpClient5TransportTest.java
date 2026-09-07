@@ -233,10 +233,7 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
     databaseAssertions.add(
         equalTo(
             SERVER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null));
-    List<AttributeAssertion> assertions = databaseAssertions;
-    if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(ERROR_TYPE, "404"));
-    }
+    databaseAssertions.add(equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "404" : null));
 
     getTesting()
         .waitAndAssertTraces(
@@ -248,7 +245,7 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
                                     ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
                                     : "GET")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(assertions),
+                            .hasAttributesSatisfyingExactly(databaseAssertions),
                     span ->
                         span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
