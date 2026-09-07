@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.ACTOR_REQUEST_TARGET;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.CLUSTER_TARGET;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.POOL_REQUEST_TARGET;
-import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
@@ -16,9 +15,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import redis.ActorRequest;
@@ -33,6 +30,7 @@ import redis.SentinelMonitoredRedisClient;
 import scala.Tuple2;
 import scala.collection.Iterable;
 import scala.collection.Iterator;
+import scala.collection.mutable.HashMap;
 
 public class RediscalaServerTargets {
 
@@ -70,9 +68,8 @@ public class RediscalaServerTargets {
   private static final Method MUTABLE_POOL_CONNECTIONS =
       findMethod(MUTABLE_POOL_CLASS, "redisServerConnections");
 
-  public static final VirtualField<scala.collection.mutable.HashMap<?, ?>, MutablePoolState>
-      MUTABLE_POOL_STATE =
-          VirtualField.find(scala.collection.mutable.HashMap.class, MutablePoolState.class);
+  public static final VirtualField<HashMap<?, ?>, MutablePoolState> MUTABLE_POOL_STATE =
+      VirtualField.find(HashMap.class, MutablePoolState.class);
 
   @Nullable
   static final Class<?> SENTINEL_MASTER_SLAVES_CLASS = findClass(SENTINEL_MASTER_SLAVES_CLASS_NAME);
@@ -298,12 +295,11 @@ public class RediscalaServerTargets {
       logger.log(FINE, "Failed to read the configured rediscala mutable pool servers", e);
       return null;
     }
-    if (!(connections instanceof scala.collection.mutable.HashMap)) {
+    if (!(connections instanceof HashMap)) {
       return null;
     }
 
-    MutablePoolState state =
-        MUTABLE_POOL_STATE.get((scala.collection.mutable.HashMap<?, ?>) connections);
+    MutablePoolState state = MUTABLE_POOL_STATE.get((HashMap<?, ?>) connections);
     if (state == null) {
       return null;
     }
@@ -322,24 +318,17 @@ public class RediscalaServerTargets {
       logger.log(FINE, "Failed to initialize rediscala mutable pool server state", e);
       return;
     }
-    if (!(connections instanceof scala.collection.mutable.HashMap)) {
+    if (!(connections instanceof HashMap)) {
       return;
     }
 
-    scala.collection.mutable.HashMap<?, ?> map =
-        (scala.collection.mutable.HashMap<?, ?>) connections;
-    MutablePoolState state;
-    try {
-      state = MutablePoolState.fromMap(map);
-    } catch (RuntimeException e) {
-      logger.log(FINE, "Failed to snapshot rediscala mutable pool servers", e);
-      state = MutablePoolState.unavailable();
-    }
+    HashMap<?, ?> map = (HashMap<?, ?>) connections;
+    MutablePoolState state = MutablePoolState.fromMap(map);
     MUTABLE_POOL_STATE.set(map, state);
   }
 
   @Nullable
-  public static MutablePoolState getMutablePoolState(scala.collection.mutable.HashMap<?, ?> map) {
+  public static MutablePoolState getMutablePoolState(HashMap<?, ?> map) {
     return MUTABLE_POOL_STATE.get(map);
   }
 
@@ -352,130 +341,52 @@ public class RediscalaServerTargets {
     return RedisServerTarget.endpoint(redisServer.host(), redisServer.port());
   }
 
-  // Scala's generic Map API is erased at the Java boundary, so membership is checked by the
-  // library implementation using the exact key object.
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  public static boolean contains(scala.collection.mutable.HashMap<?, ?> map, @Nullable Object key) {
-    return ((scala.collection.Map) map).contains(key);
-  }
-
   public static final class MutablePoolState {
-    private static final Snapshot UNAVAILABLE = new Snapshot(false, emptyMap(), null);
-
     // Supported pool writers hold the library-owned carrier or pool monitor through the map commit.
-    private volatile Snapshot snapshot;
+    @Nullable private volatile RedisServerTarget target;
 
-    private MutablePoolState(Snapshot snapshot) {
-      this.snapshot = snapshot;
+    private MutablePoolState() {}
+
+    static MutablePoolState fromMap(HashMap<?, ?> map) {
+      MutablePoolState state = new MutablePoolState();
+      state.refresh(map);
+      return state;
     }
 
-    static MutablePoolState fromMap(scala.collection.mutable.HashMap<?, ?> map) {
+    @Nullable
+    RedisServerTarget target() {
+      return target;
+    }
+
+    public void markUnavailable() {
+      target = null;
+    }
+
+    public void refresh(HashMap<?, ?> map) {
+      try {
+        target = snapshot(map);
+      } catch (RuntimeException e) {
+        markUnavailable();
+        logger.log(FINE, "Failed to snapshot rediscala mutable pool servers", e);
+      }
+    }
+
+    @Nullable
+    private static RedisServerTarget snapshot(HashMap<?, ?> map) {
       List<String> endpoints = new ArrayList<>();
       Iterator<?> iterator = map.iterator();
       while (iterator.hasNext()) {
         Object entry = iterator.next();
         if (!(entry instanceof Tuple2)) {
-          return unavailable();
+          return null;
         }
         String endpoint = endpoint(((Tuple2<?, ?>) entry)._1());
         if (endpoint == null) {
-          return unavailable();
+          return null;
         }
         endpoints.add(endpoint);
       }
-      return new MutablePoolState(Snapshot.available(endpoints));
-    }
-
-    private static MutablePoolState unavailable() {
-      return new MutablePoolState(UNAVAILABLE);
-    }
-
-    @Nullable
-    RedisServerTarget target() {
-      Snapshot current = snapshot;
-      return current.available ? current.target : null;
-    }
-
-    public void add(String endpoint) {
-      update(endpoint, 1);
-    }
-
-    public void remove(String endpoint) {
-      update(endpoint, -1);
-    }
-
-    public void markUnavailable() {
-      snapshot = UNAVAILABLE;
-    }
-
-    public boolean isAvailable() {
-      return snapshot.available;
-    }
-
-    private void update(String endpoint, int delta) {
-      if (endpoint == null) {
-        markUnavailable();
-        return;
-      }
-
-      Snapshot current = snapshot;
-      if (!current.available) {
-        return;
-      }
-
-      Map<String, Integer> counts = new HashMap<>(current.counts);
-      int count = counts.getOrDefault(endpoint, 0);
-      int updatedCount = count + delta;
-      if (updatedCount < 0) {
-        markUnavailable();
-        return;
-      }
-      if (updatedCount == 0) {
-        counts.remove(endpoint);
-      } else {
-        counts.put(endpoint, updatedCount);
-      }
-
-      Snapshot updated;
-      try {
-        updated = Snapshot.available(counts);
-      } catch (RuntimeException e) {
-        markUnavailable();
-        return;
-      }
-      snapshot = updated;
-    }
-
-    private static final class Snapshot {
-      private final boolean available;
-      private final Map<String, Integer> counts;
-      @Nullable private final RedisServerTarget target;
-
-      private Snapshot(
-          boolean available, Map<String, Integer> counts, @Nullable RedisServerTarget target) {
-        this.available = available;
-        this.counts = counts;
-        this.target = target;
-      }
-
-      private static Snapshot available(List<String> endpoints) {
-        Map<String, Integer> counts = new HashMap<>();
-        for (String endpoint : endpoints) {
-          counts.put(endpoint, counts.getOrDefault(endpoint, 0) + 1);
-        }
-        return available(counts);
-      }
-
-      private static Snapshot available(Map<String, Integer> counts) {
-        List<String> endpoints = new ArrayList<>();
-        for (Map.Entry<String, Integer> entry : counts.entrySet()) {
-          for (int i = 0; i < entry.getValue(); i++) {
-            endpoints.add(entry.getKey());
-          }
-        }
-        RedisServerTarget target = RedisServerTarget.ofUnorderedEndpoints(endpoints);
-        return new Snapshot(true, Collections.unmodifiableMap(counts), target);
-      }
+      return RedisServerTarget.ofUnorderedEndpoints(endpoints);
     }
   }
 

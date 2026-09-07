@@ -5,39 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
-import io.lettuce.core.protocol.RedisCommand;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import javax.annotation.Nullable;
+import reactor.core.CoreSubscriber;
 
 public final class LettuceReactiveCommandContext {
-  private static final ThreadLocal<Deque<RedisCommand<?, ?, ?>>> reactiveCommands =
-      new ThreadLocal<>();
+  static final Object HANDLER_KEY = LettuceReactiveCommandContext.class;
 
-  public static void enter(RedisCommand<?, ?, ?> command) {
-    Deque<RedisCommand<?, ?, ?>> commands = reactiveCommands.get();
-    if (commands == null) {
-      commands = new ArrayDeque<>();
-      reactiveCommands.set(commands);
-    }
-    commands.push(command);
-  }
-
-  public static void exit() {
-    Deque<RedisCommand<?, ?, ?>> commands = reactiveCommands.get();
-    if (commands == null) {
-      return;
-    }
-    commands.poll();
-    if (commands.isEmpty()) {
-      reactiveCommands.remove();
-    }
-  }
-
-  @Nullable
-  public static RedisCommand<?, ?, ?> current() {
-    Deque<RedisCommand<?, ?, ?>> commands = reactiveCommands.get();
-    return commands == null ? null : commands.peek();
+  public static LettuceReactiveCommandHandler handler(CoreSubscriber<?> subscriber) {
+    Object value = subscriber.currentContext().getOrDefault(HANDLER_KEY, null);
+    return value instanceof LettuceReactiveCommandHandler
+        ? (LettuceReactiveCommandHandler) value
+        : null;
   }
 
   private LettuceReactiveCommandContext() {}

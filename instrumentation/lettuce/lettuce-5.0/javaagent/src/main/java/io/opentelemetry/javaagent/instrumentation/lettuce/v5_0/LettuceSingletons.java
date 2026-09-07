@@ -172,26 +172,10 @@ public class LettuceSingletons {
       commandTarget = CONNECTION_TARGET.get(connectionHandler);
     }
 
-    // Reactive commands previously copied endpoint metadata only when
-    // RedisChannelHandler.getChannelWriter() returned a DefaultEndpoint directly. That works with
-    // default ClientOptions through Lettuce 6.4. CommandExpiryWriter can also appear in Lettuce
-    // 5.1-6.4 when command timeouts are explicitly enabled.
-    //
-    // Starting with Lettuce 6.5, command timeouts are enabled by default, so getChannelWriter()
-    // returns CommandExpiryWriter instead of its DefaultEndpoint delegate. Lettuce 7 can return
-    // MaintenanceAwareExpiryWriter, and CommandListenerWriter can add another outer wrapper.
-    // Although these writers eventually delegate write() to DefaultEndpoint, the old
-    // "channelWriter instanceof DefaultEndpoint" check is performed against the outer writer
-    // object and therefore evaluates to false.
-    //
-    // As a result, the old branch was skipped and COMMAND_ADDRESS and COMMAND_DATABASE_INDEX
-    // remained null. Reactive spans are started later by Reactor doOnSubscribe, where the
-    // attributes getter reads these command fields, so the spans lacked server.address,
-    // server.port, db.namespace, and the endpoint suffix in the span name.
-    //
-    // LettuceClientInstrumentation now stores the RedisURI metadata directly on the
+    // LettuceClientInstrumentation stores the RedisURI metadata directly on the
     // RedisChannelHandler while the connection and original DefaultEndpoint are both available.
-    // Reading CONNECTION_* here avoids depending on the concrete channel-writer wrapper chain.
+    // Reading CONNECTION_* here avoids depending on the concrete channel-writer wrapper chain and
+    // makes the metadata available when the reactive span is started.
     COMMAND_ADDRESS.set(command, CONNECTION_ADDRESS.get(connectionHandler));
     COMMAND_DATABASE_INDEX.set(command, CONNECTION_DATABASE_INDEX.get(connectionHandler));
     COMMAND_TARGET.set(command, commandTarget);
