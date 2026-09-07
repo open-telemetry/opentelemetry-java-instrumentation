@@ -22,10 +22,8 @@ import javax.annotation.Nullable;
 // environment.
 public class CouchbaseServerTargets {
 
-  // VirtualField cannot retain the generic type of the driver's seed-node set.
-  @SuppressWarnings("rawtypes")
-  private static final VirtualField<Set, CouchbaseServerTarget> SEED_NODE_TARGETS =
-      VirtualField.find(Set.class, CouchbaseServerTarget.class);
+  private static final VirtualField<SeedNode, CouchbaseServerTarget> SEED_NODE_TARGETS =
+      VirtualField.find(SeedNode.class, CouchbaseServerTarget.class);
 
   private static final VirtualField<Core, CouchbaseServerTarget> CORE_TARGETS =
       VirtualField.find(Core.class, CouchbaseServerTarget.class);
@@ -33,7 +31,11 @@ public class CouchbaseServerTargets {
   public static void registerSeedNodes(
       Set<SeedNode> seedNodes, @Nullable CouchbaseServerTarget target) {
     if (target != null) {
-      SEED_NODE_TARGETS.set(seedNodes, target);
+      for (SeedNode seedNode : seedNodes) {
+        if (seedNode != null) {
+          SEED_NODE_TARGETS.set(seedNode, target);
+        }
+      }
     }
   }
 
@@ -48,7 +50,15 @@ public class CouchbaseServerTargets {
     if (seedNodes == null) {
       return;
     }
-    CouchbaseServerTarget target = SEED_NODE_TARGETS.get(seedNodes);
+    CouchbaseServerTarget target = null;
+    for (SeedNode seedNode : seedNodes) {
+      if (seedNode != null) {
+        target = SEED_NODE_TARGETS.get(seedNode);
+        if (target != null) {
+          break;
+        }
+      }
+    }
     if (target == null && environment != null) {
       target = target(seedNodes, environment.securityConfig().tlsEnabled());
     }
