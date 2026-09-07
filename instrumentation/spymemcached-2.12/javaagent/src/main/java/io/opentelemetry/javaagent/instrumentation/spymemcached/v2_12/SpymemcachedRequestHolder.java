@@ -81,7 +81,7 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
     MemcachedNode node = operation.getHandlingNode();
     for (SpymemcachedRequest request : operationAssociations.requests()) {
       Collection<String> operationKeys = operationAssociations.getRequestKeys(request);
-      if (!holder.retry) {
+      if (!holder.retry || !operationKeys.isEmpty()) {
         request.setHandlingNode(node, operationKeys);
       } else {
         RetryState retryState = holder.retries.get(request);
@@ -108,8 +108,7 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
     for (Map.Entry<SpymemcachedRequest, RetryState> entry : retries.entrySet()) {
       RetryState retry = entry.getValue();
       if (retry.hasMultipleHandlingNodes
-          || (retry.keys.isEmpty()
-              && associations.hasRequestKeysOutside(entry.getKey(), retry.keys))) {
+          || associations.hasRequestKeysOutside(entry.getKey(), retry.keys)) {
         entry.getKey().clearHandlingNode();
       } else if (retry.handlingNode != null) {
         entry.getKey().setRetryHandlingNode(retry.handlingNode);

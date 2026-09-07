@@ -103,7 +103,7 @@ class SpymemcachedRequestTest {
   }
 
   @Test
-  void partialBulkRetryUsesRetryNode() {
+  void partialBulkRetryAcrossNodesHasNoHandlingNode() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
     Operation initialOperation = operation("one.example", 11211, "one", "two");
@@ -120,7 +120,7 @@ class SpymemcachedRequestTest {
     }
 
     request.captureHandlingNodeAddress();
-    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("two.example", 11212));
+    assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
   @Test
@@ -224,7 +224,7 @@ class SpymemcachedRequestTest {
   }
 
   @Test
-  void sequentialPartialRetriesUseLastHandlingNode() {
+  void sequentialPartialRetriesAcrossNodesHaveNoHandlingNode() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
     Operation initialOperation = operation("one.example", 11211, "one", "two");
@@ -261,7 +261,7 @@ class SpymemcachedRequestTest {
     }
 
     request.captureHandlingNodeAddress();
-    assertThat(request.getHandlingNodeAddress()).isEqualTo(node("four.example", 11214));
+    assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
   @Test

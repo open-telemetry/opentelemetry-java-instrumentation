@@ -1844,7 +1844,7 @@ class SpymemcachedTest {
   }
 
   @Test
-  void partialBulkRetryUsesRetryNode() throws Exception {
+  void partialBulkRetryAcrossNodesHasNoPeer() throws Exception {
     List<InetSocketAddress> configuredNodes = asList(memcachedAddress, secondMemcachedAddress);
     ReentrantLock queueLock = new ReentrantLock();
     OperationQueueFactory lockableQueueFactory = () -> getLockableQueue(queueLock);
@@ -1859,8 +1859,6 @@ class SpymemcachedTest {
     MemcachedNode initialNode = nodes.get(0);
     List<String> keys = keysForNode(connection, initialNode, 2);
     String retryKey = keys.get(1);
-    MemcachedNode retryNode = nextNode(connection, retryKey, initialNode);
-    InetSocketAddress retryAddress = (InetSocketAddress) retryNode.getSocketAddress();
 
     BulkFuture<Map<String, Object>> future;
     queueLock.lock();
@@ -1899,24 +1897,10 @@ class SpymemcachedTest {
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? "get" : "getBulk"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? target
-                                    : retryAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? retryAddress.getAddress().getHostAddress()
-                                    : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? (long) retryAddress.getPort() : null),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : (long) retryAddress.getPort()))));
+                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? target : null),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
+                            equalTo(SERVER_PORT, null))));
   }
 
   @Test
