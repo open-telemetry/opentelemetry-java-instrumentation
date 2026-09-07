@@ -184,7 +184,7 @@ final class HbaseZookeeperTarget {
     }
     if (endpoint.charAt(0) != '['
         && endpoint.indexOf(':') != endpoint.lastIndexOf(':')
-        && HbaseServerEndpoint.isIpv6Address(endpoint)) {
+        && HbaseServerEndpoint.isIpv6Literal(endpoint)) {
       return "[" + endpoint + "]";
     }
     return endpoint.equals(canonicalEndpoint(endpoint, null)) ? endpoint : null;
