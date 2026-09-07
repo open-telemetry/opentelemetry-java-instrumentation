@@ -69,9 +69,11 @@ public abstract class AbstractSmokeTest<T> implements TelemetryRetrieverProvider
             options.jvmArgsEnvVarName,
             options.extraEnv,
             options.setServiceName,
+            options.logOutput,
             options.extraResources,
             options.extraPorts,
             options.waitStrategy,
+            options.entrypoint,
             options.command));
   }
 

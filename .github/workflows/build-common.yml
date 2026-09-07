@@ -417,10 +417,13 @@ jobs:
           - websphere
           - wildfly
           - other
+          - spring-aot
         exclude:
           - os: ${{ inputs.skip-windows-smoke-tests && 'windows-latest' || '' }}
           - os: windows-latest
             smoke-test-suite: websphere
+          - os: windows-latest
+            smoke-test-suite: spring-aot
       fail-fast: false
     steps:
       - name: Support long paths
