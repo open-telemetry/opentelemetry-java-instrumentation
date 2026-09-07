@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.internal;
 
 import static java.util.Arrays.asList;
-import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
@@ -80,7 +80,7 @@ public class InternalMetricsDefinitions {
     }
 
     try (InputStream input = classLoader.getResourceAsStream(path)) {
-      logger.log(INFO, "loading embedded JMX rules from {0}", path);
+      logger.log(FINE, "loading embedded JMX rules from {0}", path);
       List<MetricDef> metricDefs = RuleParser.get().parseMetricDefs(input);
       loadedRules.add(new RuleSet(metricDefs, stable, handlerRegistry));
     } catch (IOException e) {
@@ -130,6 +130,11 @@ public class InternalMetricsDefinitions {
     return result;
   }
 
+  /**
+   * Get all internal metrics definitions.
+   *
+   * @return list of all internal metrics definitions, may be empty.
+   */
   public List<MetricDef> getAllMetricDefs() {
     List<MetricDef> result = new ArrayList<>();
     for (RuleSet ruleSet : loadedRules) {

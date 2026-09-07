@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
+import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -204,14 +205,13 @@ public final class JmxTelemetryBuilder {
 
     if (logger.isLoggable(FINE)) {
       // making it easier to debug include/exclude patterns
-      registeredMetrics.forEach(
-          m ->
-              logger.log(
-                  FINE,
-                  () ->
-                      String.format(
-                          "JMX metric '%s' %s by configuration%n",
-                          m, effectiveMetricsFilter.matches(m) ? "included" : "excluded")));
+      for (String metric : registeredMetrics.stream().sorted().collect(toList())) {
+        String msg =
+            String.format(
+                "JMX metric '%s' %s by configuration",
+                metric, effectiveMetricsFilter.matches(metric) ? "included" : "excluded");
+        logger.log(FINE, msg);
+      }
     }
 
     return new JmxTelemetry(
