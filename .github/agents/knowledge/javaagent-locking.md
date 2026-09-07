@@ -50,23 +50,28 @@ JVM class-loading locks are an exception. A library-owned or carrier-owned monit
 when instrumentation must coordinate with the library or with other instrumentation using the same
 carrier, but that ownership and lock ordering must be verified and documented.
 
-## Preserve Capture and Terminal Semantics
+## Preserve Capture and Completion Semantics
 
-If capture and publication are split, reserve ownership before reading raced input and commit only a
-valid snapshot. Every reservation needs an abort or recovery path if capture fails or the updater
-disappears.
+Keep these two questions separate:
 
-Use generation discard only for superseded complete replacements. Preserve independent additive
-evidence, such as carrier identity and peer metadata, when the contract requires it.
+1. **What information belongs to the operation?** Capture it at the lifecycle point required by the
+   telemetry contract.
+2. **Which call is responsible for finishing the operation?** Claim cleanup and completion exactly
+   once.
 
-Separate terminal ownership from optional enrichment. Claim mandatory cleanup and completion exactly
-once, then perform instrumenter, SDK, callback, and scope effects outside the metadata lock.
-Preserve thread-affine scope closure, synchronous throws, application errors, and library-owned
-timeout and error identity.
+If capturing information and publishing it require separate steps, reserve the update before
+reading input that can change. Publish only a valid snapshot, and abort or recover the reservation
+if capture fails or the updater disappears. Use generation checks only to discard a superseded
+complete replacement; preserve independent facts, such as carrier identity and peer metadata, when
+the contract requires them.
 
-Global hook installation also needs an explicit ownership, composition, failure, reentrancy, and
-reset policy. Do not mark a hook installed until the complete transition succeeds, and define
-rollback for partial installation.
+Do not hold the metadata lock while performing instrumenter, SDK, callback, or scope operations.
+After claiming terminal work, perform those effects outside the lock while preserving thread-affine
+scope closure, synchronous throws, application errors, and library-owned timeout and error identity.
+
+Global hooks need the same care: define who owns the previous hook, how hooks compose, and what
+happens on reentrancy, reset, or partial failure. Do not report a hook as installed until the
+complete transition succeeds, and roll back changes that were made before a failure.
 
 ## Test Reachable Guarantees
 
