@@ -276,7 +276,7 @@ site.
 | `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
 
-### Inline ternary in `equalTo(...)` with `null` for "absent"
+### Inline conditional expected values
 
 Push the ternary as deep as possible — into the `equalTo` value or single attribute key —
 rather than duplicating two whole `hasAttributesSatisfyingExactly(...)` blocks under a
@@ -285,7 +285,18 @@ rather than duplicating two whole `hasAttributesSatisfyingExactly(...)` blocks u
 ```java
 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
 equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)
-equalTo(SOME_KEY, EXPERIMENTAL_ATTRIBUTES ? "value" : null)
+equalTo(SOME_KEY, experimental("value"))
 span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
 .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
 ```
+
+Keep short conditional expected values directly in the assertion, even when several
+assertions repeat the same condition. Do not extract the branch selection into helpers such
+as `spanName(...)`, `oldOrExperimental(value)`, or `expectedNamespace()`. Those helpers hide
+the expected values at the point where a reader needs them. The conventional
+`experimental(value)` helper is the exception — it unambiguously means the value is expected
+only when experimental attributes are enabled, and `null` otherwise, so keep it instead of
+inlining `EXPERIMENTAL_ATTRIBUTES ? value : null`.
+
+A helper may obtain the mode flag or perform nontrivial derivation from test data. It should
+not choose between short expected values on the assertion's behalf.
