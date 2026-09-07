@@ -51,9 +51,11 @@ class JmxTelemetryTest {
   @Test
   void knownValidYaml() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    // disable automatic metrics loading to only use provided rules from classpath
+    builder.internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
     builder.addRules(classpathRules("jmx/rules/jvm-test.yaml"));
-    builder.internalMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm-test").build());
-    JmxTelemetry telemetry = builder.build();
+    builder.addRules(classpathRules("jmx/rules/jvm-test_unstable.yaml"));
+    JmxTelemetry telemetry = builder.build(testDefinitions());
     assertThat(telemetry).isNotNull();
 
     assertThat(builder.getRegisteredMetrics())
@@ -62,7 +64,9 @@ class JmxTelemetryTest {
             "jvm.memory.used",
             "jvm.memory.limit",
             "jvm.thread.count",
-            "jvm.memory.used_after_last_gc");
+            "jvm.memory.used_after_last_gc",
+            "jvm.file_descriptor.count",
+            "jvm.file_descriptor.limit");
 
     assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
         .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
@@ -77,11 +81,9 @@ class JmxTelemetryTest {
   void metricsExclude() {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
-            // disable stable metrics loading to prevent interfering with test
-            .internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build())
             .addRules(classpathRules("jmx/rules/jvm-test.yaml"));
     builder.setMetrics(IncludeExclude.builder().setExcluded("jvm.thread.count").build());
-    JmxTelemetry telemetry = builder.build();
+    JmxTelemetry telemetry = builder.build(testDefinitions());
     assertThat(telemetry).isNotNull();
 
     assertThat(builder.getRegisteredMetrics())
@@ -111,7 +113,7 @@ class JmxTelemetryTest {
             .setIncluded("jvm.memory.used")
             .setExcluded("jvm.thread.count")
             .build());
-    JmxTelemetry telemetry = builder.build();
+    JmxTelemetry telemetry = builder.build(testDefinitions());
     assertThat(telemetry).isNotNull();
 
     assertThat(builder.getRegisteredMetrics())
@@ -205,11 +207,12 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             .internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
-    builder.build();
+    builder.build(testDefinitions());
     assertThat(builder.getRegisteredMetrics()).isEmpty();
   }
 
   private static InternalMetricsDefinitions testDefinitions() {
+    // provides a test-only implementation that allows to avoid loading existing metrics definitions
     return new InternalMetricsDefinitions(JmxTelemetryTest.class.getClassLoader()) {
       @Override
       public Set<String> getSupportedSystems() {

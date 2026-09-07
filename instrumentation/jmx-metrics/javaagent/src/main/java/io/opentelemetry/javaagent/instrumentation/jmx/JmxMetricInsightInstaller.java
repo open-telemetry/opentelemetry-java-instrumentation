@@ -72,9 +72,11 @@ public class JmxMetricInsightInstaller implements AgentListener {
       // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
       jmx.internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
 
-      // TODO: rename config option to 'metrics.experimental.included' ???
       List<String> unstableInclude =
-          config.get("experimental").getScalarList("included", String.class, emptyList());
+          config
+              .get("metrics")
+              .get("experimental")
+              .getScalarList("included", String.class, emptyList());
 
       if (!unstableInclude.isEmpty()) {
         // only include explicitly opted-in, others will be excluded
