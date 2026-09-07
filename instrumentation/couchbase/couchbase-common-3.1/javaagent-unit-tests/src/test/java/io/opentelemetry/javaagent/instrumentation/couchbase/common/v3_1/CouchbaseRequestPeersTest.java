@@ -13,7 +13,7 @@ import static org.mockito.Mockito.mock;
 
 import com.couchbase.client.core.cnc.RequestSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Peer;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Scope;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.RequestPeerScope;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -26,7 +26,7 @@ class CouchbaseRequestPeersTest {
     assumeTrue(emitStableDatabaseSemconv());
     RequestSpan parent = mock(RequestSpan.class);
     RequestSpan otherParent = mock(RequestSpan.class);
-    Scope scope =
+    RequestPeerScope scope =
         CouchbaseRequestPeers.open(
             parent,
             new InetSocketAddress(
@@ -48,12 +48,12 @@ class CouchbaseRequestPeersTest {
     assumeTrue(emitStableDatabaseSemconv());
     RequestSpan outerParent = mock(RequestSpan.class);
     RequestSpan innerParent = mock(RequestSpan.class);
-    Scope outer =
+    RequestPeerScope outer =
         CouchbaseRequestPeers.open(
             outerParent,
             new InetSocketAddress(
                 InetAddress.getByAddress(new byte[] {(byte) 192, 0, 2, 1}), 11210));
-    Scope inner =
+    RequestPeerScope inner =
         CouchbaseRequestPeers.open(
             innerParent,
             new InetSocketAddress(
@@ -70,7 +70,7 @@ class CouchbaseRequestPeersTest {
   void retryCanCaptureAReplacementPeer() throws UnknownHostException {
     assumeTrue(emitStableDatabaseSemconv());
     RequestSpan parent = mock(RequestSpan.class);
-    Scope first =
+    RequestPeerScope first =
         CouchbaseRequestPeers.open(
             parent,
             new InetSocketAddress(
@@ -78,7 +78,7 @@ class CouchbaseRequestPeersTest {
     assertThat(CouchbaseRequestPeers.consume(parent).getAddress()).isEqualTo("192.0.2.1");
     first.close();
 
-    Scope retry =
+    RequestPeerScope retry =
         CouchbaseRequestPeers.open(
             parent,
             new InetSocketAddress(

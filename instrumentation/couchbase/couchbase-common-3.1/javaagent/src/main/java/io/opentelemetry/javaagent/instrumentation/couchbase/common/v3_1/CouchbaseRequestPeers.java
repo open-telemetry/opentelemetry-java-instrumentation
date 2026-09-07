@@ -16,10 +16,11 @@ import javax.annotation.Nullable;
 
 public class CouchbaseRequestPeers {
 
-  private static final ThreadLocal<Deque<Scope>> current = new ThreadLocal<>();
+  private static final ThreadLocal<Deque<RequestPeerScope>> current = new ThreadLocal<>();
 
   @Nullable
-  public static Scope open(@Nullable RequestSpan parent, @Nullable SocketAddress remoteAddress) {
+  public static RequestPeerScope open(
+      @Nullable RequestSpan parent, @Nullable SocketAddress remoteAddress) {
     if (!emitStableDatabaseSemconv()
         || parent == null
         || !(remoteAddress instanceof InetSocketAddress)) {
@@ -29,8 +30,8 @@ public class CouchbaseRequestPeers {
     if (socketAddress.isUnresolved()) {
       return null;
     }
-    Scope scope = new Scope(parent, socketAddress);
-    Deque<Scope> scopes = current.get();
+    RequestPeerScope scope = new RequestPeerScope(parent, socketAddress);
+    Deque<RequestPeerScope> scopes = current.get();
     if (scopes == null) {
       scopes = new ArrayDeque<>();
       current.set(scopes);
@@ -44,11 +45,11 @@ public class CouchbaseRequestPeers {
     if (parent == null) {
       return null;
     }
-    Deque<Scope> scopes = current.get();
+    Deque<RequestPeerScope> scopes = current.get();
     if (scopes == null) {
       return null;
     }
-    Scope scope = scopes.peek();
+    RequestPeerScope scope = scopes.peek();
     if (scope == null || scope.parent != parent || scope.consumed) {
       return null;
     }
@@ -76,19 +77,19 @@ public class CouchbaseRequestPeers {
     }
   }
 
-  public static class Scope {
+  public static class RequestPeerScope {
 
     private final RequestSpan parent;
     private final InetSocketAddress remoteAddress;
     private boolean consumed;
 
-    private Scope(RequestSpan parent, InetSocketAddress remoteAddress) {
+    private RequestPeerScope(RequestSpan parent, InetSocketAddress remoteAddress) {
       this.parent = parent;
       this.remoteAddress = remoteAddress;
     }
 
     public void close() {
-      Deque<Scope> scopes = current.get();
+      Deque<RequestPeerScope> scopes = current.get();
       if (scopes == null) {
         return;
       }

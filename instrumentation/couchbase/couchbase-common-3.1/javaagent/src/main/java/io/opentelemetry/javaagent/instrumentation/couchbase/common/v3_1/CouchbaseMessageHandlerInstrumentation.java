@@ -48,7 +48,7 @@ public class CouchbaseMessageHandlerInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static CouchbaseRequestPeers.Scope onEnter(
+    public static CouchbaseRequestPeers.RequestPeerScope onEnter(
         @Advice.Argument(0) ChannelHandlerContext context, @Advice.Argument(1) Object message) {
       if (!(message instanceof Request)) {
         return null;
@@ -58,7 +58,8 @@ public class CouchbaseMessageHandlerInstrumentation implements TypeInstrumentati
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable CouchbaseRequestPeers.Scope scope) {
+    public static void onExit(
+        @Advice.Enter @Nullable CouchbaseRequestPeers.RequestPeerScope scope) {
       if (scope != null) {
         scope.close();
       }
