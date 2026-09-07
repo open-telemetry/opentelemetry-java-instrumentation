@@ -23,6 +23,16 @@ import java.util.Set;
 import java.util.function.Function;
 import org.elasticsearch.client.Response;
 
+/**
+ * @deprecated The Elasticsearch REST library instrumentation is deprecated. The recommended
+ *     replacement is the <a
+ *     href="https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html">Elasticsearch
+ *     Java API Client's native OpenTelemetry support</a>, available in 7.17.20+ on the 7.x line and
+ *     8.10+. The javaagent remains supported and is separate from this library deprecation. May be
+ *     removed in the next minor release.
+ */
+@Deprecated // may be removed in the next minor release
+@SuppressWarnings("deprecation")
 public final class ElasticsearchRest7TelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.elasticsearch-rest-7.0";

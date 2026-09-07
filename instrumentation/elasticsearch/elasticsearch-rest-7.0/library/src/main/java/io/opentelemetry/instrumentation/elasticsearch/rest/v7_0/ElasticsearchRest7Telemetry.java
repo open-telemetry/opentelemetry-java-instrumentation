@@ -11,7 +11,18 @@ import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 
-/** Entrypoint for instrumenting Apache Elasticsearch Rest clients. */
+/**
+ * Entrypoint for instrumenting Apache Elasticsearch Rest clients.
+ *
+ * @deprecated The Elasticsearch REST library instrumentation is deprecated. The recommended
+ *     replacement is the <a
+ *     href="https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html">Elasticsearch
+ *     Java API Client's native OpenTelemetry support</a>, available in 7.17.20+ on the 7.x line and
+ *     8.10+. The javaagent remains supported and is separate from this library deprecation. May be
+ *     removed in the next minor release.
+ */
+@Deprecated // may be removed in the next minor release
+@SuppressWarnings("deprecation")
 public final class ElasticsearchRest7Telemetry {
   private final Instrumenter<ElasticsearchRestRequest, Response> instrumenter;
 

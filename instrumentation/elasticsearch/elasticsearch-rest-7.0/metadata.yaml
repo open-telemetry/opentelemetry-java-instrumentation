@@ -1,5 +1,11 @@
 display_name: Elasticsearch REST Client
-description: This instrumentation enables database client spans and database client metrics for Elasticsearch REST clients.
+description: >
+  This instrumentation enables database client spans and database client metrics for Elasticsearch
+  REST clients. The library artifacts are deprecated and may be removed in the next minor release.
+  The recommended replacement is the Elasticsearch Java API Client's native OpenTelemetry support
+  (https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
+  available in 7.17.20+ on the 7.x line and 8.10+. The javaagent remains supported and is separate
+  from this library deprecation.
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
