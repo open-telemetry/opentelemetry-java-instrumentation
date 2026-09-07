@@ -67,14 +67,7 @@ public final class DbServerEndpointUtil {
       return false;
     }
     char decoded = (char) ((high << 4) + low);
-    return decoded == ':'
-        || decoded == '@'
-        || decoded == '/'
-        || decoded == '?'
-        || decoded == '#'
-        || decoded == '\\'
-        || decoded == '%'
-        || decoded == '=';
+    return ":/?#[]@!$&'()*+,;=\\%".indexOf(decoded) >= 0;
   }
 
   static boolean isIpv4Literal(String host) {
