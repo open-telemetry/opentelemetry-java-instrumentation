@@ -363,9 +363,12 @@ public class SpringAiStreamTracing {
       if (newMedia == null || newMedia.isEmpty()) {
         return;
       }
+      // Match each previously captured occurrence at most once per chunk so that equal media
+      // within a chunk remain distinct while repeated chunks do not duplicate them.
+      List<MediaState> unmatchedMedia = new ArrayList<>(media);
       for (Media item : newMedia) {
         MediaState state = MediaState.create(item);
-        if (!media.contains(state)) {
+        if (!unmatchedMedia.remove(state)) {
           media.add(state);
         }
       }

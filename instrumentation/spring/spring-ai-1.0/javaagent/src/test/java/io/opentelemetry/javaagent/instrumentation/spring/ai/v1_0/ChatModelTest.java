@@ -34,6 +34,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -52,6 +53,8 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
@@ -385,8 +388,10 @@ class ChatModelTest {
     assertMultiChoiceEvents(spanContext);
   }
 
-  @Test
-  void streamDeduplicatesMediaByEmittedMetadata() {
+  @ParameterizedTest
+  @CsvSource({"1,1,1", "2,2,2", "1,2,2", "2,1,2", "0,2,2", "2,0,2"})
+  void streamPreservesMediaMultiplicityAcrossChunks(
+      int firstChunkCount, int secondChunkCount, int expectedCount) {
     Media firstMedia =
         Media.builder()
             .mimeType(Media.Format.IMAGE_PNG)
@@ -403,12 +408,21 @@ class ChatModelTest {
         Flux.just(
             response(
                 singletonList(
-                    generation(assistantMessage("", emptyList(), singletonList(firstMedia)), null)),
+                    generation(
+                        assistantMessage(
+                            "",
+                            emptyList(),
+                            List.of(firstMedia, secondMedia).subList(0, firstChunkCount)),
+                        null)),
                 ChatResponseMetadata.builder().id("response-id").model(MODEL).build()),
             response(
                 singletonList(
                     generation(
-                        assistantMessage("", emptyList(), singletonList(secondMedia)), "stop")),
+                        assistantMessage(
+                            "",
+                            emptyList(),
+                            List.of(secondMedia, firstMedia).subList(0, secondChunkCount)),
+                        "stop")),
                 ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build())));
 
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
@@ -422,7 +436,13 @@ class ChatModelTest {
                 .get(stringKey("gen_ai.output.messages")))
         .isEqualTo(
             messageSpanAttribute(
-                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"media\",\"mime_type\":\"image/png\",\"modality\":\"image\",\"name\":\"image\"}],\"finish_reason\":\"stop\"}]"));
+                "[{\"role\":\"assistant\",\"parts\":["
+                    + String.join(
+                        ",",
+                        nCopies(
+                            expectedCount,
+                            "{\"type\":\"media\",\"mime_type\":\"image/png\",\"modality\":\"image\",\"name\":\"image\"}"))
+                    + "],\"finish_reason\":\"stop\"}]"));
   }
 
   @Test
