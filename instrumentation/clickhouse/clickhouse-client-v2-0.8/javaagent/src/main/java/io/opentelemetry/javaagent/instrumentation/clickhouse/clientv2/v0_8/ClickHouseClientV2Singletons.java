@@ -15,6 +15,9 @@ import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndP
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -142,11 +145,18 @@ public class ClickHouseClientV2Singletons {
       }
       int firstColon = authority.indexOf(':');
       int lastColon = authority.lastIndexOf(':');
-      if (firstColon >= 0 && firstColon == lastColon) {
-        Integer port = parsePort(authority.substring(firstColon + 1));
-        return firstColon == 0 || port == null
-            ? null
-            : new EndpointTarget(scheme, authority.substring(0, firstColon), port);
+      if (firstColon >= 0) {
+        if (firstColon == lastColon) {
+          Integer port = parsePort(authority.substring(firstColon + 1));
+          return firstColon == 0 || port == null
+              ? null
+              : new EndpointTarget(scheme, authority.substring(0, firstColon), port);
+        }
+        Integer port = parsePort(authority.substring(lastColon + 1));
+        String address = authority.substring(0, lastColon);
+        if (port != null && isIpv6Literal(address)) {
+          return new EndpointTarget(scheme, address, port);
+        }
       }
       return new EndpointTarget(scheme, authority, null);
     }
@@ -175,6 +185,14 @@ public class ClickHouseClientV2Singletons {
         port = port * 10 + c - '0';
       }
       return port;
+    }
+
+    private static boolean isIpv6Literal(String value) {
+      try {
+        return InetAddress.getByName(value) instanceof Inet6Address;
+      } catch (UnknownHostException ignored) {
+        return false;
+      }
     }
 
     private static boolean hasUnsafePercentEscape(String authority) {

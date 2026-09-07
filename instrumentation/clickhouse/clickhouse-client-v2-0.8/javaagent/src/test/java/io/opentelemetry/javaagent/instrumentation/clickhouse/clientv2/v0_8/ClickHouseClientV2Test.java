@@ -162,6 +162,11 @@ class ClickHouseClientV2Test {
         null);
   }
 
+  @Test
+  void testConfiguredEndpointsExtractPortFromLegacyUnbracketedIpv6() throws Exception {
+    assertServerTarget(new HashSet<>(asList("http://2001:db8::1:9123")), "2001:db8::1", 9123);
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {
