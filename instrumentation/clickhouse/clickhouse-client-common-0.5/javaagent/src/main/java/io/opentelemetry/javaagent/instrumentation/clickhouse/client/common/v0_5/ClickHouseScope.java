@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 /** Container used to carry state between enter and exit advices */
 public class ClickHouseScope {
   private static final ContextKey<ClickHouseDbRequest> REQUEST_KEY =
-      ContextKey.named("clickhouse-db-request");
+      ContextKey.named("opentelemetry-clickhouse-db-request");
 
   private final ClickHouseDbRequest clickHouseDbRequest;
   private final Context context;
