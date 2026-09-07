@@ -21,6 +21,11 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_HOST_NAME;
+import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_HOST_PORT;
+import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_PEER_NAME;
+import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_PEER_PORT;
+import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_TRANSPORT;
 import static java.util.Collections.singleton;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -136,11 +141,11 @@ class CouchbaseClient31Test {
           satisfies(longKey("db.couchbase.server_duration"), val -> val.isNotNegative()));
     }
     if (emitOldDatabaseSemconv()) {
-      dispatchAttributes.add(satisfies(stringKey("net.host.name"), val -> val.isNotBlank()));
-      dispatchAttributes.add(satisfies(longKey("net.host.port"), val -> val.isPositive()));
-      dispatchAttributes.add(satisfies(stringKey("net.peer.name"), val -> val.isNotBlank()));
-      dispatchAttributes.add(satisfies(longKey("net.peer.port"), val -> val.isPositive()));
-      dispatchAttributes.add(equalTo(stringKey("net.transport"), "IP.TCP"));
+      dispatchAttributes.add(satisfies(NET_HOST_NAME, val -> val.isNotBlank()));
+      dispatchAttributes.add(satisfies(NET_HOST_PORT, val -> val.isPositive()));
+      dispatchAttributes.add(satisfies(NET_PEER_NAME, val -> val.isNotBlank()));
+      dispatchAttributes.add(satisfies(NET_PEER_PORT, val -> val.isPositive()));
+      dispatchAttributes.add(equalTo(NET_TRANSPORT, "IP.TCP"));
     }
     if (emitStableDatabaseSemconv()) {
       dispatchAttributes.add(
