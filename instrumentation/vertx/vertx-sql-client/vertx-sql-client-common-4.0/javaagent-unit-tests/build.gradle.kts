@@ -9,5 +9,6 @@ dependencies {
       ":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent",
     ),
   )
+  testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.vertx:vertx-sql-client:4.0.0")
 }

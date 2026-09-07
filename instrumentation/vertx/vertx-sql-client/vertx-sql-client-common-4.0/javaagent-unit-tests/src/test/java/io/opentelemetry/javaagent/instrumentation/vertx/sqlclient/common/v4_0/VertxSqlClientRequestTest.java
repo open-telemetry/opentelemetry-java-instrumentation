@@ -49,4 +49,19 @@ class VertxSqlClientRequestTest {
     assertThat(request.getConfiguredServerAddress()).isNull();
     assertThat(request.isInfoUpdated()).isFalse();
   }
+
+  @Test
+  void doesNotReplaceInfoAfterRequestIsFrozen() {
+    VertxSqlClientRequest request =
+        new VertxSqlClientRequest(
+            "select 1", VertxSqlClientInfo.notYetCaptured("postgresql"), false, null);
+
+    assertThat(request.freezeInfo()).isFalse();
+    assertThat(
+            request.replaceInfo(
+                VertxSqlClientInfo.create(
+                    new SqlConnectOptions().setHost("db.example").setPort(5432), "postgresql")))
+        .isFalse();
+    assertThat(request.getConfiguredServerAddress()).isNull();
+  }
 }

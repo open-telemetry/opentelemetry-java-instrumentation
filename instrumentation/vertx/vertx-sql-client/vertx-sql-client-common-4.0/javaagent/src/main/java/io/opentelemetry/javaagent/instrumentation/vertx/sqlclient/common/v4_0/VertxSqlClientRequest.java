@@ -15,6 +15,7 @@ public class VertxSqlClientRequest {
   @Nullable private final Long operationBatchSize;
   private final VertxSqlClientInfo initialInfo;
   private volatile VertxSqlClientInfo info;
+  private boolean frozen;
 
   public VertxSqlClientRequest(
       String queryText,
@@ -29,11 +30,16 @@ public class VertxSqlClientRequest {
   }
 
   public synchronized boolean replaceInfo(VertxSqlClientInfo info) {
-    if (this.info.isConfigurationCaptured()) {
+    if (frozen || this.info.isConfigurationCaptured()) {
       return false;
     }
     this.info = info;
     return true;
+  }
+
+  synchronized boolean freezeInfo() {
+    frozen = true;
+    return info != initialInfo;
   }
 
   public boolean isInfoUpdated() {
