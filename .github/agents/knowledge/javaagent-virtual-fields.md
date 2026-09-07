@@ -154,10 +154,10 @@ State state = STATE.get(carrier);
 STATE.set(carrier, update(state));
 ```
 
-If multiple threads can update the same carrier, make the attached state provide the required
-atomicity or synchronization, or redesign the ownership transition. Do not choose `Cache` solely
-for `computeIfAbsent` without first deciding whether concurrent updates and duplicate construction
-are actually valid for the instrumentation.
+When supported concurrent updates require a compound invariant, synchronize the attached state or
+redesign ownership. See [Lock Ownership and Critical Sections](javaagent-locking.md) for choosing the
+required guarantees. Do not choose `Cache` solely for `computeIfAbsent` without establishing whether
+concurrent updates and duplicate construction are valid.
 
 ## Review Guidance
 
