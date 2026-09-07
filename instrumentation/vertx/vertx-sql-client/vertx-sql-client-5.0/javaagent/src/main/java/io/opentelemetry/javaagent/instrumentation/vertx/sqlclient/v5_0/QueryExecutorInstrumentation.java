@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientInfoProvider;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory.updateSpanName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -72,51 +71,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class QueryAdvice {
     public static class AdviceScope implements VertxSqlClientSingletons.ConnectionDataListener {
-      static final class ConnectionInfoState {
-        private final Object lock = new Object();
-        private boolean terminal;
-        private boolean connectionInfoInProgress;
-        @Nullable private Throwable deferredTerminalThrowable;
-
-        boolean startConnectionInfo() {
-          synchronized (lock) {
-            if (terminal || connectionInfoInProgress) {
-              return false;
-            }
-            connectionInfoInProgress = true;
-            return true;
-          }
-        }
-
-        @Nullable
-        Throwable finishConnectionInfo() {
-          synchronized (lock) {
-            connectionInfoInProgress = false;
-            Throwable terminalThrowable = deferredTerminalThrowable;
-            deferredTerminalThrowable = null;
-            return terminalThrowable;
-          }
-        }
-
-        boolean claimTerminal(Throwable throwable) {
-          synchronized (lock) {
-            if (terminal) {
-              return false;
-            }
-            terminal = true;
-            if (connectionInfoInProgress) {
-              deferredTerminalThrowable = throwable;
-              return false;
-            }
-            return true;
-          }
-        }
-      }
-
       private final CallDepth callDepth;
       @Nullable private final VertxSqlClientInfoCapture infoCapture;
       @Nullable private final Promise<?> promise;
-      @Nullable private final ConnectionInfoState connectionInfoState;
       @Nullable private volatile VertxSqlClientRequest otelRequest;
       @Nullable private volatile Context context;
       @Nullable private Scope scope;
@@ -132,7 +89,6 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         this.callDepth = callDepth;
         this.infoCapture = infoCapture;
         this.promise = promiseInternal;
-        this.connectionInfoState = infoCapture == null ? null : new ConnectionInfoState();
       }
 
       public static AdviceScope start(Object queryExecutor, String methodName, Object[] arguments) {
@@ -221,34 +177,15 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
       @Override
       @Nullable
       public Context onConnectionInfo(VertxSqlClientInfo info) {
-        VertxSqlClientInfoCapture capture;
-        VertxSqlClientRequest request;
-        Context spanContext;
-        ConnectionInfoState state = connectionInfoState;
-        if (state == null || !state.startConnectionInfo()) {
+        VertxSqlClientInfoCapture capture = infoCapture;
+        if (capture != null) {
+          capture.removeConnectionRequest(this);
+        }
+        VertxSqlClientRequest request = otelRequest;
+        if (request == null) {
           return null;
         }
-        capture = infoCapture;
-        request = otelRequest;
-        spanContext = context;
-
-        try {
-          if (capture != null) {
-            capture.removeConnectionRequest(this);
-          }
-          if (request == null || spanContext == null) {
-            return null;
-          }
-          if (request.replaceInfo(info)) {
-            updateSpanName(spanContext, request);
-          }
-          return spanContext;
-        } finally {
-          Throwable terminalThrowable = state.finishConnectionInfo();
-          if (terminalThrowable != null) {
-            endSpan(terminalThrowable);
-          }
-        }
+        return request.replaceInfo(info) ? context : null;
       }
 
       private void endSpan(@Nullable Throwable throwable) {
@@ -271,12 +208,10 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
         Scope executionScope = scope;
         scope = null;
-        ConnectionInfoState state = connectionInfoState;
-        boolean endSpan = throwable != null && (state == null || state.claimTerminal(throwable));
         if (executionScope != null) {
           executionScope.close();
         }
-        if (endSpan) {
+        if (throwable != null) {
           if (infoCapture != null) {
             infoCapture.removeConnectionRequest(this);
           }

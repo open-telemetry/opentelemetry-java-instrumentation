@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQ
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -26,9 +27,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientUtil {
+
+  private static final Logger logger = Logger.getLogger(VertxSqlClientUtil.class.getName());
 
   private static final ThreadLocal<VertxSqlClientInfoProvider> clientInfoProvider =
       new ThreadLocal<>();
@@ -186,6 +190,14 @@ public class VertxSqlClientUtil {
       return null;
     }
     REQUEST_DATA.set(promise, null);
+    boolean infoUpdated = requestData.request.freezeInfo();
+    if (infoUpdated) {
+      try {
+        VertxSqlInstrumenterFactory.updateSpanName(requestData.context, requestData.request);
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to update Vert.x SQL span name", t);
+      }
+    }
     instrumenter.end(requestData.context, requestData.request, null, throwable);
     return requestData.parentContext.makeCurrent();
   }
