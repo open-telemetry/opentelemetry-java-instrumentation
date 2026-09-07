@@ -37,7 +37,7 @@ final class HbaseMasterTarget {
 
   @Nullable
   static String from(Configuration configuration, boolean usesConfiguredMasterPort) {
-    Integer defaultPort = defaultPort(configuration.get(MASTER_PORT_KEY), usesConfiguredMasterPort);
+    Integer defaultPort = defaultPort(configuration, usesConfiguredMasterPort);
     if (defaultPort == null) {
       return null;
     }
@@ -87,11 +87,20 @@ final class HbaseMasterTarget {
 
   @Nullable
   private static Integer defaultPort(
-      @Nullable String configuredPort, boolean usesConfiguredMasterPort) {
-    if (!usesConfiguredMasterPort || configuredPort == null || configuredPort.trim().equals("0")) {
+      Configuration configuration, boolean usesConfiguredMasterPort) {
+    if (!usesConfiguredMasterPort) {
       return DEFAULT_MASTER_PORT;
     }
-    return parsePort(configuredPort);
+    int configuredPort;
+    try {
+      configuredPort = configuration.getInt(MASTER_PORT_KEY, DEFAULT_MASTER_PORT);
+    } catch (NumberFormatException ignored) {
+      return null;
+    }
+    if (configuredPort == 0) {
+      return DEFAULT_MASTER_PORT;
+    }
+    return configuredPort > 0 && configuredPort <= 65535 ? configuredPort : null;
   }
 
   private static boolean detectConfiguredMasterPort() {

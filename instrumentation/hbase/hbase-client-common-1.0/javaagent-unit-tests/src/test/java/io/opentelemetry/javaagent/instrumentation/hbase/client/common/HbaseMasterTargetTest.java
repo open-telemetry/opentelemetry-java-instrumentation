@@ -53,6 +53,15 @@ class HbaseMasterTargetTest {
   }
 
   @Test
+  void supportsHexadecimalConfiguredPort() {
+    Configuration configuration = new Configuration(false);
+    configuration.set("hbase.masters", "master-a");
+    configuration.set("hbase.master.port", "0x4268");
+
+    assertThat(HbaseMasterTarget.from(configuration, true)).isEqualTo("master-a:17000");
+  }
+
+  @Test
   void rendersConfiguredHostname() {
     Configuration configuration = new Configuration(false);
     configuration.set("hbase.master.hostname", "master.test");
