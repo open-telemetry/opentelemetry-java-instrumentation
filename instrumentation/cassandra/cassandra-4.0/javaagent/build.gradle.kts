@@ -44,6 +44,8 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  // Run these tests with the shaded driver because the response-channel instrumentation
+  // must also match and work with the driver's relocated Netty classes.
   fun registerShadedTest(
     name: String,
     version: String,
