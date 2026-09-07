@@ -180,6 +180,22 @@ class ClickHouseClientV2Test {
     assertServerTarget(new HashSet<>(asList(endpoint)), null, null);
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "fe80::1%3Apassword",
+        "fe80::1%40password",
+        "fe80::1%2Fpassword",
+        "fe80::1%3Fpassword",
+        "fe80::1%23password",
+        "fe80::1%5Cpassword",
+        "fe80::1%25password",
+        "fe80::1%3Dpassword"
+      })
+  void testIpv6LiteralRejectsEncodedZoneDelimiters(String host) {
+    assertThat(ClickHouseEndpointUtil.isIpv6Literal(host)).isFalse();
+  }
+
   @Test
   void testQueryWithStringQuery() throws Exception {
     testing.runWithSpan(

@@ -11,7 +11,7 @@ import java.net.URISyntaxException;
 /**
  * Temporary endpoint validation helpers.
  *
- * <p>TODO Remove this class and switch its callers to DbServerEndpointUtil once #20015 merges.
+ * <p>TODO(#20016): Replace this helper with DbServerEndpointUtil after #20015 merges.
  */
 final class ClickHouseEndpointUtil {
 
@@ -40,7 +40,7 @@ final class ClickHouseEndpointUtil {
   }
 
   private static boolean isZoneId(String zoneId) {
-    if (zoneId.isEmpty()) {
+    if (zoneId.isEmpty() || startsWithEncodedDelimiter(zoneId)) {
       return false;
     }
     for (int i = 0; i < zoneId.length(); i++) {
@@ -51,7 +51,20 @@ final class ClickHouseEndpointUtil {
     return true;
   }
 
-  private static boolean isIpv4Literal(String host) {
+  private static boolean startsWithEncodedDelimiter(String value) {
+    if (value.length() < 2) {
+      return false;
+    }
+    int high = Character.digit(value.charAt(0), 16);
+    int low = Character.digit(value.charAt(1), 16);
+    if (high < 0 || low < 0) {
+      return false;
+    }
+    char decoded = (char) ((high << 4) + low);
+    return ":/?#[]@!$&'()*+,;=\\%".indexOf(decoded) >= 0;
+  }
+
+  static boolean isIpv4Literal(String host) {
     int parts = 0;
     int digits = 0;
     int value = 0;
