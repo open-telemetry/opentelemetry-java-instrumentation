@@ -30,6 +30,10 @@ import io.lettuce.core.KeyValue;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.codec.StringCodec;
+import io.lettuce.core.output.StatusOutput;
+import io.lettuce.core.protocol.CommandArgs;
+import io.lettuce.core.protocol.CommandType;
 import io.opentelemetry.api.trace.SpanKind;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -37,10 +41,12 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -412,6 +418,47 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                                     val.isEqualTo(2);
                                   }
                                 }))));
+  }
+
+  @Test
+  void testNoResponseCommandFluxCancellationEndsSpanOnce() {
+    withIsolatedContainer(
+        (connection, port) -> {
+          connection.setAutoFlushCommands(false);
+          AtomicBoolean cancelled = new AtomicBoolean();
+          Disposable subscription =
+              connection
+                  .reactive()
+                  .dispatch(
+                      CommandType.DEBUG,
+                      new StatusOutput<>(StringCodec.UTF8),
+                      new CommandArgs<>(StringCodec.UTF8).add("HELP"))
+                  .doOnCancel(() -> cancelled.set(true))
+                  .subscribe();
+
+          subscription.dispose();
+
+          assertThat(cancelled).isTrue();
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName(
+                                  emitStableDatabaseSemconv()
+                                      ? "DEBUG " + host + ":" + port
+                                      : "DEBUG")
+                              .hasKind(SpanKind.CLIENT)));
+          if (emitStableDatabaseSemconv()) {
+            testing.waitAndAssertMetrics(
+                "io.opentelemetry.lettuce-5.0",
+                metrics ->
+                    metrics
+                        .hasName("db.client.operation.duration")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(point -> point.hasCount(1))));
+          }
+        });
   }
 
   @Test

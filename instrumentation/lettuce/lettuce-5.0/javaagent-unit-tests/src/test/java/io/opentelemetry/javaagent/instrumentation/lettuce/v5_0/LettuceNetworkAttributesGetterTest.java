@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -28,7 +27,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx.LettuceReactiveCommandContext;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -296,61 +294,6 @@ class LettuceNetworkAttributesGetterTest {
 
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
     verify(context).write(command, promise);
-  }
-
-  @Test
-  void concurrentReactiveSubscriptionsKeepDistinctPeers() throws Exception {
-    InetSocketAddress firstAddress =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
-    InetSocketAddress secondAddress =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT);
-    RedisCommand<?, ?, ?> firstCommand = command();
-    RedisCommand<?, ?, ?> secondCommand = command();
-
-    CountDownLatch ready = new CountDownLatch(2);
-    CountDownLatch release = new CountDownLatch(1);
-    ExecutorService executor = Executors.newFixedThreadPool(2);
-    try {
-      Future<SocketAddress> first =
-          executor.submit(
-              () -> {
-                LettuceReactiveCommandContext.enter(firstCommand);
-                try {
-                  RedisCommand<?, ?, ?> command =
-                      requireNonNull(LettuceReactiveCommandContext.current());
-                  LettuceSingletons.recordCommandPeer(command, firstAddress);
-                  ready.countDown();
-                  release.await();
-                  return LettuceSingletons.commandPeerAddress(command);
-                } finally {
-                  LettuceReactiveCommandContext.exit();
-                }
-              });
-      Future<SocketAddress> second =
-          executor.submit(
-              () -> {
-                LettuceReactiveCommandContext.enter(secondCommand);
-                try {
-                  RedisCommand<?, ?, ?> command =
-                      requireNonNull(LettuceReactiveCommandContext.current());
-                  LettuceSingletons.recordCommandPeer(command, secondAddress);
-                  ready.countDown();
-                  release.await();
-                  return LettuceSingletons.commandPeerAddress(command);
-                } finally {
-                  LettuceReactiveCommandContext.exit();
-                }
-              });
-
-      assertThat(ready.await(10, SECONDS)).isTrue();
-      release.countDown();
-
-      assertThat(first.get(10, SECONDS)).isEqualTo(firstAddress);
-      assertThat(second.get(10, SECONDS)).isEqualTo(secondAddress);
-    } finally {
-      release.countDown();
-      executor.shutdownNow();
-    }
   }
 
   @Test

@@ -77,7 +77,7 @@ testing {
     register<JvmTestSuite>("v3PreviewLettuce65Test") {
       sources {
         java {
-          setSrcDirs(listOf("src/test/java"))
+          setSrcDirs(listOf("src/test/java", "src/testLettuce65/java"))
         }
       }
 
