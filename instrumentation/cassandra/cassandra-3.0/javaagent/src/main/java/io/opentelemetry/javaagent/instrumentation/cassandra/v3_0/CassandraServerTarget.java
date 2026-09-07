@@ -69,9 +69,45 @@ public class CassandraServerTarget {
 
     DbServerTargetBuilder targetBuilder = DbServerTarget.builder(DEFAULT_PORT);
     for (ContactPoint point : contactPoints.points) {
+      // TODO(#20016): Switch to DbServerEndpointUtil after #20015 merges.
+      if (!isSafeEndpointHost(point.host)) {
+        return null;
+      }
       targetBuilder.addEndpoint(point.host, point.port == null ? configuredPort : point.port);
     }
     return targetBuilder.build();
+  }
+
+  private static boolean isSafeEndpointHost(String host) {
+    String sanitized = host.trim();
+    boolean bracketed =
+        sanitized.length() >= 2
+            && sanitized.charAt(0) == '['
+            && sanitized.charAt(sanitized.length() - 1) == ']';
+    if (bracketed) {
+      sanitized = sanitized.substring(1, sanitized.length() - 1).trim();
+    }
+    if (sanitized.indexOf(':') >= 0) {
+      return CassandraDbServerEndpointUtil.isIpv6Literal(sanitized);
+    }
+    if (bracketed || !looksLikeIpv4Literal(sanitized)) {
+      return true;
+    }
+    return CassandraDbServerEndpointUtil.isIpv4Literal(sanitized);
+  }
+
+  private static boolean looksLikeIpv4Literal(String host) {
+    for (int i = 0; i < host.length(); i++) {
+      char c = host.charAt(i);
+      if (c != '.' && !isAsciiDigit(c)) {
+        return false;
+      }
+    }
+    return host.indexOf('.') >= 0;
+  }
+
+  private static boolean isAsciiDigit(char c) {
+    return c >= '0' && c <= '9';
   }
 
   private CassandraServerTarget() {}

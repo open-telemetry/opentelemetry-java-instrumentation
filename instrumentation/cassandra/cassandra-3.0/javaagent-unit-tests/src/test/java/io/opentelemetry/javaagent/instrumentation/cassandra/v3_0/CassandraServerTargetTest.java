@@ -14,6 +14,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class CassandraServerTargetTest {
 
@@ -120,6 +122,12 @@ class CassandraServerTargetTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("[0:0:0:0:0:0:0:1]:9042,db.example:9142");
     assertThat(target.getPort()).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"3A", "2F", "3F", "23", "5B", "5D", "40", "25"})
+  void rejectsPercentEncodedUriDelimitersInIpv6Zone(String delimiter) {
+    assertThat(CassandraServerTarget.create("fe80::1%" + delimiter + "password", 9042)).isNull();
   }
 
   @Test
