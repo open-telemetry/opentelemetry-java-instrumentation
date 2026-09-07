@@ -275,7 +275,7 @@ final class StartupReport {
     double noAgentReduction = noAgentSaved / normalNoAgent.jvm().median() * 100;
     double agentReduction = agentSaved / normalAgent.jvm().median() * 100;
     result.append("\nMeasured result: ");
-    if (noAgentSaved > 0 && agentSaved > 0 && agentReduction < noAgentReduction) {
+    if (noAgentSaved > 0 && agentSaved > noAgentSaved && agentReduction < noAgentReduction) {
       result
           .append("AOT's relative reduction was smaller with the agent (")
           .append(format(agentReduction))

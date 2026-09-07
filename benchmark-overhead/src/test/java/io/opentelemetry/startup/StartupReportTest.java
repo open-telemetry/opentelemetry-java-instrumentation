@@ -64,11 +64,22 @@ class StartupReportTest {
   void describesSmallerRelativeGainAndLargerAbsoluteSavingWithAgent() throws Exception {
     StartupReport report = new StartupReport(temporaryDirectory);
 
-    report.writeSummary(fasterSamples(), new Properties());
+    report.writeSummary(fasterSamples(7), new Properties());
 
     assertThat(Files.readString(temporaryDirectory.resolve("summary.md")))
         .contains(
             "AOT's relative reduction was smaller with the agent (30.000% versus 50.000% without it), while the absolute time saved was larger (3.000 seconds versus 2.000 seconds).");
+  }
+
+  @Test
+  void doesNotClaimLargerAbsoluteSavingWhenOnlyRelativeGainIsSmaller() throws Exception {
+    StartupReport report = new StartupReport(temporaryDirectory);
+
+    report.writeSummary(fasterSamples(9), new Properties());
+
+    assertThat(Files.readString(temporaryDirectory.resolve("summary.md")))
+        .contains(
+            "AOT saved 2.000 seconds without the agent and 1.000 seconds with the agent; the paired reductions above are the measured result.");
   }
 
   @Test
@@ -132,11 +143,11 @@ class StartupReportTest {
     return samples;
   }
 
-  private static List<StartupSample> fasterSamples() {
+  private static List<StartupSample> fasterSamples(double agentAot) {
     List<StartupSample> samples = new ArrayList<>();
     for (Variant variant : Variant.values()) {
       double normal = variant.agent() ? 10 : 4;
-      double aot = variant.aot() ? (variant.agent() ? 7 : 2) : normal;
+      double aot = variant.aot() ? (variant.agent() ? agentAot : 2) : normal;
       samples.add(new StartupSample(variant, 0, 1, true, "ok", 1, normal, 2));
       samples.add(new StartupSample(variant, 1, 1, false, "ok", 1, aot, 2));
       samples.add(new StartupSample(variant, 2, 1, false, "ok", 1, aot, 2));
