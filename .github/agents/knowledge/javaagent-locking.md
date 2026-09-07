@@ -42,6 +42,11 @@ publication. For example, selected node identities can be recorded under a short
 addresses read outside it at a valid extraction boundary. This is an option, not a terminal-sampling
 rule.
 
+An outer wrapper's callback may run before the underlying operation is initialized. Prefer an inner
+boundary that already orders initialization and cancellation; carry per-operation state through a
+context that survives supported asynchronous delegation instead of adding a handoff protocol to
+compensate for the wrong boundary.
+
 Prove carrier lifetime and reuse, library ordering of selection and retries, getter stability or
 extensibility, and consistent related-attribute extraction; the selected peer must be the one
 actually used. Moving observation time is semantic, so retain earlier capture when timing matters.
