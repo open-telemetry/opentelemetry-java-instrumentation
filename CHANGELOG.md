@@ -17,8 +17,8 @@
 
 ### 🚫 Deprecations
 
-- Deprecate the Elasticsearch REST library artifacts and their public entrypoint
-  and public entrypoints. The recommended replacement is the [Elasticsearch Java API Client's
+- Deprecate the Elasticsearch REST library artifacts and their public entrypoints. The recommended
+  replacement is the [Elasticsearch Java API Client's
   native OpenTelemetry support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
   available in 7.17.20+ on the 7.x line and 8.10+. The javaagent remains supported and is separate
   from this library deprecation.
