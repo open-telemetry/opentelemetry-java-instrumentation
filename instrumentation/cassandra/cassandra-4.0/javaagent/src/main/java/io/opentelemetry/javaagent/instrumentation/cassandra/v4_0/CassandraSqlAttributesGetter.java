@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isSniEndPoint;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
+import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
@@ -75,17 +75,42 @@ final class CassandraSqlAttributesGetter
     if (executionInfo == null) {
       return null;
     }
+    if (!emitStableDatabaseSemconv()) {
+      return getLegacyNetworkPeer(executionInfo);
+    }
+    InetSocketAddress peer = CassandraResponsePeers.getExecutionInfoPeer(executionInfo);
+    if (peer != null) {
+      return peer;
+    }
+    return getStableNetworkPeerFallback(executionInfo);
+  }
+
+  @Nullable
+  private static InetSocketAddress getLegacyNetworkPeer(ExecutionInfo executionInfo) {
+    Node coordinator = executionInfo.getCoordinator();
+    if (coordinator == null) {
+      return null;
+    }
+    SocketAddress address = coordinator.getEndPoint().resolve();
+    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+  }
+
+  @Nullable
+  private static InetSocketAddress getStableNetworkPeerFallback(ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
       return null;
     }
     EndPoint endPoint = coordinator.getEndPoint();
-    if (emitStableDatabaseSemconv() && isSniEndPoint(endPoint)) {
+    if (!(endPoint instanceof DefaultEndPoint)) {
       return null;
     }
-    // DefaultEndPoint.resolve() returns an existing InetSocketAddress without doing a DNS lookup.
     SocketAddress address = endPoint.resolve();
-    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+    if (!(address instanceof InetSocketAddress)) {
+      return null;
+    }
+    InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
+    return inetSocketAddress.isUnresolved() ? null : inetSocketAddress;
   }
 
   @Override
