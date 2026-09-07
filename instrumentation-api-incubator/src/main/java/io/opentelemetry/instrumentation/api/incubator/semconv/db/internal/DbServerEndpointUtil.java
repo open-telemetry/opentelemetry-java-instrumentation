@@ -46,7 +46,7 @@ public final class DbServerEndpointUtil {
   }
 
   private static boolean isZoneId(String zoneId) {
-    if (zoneId.isEmpty()) {
+    if (zoneId.isEmpty() || startsWithEncodedDelimiter(zoneId)) {
       return false;
     }
     for (int i = 0; i < zoneId.length(); i++) {
@@ -55,6 +55,26 @@ public final class DbServerEndpointUtil {
       }
     }
     return true;
+  }
+
+  private static boolean startsWithEncodedDelimiter(String value) {
+    if (value.length() < 2) {
+      return false;
+    }
+    int high = Character.digit(value.charAt(0), 16);
+    int low = Character.digit(value.charAt(1), 16);
+    if (high < 0 || low < 0) {
+      return false;
+    }
+    char decoded = (char) ((high << 4) + low);
+    return decoded == ':'
+        || decoded == '@'
+        || decoded == '/'
+        || decoded == '?'
+        || decoded == '#'
+        || decoded == '\\'
+        || decoded == '%'
+        || decoded == '=';
   }
 
   static boolean isIpv4Literal(String host) {

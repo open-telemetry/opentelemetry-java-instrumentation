@@ -29,7 +29,20 @@ class DbServerEndpointUtilTest {
         "gg::1",
         "::ffff:010.1.1.1",
         "fe80::1%",
-        "fe80::1%eth 0"
+        "fe80::1%eth 0",
+        "fe80::1%3Apassword",
+        "fe80::1%3apassword",
+        "fe80::1%40password",
+        "fe80::1%2Fpassword",
+        "fe80::1%2fpassword",
+        "fe80::1%3Fpassword",
+        "fe80::1%3fpassword",
+        "fe80::1%23password",
+        "fe80::1%5Cpassword",
+        "fe80::1%5cpassword",
+        "fe80::1%25password",
+        "fe80::1%3Dpassword",
+        "fe80::1%3dpassword"
       })
   void rejectsNonIpv6Literals(String host) {
     assertThat(DbServerEndpointUtil.isIpv6Literal(host)).isFalse();
