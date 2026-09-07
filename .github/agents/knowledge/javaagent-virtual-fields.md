@@ -77,6 +77,16 @@ This pattern is already used by the executors instrumentation, whose bootstrap h
 expose too much storage behavior, pass a small typed accessor with `get`, `set`, and any required
 domain operations instead.
 
+Prefer the narrowest stable carrier type that owns the state. Avoid using a broad interface when
+the state applies only to a narrower subset of its implementations. This matters especially for
+ubiquitous JDK interfaces and collection interfaces, because field injection may apply to many
+unrelated concrete classes.
+
+Broad interfaces are appropriate when the state semantically belongs to every instance in the
+abstraction and broad instrumentation is intentional. For example, `Runnable` is a suitable
+carrier for propagated task context. If no narrower stable carrier exists, document why the broad
+type is necessary and verify its fallback and lifecycle behavior.
+
 Avoid `Object` as the carrier class. It discards the type that determines where field-backed storage
 can be installed and makes the mapping apply far more broadly than intended. Generic helper methods
 may use a type parameter, but the `VirtualField.find(...)` call should identify the actual library
@@ -168,7 +178,7 @@ Flag a new weak or identity-keyed registry when all of the following are true:
    `ClassLoader`.
 3. The value is instrumentation state associated with that exact instance, not a derived value being
    memoized.
-4. The instrumentation-specific caller can identify a suitable carrier class or interface.
+4. The instrumentation-specific caller can identify a narrow, stable carrier class or interface.
 5. `VirtualField` can preserve the required lifecycle and concurrency semantics.
 
 Recommend moving storage selection to the typed caller when a shared helper currently accepts
