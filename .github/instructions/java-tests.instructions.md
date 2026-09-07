@@ -113,11 +113,8 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   }
   assertNodeListTarget(span, databaseAttributes());
 
-  // Good: each mode-dependent expectation remains visible at the assertion.
-  assertNodeListTarget(
-      span,
-      equalTo(DB_SYSTEM, emitStableDatabaseSemconv() ? null : ELASTICSEARCH),
-      equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null));
+  // Good: the mapped expectation remains visible at the assertion.
+  assertNodeListTarget(span, equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.
