@@ -20,7 +20,7 @@ public class MongoConnectionPeer {
   private static final ThreadLocal<OpenState> currentOpen = new ThreadLocal<>();
 
   public static OpenState startOpen() {
-    OpenState state = new OpenState(currentOpen.get());
+    OpenState state = new OpenState();
     currentOpen.set(state);
     return state;
   }
@@ -43,11 +43,7 @@ public class MongoConnectionPeer {
       @Nullable ConnectionDescription connectionDescription,
       @Nullable Throwable error) {
     if (currentOpen.get() == state) {
-      if (state.previous == null) {
-        currentOpen.remove();
-      } else {
-        currentOpen.set(state.previous);
-      }
+      currentOpen.remove();
     }
 
     if (error == null && connectionDescription != null && state.peer != null) {
@@ -61,12 +57,9 @@ public class MongoConnectionPeer {
   }
 
   public static class OpenState {
-    @Nullable private final OpenState previous;
     @Nullable private MongoNetworkPeer peer;
 
-    private OpenState(@Nullable OpenState previous) {
-      this.previous = previous;
-    }
+    private OpenState() {}
   }
 
   private MongoConnectionPeer() {}
