@@ -54,16 +54,30 @@ public final class CassandraTelemetry {
   }
 
   /**
-   * Constructs a tracing-enabled {@link CqlSession} using the complete collection of contact points
-   * configured for the provided session.
+   * Returns a tracing-enabled {@link CqlSession} using the supplied contact points to derive the
+   * session's logical Cassandra server target.
    *
-   * <p>Use this overload when the session does not expose its original configuration. The contact
-   * points must come from that configuration, not from the session's current topology or selected
-   * coordinator.
+   * <p>Use this overload when contact points were supplied directly to the session builder with
+   * {@code addContactPoint} or {@code addContactPoints}. The driver does not expose those builder
+   * contact points through the resulting {@link CqlSession}, so the instrumentation cannot derive
+   * the logical server target from the session alone.
    *
-   * @param session an instance of CqlSession configured as desired
-   * @param contactPoints the complete collection of contact points configured for the session
-   * @return a {@link TracingCqlSession}
+   * <p>For sessions configured through a driver configuration file or {@link
+   * com.datastax.oss.driver.api.core.config.DriverConfigLoader}, use {@link #wrap(CqlSession)}
+   * instead.
+   *
+   * <p>The contact points are captured when the session is wrapped and are used only to derive
+   * stable database server attributes. They do not change the session's connections or
+   * configuration.
+   *
+   * <p>{@code contactPoints} must contain every contact point supplied to the builder. Do not pass
+   * the current coordinator, discovered cluster nodes, or only a subset of the configured contact
+   * points.
+   *
+   * @param session the configured session to wrap
+   * @param contactPoints all contact points supplied directly to the session builder
+   * @return a tracing-enabled session
+   * @throws NullPointerException if {@code session} or {@code contactPoints} is {@code null}
    */
   public CqlSession wrap(CqlSession session, Collection<InetSocketAddress> contactPoints) {
     return tracingCqlSession.wrapSession(
