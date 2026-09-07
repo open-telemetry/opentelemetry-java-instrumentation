@@ -105,6 +105,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             containerId -> {},
             new HttpWaiter(BACKEND_PORT, "/health", Duration.ofSeconds(60)),
             /* inspect= */ true,
+            /* logOutput= */ true,
             backendLogger);
   }
 
@@ -195,6 +196,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             },
             createTargetWaiter(waitStrategy),
             /* inspect= */ true,
+            logOutput,
             appLogger);
     return null;
   }
@@ -255,7 +257,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     }
   }
 
-  private void registerLogListener(String containerId, Waiter waiter, Logger logger) {
+  private void registerLogListener(
+      String containerId, Waiter waiter, boolean logOutput, Logger logger) {
     ContainerLogFrameConsumer consumer = new ContainerLogFrameConsumer();
     waiter.configureLogger(consumer);
 
@@ -267,7 +270,9 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
         .withStdErr(true)
         .exec(consumer);
 
-    consumer.addListener(new Slf4jDockerLogLineListener(logger));
+    if (logOutput) {
+      consumer.addListener(new Slf4jDockerLogLineListener(logger));
+    }
   }
 
   private static int extractMappedPort(Container container, int internalPort) {
@@ -291,6 +296,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       Consumer<String> prepareAction,
       Waiter waiter,
       boolean inspect,
+      boolean logOutput,
       Logger logger) {
 
     if (waiter == null) {
@@ -305,7 +311,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     prepareAction.accept(containerId);
 
     client.startContainerCmd(containerId).exec();
-    registerLogListener(containerId, waiter, logger);
+    registerLogListener(containerId, waiter, logOutput, logger);
 
     InspectContainerResponse inspectResponse =
         inspect ? client.inspectContainerCmd(containerId).exec() : null;
