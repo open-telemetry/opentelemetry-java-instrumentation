@@ -65,6 +65,17 @@ class CouchbaseSpanNameTest {
   }
 
   @Test
+  void queryTextUsesQueryOperation() {
+    CouchbaseSpanName spanName = new CouchbaseSpanName("SELECT 1");
+    spanName.captureAttribute("db.statement", "SELECT 1");
+    spanName.captureServerTarget(
+        CouchbaseServerTarget.direct(
+            DbServerTarget.builder(11210).addEndpoint("node.example", 11210).build()));
+
+    assertThat(spanName.spanName()).isEqualTo("query node.example");
+  }
+
+  @Test
   void operationIsUsedWhenTargetIsUnavailable() {
     CouchbaseSpanName spanName = new CouchbaseSpanName("ping");
     spanName.captureServerTarget(null);

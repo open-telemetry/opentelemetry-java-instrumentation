@@ -14,6 +14,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseCoreInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseMessageHandlerInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSeedNodesInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -39,6 +40,7 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
     return asList(
         new CouchbaseEnvironmentInstrumentation(),
         new CouchbaseCoreInstrumentation(),
-        new CouchbaseSeedNodesInstrumentation());
+        new CouchbaseSeedNodesInstrumentation(),
+        new CouchbaseMessageHandlerInstrumentation());
   }
 }
