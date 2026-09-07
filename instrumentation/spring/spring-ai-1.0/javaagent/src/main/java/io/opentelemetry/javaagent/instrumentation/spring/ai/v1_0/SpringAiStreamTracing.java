@@ -58,9 +58,9 @@ public class SpringAiStreamTracing {
         return source;
       }
       context = chatInstrumenter.start(parentContext, request);
-    } catch (Throwable error) {
+    } catch (Throwable t) {
       // This method runs outside of Byte Buddy advice when the publisher is subscribed.
-      logger.log(FINE, "Failed to start Spring AI stream instrumentation", error);
+      logger.log(FINE, "Failed to start Spring AI stream instrumentation", t);
       return source;
     }
 
