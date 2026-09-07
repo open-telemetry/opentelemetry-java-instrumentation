@@ -214,7 +214,7 @@ public class DbServerTargetBuilder {
       return null;
     }
     if (looksLikeIpv4Literal(sanitized)) {
-      return isIpv4Literal(sanitized) ? sanitized : null;
+      return DbServerEndpointUtil.isIpv4Literal(sanitized) ? sanitized : null;
     }
     return isHostName(sanitized) ? sanitized : null;
   }
@@ -227,30 +227,6 @@ public class DbServerTargetBuilder {
       }
     }
     return host.indexOf('.') >= 0;
-  }
-
-  private static boolean isIpv4Literal(String host) {
-    int parts = 0;
-    int digits = 0;
-    int value = 0;
-    for (int i = 0; i <= host.length(); i++) {
-      char c = i == host.length() ? '.' : host.charAt(i);
-      if (c == '.') {
-        // a part with a leading zero reads as octal to some resolvers
-        if (digits == 0 || (digits > 1 && host.charAt(i - digits) == '0') || value > 255) {
-          return false;
-        }
-        parts++;
-        digits = 0;
-        value = 0;
-      } else {
-        if (++digits > 3) {
-          return false;
-        }
-        value = value * 10 + c - '0';
-      }
-    }
-    return parts == 4;
   }
 
   private static boolean isHostName(String host) {

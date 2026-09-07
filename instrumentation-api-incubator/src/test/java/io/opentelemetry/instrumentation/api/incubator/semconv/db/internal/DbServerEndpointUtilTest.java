@@ -34,4 +34,16 @@ class DbServerEndpointUtilTest {
   void rejectsNonIpv6Literals(String host) {
     assertThat(DbServerEndpointUtil.isIpv6Literal(host)).isFalse();
   }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"0.0.0.0", "1.2.3.4", "255.255.255.255"})
+  void acceptsIpv4Literals(String host) {
+    assertThat(DbServerEndpointUtil.isIpv4Literal(host)).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"1.2.3", "256.1.1.1", "010.1.1.1", "1.2.3.-4"})
+  void rejectsNonIpv4Literals(String host) {
+    assertThat(DbServerEndpointUtil.isIpv4Literal(host)).isFalse();
+  }
 }

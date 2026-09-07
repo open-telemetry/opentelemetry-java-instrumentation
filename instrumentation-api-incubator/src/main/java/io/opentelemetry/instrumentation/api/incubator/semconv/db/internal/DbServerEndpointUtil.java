@@ -57,7 +57,7 @@ public final class DbServerEndpointUtil {
     return true;
   }
 
-  private static boolean isIpv4Literal(String host) {
+  static boolean isIpv4Literal(String host) {
     int parts = 0;
     int digits = 0;
     int value = 0;
@@ -72,6 +72,9 @@ public final class DbServerEndpointUtil {
         digits = 0;
         value = 0;
       } else {
+        if (!isAsciiDigit(c)) {
+          return false;
+        }
         if (++digits > 3) {
           return false;
         }
