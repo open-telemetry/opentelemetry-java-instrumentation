@@ -271,6 +271,16 @@ class ClickHouseClientV2Test {
     assertServerTarget(new HashSet<>(asList("http://2001:db8::1:9123")), "2001:db8::1", 9123);
   }
 
+  @Test
+  void testInitialPeerUsesEffectivePort() throws Exception {
+    assertCurrentPeer(new HashSet<>(asList("http://single.example")), "single.example", 8123);
+  }
+
+  @Test
+  void testInitialPeerWithoutKnownPortIsOmitted() throws Exception {
+    assertCurrentPeer(new HashSet<>(asList("custom://single.example")), null, null);
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {
@@ -719,6 +729,27 @@ class ClickHouseClientV2Test {
     Class<?> serverTargetType = serverTarget.getClass().getSuperclass();
     assertThat(serverTargetType.getMethod("getAddress").invoke(serverTarget)).isEqualTo(address);
     assertThat(serverTargetType.getMethod("getPort").invoke(serverTarget)).isEqualTo(port);
+  }
+
+  private static void assertCurrentPeer(Set<String> endpoints, String address, Integer port)
+      throws Exception {
+    Class<?> singletons = singletons();
+    Class<?> currentServerInfo =
+        Class.forName(
+            singletons.getName() + "$CurrentServerInfo", true, singletons.getClassLoader());
+    Method of = currentServerInfo.getDeclaredMethod("of", Set.class);
+    of.setAccessible(true);
+    Object info = of.invoke(null, endpoints);
+    Object peer = currentServerInfo.getMethod("getPeer").invoke(info);
+
+    if (address == null) {
+      assertThat(peer).isNull();
+      return;
+    }
+
+    assertThat(peer).isNotNull();
+    assertThat(peer.getClass().getMethod("getAddress").invoke(peer)).isEqualTo(address);
+    assertThat(peer.getClass().getMethod("getPort").invoke(peer)).isEqualTo(port);
   }
 
   private static boolean isClassPresent(String className) {

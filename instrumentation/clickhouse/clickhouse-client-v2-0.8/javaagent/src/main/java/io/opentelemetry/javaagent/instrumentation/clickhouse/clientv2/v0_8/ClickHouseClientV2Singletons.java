@@ -108,12 +108,14 @@ public class ClickHouseClientV2Singletons {
       }
       String endpoint = endpoints.iterator().next();
       EndpointTarget extracted = EndpointTarget.parse(endpoint);
+      int peerPort =
+          extracted == null
+              ? -1
+              : extracted.port == null ? extracted.defaultPort() : extracted.port;
       DbServerTarget peer =
           extracted == null
               ? null
-              : DbServerTarget.builder(extracted.defaultPort())
-                  .addEndpoint(extracted.address, extracted.port == null ? -1 : extracted.port)
-                  .build();
+              : DbServerTarget.builder(-1).addEndpoint(extracted.address, peerPort).build();
       return new CurrentServerInfo(UrlParser.getHost(endpoint), UrlParser.getPort(endpoint), peer);
     }
 
