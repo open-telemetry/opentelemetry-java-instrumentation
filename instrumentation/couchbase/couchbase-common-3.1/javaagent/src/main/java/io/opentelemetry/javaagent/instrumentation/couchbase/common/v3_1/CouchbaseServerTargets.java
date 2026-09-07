@@ -45,13 +45,14 @@ public class CouchbaseServerTargets {
 
   public static void registerFromSeedNodes(
       Core core, @Nullable Set<SeedNode> seedNodes, @Nullable CoreEnvironment environment) {
-    if (seedNodes != null) {
-      CouchbaseServerTarget target = SEED_NODE_TARGETS.get(seedNodes);
-      if (target == null && environment != null) {
-        target = target(seedNodes, environment.securityConfig().tlsEnabled());
-      }
-      register(core, target);
+    if (seedNodes == null) {
+      return;
     }
+    CouchbaseServerTarget target = SEED_NODE_TARGETS.get(seedNodes);
+    if (target == null && environment != null) {
+      target = target(seedNodes, environment.securityConfig().tlsEnabled());
+    }
+    register(core, target);
   }
 
   @Nullable
@@ -91,11 +92,7 @@ public class CouchbaseServerTargets {
       target.addEndpoint(null, port > 0 ? port : -1);
       return;
     }
-    Set<Integer> ports = portsByAddress.get(address);
-    if (ports == null) {
-      ports = new HashSet<>();
-      portsByAddress.put(address, ports);
-    }
+    Set<Integer> ports = portsByAddress.computeIfAbsent(address, ignored -> new HashSet<>());
     if (ports.add(port)) {
       target.addEndpoint(address, port > 0 ? port : -1);
     }
