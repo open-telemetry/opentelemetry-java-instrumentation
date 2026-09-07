@@ -13,10 +13,11 @@ recommendation remains javaagent-specific; see [Virtual Fields](javaagent-virtua
 Start with the observable behavior that must be protected. Identify which supported threads,
 callbacks, and extension points can overlap at the exact advice boundary, and whether the library
 already serializes or owns completion there. Review the supported versions and configurations,
-lazy/eager initialization, subclass or custom implementations, and reentrant paths before
-declaring thread confinement. Do not generalize from a standalone helper, arbitrary mock
-scheduling, or a future that completes once: advice before a library guard can still run once per
-attempted completion.
+lazy/eager initialization, nested, skipped, and disabled advice, subclass/delegating construction,
+custom implementations, reentrancy, carrier lifetime and reuse, and fallback storage before
+declaring thread confinement. Preserve initialization, reuse, and publication guarantees across these
+paths. Do not generalize from a standalone helper, arbitrary mock scheduling, or a future that
+completes once: advice before a library guard can still run once per attempted completion.
 
 Classify the consequence of a race:
 
@@ -35,29 +36,22 @@ as transient.
 
 ## Choose the Simplest Representation
 
-Before adding capture, generations, or synchronization, reconsider the observation design. Separate
-the identity or topology that selects the carrier, request, or peer from metadata derived from that
-identity: existing immutable values or one lifecycle-appropriate snapshot may avoid repeated
-publication. For example, selected node identities can be recorded under a short lock and their
-addresses read outside it at a valid extraction boundary. This is an option, not a terminal-sampling
-rule.
+Before adding synchronization, prefer an observation boundary where the library already supplies the
+required ordering, including initialization and cancellation. Carry per-operation state through a
+context that survives supported asynchronous delegation instead of compensating for the wrong
+boundary with a handoff protocol.
 
-An outer wrapper's callback may run before the underlying operation is initialized. Prefer an inner
-boundary that already orders initialization and cancellation; carry per-operation state through a
-context that survives supported asynchronous delegation instead of adding a handoff protocol to
-compensate for the wrong boundary.
-
-Prove carrier lifetime and reuse, library ordering of selection and retries, getter stability or
-extensibility, and consistent related-attribute extraction; the selected peer must be the one
-actually used. Moving observation time is semantic, so retain earlier capture when timing matters.
-Define the observation point required by the telemetry contract: a snapshot valid at that point does
-not become invalid merely because the source changes later. Revalidate or coordinate again only when
-later freshness or coherence is part of the guarantee.
+Capture at the point required by the telemetry contract. Separate carrier or peer identity from
+derived metadata when immutable values or one snapshot can avoid repeated publication. Account for
+selection, retries, and getter stability or extensibility so related attributes stay coherent and
+describe the peer actually used. Moving observation time changes semantics; retain earlier capture
+when timing matters. A valid snapshot needs revalidation only if later freshness or coherence is
+required, not merely because its source changes.
 
 For infrequent configuration or topology updates, compare recomputing the complete target from
-canonical state at a proven observation boundary with maintaining incremental deltas, counts, or
-reservations. Include work already performed, preserve required key identity and multiplicity, and
-confirm snapshot availability and extension safety before choosing the simpler design.
+canonical state with maintaining incremental deltas, counts, or reservations. Include work already
+performed and confirm a safe snapshot is available at the required observation point; preserve key
+identity and multiplicity.
 
 After deciding the required guarantee, use the simplest state model that supplies it:
 
@@ -68,19 +62,15 @@ After deciding the required guarantee, use the simplest state model that supplie
 | One caller must own a genuinely competing effect | One once-claim CAS | The claim is the linearization point |
 | Several fields form an un-serialized invariant | One private lock | The owner commits it in a short critical section |
 
-Do not allocate a holder, lock, atomic, token, defensive copy, or retry protocol merely because a
-synthetic race can be imagined. A canonical holder is useful when shared mutable ownership requires
-one; it is not mandatory for attaching an independent value. Preserve carrier reuse,
-initialization, and fallback-storage behavior. Existing sequential or reentrant invocation may
-require clearing state without requiring CAS.
+A canonical holder is useful for shared mutable ownership, not mandatory for attaching an independent
+value. Sequential or reentrant invocation may require clearing state without requiring CAS.
 
 Consider whether simplifying or removing a protocol is better than merely trimming its allocations:
-per-request or per-observation hot paths differ from rare configuration updates. Account for nested,
-skipped, and disabled advice paths, retained memory, broadened instrumented types, extra objects,
-and CAS retries. Reuse immutable objects and existing state where possible. A configuration-time
-snapshot is not automatically a hot-path allocation, and a simple justified lock need not be
-replaced by complex lock-free code. Do not invent performance numbers or require a benchmark for
-every small edit.
+per-request or per-observation hot paths differ from rare configuration updates. Account for retained
+memory, broadened instrumented types, extra objects, and CAS retries along the supported call paths.
+Reuse immutable objects and existing state where possible. A configuration-time snapshot is not
+automatically a hot-path allocation, and a simple justified lock need not be replaced by complex
+lock-free code. Do not invent performance numbers or require a benchmark for every small edit.
 
 ## Keep Necessary Locks Safe
 
@@ -127,15 +117,14 @@ synchronized (lock) {
 Use a library-safe snapshot API or a lifecycle that proves the source cannot change concurrently.
 Copying an arbitrary mutable collection or suppressing traversal exceptions does not make it safe.
 If exact dynamic capture is necessary, a narrow library commit point may be justified; compare its
-instrumentation scope and cost with an explicitly approved omission policy before adding it. Public
-method entry and exit do not necessarily establish mutation order. Preserve the source key
-multiplicity and object identity required by the chosen telemetry contract.
+instrumentation scope and cost with the agreed metadata policy before adding it. Public method entry
+and exit do not necessarily establish mutation order. Preserve the source key multiplicity and object
+identity required by the chosen telemetry contract.
 
 Use generation discard only for a superseded, complete replacement snapshot. For additive or
 per-key observations, retain and merge independent evidence within the epoch; a latest address
-and a carrier identity may be different facts. Do not require exact ordering for optional metadata
-whose agreed policy permits omission or staleness. Such data may remain stale until a future
-update, so say that explicitly.
+and a carrier identity may be different facts. For optional metadata, require exact ordering only
+when the [agreed metadata policy](#establish-the-requirement-first) demands it.
 
 External effects have their own ordering. A generation check cannot undo a stale hook installation
 or restore a replaced callback. Define prior-hook ownership, composition, failure, reentrancy, and
@@ -146,9 +135,9 @@ reset policy for global hooks. Do not substitute a blanket latest-ticket, queue,
 Separate mandatory terminal ownership, cleanup, error preservation, and scope ownership from optional
 enrichment. When the telemetry contract permits end-time available information, the terminal owner
 may freeze one coherent snapshot for related final fields, reject later enrichment, and complete
-without waiting or handing termination to an updater. Any omission of metadata arriving after the
-freeze needs explicit agreement; preserve information published before it. Deferred completion or
-handoff needs an independently justified requirement beyond retaining every late attribute.
+without waiting or handing termination to an updater. Preserve information published before the
+freeze and apply the agreed metadata policy to later arrivals. Deferred completion or handoff needs
+an independently justified requirement beyond retaining every late attribute.
 
 For mandatory terminal ordering, claim ownership before external effects and preserve thread-affine
 scope closure, synchronous API guarantees, reentrancy, and once-only effects. A short metadata lock
@@ -171,16 +160,11 @@ and error identity and synchronous throws. If optional metadata acquisition is m
 must not bypass required instrumenter or span ending, scope closure, or other cleanup; preserve
 application-error behavior rather than silently catching failures.
 
-## Review and Test the Supported Lifecycle
-
-Trace actual callers and all relevant access paths, including nested, skipped, disabled,
-subclass/delegating construction, fallback storage, and carrier reuse. For hooks, keep ownership
-and class-loading caveats explicit but concise.
+## Test the Required Guarantees
 
 Tests should establish the selected guarantees on supported reachable call chains. Force races in
-those chains when necessary, and cover any explicitly approved omission or stale-metadata policy.
+those chains when necessary, and cover the agreed metadata policy.
 Assert that the intended hook, failure, and ordering path actually ran, not only that a plausible
 span or lifecycle result appeared.
-Do not make an exhaustive synthetic-race checklist mandatory for every change, and do not treat a
-mockable slow leaf getter or arbitrary mutable input as evidence without a supported caller.
-Report confidence accurately; do not present an unproven deadlock as reproduced.
+Do not require an exhaustive synthetic-race checklist for every change or present an unproven deadlock
+as reproduced.

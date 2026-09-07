@@ -154,16 +154,10 @@ State state = STATE.get(carrier);
 STATE.set(carrier, update(state));
 ```
 
-If supported callers can update the same carrier concurrently and the behavior requires a compound
-invariant, make the attached state provide the required atomicity or synchronization, or redesign
-the ownership transition. Do not infer that every multi-threaded accessor needs a new protocol:
-first establish the actual lifecycle and whether missing or stale optional metadata is acceptable.
-Do not choose `Cache` solely for `computeIfAbsent` without deciding whether concurrent updates and
-duplicate construction are valid for the instrumentation.
-
-For synchronization around compound state transitions and external-call ordering, see
-[Lock Ownership and Critical Sections](javaagent-locking.md). That guidance also applies to library
-instrumentation; the `VirtualField` recommendation in this article remains javaagent-specific.
+When supported concurrent updates require a compound invariant, synchronize the attached state or
+redesign ownership. See [Lock Ownership and Critical Sections](javaagent-locking.md) for choosing the
+required guarantees. Do not choose `Cache` solely for `computeIfAbsent` without establishing whether
+concurrent updates and duplicate construction are valid.
 
 ## Review Guidance
 
