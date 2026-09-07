@@ -56,18 +56,22 @@ Keep these two questions separate:
 
 1. **What information belongs to the operation?** Capture it at the lifecycle point required by the
    telemetry contract.
-2. **Which call is responsible for finishing the operation?** Claim cleanup and completion exactly
-   once.
+2. **Which call is responsible for finishing the operation?** If supported terminal paths can
+   overlap, claim cleanup and completion exactly once. If the lifecycle guarantees one terminal
+   path, no claim is needed.
 
-If capturing information and publishing it require separate steps, reserve the update before
-reading input that can change. Publish only a valid snapshot, and abort or recover the reservation
-if capture fails or the updater disappears. Use generation checks only to discard a superseded
-complete replacement; preserve independent facts, such as carrier identity and peer metadata, when
-the contract requires them.
+If capturing information and publishing it require separate steps, use a snapshot only when
+supported callbacks can overlap or external completion will read mutable state after the lock is
+released. Reserve the update before reading input that can change. Publish only a valid snapshot,
+and abort or recover the reservation if capture fails or the updater disappears. Use generation
+checks only to discard a superseded complete replacement; preserve independent facts, such as
+carrier identity and peer metadata, when the contract requires them.
 
 Do not hold the metadata lock while performing instrumenter, SDK, callback, or scope operations.
-After claiming terminal work, perform those effects outside the lock while preserving thread-affine
-scope closure, synchronous throws, application errors, and library-owned timeout and error identity.
+When terminal paths overlap, claim the work under the lock and perform the external effects
+afterward. When there is only one terminal path, perform those effects without an unnecessary
+claim. In both cases, preserve thread-affine scope closure, synchronous throws, application errors,
+and library-owned timeout and error identity.
 
 Global hooks need the same care: define who owns the previous hook, how hooks compose, and what
 happens on reentrancy, reset, or partial failure. Do not report a hook as installed until the
