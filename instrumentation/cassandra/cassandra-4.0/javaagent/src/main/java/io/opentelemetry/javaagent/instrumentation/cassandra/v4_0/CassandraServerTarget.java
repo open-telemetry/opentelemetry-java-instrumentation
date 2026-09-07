@@ -45,7 +45,11 @@ class CassandraServerTarget {
         if (!(address instanceof InetSocketAddress)) {
           return null;
         }
-        target.addEndpoint((InetSocketAddress) address);
+        InetSocketAddress inetAddress = (InetSocketAddress) address;
+        if (!isSafeHost(inetAddress.getHostString())) {
+          return null;
+        }
+        target.addEndpoint(inetAddress);
       }
       return target.build();
     } catch (RuntimeException ignored) {
@@ -85,10 +89,19 @@ class CassandraServerTarget {
       host = host.substring(1, host.length() - 1);
     }
     try {
-      target.addEndpoint(host, Integer.parseInt(contactPoint.substring(separator + 1)));
+      int port = Integer.parseInt(contactPoint.substring(separator + 1));
+      if (!isSafeHost(host)) {
+        target.addEndpoint((String) null, -1);
+        return;
+      }
+      target.addEndpoint(host, port);
     } catch (NumberFormatException ignored) {
       target.addEndpoint((String) null, -1);
     }
+  }
+
+  private static boolean isSafeHost(String host) {
+    return host.indexOf(':') < 0 || CassandraServerEndpointUtil.isIpv6Literal(host);
   }
 
   private CassandraServerTarget() {}

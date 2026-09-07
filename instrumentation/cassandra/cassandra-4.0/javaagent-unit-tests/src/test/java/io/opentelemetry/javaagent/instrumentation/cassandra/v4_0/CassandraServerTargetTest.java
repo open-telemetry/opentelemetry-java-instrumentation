@@ -36,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -140,6 +141,13 @@ class CassandraServerTargetTest {
   @MethodSource("invalidContactPoints")
   void invalidContactPointsDropTheTarget(List<String> contactPoints) {
     assertThat(CassandraServerTarget.of(contactPoints)).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"3A", "2F", "3F", "23", "5B", "5D", "40", "25"})
+  void encodedUriDelimitersInIpv6ZoneIdsDropTheTarget(String delimiter) {
+    assertThat(CassandraServerTarget.of(singletonList("[fe80::1%" + delimiter + "password]:9042")))
+        .isNull();
   }
 
   private static Stream<Arguments> invalidContactPoints() {
