@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-// TODO: Remove this class and switch callers to DbServerEndpointUtil once #20015 merges.
+// TODO(#20016): Replace with DbServerEndpointUtil after #20015 merges.
 final class RedisServerTargetUtil {
 
   static boolean isIpv6Literal(String value) {
@@ -61,7 +61,7 @@ final class RedisServerTargetUtil {
   }
 
   private static boolean isZoneId(String value) {
-    if (value.isEmpty()) {
+    if (value.isEmpty() || startsWithEncodedDelimiter(value)) {
       return false;
     }
     for (int i = 0; i < value.length(); i++) {
@@ -70,6 +70,26 @@ final class RedisServerTargetUtil {
       }
     }
     return true;
+  }
+
+  private static boolean startsWithEncodedDelimiter(String value) {
+    if (value.length() < 2) {
+      return false;
+    }
+    int high = Character.digit(value.charAt(0), 16);
+    int low = Character.digit(value.charAt(1), 16);
+    if (high < 0 || low < 0) {
+      return false;
+    }
+    char decoded = (char) ((high << 4) + low);
+    return decoded == ':'
+        || decoded == '@'
+        || decoded == '/'
+        || decoded == '?'
+        || decoded == '#'
+        || decoded == '\\'
+        || decoded == '%'
+        || decoded == '=';
   }
 
   private static boolean isUnreserved(char c) {

@@ -475,6 +475,27 @@ class RedisServerTargetTest {
   }
 
   @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "3Apassword",
+        "3apassword",
+        "40password",
+        "2Fpassword",
+        "2fpassword",
+        "3Fpassword",
+        "3fpassword",
+        "23password",
+        "5Cpassword",
+        "5cpassword",
+        "25password",
+        "3Dpassword",
+        "3dpassword"
+      })
+  void rejectsPercentEncodedDelimitersInIpv6Zone(String encodedDelimiter) {
+    assertThat(RedisServerTarget.ofEndpoint("[fe80::1%" + encodedDelimiter + "]:6379")).isNull();
+  }
+
+  @ParameterizedTest
   @NullAndEmptySource
   @ValueSource(
       strings = {
