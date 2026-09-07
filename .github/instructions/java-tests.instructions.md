@@ -98,7 +98,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   semconv utility applies. Seeing both expected values at the assertion is more
   useful than deduplicating a short expression.
 - Do not conditionally build a `List<AttributeAssertion>` and then pass that
-  list to an otherwise ordinary assertion helper. Pass each assertion directly
+  list to `hasAttributesSatisfyingExactly(...)`. Pass each assertion directly
   and keep the mode check with its expected value. Retain helpers only for
   genuinely nontrivial derivation:
 
@@ -114,11 +114,10 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
     }
     return attributes;
   }
-  assertNodeListTarget(span, databaseAttributes());
+  span.hasAttributesSatisfyingExactly(databaseAttributes());
 
   // Good: pass each assertion directly and keep its mode check visible.
-  assertNodeListTarget(
-      span,
+  span.hasAttributesSatisfyingExactly(
       equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
       equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
   ```

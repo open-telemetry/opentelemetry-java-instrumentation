@@ -325,9 +325,9 @@ otherwise, so keep it instead of inlining
 `EXPERIMENTAL_ATTRIBUTES ? value : null`.
 
 A helper may obtain the mode flag or derive a value from test data. Do not
-conditionally build a `List<AttributeAssertion>` and then pass that list to an
-otherwise ordinary assertion helper. Pass each assertion directly and keep the
-mode check with its expected value. Keep helpers for genuinely nontrivial
+conditionally build a `List<AttributeAssertion>` and then pass that list to
+`hasAttributesSatisfyingExactly(...)`. Pass each assertion directly and keep
+the mode check with its expected value. Keep helpers for genuinely nontrivial
 derivation only:
 
 ```java
@@ -342,11 +342,10 @@ private static List<AttributeAssertion> databaseAttributes() {
   }
   return attributes;
 }
-assertNodeListTarget(span, databaseAttributes());
+span.hasAttributesSatisfyingExactly(databaseAttributes());
 
 // Good: pass each assertion directly and keep its mode check visible.
-assertNodeListTarget(
-    span,
+span.hasAttributesSatisfyingExactly(
     equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
     equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
 ```
