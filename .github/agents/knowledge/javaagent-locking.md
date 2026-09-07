@@ -30,6 +30,21 @@ For shared mutable state:
 - use a once-claim CAS when one of several callers must finish an operation;
 - use one short private lock when several fields must be updated together.
 
+Descriptive connection metadata used only for attributes or span names may be temporarily stale
+while a long-lived client, connection, or pool is reconfigured. A span created during an update may
+use either the complete previous immutable snapshot or the complete new one. Once updates stop,
+subsequent spans must converge on the latest snapshot. Refresh the snapshot at a stable client or
+pool lifecycle boundary and publish it safely.
+
+This allowance does not apply to context propagation, span lifecycle, suppression, completion
+ownership, request/response pairing, status or error attribution, or cleanup. It does not permit
+fields from different snapshots or change what the metadata means. Temporarily reporting the
+previous configured target can be acceptable; substituting a connected peer for a configured target
+is not.
+
+Do not add generation counters, CAS loops, handoff protocols, or instrumentation of lower-level
+collection mutations solely to preserve the exact transition point.
+
 Do not add a lock, CAS, generation, copy, or reservation merely because an unsupported hypothetical
 race can be imagined.
 
