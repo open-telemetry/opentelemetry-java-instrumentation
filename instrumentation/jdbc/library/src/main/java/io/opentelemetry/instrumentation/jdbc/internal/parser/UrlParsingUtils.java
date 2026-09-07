@@ -507,8 +507,7 @@ public final class UrlParsingUtils {
 
   /** Parse and normalize a comma-separated configured server group. */
   @Nullable
-  public static ServerAddressGroup parseServerAddressGroup(
-      String authority, @Nullable Integer defaultPort) {
+  public static String parseServerAddressGroup(String authority, @Nullable Integer defaultPort) {
     String sanitized = sanitizeHostList(authority);
     if (sanitized == null) {
       return null;
@@ -530,7 +529,7 @@ public final class UrlParsingUtils {
         builder.addEndpoint(endpoint.host(), endpoint.port() == null ? -1 : endpoint.port());
       }
       DbServerTarget target = builder.build();
-      return target == null ? null : new ServerAddressGroup(target.getAddress());
+      return target == null ? null : target.getAddress();
     }
 
     for (HostPort endpoint : endpoints) {
@@ -551,14 +550,14 @@ public final class UrlParsingUtils {
   }
 
   @Nullable
-  private static ServerAddressGroup renderSpecialServerAddressGroup(
+  private static String renderSpecialServerAddressGroup(
       List<String> entries, List<HostPort> endpoints, @Nullable Integer defaultPort) {
     boolean hasNonDefaultPort = false;
     boolean hasUnknownPort = false;
     for (int i = 0; i < endpoints.size(); i++) {
       HostPort endpoint = endpoints.get(i);
       if (endpoint.host().startsWith("/")) {
-        return new ServerAddressGroup(joinFirstEndpoints(entries));
+        return joinFirstEndpoints(entries);
       }
       Integer effectivePort = endpoint.port();
       if (effectivePort == null && defaultPort != null) {
@@ -588,7 +587,7 @@ public final class UrlParsingUtils {
           endpoint.host(),
           defaultPort == null || hasNonDefaultPort ? endpoint.port() : null);
     }
-    return new ServerAddressGroup(address.toString());
+    return address.toString();
   }
 
   private static String joinFirstEndpoints(List<String> entries) {
@@ -612,24 +611,6 @@ public final class UrlParsingUtils {
     Integer port = portMatcher.find() ? parsePort(portMatcher.group(1)) : null;
     String host = hostMatcher.group(1).trim();
     return new HostPort(stripIpv6Brackets(host), port, host.indexOf(':') >= 0 ? host : null);
-  }
-
-  /**
-   * A normalized configured server address group.
-   *
-   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
-   * at any time.
-   */
-  public static final class ServerAddressGroup {
-    private final String address;
-
-    private ServerAddressGroup(String address) {
-      this.address = address;
-    }
-
-    public String address() {
-      return address;
-    }
   }
 
   /**

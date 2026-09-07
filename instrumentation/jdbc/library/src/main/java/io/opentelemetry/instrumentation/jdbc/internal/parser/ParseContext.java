@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
-import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.UrlParams;
 import java.util.Map;
 import java.util.Properties;
@@ -116,11 +115,11 @@ public final class ParseContext {
   }
 
   /** Set a normalized configured server group when parsing succeeds. */
-  public void serverAddressGroup(@Nullable ServerAddressGroup serverAddressGroup) {
+  public void serverAddressGroup(@Nullable String serverAddressGroup) {
     if (serverAddressGroup == null) {
       return;
     }
-    this.serverAddressGroup = serverAddressGroup.address();
+    this.serverAddressGroup = serverAddressGroup;
     multiTarget = true;
   }
 

@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
 
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
-import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -132,7 +131,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
       return null;
     }
     ctx.multiTarget();
-    ServerAddressGroup group = UrlParsingUtils.parseServerAddressGroup(authority, DEFAULT_PORT);
+    String group = UrlParsingUtils.parseServerAddressGroup(authority, DEFAULT_PORT);
     ctx.serverAddressGroup(group);
     return authority;
   }
@@ -225,8 +224,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
       addresses.append(description, addressMatcher.start() + 1, end);
       searchFrom = end + 1;
     }
-    ServerAddressGroup group =
-        UrlParsingUtils.parseServerAddressGroup(addresses.toString(), DEFAULT_PORT);
+    String group = UrlParsingUtils.parseServerAddressGroup(addresses.toString(), DEFAULT_PORT);
     ctx.serverAddressGroup(group);
   }
 

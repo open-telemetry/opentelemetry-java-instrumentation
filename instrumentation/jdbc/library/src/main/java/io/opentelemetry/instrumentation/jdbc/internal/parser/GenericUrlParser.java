@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
@@ -108,7 +107,7 @@ public final class GenericUrlParser implements JdbcUrlParser {
         return jdbcUrl.indexOf("://") < 0;
       }
     }
-    ServerAddressGroup hostList = parseServerAddressGroup(authority, defaultPort);
+    String hostList = parseServerAddressGroup(authority, defaultPort);
     ctx.serverAddressGroup(hostList);
     return true;
   }

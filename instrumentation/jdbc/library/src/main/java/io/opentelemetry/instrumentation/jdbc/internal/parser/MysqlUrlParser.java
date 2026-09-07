@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
 
-import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.ServerAddressGroup;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -229,7 +228,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
         return false;
       }
     }
-    ServerAddressGroup hostList = parseServerAddressGroup(authority, DEFAULT_PORT);
+    String hostList = parseServerAddressGroup(authority, DEFAULT_PORT);
     ctx.serverAddressGroup(hostList);
     return true;
   }
