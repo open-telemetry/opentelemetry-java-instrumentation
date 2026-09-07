@@ -77,14 +77,14 @@ class CassandraServerTargetTest {
             "::1",
             null),
         argumentSet(
-            "configured contact points preserve order and omit the shared default port",
+            "configured contact points are sorted and omit the shared default port",
             asList("node1.example.com:9042", "10.0.0.5:9042"),
-            "node1.example.com,10.0.0.5",
+            "10.0.0.5,node1.example.com",
             null),
         argumentSet(
             "several contact points inline every shared non-default port",
             asList("node1.example.com:9142", "10.0.0.5:9142"),
-            "node1.example.com:9142,10.0.0.5:9142",
+            "10.0.0.5:9142,node1.example.com:9142",
             null),
         argumentSet(
             "duplicate configured contact points are preserved",
@@ -94,7 +94,7 @@ class CassandraServerTargetTest {
         argumentSet(
             "IPv6 contact points stay bracketed when ports are mixed",
             asList("[::1]:9042", "2001:db8::1:9142", "10.0.0.5:9042"),
-            "[::1]:9042,[2001:db8::1]:9142,10.0.0.5:9042",
+            "10.0.0.5:9042,[2001:db8::1]:9142,[::1]:9042",
             null),
         argumentSet(
             "endpoint list includes five endpoints",
@@ -104,11 +104,11 @@ class CassandraServerTargetTest {
                 "node4.example.com:9042",
                 "node1.example.com:9042",
                 "node3.example.com:9042"),
-            "node5.example.com,node2.example.com,node4.example.com,node1.example.com,"
-                + "node3.example.com",
+            "node1.example.com,node2.example.com,node3.example.com,node4.example.com,"
+                + "node5.example.com",
             null),
         argumentSet(
-            "configured endpoint list keeps the first five endpoints",
+            "configured endpoint list is sorted before keeping the first five endpoints",
             asList(
                 "node6.example.com:9042",
                 "node3.example.com:9042",
@@ -116,13 +116,13 @@ class CassandraServerTargetTest {
                 "node5.example.com:9042",
                 "node2.example.com:9042",
                 "node4.example.com:9042"),
-            "node6.example.com,node3.example.com,node1.example.com,node5.example.com,"
-                + "node2.example.com",
+            "node1.example.com,node2.example.com,node3.example.com,node4.example.com,"
+                + "node5.example.com",
             null));
   }
 
   @Test
-  void configuredMixedPortContactPointOrderIsPreserved() {
+  void configuredMixedPortContactPointPermutationsAreSorted() {
     DbServerTarget first =
         CassandraServerTarget.of(asList("node2.example.com:9142", "node1.example.com:9042"));
     DbServerTarget second =
@@ -130,8 +130,8 @@ class CassandraServerTargetTest {
 
     assertThat(first).isNotNull();
     assertThat(second).isNotNull();
-    assertThat(first.getAddress()).isEqualTo("node2.example.com:9142,node1.example.com:9042");
-    assertThat(second.getAddress()).isEqualTo("node1.example.com:9042,node2.example.com:9142");
+    assertThat(first.getAddress()).isEqualTo("node1.example.com:9042,node2.example.com:9142");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
     assertThat(first.getPort()).isNull();
     assertThat(second.getPort()).isNull();
   }
@@ -274,7 +274,7 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void sessionPreservesConfiguredOrderBeforeSortedProgrammaticContactPoints() {
+  void sessionSortsCombinedConfiguredAndProgrammaticContactPoints() {
     configureContactPoints(asList("configured2.example.com:9042", "configured1.example.com:9042"));
     when(session.getContext()).thenReturn(context);
     EndPoint first =
@@ -288,7 +288,7 @@ class CassandraServerTargetTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
         .isEqualTo(
-            "configured2.example.com,configured1.example.com,programmatic1.example.com,"
+            "configured1.example.com,configured2.example.com,programmatic1.example.com,"
                 + "programmatic2.example.com");
   }
 
