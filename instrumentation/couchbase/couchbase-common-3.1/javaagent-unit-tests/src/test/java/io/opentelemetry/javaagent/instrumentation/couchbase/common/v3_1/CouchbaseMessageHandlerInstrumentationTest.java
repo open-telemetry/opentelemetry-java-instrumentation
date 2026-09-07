@@ -20,7 +20,7 @@ import com.couchbase.client.core.msg.NonChunkedHttpRequest;
 import com.couchbase.client.core.msg.Request;
 import com.couchbase.client.core.msg.kv.KeyValueRequest;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Peer;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Scope;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.RequestPeerScope;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -45,7 +45,8 @@ class CouchbaseMessageHandlerInstrumentationTest {
             new InetSocketAddress(
                 InetAddress.getByAddress(new byte[] {(byte) 192, 0, 2, 1}), 11210));
 
-    Scope scope = CouchbaseMessageHandlerInstrumentation.WriteAdvice.onEnter(context, request);
+    RequestPeerScope scope =
+        CouchbaseMessageHandlerInstrumentation.WriteAdvice.onEnter(context, request);
     Peer peer = CouchbaseRequestPeers.consume(parent);
     assertThat(peer.getAddress()).isEqualTo("192.0.2.1");
     assertThat(peer.getPort()).isEqualTo(11210);
