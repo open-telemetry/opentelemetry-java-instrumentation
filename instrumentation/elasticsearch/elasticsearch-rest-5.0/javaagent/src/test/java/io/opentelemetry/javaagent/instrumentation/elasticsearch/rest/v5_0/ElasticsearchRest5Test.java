@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -104,7 +106,10 @@ class ElasticsearchRest5Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -150,7 +155,10 @@ class ElasticsearchRest5Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("POST")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "POST")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -221,7 +229,10 @@ class ElasticsearchRest5Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? httpHost.getHostName() + ":" + httpHost.getPort()
+                                : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -246,5 +257,62 @@ class ElasticsearchRest5Test {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void configuredHostListIsTheWholeTarget() throws IOException {
+    RestClient hostListClient = hostListClient();
+    cleanup.deferCleanup(hostListClient);
+
+    hostListClient.performRequest("GET", "_cluster/health");
+
+    assertConfiguredTarget(hostList());
+  }
+
+  @Test
+  void theTargetDoesNotFollowLaterHostChanges() throws IOException {
+    RestClient hostListClient = hostListClient();
+    cleanup.deferCleanup(hostListClient);
+    // Simulate automatic node discovery replacing the active host list. The configured target must
+    // continue to reflect the hosts supplied when the client was built.
+    hostListClient.setHosts(httpHost);
+
+    hostListClient.performRequest("GET", "_cluster/health");
+
+    assertConfiguredTarget(hostList());
+  }
+
+  private static RestClient hostListClient() {
+    return RestClient.builder(httpHost, httpHost)
+        .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
+        .build();
+  }
+
+  private static String hostList() {
+    return httpHost.getHostName()
+        + ":"
+        + httpHost.getPort()
+        + ","
+        + httpHost.getHostName()
+        + ":"
+        + httpHost.getPort();
+  }
+
+  private static void assertConfiguredTarget(String hostList) {
+    testing.waitAndAssertTraces(
+        trace ->
+            assertThat(trace.getSpan(0))
+                .hasName(emitStableDatabaseSemconv() ? hostList : "GET")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(
+                        SERVER_ADDRESS,
+                        emitStableDatabaseSemconv() ? hostList : httpHost.getHostName()),
+                    equalTo(
+                        SERVER_PORT,
+                        emitStableDatabaseSemconv() ? null : Long.valueOf(httpHost.getPort())),
+                    equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
   }
 }
