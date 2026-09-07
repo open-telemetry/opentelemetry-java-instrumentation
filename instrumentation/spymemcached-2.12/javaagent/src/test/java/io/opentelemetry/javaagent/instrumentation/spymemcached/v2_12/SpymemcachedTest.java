@@ -2265,7 +2265,8 @@ class SpymemcachedTest {
                             element ->
                                 element
                                     .getClassName()
-                                    .equals(SpymemcachedRequest.class.getName()))) {
+                                    .equals(
+                                        "io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12.SpymemcachedRequest"))) {
                   addressFailures.incrementAndGet();
                   throw new IllegalStateException("address unavailable");
                 }
