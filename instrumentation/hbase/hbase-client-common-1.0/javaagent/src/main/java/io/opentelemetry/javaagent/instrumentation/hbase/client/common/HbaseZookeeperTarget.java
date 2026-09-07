@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.canonicalEndpoint;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.parsePort;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpointUtil.isIpv6Literal;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -184,7 +185,7 @@ final class HbaseZookeeperTarget {
     }
     if (endpoint.charAt(0) != '['
         && endpoint.indexOf(':') != endpoint.lastIndexOf(':')
-        && HbaseServerEndpoint.isIpv6Literal(endpoint)) {
+        && isIpv6Literal(endpoint)) {
       return "[" + endpoint + "]";
     }
     return endpoint.equals(canonicalEndpoint(endpoint, null)) ? endpoint : null;
