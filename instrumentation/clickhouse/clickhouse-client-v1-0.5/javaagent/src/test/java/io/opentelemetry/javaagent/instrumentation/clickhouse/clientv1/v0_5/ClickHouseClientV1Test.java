@@ -26,18 +26,24 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import com.clickhouse.client.ClickHouseClient;
 import com.clickhouse.client.ClickHouseException;
 import com.clickhouse.client.ClickHouseNode;
+import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.ClickHouseParameterizedQuery;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.client.ClickHouseResponseSummary;
 import com.clickhouse.data.ClickHouseFormat;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeAll;
@@ -130,6 +136,73 @@ class ClickHouseClientV1Test {
         DB_NAMESPACE,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  void testConfiguredNodesPreserveOrderAndRenderPortsAndIpv6() throws Exception {
+    ClickHouseNode first =
+        ClickHouseNode.builder(ClickHouseNode.of("http://first.example"))
+            .host("2001:db8::1")
+            .port(9123)
+            .build();
+    ClickHouseNode second = ClickHouseNode.of("http://second.example");
+    ClickHouseNode third =
+        ClickHouseNode.builder(ClickHouseNode.of("http://third.example")).port(8124).build();
+
+    Object serverTarget = serverTarget(requestWithNodes(ImmutableList.of(first, second, third)));
+
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget))
+        .isEqualTo("[2001:db8::1]:9123,second.example:8123,third.example:8124");
+    assertThat(serverTargetPort(serverTarget)).isNull();
+  }
+
+  @Test
+  void testConfiguredDefaultPortIsReportedSeparately() throws Exception {
+    Object serverTarget =
+        serverTarget(
+            requestWithNodes(ImmutableList.of(ClickHouseNode.of("http://default.example"))));
+
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget)).isEqualTo("default.example");
+    assertThat(serverTargetPort(serverTarget)).isNull();
+
+    serverTarget =
+        serverTarget(
+            requestWithNodes(ImmutableList.of(ClickHouseNode.of("http://single.example:9123"))));
+
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget)).isEqualTo("single.example");
+    assertThat(serverTargetPort(serverTarget)).isEqualTo(9123);
+  }
+
+  @Test
+  void testConfiguredNodesRejectUnsafeTarget() throws Exception {
+    ClickHouseNode unsafe =
+        ClickHouseNode.builder(ClickHouseNode.of("http://safe.example"))
+            .host("user:password@unsafe.example")
+            .build();
+
+    assertThat(serverTarget(requestWithNodes(ImmutableList.of(unsafe)))).isNull();
+  }
+
+  @Test
+  void testCopiedSealedRequestRetainsConfiguredTarget() throws Exception {
+    String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
+    String expectedAddress = host + ":" + port + "," + host + ":" + (port + 1);
+
+    ClickHouseRequest<?> request =
+        client
+            .read(ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0"))
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + TABLE_NAME)
+            .seal()
+            .copy();
+
+    Object serverTarget = serverTarget(request);
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget)).isEqualTo(expectedAddress);
+    assertThat(serverTargetPort(serverTarget)).isNull();
   }
 
   @Test
@@ -562,5 +635,55 @@ class ClickHouseClientV1Test {
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  private static ClickHouseNodes createNodes(Collection<ClickHouseNode> nodes) throws Exception {
+    Constructor<ClickHouseNodes> constructor =
+        ClickHouseNodes.class.getDeclaredConstructor(Collection.class);
+    constructor.setAccessible(true);
+    return constructor.newInstance(nodes);
+  }
+
+  private static ClickHouseRequest<?> requestWithNodes(Collection<ClickHouseNode> nodes)
+      throws Exception {
+    return client.read(createNodes(nodes));
+  }
+
+  private static Object serverTarget(ClickHouseRequest<?> request) throws Exception {
+    return singletons(request)
+        .getMethod("serverTarget", ClickHouseRequest.class)
+        .invoke(null, request);
+  }
+
+  private static String serverTargetAddress(Object serverTarget) throws Exception {
+    return (String) serverTarget.getClass().getMethod("getAddress").invoke(serverTarget);
+  }
+
+  private static Integer serverTargetPort(Object serverTarget) throws Exception {
+    return (Integer) serverTarget.getClass().getMethod("getPort").invoke(serverTarget);
+  }
+
+  private static Class<?> singletons(ClickHouseRequest<?> request) throws Exception {
+    String singletonsName =
+        "io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5."
+            + "ClickHouseClientV1Singletons";
+    ClassLoader requestClassLoader = request.getClass().getClassLoader();
+    try {
+      return Class.forName(singletonsName, true, requestClassLoader);
+    } catch (ClassNotFoundException ignored) {
+      Class<?> registry =
+          AgentClassLoaderAccess.loadClass(
+              "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+      Method getInstrumentationClassLoader =
+          registry.getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class);
+      ClassLoader instrumentationClassLoader =
+          (ClassLoader)
+              getInstrumentationClassLoader.invoke(
+                  null,
+                  "io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5."
+                      + "ClickHouseClientV1InstrumentationModule",
+                  requestClassLoader);
+      return Class.forName(singletonsName, true, instrumentationClassLoader);
+    }
   }
 }
