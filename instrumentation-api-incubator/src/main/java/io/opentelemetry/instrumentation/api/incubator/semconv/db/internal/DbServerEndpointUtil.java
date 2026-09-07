@@ -17,9 +17,13 @@ import java.net.URISyntaxException;
 public final class DbServerEndpointUtil {
 
   /**
-   * Returns whether {@code host} is an IPv6 literal.
+   * Returns whether {@code host} is an IPv6 literal accepted as a database server endpoint.
    *
    * <p>The value is validated as text and is never resolved as a host name.
+   *
+   * <p>A scoped literal is rejected when its {@code %} separator and the first two characters of
+   * its zone ID together form the percent-encoding of a URI delimiter, a backslash, or a percent
+   * sign.
    */
   public static boolean isIpv6Literal(String host) {
     int zoneStart = host.indexOf('%');
