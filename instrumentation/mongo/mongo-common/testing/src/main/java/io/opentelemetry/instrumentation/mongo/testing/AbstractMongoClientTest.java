@@ -173,6 +173,12 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"capped\":\"?\",\"$db\":\"?\"}",
                                 "{\"create\":\""
                                     + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"create\":\""
+                                    + collectionName
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
@@ -204,6 +210,12 @@ public abstract class AbstractMongoClientTest<T> {
                                 "{\"create\":\""
                                     + collectionName
                                     + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
@@ -238,6 +250,12 @@ public abstract class AbstractMongoClientTest<T> {
                                 "{\"create\":\""
                                     + collectionName
                                     + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
@@ -280,6 +298,9 @@ public abstract class AbstractMongoClientTest<T> {
                               "{\"count\":\""
                                   + collectionName
                                   + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                              "{\"count\":\""
+                                  + collectionName
+                                  + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
                               "{\"count\":\""
                                   + collectionName
                                   + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"));
@@ -349,6 +370,9 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"count\":\""
                                     + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
                                     + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
@@ -401,6 +425,9 @@ public abstract class AbstractMongoClientTest<T> {
                                 "{\"count\":\""
                                     + collectionName
                                     + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"count\":\""
                                     + collectionName
                                     + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
@@ -457,6 +484,9 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"count\":\""
                                     + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
                                     + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
@@ -493,6 +523,9 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"find\":\""
                                     + collectionName
+                                    + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"find\":\""
+                                    + collectionName
                                     + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")),
                     span ->
                         mongoSpan(
@@ -505,6 +538,7 @@ public abstract class AbstractMongoClientTest<T> {
                                 "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\"}",
                                 "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\"}",
                                 "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
@@ -543,6 +577,12 @@ public abstract class AbstractMongoClientTest<T> {
                                 "{\"create\":\""
                                     + collectionName
                                     + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",

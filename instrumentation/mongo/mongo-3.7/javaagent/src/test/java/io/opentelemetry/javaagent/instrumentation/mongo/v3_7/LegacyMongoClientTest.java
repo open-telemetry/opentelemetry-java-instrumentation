@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import com.mongodb.MongoClientOptions;
 import io.opentelemetry.instrumentation.mongo.v3_1.AbstractMongo31ClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -26,6 +28,6 @@ class LegacyMongoClientTest extends AbstractMongo31ClientTest {
 
   @Override
   protected boolean supportsNetworkPeer() {
-    return true;
+    return testLatestDeps();
   }
 }

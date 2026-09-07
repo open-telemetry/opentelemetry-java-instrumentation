@@ -23,8 +23,7 @@ muzzle {
 dependencies {
   implementation(project(":instrumentation:mongo:mongo-3.1:library"))
 
-  // SocketStream.initializeSocket became protected in 3.11.
-  library("org.mongodb:mongo-java-driver:3.11.0")
+  library("org.mongodb:mongo-java-driver:3.7.0")
   latestDepTestLibrary("org.mongodb:mongo-java-driver:3.+") // see mongo-4.0 module
 
   testImplementation(project(":instrumentation:mongo:mongo-3.1:testing"))
@@ -40,6 +39,7 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
