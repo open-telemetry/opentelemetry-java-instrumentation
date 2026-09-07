@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -224,8 +227,13 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
   private void assertErrorTypeSpan() {
     List<AttributeAssertion> databaseAssertions =
         databaseAttributes("GET", "GET /invalid-index/_doc/1");
-    List<AttributeAssertion> assertions =
-        withServer(databaseAssertions.toArray(new AttributeAssertion[0]));
+    databaseAssertions.add(equalTo(NETWORK_TYPE, null));
+    databaseAssertions.add(
+        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? httpHost.getHost() : null));
+    databaseAssertions.add(
+        equalTo(
+            SERVER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null));
+    List<AttributeAssertion> assertions = databaseAssertions;
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "404"));
     }
@@ -235,7 +243,10 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(openSearchSpanName("GET"))
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(assertions),
                     span ->

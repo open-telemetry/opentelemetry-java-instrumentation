@@ -5,19 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static java.util.Arrays.asList;
-
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import javax.net.ssl.SSLContext;
 import org.apache.hc.client5.http.auth.AuthScope;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
@@ -134,21 +124,5 @@ abstract class AbstractOpenSearchQueryTest {
   @AfterAll
   void tearDown() {
     opensearch.stop();
-  }
-
-  String openSearchSpanName(String method) {
-    return emitStableDatabaseSemconv()
-        ? method + " " + httpHost.getHost() + ":" + httpHost.getPort()
-        : method;
-  }
-
-  List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
-    List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
-    result.add(equalTo(NETWORK_TYPE, null));
-    if (emitStableDatabaseSemconv()) {
-      result.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
-      result.add(equalTo(SERVER_PORT, httpHost.getPort()));
-    }
-    return result;
   }
 }
