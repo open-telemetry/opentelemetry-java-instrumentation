@@ -26,7 +26,7 @@ for javaagent state attached to third-party objects; keep the related updates sa
 
 For shared mutable state:
 
-- use immutable replacement or `volatile` for one independently replaceable value;
+- use a safely published reference, such as a `volatile` field, when replacing one immutable value;
 - use a once-claim CAS when one of several callers must finish an operation;
 - use one short private lock when several fields must be updated together.
 
@@ -47,7 +47,8 @@ call proceeds. Do not hold them across:
 - callbacks, logging, I/O, waits, or scope closure;
 - overridable getters, collection traversal, or callbacks through application code.
 
-Decide or copy the work under the lock, release it, and perform the external effect afterward.
+Capture the work in a local value under the lock, release it, and perform the external effect
+afterward.
 
 JVM class-loading locks are an exception. A monitor on a library object or instrumented object can
 also be valid when instrumentation must coordinate with the library or with other instrumentation
