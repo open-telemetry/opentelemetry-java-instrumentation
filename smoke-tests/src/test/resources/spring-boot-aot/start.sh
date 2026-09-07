@@ -9,6 +9,7 @@ aot_cache="$aot_directory/application.aot"
 training_log="$aot_directory/training.log"
 create_log="$aot_directory/create.log"
 production_java_tool_options="${JAVA_TOOL_OPTIONS:-}"
+production_java_tool_options="${production_java_tool_options/otel.javaagent.debug=true/otel.javaagent.debug=false}"
 training_pid=
 
 mkdir -p "$aot_directory"
@@ -106,7 +107,6 @@ export JAVA_TOOL_OPTIONS="$production_java_tool_options \
   -XX:AOTCache=$aot_cache \
   --add-modules=java.instrument \
   -Xbootclasspath/a:$agent_jar \
-  -Dotel.javaagent.debug=false \
   -Djdk.instrument.traceUsage=true \
   -Xlog:aot=debug,class+load=info"
 
