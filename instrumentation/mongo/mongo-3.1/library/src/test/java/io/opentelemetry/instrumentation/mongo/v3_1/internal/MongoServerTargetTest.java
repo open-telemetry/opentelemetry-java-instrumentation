@@ -207,6 +207,24 @@ class MongoServerTargetTest {
     assertThat(target.getPort()).isEqualTo(27018);
   }
 
+  @ParameterizedTest
+  @MethodSource("unsafeEncodedIpv6ZoneHosts")
+  void percentEncodedUriDelimitersAtStartOfIpv6ZoneAreNotReported(String host) {
+    assertThat(MongoServerTarget.seeds(singletonList(seedWithHost(host, 27017)))).isNull();
+  }
+
+  private static Stream<Arguments> unsafeEncodedIpv6ZoneHosts() {
+    return Stream.of(
+        argumentSet("colon", "[::1%3Apassword]"),
+        argumentSet("at sign", "[::1%40password]"),
+        argumentSet("slash", "[::1%2Fpassword]"),
+        argumentSet("question mark", "[::1%3Fpassword]"),
+        argumentSet("hash", "[::1%23password]"),
+        argumentSet("backslash", "[::1%5Cpassword]"),
+        argumentSet("percent", "[::1%25password]"),
+        argumentSet("equals", "[::1%3Dpassword]"));
+  }
+
   @Test
   void srvHostUsesTheNativeDiscoveryIdentity() {
     MongoServerTarget target = MongoServerTarget.srvHost("cluster0.example.com");
@@ -252,8 +270,6 @@ class MongoServerTargetTest {
     assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("apiKey=secret", 27017))))
         .isNull();
     assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("abc:def:123", 27017)))).isNull();
-    assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("[::1%3Apassword]", 27017))))
-        .isNull();
   }
 
   @Test
