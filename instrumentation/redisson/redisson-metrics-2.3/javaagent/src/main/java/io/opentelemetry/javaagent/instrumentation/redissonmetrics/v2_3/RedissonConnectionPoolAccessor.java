@@ -121,7 +121,7 @@ class RedissonConnectionPoolAccessor {
           return ((Collection<?>) listeners).size();
         }
       }
-    } catch (IllegalAccessException | RuntimeException ignored) {
+    } catch (IllegalAccessException ignored) {
       // ignored
     }
     return null;
