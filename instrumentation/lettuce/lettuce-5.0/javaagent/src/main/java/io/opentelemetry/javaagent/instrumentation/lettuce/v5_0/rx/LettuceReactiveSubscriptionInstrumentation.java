@@ -12,8 +12,12 @@ import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.reactivestreams.Subscriber;
+import reactor.core.CoreSubscriber;
 
 public class LettuceReactiveSubscriptionInstrumentation implements TypeInstrumentation {
 
@@ -32,13 +36,20 @@ public class LettuceReactiveSubscriptionInstrumentation implements TypeInstrumen
   public static class SubscribeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.FieldValue("command") RedisCommand<?, ?, ?> command) {
-      LettuceReactiveCommandContext.enter(command);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      LettuceReactiveCommandContext.exit();
+    @AssignReturned.ToArguments(@ToArgument(0))
+    public static Subscriber<?> onEnter(
+        @Advice.FieldValue("command") RedisCommand<?, ?, ?> command,
+        @Advice.Argument(0) Subscriber<?> subscriber) {
+      if (subscriber instanceof CoreSubscriber<?>) {
+        LettuceReactiveCommandHandler handler =
+            LettuceReactiveCommandContext.handler((CoreSubscriber<?>) subscriber);
+        if (handler != null) {
+          handler.onCommand(command);
+          return LettuceReactiveCommandSubscriber.withCancellation(
+              (CoreSubscriber<?>) subscriber, handler);
+        }
+      }
+      return subscriber;
     }
   }
 }
