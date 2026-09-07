@@ -25,7 +25,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -96,15 +95,25 @@ abstract class AbstractOpenSearchTest {
   void shouldGetStatusWithTraces() throws IOException {
     HealthResponse healthResponse = openSearchClient.cluster().health();
     assertThat(healthResponse).isNotNull();
+    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
+    assertions.add(equalTo(NETWORK_TYPE, null));
+    assertions.add(
+        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? httpHost.getHost() : null));
+    assertions.add(
+        equalTo(
+            SERVER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null));
 
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(openSearchSpanName("GET"))
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(clusterHealthAttributes()),
+                            .hasAttributesSatisfyingExactly(assertions),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -122,6 +131,13 @@ abstract class AbstractOpenSearchTest {
   @Test
   void shouldGetStatusAsyncWithTraces() throws Exception {
     CountDownLatch countDownLatch = new CountDownLatch(1);
+    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
+    assertions.add(equalTo(NETWORK_TYPE, null));
+    assertions.add(
+        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? httpHost.getHost() : null));
+    assertions.add(
+        equalTo(
+            SERVER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null));
 
     CompletableFuture<HealthResponse> responseCompletableFuture =
         getTesting()
@@ -145,10 +161,13 @@ abstract class AbstractOpenSearchTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(openSearchSpanName("GET"))
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(clusterHealthAttributes()),
+                            .hasAttributesSatisfyingExactly(assertions),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -183,31 +202,6 @@ abstract class AbstractOpenSearchTest {
         SERVER_PORT);
   }
 
-  String openSearchSpanName(String method) {
-    return openSearchSpanName(method, httpHost.getHost(), Long.valueOf(httpHost.getPort()));
-  }
-
-  String openSearchSpanName(String method, String serverAddress, Long serverPort) {
-    return emitStableDatabaseSemconv()
-        ? method + " " + serverAddress + (serverPort != null ? ":" + serverPort : "")
-        : method;
-  }
-
-  List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
-    List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
-    result.add(equalTo(NETWORK_TYPE, null));
-    if (emitStableDatabaseSemconv()) {
-      result.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
-      result.add(equalTo(SERVER_PORT, httpHost.getPort()));
-    }
-    return result;
-  }
-
-  List<AttributeAssertion> clusterHealthAttributes() {
-    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
-    return withServer(assertions.toArray(new AttributeAssertion[0]));
-  }
-
   List<AttributeAssertion> databaseAttributes(String operation, String queryText) {
     List<AttributeAssertion> result = new ArrayList<>();
     if (emitOldDatabaseSemconv()) {
@@ -233,7 +227,7 @@ abstract class AbstractOpenSearchTest {
         .waitAndAssertTraces(
             trace ->
                 assertThat(trace.getSpan(0))
-                    .hasName(openSearchSpanName("GET", nodeList, null))
+                    .hasName(emitStableDatabaseSemconv() ? "GET " + nodeList : "GET")
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfyingExactly(assertions));
   }

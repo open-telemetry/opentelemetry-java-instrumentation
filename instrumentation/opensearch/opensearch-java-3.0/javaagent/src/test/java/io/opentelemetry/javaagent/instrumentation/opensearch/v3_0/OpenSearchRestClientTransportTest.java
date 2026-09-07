@@ -5,12 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.List;
 import javax.net.ssl.SSLContext;
 import org.apache.hc.client5.http.auth.AuthScope;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
@@ -79,12 +86,17 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
 
     HealthResponse healthResponse = client.cluster().health();
     assertThat(healthResponse).isNotNull();
+    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
+    assertions.add(equalTo(NETWORK_TYPE, null));
+    assertions.add(
+        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? httpHost.getHost() : null));
+    assertions.add(
+        equalTo(
+            SERVER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null));
 
     getTesting()
         .waitAndAssertTraces(
-            trace ->
-                assertThat(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(clusterHealthAttributes()));
+            trace -> assertThat(trace.getSpan(0)).hasAttributesSatisfyingExactly(assertions));
   }
 
   private HttpHost configuredHost() {

@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -192,10 +193,11 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName(
-                                openSearchSpanName(
-                                    "GET",
-                                    "os.example",
-                                    expectedPort == null ? null : Long.valueOf(expectedPort)))
+                                emitStableDatabaseSemconv()
+                                    ? "GET "
+                                        + "os.example"
+                                        + (expectedPort == null ? "" : ":" + expectedPort)
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(assertions)));
   }
@@ -255,6 +257,13 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
     countDownLatch.await();
     HealthResponse healthResponse = responseCompletableFuture.get();
     assertThat(healthResponse).isNotNull();
+    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
+    assertions.add(equalTo(NETWORK_TYPE, null));
+    assertions.add(
+        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? httpHost.getHost() : null));
+    assertions.add(
+        equalTo(
+            SERVER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null));
 
     getTesting()
         .waitAndAssertTraces(
@@ -262,10 +271,13 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(openSearchSpanName("GET"))
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(clusterHealthAttributes()),
+                            .hasAttributesSatisfyingExactly(assertions),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
