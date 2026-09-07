@@ -602,3 +602,4 @@ opensearch-java-3.0:javaagent-unit-tests
 apache-commons-pool-2.0:bootstrap
 rabbitmq-2.7:bootstrap
 pekko-remote-1.0:javaagent
+redisson-metrics-2.3:javaagent
