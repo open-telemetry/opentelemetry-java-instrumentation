@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import static java.util.Collections.emptyList;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -256,7 +254,7 @@ public final class RedisServerTarget {
     }
     Integer port = Endpoint.parsePort(value.substring(portStart + 1));
     String host = value.substring(0, portStart);
-    return port != null && Endpoint.isIpv6Literal(host) ? endpoint(host, port) : value;
+    return port != null && RedisServerTargetUtil.isIpv6Literal(host) ? endpoint(host, port) : value;
   }
 
   private static void appendHost(StringBuilder builder, String host, boolean hasPort) {
@@ -351,7 +349,7 @@ public final class RedisServerTarget {
           return null;
         }
         String host = authority.substring(1, hostEnd);
-        if (!isIpv6Literal(host)) {
+        if (!RedisServerTargetUtil.isIpv6Literal(host)) {
           return null;
         }
         String rest = authority.substring(hostEnd + 1);
@@ -375,7 +373,7 @@ public final class RedisServerTarget {
         return port == null ? null : new Endpoint(authority.substring(0, portStart), port, false);
       }
       // an unbracketed literal IPv6 address has more than one colon and carries no port
-      if (secondColon >= 0 && isIpv6Literal(authority)) {
+      if (secondColon >= 0 && RedisServerTargetUtil.isIpv6Literal(authority)) {
         return new Endpoint(authority, null, false);
       }
       if (portStart >= 0) {
@@ -392,84 +390,6 @@ public final class RedisServerTarget {
         }
       }
       return false;
-    }
-
-    private static boolean isIpv6Literal(String value) {
-      // TODO: Replace these helpers with DbServerEndpointUtil once #20015 merges.
-      int zoneStart = value.indexOf('%');
-      String literal = zoneStart < 0 ? value : value.substring(0, zoneStart);
-      if (zoneStart >= 0 && !isZoneId(value.substring(zoneStart + 1))) {
-        return false;
-      }
-      for (int i = 0; i < literal.length(); i++) {
-        char c = literal.charAt(i);
-        if (c != ':' && c != '.' && !isAsciiHexDigit(c)) {
-          return false;
-        }
-      }
-      int ipv4Start = literal.lastIndexOf(':') + 1;
-      if (literal.indexOf('.') >= 0 && !isIpv4Literal(literal.substring(ipv4Start))) {
-        return false;
-      }
-      try {
-        return new URI("db://[" + literal + "]").getHost() != null;
-      } catch (URISyntaxException ignored) {
-        return false;
-      }
-    }
-
-    private static boolean isIpv4Literal(String value) {
-      int parts = 0;
-      int digits = 0;
-      int number = 0;
-      for (int i = 0; i <= value.length(); i++) {
-        char c = i == value.length() ? '.' : value.charAt(i);
-        if (c == '.') {
-          if (digits == 0 || (digits > 1 && value.charAt(i - digits) == '0') || number > 255) {
-            return false;
-          }
-          parts++;
-          digits = 0;
-          number = 0;
-        } else {
-          if (!isAsciiDigit(c)) {
-            return false;
-          }
-          if (++digits > 3) {
-            return false;
-          }
-          number = number * 10 + c - '0';
-        }
-      }
-      return parts == 4;
-    }
-
-    private static boolean isZoneId(String value) {
-      if (value.isEmpty()) {
-        return false;
-      }
-      for (int i = 0; i < value.length(); i++) {
-        if (!isUnreserved(value.charAt(i))) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    private static boolean isUnreserved(char c) {
-      return c == '-' || c == '.' || c == '_' || c == '~' || isAsciiLetterOrDigit(c);
-    }
-
-    private static boolean isAsciiHexDigit(char c) {
-      return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || isAsciiDigit(c);
-    }
-
-    private static boolean isAsciiLetterOrDigit(char c) {
-      return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || isAsciiDigit(c);
-    }
-
-    private static boolean isAsciiDigit(char c) {
-      return c >= '0' && c <= '9';
     }
 
     private static boolean isSocket(@Nullable String scheme, String value) {
