@@ -10,13 +10,11 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import com.couchbase.client.core.cnc.RequestSpan;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import javax.annotation.Nullable;
 
 public class CouchbaseRequestPeers {
 
-  private static final ThreadLocal<Deque<RequestPeerScope>> current = new ThreadLocal<>();
+  private static final ThreadLocal<RequestPeerScope> current = new ThreadLocal<>();
 
   @Nullable
   public static RequestPeerScope open(
@@ -31,12 +29,7 @@ public class CouchbaseRequestPeers {
       return null;
     }
     RequestPeerScope scope = new RequestPeerScope(parent, socketAddress);
-    Deque<RequestPeerScope> scopes = current.get();
-    if (scopes == null) {
-      scopes = new ArrayDeque<>();
-      current.set(scopes);
-    }
-    scopes.push(scope);
+    current.set(scope);
     return scope;
   }
 
@@ -45,11 +38,7 @@ public class CouchbaseRequestPeers {
     if (parent == null) {
       return null;
     }
-    Deque<RequestPeerScope> scopes = current.get();
-    if (scopes == null) {
-      return null;
-    }
-    RequestPeerScope scope = scopes.peek();
+    RequestPeerScope scope = current.get();
     if (scope == null || scope.parent != parent || scope.consumed) {
       return null;
     }
@@ -89,16 +78,7 @@ public class CouchbaseRequestPeers {
     }
 
     public void close() {
-      Deque<RequestPeerScope> scopes = current.get();
-      if (scopes == null) {
-        return;
-      }
-      if (scopes.peek() == this) {
-        scopes.pop();
-      } else {
-        scopes.remove(this);
-      }
-      if (scopes.isEmpty()) {
+      if (current.get() == this) {
         current.remove();
       }
     }

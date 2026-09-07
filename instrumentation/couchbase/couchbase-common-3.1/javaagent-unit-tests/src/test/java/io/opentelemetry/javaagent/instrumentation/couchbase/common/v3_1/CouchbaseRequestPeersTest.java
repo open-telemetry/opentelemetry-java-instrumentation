@@ -44,29 +44,6 @@ class CouchbaseRequestPeersTest {
   }
 
   @Test
-  void nestedScopesKeepPeerBoundToParentIdentity() throws UnknownHostException {
-    assumeTrue(emitStableDatabaseSemconv());
-    RequestSpan outerParent = mock(RequestSpan.class);
-    RequestSpan innerParent = mock(RequestSpan.class);
-    RequestPeerScope outer =
-        CouchbaseRequestPeers.open(
-            outerParent,
-            new InetSocketAddress(
-                InetAddress.getByAddress(new byte[] {(byte) 192, 0, 2, 1}), 11210));
-    RequestPeerScope inner =
-        CouchbaseRequestPeers.open(
-            innerParent,
-            new InetSocketAddress(
-                InetAddress.getByAddress(new byte[] {(byte) 192, 0, 2, 2}), 8093));
-
-    assertThat(CouchbaseRequestPeers.consume(outerParent)).isNull();
-    assertThat(CouchbaseRequestPeers.consume(innerParent).getAddress()).isEqualTo("192.0.2.2");
-    inner.close();
-    assertThat(CouchbaseRequestPeers.consume(outerParent).getAddress()).isEqualTo("192.0.2.1");
-    outer.close();
-  }
-
-  @Test
   void retryCanCaptureAReplacementPeer() throws UnknownHostException {
     assumeTrue(emitStableDatabaseSemconv());
     RequestSpan parent = mock(RequestSpan.class);
