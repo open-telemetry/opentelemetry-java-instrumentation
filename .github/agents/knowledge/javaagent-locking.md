@@ -50,7 +50,7 @@ JVM class-loading locks are an exception. A library-owned or carrier-owned monit
 when instrumentation must coordinate with the library or with other instrumentation using the same
 carrier, but that ownership and lock ordering must be verified and documented.
 
-## Preserve Capture and Completion Semantics
+## Separate Capture from Completion
 
 Keep these two questions separate:
 
