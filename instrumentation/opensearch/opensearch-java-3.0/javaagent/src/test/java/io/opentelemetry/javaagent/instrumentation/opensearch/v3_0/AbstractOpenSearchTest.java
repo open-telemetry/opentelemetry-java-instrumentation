@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -31,11 +30,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.AfterAll;
@@ -95,14 +91,6 @@ abstract class AbstractOpenSearchTest {
   void shouldGetStatusWithTraces() throws IOException {
     HealthResponse healthResponse = openSearchClient.cluster().health();
     assertThat(healthResponse).isNotNull();
-    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
-    assertions.add(equalTo(NETWORK_TYPE, null));
-    assertions.add(
-        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? httpHost.getHost() : null));
-    assertions.add(
-        equalTo(
-            SERVER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null));
-
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -113,7 +101,19 @@ abstract class AbstractOpenSearchTest {
                                     ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
                                     : "GET")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(assertions),
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "GET"),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -131,14 +131,6 @@ abstract class AbstractOpenSearchTest {
   @Test
   void shouldGetStatusAsyncWithTraces() throws Exception {
     CountDownLatch countDownLatch = new CountDownLatch(1);
-    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
-    assertions.add(equalTo(NETWORK_TYPE, null));
-    assertions.add(
-        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? httpHost.getHost() : null));
-    assertions.add(
-        equalTo(
-            SERVER_PORT, emitStableDatabaseSemconv() ? Long.valueOf(httpHost.getPort()) : null));
-
     CompletableFuture<HealthResponse> responseCompletableFuture =
         getTesting()
             .runWithSpan(
@@ -167,7 +159,19 @@ abstract class AbstractOpenSearchTest {
                                     : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(assertions),
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "GET"),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -202,33 +206,19 @@ abstract class AbstractOpenSearchTest {
         SERVER_PORT);
   }
 
-  List<AttributeAssertion> databaseAttributes(String operation, String queryText) {
-    List<AttributeAssertion> result = new ArrayList<>();
-    if (emitOldDatabaseSemconv()) {
-      result.add(equalTo(DB_SYSTEM, OPENSEARCH));
-      result.add(equalTo(DB_OPERATION, operation));
-      result.add(equalTo(DB_STATEMENT, queryText));
-    }
-    if (emitStableDatabaseSemconv()) {
-      result.add(equalTo(DB_SYSTEM_NAME, OPENSEARCH));
-      result.add(equalTo(DB_OPERATION_NAME, operation));
-      result.add(equalTo(DB_QUERY_TEXT, queryText));
-    }
-    return result;
-  }
-
   void assertNodeListTarget(String nodeList) {
-    List<AttributeAssertion> assertions = databaseAttributes("GET", "GET /_cluster/health");
-    assertions.add(equalTo(NETWORK_TYPE, null));
-    assertions.add(equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null));
-    assertions.add(equalTo(SERVER_PORT, null));
-
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 assertThat(trace.getSpan(0))
                     .hasName(emitStableDatabaseSemconv() ? "GET " + nodeList : "GET")
                     .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(assertions));
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                        equalTo(maybeStable(DB_OPERATION), "GET"),
+                        equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                        equalTo(NETWORK_TYPE, null),
+                        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null),
+                        equalTo(SERVER_PORT, null)));
   }
 }
