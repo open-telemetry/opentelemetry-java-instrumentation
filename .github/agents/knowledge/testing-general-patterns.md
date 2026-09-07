@@ -324,23 +324,29 @@ is expected only when experimental attributes are enabled, and `null`
 otherwise, so keep it instead of inlining
 `EXPERIMENTAL_ATTRIBUTES ? value : null`.
 
-A helper may obtain the mode flag or derive a value from test data. It should
-not choose between short expected values on the assertion's behalf, build or
-augment a `List<AttributeAssertion>` with mode-dependent entries, or otherwise
-hide the expected assertion shape. Keep helpers for genuinely nontrivial
+A helper may obtain the mode flag or derive a value from test data. Do not
+conditionally build a `List<AttributeAssertion>` and then pass that list to an
+otherwise ordinary assertion helper. Pass each assertion directly and keep the
+mode check with its expected value. Keep helpers for genuinely nontrivial
 derivation only:
 
 ```java
 // Bad: the helper conditionally builds a list and hides the expected shape.
 private static List<AttributeAssertion> databaseAttributes() {
   List<AttributeAssertion> attributes = new ArrayList<>();
+  if (emitOldDatabaseSemconv()) {
+    attributes.add(equalTo(DB_USER, USER_DB));
+  }
   if (emitStableDatabaseSemconv()) {
-    attributes.add(equalTo(DB_SYSTEM_NAME, ELASTICSEARCH));
+    attributes.add(equalTo(ERROR_TYPE, "42601"));
   }
   return attributes;
 }
 assertNodeListTarget(span, databaseAttributes());
 
-// Good: the mapped expectation remains visible at the assertion.
-assertNodeListTarget(span, equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH));
+// Good: pass each assertion directly and keep its mode check visible.
+assertNodeListTarget(
+    span,
+    equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
+    equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
 ```

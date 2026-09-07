@@ -97,24 +97,30 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   `oldOrExperimental(value)`, or `expectedNamespace()` when no established
   semconv utility applies. Seeing both expected values at the assertion is more
   useful than deduplicating a short expression.
-- Do not hide mode-dependent expectations in a helper that builds or augments a
-  `List<AttributeAssertion>`, such as `databaseAttributes()`, and passes it to
-  an assertion helper. Keep each individual attribute expectation at the
-  assertion site; retain helpers only for genuinely nontrivial derivation:
+- Do not conditionally build a `List<AttributeAssertion>` and then pass that
+  list to an otherwise ordinary assertion helper. Pass each assertion directly
+  and keep the mode check with its expected value. Retain helpers only for
+  genuinely nontrivial derivation:
 
   ```java
   // Bad: the helper conditionally builds a list and hides the expected shape.
   private static List<AttributeAssertion> databaseAttributes() {
     List<AttributeAssertion> attributes = new ArrayList<>();
+    if (emitOldDatabaseSemconv()) {
+      attributes.add(equalTo(DB_USER, USER_DB));
+    }
     if (emitStableDatabaseSemconv()) {
-      attributes.add(equalTo(DB_SYSTEM_NAME, ELASTICSEARCH));
+      attributes.add(equalTo(ERROR_TYPE, "42601"));
     }
     return attributes;
   }
   assertNodeListTarget(span, databaseAttributes());
 
-  // Good: the mapped expectation remains visible at the assertion.
-  assertNodeListTarget(span, equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH));
+  // Good: pass each assertion directly and keep its mode check visible.
+  assertNodeListTarget(
+      span,
+      equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
+      equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.
