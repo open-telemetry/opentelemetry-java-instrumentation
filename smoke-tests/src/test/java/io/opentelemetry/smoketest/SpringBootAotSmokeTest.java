@@ -25,10 +25,7 @@ class SpringBootAotSmokeTest extends AbstractSpringBootSmokeTest {
         .waitStrategy(
             new TargetWaitStrategy.Log(
                 Duration.ofMinutes(3), ".*Started SpringbootApplication in.*"))
-        .entrypoint(
-            "/bin/bash",
-            "-c",
-            "sed -i 's/\\r$//' /spring-boot-aot.sh && exec /bin/bash /spring-boot-aot.sh");
+        .entrypoint("/bin/bash", "/spring-boot-aot.sh");
   }
 
   @Test
