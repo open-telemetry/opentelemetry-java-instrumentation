@@ -60,13 +60,14 @@ class CouchbaseServerTargetsTest {
             asList(
                 SeedNode.create("two.example", Optional.empty(), Optional.empty()),
                 SeedNode.create("one.example", Optional.empty(), Optional.empty())));
+    Set<SeedNode> returnedSeedNodes = new LinkedHashSet<>(seedNodes);
     CouchbaseServerTarget connectionStringTarget =
         CouchbaseConnectionStrings.target("couchbases://cluster.example");
     assertThat(connectionStringTarget).isNotNull();
 
     Core core = mock(Core.class);
     CouchbaseServerTargets.registerSeedNodes(seedNodes, connectionStringTarget);
-    CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, null);
+    CouchbaseServerTargets.registerFromSeedNodes(core, returnedSeedNodes, null);
 
     assertThat(CouchbaseServerTargets.get(core)).isSameAs(connectionStringTarget);
     assertThat(connectionStringTarget.getAddress()).isEqualTo("couchbases://cluster.example");
@@ -141,6 +142,15 @@ class CouchbaseServerTargetsTest {
         singleton(SeedNode.create("node.example", Optional.of(11210), Optional.empty()));
 
     CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, null);
+
+    assertThat(CouchbaseServerTargets.get(core)).isNull();
+  }
+
+  @Test
+  void nullSeedNodesDoNotRegisterTarget() {
+    Core core = mock(Core.class);
+
+    CouchbaseServerTargets.registerFromSeedNodes(core, null, null);
 
     assertThat(CouchbaseServerTargets.get(core)).isNull();
   }
