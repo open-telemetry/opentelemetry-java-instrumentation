@@ -221,7 +221,7 @@ class KafkaConnectTest extends TargetSystemTest {
     InternalMetricsDefinitions definitions =
         new InternalMetricsDefinitions(getClass().getClassLoader());
 
-    Set<String> rules = definitions.getRulesForSystem("kafka-connect", true, true);
+    Set<String> rules = getAllRulesForSystem("kafka-connect");
     assertThat(rules).hasSize(1);
 
     try (InputStream input =

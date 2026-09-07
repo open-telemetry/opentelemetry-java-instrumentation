@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -48,9 +49,8 @@ class InternalMetricsDefinitionsTest {
 
     Set<String> allRules = new HashSet<>();
     for (String system : definitions.getSupportedSystems()) {
-      Set<String> rulesForSystem = definitions.getRulesForSystem(system, true, true);
-      assertThat(rulesForSystem).isNotEmpty();
-      allRules.addAll(rulesForSystem);
+      Optional.ofNullable(definitions.getRulesPath(system, true)).ifPresent(allRules::add);
+      Optional.ofNullable(definitions.getRulesPath(system, false)).ifPresent(allRules::add);
     }
 
     assertThat(getYamlFilesFromFileSystem()).isNotEmpty();
@@ -96,22 +96,19 @@ class InternalMetricsDefinitionsTest {
   }
 
   @Test
-  void loadByStability() {
+  void getRulesPath() {
     // we intentionally use a fake (unsupported) system to test resource resolution
     InternalMetricsDefinitions definitions = new InternalMetricsDefinitions(CLASS_LOADER);
-    assertThat(definitions.getRulesForSystem("fake-system", false, false)).isEmpty();
-    assertThat(definitions.getRulesForSystem("fake-system", true, false))
-        .containsExactlyInAnyOrder("jmx/rules/fake-system.yaml");
-    assertThat(definitions.getRulesForSystem("fake-system", false, true))
-        .containsExactlyInAnyOrder("jmx/rules/fake-system_unstable.yaml");
-    assertThat(definitions.getRulesForSystem("fake-system", true, true))
-        .containsExactlyInAnyOrder(
-            "jmx/rules/fake-system.yaml", "jmx/rules/fake-system_unstable.yaml");
+    assertThat(definitions.getRulesPath("fake-system", false))
+        .isEqualTo("jmx/rules/fake-system_unstable.yaml");
+    assertThat(definitions.getRulesPath("fake-system", true))
+        .isEqualTo("jmx/rules/fake-system.yaml");
   }
 
   @Test
   void loadMissing() {
     InternalMetricsDefinitions definitions = new InternalMetricsDefinitions(CLASS_LOADER);
-    assertThat(definitions.getRulesForSystem("missing-system", true, true)).isEmpty();
+    assertThat(definitions.getRulesPath("missing-system", false)).isNull();
+    assertThat(definitions.getRulesPath("missing-system", true)).isNull();
   }
 }

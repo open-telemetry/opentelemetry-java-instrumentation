@@ -73,14 +73,13 @@ public class InternalMetricsDefinitions {
   }
 
   private void loadRules(String systemName, boolean stable, HandlerRegistry handlerRegistry) {
-    String path = String.format("jmx/rules/%s.yaml", systemName);
-    if (!stable) {
-      path = String.format("jmx/rules/%s_unstable.yaml", systemName);
+    String path = getRulesPath(systemName, stable);
+    if (path == null) {
+      // silently ignore non-existing rules
+      return;
     }
+
     try (InputStream input = classLoader.getResourceAsStream(path)) {
-      if (input == null) {
-        return;
-      }
       logger.log(INFO, "loading embedded JMX rules from {0}", path);
       List<MetricDef> metricDefs = RuleParser.get().parseMetricDefs(input);
       loadedRules.add(new RuleSet(metricDefs, stable, handlerRegistry));
@@ -140,57 +139,25 @@ public class InternalMetricsDefinitions {
   }
 
   /**
-   * Get resource paths for rules for a given system.
+   * Get path to existing rules resources.
    *
-   * @param system system identifier
-   * @param includeStable whether to include stable rules
-   * @param includeUnstable whether to include unstable rules
-   * @return collection of resource paths to load rules, empty if no embedded rules are available
-   *     (which means the system is not supported by embedded rules).
+   * @param system system name
+   * @param stable true to load stable rules, false for non-stable rules
+   * @return path to rules resource, {@literal null} if there is none
    */
-  public Set<String> getRulesForSystem(
-      String system, boolean includeStable, boolean includeUnstable) {
-    Set<String> result = new HashSet<>();
-
-    if (includeStable) {
-      String stablePath = getRulesPath(system, true);
-      if (stablePath != null) {
-        result.add(stablePath);
-      }
-    }
-
-    if (includeUnstable) {
-      String unstablePath = getRulesPath(system, false);
-      if (unstablePath != null) {
-        result.add(unstablePath);
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Get resource path for rules for a given system.
-   *
-   * @param system system identifier
-   * @param stable whether to get stable or unstable rules
-   * @return resource path to load rules, or null if no rules matching system and stability are
-   *     available
-   */
-  @Nullable // TODO: deprecate this
+  @Nullable
   public String getRulesPath(String system, boolean stable) {
     String path = String.format("jmx/rules/%s.yaml", system);
     if (!stable) {
       path = String.format("jmx/rules/%s_unstable.yaml", system);
     }
-    // testing with getResourceAsStream to ensure consistent behavior with loading
-    try (InputStream stream = classLoader.getResourceAsStream(path)) {
-      if (stream != null) {
-        return path;
-      }
+
+    // Probe existence by attempting to read it using same method as actually reading it.
+    try (InputStream input = classLoader.getResourceAsStream(path)) {
+      return input != null ? path : null;
     } catch (IOException e) {
-      throw new IllegalStateException("unable to load resource", e);
+      // no io exception expected when loading resources
+      throw new IllegalStateException(e);
     }
-    return null;
   }
 }

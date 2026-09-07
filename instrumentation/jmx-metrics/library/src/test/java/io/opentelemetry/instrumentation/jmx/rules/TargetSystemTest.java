@@ -32,8 +32,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -331,7 +333,10 @@ public class TargetSystemTest {
   protected static Set<String> getAllRulesForSystem(String system) {
     InternalMetricsDefinitions definitions =
         new InternalMetricsDefinitions(TargetSystemTest.class.getClassLoader());
-    Set<String> rules = definitions.getRulesForSystem(system, true, true);
+
+    Set<String> rules = new HashSet<>();
+    Optional.ofNullable(definitions.getRulesPath(system, true)).ifPresent(rules::add);
+    Optional.ofNullable(definitions.getRulesPath(system, false)).ifPresent(rules::add);
     return rules;
   }
 

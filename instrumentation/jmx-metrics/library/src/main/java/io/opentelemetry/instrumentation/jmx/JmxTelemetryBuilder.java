@@ -230,24 +230,4 @@ public final class JmxTelemetryBuilder {
   Set<String> getRegisteredMetrics() {
     return Collections.unmodifiableSet(registeredMetrics);
   }
-
-  // package-private for testing
-  Set<String> getInternalRulesToLoad(InternalMetricsDefinitions internalMetrics) {
-    Set<String> rulesToLoad = new HashSet<>();
-    if (stableMetricsSystemFilter != null || unstableMetricsSystemFilter != null) {
-      internalMetrics
-          .getSupportedSystems()
-          .forEach(
-              system -> {
-                boolean includeStable =
-                    stableMetricsSystemFilter != null && stableMetricsSystemFilter.matches(system);
-                boolean includeUnstable =
-                    unstableMetricsSystemFilter != null
-                        && unstableMetricsSystemFilter.matches(system);
-                rulesToLoad.addAll(
-                    internalMetrics.getRulesForSystem(system, includeStable, includeUnstable));
-              });
-    }
-    return rulesToLoad;
-  }
 }
