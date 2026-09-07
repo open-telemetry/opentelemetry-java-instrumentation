@@ -143,9 +143,16 @@ reset policy for global hooks. Do not substitute a blanket latest-ticket, queue,
 
 ## Separate Terminal Ownership from Enrichment
 
-Do not add deferred terminal state or waiting solely to guarantee every late attribute. If terminal
-ordering is genuinely required, claim ownership before external effects and preserve thread-affine
-scope closure, synchronous API guarantees, reentrancy, and once-only effects:
+Separate mandatory terminal ownership, cleanup, error preservation, and scope ownership from optional
+enrichment. When the telemetry contract permits end-time available information, the terminal owner
+may freeze one coherent snapshot for related final fields, reject later enrichment, and complete
+without waiting or handing termination to an updater. Any omission of metadata arriving after the
+freeze needs explicit agreement; preserve information published before it. Deferred completion or
+handoff needs an independently justified requirement beyond retaining every late attribute.
+
+For mandatory terminal ordering, claim ownership before external effects and preserve thread-affine
+scope closure, synchronous API guarantees, reentrancy, and once-only effects. A short metadata lock
+may be simpler than a lock-free handoff, but keep external effects out of it:
 
 ```java
 Work work;
