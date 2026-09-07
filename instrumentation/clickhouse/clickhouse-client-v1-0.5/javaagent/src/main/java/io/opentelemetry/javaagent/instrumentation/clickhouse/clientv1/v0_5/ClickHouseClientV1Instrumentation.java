@@ -60,10 +60,13 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
       }
 
       ClickHouseNode server = clickHouseRequest.getServer();
+      String host = server.getHost();
+      int port = server.getPort();
       ClickHouseDbRequest request =
           ClickHouseDbRequest.create(
-              server.getHost(),
-              server.getPort(),
+              host,
+              port,
+              ClickHouseClientV1Singletons.peerServerTarget(host, port),
               ClickHouseClientV1Singletons.serverTarget(clickHouseRequest),
               server.getDatabase().orElse(ClickHouseDefaults.DATABASE.getDefaultValue().toString()),
               ClickHouseRequestAccess.getQuery(clickHouseRequest));

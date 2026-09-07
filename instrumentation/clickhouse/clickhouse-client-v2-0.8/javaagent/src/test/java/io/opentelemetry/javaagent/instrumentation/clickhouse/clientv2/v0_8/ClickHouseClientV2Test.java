@@ -13,6 +13,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -23,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.ServerException;
@@ -38,8 +41,10 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -127,6 +132,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -141,8 +151,102 @@ class ClickHouseClientV2Test {
         DB_SYSTEM_NAME,
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  void testRetryReportsContactedEndpoint() throws Exception {
+    assumeTrue(isClassPresent("com.clickhouse.client.api.transport.ClientNodeSelector"));
+
+    int unavailablePort = 1;
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint("http://127.0.0.1:" + unavailablePort)
+            .addEndpoint(Protocol.HTTP, host, port, false)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false")
+            .setConnectTimeout(100)
+            .setMaxRetries(1)
+            .useAsyncRequests(true)
+            .build();
+    cleanup.deferCleanup(testClient);
+    putUnreachableEndpointFirst(testClient, unavailablePort);
+
+    QueryResponse response = testClient.query("select * from " + TABLE_NAME).join();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfyingExactly(
+                        equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                        equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                        equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                        equalTo(
+                            NETWORK_PEER_PORT, emitStableDatabaseSemconv() ? (long) port : null),
+                        equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                        equalTo(
+                            DB_QUERY_SUMMARY,
+                            emitStableDatabaseSemconv() ? "select test_table" : null),
+                        equalTo(
+                            maybeStable(DB_OPERATION),
+                            emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testExhaustedRetryReportsLastContactedEndpoint() throws Exception {
+    assumeTrue(isClassPresent("com.clickhouse.client.api.transport.ClientNodeSelector"));
+
+    int firstUnavailablePort = 1;
+    int secondUnavailablePort = 2;
+    Client testClient =
+        new Client.Builder()
+            .addEndpoint("http://127.0.0.1:" + firstUnavailablePort)
+            .addEndpoint("http://127.0.0.1:" + secondUnavailablePort)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .setOption("compress", "false")
+            .setConnectTimeout(100)
+            .setMaxRetries(1)
+            .useAsyncRequests(true)
+            .build();
+    cleanup.deferCleanup(testClient);
+    putUnreachableEndpointFirst(testClient, firstUnavailablePort);
+
+    Throwable thrown = catchThrowable(() -> testClient.query("select * from " + TABLE_NAME).join());
+    assertThat(thrown).isNotNull();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfyingExactly(
+                        equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                        equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null),
+                        equalTo(
+                            NETWORK_PEER_PORT,
+                            emitStableDatabaseSemconv() ? (long) secondUnavailablePort : null),
+                        equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                        equalTo(
+                            DB_QUERY_SUMMARY,
+                            emitStableDatabaseSemconv() ? "select test_table" : null),
+                        equalTo(
+                            maybeStable(DB_OPERATION),
+                            emitStableDatabaseSemconv() ? null : "SELECT"),
+                        equalTo(
+                            ERROR_TYPE,
+                            emitStableDatabaseSemconv()
+                                ? thrown.getCause().getClass().getName()
+                                : null))));
   }
 
   @Test
@@ -176,6 +280,15 @@ class ClickHouseClientV2Test {
   }
 
   @Test
+  void testUnsafePeerEndpointIsOmitted() throws Exception {
+    Class<?> endpointTarget = Class.forName(singletons().getName() + "$EndpointTarget");
+    Method parse = endpointTarget.getDeclaredMethod("parse", String.class);
+    parse.setAccessible(true);
+
+    assertThat(parse.invoke(null, "http://host.example%3fsecret:8123")).isNull();
+  }
+
+  @Test
   void testQueryWithStringQuery() throws Exception {
     testing.runWithSpan(
         "parent",
@@ -205,6 +318,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + TABLE_NAME + " values(?)(?)(?)"),
                             equalTo(
@@ -225,6 +343,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -263,6 +386,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -299,6 +427,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from non_existent_table"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -315,6 +448,8 @@ class ClickHouseClientV2Test {
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
         ERROR_TYPE,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
     if (emitStableDatabaseSemconv()) {
@@ -358,6 +493,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
                             equalTo(
@@ -393,6 +533,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
@@ -436,6 +581,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + TABLE_NAME + " values(?)"),
                             equalTo(
@@ -456,6 +606,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
@@ -502,6 +657,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " where value={param_s: String}"),
                             equalTo(
@@ -524,10 +684,50 @@ class ClickHouseClientV2Test {
       assertThat(serverTarget).isNull();
       return;
     }
+
     assertThat(serverTarget).isNotNull();
     assertThat(serverTarget.getClass().getMethod("getAddress").invoke(serverTarget))
         .isEqualTo(address);
     assertThat(serverTarget.getClass().getMethod("getPort").invoke(serverTarget)).isEqualTo(port);
+  }
+
+  private static boolean isClassPresent(String className) {
+    try {
+      Class.forName(className, false, Client.class.getClassLoader());
+      return true;
+    } catch (ClassNotFoundException ignored) {
+      return false;
+    }
+  }
+
+  private static void putUnreachableEndpointFirst(Client client, int unavailablePort)
+      throws Exception {
+    Field endpointsField = Client.class.getDeclaredField("endpoints");
+    endpointsField.setAccessible(true);
+    List<?> endpoints = (List<?>) endpointsField.get(client);
+    List<Object> orderedEndpoints = new ArrayList<>(endpoints.size());
+    Object unavailableEndpoint = null;
+    for (Object endpoint : endpoints) {
+      int endpointPort = (Integer) endpoint.getClass().getMethod("getPort").invoke(endpoint);
+      if (endpointPort == unavailablePort) {
+        unavailableEndpoint = endpoint;
+      } else {
+        orderedEndpoints.add(endpoint);
+      }
+    }
+    assertThat(unavailableEndpoint).isNotNull();
+    orderedEndpoints.add(0, unavailableEndpoint);
+    endpointsField.set(client, orderedEndpoints);
+
+    Class<?> selectorClass =
+        Class.forName(
+            "com.clickhouse.client.api.transport.ClientNodeSelector",
+            true,
+            Client.class.getClassLoader());
+    Object selector = selectorClass.getConstructor(List.class).newInstance(orderedEndpoints);
+    Field selectorField = Client.class.getDeclaredField("nodeSelector");
+    selectorField.setAccessible(true);
+    selectorField.set(client, selector);
   }
 
   private static Class<?> singletons() throws Exception {

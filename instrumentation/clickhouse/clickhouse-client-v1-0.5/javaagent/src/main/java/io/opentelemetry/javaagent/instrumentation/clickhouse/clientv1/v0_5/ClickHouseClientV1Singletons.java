@@ -58,6 +58,11 @@ public class ClickHouseClientV1Singletons {
     return uncapturedServerTarget(request);
   }
 
+  @Nullable
+  public static DbServerTarget peerServerTarget(String host, int port) {
+    return DbServerTarget.builder(-1).addEndpoint(extractPeerHost(host), port).build();
+  }
+
   public static void captureConfiguredNodes(
       ClickHouseNodes nodes, Collection<ClickHouseNode> configuredNodes) {
     NODES_SERVER_TARGET.set(nodes, createServerTarget(configuredNodes));
@@ -104,6 +109,31 @@ public class ClickHouseClientV1Singletons {
     int defaultPort =
         node.getConfig().isSsl() ? protocol.getDefaultSecurePort() : protocol.getDefaultPort();
     builder.addEndpoint(node.getHost(), node.getPort(), defaultPort);
+  }
+
+  @Nullable
+  private static String extractPeerHost(String host) {
+    if (host.indexOf('/') >= 0
+        || host.indexOf('?') >= 0
+        || host.indexOf('#') >= 0
+        || host.indexOf(',') >= 0
+        || host.indexOf('=') >= 0
+        || host.indexOf('%') >= 0
+        || host.indexOf('[') >= 0
+        || host.indexOf(']') >= 0
+        || hasWhitespace(host)) {
+      return null;
+    }
+    return host.indexOf('@') < 0 ? host : null;
+  }
+
+  private static boolean hasWhitespace(String value) {
+    for (int i = 0; i < value.length(); i++) {
+      if (Character.isWhitespace(value.charAt(i))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static class CapturedServerTarget {
