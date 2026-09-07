@@ -33,9 +33,9 @@ public interface VirtualFieldMappingsBuilder {
   /**
    * Register the association between the {@code typeName} and the {@code fieldTypeName}. Class
    * pairs registered using this method will be available as {@link VirtualField}s in the runtime;
-   * obtainable by calling {@link VirtualField#find(Class, Class)}.
+   * obtainable by calling {@link VirtualField#find(String, Class, Class)}.
    *
-   * @param filedName The name of the virtual field.
+   * @param fieldName The name of the virtual field.
    * @param typeName The name of the type that will contain the virtual field of type named {@code
    *     fieldTypeName}.
    * @param fieldTypeName The name of the field type that will be added to {@code type}.
@@ -43,5 +43,5 @@ public interface VirtualFieldMappingsBuilder {
    * @see VirtualField
    */
   @CanIgnoreReturnValue
-  VirtualFieldMappingsBuilder register(String filedName, String typeName, String fieldTypeName);
+  VirtualFieldMappingsBuilder register(String fieldName, String typeName, String fieldTypeName);
 }

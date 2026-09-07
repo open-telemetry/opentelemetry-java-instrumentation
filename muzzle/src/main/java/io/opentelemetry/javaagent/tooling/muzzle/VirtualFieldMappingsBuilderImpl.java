@@ -22,9 +22,32 @@ public final class VirtualFieldMappingsBuilderImpl implements VirtualFieldMappin
 
   @Override
   public VirtualFieldMappingsBuilder register(
-      String filedName, String typeName, String fieldTypeName) {
-    mappingSet.add(new Mapping(filedName, typeName, fieldTypeName));
+      String fieldName, String typeName, String fieldTypeName) {
+    // since we are going to use the field name as part of generated class and method names we are
+    // not going to allow all kinds of names
+    if (!isIdentifier(fieldName)) {
+      throw new IllegalArgumentException("Invalid field name: " + fieldName);
+    }
+    mappingSet.add(new Mapping(fieldName, typeName, fieldTypeName));
     return this;
+  }
+
+  private static boolean isIdentifier(String name) {
+    if (name.isEmpty()) {
+      return true;
+    }
+
+    int cp = name.codePointAt(0);
+    if (!Character.isJavaIdentifierStart(cp)) {
+      return false;
+    }
+    for (int i = Character.charCount(cp); i < name.length(); i += Character.charCount(cp)) {
+      cp = name.codePointAt(i);
+      if (!Character.isJavaIdentifierPart(cp)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void registerAll(VirtualFieldMappings mappings) {

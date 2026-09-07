@@ -63,9 +63,10 @@ final class VirtualFieldImplementationsGenerator {
   }
 
   /**
-   * Generate an 'implementation' of a context store class for given key class name and context
-   * class name.
+   * Generate an 'implementation' of a context store class for given field name, key class name and
+   * context class name.
    *
+   * @param fieldName field name
    * @param typeName key class name
    * @param fieldTypeName context class name
    * @return unloaded dynamic type containing generated class

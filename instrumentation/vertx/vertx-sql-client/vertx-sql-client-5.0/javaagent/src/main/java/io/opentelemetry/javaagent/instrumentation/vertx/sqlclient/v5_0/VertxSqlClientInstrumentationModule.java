@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
-import java.util.function.BiConsumer;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
@@ -58,14 +57,14 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
+  public void registerVirtualFields(VirtualFieldRegistration virtualFieldRegistration) {
     // we add the virtual field to CommandBase manually because it is in different package in 5.0
     // and 5.1
     // used in 5.0
-    virtualFieldRegistrar.accept(
+    virtualFieldRegistration.register(
         "io.vertx.sqlclient.internal.command.CommandBase", Context.class.getName());
     // used in 5.1
-    virtualFieldRegistrar.accept(
+    virtualFieldRegistration.register(
         "io.vertx.sqlclient.spi.protocol.CommandBase", Context.class.getName());
   }
 }
