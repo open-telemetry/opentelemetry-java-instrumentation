@@ -60,14 +60,3 @@ completion under the lock and perform external effects afterward. Otherwise, do 
 completion claim just to guard against hypothetical duplicate calls. Preserve closing scopes on the
 thread where they were opened, exceptions that must be thrown immediately, application errors, and
 the library's timeout and original error.
-
-Global hooks need clear rules for who owns the existing hook, how hooks combine, and what happens
-on failure, recursive calls, or reset. Do not report a hook as installed until the complete
-transition succeeds, and roll back changes that were made before a failure.
-
-## Test Supported Guarantees
-
-Tests should cover supported lifecycle paths that can overlap, especially initialization,
-cancellation, reuse, asynchronous completion, completion races, and failure paths. Assert that the
-intended hook, cleanup, and ordering path ran, not merely that the telemetry output looked
-plausible.
