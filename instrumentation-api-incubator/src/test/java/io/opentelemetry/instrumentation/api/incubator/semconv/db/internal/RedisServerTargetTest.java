@@ -464,6 +464,8 @@ class RedisServerTargetTest {
     "[2001:db8::1]:6380, 2001:db8::1, 6380",
     "redis://[::1], ::1, ",
     "::1, ::1, ",
+    "[fe80::1%eth0]:6379, fe80::1%eth0, ",
+    "[::ffff:192.0.2.1]:6379, ::ffff:192.0.2.1, ",
   })
   void sanitizesEndpoint(String endpoint, String address, Integer port) {
     RedisServerTarget target = RedisServerTarget.ofEndpoint(endpoint);
@@ -512,6 +514,8 @@ class RedisServerTargetTest {
         ":6379",
         "1:2:3",
         "2001:db8::g",
+        "[::ffff:010.1.1.1]:6379",
+        "[fe80::1%eth 0]:6379",
         "::1]",
         "[[::1]:6379",
         "/tmp/redis#1.sock",
