@@ -77,6 +77,8 @@ class JmxTelemetryTest {
   void metricsExclude() {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
+            // disable stable metrics loading to prevent interfering with test
+            .internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build())
             .addRules(classpathRules("jmx/rules/jvm-test.yaml"));
     builder.setMetrics(IncludeExclude.builder().setExcluded("jvm.thread.count").build());
     JmxTelemetry telemetry = builder.build();

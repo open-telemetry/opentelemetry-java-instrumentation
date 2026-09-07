@@ -13,7 +13,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
@@ -218,9 +217,6 @@ class KafkaConnectTest extends TargetSystemTest {
   }
 
   private JmxConfig loadKafkaConnectConfig() throws Exception {
-    InternalMetricsDefinitions definitions =
-        new InternalMetricsDefinitions(getClass().getClassLoader());
-
     Set<String> rules = getAllRulesForSystem("kafka-connect");
     assertThat(rules).hasSize(1);
 
