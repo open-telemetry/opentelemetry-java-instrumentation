@@ -74,8 +74,15 @@ final class HbaseMasterTarget {
     if (configuredHostname != null && !configuredHostname.isEmpty()) {
       return configuredHostname + ":" + configuration.getInt(MASTER_PORT_KEY, DEFAULT_MASTER_PORT);
     }
-    // MasterRegistry derives a hostname through DNS here; telemetry omits that implicit target.
-    return null;
+    try {
+      Method getMasterAddr =
+          Class.forName(MASTER_REGISTRY, false, HbaseMasterTarget.class.getClassLoader())
+              .getDeclaredMethod("getMasterAddr", Configuration.class);
+      getMasterAddr.setAccessible(true);
+      return (String) getMasterAddr.invoke(null, configuration);
+    } catch (ReflectiveOperationException | SecurityException | LinkageError ignored) {
+      return null;
+    }
   }
 
   @Nullable
