@@ -16,6 +16,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -27,7 +29,7 @@ import javax.annotation.Nullable;
  * extraction from request/response objects.
  */
 public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   // copied from GenAiIncubatingAttributes
   static final AttributeKey<String> GEN_AI_OPERATION_NAME = stringKey("gen_ai.operation.name");
@@ -121,5 +123,14 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
       errorType = error.getClass().getName();
     }
     attributes.put(ERROR_TYPE, errorType);
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @Override
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.GEN_AI_CLIENT;
   }
 }

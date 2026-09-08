@@ -16,11 +16,16 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -35,6 +40,30 @@ class GenAiAttributesExtractorTest {
       stringArrayKey("gen_ai.request.encoding_formats");
   private static final AttributeKey<List<String>> GEN_AI_REQUEST_STOP_SEQUENCES =
       stringArrayKey("gen_ai.request.stop_sequences");
+
+  @Test
+  void suppressesNestedGenAiInstrumenters() {
+    Instrumenter<Request, Response> outer =
+        Instrumenter.<Request, Response>builder(OpenTelemetry.noop(), "outer", request -> "chat")
+            .addAttributesExtractor(GenAiAttributesExtractor.create(new TestGetter()))
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    Instrumenter<Request, Response> inner =
+        Instrumenter.<Request, Response>builder(OpenTelemetry.noop(), "inner", request -> "chat")
+            .addAttributesExtractor(GenAiAttributesExtractor.create(new TestGetter()))
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    Request request = new Request(false);
+    Context context = outer.start(Context.root(), request);
+
+    assertThat(SpanKey.GEN_AI_CLIENT.fromContextOrNull(context)).isNotNull();
+    assertThat(inner.shouldStart(context, request)).isFalse();
+    assertThat(inner.shouldStart(Context.root(), request)).isTrue();
+    assertThat(
+            inner.shouldStart(
+                SpanKey.HTTP_CLIENT.storeInContext(Context.root(), Span.getInvalid()), request))
+        .isTrue();
+
+    outer.end(context, request, null, null);
+  }
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
