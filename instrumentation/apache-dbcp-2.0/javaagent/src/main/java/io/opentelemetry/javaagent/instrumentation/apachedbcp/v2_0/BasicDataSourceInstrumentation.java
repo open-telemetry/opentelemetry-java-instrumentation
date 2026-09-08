@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDataSourceName;
+import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDatabaseAttributes;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -72,7 +73,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
       String dataSourceName =
           objectName != null ? getDataSourceName(objectName) : getDataSourceName(dataSource);
-      telemetry().registerMetrics(dataSource, dataSourceName);
+      telemetry().registerMetrics(dataSource, dataSourceName, getDatabaseAttributes(dataSource));
     }
   }
 
@@ -96,7 +97,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
       String dataSourceName = getDataSourceName(objectName);
 
       telemetry().unregisterMetrics(dataSource);
-      telemetry().registerMetrics(dataSource, dataSourceName);
+      telemetry().registerMetrics(dataSource, dataSourceName, getDatabaseAttributes(dataSource));
     }
   }
 }

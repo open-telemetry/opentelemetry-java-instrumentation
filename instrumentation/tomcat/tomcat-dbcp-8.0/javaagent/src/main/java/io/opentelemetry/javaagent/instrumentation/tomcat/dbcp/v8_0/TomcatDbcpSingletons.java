@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -19,11 +20,19 @@ public class TomcatDbcpSingletons {
   }
 
   public static String getDataSourceName(BasicDataSource dataSource) {
+    return JdbcConnectionPoolNameUtil.poolName(getDbInfo(dataSource), "tomcat-dbcp");
+  }
+
+  public static Attributes getDatabaseAttributes(BasicDataSource dataSource) {
+    return JdbcConnectionPoolNameUtil.databaseAttributes(getDbInfo(dataSource));
+  }
+
+  private static DbInfo getDbInfo(BasicDataSource dataSource) {
     DbInfo dbInfo =
         JdbcConnectionUrlParser.parse(
             dataSource.getUrl(),
             OpenTelemetryBasicDataSourceUtil.getConnectionProperties(dataSource));
-    return JdbcConnectionPoolNameUtil.poolName(dbInfo, "tomcat-dbcp");
+    return dbInfo;
   }
 
   private TomcatDbcpSingletons() {}

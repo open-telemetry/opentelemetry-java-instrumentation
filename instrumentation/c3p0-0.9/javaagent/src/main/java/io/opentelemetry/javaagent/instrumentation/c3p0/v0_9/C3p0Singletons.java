@@ -9,6 +9,7 @@ import com.mchange.v2.c3p0.DriverManagerDataSource;
 import com.mchange.v2.c3p0.WrapperConnectionPoolDataSource;
 import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.c3p0.v0_9.C3p0Telemetry;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -26,22 +27,28 @@ public class C3p0Singletons {
   }
 
   public static String getDataSourceName(AbstractPoolBackedDataSource dataSource) {
+    return JdbcConnectionPoolNameUtil.poolName(getDbInfo(dataSource), DEFAULT_DATA_SOURCE_NAME);
+  }
+
+  public static Attributes getDatabaseAttributes(AbstractPoolBackedDataSource dataSource) {
+    return JdbcConnectionPoolNameUtil.databaseAttributes(getDbInfo(dataSource));
+  }
+
+  private static DbInfo getDbInfo(AbstractPoolBackedDataSource dataSource) {
     ConnectionPoolDataSource poolDataSource = dataSource.getConnectionPoolDataSource();
     if (!(poolDataSource instanceof WrapperConnectionPoolDataSource)) {
-      return DEFAULT_DATA_SOURCE_NAME;
+      return DbInfo.DEFAULT;
     }
 
     DataSource nestedDataSource =
         ((WrapperConnectionPoolDataSource) poolDataSource).getNestedDataSource();
     if (!(nestedDataSource instanceof DriverManagerDataSource)) {
-      return DEFAULT_DATA_SOURCE_NAME;
+      return DbInfo.DEFAULT;
     }
 
     DriverManagerDataSource driverManagerDataSource = (DriverManagerDataSource) nestedDataSource;
-    DbInfo dbInfo =
-        JdbcConnectionUrlParser.parse(
-            driverManagerDataSource.getJdbcUrl(), driverManagerDataSource.getProperties());
-    return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_DATA_SOURCE_NAME);
+    return JdbcConnectionUrlParser.parse(
+        driverManagerDataSource.getJdbcUrl(), driverManagerDataSource.getProperties());
   }
 
   private C3p0Singletons() {}

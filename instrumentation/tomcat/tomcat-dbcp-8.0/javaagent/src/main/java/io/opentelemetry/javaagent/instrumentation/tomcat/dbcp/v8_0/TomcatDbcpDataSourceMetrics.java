@@ -26,11 +26,17 @@ public class TomcatDbcpDataSourceMetrics {
       new ConcurrentHashMap<>();
 
   public static void registerMetrics(BasicDataSourceMXBean dataSource, String dataSourceName) {
+    registerMetrics(dataSource, dataSourceName, Attributes.empty());
+  }
+
+  public static void registerMetrics(
+      BasicDataSourceMXBean dataSource, String dataSourceName, Attributes databaseAttributes) {
     dataSourceMetrics.computeIfAbsent(
         dataSource,
         ds -> {
           DbConnectionPoolMetrics metrics =
-              DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSourceName);
+              DbConnectionPoolMetrics.create(
+                  openTelemetry, INSTRUMENTATION_NAME, dataSourceName, databaseAttributes);
 
           ObservableLongMeasurement connections = metrics.connections();
           ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();

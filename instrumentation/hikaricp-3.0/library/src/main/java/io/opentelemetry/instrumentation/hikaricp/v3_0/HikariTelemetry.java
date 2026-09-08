@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.hikaricp.v3_0;
 
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import javax.annotation.Nullable;
 
 /** Entrypoint for instrumenting Hikari database connection pools. */
@@ -27,7 +28,7 @@ public final class HikariTelemetry {
    * com.zaxxer.hikari.HikariConfig#setMetricsTrackerFactory(MetricsTrackerFactory)}.
    */
   public MetricsTrackerFactory createMetricsTrackerFactory() {
-    return createMetricsTrackerFactory(null);
+    return createMetricsTrackerFactory(null, Attributes.empty());
   }
 
   /**
@@ -39,6 +40,15 @@ public final class HikariTelemetry {
    */
   public MetricsTrackerFactory createMetricsTrackerFactory(
       @Nullable MetricsTrackerFactory delegate) {
-    return new OpenTelemetryMetricsTrackerFactory(openTelemetry, delegate);
+    return createMetricsTrackerFactory(delegate, Attributes.empty());
+  }
+
+  /**
+   * Returns a metrics tracker factory that adds the supplied configured database attributes to
+   * stable database metrics.
+   */
+  public MetricsTrackerFactory createMetricsTrackerFactory(
+      @Nullable MetricsTrackerFactory delegate, Attributes databaseAttributes) {
+    return new OpenTelemetryMetricsTrackerFactory(openTelemetry, delegate, databaseAttributes);
   }
 }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.apachedbcp.v2_0.ApacheDbcpTelemetry;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -29,11 +30,19 @@ public class ApacheDbcpSingletons {
   }
 
   public static String getDataSourceName(BasicDataSource dataSource) {
+    return JdbcConnectionPoolNameUtil.poolName(getDbInfo(dataSource), "apache-dbcp2");
+  }
+
+  public static Attributes getDatabaseAttributes(BasicDataSource dataSource) {
+    return JdbcConnectionPoolNameUtil.databaseAttributes(getDbInfo(dataSource));
+  }
+
+  private static DbInfo getDbInfo(BasicDataSource dataSource) {
     DbInfo dbInfo =
         JdbcConnectionUrlParser.parse(
             dataSource.getUrl(),
             OpenTelemetryBasicDataSourceUtil.getConnectionProperties(dataSource));
-    return JdbcConnectionPoolNameUtil.poolName(dbInfo, "apache-dbcp2");
+    return dbInfo;
   }
 
   private ApacheDbcpSingletons() {}
