@@ -319,13 +319,7 @@ class ClickHouseClientV2Test {
 
   @Test
   void testUnsafePeerEndpointIsOmitted() throws Exception {
-    Class<?> singletons = singletons();
-    Class<?> endpointTarget =
-        Class.forName(singletons.getName() + "$EndpointTarget", true, singletons.getClassLoader());
-    Method parse = endpointTarget.getDeclaredMethod("parse", String.class);
-    parse.setAccessible(true);
-
-    assertThat(parse.invoke(null, "http://host.example%3fsecret:8123")).isNull();
+    assertCurrentPeer(new HashSet<>(asList("http://host.example%3fsecret:8123")), null, null);
   }
 
   @Test
