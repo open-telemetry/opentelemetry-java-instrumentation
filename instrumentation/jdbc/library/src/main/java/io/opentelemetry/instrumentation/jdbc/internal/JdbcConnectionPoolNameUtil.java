@@ -125,15 +125,17 @@ public final class JdbcConnectionPoolNameUtil {
       return address;
     }
 
+    if (port == null) {
+      return address;
+    }
+
     StringBuilder endpoint = new StringBuilder();
     if (address.indexOf(':') >= 0) {
       endpoint.append('[').append(address).append(']');
     } else {
       endpoint.append(address);
     }
-    if (port != null) {
-      endpoint.append(':').append(port);
-    }
+    endpoint.append(':').append(port);
     return endpoint.toString();
   }
 

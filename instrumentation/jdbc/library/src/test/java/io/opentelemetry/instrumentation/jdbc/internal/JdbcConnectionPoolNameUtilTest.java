@@ -128,6 +128,11 @@ class JdbcConnectionPoolNameUtilTest {
             FALLBACK_NAME,
             "db-a:5432,db-b:6432"),
         argumentSet(
+            "portless configured IPv6 address",
+            DbInfo.builder().configuredServerAddress("2001:db8::1").build(),
+            FALLBACK_NAME,
+            "2001:db8::1"),
+        argumentSet(
             "empty namespace",
             DbInfo.builder()
                 .legacyServerAddress("db.example")
