@@ -32,17 +32,17 @@ public final class JdbcConnectionPoolNameUtil {
   public static String poolName(DbInfo dbInfo, String fallbackName) {
     if (emitStableDatabaseSemconv()) {
       String dbNamespace = dbInfo.getDbNamespace();
-      if (dbNamespace != null) {
+      if (dbNamespace != null && !dbNamespace.isEmpty()) {
         return dbNamespace;
       }
 
       DbServerTarget target = dbInfo.getConfiguredServerTarget();
-      if (target != null) {
+      if (target != null && !target.getAddress().isEmpty()) {
         return endpoint(target.getAddress(), target.getPort());
       }
 
       String dbSystemName = dbInfo.getDbSystemName();
-      if (dbSystemName != null) {
+      if (dbSystemName != null && !dbSystemName.isEmpty()) {
         return dbSystemName;
       }
 
