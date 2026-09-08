@@ -32,9 +32,10 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-jmx-metrics:OPENT
 
 ```java
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
-import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 
+import java.nio.file.Paths;
 import java.time.Duration;
 
 // Get an OpenTelemetry instance
