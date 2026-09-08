@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.clickhouse.client.api.Client;
@@ -28,7 +29,6 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
@@ -45,7 +45,8 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
             .and(named("query"))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, isSubTypeOf(Map.class)))
-            .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings"))),
+            .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings")))
+            .and(returns(isSubTypeOf(CompletableFuture.class))),
         getClass().getName() + "$QueryAdvice");
   }
 
@@ -88,19 +89,17 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
+        @Advice.Return @Nullable CompletableFuture<?> future,
         @Advice.Enter @Nullable ClickHouseScope scope) {
       CallDepth callDepth = CallDepth.forClass(Client.class);
       if (callDepth.decrementAndGet() > 0 || scope == null) {
         return;
       }
 
-      if (!emitStableDatabaseSemconv()
-          || throwable != null
-          || !(result instanceof CompletableFuture)) {
+      if (!emitStableDatabaseSemconv() || throwable != null || future == null) {
         scope.end(throwable);
       } else {
-        scope.endOnCompletion((CompletableFuture<?>) result);
+        scope.endOnCompletion(future);
       }
     }
   }

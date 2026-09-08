@@ -28,7 +28,6 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
@@ -81,7 +80,7 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(0) ClickHouseRequest<?> clickHouseRequest,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
+        @Advice.Return @Nullable Object result,
         @Advice.Enter @Nullable ClickHouseScope scope) {
 
       CallDepth callDepth = CallDepth.forClass(ClickHouseClient.class);
