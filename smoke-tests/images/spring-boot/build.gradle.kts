@@ -58,7 +58,7 @@ springBoot {
 }
 
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
-// The launcher embedded by the Spring Boot 4 plugin requires Java 17.
+// Use the exploded layout on JDK 8 and 11 because the Spring Boot 4 Gradle plugin packages the bootJar with launcher classes that require Java 17.
 val useExecutableBootJarLayout = targetJDK.toString().toInt() >= 17
 val bootJarTask = tasks.named<Jar>("bootJar")
 
