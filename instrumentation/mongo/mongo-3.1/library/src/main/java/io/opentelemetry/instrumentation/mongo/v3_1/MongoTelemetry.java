@@ -54,7 +54,7 @@ public final class MongoTelemetry {
    * Returns a new {@link CommandListener} using the supplied seed list to derive the client's
    * logical MongoDB server target.
    *
-   * <p>Use this overload when the client is configured with one or more seed addresses. The seed
+   * <p>Use this overload when you have the seed addresses from the client's configuration. The seed
    * list must contain every address from the client's configuration. Do not pass the server
    * selected for a command, discovered cluster nodes, or only a subset of the configured seeds.
    *
