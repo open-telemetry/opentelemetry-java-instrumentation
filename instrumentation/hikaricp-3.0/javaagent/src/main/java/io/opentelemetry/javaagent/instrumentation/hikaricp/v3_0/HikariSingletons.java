@@ -58,7 +58,7 @@ public class HikariSingletons {
 
   private static DbInfo getDbInfo(HikariConfig config) {
     if (config.getDataSource() == null && config.getDataSourceClassName() != null) {
-      return JdbcConnectionUrlParser.parse(null, config.getDataSourceProperties());
+      return JdbcConnectionPoolNameUtil.dbInfo(config.getDataSourceProperties());
     }
 
     return JdbcConnectionUrlParser.parse(config.getJdbcUrl(), config.getDataSourceProperties());
