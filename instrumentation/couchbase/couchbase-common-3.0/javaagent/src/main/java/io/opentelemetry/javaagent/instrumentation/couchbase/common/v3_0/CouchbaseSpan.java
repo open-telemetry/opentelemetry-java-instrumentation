@@ -50,9 +50,6 @@ public final class CouchbaseSpan {
   }
 
   public void setAttribute(String key, @Nullable String value) {
-    if (value == null) {
-      return;
-    }
     if (emitStableDatabaseSemconv()) {
       String stableKey = stableKey(key);
       if (stableKey != null) {
