@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-/** Temporary local copy of the endpoint validation used by {@code DbServerEndpointUtil}. */
+// Temporary helper copied from PR #20015.
+// Remove it after PR #20015 merges and use DbServerEndpointUtil instead.
+// Migration tracked in issue #20016.
 final class CassandraDbServerEndpointUtil {
 
   static boolean isIpv6Literal(String host) {
