@@ -85,7 +85,7 @@ public final class OpenTelemetryDriver implements Driver {
             "otel.instrumentation.jdbc.query-sanitization.enabled",
             SystemProperty.getBoolean(
                 "otel.instrumentation.common.db.query-sanitization.enabled",
-                SemconvStability.v3Preview()
+                SemconvStability.v3Preview(openTelemetry)
                     ? true
                     : SystemProperty.getBoolean(
                         "otel.instrumentation.common.db-statement-sanitizer.enabled", true))));

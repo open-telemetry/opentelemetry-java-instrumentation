@@ -37,7 +37,7 @@ import org.junitpioneer.jupiter.ClearSystemProperty;
 
 @ClearSystemProperty(key = "otel.instrumentation.jdbc.query-sanitization.enabled")
 @ClearSystemProperty(key = "otel.instrumentation.common.db.query-sanitization.enabled")
-@SuppressWarnings("deprecation") // using deprecated semconv
+@ClearSystemProperty(key = "otel.instrumentation.common.db-statement-sanitizer.enabled")
 class OpenTelemetryDriverQuerySanitizationTest {
 
   @RegisterExtension
@@ -86,7 +86,34 @@ class OpenTelemetryDriverQuerySanitizationTest {
     assertQuerySanitization(configuredOpenTelemetry(null, enabled), enabled);
   }
 
-  private static OpenTelemetry configuredOpenTelemetry(Boolean jdbcEnabled, Boolean commonEnabled) {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void deprecatedJdbcSettingUsesInstanceV3Preview(boolean v3Preview) throws SQLException {
+    ExtendedOpenTelemetry openTelemetry = configuredOpenTelemetry(null, null);
+    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
+        .thenReturn(v3Preview);
+    when(openTelemetry
+            .getInstrumentationConfig("jdbc")
+            .get("statement_sanitizer")
+            .getBoolean("enabled"))
+        .thenReturn(false);
+
+    assertQuerySanitization(openTelemetry, v3Preview);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void deprecatedSystemFallbackUsesInstanceV3Preview(boolean v3Preview) throws SQLException {
+    ExtendedOpenTelemetry openTelemetry = configuredOpenTelemetry(null, null);
+    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
+        .thenReturn(v3Preview);
+    System.setProperty("otel.instrumentation.common.db-statement-sanitizer.enabled", "false");
+
+    assertQuerySanitization(openTelemetry, v3Preview);
+  }
+
+  private static ExtendedOpenTelemetry configuredOpenTelemetry(
+      Boolean jdbcEnabled, Boolean commonEnabled) {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     when(openTelemetry.getTracerProvider())
         .thenReturn(otelTesting.getOpenTelemetry().getTracerProvider());
@@ -126,6 +153,7 @@ class OpenTelemetryDriverQuerySanitizationTest {
         argumentSet("JDBC disables over common", false, true, false));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void assertQuerySanitization(OpenTelemetry openTelemetry, boolean expected)
       throws SQLException {
     OpenTelemetryDriver driver = new OpenTelemetryDriver();

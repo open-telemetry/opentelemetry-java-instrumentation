@@ -42,6 +42,7 @@ public final class DbConfig {
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName);
     Boolean querySanitizationEnabled =
         getQuerySanitizationEnabled(
+            openTelemetry,
             instrumentationConfig,
             "otel.instrumentation." + instrumentationName + ".statement-sanitizer.enabled",
             "otel.instrumentation." + instrumentationName + ".query-sanitization.enabled");
@@ -133,13 +134,16 @@ public final class DbConfig {
 
   @Nullable
   private static Boolean getQuerySanitizationEnabled(
-      DeclarativeConfigProperties config, String deprecatedProperty, String replacementProperty) {
+      OpenTelemetry openTelemetry,
+      DeclarativeConfigProperties config,
+      String deprecatedProperty,
+      String replacementProperty) {
     Boolean value = config.get("query_sanitization").getBoolean("enabled");
     if (value != null) {
       return value;
     }
 
-    if (!SemconvStability.v3Preview()) {
+    if (!SemconvStability.v3Preview(openTelemetry)) {
       Boolean deprecatedValue = config.get("statement_sanitizer").getBoolean("enabled");
       if (deprecatedValue != null) {
         warnIfDeprecatedSettingOrEquivalentUsed(deprecatedProperty, replacementProperty);
