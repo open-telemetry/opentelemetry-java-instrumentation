@@ -56,7 +56,8 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
       if (!ViburSingletons.isDataSourceNameConfigured(dataSource)) {
         poolName = ViburSingletons.getDataSourceName(dataSource);
       }
-      telemetry().registerMetrics(dataSource, poolName);
+      telemetry()
+          .registerMetrics(dataSource, poolName, ViburSingletons.getDatabaseAttributes(dataSource));
     }
   }
 

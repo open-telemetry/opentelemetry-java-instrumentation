@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0.DruidSingletons.getDataSourceName;
+import static io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0.DruidSingletons.getDatabaseAttributes;
 import static io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0.DruidSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -49,7 +50,8 @@ class DruidDataSourceInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Object dataSource, @Advice.Argument(1) @Nullable String name) {
       DruidDataSourceMBean druidDataSource = (DruidDataSourceMBean) dataSource;
       String poolName = name == null || name.isEmpty() ? getDataSourceName(druidDataSource) : name;
-      telemetry().registerMetrics(druidDataSource, poolName);
+      telemetry()
+          .registerMetrics(druidDataSource, poolName, getDatabaseAttributes(druidDataSource));
     }
   }
 

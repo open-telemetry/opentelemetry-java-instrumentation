@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0;
 
 import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.getDataSourceName;
+import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.getDatabaseAttributes;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -47,7 +48,8 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
       String dataSourceName =
           objectName != null ? getDataSourceName(objectName) : getDataSourceName(dataSource);
-      TomcatDbcpDataSourceMetrics.registerMetrics(dataSource, dataSourceName);
+      TomcatDbcpDataSourceMetrics.registerMetrics(
+          dataSource, dataSourceName, getDatabaseAttributes(dataSource));
     }
   }
 
@@ -71,7 +73,8 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
       String dataSourceName = getDataSourceName(objectName);
 
       TomcatDbcpDataSourceMetrics.unregisterMetrics(dataSource);
-      TomcatDbcpDataSourceMetrics.registerMetrics(dataSource, dataSourceName);
+      TomcatDbcpDataSourceMetrics.registerMetrics(
+          dataSource, dataSourceName, getDatabaseAttributes(dataSource));
     }
   }
 }

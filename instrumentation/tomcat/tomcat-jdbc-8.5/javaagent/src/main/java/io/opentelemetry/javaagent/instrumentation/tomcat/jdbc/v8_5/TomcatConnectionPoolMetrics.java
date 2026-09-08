@@ -50,8 +50,12 @@ public class TomcatConnectionPoolMetrics {
 
   @SuppressWarnings("deprecation") // deprecated overload keeps the legacy scope by default
   private static BatchCallback createInstruments(DataSourceProxy dataSource) {
+    DbInfo dbInfo = getDbInfo(dataSource);
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(meter, getPoolName(dataSource));
+        DbConnectionPoolMetrics.create(
+            meter,
+            getPoolName(dataSource, dbInfo),
+            JdbcConnectionPoolNameUtil.databaseAttributes(dbInfo));
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
@@ -79,16 +83,19 @@ public class TomcatConnectionPoolMetrics {
         pendingRequestsForConnection);
   }
 
-  private static String getPoolName(DataSourceProxy dataSource) {
+  private static String getPoolName(DataSourceProxy dataSource, DbInfo dbInfo) {
     PoolConfiguration poolProperties = dataSource.getPoolProperties();
     String configuredPoolName = dataSource.getPoolName();
     if (configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)) {
       return configuredPoolName;
     }
 
-    DbInfo dbInfo =
-        JdbcConnectionUrlParser.parse(poolProperties.getUrl(), poolProperties.getDbProperties());
     return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_POOL_NAME);
+  }
+
+  private static DbInfo getDbInfo(DataSourceProxy dataSource) {
+    PoolConfiguration poolProperties = dataSource.getPoolProperties();
+    return JdbcConnectionUrlParser.parse(poolProperties.getUrl(), poolProperties.getDbProperties());
   }
 
   public static void unregisterMetrics(DataSourceProxy dataSource) {

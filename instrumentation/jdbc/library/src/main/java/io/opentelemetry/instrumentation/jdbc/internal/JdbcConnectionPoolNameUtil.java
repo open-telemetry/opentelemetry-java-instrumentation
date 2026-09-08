@@ -5,6 +5,15 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils;
 import java.util.Properties;
@@ -17,27 +26,29 @@ import javax.annotation.Nullable;
 public final class JdbcConnectionPoolNameUtil {
 
   public static String poolName(Properties properties, String fallbackName) {
-    DbInfo.Builder dbInfoBuilder = DbInfo.builder();
-
-    String serverName = getPropertyValue(properties, "serverName");
-    if (serverName != null && !serverName.isEmpty()) {
-      dbInfoBuilder.legacyServerAddress(UrlParsingUtils.stripIpv6Brackets(serverName));
-    }
-
-    Integer serverPort = UrlParsingUtils.parsePort(getPropertyValue(properties, "portNumber"));
-    if (serverPort != null) {
-      dbInfoBuilder.legacyServerPort(serverPort);
-    }
-
-    String databaseName = getPropertyValue(properties, "databaseName");
-    if (databaseName != null && !databaseName.isEmpty()) {
-      dbInfoBuilder.dbNamespace(databaseName);
-    }
-
-    return poolName(dbInfoBuilder.build(), fallbackName);
+    return poolName(dbInfo(properties), fallbackName);
   }
 
   public static String poolName(DbInfo dbInfo, String fallbackName) {
+    if (emitStableDatabaseSemconv()) {
+      String dbNamespace = dbInfo.getDbNamespace();
+      if (dbNamespace != null) {
+        return dbNamespace;
+      }
+
+      DbServerTarget target = dbInfo.getConfiguredServerTarget();
+      if (target != null) {
+        return endpoint(target.getAddress(), target.getPort());
+      }
+
+      String dbSystemName = dbInfo.getDbSystemName();
+      if (dbSystemName != null) {
+        return dbSystemName;
+      }
+
+      return fallbackName;
+    }
+
     String serverAddress = dbInfo.getLegacyServerAddress();
     Integer serverPort = dbInfo.getLegacyServerPort();
     String dbNamespace = dbInfo.getDbNamespace();
@@ -64,6 +75,62 @@ public final class JdbcConnectionPoolNameUtil {
     // Asynchronous metric observations with equal attributes are spatially aggregated, so pools
     // connected to the same database can intentionally share the derived name.
     return poolName.length() > 0 ? poolName.toString() : fallbackName;
+  }
+
+  public static DbInfo dbInfo(Properties properties) {
+    DbInfo.Builder dbInfoBuilder = DbInfo.builder();
+
+    String serverName = getPropertyValue(properties, "serverName");
+    if (serverName != null && !serverName.isEmpty()) {
+      serverName = UrlParsingUtils.stripIpv6Brackets(serverName);
+      dbInfoBuilder.legacyServerAddress(serverName);
+    }
+
+    Integer serverPort = UrlParsingUtils.parsePort(getPropertyValue(properties, "portNumber"));
+    if (serverPort != null) {
+      dbInfoBuilder.legacyServerPort(serverPort);
+    }
+
+    if (serverName != null && !serverName.isEmpty()) {
+      dbInfoBuilder.configuredServerTarget(DbServerTarget.create(serverName, serverPort));
+    }
+
+    String databaseName = getPropertyValue(properties, "databaseName");
+    if (databaseName != null && !databaseName.isEmpty()) {
+      dbInfoBuilder.dbNamespace(databaseName);
+    }
+
+    return dbInfoBuilder.build();
+  }
+
+  public static Attributes databaseAttributes(DbInfo dbInfo) {
+    if (!emitStableDatabaseSemconv()) {
+      return Attributes.empty();
+    }
+
+    AttributesBuilder attributes = Attributes.builder();
+    attributes.put(DB_SYSTEM_NAME, dbInfo.getDbSystemName());
+    attributes.put(DB_NAMESPACE, dbInfo.getDbNamespace());
+    DbServerTarget target = dbInfo.getConfiguredServerTarget();
+    if (target != null) {
+      attributes.put(SERVER_ADDRESS, target.getAddress());
+      Integer port = target.getPort();
+      attributes.put(SERVER_PORT, port == null ? null : port.longValue());
+    }
+    return attributes.build();
+  }
+
+  private static String endpoint(String address, @Nullable Integer port) {
+    StringBuilder endpoint = new StringBuilder();
+    if (address.indexOf(':') >= 0) {
+      endpoint.append('[').append(address).append(']');
+    } else {
+      endpoint.append(address);
+    }
+    if (port != null) {
+      endpoint.append(':').append(port);
+    }
+    return endpoint.toString();
   }
 
   @Nullable

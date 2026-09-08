@@ -38,7 +38,9 @@ final class AbstractPoolBackedDataSourceInstrumentation implements TypeInstrumen
       if (dataSourceName == null || dataSourceName.equals(dataSource.getIdentityToken())) {
         dataSourceName = C3p0Singletons.getDataSourceName(dataSource);
       }
-      telemetry().registerMetrics(dataSource, dataSourceName);
+      telemetry()
+          .registerMetrics(
+              dataSource, dataSourceName, C3p0Singletons.getDatabaseAttributes(dataSource));
     }
   }
 

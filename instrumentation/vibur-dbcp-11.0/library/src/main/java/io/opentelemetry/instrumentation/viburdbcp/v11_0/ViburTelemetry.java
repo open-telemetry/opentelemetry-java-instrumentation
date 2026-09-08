@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.viburdbcp.v11_0;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import org.vibur.dbcp.ViburDBCPDataSource;
 
 /** Entrypoint for instrumenting Vibur database connection pools. */
@@ -29,6 +30,11 @@ public final class ViburTelemetry {
   /** Start collecting metrics for given data source using the given pool name. */
   public void registerMetrics(ViburDBCPDataSource dataSource, String poolName) {
     ConnectionPoolMetrics.registerMetrics(openTelemetry, dataSource, poolName);
+  }
+
+  public void registerMetrics(
+      ViburDBCPDataSource dataSource, String poolName, Attributes databaseAttributes) {
+    ConnectionPoolMetrics.registerMetrics(openTelemetry, dataSource, poolName, databaseAttributes);
   }
 
   /** Stop collecting metrics for given data source. */

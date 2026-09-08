@@ -37,12 +37,26 @@ public final class DbConnectionPoolMetrics {
 
   public static DbConnectionPoolMetrics create(
       OpenTelemetry openTelemetry, String instrumentationName, String poolName) {
+    return create(openTelemetry, instrumentationName, poolName, Attributes.empty());
+  }
+
+  /**
+   * Creates database connection pool metrics with additional database attributes.
+   *
+   * <p>The additional attributes are emitted only when stable database semantic conventions are
+   * enabled. Legacy pool metrics retain their existing attribute set.
+   */
+  public static DbConnectionPoolMetrics create(
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      String poolName,
+      Attributes databaseAttributes) {
     MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationName);
     String version = EmbeddedInstrumentationProperties.findVersion(instrumentationName);
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
-    return create(meterBuilder.build(), poolName);
+    return create(meterBuilder.build(), poolName, databaseAttributes);
   }
 
   /**
@@ -54,7 +68,24 @@ public final class DbConnectionPoolMetrics {
    */
   @Deprecated
   public static DbConnectionPoolMetrics create(Meter meter, String poolName) {
-    return new DbConnectionPoolMetrics(meter, Attributes.of(POOL_NAME, poolName));
+    return create(meter, poolName, Attributes.empty());
+  }
+
+  /**
+   * Like {@link #create(Meter, String)}, but accepts additional database attributes.
+   *
+   * @deprecated Exists only so the {@code tomcat-jdbc-8.5} javaagent can emit the pre-rename {@code
+   *     io.opentelemetry.tomcat-jdbc} scope by default; to be removed in 3.0 once v3-preview
+   *     becomes the default.
+   */
+  @Deprecated
+  public static DbConnectionPoolMetrics create(
+      Meter meter, String poolName, Attributes databaseAttributes) {
+    Attributes attributes = Attributes.of(POOL_NAME, poolName);
+    if (emitStableDatabaseSemconv()) {
+      attributes = attributes.toBuilder().putAll(databaseAttributes).build();
+    }
+    return new DbConnectionPoolMetrics(meter, attributes);
   }
 
   private final Meter meter;
