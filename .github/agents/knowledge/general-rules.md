@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - Use when: always — load this file for every review
-- Review focus: engineering correctness, style, naming, semconv, config, testing, new modules
+- Review focus: engineering correctness, performance, style, naming, semconv, config, testing, new modules
 
 ## Review Checklist
 
@@ -14,6 +14,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Category     | Rule                                                                                                                                                                                                                                                                                                                                                                                                          | Scope Trigger                                                                                                                                                   | Knowledge File                     |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
 | General      | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments                                                                                                                                                                                                                                                                                                                              | Always                                                                                                                                                          | —                                  |
+| Performance  | Precompile reusable regular expressions when compilation repeats on a runtime hot path; do not flag inline regex use on a bounded cold path                                                                                                                                                                                                                                                                   | Regex use in per-request, per-message, or per-operation code and in startup, initialization, or registration code                                               | —                                  |
 | Style        | Style guide                                                                                                                                                                                                                                                                                                                                                                                                   | Always                                                                                                                                                          | —                                  |
 | Style        | Reflow avoidable short lines that Spotless creates between consecutive `//` prose-comment lines; allow short lines when the line-length limit requires them                                                                                                                                                                                                                                                   | Multi-line `//` prose comments                                                                                                                                  | —                                  |
 | Style        | Uppercase field names should reflect semantic constants or immutable value constants such as `Duration` timeouts/intervals, not simply `static final`                                                                                                                                                                                                                                                         | Always                                                                                                                                                          | —                                  |
@@ -63,6 +64,13 @@ Flag real defects, including:
 - security regressions
 
 Only flag substantive problems, not stylistic preference.
+
+## [Performance] Precompile Regular Expressions on Hot Paths
+
+Precompile reusable regular expressions when regex compilation would happen repeatedly on a
+runtime hot path, such as per request, message, or database operation. Do not flag inline regex
+use merely for lacking a precompiled `Pattern` when it runs only during startup, client
+initialization, registration, or another bounded cold path.
 
 ## [Javaagent] Best-Effort Suppressed Failures
 
