@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.CONTACT_POINTS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerEndpointUtil.isIpv6Literal;
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isDefaultEndPoint;
 import static java.util.Collections.emptyList;
 
@@ -101,7 +102,7 @@ class CassandraServerTarget {
   }
 
   private static boolean isSafeHost(String host) {
-    return host.indexOf(':') < 0 || CassandraServerEndpointUtil.isIpv6Literal(host);
+    return host.indexOf(':') < 0 || isIpv6Literal(host);
   }
 
   private CassandraServerTarget() {}
