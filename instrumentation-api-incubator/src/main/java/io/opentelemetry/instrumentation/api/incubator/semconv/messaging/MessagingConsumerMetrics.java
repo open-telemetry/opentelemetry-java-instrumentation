@@ -22,6 +22,8 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -43,10 +45,14 @@ public final class MessagingConsumerMetrics implements OperationListener {
       AttributeKey.stringKey("messaging.operation");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
       AttributeKey.stringKey("messaging.operation.type");
-  private static final ContextKey<MessagingConsumerMetrics.State> MESSAGING_CONSUMER_METRICS_STATE =
-      ContextKey.named("messaging-consumer-metrics-state");
+  // Use RECEIVE as the coordination key because the counter records each delivered message once,
+  // including when a PROCESS operation records it.
+  private static final MessagingOperationType CONSUMED_MESSAGES_OPERATION =
+      MessagingOperationType.RECEIVE;
   private static final Logger logger = Logger.getLogger(MessagingConsumerMetrics.class.getName());
 
+  private final ContextKey<MessagingConsumerMetrics.State> messagingConsumerMetricsState =
+      ContextKey.named("messaging-consumer-metrics-state");
   private final boolean supportsStableSemconv;
   private final boolean clientOperationDurationOnly;
   private final boolean consumedMessagesOnly;
@@ -144,9 +150,32 @@ public final class MessagingConsumerMetrics implements OperationListener {
     if (!enabled) {
       return context;
     }
+    MessagingOperationType operationType =
+        MessagingOperationType.fromValue(startAttributes.get(MESSAGING_OPERATION_TYPE));
+    boolean recordClientOperationDuration =
+        clientOperationDurationHistogram != null
+            && operationType != MessagingOperationType.PROCESS
+            && !MessagingTelemetryState.contains(
+                context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
+    boolean recordConsumedMessages =
+        consumedMessagesCounter != null
+            && (consumedMessagesOnly || operationType == MessagingOperationType.RECEIVE)
+            && !MessagingTelemetryState.contains(
+                context, CONSUMED_MESSAGES_OPERATION, MessagingTelemetrySignal.CONSUMED_MESSAGES);
+    if (recordClientOperationDuration) {
+      context =
+          MessagingTelemetryState.addIfEnabled(
+              context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
+    }
+    if (recordConsumedMessages) {
+      context =
+          MessagingTelemetryState.addIfEnabled(
+              context, CONSUMED_MESSAGES_OPERATION, MessagingTelemetrySignal.CONSUMED_MESSAGES);
+    }
     return context.with(
-        MESSAGING_CONSUMER_METRICS_STATE,
-        new AutoValue_MessagingConsumerMetrics_State(startAttributes, startNanos));
+        messagingConsumerMetricsState,
+        new AutoValue_MessagingConsumerMetrics_State(
+            startAttributes, startNanos, recordClientOperationDuration, recordConsumedMessages));
   }
 
   @Override
@@ -154,7 +183,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
     if (!enabled) {
       return;
     }
-    MessagingConsumerMetrics.State state = context.get(MESSAGING_CONSUMER_METRICS_STATE);
+    MessagingConsumerMetrics.State state = context.get(messagingConsumerMetricsState);
     if (state == null) {
       logger.log(
           FINE,
@@ -180,8 +209,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
         clientOperationDurationHistogram != null || consumedMessagesCounter != null
             ? MessagingMetricsAdvice.filterAttributes(attributes)
             : attributes;
-    if (clientOperationDurationHistogram != null
-        && !MessagingOperationType.PROCESS.value().equals(operationType)) {
+    if (clientOperationDurationHistogram != null && state.recordClientOperationDuration()) {
       clientOperationDurationHistogram.record(duration, filteredAttributes, context);
     }
 
@@ -192,8 +220,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
         receiveMessageCount.add(receiveMessagesCount, attributes, context);
       }
     }
-    if (consumedMessagesCounter != null
-        && (consumedMessagesOnly || MessagingOperationType.RECEIVE.value().equals(operationType))) {
+    if (consumedMessagesCounter != null && state.recordConsumedMessages()) {
       long consumedMessagesCount =
           getConsumedMessagesCount(attributes, batchMessageCount, consumedMessagesOnly);
       if (consumedMessagesCount > 0) {
@@ -247,6 +274,10 @@ public final class MessagingConsumerMetrics implements OperationListener {
     abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
+
+    abstract boolean recordClientOperationDuration();
+
+    abstract boolean recordConsumedMessages();
   }
 
   private enum Variant {

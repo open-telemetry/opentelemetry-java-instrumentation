@@ -5,8 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 class SpymemcachedAttributesGetter
@@ -38,5 +42,27 @@ class SpymemcachedAttributesGetter
   @SuppressWarnings("deprecation") // old database semconv still use db.operation
   public String getDbOperation(SpymemcachedRequest spymemcachedRequest) {
     return spymemcachedRequest.getOperationName();
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(SpymemcachedRequest spymemcachedRequest) {
+    if (emitStableDatabaseSemconv()) {
+      DbServerTarget target = spymemcachedRequest.getServerTarget();
+      return target == null ? null : target.getAddress();
+    }
+    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
+    return address == null ? null : address.getHostString();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(SpymemcachedRequest spymemcachedRequest) {
+    if (emitStableDatabaseSemconv()) {
+      DbServerTarget target = spymemcachedRequest.getServerTarget();
+      return target == null ? null : target.getPort();
+    }
+    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
+    return address == null ? null : address.getPort();
   }
 }
