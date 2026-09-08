@@ -91,6 +91,18 @@ class MongoServerTargetTest {
   }
 
   @Test
+  void duplicateUnixSocketSeedsAreRemoved() {
+    MongoServerTarget target =
+        MongoServerTarget.seeds(
+            asList(
+                new ServerAddress("/tmp/mongodb-27017.sock"),
+                new ServerAddress("/tmp/mongodb-27017.sock")));
+
+    assertThat(target.getAddress()).isEqualTo("/tmp/mongodb-27017.sock");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void onlyTheFirstFiveConfiguredSeedsAreReported() {
     MongoServerTarget target =
         MongoServerTarget.seeds(

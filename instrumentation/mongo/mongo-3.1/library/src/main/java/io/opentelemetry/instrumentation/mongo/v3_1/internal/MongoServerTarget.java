@@ -69,7 +69,7 @@ public class MongoServerTarget {
       }
     }
     if (unixSocketTarget != null) {
-      if (seeds.size() > 1) {
+      if (hosts.size() > 1) {
         return null;
       }
       return from(unixSocketTarget);
