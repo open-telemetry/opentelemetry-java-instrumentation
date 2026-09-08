@@ -51,15 +51,8 @@ public abstract class HbaseRequest {
   public abstract String getServerTarget();
 
   @Nullable
-  public String getNetworkPeerAddress() {
-    InetSocketAddress networkPeer = this.networkPeer;
-    return networkPeer == null ? null : networkPeer.getAddress().getHostAddress();
-  }
-
-  @Nullable
-  public Integer getNetworkPeerPort() {
-    InetSocketAddress networkPeer = this.networkPeer;
-    return networkPeer == null ? null : networkPeer.getPort();
+  public InetSocketAddress getNetworkPeerInetSocketAddress() {
+    return networkPeer;
   }
 
   @Nullable

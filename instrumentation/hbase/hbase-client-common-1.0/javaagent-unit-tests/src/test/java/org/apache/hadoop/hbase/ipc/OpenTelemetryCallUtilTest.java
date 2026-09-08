@@ -26,14 +26,14 @@ class OpenTelemetryCallUtilTest {
     RequestAndContext requestAndContext = requestAndContext();
     OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
 
-    OpenTelemetryCallUtil.setNetworkPeer(
-        call, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234));
+    InetSocketAddress networkPeer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234);
+    OpenTelemetryCallUtil.setNetworkPeer(call, networkPeer);
 
     RequestAndContext updated = OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
     assertThat(updated).isSameAs(requestAndContext);
     assertThat(updated.getRequest()).isSameAs(requestAndContext.getRequest());
-    assertThat(updated.getRequest().getNetworkPeerAddress()).isEqualTo("10.20.30.40");
-    assertThat(updated.getRequest().getNetworkPeerPort()).isEqualTo(1234);
+    assertThat(updated.getRequest().getNetworkPeerInetSocketAddress()).isSameAs(networkPeer);
     assertThat(updated.getRequest().getServerTarget()).isEqualTo("logical-target");
     assertThat(updated.getScope()).isSameAs(requestAndContext.getScope());
     assertThat(updated.getContext()).isSameAs(requestAndContext.getContext());
@@ -73,17 +73,18 @@ class OpenTelemetryCallUtilTest {
     RequestAndContext requestAndContext = requestAndContext();
     OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
 
-    OpenTelemetryCallUtil.setNetworkPeer(
-        call, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234));
-    OpenTelemetryCallUtil.setNetworkPeer(
-        call, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 41}), 5678));
+    InetSocketAddress firstPeer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234);
+    InetSocketAddress secondPeer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 41}), 5678);
+    OpenTelemetryCallUtil.setNetworkPeer(call, firstPeer);
+    OpenTelemetryCallUtil.setNetworkPeer(call, secondPeer);
 
     RequestAndContext updated = OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
     assertThat(updated).isSameAs(requestAndContext);
     HbaseRequest request = updated.getRequest();
     assertThat(request).isSameAs(requestAndContext.getRequest());
-    assertThat(request.getNetworkPeerAddress()).isEqualTo("10.20.30.41");
-    assertThat(request.getNetworkPeerPort()).isEqualTo(5678);
+    assertThat(request.getNetworkPeerInetSocketAddress()).isSameAs(secondPeer);
   }
 
   @Test
@@ -104,16 +105,17 @@ class OpenTelemetryCallUtilTest {
     RequestAndContext requestAndContext = requestAndContext();
     OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
 
-    OpenTelemetryCallUtil.setNetworkPeer(
-        call, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234));
+    InetSocketAddress firstPeer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234);
+    OpenTelemetryCallUtil.setNetworkPeer(call, firstPeer);
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
         .isSameAs(requestAndContext);
 
     OpenTelemetryCallUtil.setNetworkPeer(
         call, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 41}), 5678));
 
-    assertThat(requestAndContext.getRequest().getNetworkPeerAddress()).isEqualTo("10.20.30.40");
-    assertThat(requestAndContext.getRequest().getNetworkPeerPort()).isEqualTo(1234);
+    assertThat(requestAndContext.getRequest().getNetworkPeerInetSocketAddress())
+        .isSameAs(firstPeer);
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call)).isNull();
   }
 

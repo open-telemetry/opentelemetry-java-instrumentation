@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.hadoop.hbase.TableName;
 
@@ -68,14 +69,9 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
 
   @Nullable
   @Override
-  public String getNetworkPeerAddress(HbaseRequest request, @Nullable Void unused) {
-    return emitStableDatabaseSemconv() ? request.getNetworkPeerAddress() : null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getNetworkPeerPort(HbaseRequest request, @Nullable Void unused) {
-    return emitStableDatabaseSemconv() ? request.getNetworkPeerPort() : null;
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      HbaseRequest request, @Nullable Void unused) {
+    return emitStableDatabaseSemconv() ? request.getNetworkPeerInetSocketAddress() : null;
   }
 
   @Nullable
