@@ -138,11 +138,16 @@ final class CassandraServerTarget {
 
   @Nullable
   static DbServerTarget ofAddresses(Collection<InetSocketAddress> contactPoints) {
-    DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
-    for (InetSocketAddress contactPoint : contactPoints) {
-      target.addEndpoint(contactPoint);
+    try {
+      DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
+      for (InetSocketAddress contactPoint : contactPoints) {
+        target.addEndpoint(contactPoint);
+      }
+      return target.build();
+    } catch (RuntimeException ignored) {
+      // Unsafe or malformed contact points have no stable server target.
+      return null;
     }
-    return target.build();
   }
 
   private static String asContactPoint(InetSocketAddress address) {
