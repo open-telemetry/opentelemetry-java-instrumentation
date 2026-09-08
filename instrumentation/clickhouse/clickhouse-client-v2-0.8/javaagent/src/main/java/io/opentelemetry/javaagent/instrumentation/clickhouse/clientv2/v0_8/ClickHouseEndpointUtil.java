@@ -62,7 +62,7 @@ final class ClickHouseEndpointUtil {
     return ":/?#[]@!$&'()*+,;=\\%".indexOf(decoded) >= 0;
   }
 
-  static boolean isIpv4Literal(String host) {
+  private static boolean isIpv4Literal(String host) {
     int parts = 0;
     int digits = 0;
     int value = 0;
