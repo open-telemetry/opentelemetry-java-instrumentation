@@ -58,9 +58,6 @@ class GeodeServerTargetBuilder {
   }
 
   private static DbServerTargetBuilder newLocatorBuilder() {
-    return DbServerTarget.builder(DEFAULT_LOCATOR_PORT)
-        .setSorted(true)
-        .setMaxEndpoints(Integer.MAX_VALUE)
-        .setPortAlwaysInline(true);
+    return DbServerTarget.builder(DEFAULT_LOCATOR_PORT).setSorted(true).setPortAlwaysInline(true);
   }
 }
