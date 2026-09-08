@@ -58,6 +58,8 @@ springBoot {
 }
 
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+// The launcher embedded by the Spring Boot 4 plugin requires Java 17.
+val useExecutableBootJarLayout = targetJDK.toString().toInt() >= 17
 val bootJarTask = tasks.named<Jar>("bootJar")
 
 val prepareBootJarForImage = tasks.register<Sync>("prepareBootJarForImage") {
@@ -71,13 +73,15 @@ val prepareBootJarForImage = tasks.register<Sync>("prepareBootJarForImage") {
 jib {
   from.image = "eclipse-temurin:$targetJDK"
   to.image = "ghcr.io/$repo/smoke-test-spring-boot:jdk$targetJDK-$tag"
-  container.entrypoint = listOf("java", "-jar", "/app/app.jar")
   container.ports = listOf("8080")
-  extraDirectories {
-    paths {
-      path {
-        setFrom(layout.buildDirectory.dir("jib-extra").get().asFile.toPath())
-        into = "/"
+  if (useExecutableBootJarLayout) {
+    container.entrypoint = listOf("java", "-jar", "/app/app.jar")
+    extraDirectories {
+      paths {
+        path {
+          setFrom(layout.buildDirectory.dir("jib-extra").get().asFile.toPath())
+          into = "/"
+        }
       }
     }
   }
@@ -85,7 +89,9 @@ jib {
 
 tasks {
   withType<JibTask>().configureEach {
-    dependsOn(prepareBootJarForImage)
+    if (useExecutableBootJarLayout) {
+      dependsOn(prepareBootJarForImage)
+    }
     // Jib tasks access Task.project at execution time which is not compatible with configuration cache
     notCompatibleWithConfigurationCache("Jib task accesses Task.project at execution time")
   }

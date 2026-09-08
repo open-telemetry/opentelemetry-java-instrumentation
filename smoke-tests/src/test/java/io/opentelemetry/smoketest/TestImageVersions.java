@@ -11,9 +11,6 @@ public class TestImageVersions {
   // smoke-test-spring-boot
   public static final String SPRING_BOOT_VERSION = "20260826.32962641676";
 
-  // Last exploded image, used on JDK 8 and 11 because bootJar launchers require JDK 17
-  public static final String SPRING_BOOT_JDK_8_11_VERSION = "20260331.23783210915";
-
   // smoke-test-grpc
   public static final String GRPC_VERSION = "20260908.34190084723";
 
