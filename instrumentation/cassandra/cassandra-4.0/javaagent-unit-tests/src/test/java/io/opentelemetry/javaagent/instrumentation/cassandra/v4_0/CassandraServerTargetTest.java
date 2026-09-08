@@ -157,8 +157,11 @@ class CassandraServerTargetTest {
         argumentSet("blank contact point", singletonList("  ")),
         argumentSet("contact point without a port", singletonList("cassandra.example.com")),
         argumentSet("non-numeric port", singletonList("node.example.com:not-a-port")),
+        argumentSet("negative port", singletonList("node.example.com:-1")),
         argumentSet("zero port", singletonList("node.example.com:0")),
         argumentSet("unclosed IPv6 bracket", singletonList("[::1:9042")),
+        argumentSet("bracketed hostname", singletonList("[node.example.com]:9042")),
+        argumentSet("bracketed IPv4 address", singletonList("[127.0.0.1]:9042")),
         argumentSet("unbracketed loopback IPv6", singletonList("::1")),
         argumentSet("unbracketed IPv6", singletonList("2001:db8::1")),
         argumentSet(

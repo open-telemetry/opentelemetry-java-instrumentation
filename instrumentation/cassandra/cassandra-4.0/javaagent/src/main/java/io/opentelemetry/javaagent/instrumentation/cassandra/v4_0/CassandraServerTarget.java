@@ -88,10 +88,14 @@ class CassandraServerTarget {
         return;
       }
       host = host.substring(1, host.length() - 1);
+      if (!isIpv6Literal(host)) {
+        target.addEndpoint((String) null, -1);
+        return;
+      }
     }
     try {
       int port = Integer.parseInt(contactPoint.substring(separator + 1));
-      if (!isSafeHost(host)) {
+      if (port < 0 || !isSafeHost(host)) {
         target.addEndpoint((String) null, -1);
         return;
       }
