@@ -8,11 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-/**
- * Temporary copy of {@code DbServerEndpointUtil}.
- *
- * <p>TODO(#20016): Remove this class and use {@code DbServerEndpointUtil} after #20015 merges.
- */
+// Temporary helper copied from PR #20015.
+// Remove it after PR #20015 merges and use DbServerEndpointUtil instead.
+// Migration tracked in issue #20016.
 final class HbaseServerEndpointUtil {
 
   static boolean isIpv6Literal(String host) {
