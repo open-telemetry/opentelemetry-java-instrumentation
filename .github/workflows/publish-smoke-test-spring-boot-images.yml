@@ -8,6 +8,7 @@ on:
       - ".github/workflows/reusable-publish-smoke-test-images.yml"
     branches:
       - main
+      - trask-bump-smoke-test-images
 
 permissions:
   contents: read
