@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
@@ -87,17 +88,19 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return @Nullable CompletableFuture<?> future,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
         @Advice.Enter @Nullable ClickHouseScope scope) {
       CallDepth callDepth = CallDepth.forClass(Client.class);
       if (callDepth.decrementAndGet() > 0 || scope == null) {
         return;
       }
 
-      if (!emitStableDatabaseSemconv() || throwable != null || future == null) {
+      if (!emitStableDatabaseSemconv()
+          || throwable != null
+          || !(result instanceof CompletableFuture)) {
         scope.end(throwable);
       } else {
-        scope.endOnCompletion(future);
+        scope.endOnCompletion((CompletableFuture<?>) result);
       }
     }
   }
