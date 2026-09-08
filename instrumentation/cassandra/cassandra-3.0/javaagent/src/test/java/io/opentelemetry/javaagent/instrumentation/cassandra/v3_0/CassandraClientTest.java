@@ -228,6 +228,15 @@ class CassandraClientTest {
   }
 
   @Test
+  void buildFromBuilderPreservesStableTarget() {
+    Cluster.Builder builder =
+        Cluster.builder().addContactPoint("LOCALHOST").withPort(cassandraPort);
+    Cluster configuredCluster = Cluster.buildFrom(builder);
+
+    assertConfiguredTarget(configuredCluster, "LOCALHOST", cassandraPort);
+  }
+
+  @Test
   void multipleConfiguredContactPointsWithSharedNonDefaultPortAreStableTarget() {
     Cluster multiContactPointCluster =
         Cluster.builder()

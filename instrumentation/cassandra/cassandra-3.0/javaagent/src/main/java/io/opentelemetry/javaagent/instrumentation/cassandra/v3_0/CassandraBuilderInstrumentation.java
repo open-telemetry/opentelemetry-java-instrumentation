@@ -30,7 +30,6 @@ class CassandraBuilderInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("addContactPoint", "addContactPoints", "addContactPointsWithPorts"),
         getClass().getName() + "$AddContactPointsAdvice");
-    transformer.applyAdviceToMethod(named("build"), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -55,20 +54,6 @@ class CassandraBuilderInstrumentation implements TypeInstrumentation {
         } else {
           CassandraServerTarget.invalidate(builder);
         }
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class BuildAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This Cluster.Builder builder,
-        @Advice.FieldValue("port") int port,
-        @Advice.Return Cluster cluster) {
-      if (emitStableDatabaseSemconv()) {
-        CassandraServerTarget.store(builder, cluster, port);
       }
     }
   }

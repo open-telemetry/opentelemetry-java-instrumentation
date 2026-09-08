@@ -20,6 +20,9 @@ public class CassandraInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new CassandraBuilderInstrumentation(), new CassandraManagerInstrumentation());
+    return asList(
+        new CassandraBuilderInstrumentation(),
+        new CassandraClusterInstrumentation(),
+        new CassandraManagerInstrumentation());
   }
 }
