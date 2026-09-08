@@ -27,6 +27,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.CompletionException;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import javax.net.ssl.SSLContext;
 import org.apache.hc.client5.http.DnsResolver;
 import org.apache.hc.client5.http.auth.AuthScope;
@@ -104,7 +105,9 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
     assertThat(healthResponse).isNotNull();
 
     assertNodeListTarget(
-        httpHost.getHost() + ":443," + httpHost.getHost() + ":" + httpHost.getPort());
+        Stream.of(httpHost.getHost() + ":443", httpHost.getHost() + ":" + httpHost.getPort())
+            .sorted()
+            .collect(joining(",")));
   }
 
   @Test
