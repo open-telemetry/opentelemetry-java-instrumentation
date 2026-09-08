@@ -135,7 +135,7 @@ class StartupReportTest {
   private static List<StartupSample> samples() {
     List<StartupSample> samples = new ArrayList<>();
     for (Variant variant : Variant.values()) {
-      double jvm = variant.aot() ? (variant.agent() ? 2.5 : 2.5) : 2.0;
+      double jvm = variant.aot() ? 2.5 : 2.0;
       samples.add(new StartupSample(variant, 0, 1, true, "ok", 1.0, jvm, 2.5));
       samples.add(new StartupSample(variant, 1, 1, false, "ok", 1.0, jvm, 2.5));
       samples.add(new StartupSample(variant, 2, 1, false, "ok", 1.5, jvm + 0.5, 3.0));
