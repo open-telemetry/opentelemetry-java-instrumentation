@@ -43,19 +43,6 @@ public final class MongoTelemetry {
   }
 
   /**
-   * Returns a new {@link CommandListener} that can be used with methods like {@link
-   * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
-   *
-   * <p>Use this method when the client's configured seed addresses are not available. If they are
-   * available, use {@link #createCommandListener(List)} so that stable database semantic
-   * conventions can derive {@code server.address} and {@code server.port} from the configured
-   * target.
-   */
-  public CommandListener createCommandListener() {
-    return new TracingCommandListener(instrumenter);
-  }
-
-  /**
    * Returns a new {@link CommandListener} using the supplied seed list to derive the client's
    * logical MongoDB server target.
    *
@@ -74,5 +61,18 @@ public final class MongoTelemetry {
   public CommandListener createCommandListener(List<ServerAddress> configuredServerAddresses) {
     return new TracingCommandListener(
         instrumenter, MongoServerTarget.seeds(configuredServerAddresses));
+  }
+
+  /**
+   * Returns a new {@link CommandListener} that can be used with methods like {@link
+   * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
+   *
+   * <p>Use this method only when the client's configured seed addresses are not available. If they
+   * are available, use {@link #createCommandListener(List)} so that stable database semantic
+   * conventions can derive {@code server.address} and {@code server.port} from the configured
+   * target.
+   */
+  public CommandListener createCommandListener() {
+    return new TracingCommandListener(instrumenter);
   }
 }
