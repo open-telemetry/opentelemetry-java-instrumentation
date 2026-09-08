@@ -79,7 +79,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
         Context parentContext = Context.current();
         Instrumenter<MessageWithDestination, Void> instrumenter =
             consumerProcessInstrumenter(
-                messageWithDestination.message().wasReceiveTelemetryRecorded());
+                messageWithDestination.message().wereConsumedMessagesRecorded());
         if (!instrumenter.shouldStart(parentContext, messageWithDestination)) {
           // an advice scope is still needed, to clear the listener's subscription name on exit
           return new AdviceScope(

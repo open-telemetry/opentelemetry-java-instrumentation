@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.net.InetAddress;
@@ -227,44 +226,29 @@ class DbServerTargetTest {
   }
 
   @Test
-  void endpointCapIsConfigurable() {
-    DbServerTarget target =
-        builder()
-            .setMaxEndpoints(2)
-            .addEndpoint("a.example.com", -1)
-            .addEndpoint("b.example.com", -1)
-            .addEndpoint("c.example.com", -1)
-            .build();
-
-    assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("a.example.com,b.example.com");
-  }
-
-  @Test
-  void endpointCapMustBePositive() {
-    assertThatThrownBy(() -> builder().setMaxEndpoints(0))
-        .isInstanceOf(IllegalArgumentException.class);
-  }
-
-  @Test
   void endpointsAreSortedBeforeTheyAreCapped() {
     DbServerTarget target =
         builder()
             .setSorted(true)
-            .setMaxEndpoints(2)
             .addEndpoint("c.example.com", -1)
             .addEndpoint("a.example.com", -1)
             .addEndpoint("b.example.com", -1)
+            .addEndpoint("e.example.com", -1)
+            .addEndpoint("d.example.com", -1)
+            .addEndpoint("f.example.com", -1)
             .build();
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("a.example.com,b.example.com");
+    assertThat(target.getAddress())
+        .isEqualTo("a.example.com,b.example.com,c.example.com,d.example.com,e.example.com");
   }
 
   @Test
   void anUnsafeEndpointBeyondTheCapStillDropsTheTarget() {
-    DbServerTargetBuilder builder = builder().setMaxEndpoints(1);
-    builder.addEndpoint("a.example.com", -1);
+    DbServerTargetBuilder builder = builder();
+    for (int i = 1; i <= 5; i++) {
+      builder.addEndpoint("node" + i + ".example.com", -1);
+    }
     builder.addEndpoint("evil host", -1);
 
     assertThat(builder.build()).isNull();
