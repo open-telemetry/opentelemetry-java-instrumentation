@@ -606,3 +606,4 @@ redisson-metrics-2.3:javaagent
 redisson-metrics-common-2.3:javaagent
 redisson-metrics-common-2.3:testing
 geode-1.4:javaagent-unit-tests
+spymemcached-2.12:javaagent-unit-tests
