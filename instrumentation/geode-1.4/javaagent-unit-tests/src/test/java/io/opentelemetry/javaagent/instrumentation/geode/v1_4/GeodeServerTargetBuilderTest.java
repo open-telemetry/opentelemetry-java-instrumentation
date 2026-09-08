@@ -35,7 +35,7 @@ class GeodeServerTargetBuilderTest {
   }
 
   @Test
-  void locatorDiscoveryKeepsEverySortedLocatorAndServerGroup() {
+  void locatorDiscoveryIsSortedAndLimitedToFive() {
     GeodeServerTargetBuilder builder = new GeodeServerTargetBuilder();
     builder.addLocator("z.example", 10334);
     builder.addLocator("e.example", 10334);
@@ -50,7 +50,7 @@ class GeodeServerTargetBuilderTest {
     assertThat(target.getAddress())
         .isEqualTo(
             "a.example:10334,b.example:10334,c.example:10334,d.example:10334,"
-                + "e.example:10334,z.example:10334/orders");
+                + "e.example:10334/orders");
     assertThat(target.getPort()).isNull();
   }
 
