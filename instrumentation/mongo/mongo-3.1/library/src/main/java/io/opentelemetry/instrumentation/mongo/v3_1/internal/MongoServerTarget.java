@@ -132,7 +132,9 @@ public class MongoServerTarget {
     return host;
   }
 
-  // TODO(#20016): Migrate this protection to DbServerEndpointUtil after #20015 merges.
+  // Temporary helper copied from PR #20015.
+  // Remove it after PR #20015 merges and use DbServerEndpointUtil instead.
+  // Migration tracked in issue #20016.
   private static boolean hasUnsafeEncodedIpv6Zone(String host) {
     int zoneSeparator = host.indexOf('%');
     return zoneSeparator >= 0 && startsWithEncodedDelimiter(host.substring(zoneSeparator + 1));
