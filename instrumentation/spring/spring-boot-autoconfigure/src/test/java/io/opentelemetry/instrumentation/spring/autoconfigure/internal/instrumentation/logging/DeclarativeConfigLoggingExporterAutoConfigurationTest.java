@@ -26,8 +26,8 @@ class DeclarativeConfigLoggingExporterAutoConfigurationTest {
                   DeclarativeConfigLoggingExporterAutoConfiguration.class,
                   OpenTelemetryAutoConfiguration.class));
 
-  // Spring supplies every scalar as a String, so this fails while isEnabled() reads the flag
-  // through a config provider that does not coerce
+  // Spring supplies every scalar as a String, so this passes only while isEnabled() reads the
+  // flag through a config provider that coerces
   @Test
   void debugEnabled() {
     runner
