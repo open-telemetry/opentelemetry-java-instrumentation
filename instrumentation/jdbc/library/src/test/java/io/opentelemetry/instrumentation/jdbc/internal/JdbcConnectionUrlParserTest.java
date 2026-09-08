@@ -238,6 +238,12 @@ class JdbcConnectionUrlParserTest {
     assertThat(sanitizeHostList("address=(host=h1),address=(host=unexpected=value)")).isNull();
     assertThat(sanitizeHostList("h1:5432,:5433")).isNull();
     assertThat(sanitizeHostList("not:an:address,h2")).isNull();
+    assertThat(sanitizeHostList("address=(host=h1)(port=secret),address=(host=h2)(port=3306)"))
+        .isNull();
+    assertThat(
+            sanitizeHostList(
+                "address=(host=h1)(port=3306)(port=3307),address=(host=h2)(port=3306)"))
+        .isNull();
   }
 
   @Test
@@ -2447,6 +2453,14 @@ class JdbcConnectionUrlParserTest {
   @Test
   void invalidUnixSocketInServerAddressGroupFailsClosed() {
     assertThat(parseServerAddressGroup("/valid.sock,/invalid?sock", null)).isNull();
+  }
+
+  @Test
+  void invalidExplicitPortsInServerAddressGroupFailClosed() {
+    DbInfo dbInfo = parse("jdbc:unknown://h1:70000,h2:70000/db", null);
+
+    assertThat(dbInfo.getConfiguredServerAddress()).isNull();
+    assertThat(dbInfo.getConfiguredServerPort()).isNull();
   }
 
   @ParameterizedTest

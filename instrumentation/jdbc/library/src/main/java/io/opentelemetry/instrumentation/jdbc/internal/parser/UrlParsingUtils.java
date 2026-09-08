@@ -29,6 +29,8 @@ import javax.annotation.Nullable;
  */
 public final class UrlParsingUtils {
 
+  private static final int MIN_PORT = 1;
+  private static final int MAX_PORT = 65535;
   private static final Logger logger = Logger.getLogger(UrlParsingUtils.class.getName());
 
   // Source: Regular Expressions Cookbook 2nd edition - 8.17.
@@ -62,7 +64,7 @@ public final class UrlParsingUtils {
   private static final Pattern ADDRESS_HOST_PATTERN =
       Pattern.compile("\\(\\s*host\\s*=\\s*([^)]*?)\\s*\\)", Pattern.CASE_INSENSITIVE);
   private static final Pattern ADDRESS_PORT_PATTERN =
-      Pattern.compile("\\(\\s*port\\s*=\\s*([\\d]+)\\s*\\)", Pattern.CASE_INSENSITIVE);
+      Pattern.compile("\\(\\s*port\\s*=\\s*([^)]*?)\\s*\\)", Pattern.CASE_INSENSITIVE);
   private static final Pattern ADDRESS_ENTRY_PATTERN =
       Pattern.compile("^address\\s*=", Pattern.CASE_INSENSITIVE);
 
@@ -453,7 +455,11 @@ public final class UrlParsingUtils {
 
     Matcher portMatcher = ADDRESS_PORT_PATTERN.matcher(host);
     if (portMatcher.find()) {
-      sanitized.append("(port=").append(portMatcher.group(1)).append(')');
+      String addressPort = portMatcher.group(1).trim();
+      if (!isValidPort(addressPort) || portMatcher.find()) {
+        return null;
+      }
+      sanitized.append("(port=").append(addressPort).append(')');
     }
     return sanitized.toString();
   }
@@ -474,14 +480,28 @@ public final class UrlParsingUtils {
     int closingBracket = value.startsWith("[") ? value.indexOf(']') : -1;
     if (closingBracket >= 0) {
       String rest = value.substring(closingBracket + 1);
-      return rest.isEmpty() || (rest.startsWith(":") && parsePort(rest.substring(1)) != null);
+      return rest.isEmpty() || (rest.startsWith(":") && isValidPort(rest.substring(1)));
     }
     int firstColon = value.indexOf(':');
     int lastColon = value.lastIndexOf(':');
     if (firstColon != lastColon) {
       return DbServerTargetBuilder.isValidHost(value);
     }
-    return firstColon < 0 || (firstColon > 0 && parsePort(value.substring(firstColon + 1)) != null);
+    return firstColon < 0 || (firstColon > 0 && isValidPort(value.substring(firstColon + 1)));
+  }
+
+  private static boolean isValidPort(String value) {
+    if (value.isEmpty()) {
+      return false;
+    }
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      if (c < '0' || c > '9') {
+        return false;
+      }
+    }
+    Integer port = parsePort(value);
+    return port != null && port >= MIN_PORT && port <= MAX_PORT;
   }
 
   /** Sanitize a comma-separated host list, returning {@code null} when it is not valid. */
