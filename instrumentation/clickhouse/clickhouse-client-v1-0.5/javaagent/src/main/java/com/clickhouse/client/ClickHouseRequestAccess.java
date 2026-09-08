@@ -5,6 +5,8 @@
 
 package com.clickhouse.client;
 
+import javax.annotation.Nullable;
+
 // helper class for accessing package private members in com.clickhouse.client package
 public class ClickHouseRequestAccess {
 
@@ -12,12 +14,14 @@ public class ClickHouseRequestAccess {
     return clickHouseRequest.getQuery();
   }
 
+  @Nullable
   public static ClickHouseNodes getNodes(ClickHouseRequest<?> clickHouseRequest) {
     return clickHouseRequest.server instanceof ClickHouseNodes
         ? (ClickHouseNodes) clickHouseRequest.server
         : null;
   }
 
+  @Nullable
   public static ClickHouseNode getDirectNode(ClickHouseRequest<?> clickHouseRequest) {
     return clickHouseRequest.server instanceof ClickHouseNode
         ? (ClickHouseNode) clickHouseRequest.server
