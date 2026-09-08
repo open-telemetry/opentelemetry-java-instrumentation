@@ -37,7 +37,6 @@ class SpymemcachedAttributesGetterTest {
   void singleDefaultPortIsOmittedInStableTelemetry() {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
     request.setHandlingNode(memcachedNode("selected.example", 11212));
-    request.captureHandlingNodeAddress();
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? "one.example" : "selected.example");
@@ -49,7 +48,6 @@ class SpymemcachedAttributesGetterTest {
     SpymemcachedRequest request =
         request(asList(node("one.example", 11212), node("two.example", 11212)));
     request.setHandlingNode(memcachedNode("two.example", 11212));
-    request.captureHandlingNodeAddress();
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(
@@ -62,7 +60,6 @@ class SpymemcachedAttributesGetterTest {
     SpymemcachedRequest request =
         request(asList(node("one.example", 11211), node("two.example", 11212)));
     request.setHandlingNode(memcachedNode("selected.example", 11213));
-    request.captureHandlingNodeAddress();
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(
@@ -77,7 +74,6 @@ class SpymemcachedAttributesGetterTest {
     SpymemcachedRequest request =
         SpymemcachedRequest.create(mock(MemcachedConnection.class), "asyncGet");
     request.setHandlingNode(memcachedNode("one.example", 11211));
-    request.captureHandlingNodeAddress();
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? null : "one.example");
@@ -89,7 +85,6 @@ class SpymemcachedAttributesGetterTest {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
     request.setHandlingNode(memcachedNode("selected.example", 11212));
-    request.captureHandlingNodeAddress();
     AttributesBuilder attributes = Attributes.builder();
 
     extractServerAttributes(attributes, request);
@@ -107,7 +102,6 @@ class SpymemcachedAttributesGetterTest {
         connection, asList(node("one.example", 11212), node("two.example", 11212)));
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
     request.setHandlingNode(memcachedNode("selected.example", 11213));
-    request.captureHandlingNodeAddress();
     AttributesBuilder attributes = Attributes.builder();
     attributes.put(SERVER_ADDRESS, getter.getServerAddress(request));
     Integer serverPort = getter.getServerPort(request);
@@ -134,7 +128,6 @@ class SpymemcachedAttributesGetterTest {
     InetSocketAddress peer =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 11211);
     request.setHandlingNode(memcachedNode(peer));
-    request.captureHandlingNodeAddress();
 
     assertThat(getter.getNetworkPeerInetSocketAddress(request, null))
         .isEqualTo(emitStableDatabaseSemconv() ? peer : null);
@@ -149,7 +142,6 @@ class SpymemcachedAttributesGetterTest {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
     InetSocketAddress unresolved = node("unresolved.example", 11211);
     request.setHandlingNode(memcachedNode(unresolved));
-    request.captureHandlingNodeAddress();
 
     assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
@@ -166,7 +158,6 @@ class SpymemcachedAttributesGetterTest {
               private static final long serialVersionUID = 1L;
             });
     request.setHandlingNode(node);
-    request.captureHandlingNodeAddress();
 
     assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
@@ -174,7 +165,7 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
-  void addressAndPortReadsUseThePreparedSnapshot() throws UnknownHostException {
+  void addressAndPortReadsUseTheEnqueueTimeSnapshot() throws UnknownHostException {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
     InetSocketAddress first =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 11211);
@@ -185,7 +176,6 @@ class SpymemcachedAttributesGetterTest {
     when(node.getSocketAddress()).thenAnswer(invocation -> address.get());
 
     request.setHandlingNode(node);
-    request.captureHandlingNodeAddress();
     address.set(second);
 
     if (emitStableDatabaseSemconv()) {
@@ -208,7 +198,6 @@ class SpymemcachedAttributesGetterTest {
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 41}), 11212);
     request.setHandlingNode(memcachedNode(firstPeer));
     request.setHandlingNode(memcachedNode(secondPeer));
-    request.captureHandlingNodeAddress();
 
     assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
   }

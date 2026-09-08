@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -57,18 +56,8 @@ class MemcachedConnectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RedistributeOperationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static SpymemcachedRequestHolder.RetryScope onEnter(
-        @Advice.Argument(0) Operation operation) {
-      return SpymemcachedRequestHolder.startRetry(operation);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Enter @Nullable SpymemcachedRequestHolder.RetryScope retryScope) {
-      if (retryScope != null) {
-        retryScope.close();
-      }
+    public static void onEnter(@Advice.Argument(0) Operation operation) {
+      SpymemcachedRequestHolder.markRedistributed(operation);
     }
   }
 }
