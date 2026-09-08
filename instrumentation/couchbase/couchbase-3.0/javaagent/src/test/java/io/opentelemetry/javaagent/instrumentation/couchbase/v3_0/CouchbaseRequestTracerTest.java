@@ -56,6 +56,7 @@ class CouchbaseRequestTracerTest {
     when(requestContext.request()).thenReturn(request);
     Map<String, Object> clientContext = new HashMap<>();
     clientContext.put("request_id", "abc");
+    clientContext.put("ignored", null);
     when(requestContext.clientContext()).thenReturn(clientContext);
     when(requestContext.serverLatency()).thenReturn(42L);
     requestSpan.requestContext(requestContext);
@@ -75,7 +76,7 @@ class CouchbaseRequestTracerTest {
                     span.hasKind(INTERNAL)
                         .hasName("get")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("peer.service"), "kv"),
                             equalTo(stringKey("couchbase.operation_id"), "0x17"),
                             equalTo(stringKey("couchbase.document_id"), "document"),
@@ -84,6 +85,6 @@ class CouchbaseRequestTracerTest {
                 span ->
                     span.hasName("dispatch_to_server")
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(equalTo(longKey("peer.latency"), 42L))));
+                        .hasAttributesSatisfyingExactly(equalTo(longKey("peer.latency"), 42L))));
   }
 }

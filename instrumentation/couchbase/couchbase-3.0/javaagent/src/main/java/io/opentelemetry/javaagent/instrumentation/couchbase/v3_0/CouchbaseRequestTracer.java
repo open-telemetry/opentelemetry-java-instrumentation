@@ -120,8 +120,11 @@ public final class CouchbaseRequestTracer implements RequestTracer {
         context
             .clientContext()
             .forEach(
-                (key, value) ->
-                    span.setRawAttribute("couchbase.client_context." + key, value.toString()));
+                (key, value) -> {
+                  if (value != null) {
+                    span.setRawAttribute("couchbase.client_context." + key, value.toString());
+                  }
+                });
       }
       span.end();
     }
