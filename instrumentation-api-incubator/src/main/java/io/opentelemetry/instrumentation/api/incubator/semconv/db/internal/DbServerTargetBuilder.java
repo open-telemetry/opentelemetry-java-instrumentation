@@ -13,7 +13,9 @@ import javax.annotation.Nullable;
 
 /**
  * Collects the endpoints a database client was configured with and renders them as a single {@link
- * DbServerTarget}.
+ * DbServerTarget}. A caller that knows which single endpoint served an operation collects that one
+ * endpoint instead, and reports the result as {@code network.peer.address} and {@code
+ * network.peer.port}.
  *
  * <p>Every endpoint is validated as a host name, an IPv4 literal, or an IPv6 literal without any
  * name resolution. When one endpoint cannot be validated the whole target is dropped, because a
