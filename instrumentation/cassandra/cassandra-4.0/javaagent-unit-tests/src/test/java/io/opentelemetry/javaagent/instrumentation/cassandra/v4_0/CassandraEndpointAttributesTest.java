@@ -32,7 +32,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -226,8 +225,7 @@ class CassandraEndpointAttributesTest {
   void sniPeerSourceFollowsSemconvMode() throws UnknownHostException {
     InetSocketAddress responsePeer = resolved(29042);
     InetSocketAddress legacyPeer = resolved(39042);
-    VirtualField.find(ExecutionInfo.class, InetSocketAddress.class)
-        .set(executionInfo, responsePeer);
+    CassandraResponsePeers.setExecutionInfoPeer(executionInfo, responsePeer);
     if (!emitStableDatabaseSemconv()) {
       when(executionInfo.getCoordinator()).thenReturn(coordinator);
       when(coordinator.getEndPoint()).thenReturn(sniEndPoint);
@@ -295,8 +293,7 @@ class CassandraEndpointAttributesTest {
   void responsePeerPrecedenceFollowsSemconvMode() throws UnknownHostException {
     InetSocketAddress responsePeer = resolved(19042);
     InetSocketAddress legacyPeer = resolved(9042);
-    VirtualField.find(ExecutionInfo.class, InetSocketAddress.class)
-        .set(executionInfo, responsePeer);
+    CassandraResponsePeers.setExecutionInfoPeer(executionInfo, responsePeer);
     if (!emitStableDatabaseSemconv()) {
       when(executionInfo.getCoordinator()).thenReturn(coordinator);
       when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(legacyPeer));
@@ -318,8 +315,7 @@ class CassandraEndpointAttributesTest {
   void emittedNetworkAttributesUseTheModeSpecificPeerSource() throws UnknownHostException {
     InetSocketAddress responsePeer = resolved(19042);
     InetSocketAddress legacyPeer = InetSocketAddress.createUnresolved("legacy.example.com", 9042);
-    VirtualField.find(ExecutionInfo.class, InetSocketAddress.class)
-        .set(executionInfo, responsePeer);
+    CassandraResponsePeers.setExecutionInfoPeer(executionInfo, responsePeer);
     if (!emitStableDatabaseSemconv()) {
       when(executionInfo.getCoordinator()).thenReturn(coordinator);
       when(coordinator.getEndPoint()).thenReturn(customEndPoint);
