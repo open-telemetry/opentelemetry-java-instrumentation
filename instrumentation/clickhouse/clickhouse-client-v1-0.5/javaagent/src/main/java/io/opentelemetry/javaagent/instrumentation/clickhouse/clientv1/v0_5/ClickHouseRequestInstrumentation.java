@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import com.clickhouse.client.ClickHouseRequest;
@@ -27,7 +30,9 @@ class ClickHouseRequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("copy", "seal", "write").and(takesNoArguments()),
+        namedOneOf("copy", "seal", "write")
+            .and(takesNoArguments())
+            .and(returns(hasSuperType(named("com.clickhouse.client.ClickHouseRequest")))),
         getClass().getName() + "$CopyTargetAdvice");
   }
 
