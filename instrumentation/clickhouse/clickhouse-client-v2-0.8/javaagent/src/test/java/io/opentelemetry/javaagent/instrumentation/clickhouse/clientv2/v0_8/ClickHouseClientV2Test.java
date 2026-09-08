@@ -194,8 +194,8 @@ class ClickHouseClientV2Test {
         "fe80::1%25password",
         "fe80::1%3Dpassword"
       })
-  void testIpv6LiteralRejectsEncodedZoneDelimiters(String host) {
-    assertThat(ClickHouseEndpointUtil.isIpv6Literal(host)).isFalse();
+  void testConfiguredEndpointsRejectIpv6EncodedZoneDelimiters(String host) throws Exception {
+    assertServerTarget(new HashSet<>(asList("http://[" + host + "]:8123")), null, null);
   }
 
   @Test
