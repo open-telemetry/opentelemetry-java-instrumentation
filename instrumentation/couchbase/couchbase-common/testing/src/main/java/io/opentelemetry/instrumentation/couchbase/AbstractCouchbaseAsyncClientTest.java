@@ -127,7 +127,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -185,7 +186,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -253,7 +255,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -337,7 +340,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -402,7 +406,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
