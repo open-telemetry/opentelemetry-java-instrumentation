@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.11"
+    id("org.graalvm.buildtools.native") version "1.1.12"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -311,6 +311,7 @@ include(":instrumentation:finagle-http-23.11:compile-stub")
 include(":instrumentation:finagle-http-23.11:javaagent")
 include(":instrumentation:finatra-2.9:javaagent")
 include(":instrumentation:geode-1.4:javaagent")
+include(":instrumentation:geode-1.4:javaagent-unit-tests")
 include(":instrumentation:google-http-client-1.19:javaagent")
 include(":instrumentation:grails-3.0:javaagent")
 include(":instrumentation:graphql-java:graphql-java-12.0:javaagent")
@@ -620,10 +621,11 @@ include(":instrumentation:redisson:redisson-3.0:javaagent")
 include(":instrumentation:redisson:redisson-3.17:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:testing")
+include(":instrumentation:redisson:redisson-metrics-2.3:javaagent")
 include(":instrumentation:redisson:redisson-metrics-3.18:javaagent")
 include(":instrumentation:redisson:redisson-metrics-3.26:javaagent")
-include(":instrumentation:redisson:redisson-metrics-common-3.18:javaagent")
-include(":instrumentation:redisson:redisson-metrics-common-3.18:testing")
+include(":instrumentation:redisson:redisson-metrics-common-2.3:javaagent")
+include(":instrumentation:redisson:redisson-metrics-common-2.3:testing")
 include(":instrumentation:resources:library")
 include(":instrumentation:restlet:restlet-1.1:javaagent")
 include(":instrumentation:restlet:restlet-1.1:library")
@@ -731,6 +733,7 @@ include(":instrumentation:spring:spring-ws-2.0:testing")
 include(":instrumentation:spring:starters:spring-boot-starter")
 include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
+include(":instrumentation:spymemcached-2.12:javaagent-unit-tests")
 include(":instrumentation:struts:struts-2.3:javaagent")
 include(":instrumentation:struts:struts-7.0:javaagent")
 include(":instrumentation:tapestry-5.4:javaagent")
