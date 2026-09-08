@@ -33,6 +33,7 @@ import com.clickhouse.client.ClickHouseParameterizedQuery;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.client.ClickHouseResponseSummary;
+import com.clickhouse.client.TestClickHouseClient;
 import com.clickhouse.data.ClickHouseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -481,6 +482,49 @@ class ClickHouseClientV1Test {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testAsyncExecuteUsesFinalServer() {
+    ClickHouseNode initialServer = ClickHouseNode.of("http://initial.example:8124/default");
+    ClickHouseNode finalServer = ClickHouseNode.of("http://final.example:9123/default");
+    TestClickHouseClient client = new TestClickHouseClient();
+
+    CompletableFuture<ClickHouseResponse> response =
+        client.read(initialServer).query("select * from " + TABLE_NAME).execute();
+
+    client.failOverTo(finalServer);
+    if (emitStableDatabaseSemconv()) {
+      assertThat(testing.spans()).isEmpty();
+    }
+    client.complete();
+    response.join();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "select test_table"
+                                : "SELECT " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, "initial.example"),
+                            equalTo(SERVER_PORT, 8124),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? "final.example" : null),
+                            equalTo(NETWORK_PEER_PORT, emitStableDatabaseSemconv() ? 9123L : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,

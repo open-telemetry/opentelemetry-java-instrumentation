@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
@@ -23,9 +24,11 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseScope;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
@@ -77,6 +80,8 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Argument(0) ClickHouseRequest<?> clickHouseRequest,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
         @Advice.Enter @Nullable ClickHouseScope scope) {
 
       CallDepth callDepth = CallDepth.forClass(ClickHouseClient.class);
@@ -84,7 +89,34 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
         return;
       }
 
-      scope.end(throwable);
+      if (emitStableDatabaseSemconv() && throwable == null && result instanceof CompletableFuture) {
+        scope.endOnCompletion(
+            (CompletableFuture<?>) result, new PeerUpdater(scope, clickHouseRequest));
+      } else {
+        updatePeer(scope, clickHouseRequest);
+        scope.end(throwable);
+      }
+    }
+
+    public static void updatePeer(ClickHouseScope scope, ClickHouseRequest<?> clickHouseRequest) {
+      ClickHouseNode server = clickHouseRequest.getServer();
+      scope.setPeer(
+          ClickHouseClientV1Singletons.peerServerTarget(server.getHost(), server.getPort()));
+    }
+  }
+
+  public static class PeerUpdater implements Runnable {
+    private final ClickHouseScope scope;
+    private final ClickHouseRequest<?> clickHouseRequest;
+
+    public PeerUpdater(ClickHouseScope scope, ClickHouseRequest<?> clickHouseRequest) {
+      this.scope = scope;
+      this.clickHouseRequest = clickHouseRequest;
+    }
+
+    @Override
+    public void run() {
+      ExecuteAndWaitAdvice.updatePeer(scope, clickHouseRequest);
     }
   }
 }
