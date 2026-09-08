@@ -9,7 +9,7 @@ import com.datastax.oss.protocol.internal.Frame;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
 
-public class VirtualFieldHelper {
+class VirtualFieldHelper {
 
   public static final VirtualField<Frame, InetSocketAddress> FRAME_PEER =
       VirtualField.find(Frame.class, InetSocketAddress.class);
