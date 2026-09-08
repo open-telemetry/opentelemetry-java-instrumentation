@@ -418,6 +418,7 @@ public final class AwsSdkInstrumenterFactory {
         builder -> {
           builder
               .addAttributesExtractor(GenAiAttributesExtractor.create(getter))
+              .addAttributesExtractor(new BedrockRuntimeAttributesExtractor())
               .addOperationMetrics(GenAiClientMetrics.get());
           setGenAiClientExceptionEventExtractor(builder);
         },
