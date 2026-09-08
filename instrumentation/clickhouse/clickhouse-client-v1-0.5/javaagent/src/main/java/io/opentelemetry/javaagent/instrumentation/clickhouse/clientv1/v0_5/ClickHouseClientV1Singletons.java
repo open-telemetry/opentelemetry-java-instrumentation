@@ -116,7 +116,12 @@ public class ClickHouseClientV1Singletons {
 
   private static boolean addEndpoint(DbServerTargetBuilder builder, ClickHouseNode node) {
     String host = node.getHost();
-    if (host.indexOf(':') >= 0 && !ClickHouseEndpointUtil.isIpv6Literal(host)) {
+    int hostLength = host.length();
+    String hostToValidate =
+        hostLength > 1 && host.charAt(0) == '[' && host.charAt(hostLength - 1) == ']'
+            ? host.substring(1, hostLength - 1)
+            : host;
+    if (hostToValidate.indexOf(':') >= 0 && !ClickHouseEndpointUtil.isIpv6Literal(hostToValidate)) {
       return false;
     }
     ClickHouseProtocol protocol = node.getProtocol();

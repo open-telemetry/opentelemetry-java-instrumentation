@@ -158,6 +158,17 @@ class ClickHouseClientV1Test {
   }
 
   @Test
+  void testConfiguredBracketedIpv6() throws Exception {
+    Object serverTarget =
+        serverTarget(
+            requestWithNodes(ImmutableList.of(ClickHouseNode.of("http://[2001:db8::1]:8123"))));
+
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget)).isEqualTo("2001:db8::1");
+    assertThat(serverTargetPort(serverTarget)).isNull();
+  }
+
+  @Test
   void testConfiguredDefaultPortIsReportedSeparately() throws Exception {
     Object serverTarget =
         serverTarget(
