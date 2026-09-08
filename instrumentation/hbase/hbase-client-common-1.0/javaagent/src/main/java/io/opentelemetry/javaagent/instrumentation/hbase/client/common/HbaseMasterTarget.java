@@ -46,6 +46,7 @@ final class HbaseMasterTarget {
       return null;
     }
 
+    // MasterRegistry is a discovery service, so its endpoint ports remain inline in server.address.
     DbServerTargetBuilder builder =
         DbServerTarget.builder(defaultPort).setSorted(true).setPortAlwaysInline(true);
     for (String configuredMaster : configuredMasters.split(",", -1)) {
