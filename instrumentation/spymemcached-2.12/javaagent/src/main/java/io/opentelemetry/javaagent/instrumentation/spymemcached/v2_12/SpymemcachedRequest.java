@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -16,12 +17,16 @@ import net.spy.memcached.MemcachedNode;
 public abstract class SpymemcachedRequest {
 
   public static SpymemcachedRequest create(MemcachedConnection connection, String queryText) {
-    return new AutoValue_SpymemcachedRequest(connection, queryText);
+    return new AutoValue_SpymemcachedRequest(
+        connection, queryText, SpymemcachedSingletons.serverTarget(connection));
   }
 
   public abstract MemcachedConnection getConnection();
 
   public abstract String getQueryText();
+
+  @Nullable
+  public abstract DbServerTarget getServerTarget();
 
   @Nullable private MemcachedNode handlingNode;
   @Nullable private InetSocketAddress handlingNodeAddress;
