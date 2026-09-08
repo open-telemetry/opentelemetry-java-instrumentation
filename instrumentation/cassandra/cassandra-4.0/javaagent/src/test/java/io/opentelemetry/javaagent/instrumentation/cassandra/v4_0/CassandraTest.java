@@ -185,32 +185,19 @@ class CassandraTest extends AbstractCassandraTest {
       throw new IllegalStateException("Expected the tracing session to be a JDK proxy");
     }
     InvocationHandler invocationHandler = Proxy.getInvocationHandler(session);
-    Class<?> type = invocationHandler.getClass();
-    while (type != Object.class) {
-      for (Field field : type.getDeclaredFields()) {
-        if (CqlSession.class.isAssignableFrom(field.getType())) {
-          field.setAccessible(true);
-          return (CqlSession) field.get(invocationHandler);
-        }
+    for (Field field : invocationHandler.getClass().getDeclaredFields()) {
+      if (CqlSession.class.isAssignableFrom(field.getType())) {
+        field.setAccessible(true);
+        return (CqlSession) field.get(invocationHandler);
       }
-      type = type.getSuperclass();
     }
     throw new IllegalStateException("Could not find the delegate session");
   }
 
   private static void setEndPoint(Node node, EndPoint endPoint)
       throws ReflectiveOperationException {
-    Class<?> type = node.getClass();
-    while (type != Object.class) {
-      try {
-        Field field = type.getDeclaredField("endPoint");
-        field.setAccessible(true);
-        field.set(node, endPoint);
-        return;
-      } catch (NoSuchFieldException ignored) {
-        type = type.getSuperclass();
-      }
-    }
-    throw new NoSuchFieldException("Could not find the endpoint field");
+    Field field = node.getClass().getDeclaredField("endPoint");
+    field.setAccessible(true);
+    field.set(node, endPoint);
   }
 }
