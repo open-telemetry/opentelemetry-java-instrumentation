@@ -9,7 +9,7 @@ package io.opentelemetry.smoketest;
 public class TestImageVersions {
 
   // smoke-test-spring-boot
-  public static final String SPRING_BOOT_VERSION = "20260826.32962641676";
+  public static final String SPRING_BOOT_VERSION = "20260908.34272316197";
 
   // smoke-test-grpc
   public static final String GRPC_VERSION = "20260908.34190084723";
