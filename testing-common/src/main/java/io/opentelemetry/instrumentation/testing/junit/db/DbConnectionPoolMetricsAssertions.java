@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
@@ -198,7 +197,8 @@ public class DbConnectionPoolMetricsAssertions {
 
   private void verifyPoolName(LongSumAssert sum) {
     sum.isNotMonotonic()
-        .hasPointsSatisfying(point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName)));
+        .hasPointsSatisfying(
+            point -> point.hasAttributesSatisfying(equalTo(POOL_NAME_KEY, poolName)));
   }
 
   private void verifyPendingRequests() {
@@ -238,7 +238,7 @@ public class DbConnectionPoolMetricsAssertions {
             sum ->
                 sum.isMonotonic()
                     .hasPointsSatisfying(
-                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+                        point -> point.hasAttributesSatisfying(equalTo(POOL_NAME_KEY, poolName))));
   }
 
   private void verifyCreateTime() {
@@ -257,7 +257,7 @@ public class DbConnectionPoolMetricsAssertions {
         .hasHistogramSatisfying(
             histogram ->
                 histogram.hasPointsSatisfying(
-                    point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+                    point -> point.hasAttributesSatisfying(equalTo(POOL_NAME_KEY, poolName))));
   }
 
   private void verifyWaitTime() {
@@ -276,7 +276,7 @@ public class DbConnectionPoolMetricsAssertions {
         .hasHistogramSatisfying(
             histogram ->
                 histogram.hasPointsSatisfying(
-                    point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+                    point -> point.hasAttributesSatisfying(equalTo(POOL_NAME_KEY, poolName))));
   }
 
   private void verifyUseTime() {
@@ -295,6 +295,6 @@ public class DbConnectionPoolMetricsAssertions {
         .hasHistogramSatisfying(
             histogram ->
                 histogram.hasPointsSatisfying(
-                    point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+                    point -> point.hasAttributesSatisfying(equalTo(POOL_NAME_KEY, poolName))));
   }
 }

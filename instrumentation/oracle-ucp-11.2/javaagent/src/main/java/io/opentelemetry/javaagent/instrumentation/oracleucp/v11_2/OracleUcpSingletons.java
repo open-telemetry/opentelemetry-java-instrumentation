@@ -33,11 +33,15 @@ public class OracleUcpSingletons {
     return telemetry;
   }
 
-  public static void capturePoolName(
-      PoolDataSource dataSource, UniversalConnectionPool connectionPool) {
+  public static void captureDatabaseInfo(
+      PoolDataSource dataSource,
+      UniversalConnectionPool connectionPool,
+      boolean generatedPoolName) {
     DbInfo dbInfo = getDbInfo(dataSource);
-    METRIC_POOL_NAME_FIELD.set(
-        connectionPool, JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_POOL_NAME));
+    if (generatedPoolName) {
+      METRIC_POOL_NAME_FIELD.set(
+          connectionPool, JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_POOL_NAME));
+    }
     DATABASE_ATTRIBUTES_FIELD.set(
         connectionPool, JdbcConnectionPoolNameUtil.databaseAttributes(dbInfo));
   }
@@ -73,17 +77,26 @@ public class OracleUcpSingletons {
 
   public static void clearPoolName(UniversalConnectionPool connectionPool) {
     METRIC_POOL_NAME_FIELD.set(connectionPool, null);
-    DATABASE_ATTRIBUTES_FIELD.set(connectionPool, null);
   }
 
   public static void registerMetrics(UniversalConnectionPool connectionPool) {
     String poolName = METRIC_POOL_NAME_FIELD.get(connectionPool);
     Attributes databaseAttributes = DATABASE_ATTRIBUTES_FIELD.get(connectionPool);
+    if (databaseAttributes != null) {
+      telemetry()
+          .registerMetrics(
+              connectionPool,
+              poolName == null ? connectionPool.getName() : poolName,
+              databaseAttributes);
+      return;
+    }
+
     if (poolName == null) {
       telemetry().registerMetrics(connectionPool);
-    } else {
-      telemetry().registerMetrics(connectionPool, poolName, databaseAttributes);
+      return;
     }
+
+    telemetry().registerMetrics(connectionPool, poolName);
   }
 
   private OracleUcpSingletons() {}
