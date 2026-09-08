@@ -28,8 +28,6 @@ class DefaultExecutionInfoInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // Driver 4.0 through 4.3 use this single constructor shape. Matching it exactly prevents
-    // applying advice with the wrong argument binding if another overload appears.
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArguments(11))
