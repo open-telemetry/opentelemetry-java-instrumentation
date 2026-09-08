@@ -127,7 +127,9 @@ public class ClickHouseClientV2Singletons {
       }
       if (authority.startsWith("[")) {
         int bracketEnd = authority.indexOf(']');
-        if (bracketEnd <= 1 || authority.indexOf(']', bracketEnd + 1) >= 0) {
+        if (bracketEnd <= 1
+            || authority.indexOf(']', bracketEnd + 1) >= 0
+            || !ClickHouseEndpointUtil.isIpv6Literal(authority.substring(1, bracketEnd))) {
           return null;
         }
         String rest = authority.substring(bracketEnd + 1);
