@@ -169,7 +169,8 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testConfiguredDefaultPortIsReportedSeparately() throws Exception {
+  void testConfiguredSingleEndpointOmitsDefaultPortAndReportsNonDefaultPortSeparately()
+      throws Exception {
     Object serverTarget =
         serverTarget(
             requestWithNodes(ImmutableList.of(ClickHouseNode.of("http://default.example"))));
