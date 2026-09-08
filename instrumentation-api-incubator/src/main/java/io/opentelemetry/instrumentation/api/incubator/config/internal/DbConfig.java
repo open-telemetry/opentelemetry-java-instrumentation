@@ -33,6 +33,11 @@ public final class DbConfig {
 
   public static boolean isQuerySanitizationEnabled(
       OpenTelemetry openTelemetry, String instrumentationName) {
+    return isQuerySanitizationEnabled(openTelemetry, instrumentationName, true);
+  }
+
+  public static boolean isQuerySanitizationEnabled(
+      OpenTelemetry openTelemetry, String instrumentationName, boolean defaultValue) {
     DeclarativeConfigProperties instrumentationConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName);
     Boolean querySanitizationEnabled =
@@ -43,7 +48,7 @@ public final class DbConfig {
     if (querySanitizationEnabled != null) {
       return querySanitizationEnabled;
     }
-    return isCommonQuerySanitizationEnabled(openTelemetry);
+    return isCommonQuerySanitizationEnabled(openTelemetry, defaultValue);
   }
 
   public static boolean isSqlCommenterEnabled(
