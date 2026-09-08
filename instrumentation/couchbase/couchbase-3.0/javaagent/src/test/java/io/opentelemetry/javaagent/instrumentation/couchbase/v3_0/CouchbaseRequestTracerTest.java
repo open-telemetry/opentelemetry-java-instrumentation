@@ -40,10 +40,7 @@ class CouchbaseRequestTracerTest {
   @Test
   @SuppressWarnings({"DeduplicateConstants", "rawtypes", "unchecked"})
   void recordsRequestLifecycleAttributesAndChildSpans() {
-    ClusterEnvironment environment = ClusterEnvironment.builder().build();
-    cleanup.deferAfterAll(environment::shutdown);
-
-    RequestTracer requestTracer = ((CoreEnvironment) environment).requestTracer();
+    RequestTracer requestTracer = createRequestTracer();
     RequestSpan parent = requestTracer.requestSpan("parent", null);
     InternalSpan requestSpan = requestTracer.internalSpan("get", parent);
 
@@ -86,5 +83,44 @@ class CouchbaseRequestTracerTest {
                     span.hasName("dispatch_to_server")
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(equalTo(longKey("peer.latency"), 42L))));
+  }
+
+  @Test
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  void endsChildSpansWhenReplacedOrRequestFinishes() {
+    RequestTracer requestTracer = createRequestTracer();
+    RequestSpan parent = requestTracer.requestSpan("parent", null);
+    InternalSpan requestSpan = requestTracer.internalSpan("get", parent);
+
+    BaseKeyValueRequest request = mock(BaseKeyValueRequest.class);
+    when(request.serviceType()).thenReturn(ServiceType.KV);
+    when(request.key()).thenReturn("document".getBytes(UTF_8));
+
+    RequestContext requestContext = mock(RequestContext.class);
+    when(requestContext.request()).thenReturn(request);
+    requestSpan.requestContext(requestContext);
+
+    requestSpan.startPayloadEncoding();
+    requestSpan.startPayloadEncoding();
+    requestSpan.startDispatch();
+    requestSpan.startDispatch();
+    requestSpan.finish();
+    parent.finish();
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span -> span.hasName("get").hasParent(trace.getSpan(0)),
+                span -> span.hasName("request_encoding").hasParent(trace.getSpan(1)),
+                span -> span.hasName("request_encoding").hasParent(trace.getSpan(1)),
+                span -> span.hasName("dispatch_to_server").hasParent(trace.getSpan(1)),
+                span -> span.hasName("dispatch_to_server").hasParent(trace.getSpan(1))));
+  }
+
+  private static RequestTracer createRequestTracer() {
+    ClusterEnvironment environment = ClusterEnvironment.builder().build();
+    cleanup.deferAfterAll(environment::shutdown);
+    return ((CoreEnvironment) environment).requestTracer();
   }
 }

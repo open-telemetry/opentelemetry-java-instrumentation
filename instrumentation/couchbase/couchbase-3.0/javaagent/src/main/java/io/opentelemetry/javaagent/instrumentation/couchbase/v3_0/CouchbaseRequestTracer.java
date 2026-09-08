@@ -105,6 +105,8 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void finish() {
+      endEncodingSpan();
+      endDispatchSpan();
       RequestContext context = requireNonNull(requestContext);
       span.setRawAttribute("peer.service", mapServiceType(context.request().serviceType()));
       String operationId = context.request().operationId();
@@ -141,22 +143,27 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void startPayloadEncoding() {
+      endEncodingSpan();
       encodingSpan = tracer.startSpan(PAYLOAD_ENCODING_SPAN_NAME, span);
     }
 
     @Override
     public void stopPayloadEncoding() {
-      requireNonNull(encodingSpan).end();
+      CouchbaseSpan encoding = requireNonNull(encodingSpan);
+      encodingSpan = null;
+      encoding.end();
     }
 
     @Override
     public void startDispatch() {
+      endDispatchSpan();
       dispatchSpan = tracer.startSpan(DISPATCH_SPAN_NAME, span);
     }
 
     @Override
     public void stopDispatch() {
       CouchbaseSpan dispatch = requireNonNull(dispatchSpan);
+      dispatchSpan = null;
       RequestContext context = requireNonNull(requestContext);
       long serverLatency = context.serverLatency();
       if (serverLatency > 0) {
@@ -168,6 +175,22 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     @Override
     public RequestSpan toRequestSpan() {
       return new AgentRequestSpan(span);
+    }
+
+    private void endEncodingSpan() {
+      CouchbaseSpan encoding = encodingSpan;
+      encodingSpan = null;
+      if (encoding != null) {
+        encoding.end();
+      }
+    }
+
+    private void endDispatchSpan() {
+      CouchbaseSpan dispatch = dispatchSpan;
+      dispatchSpan = null;
+      if (dispatch != null) {
+        dispatch.end();
+      }
     }
 
     @Nullable
