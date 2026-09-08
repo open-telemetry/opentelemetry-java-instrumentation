@@ -116,7 +116,11 @@ public class ClickHouseClientV1Singletons {
 
   private static boolean addEndpoint(DbServerTargetBuilder builder, ClickHouseNode node) {
     String host = node.getHost();
-    if (hasWhitespace(host)) {
+    if (host.isEmpty()
+        || hasWhitespace(host)
+        || host.indexOf('@') >= 0
+        || host.indexOf(',') >= 0
+        || host.indexOf('=') >= 0) {
       return false;
     }
     int hostLength = host.length();
@@ -124,7 +128,11 @@ public class ClickHouseClientV1Singletons {
         hostLength > 1 && host.charAt(0) == '[' && host.charAt(hostLength - 1) == ']'
             ? host.substring(1, hostLength - 1)
             : host;
-    if (hostToValidate.indexOf(':') >= 0 && !DbServerEndpointUtil.isIpv6Literal(hostToValidate)) {
+    if (hostToValidate.indexOf(':') >= 0) {
+      if (!DbServerEndpointUtil.isIpv6Literal(hostToValidate)) {
+        return false;
+      }
+    } else if (hostToValidate.indexOf('%') >= 0) {
       return false;
     }
     ClickHouseProtocol protocol = node.getProtocol();
