@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure;
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static java.util.Collections.emptyMap;
 
@@ -22,8 +22,11 @@ import java.util.Map;
  * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/SdkConfigProvider.java">SdkConfigProvider</a>
  * which uses {@link SpringDeclarativeConfigProperties} instead of {@link
  * io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties}.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
-final class SpringConfigProvider implements ConfigProvider {
+public final class SpringConfigProvider implements ConfigProvider {
 
   private final DeclarativeConfigProperties instrumentationConfig;
 
@@ -49,13 +52,13 @@ final class SpringConfigProvider implements ConfigProvider {
    * @param componentLoader the component loader
    * @return the {@link SpringConfigProvider}
    */
-  static SpringConfigProvider create(
+  public static SpringConfigProvider create(
       OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
     DeclarativeConfigProperties configProperties = toConfigProperties(model, componentLoader);
     return new SpringConfigProvider(configProperties.get("instrumentation/development"));
   }
 
-  static SpringConfigProvider create(DeclarativeConfigProperties instrumentationConfig) {
+  public static SpringConfigProvider create(DeclarativeConfigProperties instrumentationConfig) {
     return new SpringConfigProvider(
         SpringDeclarativeConfigProperties.create(
             DeclarativeConfigProperties.toMap(instrumentationConfig),
