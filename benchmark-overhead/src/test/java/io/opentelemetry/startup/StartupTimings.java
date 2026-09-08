@@ -5,6 +5,7 @@
 
 package io.opentelemetry.startup;
 
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,7 +18,9 @@ record StartupTimings(double springSeconds, double jvmSeconds) {
 
   static StartupTimings parse(String logs) {
     StartupTimings result = null;
-    for (String line : logs.lines().toList()) {
+    Iterator<String> lines = logs.lines().iterator();
+    while (lines.hasNext()) {
+      String line = lines.next();
       if (!line.contains("Started SpringbootApplication")) {
         continue;
       }
