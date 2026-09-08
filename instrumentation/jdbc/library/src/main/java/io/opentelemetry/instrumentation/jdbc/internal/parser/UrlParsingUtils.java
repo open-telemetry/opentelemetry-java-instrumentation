@@ -476,10 +476,12 @@ public final class UrlParsingUtils {
       String rest = value.substring(closingBracket + 1);
       return rest.isEmpty() || (rest.startsWith(":") && parsePort(rest.substring(1)) != null);
     }
-    int colon = value.lastIndexOf(':');
-    return colon < 0
-        || value.indexOf(':') != colon
-        || (colon > 0 && parsePort(value.substring(colon + 1)) != null);
+    int firstColon = value.indexOf(':');
+    int lastColon = value.lastIndexOf(':');
+    if (firstColon != lastColon) {
+      return DbServerTargetBuilder.isValidHost(value);
+    }
+    return firstColon < 0 || (firstColon > 0 && parsePort(value.substring(firstColon + 1)) != null);
   }
 
   /** Sanitize a comma-separated host list, returning {@code null} when it is not valid. */

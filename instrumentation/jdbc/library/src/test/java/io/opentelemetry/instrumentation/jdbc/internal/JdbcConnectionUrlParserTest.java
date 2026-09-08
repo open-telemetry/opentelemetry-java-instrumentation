@@ -237,6 +237,13 @@ class JdbcConnectionUrlParserTest {
     assertThat(sanitizeHostList("h1:3306,unexpected=value")).isNull();
     assertThat(sanitizeHostList("address=(host=h1),address=(host=unexpected=value)")).isNull();
     assertThat(sanitizeHostList("h1:5432,:5433")).isNull();
+    assertThat(sanitizeHostList("not:an:address,h2")).isNull();
+  }
+
+  @Test
+  void ipv6ZoneIdentifiersArePreservedInConfiguredTargets() {
+    assertThat(sanitizeHostList("fe80::1%eth0,fe80::2%eth1"))
+        .isEqualTo("fe80::1%eth0,fe80::2%eth1");
   }
 
   @Test
