@@ -16,6 +16,8 @@ import javax.annotation.Nullable;
 public class CassandraChannel {
 
   private static final MethodType ACCESSOR_TYPE = MethodType.methodType(Object.class, Object.class);
+  private static final MethodHandle NOOP_ACCESSOR =
+      MethodHandles.dropArguments(MethodHandles.constant(Object.class, null), 0, Object.class);
 
   private static final ClassValue<MethodHandle> channelMethods =
       new ClassValue<MethodHandle>() {
@@ -37,6 +39,9 @@ public class CassandraChannel {
   public static InetSocketAddress getRemoteAddress(Object context) {
     try {
       Object channel = (Object) channelMethods.get(context.getClass()).invokeExact(context);
+      if (channel == null) {
+        return null;
+      }
       Object remoteAddress =
           (Object) remoteAddressMethods.get(channel.getClass()).invokeExact(channel);
       if (!(remoteAddress instanceof InetSocketAddress)
@@ -52,13 +57,12 @@ public class CassandraChannel {
   private static MethodHandle createAccessor(Class<?> type, String name) {
     Method method = findPublicInterfaceMethod(type, name);
     if (method == null) {
-      throw new IllegalStateException(
-          "No public " + name + "() interface method on " + type.getName());
+      return NOOP_ACCESSOR;
     }
     try {
       return MethodHandles.publicLookup().unreflect(method).asType(ACCESSOR_TYPE);
-    } catch (IllegalAccessException e) {
-      throw new IllegalStateException("Cannot access " + method, e);
+    } catch (IllegalAccessException ignored) {
+      return NOOP_ACCESSOR;
     }
   }
 
