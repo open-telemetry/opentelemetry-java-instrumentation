@@ -81,11 +81,7 @@ public class ClickHouseClientV2Singletons {
     Class<?> selectedNodeClass = selectedNode.getClass();
     String host = (String) selectedNodeClass.getMethod("getHost").invoke(selectedNode);
     int port = (Integer) selectedNodeClass.getMethod("getPort").invoke(selectedNode);
-    EndpointTarget extracted = EndpointTarget.parse(host);
-    request.setPeer(
-        extracted == null
-            ? null
-            : DbServerTarget.builder(-1).addEndpoint(extracted.address, port).build());
+    request.setPeer(DbServerTarget.builder(-1).addEndpoint(host, port).build());
   }
 
   public static class CurrentServerInfo {
