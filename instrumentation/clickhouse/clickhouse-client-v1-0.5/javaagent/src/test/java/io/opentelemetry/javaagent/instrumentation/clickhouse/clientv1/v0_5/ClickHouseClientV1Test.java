@@ -187,6 +187,16 @@ class ClickHouseClientV1Test {
   }
 
   @Test
+  void testConfiguredNodesRejectIpv6EncodedZoneDelimiter() throws Exception {
+    ClickHouseNode unsafe =
+        ClickHouseNode.builder(ClickHouseNode.of("http://safe.example"))
+            .host("fe80::1%3Apassword")
+            .build();
+
+    assertThat(serverTarget(requestWithNodes(ImmutableList.of(unsafe)))).isNull();
+  }
+
+  @Test
   void testCopiedSealedRequestRetainsConfiguredTarget() throws Exception {
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
     String expectedAddress = host + ":" + port + "," + host + ":" + (port + 1);

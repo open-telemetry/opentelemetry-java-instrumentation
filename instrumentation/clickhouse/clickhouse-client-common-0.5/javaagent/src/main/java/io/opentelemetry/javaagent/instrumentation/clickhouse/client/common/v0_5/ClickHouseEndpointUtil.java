@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
+package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -11,9 +11,9 @@ import java.net.URISyntaxException;
 // Temporary helper copied from PR #20015.
 // Remove it after PR #20015 merges and use DbServerEndpointUtil instead.
 // Migration tracked in issue #20016.
-final class ClickHouseEndpointUtil {
+public final class ClickHouseEndpointUtil {
 
-  static boolean isIpv6Literal(String host) {
+  public static boolean isIpv6Literal(String host) {
     int zoneStart = host.indexOf('%');
     String literal = zoneStart < 0 ? host : host.substring(0, zoneStart);
     if (zoneStart >= 0 && !isZoneId(host.substring(zoneStart + 1))) {

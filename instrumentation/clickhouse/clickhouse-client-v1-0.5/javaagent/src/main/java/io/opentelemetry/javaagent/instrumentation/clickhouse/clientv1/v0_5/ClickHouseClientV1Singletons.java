@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseEndpointUtil;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -100,7 +101,9 @@ public class ClickHouseClientV1Singletons {
   private static DbServerTarget createServerTarget(Collection<ClickHouseNode> nodes) {
     DbServerTargetBuilder builder = DbServerTarget.builder(-1);
     for (ClickHouseNode node : nodes) {
-      addEndpoint(builder, node);
+      if (!addEndpoint(builder, node)) {
+        return null;
+      }
     }
     return builder.build();
   }
@@ -108,15 +111,19 @@ public class ClickHouseClientV1Singletons {
   @Nullable
   private static DbServerTarget createServerTarget(ClickHouseNode node) {
     DbServerTargetBuilder builder = DbServerTarget.builder(-1);
-    addEndpoint(builder, node);
-    return builder.build();
+    return addEndpoint(builder, node) ? builder.build() : null;
   }
 
-  private static void addEndpoint(DbServerTargetBuilder builder, ClickHouseNode node) {
+  private static boolean addEndpoint(DbServerTargetBuilder builder, ClickHouseNode node) {
+    String host = node.getHost();
+    if (host.indexOf(':') >= 0 && !ClickHouseEndpointUtil.isIpv6Literal(host)) {
+      return false;
+    }
     ClickHouseProtocol protocol = node.getProtocol();
     int defaultPort =
         node.getConfig().isSsl() ? protocol.getDefaultSecurePort() : protocol.getDefaultPort();
-    builder.addEndpoint(node.getHost(), node.getPort(), defaultPort);
+    builder.addEndpoint(host, node.getPort(), defaultPort);
+    return true;
   }
 
   private static class CapturedServerTarget {
