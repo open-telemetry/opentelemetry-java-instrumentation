@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientInfoReference;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolClientInfoReference;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.isKnownDbSystem;
@@ -30,18 +29,38 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.MutableVertxSqlClientInfoReference;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoReference;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import java.util.List;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class PoolInstrumentation implements TypeInstrumentation {
+
+  public static final class PoolConstructionState {
+    private final CallDepth callDepth;
+    @Nullable private final MutableVertxSqlClientInfoReference infoReference;
+
+    public PoolConstructionState(
+        CallDepth callDepth, @Nullable MutableVertxSqlClientInfoReference infoReference) {
+      this.callDepth = callDepth;
+      this.infoReference = infoReference;
+    }
+
+    public boolean isNested() {
+      return callDepth.decrementAndGet() > 0;
+    }
+
+    @Nullable
+    public MutableVertxSqlClientInfoReference getInfoReference() {
+      return infoReference;
+    }
+  }
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -84,12 +103,12 @@ class PoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PoolAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth onEnter(
+    public static PoolConstructionState onEnter(
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
         @Advice.Origin("#t") String declaringTypeName) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+        return new PoolConstructionState(callDepth, null);
       }
 
       String dbSystemName = resolveDbSystemName(sqlConnectOptions, declaringTypeName);
@@ -97,28 +116,26 @@ class PoolInstrumentation implements TypeInstrumentation {
           new MutableVertxSqlClientInfoReference(
               VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
       setClientInfoReference(infoReference);
-      return callDepth;
+      return new PoolConstructionState(callDepth, infoReference);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
-        @Advice.Enter CallDepth callDepth) {
-      if (callDepth.decrementAndGet() > 0) {
+        @Advice.Enter PoolConstructionState state) {
+      if (state.isNested()) {
         return;
       }
 
-      VertxSqlClientInfoReference infoReference = getClientInfoReference();
-      if (pool != null && infoReference instanceof MutableVertxSqlClientInfoReference) {
-        MutableVertxSqlClientInfoReference mutableInfoReference =
-            (MutableVertxSqlClientInfoReference) infoReference;
-        VertxSqlClientInfo info = mutableInfoReference.get();
+      MutableVertxSqlClientInfoReference infoReference = state.getInfoReference();
+      if (pool != null && infoReference != null) {
+        VertxSqlClientInfo info = infoReference.get();
         String dbSystemName = info != null ? info.getDbSystemName() : null;
         if (dbSystemName == null || !isKnownDbSystem(dbSystemName)) {
           dbSystemName = getDbSystemNameFromClassName(pool);
         }
-        mutableInfoReference.set(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
+        infoReference.set(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
       }
       if (pool != null) {
         setPoolClientInfoReference(pool, infoReference);
@@ -130,12 +147,12 @@ class PoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ServerListAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth onEnter(
+    public static PoolConstructionState onEnter(
         @Advice.Argument(1) List<SqlConnectOptions> databases,
         @Advice.Origin("#t") String declaringTypeName) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+        return new PoolConstructionState(callDepth, null);
       }
 
       SqlConnectOptions first = databases == null || databases.isEmpty() ? null : databases.get(0);
@@ -144,28 +161,26 @@ class PoolInstrumentation implements TypeInstrumentation {
           new MutableVertxSqlClientInfoReference(
               VertxSqlClientInfo.create(databases, dbSystemName));
       setClientInfoReference(infoReference);
-      return callDepth;
+      return new PoolConstructionState(callDepth, infoReference);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return Object client,
         @Advice.Argument(1) List<SqlConnectOptions> databases,
-        @Advice.Enter CallDepth callDepth) {
-      if (callDepth.decrementAndGet() > 0) {
+        @Advice.Enter PoolConstructionState state) {
+      if (state.isNested()) {
         return;
       }
 
-      VertxSqlClientInfoReference infoReference = getClientInfoReference();
-      if (client != null && infoReference instanceof MutableVertxSqlClientInfoReference) {
-        MutableVertxSqlClientInfoReference mutableInfoReference =
-            (MutableVertxSqlClientInfoReference) infoReference;
-        VertxSqlClientInfo info = mutableInfoReference.get();
+      MutableVertxSqlClientInfoReference infoReference = state.getInfoReference();
+      if (client != null && infoReference != null) {
+        VertxSqlClientInfo info = infoReference.get();
         String dbSystemName = info != null ? info.getDbSystemName() : null;
         if (dbSystemName == null || !isKnownDbSystem(dbSystemName)) {
           dbSystemName = getDbSystemNameFromClassName(client);
         }
-        mutableInfoReference.set(VertxSqlClientInfo.create(databases, dbSystemName));
+        infoReference.set(VertxSqlClientInfo.create(databases, dbSystemName));
       }
       if (client instanceof Pool) {
         setPoolClientInfoReference((Pool) client, infoReference);
