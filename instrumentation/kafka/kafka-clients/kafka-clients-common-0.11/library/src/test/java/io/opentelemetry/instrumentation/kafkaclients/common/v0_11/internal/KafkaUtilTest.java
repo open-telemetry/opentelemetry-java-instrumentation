@@ -43,10 +43,33 @@ class KafkaUtilTest {
 
   @Test
   void clusterIdFromMetadata_noClusterId_returnsNull() {
-    // Fresh Metadata with no update — fetch() returns the bootstrap cluster whose clusterId is
-    // null.
+    // Fresh Metadata with no update — fetch() returns Cluster.empty(), whose clusterId is null.
     Metadata metadata = new Metadata(0, Long.MAX_VALUE, false);
     assertThat(KafkaUtil.clusterIdFromMetadata(metadata)).isNull();
+  }
+
+  @Test
+  void pendingClusterId_stopsRetryingAfterBudget() {
+    // A pending entry re-reads Metadata on each span. Metadata.fetch() synchronizes on the instance
+    // shared with the Kafka network thread, so the budget must run out on a client whose broker
+    // never reports an id; otherwise every span contends on that lock forever.
+    KafkaClusterId pending = KafkaClusterId.of(new Metadata(0, Long.MAX_VALUE, false));
+
+    int attempts = 0;
+    while (!pending.pendingAttemptsExhausted()) {
+      attempts++;
+      assertThat(attempts).describedAs("retry budget is unbounded").isLessThan(1000);
+    }
+    assertThat(attempts).isPositive();
+    // Stays exhausted, so the caller cannot be talked back into retrying.
+    assertThat(pending.pendingAttemptsExhausted()).isTrue();
+  }
+
+  @Test
+  void resolvedAndUnavailableClusterId_neverReportExhaustion() {
+    // Only the pending state has a budget; these two are terminal and must not claim exhaustion.
+    assertThat(KafkaClusterId.resolved("test-cluster").pendingAttemptsExhausted()).isFalse();
+    assertThat(KafkaClusterId.UNAVAILABLE.pendingAttemptsExhausted()).isFalse();
   }
 
   @Test

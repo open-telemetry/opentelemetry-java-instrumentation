@@ -70,23 +70,6 @@ public final class KafkaProducerRequest {
       ProducerRecord<?, ?> record,
       @Nullable String clientId,
       @Nullable String bootstrapServers,
-      @Nullable String clusterId) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, clusterId, null);
-  }
-
-  public static KafkaProducerRequest create(
-      ProducerRecord<?, ?> record,
-      @Nullable String clientId,
-      @Nullable String bootstrapServers,
-      @Nullable String clusterId,
-      @Nullable Producer<?, ?> producer) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, clusterId, producer);
-  }
-
-  public static KafkaProducerRequest create(
-      ProducerRecord<?, ?> record,
-      @Nullable String clientId,
-      @Nullable String bootstrapServers,
       boolean spanContextPropagated,
       @Nullable String clusterId) {
     return new KafkaProducerRequest(

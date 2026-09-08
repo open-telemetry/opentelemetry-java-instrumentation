@@ -119,9 +119,9 @@ public abstract class KafkaClientBaseTest {
 
     producer = new KafkaProducer<>(producerProps());
     cleanup.deferAfterAll(producer);
-    // Trigger metadata fetch so cluster id is available before the first send. Without this,
-    // KafkaUtil.getClusterId returns null on the very first send because the broker has not yet
-    // responded with a metadata message containing the cluster resource.
+    // Required by the interceptor-based tests that extend this class: those pass the cluster id as
+    // a plain String captured from ClusterResourceListener.onUpdate and hold no Producer reference,
+    // so they have no onEnd retry to fall back on and would miss the id on the very first send.
     producer.partitionsFor(SHARED_TOPIC);
 
     consumer = new KafkaConsumer<>(consumerProps());

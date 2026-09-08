@@ -124,8 +124,11 @@ public final class KafkaUtil {
     try {
       delegateField = KafkaConsumer.class.getDeclaredField("delegate");
       delegateField.setAccessible(true);
-    } catch (NoSuchFieldException | RuntimeException ignored) {
-      // pre-3.7: no delegate field
+    } catch (NoSuchFieldException | RuntimeException | LinkageError ignored) {
+      // pre-3.7: no delegate field. LinkageError is caught for the same reason as in
+      // metadataFieldCache: getDeclaredField resolves the types of every declared field, and this
+      // runs in a static initializer, where an escaping error would disable all Kafka
+      // instrumentation rather than just this attribute.
       delegateField = null;
     }
 
@@ -220,10 +223,14 @@ public final class KafkaUtil {
       if (cached.clusterId != null) {
         return cached.clusterId;
       }
-      // Pending state: cluster id not yet available from broker; retry this span.
+      // Pending state: cluster id not yet available from broker; retry, but only a bounded number
+      // of times. Metadata.fetch() synchronizes on the Metadata instance shared with the Kafka
+      // network thread, so a client whose broker never reports an id must stop retrying.
       String id = clusterIdFromMetadata(cached.metadata);
       if (id != null) {
         CONSUMER_CLUSTER_ID_FIELD.set(consumer, KafkaClusterId.resolved(id));
+      } else if (cached.pendingAttemptsExhausted()) {
+        CONSUMER_CLUSTER_ID_FIELD.set(consumer, KafkaClusterId.UNAVAILABLE);
       }
       return id;
     }
@@ -243,10 +250,14 @@ public final class KafkaUtil {
       if (cached.clusterId != null) {
         return cached.clusterId;
       }
-      // Pending state: cluster id not yet available from broker; retry this span.
+      // Pending state: cluster id not yet available from broker; retry, but only a bounded number
+      // of times. Metadata.fetch() synchronizes on the Metadata instance shared with the Kafka
+      // network thread, so a client whose broker never reports an id must stop retrying.
       String id = clusterIdFromMetadata(cached.metadata);
       if (id != null) {
         PRODUCER_CLUSTER_ID_FIELD.set(producer, KafkaClusterId.resolved(id));
+      } else if (cached.pendingAttemptsExhausted()) {
+        PRODUCER_CLUSTER_ID_FIELD.set(producer, KafkaClusterId.UNAVAILABLE);
       }
       return id;
     }
@@ -256,33 +267,14 @@ public final class KafkaUtil {
   @Nullable
   private static <T> String resolveAndCache(
       T client, VirtualField<T, KafkaClusterId> field, @Nullable Object holder) {
-    if (holder == null) {
+    Metadata metadata = extractMetadataFromHolder(holder);
+    if (metadata == null) {
       field.set(client, KafkaClusterId.UNAVAILABLE);
       return null;
     }
-    Field metadataField = metadataField(holder.getClass());
-    if (metadataField == null) {
-      field.set(client, KafkaClusterId.UNAVAILABLE);
-      return null;
-    }
-    try {
-      Metadata metadata = (Metadata) metadataField.get(holder);
-      if (metadata == null) {
-        // Transient: field not yet initialised (shouldn't happen after construction, but be safe).
-        return null;
-      }
-      String id = clusterIdFromMetadata(metadata);
-      if (id != null) {
-        field.set(client, KafkaClusterId.resolved(id));
-      } else {
-        field.set(client, KafkaClusterId.of(metadata));
-      }
-      return id;
-    } catch (IllegalAccessException | ClassCastException e) {
-      logReflectionFailureOnce(holder.getClass(), e.toString());
-      field.set(client, KafkaClusterId.UNAVAILABLE);
-      return null;
-    }
+    String id = clusterIdFromMetadata(metadata);
+    field.set(client, id != null ? KafkaClusterId.resolved(id) : KafkaClusterId.of(metadata));
+    return id;
   }
 
   private static Object resolveMetadataHolder(Consumer<?, ?> consumer) {

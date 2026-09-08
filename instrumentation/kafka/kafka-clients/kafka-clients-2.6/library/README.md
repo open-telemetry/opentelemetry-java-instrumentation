@@ -105,7 +105,9 @@ granular set of attributes available. In the case
 of `records-consumed-total`, it reports `[client-id, topic]` and ignores `[client-id]`.
 
 `messaging.kafka.cluster.id` is added to these metrics once the client resolves cluster metadata,
-so data points emitted before the first metadata response are reported without it.
+so data points emitted before the first metadata response are reported without it. The same applies
+to spans produced by the interceptors: the cluster id becomes available when Kafka invokes
+`ClusterResourceListener.onUpdate`, so a producer's very first span may not carry the attribute.
 
 The following table shows the full set of metrics exposed by the kafka client, and the corresponding
 OpenTelemetry metric each maps to (if available). Empty values in the Instrument Name, Instrument

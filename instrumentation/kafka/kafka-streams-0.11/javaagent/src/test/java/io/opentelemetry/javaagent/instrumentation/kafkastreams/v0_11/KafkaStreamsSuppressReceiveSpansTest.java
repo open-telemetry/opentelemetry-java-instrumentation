@@ -257,13 +257,8 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(
                                   stringKey("messaging.kafka.bootstrap.servers"),
                                   EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
-                  // cluster.id: best-effort; Streams internal producer may lack it on first send.
-                  if (trace.getSpan(2).getAttributes().get(stringKey("messaging.kafka.cluster.id"))
-                      != null) {
-                    processedPublishAttrs.add(
-                        satisfies(
-                            stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
-                  }
+                  processedPublishAttrs.add(
+                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                   span.hasName(STREAM_PROCESSED + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(1))

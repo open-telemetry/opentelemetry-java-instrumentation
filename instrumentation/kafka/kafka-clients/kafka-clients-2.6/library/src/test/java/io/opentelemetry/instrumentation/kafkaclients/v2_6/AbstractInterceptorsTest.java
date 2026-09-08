@@ -207,7 +207,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
-                        .hasAttributesSatisfyingExactly(interceptorReceiveAttributes()),
+                        .hasAttributesSatisfyingExactly(receiveAttributes()),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
@@ -284,10 +284,6 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
           satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     }
     return assertions;
-  }
-
-  private static List<AttributeAssertion> interceptorReceiveAttributes() {
-    return receiveAttributes();
   }
 
   private static List<AttributeAssertion> processAttributes(boolean experimental) {

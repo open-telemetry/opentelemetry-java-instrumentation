@@ -155,10 +155,9 @@ public final class OpenTelemetryMetricsReporter
     if (id == null || id.isEmpty()) {
       return;
     }
-    synchronized (lock) {
-      if (id.equals(clusterId)) {
-        return;
-      }
+    // No lock: clusterId is volatile and nothing else here is guarded. Taking `lock` would put the
+    // Kafka network thread behind instrument bookkeeping held across closeAllInstruments().
+    if (!id.equals(clusterId)) {
       clusterId = id;
     }
   }
