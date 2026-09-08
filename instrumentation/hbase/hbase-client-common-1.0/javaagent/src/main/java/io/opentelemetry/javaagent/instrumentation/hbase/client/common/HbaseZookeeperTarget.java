@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerEndpointUtil.isIpv6Literal;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.CONTROL_CHARACTERS;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.ENDPOINT_SEPARATOR;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.canonicalEndpoint;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.parsePort;
 
@@ -105,7 +107,7 @@ final class HbaseZookeeperTarget {
 
     List<String> hosts = new ArrayList<>();
     Integer clientPort = null;
-    for (String configuredEndpoint : quorumServers.split(",", -1)) {
+    for (String configuredEndpoint : ENDPOINT_SEPARATOR.split(quorumServers, -1)) {
       String endpoint = canonicalEndpoint(configuredEndpoint, null);
       if (endpoint == null) {
         return null;
@@ -165,9 +167,9 @@ final class HbaseZookeeperTarget {
     if (configuredQuorum == null) {
       return null;
     }
-    String quorum = configuredQuorum.replaceAll("[\\t\\n\\x0B\\f\\r]", "");
+    String quorum = CONTROL_CHARACTERS.matcher(configuredQuorum).replaceAll("");
     List<String> endpoints = new ArrayList<>();
-    for (String endpoint : quorum.split(",", -1)) {
+    for (String endpoint : ENDPOINT_SEPARATOR.split(quorum, -1)) {
       String canonicalEndpoint = canonicalQuorumEndpoint(endpoint);
       if (canonicalEndpoint == null) {
         return null;
@@ -196,7 +198,7 @@ final class HbaseZookeeperTarget {
     if (configuredParent == null) {
       return null;
     }
-    String parent = configuredParent.replaceAll("[\\t\\n\\x0B\\f\\r]", "").trim();
+    String parent = CONTROL_CHARACTERS.matcher(configuredParent).replaceAll("").trim();
     return parent.length() > 1 && parent.charAt(0) == '/' && !parent.endsWith("/") ? parent : null;
   }
 

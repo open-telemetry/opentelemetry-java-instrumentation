@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.ENDPOINT_SEPARATOR;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.canonicalEndpoint;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.parsePort;
 
@@ -49,7 +50,7 @@ final class HbaseMasterTarget {
     // MasterRegistry is a discovery service, so its endpoint ports remain inline in server.address.
     DbServerTargetBuilder builder =
         DbServerTarget.builder(defaultPort).setSorted(true).setPortAlwaysInline(true);
-    for (String configuredMaster : configuredMasters.split(",", -1)) {
+    for (String configuredMaster : ENDPOINT_SEPARATOR.split(configuredMasters, -1)) {
       String endpoint = canonicalEndpoint(configuredMaster, defaultPort);
       if (endpoint == null) {
         return null;

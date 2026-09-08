@@ -7,9 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerEndpointUtil.isIpv6Literal;
 
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 final class HbaseServerEndpoint {
+
+  static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\t\\n\\x0B\\f\\r]");
+  static final Pattern ENDPOINT_SEPARATOR = Pattern.compile(",");
 
   @Nullable
   static String canonicalEndpoint(String configuredEndpoint, @Nullable Integer defaultPort) {
@@ -69,7 +73,7 @@ final class HbaseServerEndpoint {
 
   @Nullable
   static String sanitizeEndpoint(String configuredEndpoint) {
-    String endpoint = configuredEndpoint.replaceAll("[\\t\\n\\x0B\\f\\r]", "").trim();
+    String endpoint = CONTROL_CHARACTERS.matcher(configuredEndpoint).replaceAll("").trim();
     for (int i = 0; i < endpoint.length(); i++) {
       char c = endpoint.charAt(i);
       if (c == '@' || c == '/' || c == '?' || c == '#' || Character.isWhitespace(c)) {
