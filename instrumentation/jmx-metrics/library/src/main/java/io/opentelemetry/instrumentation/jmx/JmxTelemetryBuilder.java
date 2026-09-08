@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -36,7 +37,7 @@ public final class JmxTelemetryBuilder {
   private static final Logger logger = Logger.getLogger(JmxTelemetryBuilder.class.getName());
 
   private final OpenTelemetry openTelemetry;
-  private final MetricConfiguration metricConfiguration;
+  private final List<MetricDef> userMetricDefs = new ArrayList<>();
   private long discoveryDelayMs;
   private ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
   private ComponentLoader componentLoader = ComponentLoader.forClassLoader(classLoader);
@@ -53,7 +54,6 @@ public final class JmxTelemetryBuilder {
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
     this.discoveryDelayMs = 0;
-    this.metricConfiguration = new MetricConfiguration();
   }
 
   /**
@@ -86,7 +86,7 @@ public final class JmxTelemetryBuilder {
     List<MetricDef> metricDefs = RuleParser.get().parseMetricDefs(input);
 
     for (MetricDef metricDef : metricDefs) {
-      metricConfiguration.addMetricDef(metricDef);
+      userMetricDefs.add(metricDef);
       registeredMetrics.addAll(metricDef.getMetricNames());
       registeredHandlers.addAll(metricDef.getHandlerNames());
     }
@@ -177,6 +177,9 @@ public final class JmxTelemetryBuilder {
             registeredMetrics.addAll(handler.getMetricNames());
           }
         });
+
+    MetricConfiguration metricConfiguration = new MetricConfiguration();
+    userMetricDefs.forEach(metricConfiguration::addMetricDef);
 
     // filter on system name let the caller control which systems are supported.
     metricsDefinitions.loadInternalRules(internalMetricsSystemFilter, handlerRegistry);

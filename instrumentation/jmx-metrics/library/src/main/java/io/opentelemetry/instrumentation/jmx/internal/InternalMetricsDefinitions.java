@@ -88,32 +88,6 @@ public class InternalMetricsDefinitions {
     }
   }
 
-  private static class RuleSet {
-    private final boolean stable;
-    private final List<MetricDef> metricDefs;
-    private final Set<String> metricNames = new HashSet<>();
-
-    RuleSet(List<MetricDef> metricDefs, boolean stable, HandlerRegistry handlerRegistry) {
-      this.metricDefs = metricDefs;
-      this.stable = stable;
-      for (MetricDef def : metricDefs) {
-        metricNames.addAll(def.getMetricNames());
-        for (String handlerName : def.getHandlerNames()) {
-          ExperimentalJmxMetricHandler handler = handlerRegistry.getHandler(handlerName);
-          if (handler == null) {
-            throw new IllegalArgumentException(
-                "Unable to resolve handler " + handlerName + " with provided registry");
-          }
-          metricNames.addAll(handler.getMetricNames());
-        }
-      }
-    }
-
-    Set<String> getMetricNames() {
-      return metricNames;
-    }
-  }
-
   /**
    * Get metric names for a given stability.
    *
@@ -163,6 +137,32 @@ public class InternalMetricsDefinitions {
     } catch (IOException e) {
       // no io exception expected when loading resources
       throw new IllegalStateException(e);
+    }
+  }
+
+  private static class RuleSet {
+    private final boolean stable;
+    private final List<MetricDef> metricDefs;
+    private final Set<String> metricNames = new HashSet<>();
+
+    RuleSet(List<MetricDef> metricDefs, boolean stable, HandlerRegistry handlerRegistry) {
+      this.metricDefs = metricDefs;
+      this.stable = stable;
+      for (MetricDef def : metricDefs) {
+        metricNames.addAll(def.getMetricNames());
+        for (String handlerName : def.getHandlerNames()) {
+          ExperimentalJmxMetricHandler handler = handlerRegistry.getHandler(handlerName);
+          if (handler == null) {
+            throw new IllegalArgumentException(
+                "Unable to resolve handler " + handlerName + " with provided registry");
+          }
+          metricNames.addAll(handler.getMetricNames());
+        }
+      }
+    }
+
+    Set<String> getMetricNames() {
+      return metricNames;
     }
   }
 }
