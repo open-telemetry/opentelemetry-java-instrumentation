@@ -75,10 +75,11 @@ public class CassandraChannel {
         } catch (NoSuchMethodException ignored) {
           // Continue with the other public interfaces.
         }
-      }
-      Method method = findPublicInterfaceMethod(interfaceType, name);
-      if (method != null) {
-        return method;
+      } else {
+        Method method = findPublicInterfaceMethod(interfaceType, name);
+        if (method != null) {
+          return method;
+        }
       }
     }
     Class<?> superclass = type.getSuperclass();
