@@ -34,12 +34,12 @@ public class DeclarativeConfigLoggingExporterAutoConfiguration {
     // Spring supplies every scalar as a String, so the flag has to be read through
     // SpringConfigProvider, which coerces. The plain SdkConfigProvider does not, and returned
     // false for a configured debug: true.
-    private static final ComponentLoader COMPONENT_LOADER =
+    private static final ComponentLoader componentLoader =
         ComponentLoader.forClassLoader(SpanLoggingCustomizerProvider.class.getClassLoader());
 
     @Override
     protected boolean isEnabled(OpenTelemetryConfigurationModel model) {
-      return SpringConfigProvider.create(model, COMPONENT_LOADER)
+      return SpringConfigProvider.create(model, componentLoader)
           .getInstrumentationConfig("spring_starter")
           .getBoolean("debug", false);
     }
