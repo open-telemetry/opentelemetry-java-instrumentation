@@ -94,16 +94,6 @@ class CassandraServerTargetTest {
             "::1",
             null),
         argumentSet(
-            "unbracketed IPv6 contact point with a port is accepted",
-            singletonList("2001:db8::1:9042"),
-            "2001:db8::1",
-            null),
-        argumentSet(
-            "unbracketed IPv6 contact point ending with a double colon is accepted",
-            singletonList("2001:db8:::9142"),
-            "2001:db8::",
-            9142),
-        argumentSet(
             "configured contact points preserve order and omit the shared default port",
             asList("node1.example.com:9042", "10.0.0.5:9042"),
             "node1.example.com,10.0.0.5",
@@ -120,12 +110,12 @@ class CassandraServerTargetTest {
             null),
         argumentSet(
             "IPv6 contact points omit brackets when they share a port",
-            asList("[::1]:9042", "2001:db8::1:9042", "10.0.0.5:9042"),
+            asList("[::1]:9042", "[2001:db8::1]:9042", "10.0.0.5:9042"),
             "::1,2001:db8::1,10.0.0.5",
             null),
         argumentSet(
             "IPv6 contact points stay bracketed when ports are mixed",
-            asList("[::1]:9042", "2001:db8::1:9142", "10.0.0.5:9042"),
+            asList("[::1]:9042", "[2001:db8::1]:9142", "10.0.0.5:9042"),
             "[::1]:9042,[2001:db8::1]:9142,10.0.0.5:9042",
             null),
         argumentSet(
@@ -266,6 +256,10 @@ class CassandraServerTargetTest {
         argumentSet("unclosed IPv6 bracket", singletonList("[::1:9042")),
         argumentSet("unbracketed loopback IPv6", singletonList("::1")),
         argumentSet("unbracketed IPv6", singletonList("2001:db8::1")),
+        argumentSet("unbracketed IPv6 with an apparent port", singletonList("2001:db8::1:9042")),
+        argumentSet(
+            "unbracketed IPv6 ending with a double colon and apparent port",
+            singletonList("2001:db8:::9142")),
         argumentSet(
             "credentials in contact point", singletonList("user:password@node.example.com:9042")),
         argumentSet(

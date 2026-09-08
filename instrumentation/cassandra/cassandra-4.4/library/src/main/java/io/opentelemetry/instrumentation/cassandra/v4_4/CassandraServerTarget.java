@@ -176,6 +176,9 @@ final class CassandraServerTarget {
         return null;
       }
       host = host.substring(1, host.length() - 1);
+    } else if (host.indexOf(':') >= 0) {
+      target.addEndpoint((String) null, -1);
+      return null;
     }
     try {
       int port = Integer.parseInt(contactPoint.substring(separator + 1));
