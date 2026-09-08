@@ -33,7 +33,8 @@ import javax.annotation.Nullable;
  */
 public class DbServerTargetBuilder {
 
-  public static final int MAX_ENDPOINTS = 5;
+  private static final int DEFAULT_MAX_ENDPOINTS = 5;
+
   private static final int MIN_PORT = 1;
   private static final int MAX_PORT = 65535;
   private static final int MAX_HOST_NAME_LENGTH = 253;
@@ -41,7 +42,7 @@ public class DbServerTargetBuilder {
 
   @Nullable private final Integer defaultPort;
   private final List<Endpoint> endpoints = new ArrayList<>();
-  private int maxEndpoints = MAX_ENDPOINTS;
+  private int maxEndpoints = DEFAULT_MAX_ENDPOINTS;
   private boolean sorted;
   private boolean portAlwaysInline;
   @Nullable private String suffix;
