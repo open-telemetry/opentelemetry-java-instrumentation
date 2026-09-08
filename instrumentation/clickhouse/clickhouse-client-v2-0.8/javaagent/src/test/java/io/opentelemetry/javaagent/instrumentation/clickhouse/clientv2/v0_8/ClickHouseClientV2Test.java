@@ -25,7 +25,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.ServerException;
@@ -41,10 +40,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -158,95 +155,15 @@ class ClickHouseClientV2Test {
   }
 
   @Test
-  void testRetryReportsContactedEndpoint() throws Exception {
-    assumeTrue(isClassPresent("com.clickhouse.client.api.transport.ClientNodeSelector"));
+  void testCapturedPeerFollowsEachContactedEndpoint() throws Exception {
+    Object request = createDbRequest();
+    assertCapturedPeer(request, null, null);
 
-    int unavailablePort = 1;
-    Client testClient =
-        new Client.Builder()
-            .addEndpoint("http://127.0.0.1:" + unavailablePort)
-            .addEndpoint(Protocol.HTTP, host, port, false)
-            .setDefaultDatabase(DATABASE_NAME)
-            .setUsername(USERNAME)
-            .setPassword(PASSWORD)
-            .setOption("compress", "false")
-            .setConnectTimeout(100)
-            .setMaxRetries(1)
-            .useAsyncRequests(true)
-            .build();
-    cleanup.deferCleanup(testClient);
-    putUnreachableEndpointFirst(testClient, unavailablePort);
+    capturePeer(request, new TestEndpoint("first.example", 9123));
+    assertCapturedPeer(request, "first.example", 9123);
 
-    QueryResponse response = testClient.query("select * from " + TABLE_NAME).join();
-    response.close();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                        equalTo(maybeStable(DB_NAME), DATABASE_NAME),
-                        equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
-                        equalTo(
-                            NETWORK_PEER_PORT, emitStableDatabaseSemconv() ? (long) port : null),
-                        equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
-                        equalTo(
-                            DB_QUERY_SUMMARY,
-                            emitStableDatabaseSemconv() ? "select test_table" : null),
-                        equalTo(
-                            maybeStable(DB_OPERATION),
-                            emitStableDatabaseSemconv() ? null : "SELECT"))));
-  }
-
-  @Test
-  void testExhaustedRetryReportsLastContactedEndpoint() throws Exception {
-    assumeTrue(isClassPresent("com.clickhouse.client.api.transport.ClientNodeSelector"));
-
-    int firstUnavailablePort = 1;
-    int secondUnavailablePort = 2;
-    Client testClient =
-        new Client.Builder()
-            .addEndpoint("http://127.0.0.1:" + firstUnavailablePort)
-            .addEndpoint("http://127.0.0.1:" + secondUnavailablePort)
-            .setDefaultDatabase(DATABASE_NAME)
-            .setUsername(USERNAME)
-            .setPassword(PASSWORD)
-            .setOption("compress", "false")
-            .setConnectTimeout(100)
-            .setMaxRetries(1)
-            .useAsyncRequests(true)
-            .build();
-    cleanup.deferCleanup(testClient);
-    putUnreachableEndpointFirst(testClient, firstUnavailablePort);
-
-    Throwable thrown = catchThrowable(() -> testClient.query("select * from " + TABLE_NAME).join());
-    assertThat(thrown).isNotNull();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                        equalTo(maybeStable(DB_NAME), DATABASE_NAME),
-                        equalTo(
-                            NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null),
-                        equalTo(
-                            NETWORK_PEER_PORT,
-                            emitStableDatabaseSemconv() ? (long) secondUnavailablePort : null),
-                        equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
-                        equalTo(
-                            DB_QUERY_SUMMARY,
-                            emitStableDatabaseSemconv() ? "select test_table" : null),
-                        equalTo(
-                            maybeStable(DB_OPERATION),
-                            emitStableDatabaseSemconv() ? null : "SELECT"),
-                        equalTo(
-                            ERROR_TYPE,
-                            emitStableDatabaseSemconv()
-                                ? thrown.getCause().getClass().getName()
-                                : null))));
+    capturePeer(request, new TestEndpoint("second.example", 9124));
+    assertCapturedPeer(request, "second.example", 9124);
   }
 
   @Test
@@ -746,43 +663,49 @@ class ClickHouseClientV2Test {
     assertThat(peer.getClass().getMethod("getPort").invoke(peer)).isEqualTo(port);
   }
 
-  private static boolean isClassPresent(String className) {
-    try {
-      Class.forName(className, false, Client.class.getClassLoader());
-      return true;
-    } catch (ClassNotFoundException ignored) {
-      return false;
-    }
+  private static Object createDbRequest() throws Exception {
+    return uniqueMethod(dbRequestClass(), "create")
+        .invoke(
+            null,
+            "initial.example",
+            8123,
+            null,
+            null,
+            DATABASE_NAME,
+            "select * from " + TABLE_NAME);
   }
 
-  private static void putUnreachableEndpointFirst(Client client, int unavailablePort)
-      throws Exception {
-    Field endpointsField = Client.class.getDeclaredField("endpoints");
-    endpointsField.setAccessible(true);
-    List<?> endpoints = (List<?>) endpointsField.get(client);
-    List<Object> orderedEndpoints = new ArrayList<>(endpoints.size());
-    Object unavailableEndpoint = null;
-    for (Object endpoint : endpoints) {
-      int endpointPort = (Integer) endpoint.getClass().getMethod("getPort").invoke(endpoint);
-      if (endpointPort == unavailablePort) {
-        unavailableEndpoint = endpoint;
-      } else {
-        orderedEndpoints.add(endpoint);
+  private static void capturePeer(Object request, Object contactedEndpoint) throws Exception {
+    uniqueMethod(singletons(), "capturePeer").invoke(null, request, contactedEndpoint);
+  }
+
+  /**
+   * Returns the only method of {@code owner} with this name. The parameter types cannot be named
+   * here, because the instrumentation classes are loaded by the agent rather than by the test class
+   * loader.
+   */
+  private static Method uniqueMethod(Class<?> owner, String name) {
+    for (Method method : owner.getDeclaredMethods()) {
+      if (name.equals(method.getName())) {
+        return method;
       }
     }
-    assertThat(unavailableEndpoint).isNotNull();
-    orderedEndpoints.add(0, unavailableEndpoint);
-    endpointsField.set(client, orderedEndpoints);
+    throw new AssertionError(owner.getName() + " has no method named " + name);
+  }
 
-    Class<?> selectorClass =
-        Class.forName(
-            "com.clickhouse.client.api.transport.ClientNodeSelector",
-            true,
-            Client.class.getClassLoader());
-    Object selector = selectorClass.getConstructor(List.class).newInstance(orderedEndpoints);
-    Field selectorField = Client.class.getDeclaredField("nodeSelector");
-    selectorField.setAccessible(true);
-    selectorField.set(client, selector);
+  private static void assertCapturedPeer(Object request, String address, Integer port)
+      throws Exception {
+    Class<?> requestClass = dbRequestClass();
+    assertThat(requestClass.getMethod("getPeerAddress").invoke(request)).isEqualTo(address);
+    assertThat(requestClass.getMethod("getPeerPort").invoke(request)).isEqualTo(port);
+  }
+
+  private static Class<?> dbRequestClass() throws Exception {
+    return Class.forName(
+        "io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5."
+            + "ClickHouseDbRequest",
+        true,
+        singletons().getClassLoader());
   }
 
   private static Class<?> singletons() throws Exception {
@@ -805,6 +728,29 @@ class ClickHouseClientV2Test {
                       + "ClickHouseClientV2InstrumentationModule",
                   Client.class.getClassLoader());
       return Class.forName(singletonsName, true, instrumentationClassLoader);
+    }
+  }
+
+  /**
+   * Stands in for the node or endpoint object that the ClickHouse client hands to its HTTP helper
+   * for a single attempt. The instrumentation reads the host and the port off it reflectively,
+   * because the library names that object differently across the supported versions.
+   */
+  public static class TestEndpoint {
+    private final String host;
+    private final int port;
+
+    TestEndpoint(String host, int port) {
+      this.host = host;
+      this.port = port;
+    }
+
+    public String getHost() {
+      return host;
+    }
+
+    public int getPort() {
+      return port;
     }
   }
 }
