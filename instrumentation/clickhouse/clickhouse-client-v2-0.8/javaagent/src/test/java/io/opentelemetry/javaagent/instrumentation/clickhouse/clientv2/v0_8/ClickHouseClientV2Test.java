@@ -146,7 +146,7 @@ class ClickHouseClientV2Test {
   }
 
   @Test
-  void testConfiguredEndpointsPreserveOrderingAndDefaultPorts() throws Exception {
+  void testConfiguredEndpointsSortNaturallyAndOmitDefaultPorts() throws Exception {
     assertServerTarget(
         new HashSet<>(asList("https://z.example:8443", "http://a.example:8123")),
         "a.example,z.example",
