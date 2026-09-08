@@ -28,52 +28,37 @@ public abstract class SpymemcachedRequest {
   @Nullable
   public abstract DbServerTarget getServerTarget();
 
-  private final Object lock = new Object();
+  // Node capture runs on the client-call thread. The I/O thread only sets the omission flag,
+  // which is never reset, so a late capture cannot restore a redistributed peer.
   @Nullable private MemcachedNode handlingNode;
-  @Nullable private InetSocketAddress handlingNodeAddress;
-  private boolean handlingNodeOmitted;
+  @Nullable private volatile InetSocketAddress handlingNodeAddress;
+  private volatile boolean handlingNodeOmitted;
 
   public void setHandlingNode(@Nullable MemcachedNode node) {
-    if (node == null) {
+    if (node == null || handlingNodeOmitted) {
       return;
     }
-    synchronized (lock) {
-      if (handlingNodeOmitted) {
-        return;
-      }
-      if (handlingNode != null && node != handlingNode) {
-        handlingNodeOmitted = true;
-        handlingNode = null;
-        handlingNodeAddress = null;
-        return;
-      }
-      handlingNode = node;
+    if (handlingNode != null && node != handlingNode) {
+      handlingNodeOmitted = true;
+      handlingNode = null;
+      handlingNodeAddress = null;
+      return;
     }
+
+    handlingNode = node;
     SocketAddress socketAddress = node.getSocketAddress();
-    if (!(socketAddress instanceof InetSocketAddress)) {
-      return;
-    }
-    synchronized (lock) {
-      if (handlingNodeOmitted || handlingNode != node) {
-        return;
-      }
+    if (socketAddress instanceof InetSocketAddress) {
       handlingNodeAddress = (InetSocketAddress) socketAddress;
     }
   }
 
   public void markRedistributed() {
-    synchronized (lock) {
-      handlingNodeOmitted = true;
-      handlingNode = null;
-      handlingNodeAddress = null;
-    }
+    handlingNodeOmitted = true;
   }
 
   @Nullable
   public InetSocketAddress getHandlingNodeAddress() {
-    synchronized (lock) {
-      return handlingNodeAddress;
-    }
+    return handlingNodeOmitted ? null : handlingNodeAddress;
   }
 
   /** Returns the memcached command that corresponds to the client method. */

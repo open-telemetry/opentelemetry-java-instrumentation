@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -15,6 +16,8 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.context.Context;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
@@ -78,6 +81,10 @@ class SpymemcachedRequestTest {
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
     assertThat(request.getHandlingNodeAddress()).isNull();
+
+    request.setHandlingNode(memcachedNode("one.example", 11211));
+
+    assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
   @Test
@@ -104,8 +111,51 @@ class SpymemcachedRequestTest {
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("one.example", 11211));
 
     SpymemcachedRequestHolder.markRedistributed(operation);
+    assertThat(request.getHandlingNodeAddress()).isNull();
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
+    assertThat(request.getHandlingNodeAddress()).isNull();
+  }
+
+  @Test
+  void redistributionBeforeCaptureOmitsHandlingNode() {
+    SpymemcachedRequest request =
+        SpymemcachedRequest.create(mock(MemcachedConnection.class), "asyncGet");
+
+    request.markRedistributed();
+    request.setHandlingNode(memcachedNode("one.example", 11211));
+
+    assertThat(request.getHandlingNodeAddress()).isNull();
+  }
+
+  @Test
+  void redistributionDuringCaptureOmitsHandlingNode() {
+    SpymemcachedRequest request =
+        SpymemcachedRequest.create(mock(MemcachedConnection.class), "asyncGet");
+    MemcachedNode node = mock(MemcachedNode.class);
+    InetSocketAddress address = node("one.example", 11211);
+    ExecutorService ioThread = Executors.newSingleThreadExecutor();
+    try {
+      when(node.getSocketAddress())
+          .thenAnswer(
+              invocation -> {
+                ioThread
+                    .submit(
+                        () -> {
+                          request.markRedistributed();
+                          assertThat(request.getHandlingNodeAddress()).isNull();
+                        })
+                    .get(10, SECONDS);
+                return address;
+              });
+
+      request.setHandlingNode(node);
+    } finally {
+      ioThread.shutdownNow();
+    }
+
+    assertThat(request.getHandlingNodeAddress()).isNull();
+    request.setHandlingNode(memcachedNode("two.example", 11212));
     assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
