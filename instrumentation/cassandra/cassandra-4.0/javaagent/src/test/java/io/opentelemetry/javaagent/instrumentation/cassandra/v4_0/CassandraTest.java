@@ -181,6 +181,9 @@ class CassandraTest extends AbstractCassandraTest {
   }
 
   private static CqlSession getDelegate(CqlSession session) throws IllegalAccessException {
+    if (!Proxy.isProxyClass(session.getClass())) {
+      throw new IllegalStateException("Expected the tracing session to be a JDK proxy");
+    }
     InvocationHandler invocationHandler = Proxy.getInvocationHandler(session);
     Class<?> type = invocationHandler.getClass();
     while (type != Object.class) {
