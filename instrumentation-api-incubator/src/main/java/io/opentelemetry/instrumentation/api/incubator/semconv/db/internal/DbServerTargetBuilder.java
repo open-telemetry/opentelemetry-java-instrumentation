@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  */
 public class DbServerTargetBuilder {
 
-  private static final int MAX_ENDPOINTS = 5;
+  public static final int MAX_ENDPOINTS = 5;
   private static final int MIN_PORT = 1;
   private static final int MAX_PORT = 65535;
   private static final int MAX_HOST_NAME_LENGTH = 253;
