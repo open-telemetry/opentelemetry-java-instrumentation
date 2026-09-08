@@ -85,11 +85,11 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
   @Test
   void testJmxPrefix() {
-    DeclarativeConfigProperties config = createConfig("otel.jmx.enabled", "true");
+    DeclarativeConfigProperties config = createConfig("otel.jmx.config", "/path/to/config.yaml");
 
-    assertThat(config.getStructured("java").getStructured("jmx").getBoolean("enabled"))
+    assertThat(config.getStructured("java").getStructured("jmx").getString("config"))
         .isNotNull()
-        .isTrue();
+        .isEqualTo("/path/to/config.yaml");
   }
 
   @Test

@@ -86,7 +86,7 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
                 JakartaMessageAdapter.create(message), null, JmsSubscriptionNames.get(message));
 
         Instrumenter<MessageWithDestination, Void> instrumenter =
-            listenerInstrumenter(request.message().wasReceiveTelemetryRecorded());
+            listenerInstrumenter(request.message().wereConsumedMessagesRecorded());
         if (!instrumenter.shouldStart(parentContext, request)) {
           return null;
         }
