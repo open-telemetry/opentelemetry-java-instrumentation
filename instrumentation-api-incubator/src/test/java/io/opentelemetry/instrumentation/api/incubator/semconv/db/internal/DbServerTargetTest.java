@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.net.InetAddress;
@@ -287,6 +288,26 @@ class DbServerTargetTest {
         .isEqualTo(
             "node1.example.com,node2.example.com,node3.example.com,node4.example.com,"
                 + "node5.example.com");
+  }
+
+  @Test
+  void endpointCapIsConfigurable() {
+    DbServerTarget target =
+        builder()
+            .setMaxEndpoints(2)
+            .addEndpoint("a.example.com", -1)
+            .addEndpoint("b.example.com", -1)
+            .addEndpoint("c.example.com", -1)
+            .build();
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("a.example.com,b.example.com");
+  }
+
+  @Test
+  void endpointCapMustBePositive() {
+    assertThatThrownBy(() -> builder().setMaxEndpoints(0))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

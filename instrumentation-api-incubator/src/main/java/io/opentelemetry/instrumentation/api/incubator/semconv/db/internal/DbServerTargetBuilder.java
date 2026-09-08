@@ -41,6 +41,7 @@ public class DbServerTargetBuilder {
 
   @Nullable private final Integer defaultPort;
   private final List<Endpoint> endpoints = new ArrayList<>();
+  private int maxEndpoints = MAX_ENDPOINTS;
   private boolean sorted;
   private boolean portAlwaysInline;
   @Nullable private String suffix;
@@ -62,6 +63,16 @@ public class DbServerTargetBuilder {
   @CanIgnoreReturnValue
   public DbServerTargetBuilder setSorted(boolean sorted) {
     this.sorted = sorted;
+    return this;
+  }
+
+  /** Render at most {@code maxEndpoints} endpoints. Default is 5. */
+  @CanIgnoreReturnValue
+  public DbServerTargetBuilder setMaxEndpoints(int maxEndpoints) {
+    if (maxEndpoints < 1) {
+      throw new IllegalArgumentException("maxEndpoints must be positive");
+    }
+    this.maxEndpoints = maxEndpoints;
     return this;
   }
 
@@ -177,7 +188,7 @@ public class DbServerTargetBuilder {
     if (sorted) {
       rendered.sort(String::compareTo);
     }
-    return String.join(",", rendered.subList(0, Math.min(MAX_ENDPOINTS, rendered.size())));
+    return String.join(",", rendered.subList(0, Math.min(maxEndpoints, rendered.size())));
   }
 
   private DbServerTarget target(String address, @Nullable Integer port) {
