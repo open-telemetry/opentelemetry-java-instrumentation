@@ -11,6 +11,8 @@ import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class ClickHouseDbRequest {
+  // The selected peer can change as an operation retries. It is intentionally excluded from
+  // AutoValue's equality, hash code, and string representations.
   @Nullable private volatile DbServerTarget peer;
 
   public static ClickHouseDbRequest create(
