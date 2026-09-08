@@ -61,8 +61,6 @@ public class MongoServerTarget {
         if (unixSocketTarget == null) {
           return null;
         }
-      } else if (MongoServerEndpointUtil.hasUnsafeEncodedIpv6Zone(host)) {
-        return null;
       }
       Integer port = unixSocket ? null : seed.getPort();
       if (!containsEndpoint(hosts, ports, host, port)) {
