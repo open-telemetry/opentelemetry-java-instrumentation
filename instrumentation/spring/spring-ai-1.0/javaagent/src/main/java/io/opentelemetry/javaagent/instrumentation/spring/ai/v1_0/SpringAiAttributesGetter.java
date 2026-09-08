@@ -15,10 +15,9 @@ import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.EmptyUsage;
 import org.springframework.ai.chat.metadata.Usage;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 
-class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest, ChatResponse> {
+class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest, SpringAiResponse> {
   @Override
   public String getOperationName(SpringAiRequest request) {
     return "chat";
@@ -91,11 +90,11 @@ class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest,
 
   @Override
   public List<String> getResponseFinishReasons(
-      SpringAiRequest request, @Nullable ChatResponse response) {
+      SpringAiRequest request, @Nullable SpringAiResponse response) {
     if (response == null) {
       return emptyList();
     }
-    return response.getResults().stream()
+    return response.response().getResults().stream()
         .map(Generation::getMetadata)
         .filter(metadata -> metadata != null)
         .map(ChatGenerationMetadata::getFinishReason)
@@ -105,7 +104,7 @@ class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest,
 
   @Override
   @Nullable
-  public String getResponseId(SpringAiRequest request, @Nullable ChatResponse response) {
+  public String getResponseId(SpringAiRequest request, @Nullable SpringAiResponse response) {
     ChatResponseMetadata metadata = metadata(response);
     String id = metadata == null ? null : metadata.getId();
     return id == null || id.isEmpty() ? null : id;
@@ -113,7 +112,7 @@ class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest,
 
   @Override
   @Nullable
-  public String getResponseModel(SpringAiRequest request, @Nullable ChatResponse response) {
+  public String getResponseModel(SpringAiRequest request, @Nullable SpringAiResponse response) {
     ChatResponseMetadata metadata = metadata(response);
     String model = metadata == null ? null : metadata.getModel();
     return model == null || model.isEmpty() ? null : model;
@@ -121,7 +120,7 @@ class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest,
 
   @Override
   @Nullable
-  public Long getUsageInputTokens(SpringAiRequest request, @Nullable ChatResponse response) {
+  public Long getUsageInputTokens(SpringAiRequest request, @Nullable SpringAiResponse response) {
     Usage usage = usage(response);
     Integer tokens = usage == null ? null : usage.getPromptTokens();
     return tokens == null ? null : tokens.longValue();
@@ -129,19 +128,19 @@ class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest,
 
   @Override
   @Nullable
-  public Long getUsageOutputTokens(SpringAiRequest request, @Nullable ChatResponse response) {
+  public Long getUsageOutputTokens(SpringAiRequest request, @Nullable SpringAiResponse response) {
     Usage usage = usage(response);
     Integer tokens = usage == null ? null : usage.getCompletionTokens();
     return tokens == null ? null : tokens.longValue();
   }
 
   @Nullable
-  private static ChatResponseMetadata metadata(@Nullable ChatResponse response) {
-    return response == null ? null : response.getMetadata();
+  private static ChatResponseMetadata metadata(@Nullable SpringAiResponse response) {
+    return response == null ? null : response.response().getMetadata();
   }
 
   @Nullable
-  private static Usage usage(@Nullable ChatResponse response) {
+  private static Usage usage(@Nullable SpringAiResponse response) {
     ChatResponseMetadata metadata = metadata(response);
     Usage usage = metadata == null ? null : metadata.getUsage();
     return usage instanceof EmptyUsage ? null : usage;

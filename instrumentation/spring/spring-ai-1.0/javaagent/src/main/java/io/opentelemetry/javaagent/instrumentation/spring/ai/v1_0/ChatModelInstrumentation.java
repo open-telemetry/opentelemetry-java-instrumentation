@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.shouldSuppressNestedChatModelInstrumentation;
+import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -18,6 +18,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -57,108 +58,46 @@ class ChatModelInstrumentation implements TypeInstrumentation {
   public static class CallAdvice {
 
     public static class AdviceScope {
-      private final CallDepth callDepth;
-      @Nullable private final Context context;
-      @Nullable private final Scope scope;
-      @Nullable private final SpringAiRequest request;
+      private static final Logger logger = Logger.getLogger(AdviceScope.class.getName());
+      private final Context context;
+      private final Scope scope;
+      private final SpringAiRequest request;
 
-      private AdviceScope(
-          CallDepth callDepth,
-          @Nullable Context context,
-          @Nullable Scope scope,
-          @Nullable SpringAiRequest request) {
-        this.callDepth = callDepth;
+      private AdviceScope(Context context, SpringAiRequest request) {
         this.context = context;
-        this.scope = scope;
+        this.scope = context.makeCurrent();
         this.request = request;
       }
 
+      @Nullable
       public static AdviceScope start(Object chatModel, Prompt prompt, boolean streaming) {
-        CallDepth callDepth = CallDepth.forClass(ChatModel.class);
-        if (callDepth.getAndIncrement() > 0
-            || shouldSuppressNestedChatModelInstrumentation(Context.current())) {
-          return new AdviceScope(callDepth, null, null, null);
+        SpringAiRequest request = SpringAiRequest.create(prompt, chatModel, streaming);
+        Context parentContext = Context.current();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
         }
-
-        SpringAiRequest request = null;
-        Context context = null;
-        Scope scope = null;
-        boolean completed = false;
+        Context context = instrumenter().start(parentContext, request);
         try {
-          request = SpringAiRequest.create(prompt, chatModel, streaming);
-          Context parentContext = Context.current();
-          if (!instrumenter().shouldStart(parentContext, request)) {
-            AdviceScope adviceScope = new AdviceScope(callDepth, null, null, null);
-            completed = true;
-            return adviceScope;
-          }
-          context = instrumenter().start(parentContext, request);
-          scope = context.makeCurrent();
-          try {
-            SpringAiMessageAttributes.setInputMessages(context, request);
-          } catch (Throwable ignored) {
-            // best effort
-          }
-          try {
-            SpringAiMessageEvents.emitPromptEvents(context, request);
-          } catch (Throwable ignored) {
-            // best effort
-          }
-          AdviceScope adviceScope = new AdviceScope(callDepth, context, scope, request);
-          completed = true;
-          return adviceScope;
-        } finally {
-          if (!completed) {
-            cleanupAfterStartFailure(callDepth, context, scope, request);
-          }
+          SpringAiMessageEvents.emitPromptEvents(context, request);
+        } catch (Throwable t) {
+          logger.log(FINE, "Failed to emit Spring AI prompt events", t);
         }
-      }
-
-      private static void cleanupAfterStartFailure(
-          CallDepth callDepth,
-          @Nullable Context context,
-          @Nullable Scope scope,
-          @Nullable SpringAiRequest request) {
-        try {
-          if (scope != null) {
-            scope.close();
-          }
-        } finally {
-          try {
-            if (context != null && request != null) {
-              instrumenter().end(context, request, null, null);
-            }
-          } finally {
-            callDepth.decrementAndGet();
-          }
-        }
+        return new AdviceScope(context, request);
       }
 
       public void end(@Nullable ChatResponse response, @Nullable Throwable throwable) {
-        if (callDepth.decrementAndGet() > 0
-            || scope == null
-            || context == null
-            || request == null) {
-          return;
-        }
+        scope.close();
         try {
-          scope.close();
-        } finally {
-          try {
-            try {
-              SpringAiMessageAttributes.setOutputMessages(context, response, null);
-            } catch (Throwable ignored) {
-              // best effort
-            }
-            try {
-              SpringAiMessageEvents.emitResponseEvents(context, request, response, null);
-            } catch (Throwable ignored) {
-              // best effort
-            }
-          } finally {
-            instrumenter().end(context, request, response, throwable);
-          }
+          SpringAiMessageEvents.emitResponseEvents(context, request, response, null);
+        } catch (Throwable t) {
+          logger.log(FINE, "Failed to emit Spring AI response events", t);
         }
+        instrumenter()
+            .end(
+                context,
+                request,
+                response == null ? null : new SpringAiResponse(response, null),
+                throwable);
       }
     }
 
@@ -194,8 +133,7 @@ class ChatModelInstrumentation implements TypeInstrumentation {
       public static StreamAdviceScope start() {
         CallDepth callDepth = CallDepth.forClass(ChatModel.class);
         boolean nested = callDepth.getAndIncrement() > 0;
-        return new StreamAdviceScope(
-            callDepth, nested || shouldSuppressNestedChatModelInstrumentation(Context.current()));
+        return new StreamAdviceScope(callDepth, nested);
       }
 
       public boolean shouldSuppress() {
@@ -222,7 +160,9 @@ class ChatModelInstrumentation implements TypeInstrumentation {
       if (throwable != null) {
         CallAdvice.AdviceScope callAdviceScope =
             CallAdvice.AdviceScope.start(chatModel, prompt, true);
-        callAdviceScope.end(null, throwable);
+        if (callAdviceScope != null) {
+          callAdviceScope.end(null, throwable);
+        }
         return publisher;
       }
       if (publisher == null) {

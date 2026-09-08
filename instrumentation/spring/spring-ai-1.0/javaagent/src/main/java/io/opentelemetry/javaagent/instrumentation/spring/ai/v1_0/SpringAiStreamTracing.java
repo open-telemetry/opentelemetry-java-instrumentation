@@ -9,11 +9,10 @@ import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAi
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.captureMessageContentAsSpanAttributes;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
-import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.shouldSuppressNestedChatModelInstrumentation;
-import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.suppressNestedChatModelInstrumentation;
 import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
@@ -46,15 +45,15 @@ public class SpringAiStreamTracing {
 
   private static Flux<ChatResponse> start(
       Flux<ChatResponse> source, SpringAiRequest request, ContextView reactorContext) {
-    Instrumenter<SpringAiRequest, ChatResponse> chatInstrumenter;
+    Instrumenter<SpringAiRequest, SpringAiResponse> chatInstrumenter;
+    Context parentContext;
     Context context;
     try {
       chatInstrumenter = instrumenter();
-      Context parentContext =
+      parentContext =
           ContextPropagationOperator.getOpenTelemetryContextFromContextView(
               reactorContext, Context.current());
-      if (shouldSuppressNestedChatModelInstrumentation(parentContext)
-          || !chatInstrumenter.shouldStart(parentContext, request)) {
+      if (!chatInstrumenter.shouldStart(parentContext, request)) {
         return source;
       }
       context = chatInstrumenter.start(parentContext, request);
@@ -65,56 +64,34 @@ public class SpringAiStreamTracing {
     }
 
     try {
-      try {
-        SpringAiMessageAttributes.setInputMessages(context, request);
-      } catch (Throwable ignored) {
-        // best effort
-      }
-      try {
-        SpringAiMessageEvents.emitPromptEvents(context, request);
-      } catch (Throwable ignored) {
-        // best effort
-      }
-      AtomicBoolean ended = new AtomicBoolean();
-      StreamState state =
-          new StreamState(
-              captureMessageContent(),
-              captureMessageContentAsSpanAttributes(),
-              messageContentSpanAttributeMaxLength());
-      Flux<ChatResponse> traced =
-          source
-              // The suppression marker is needed only while subscribing to a deferred delegate.
-              // Keeping it in the context propagated to downstream callbacks would suppress a
-              // legitimate ChatModel.stream() call made by a downstream operator.
-              .contextWrite(
-                  contextView ->
-                      ContextPropagationOperator.storeOpenTelemetryContext(
-                          contextView, suppressNestedChatModelInstrumentation(context)))
-              .doOnNext(state::add)
-              .doOnError(error -> end(chatInstrumenter, context, request, state, error, ended))
-              .doOnComplete(() -> end(chatInstrumenter, context, request, state, null, ended))
-              .doOnCancel(() -> end(chatInstrumenter, context, request, state, null, ended));
-      return ContextPropagationOperator.runWithContext(traced, context);
-    } catch (Throwable ignored) {
-      // Do not leak an already-started span if Reactor rejects operator assembly.
-      endStartedSpan(chatInstrumenter, context, request);
-      return source;
+      SpringAiMessageEvents.emitPromptEvents(context, request);
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed to emit Spring AI prompt events", t);
     }
-  }
-
-  private static void endStartedSpan(
-      Instrumenter<SpringAiRequest, ChatResponse> instrumenter,
-      Context context,
-      SpringAiRequest request) {
-    try {
-      instrumenter.end(context, request, null, null);
-    } catch (Throwable ignored) {
-      // This callback is outside of Byte Buddy advice suppression.
-    }
+    AtomicBoolean ended = new AtomicBoolean();
+    StreamState state =
+        new StreamState(
+            captureMessageContent(),
+            captureMessageContentAsSpanAttributes(),
+            messageContentSpanAttributeMaxLength());
+    Flux<ChatResponse> traced =
+        source
+            // Suppress nested GenAI operations in the source, including deferred delegates.
+            .contextWrite(
+                contextView ->
+                    ContextPropagationOperator.storeOpenTelemetryContext(contextView, context))
+            .doOnNext(state::add)
+            .doOnError(error -> end(chatInstrumenter, context, request, state, error, ended))
+            .doOnComplete(() -> end(chatInstrumenter, context, request, state, null, ended))
+            .doOnCancel(() -> end(chatInstrumenter, context, request, state, null, ended));
+    // Downstream callbacks may start a separate GenAI operation. Propagate the span as their
+    // parent without the source's suppression key and operation-listener state.
+    return ContextPropagationOperator.runWithContext(
+        traced, parentContext.with(Span.fromContext(context)));
   }
 
   private static void end(
-      Instrumenter<SpringAiRequest, ChatResponse> instrumenter,
+      Instrumenter<SpringAiRequest, SpringAiResponse> instrumenter,
       Context context,
       SpringAiRequest request,
       StreamState state,
@@ -124,23 +101,19 @@ public class SpringAiStreamTracing {
       return;
     }
 
-    @Nullable ChatResponse response = null;
-    @Nullable List<String> streamedContents = null;
+    SpringAiResponse response = null;
     try {
-      Snapshot snapshot = state.snapshot();
-      response = snapshot.response;
-      streamedContents = snapshot.streamedContents;
+      response = state.snapshot();
     } catch (Throwable ignored) {
       // Telemetry state must not affect the instrumented publisher.
     }
 
     try {
-      SpringAiMessageAttributes.setOutputMessages(context, response, streamedContents);
-    } catch (Throwable ignored) {
-      // best effort
-    }
-    try {
-      SpringAiMessageEvents.emitResponseEvents(context, request, response, streamedContents);
+      SpringAiMessageEvents.emitResponseEvents(
+          context,
+          request,
+          response == null ? null : response.response(),
+          response == null ? null : response.streamedContents());
     } catch (Throwable ignored) {
       // best effort
     }
@@ -238,9 +211,10 @@ public class SpringAiStreamTracing {
       }
     }
 
-    private synchronized Snapshot snapshot() {
+    @Nullable
+    private synchronized SpringAiResponse snapshot() {
       if (!hasResponse) {
-        return new Snapshot(null, null);
+        return null;
       }
 
       List<Generation> responseGenerations = new ArrayList<>(generations.size());
@@ -268,7 +242,7 @@ public class SpringAiStreamTracing {
       }
       ChatResponse response = new ChatResponse(responseGenerations, metadata.build());
 
-      return new Snapshot(response, contents);
+      return new SpringAiResponse(response, contents);
     }
   }
 
@@ -569,16 +543,6 @@ public class SpringAiStreamTracing {
         return content.substring(0, length - 1);
       }
       return content.toString();
-    }
-  }
-
-  private static final class Snapshot {
-    @Nullable private final ChatResponse response;
-    @Nullable private final List<String> streamedContents;
-
-    private Snapshot(@Nullable ChatResponse response, @Nullable List<String> streamedContents) {
-      this.response = response;
-      this.streamedContents = streamedContents;
     }
   }
 

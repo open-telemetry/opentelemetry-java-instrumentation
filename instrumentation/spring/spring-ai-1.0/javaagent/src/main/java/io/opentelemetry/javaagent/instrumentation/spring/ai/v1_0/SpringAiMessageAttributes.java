@@ -9,14 +9,17 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.captureMessageContentAsSpanAttributes;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiStringUtil.truncate;
+import static java.util.logging.Level.FINE;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -28,32 +31,49 @@ import org.springframework.ai.content.MediaContent;
 import org.springframework.util.MimeType;
 
 /** Adds opt-in message content attributes for backends that display trace tags. */
-public class SpringAiMessageAttributes {
+class SpringAiMessageAttributes implements AttributesExtractor<SpringAiRequest, SpringAiResponse> {
+  private static final Logger logger = Logger.getLogger(SpringAiMessageAttributes.class.getName());
   private static final AttributeKey<String> GEN_AI_INPUT_MESSAGES =
       stringKey("gen_ai.input.messages");
   private static final AttributeKey<String> GEN_AI_OUTPUT_MESSAGES =
       stringKey("gen_ai.output.messages");
 
-  public static void setInputMessages(Context context, SpringAiRequest request) {
+  @Override
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, SpringAiRequest request) {
     if (!captureMessageContentAsSpanAttributes()) {
       return;
     }
-    Span.fromContext(context)
-        .setAttribute(
-            GEN_AI_INPUT_MESSAGES,
-            serializeMessages(
-                request.prompt().getInstructions(), messageContentSpanAttributeMaxLength()));
+    try {
+      attributes.put(
+          GEN_AI_INPUT_MESSAGES,
+          serializeMessages(
+              request.prompt().getInstructions(), messageContentSpanAttributeMaxLength()));
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed to serialize Spring AI input messages", t);
+    }
   }
 
-  public static void setOutputMessages(
-      Context context, @Nullable ChatResponse response, @Nullable List<String> streamedContents) {
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      SpringAiRequest request,
+      @Nullable SpringAiResponse response,
+      @Nullable Throwable error) {
     if (!captureMessageContentAsSpanAttributes() || response == null) {
       return;
     }
-    Span.fromContext(context)
-        .setAttribute(
-            GEN_AI_OUTPUT_MESSAGES,
-            serializeResponses(response, streamedContents, messageContentSpanAttributeMaxLength()));
+    try {
+      attributes.put(
+          GEN_AI_OUTPUT_MESSAGES,
+          serializeResponses(
+              response.response(),
+              response.streamedContents(),
+              messageContentSpanAttributeMaxLength()));
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed to serialize Spring AI output messages", t);
+    }
   }
 
   static String serializeMessages(List<Message> messages, int maxContentLength) {
@@ -304,6 +324,4 @@ public class SpringAiMessageAttributes {
     JsonStringEncoder.getInstance().quoteAsString(value == null ? "" : value, result);
     result.append('"');
   }
-
-  private SpringAiMessageAttributes() {}
 }

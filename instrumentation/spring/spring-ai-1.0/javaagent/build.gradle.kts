@@ -18,6 +18,8 @@ muzzle {
 dependencies {
   library("org.springframework.ai:spring-ai-model:1.0.0")
   testLibrary("org.springframework.ai:spring-ai-openai:1.0.0")
+  latestDepTestLibrary("org.springframework.ai:spring-ai-model:1.+") // documented limitation
+  latestDepTestLibrary("org.springframework.ai:spring-ai-openai:1.+") // documented limitation
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
@@ -30,6 +32,7 @@ tasks {
 
   test {
     systemProperty("otel.instrumentation.genai.capture-message-content", true)
+    systemProperty("metadataConfig", "otel.instrumentation.genai.capture-message-content=true")
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -61,10 +64,6 @@ tasks {
         "-Dotel.instrumentation.spring-ai.experimental.message-content-span-attribute.max-length=10",
       )
       systemProperty("otel.instrumentation.genai.capture-message-content", false)
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled=true,otel.instrumentation.spring-ai.experimental.message-content-span-attribute.max-length=10",
-      )
     }
 
   val testContentDisabled = register<Test>("testContentDisabled") {

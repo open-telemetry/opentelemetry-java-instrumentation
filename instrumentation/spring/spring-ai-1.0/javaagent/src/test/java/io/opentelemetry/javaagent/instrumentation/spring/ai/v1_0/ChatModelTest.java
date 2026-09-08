@@ -130,7 +130,7 @@ class ChatModelTest {
   }
 
   @Test
-  void instrumentationSetupFailureDoesNotLeakCallDepth() {
+  void instrumentationSetupFailureDoesNotAffectSubsequentCalls() {
     chatModel.setDefaultOptionsFailure(new IllegalStateException("default options failed"));
     testing.runWithSpan("failed setup", () -> chatModel.call(prompt()));
     assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isEqualTo(1);
