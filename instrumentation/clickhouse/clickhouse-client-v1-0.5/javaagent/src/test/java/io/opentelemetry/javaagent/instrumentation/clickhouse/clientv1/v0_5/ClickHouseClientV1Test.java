@@ -49,6 +49,8 @@ import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -188,12 +190,20 @@ class ClickHouseClientV1Test {
     assertThat(serverTargetPort(serverTarget)).isEqualTo(9123);
   }
 
-  @Test
-  void testConfiguredNodesRejectUnsafeTarget() throws Exception {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "user:password@unsafe.example",
+        "user@unsafe.example",
+        "host.example%3fpassword%3dsecret",
+        "first.example,second.example",
+        "host=bad",
+        " unsafe.example",
+        "unsafe.example "
+      })
+  void testConfiguredNodesRejectUnsafeOrMalformedHosts(String host) throws Exception {
     ClickHouseNode unsafe =
-        ClickHouseNode.builder(ClickHouseNode.of("http://safe.example"))
-            .host("user:password@unsafe.example")
-            .build();
+        ClickHouseNode.builder(ClickHouseNode.of("http://safe.example")).host(host).build();
 
     assertThat(serverTarget(requestWithNodes(ImmutableList.of(unsafe)))).isNull();
   }

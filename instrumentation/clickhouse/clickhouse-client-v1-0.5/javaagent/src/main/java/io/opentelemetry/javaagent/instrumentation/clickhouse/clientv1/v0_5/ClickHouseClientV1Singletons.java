@@ -116,6 +116,9 @@ public class ClickHouseClientV1Singletons {
 
   private static boolean addEndpoint(DbServerTargetBuilder builder, ClickHouseNode node) {
     String host = node.getHost();
+    if (hasWhitespace(host)) {
+      return false;
+    }
     int hostLength = host.length();
     String hostToValidate =
         hostLength > 1 && host.charAt(0) == '[' && host.charAt(hostLength - 1) == ']'
@@ -129,6 +132,15 @@ public class ClickHouseClientV1Singletons {
         node.getConfig().isSsl() ? protocol.getDefaultSecurePort() : protocol.getDefaultPort();
     builder.addEndpoint(host, node.getPort(), defaultPort);
     return true;
+  }
+
+  private static boolean hasWhitespace(String value) {
+    for (int i = 0; i < value.length(); i++) {
+      if (Character.isWhitespace(value.charAt(i))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static class CapturedServerTarget {
