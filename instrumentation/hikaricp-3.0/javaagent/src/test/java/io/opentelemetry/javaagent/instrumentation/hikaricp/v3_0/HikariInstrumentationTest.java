@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hikaricp.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
@@ -102,7 +103,9 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
     config.setMaximumPoolSize(1);
     config.setInitializationFailTimeout(-1);
 
-    assertPoolName(new HikariDataSource(config), "properties.example:5433/inventory");
+    assertPoolName(
+        new HikariDataSource(config),
+        emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
   }
 
   @Test
