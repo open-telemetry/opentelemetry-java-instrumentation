@@ -176,7 +176,10 @@ class ClickHouseClientV2Test {
         "http://[fe80::1%3Apassword]:8123",
         "http://host.example%3fpassword%3dsecret:8123",
         "http://first.example,second.example:8123",
-        " http://host.example:8123"
+        " http://host.example:8123",
+        "://host.example:8123",
+        "http://",
+        "http:///"
       })
   void testConfiguredEndpointsRejectUnsafeOrMalformedValues(String endpoint) throws Exception {
     assertServerTarget(new HashSet<>(asList(endpoint)), null, null);

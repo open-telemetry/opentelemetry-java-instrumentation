@@ -106,6 +106,9 @@ public class ClickHouseClientV2Singletons {
       if (authorityStart < 0) {
         authorityStart = 0;
       } else {
+        if (authorityStart == 0) {
+          return null;
+        }
         scheme = endpoint.substring(0, authorityStart);
         authorityStart += 3;
       }
@@ -121,7 +124,8 @@ public class ClickHouseClientV2Singletons {
         return null;
       }
       String authority = endpoint.substring(authorityStart, authorityEnd);
-      if (authority.indexOf('=') >= 0
+      if (authority.isEmpty()
+          || authority.indexOf('=') >= 0
           || authority.indexOf(',') >= 0
           || hasUnsafePercentEscape(authority)) {
         return null;
