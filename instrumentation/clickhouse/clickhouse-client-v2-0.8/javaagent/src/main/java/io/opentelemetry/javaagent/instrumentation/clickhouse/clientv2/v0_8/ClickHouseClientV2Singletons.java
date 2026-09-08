@@ -106,10 +106,11 @@ public class ClickHouseClientV2Singletons {
       if (authorityStart < 0) {
         authorityStart = 0;
       } else {
-        if (authorityStart == 0) {
+        String extractedScheme = endpoint.substring(0, authorityStart);
+        if (!isValidScheme(extractedScheme)) {
           return null;
         }
-        scheme = endpoint.substring(0, authorityStart);
+        scheme = extractedScheme;
         authorityStart += 3;
       }
       int authorityEnd = endpoint.length();
@@ -163,6 +164,27 @@ public class ClickHouseClientV2Singletons {
         }
       }
       return new EndpointTarget(scheme, authority, null);
+    }
+
+    private static boolean isValidScheme(String scheme) {
+      if (scheme.isEmpty() || !isAsciiLetter(scheme.charAt(0))) {
+        return false;
+      }
+      for (int i = 1; i < scheme.length(); i++) {
+        char c = scheme.charAt(i);
+        if (!isAsciiLetter(c) && !isAsciiDigit(c) && c != '+' && c != '-' && c != '.') {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    private static boolean isAsciiLetter(char c) {
+      return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    private static boolean isAsciiDigit(char c) {
+      return c >= '0' && c <= '9';
     }
 
     private int defaultPort() {

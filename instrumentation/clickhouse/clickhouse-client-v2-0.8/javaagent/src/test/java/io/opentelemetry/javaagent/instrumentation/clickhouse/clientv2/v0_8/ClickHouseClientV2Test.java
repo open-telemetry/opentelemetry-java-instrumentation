@@ -178,6 +178,8 @@ class ClickHouseClientV2Test {
         "http://first.example,second.example:8123",
         " http://host.example:8123",
         "://host.example:8123",
+        "1http://host.example:8123",
+        "ht^tp://host.example:8123",
         "http://",
         "http:///"
       })
