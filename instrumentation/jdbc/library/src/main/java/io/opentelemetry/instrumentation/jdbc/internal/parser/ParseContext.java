@@ -28,8 +28,10 @@ public final class ParseContext {
   @Nullable private String subtype;
   @Nullable private String host;
   @Nullable private Integer port;
-  @Nullable private String serverAddressGroup;
-  private boolean multiTarget;
+  @Nullable private String configuredServerAddress;
+  @Nullable private Integer configuredServerPort;
+  private boolean multipleTargets;
+  private boolean configuredTargetResolved;
   @Nullable private String user;
   @Nullable private String databaseName;
   @Nullable private String namespace;
@@ -101,6 +103,14 @@ public final class ParseContext {
    */
   public void host(@Nullable String host) {
     this.host = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
+    if (!configuredTargetResolved) {
+      configuredServerAddress = this.host;
+    }
+  }
+
+  /** Set a parser default host without marking it as configured. */
+  public void defaultHost(@Nullable String host) {
+    this.host = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
   }
 
   /** The port value accumulated so far. */
@@ -112,20 +122,26 @@ public final class ParseContext {
   /** Set the port value. */
   public void port(@Nullable Integer port) {
     this.port = port;
-  }
-
-  /** Set a normalized configured server group when parsing succeeds. */
-  public void serverAddressGroup(@Nullable String serverAddressGroup) {
-    if (serverAddressGroup == null) {
-      return;
+    if (!configuredTargetResolved) {
+      configuredServerPort = port;
     }
-    this.serverAddressGroup = serverAddressGroup;
-    multiTarget = true;
   }
 
-  /** Mark the connection as having multiple configured targets. */
+  /** Set a parser default port without marking it as configured. */
+  public void defaultPort(@Nullable Integer port) {
+    this.port = port;
+  }
+
+  /** Set a normalized configured target when parsing succeeds. */
+  public void configuredServerAddress(@Nullable String configuredServerAddress) {
+    this.configuredTargetResolved = true;
+    this.configuredServerAddress = configuredServerAddress;
+    this.configuredServerPort = null;
+  }
+
+  /** Mark the connection as having multiple configured targets for parser-local validation. */
   public void multiTarget() {
-    multiTarget = true;
+    multipleTargets = true;
   }
 
   /** The user value accumulated so far. */
@@ -215,7 +231,7 @@ public final class ParseContext {
     }
     Integer port = UrlParsingUtils.parsePort(params.get("portnumber"));
     if (port != null) {
-      this.port = port;
+      port(port);
     }
     String databaseName = params.get("databasename");
     if (databaseName != null && !databaseName.isEmpty()) {
@@ -244,7 +260,7 @@ public final class ParseContext {
 
     Integer parsedPort = UrlParsingUtils.parsePort(props.getProperty("portNumber"));
     if (parsedPort != null) {
-      this.port = parsedPort;
+      port(parsedPort);
     }
 
     String databaseName = props.getProperty("databaseName");
@@ -316,7 +332,7 @@ public final class ParseContext {
     // Handle IPv6 addresses and extract host:port
     HostPort hostPort = UrlParsingUtils.extractHostPort(serverName);
     if (hostPort.port() != null) {
-      this.port = hostPort.port();
+      port(hostPort.port());
     }
     if (!hostPort.host().isEmpty()) {
       host(hostPort.host());
@@ -331,8 +347,7 @@ public final class ParseContext {
   public DbInfo toDbInfo() {
     // oldSemconvSystem falls back to system when not explicitly set (i.e., when both are the same)
     String oldSystem = oldSemconvSystem != null ? oldSemconvSystem : system;
-    DbInfo.Builder builder =
-        DbInfo.builder().dbSystemName(system).dbSystem(oldSystem).multiTarget(multiTarget);
+    DbInfo.Builder builder = DbInfo.builder().dbSystemName(system).dbSystem(oldSystem);
     if (host != null) {
       builder.serverAddress(host);
     }
@@ -354,10 +369,22 @@ public final class ParseContext {
     } else if (namespace != null) {
       builder.dbName(namespace);
     }
-    builder.dbConnectionString(buildShortUrl(type, subtype, host, port));
-    if (serverAddressGroup != null) {
-      builder.serverAddressGroup(serverAddressGroup);
+    String legacyConnectionString = buildShortUrl(type, subtype, host, port);
+    builder.dbConnectionString(legacyConnectionString);
+    String configuredAddress = configuredServerAddress;
+    Integer configuredPort = configuredServerPort;
+    if (multipleTargets && !configuredTargetResolved) {
+      configuredAddress = null;
+      configuredPort = null;
+    } else if (!multipleTargets
+        && configuredAddress != null
+        && configuredPort == null
+        && port != null) {
+      // Preserve the existing single-server default-port behavior in stable telemetry.
+      configuredPort = port;
     }
+    builder.configuredServerAddress(configuredAddress);
+    builder.configuredServerPort(configuredPort);
     return builder.build();
   }
 }

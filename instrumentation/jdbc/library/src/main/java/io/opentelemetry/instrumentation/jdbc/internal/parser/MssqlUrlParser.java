@@ -48,8 +48,8 @@ public final class MssqlUrlParser implements JdbcUrlParser {
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(MICROSOFT_SQL_SERVER);
     ctx.oldSemconvSystem(MSSQL);
-    ctx.host(DEFAULT_HOST);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultHost(DEFAULT_HOST);
+    ctx.defaultPort(DEFAULT_PORT);
 
     // Extract subtype from URL like microsoft:sqlserver://...
     String subtype = UrlParsingUtils.extractSubtype(jdbcUrl);
@@ -109,7 +109,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     group.append(',');
     appendServerAddress(group, failoverPartner);
     String serverAddressGroup = parseServerAddressGroup(group.toString(), DEFAULT_PORT);
-    ctx.serverAddressGroup(serverAddressGroup);
+    ctx.configuredServerAddress(serverAddressGroup);
   }
 
   /** Returns whether a server was configured by the data source, parameters, or URL authority. */

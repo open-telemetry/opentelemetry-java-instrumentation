@@ -44,8 +44,8 @@ public final class PostgresqlUrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(POSTGRESQL);
-    ctx.host(DEFAULT_HOST);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultHost(DEFAULT_HOST);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyUserProperty();
 

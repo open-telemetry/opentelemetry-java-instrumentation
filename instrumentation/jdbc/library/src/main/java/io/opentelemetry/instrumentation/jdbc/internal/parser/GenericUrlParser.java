@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
 import static java.util.logging.Level.FINE;
 
@@ -108,7 +109,9 @@ public final class GenericUrlParser implements JdbcUrlParser {
       }
     }
     String hostList = parseServerAddressGroup(authority, defaultPort);
-    ctx.serverAddressGroup(hostList);
+    if (hostList != null || hasMultipleTargets(jdbcUrl)) {
+      ctx.configuredServerAddress(hostList);
+    }
     return true;
   }
 }

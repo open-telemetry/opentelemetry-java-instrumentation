@@ -109,21 +109,15 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getServerAddress(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
-    String addressGroup = dbInfo.getServerAddressGroup();
-    if (emitStableDatabaseSemconv() && (addressGroup != null || dbInfo.isMultiTarget())) {
-      return addressGroup;
-    }
-    return dbInfo.getServerAddress();
+    return emitStableDatabaseSemconv()
+        ? dbInfo.getConfiguredServerAddress()
+        : dbInfo.getServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
-    if (emitStableDatabaseSemconv()
-        && (dbInfo.getServerAddressGroup() != null || dbInfo.isMultiTarget())) {
-      return null;
-    }
-    return dbInfo.getServerPort();
+    return emitStableDatabaseSemconv() ? dbInfo.getConfiguredServerPort() : dbInfo.getServerPort();
   }
 }

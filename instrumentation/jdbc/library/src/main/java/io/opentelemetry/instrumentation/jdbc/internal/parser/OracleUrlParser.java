@@ -63,7 +63,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(ORACLE_DB);
     ctx.oldSemconvSystem(ORACLE);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyDataSourceProperties();
 
@@ -132,7 +132,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
     }
     ctx.multiTarget();
     String group = UrlParsingUtils.parseServerAddressGroup(authority, DEFAULT_PORT);
-    ctx.serverAddressGroup(group);
+    ctx.configuredServerAddress(group);
     return authority;
   }
 
@@ -225,7 +225,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
       searchFrom = end + 1;
     }
     String group = UrlParsingUtils.parseServerAddressGroup(addresses.toString(), DEFAULT_PORT);
-    ctx.serverAddressGroup(group);
+    ctx.configuredServerAddress(group);
   }
 
   private static int findClosingParen(String text, int openParen) {

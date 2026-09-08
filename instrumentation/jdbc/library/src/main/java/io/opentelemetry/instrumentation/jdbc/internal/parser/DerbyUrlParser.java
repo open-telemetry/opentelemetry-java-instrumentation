@@ -161,7 +161,7 @@ public final class DerbyUrlParser implements JdbcUrlParser {
       }
     } else {
       ctx.host(url);
-      ctx.port(DEFAULT_PORT);
+      ctx.defaultPort(DEFAULT_PORT);
     }
   }
 }

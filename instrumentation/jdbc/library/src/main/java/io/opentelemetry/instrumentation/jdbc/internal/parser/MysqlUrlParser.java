@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
 
@@ -68,8 +69,8 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       system = OTHER_SQL;
     }
     ctx.system(system);
-    ctx.host(DEFAULT_HOST);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultHost(DEFAULT_HOST);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyUserProperty();
 
@@ -229,7 +230,9 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       }
     }
     String hostList = parseServerAddressGroup(authority, DEFAULT_PORT);
-    ctx.serverAddressGroup(hostList);
+    if (hostList != null || hasMultipleTargets(jdbcUrl)) {
+      ctx.configuredServerAddress(hostList);
+    }
     return true;
   }
 

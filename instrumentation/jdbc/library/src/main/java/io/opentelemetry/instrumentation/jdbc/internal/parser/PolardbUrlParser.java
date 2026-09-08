@@ -25,7 +25,7 @@ public final class PolardbUrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(SYSTEM);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyUserProperty();
 

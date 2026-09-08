@@ -39,7 +39,7 @@ class JdbcServicePeerTest {
                 .dbSystemName(POSTGRESQL)
                 .serverAddress("localhost")
                 .serverPort(5432)
-                .serverAddressGroup(GROUP_TARGET)
+                .configuredServerAddress(GROUP_TARGET)
                 .build());
 
     if (emitStableDatabaseSemconv()) {
@@ -61,6 +61,8 @@ class JdbcServicePeerTest {
                 .dbSystemName(POSTGRESQL)
                 .serverAddress("localhost")
                 .serverPort(5432)
+                .configuredServerAddress("localhost")
+                .configuredServerPort(5432)
                 .build());
 
     assertThat(resolve(request, "localhost"))
@@ -75,7 +77,7 @@ class JdbcServicePeerTest {
                 .dbSystemName("oracle.db")
                 .serverAddress("orcl.host1")
                 .serverPort(1521)
-                .serverAddressGroup(DEFAULT_PORT_GROUP_TARGET)
+                .configuredServerAddress(DEFAULT_PORT_GROUP_TARGET)
                 .build());
 
     if (emitStableDatabaseSemconv()) {

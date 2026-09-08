@@ -18,7 +18,7 @@ public abstract class DbInfo {
   public static final DbInfo DEFAULT = builder().build();
 
   public static DbInfo.Builder builder() {
-    return new AutoValue_DbInfo.Builder().multiTarget(false);
+    return new AutoValue_DbInfo.Builder();
   }
 
   /** The stable/new db.system.name value (e.g., "h2database", "microsoft.sql_server"). */
@@ -57,9 +57,10 @@ public abstract class DbInfo {
   public abstract Integer getServerPort();
 
   @Nullable
-  public abstract String getServerAddressGroup();
+  public abstract String getConfiguredServerAddress();
 
-  public abstract boolean isMultiTarget();
+  @Nullable
+  public abstract Integer getConfiguredServerPort();
 
   @Nullable
   public final String getSystem() {
@@ -102,8 +103,8 @@ public abstract class DbInfo {
         .dbNamespace(getDbNamespace())
         .serverAddress(getServerAddress())
         .serverPort(getServerPort())
-        .serverAddressGroup(getServerAddressGroup())
-        .multiTarget(isMultiTarget());
+        .configuredServerAddress(getConfiguredServerAddress())
+        .configuredServerPort(getConfiguredServerPort());
   }
 
   /**
@@ -136,9 +137,9 @@ public abstract class DbInfo {
 
     public abstract Builder serverPort(Integer serverPort);
 
-    public abstract Builder serverAddressGroup(String serverAddressGroup);
+    public abstract Builder configuredServerAddress(String configuredServerAddress);
 
-    public abstract Builder multiTarget(boolean multiTarget);
+    public abstract Builder configuredServerPort(Integer configuredServerPort);
 
     public final Builder system(String system) {
       return dbSystemName(system).dbSystem(system);

@@ -98,7 +98,7 @@ class JdbcAttributesGetterTest {
             .dbSystemName(MARIADB)
             .serverAddress("h1")
             .serverPort(3306)
-            .serverAddressGroup("h1:15432,h2:15432")
+            .configuredServerAddress("h1:15432,h2:15432")
             .build();
     DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
 
@@ -118,8 +118,8 @@ class JdbcAttributesGetterTest {
     DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, null);
     DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
 
-    assertThat(dbInfo.isMultiTarget()).isTrue();
-    assertThat(dbInfo.getServerAddressGroup()).isNull();
+    assertThat(dbInfo.getConfiguredServerAddress()).isNull();
+    assertThat(dbInfo.getConfiguredServerPort()).isNull();
     if (emitStableDatabaseSemconv()) {
       assertThat(attributesGetter.getServerAddress(request)).isNull();
       assertThat(attributesGetter.getServerPort(request)).isNull();
@@ -168,7 +168,13 @@ class JdbcAttributesGetterTest {
   @Test
   void singularTargetKeepsHostAndPortInEveryMode() {
     DbInfo dbInfo =
-        DbInfo.builder().dbSystemName(MARIADB).serverAddress("h1").serverPort(3306).build();
+        DbInfo.builder()
+            .dbSystemName(MARIADB)
+            .serverAddress("h1")
+            .serverPort(3306)
+            .configuredServerAddress("h1")
+            .configuredServerPort(3306)
+            .build();
     DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
 
     assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1");
