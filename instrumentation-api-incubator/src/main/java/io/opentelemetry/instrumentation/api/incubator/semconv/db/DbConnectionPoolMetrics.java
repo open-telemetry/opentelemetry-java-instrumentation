@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
@@ -81,11 +82,12 @@ public final class DbConnectionPoolMetrics {
   @Deprecated
   public static DbConnectionPoolMetrics create(
       Meter meter, String poolName, Attributes databaseAttributes) {
-    Attributes attributes = Attributes.of(POOL_NAME, poolName);
+    AttributesBuilder attributes = Attributes.builder();
     if (emitStableDatabaseSemconv()) {
-      attributes = attributes.toBuilder().putAll(databaseAttributes).build();
+      attributes.putAll(databaseAttributes);
     }
-    return new DbConnectionPoolMetrics(meter, attributes);
+    attributes.put(POOL_NAME, poolName);
+    return new DbConnectionPoolMetrics(meter, attributes.build());
   }
 
   private final Meter meter;
