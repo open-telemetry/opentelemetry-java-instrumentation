@@ -15,7 +15,14 @@ training_pid=
 mkdir -p "$aot_directory"
 
 if [[ -f /app/app.jar ]]; then
-  application_args=(-jar /app/app.jar)
+  application_directory="$aot_directory/application"
+  env -u JAVA_TOOL_OPTIONS java \
+    -Djarmode=tools \
+    -jar /app/app.jar \
+    extract \
+    --destination "$application_directory" \
+    --application-filename app.jar
+  application_args=(-jar "$application_directory/app.jar")
 else
   application_jar="$aot_directory/application.jar"
   env -u JAVA_TOOL_OPTIONS jar --create \
