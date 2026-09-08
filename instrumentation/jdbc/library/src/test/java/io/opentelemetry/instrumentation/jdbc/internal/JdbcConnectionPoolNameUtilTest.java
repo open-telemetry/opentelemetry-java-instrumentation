@@ -123,6 +123,11 @@ class JdbcConnectionPoolNameUtilTest {
             "orders",
             "orders"),
         argumentSet(
+            "configured target list",
+            DbInfo.builder().configuredServerAddress("db-a:5432,db-b:6432").build(),
+            FALLBACK_NAME,
+            "db-a:5432,db-b:6432"),
+        argumentSet(
             "empty namespace",
             DbInfo.builder()
                 .legacyServerAddress("db.example")

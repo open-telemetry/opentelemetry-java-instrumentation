@@ -121,6 +121,10 @@ public final class JdbcConnectionPoolNameUtil {
   }
 
   private static String endpoint(String address, @Nullable Integer port) {
+    if (address.indexOf(',') >= 0) {
+      return address;
+    }
+
     StringBuilder endpoint = new StringBuilder();
     if (address.indexOf(':') >= 0) {
       endpoint.append('[').append(address).append(']');
