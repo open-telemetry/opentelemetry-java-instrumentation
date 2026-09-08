@@ -9,6 +9,12 @@ groups:
         brief: Web application context path
         examples:
           - "/myapp"
+      - id: tomcat.host
+        type: string
+        stability: development
+        brief: Name of the Tomcat host.
+        examples:
+          - "localhost"
       - id: tomcat.request.processor.name
         type: string
         stability: development
@@ -21,7 +27,6 @@ groups:
         brief: Name of the Tomcat thread pool.
         examples:
           - "http-nio-8080"
-
   - id: metric.tomcat.session.active.count
     metric_name: tomcat.session.active.count
     stability: development
@@ -39,6 +44,113 @@ groups:
     brief: Maximum possible number of active sessions.
     unit: "{session}"
     instrument: updowncounter
+    attributes:
+      - ref: tomcat.context
+
+  - id: metric.tomcat.db.client.connection.initial
+    metric_name: tomcat.db.client.connection.initial
+    stability: development
+    type: metric
+    brief: The configured initial size of the JDBC connection pool.
+    unit: "{connection}"
+    instrument: updowncounter
+    attributes:
+      - ref: tomcat.host
+      - ref: tomcat.context
+      - ref: db.client.connection.pool.name
+
+  - id: metric.tomcat.db.client.connection.count
+    metric_name: tomcat.db.client.connection.count
+    stability: development
+    type: metric
+    brief: The number of JDBC connections.
+    unit: "{connection}"
+    instrument: updowncounter
+    attributes:
+      - ref: tomcat.host
+      - ref: tomcat.context
+      - ref: db.client.connection.pool.name
+      - ref: db.client.connection.state
+
+  - id: metric.tomcat.db.client.connection.limit
+    metric_name: tomcat.db.client.connection.limit
+    stability: development
+    type: metric
+    brief: The configured maximum size of the JDBC connection pool.
+    unit: "{connection}"
+    instrument: updowncounter
+    attributes:
+      - ref: tomcat.host
+      - ref: tomcat.context
+      - ref: db.client.connection.pool.name
+
+  - id: metric.tomcat.session.duration.max
+    metric_name: tomcat.session.duration.max
+    stability: development
+    type: metric
+    brief: The maximum observed session lifetime.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: tomcat.context
+
+  - id: metric.tomcat.session.created
+    metric_name: tomcat.session.created
+    stability: development
+    type: metric
+    brief: The number of sessions created.
+    unit: "{session}"
+    instrument: counter
+    attributes:
+      - ref: tomcat.context
+
+  - id: metric.tomcat.session.duration.mean
+    metric_name: tomcat.session.duration.mean
+    stability: development
+    type: metric
+    brief: The average observed session lifetime.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: tomcat.context
+
+  - id: metric.tomcat.session.processing.duration.sum
+    metric_name: tomcat.session.processing.duration.sum
+    stability: development
+    type: metric
+    brief: The total time spent processing sessions.
+    unit: s
+    instrument: counter
+    attributes:
+      - ref: tomcat.context
+
+  - id: metric.tomcat.session.active.max
+    metric_name: tomcat.session.active.max
+    stability: development
+    type: metric
+    brief: The maximum number of concurrent active sessions observed.
+    unit: "{session}"
+    instrument: gauge
+    attributes:
+      - ref: tomcat.context
+
+  - id: metric.tomcat.session.expired
+    metric_name: tomcat.session.expired
+    stability: development
+    type: metric
+    brief: The number of expired sessions.
+    unit: "{session}"
+    instrument: counter
+    attributes:
+      - ref: tomcat.context
+
+  - id: metric.tomcat.session.rejected
+    metric_name: tomcat.session.rejected
+    stability: development
+    type: metric
+    brief: The number of rejected sessions.
+    unit: "{session}"
+    instrument: counter
     attributes:
       - ref: tomcat.context
 
