@@ -57,10 +57,10 @@ public final class CassandraTelemetry {
    * Returns a tracing-enabled {@link CqlSession} using the supplied contact points to derive the
    * session's logical Cassandra server target.
    *
-   * <p>Use this overload when contact points were supplied directly to the session builder with
-   * {@code addContactPoint} or {@code addContactPoints}. The driver does not expose those builder
-   * contact points through the resulting {@link CqlSession}, so the instrumentation cannot derive
-   * the logical server target from the session alone.
+   * <p>Use this overload when contact points were supplied directly with the session builder's
+   * contact-point methods. The driver does not expose those builder contact points through the
+   * resulting {@link CqlSession}, so the instrumentation cannot derive the logical server target
+   * from the session alone.
    *
    * <p>For sessions configured through a driver configuration file or {@link
    * com.datastax.oss.driver.api.core.config.DriverConfigLoader}, use {@link #wrap(CqlSession)}
