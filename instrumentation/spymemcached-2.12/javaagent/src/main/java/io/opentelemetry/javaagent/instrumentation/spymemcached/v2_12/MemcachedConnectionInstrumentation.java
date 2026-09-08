@@ -43,7 +43,7 @@ class MemcachedConnectionInstrumentation implements TypeInstrumentation {
   public static class AddOperationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) Operation operation) {
-      SpymemcachedRequestHolder.associateOperation(Java8BytecodeBridge.currentContext(), operation);
+      SpymemcachedRequestHolder.trackOperation(Java8BytecodeBridge.currentContext(), operation);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)

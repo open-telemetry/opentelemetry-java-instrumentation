@@ -17,8 +17,8 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
 
   private static final ContextKey<SpymemcachedRequestHolder> KEY =
       named("opentelemetry-spymemcached-request-holder");
-  private static final VirtualField<Operation, SpymemcachedRequestAssociations> REQUESTS =
-      VirtualField.find(Operation.class, SpymemcachedRequestAssociations.class);
+  private static final VirtualField<Operation, SpymemcachedRequestSet> REQUESTS =
+      VirtualField.find(Operation.class, SpymemcachedRequestSet.class);
 
   private final SpymemcachedRequest request;
 
@@ -33,30 +33,30 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
     return context.with(new SpymemcachedRequestHolder(request));
   }
 
-  public static void associateOperation(Context context, Operation operation) {
+  public static void trackOperation(Context context, Operation operation) {
     SpymemcachedRequestHolder holder = context.get(KEY);
     if (holder == null) {
       return;
     }
-    SpymemcachedRequestAssociations associations = REQUESTS.get(operation);
-    if (associations == null) {
-      associations = new SpymemcachedRequestAssociations();
-      REQUESTS.set(operation, associations);
+    SpymemcachedRequestSet requestSet = REQUESTS.get(operation);
+    if (requestSet == null) {
+      requestSet = new SpymemcachedRequestSet();
+      REQUESTS.set(operation, requestSet);
     }
-    associations.add(holder.request);
+    requestSet.add(holder.request);
   }
 
   public static void propagateOperation(Operation target, Operation source) {
-    SpymemcachedRequestAssociations sourceAssociations = REQUESTS.get(source);
-    if (sourceAssociations == null) {
+    SpymemcachedRequestSet sourceRequestSet = REQUESTS.get(source);
+    if (sourceRequestSet == null) {
       return;
     }
-    SpymemcachedRequestAssociations targetAssociations = REQUESTS.get(target);
-    if (targetAssociations == null) {
-      targetAssociations = new SpymemcachedRequestAssociations();
-      REQUESTS.set(target, targetAssociations);
+    SpymemcachedRequestSet targetRequestSet = REQUESTS.get(target);
+    if (targetRequestSet == null) {
+      targetRequestSet = new SpymemcachedRequestSet();
+      REQUESTS.set(target, targetRequestSet);
     }
-    targetAssociations.merge(sourceAssociations);
+    targetRequestSet.merge(sourceRequestSet);
   }
 
   public static void captureHandlingNode(Context context, Operation operation) {
@@ -68,11 +68,11 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
   }
 
   public static void markRedistributed(Operation operation) {
-    SpymemcachedRequestAssociations associations = REQUESTS.get(operation);
-    if (associations == null) {
+    SpymemcachedRequestSet requestSet = REQUESTS.get(operation);
+    if (requestSet == null) {
       return;
     }
-    for (SpymemcachedRequest request : associations.requests()) {
+    for (SpymemcachedRequest request : requestSet.requests()) {
       request.markRedistributed();
     }
   }

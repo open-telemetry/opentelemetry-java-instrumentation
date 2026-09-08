@@ -10,7 +10,7 @@ import static java.util.Collections.newSetFromMap;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-class SpymemcachedRequestAssociations {
+class SpymemcachedRequestSet {
 
   private final Set<SpymemcachedRequest> requests =
       newSetFromMap(new IdentityHashMap<SpymemcachedRequest, Boolean>());
@@ -19,7 +19,7 @@ class SpymemcachedRequestAssociations {
     requests.add(request);
   }
 
-  void merge(SpymemcachedRequestAssociations other) {
+  void merge(SpymemcachedRequestSet other) {
     requests.addAll(other.requests);
   }
 

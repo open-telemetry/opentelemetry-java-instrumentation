@@ -99,7 +99,7 @@ class SpymemcachedRequestTest {
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
     Operation operation = operation("one.example", 11211);
     Context context = SpymemcachedRequestHolder.init(Context.root(), request);
-    SpymemcachedRequestHolder.associateOperation(context, operation);
+    SpymemcachedRequestHolder.trackOperation(context, operation);
     SpymemcachedRequestHolder.captureHandlingNode(context, operation);
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("one.example", 11211));
 
@@ -110,7 +110,7 @@ class SpymemcachedRequestTest {
   }
 
   @Test
-  void optimizedRedistributionOmitsHandlingNodeFromEveryAssociatedRequest() {
+  void optimizedRedistributionOmitsHandlingNodeFromEveryTrackedRequest() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest firstRequest = SpymemcachedRequest.create(connection, "asyncGet");
     SpymemcachedRequest secondRequest = SpymemcachedRequest.create(connection, "asyncGet");
@@ -118,9 +118,9 @@ class SpymemcachedRequestTest {
     Operation secondOperation = operation("one.example", 11211);
     Context firstContext = SpymemcachedRequestHolder.init(Context.root(), firstRequest);
     Context secondContext = SpymemcachedRequestHolder.init(Context.root(), secondRequest);
-    SpymemcachedRequestHolder.associateOperation(firstContext, firstOperation);
+    SpymemcachedRequestHolder.trackOperation(firstContext, firstOperation);
     SpymemcachedRequestHolder.captureHandlingNode(firstContext, firstOperation);
-    SpymemcachedRequestHolder.associateOperation(secondContext, secondOperation);
+    SpymemcachedRequestHolder.trackOperation(secondContext, secondOperation);
     SpymemcachedRequestHolder.captureHandlingNode(secondContext, secondOperation);
     Operation optimizedOperation = mock(Operation.class);
     SpymemcachedRequestHolder.propagateOperation(optimizedOperation, firstOperation);
