@@ -65,21 +65,18 @@ final class HbaseZookeeperTarget {
     }
 
     String quorum = supportsClientZkConfig ? configuration.get(CLIENT_ZK_QUORUM_KEY) : null;
-    String clientPort = null;
+    String clientPortKey = ZK_CLIENT_PORT_KEY;
     if (quorum == null) {
       quorum = configuration.get(ZK_QUORUM_KEY, DEFAULT_ZK_QUORUM);
-    } else {
-      clientPort = configuration.get(CLIENT_ZK_CLIENT_PORT_KEY);
+    } else if (configuration.get(CLIENT_ZK_CLIENT_PORT_KEY) != null) {
+      clientPortKey = CLIENT_ZK_CLIENT_PORT_KEY;
     }
     quorum = sanitizeQuorum(quorum);
     if (quorum == null) {
       return null;
     }
 
-    if (clientPort == null) {
-      clientPort = configuration.get(ZK_CLIENT_PORT_KEY, Integer.toString(DEFAULT_ZK_CLIENT_PORT));
-    }
-    Integer parsedClientPort = parsePort(clientPort);
+    Integer parsedClientPort = getConfiguredPort(configuration, clientPortKey);
     if (parsedClientPort == null) {
       return null;
     }
@@ -131,6 +128,17 @@ final class HbaseZookeeperTarget {
     }
     hosts.sort(String::compareTo);
     return String.join(",", hosts) + ":" + clientPort + ":" + znodeParent;
+  }
+
+  @Nullable
+  private static Integer getConfiguredPort(Configuration configuration, String key) {
+    int port;
+    try {
+      port = configuration.getInt(key, DEFAULT_ZK_CLIENT_PORT);
+    } catch (NumberFormatException ignored) {
+      return null;
+    }
+    return port > 0 && port <= 65535 ? port : null;
   }
 
   private static boolean hasUsableZooCfg(Configuration configuration) {

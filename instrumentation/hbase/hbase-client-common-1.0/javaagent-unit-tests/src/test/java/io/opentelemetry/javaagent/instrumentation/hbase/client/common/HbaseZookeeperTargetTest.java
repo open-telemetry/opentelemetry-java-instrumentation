@@ -111,6 +111,20 @@ class HbaseZookeeperTargetTest {
         .isEqualTo("client-zk:2182:/hbase");
   }
 
+  @Test
+  void parsesHexadecimalClientPorts() {
+    Configuration configuration = new Configuration(false);
+    configuration.set("hbase.zookeeper.quorum", "server-zk");
+    configuration.set("hbase.zookeeper.property.clientPort", "0x886");
+    configuration.set("hbase.client.zookeeper.quorum", "client-zk");
+    configuration.set("hbase.client.zookeeper.property.clientPort", "0x887");
+
+    assertThat(HbaseZookeeperTarget.from(configuration, false, false))
+        .isEqualTo("server-zk:2182:/hbase");
+    assertThat(HbaseZookeeperTarget.from(configuration, true, false))
+        .isEqualTo("client-zk:2183:/hbase");
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {"zk-a,,zk-b", "user:password@zk-a/path", " zk-a,zk-b", "not:an:ipv6-address"})
@@ -122,7 +136,7 @@ class HbaseZookeeperTargetTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"", "0", "65536", "not-a-port"})
+  @ValueSource(strings = {"", "0", "0x0", "65536", "0x10000", "not-a-port"})
   void rejectsInvalidClientPort(String clientPort) {
     Configuration configuration = new Configuration(false);
     configuration.set("hbase.zookeeper.property.clientPort", clientPort);
