@@ -190,6 +190,19 @@ class ClickHouseClientV1Test {
     assertThat(serverTargetPort(serverTarget)).isEqualTo(9123);
   }
 
+  @Test
+  void testConfiguredNodeTrimsSurroundingWhitespace() throws Exception {
+    ClickHouseNode node =
+        ClickHouseNode.builder(ClickHouseNode.of("http://safe.example"))
+            .host(" unsafe.example ")
+            .build();
+
+    Object serverTarget = serverTarget(requestWithNodes(ImmutableList.of(node)));
+
+    assertThat(serverTarget).isNotNull();
+    assertThat(serverTargetAddress(serverTarget)).isEqualTo("unsafe.example");
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {
@@ -197,9 +210,7 @@ class ClickHouseClientV1Test {
         "user@unsafe.example",
         "host.example%3fpassword%3dsecret",
         "first.example,second.example",
-        "host=bad",
-        " unsafe.example",
-        "unsafe.example "
+        "host=bad"
       })
   void testConfiguredNodesRejectUnsafeOrMalformedHosts(String host) throws Exception {
     ClickHouseNode unsafe =
