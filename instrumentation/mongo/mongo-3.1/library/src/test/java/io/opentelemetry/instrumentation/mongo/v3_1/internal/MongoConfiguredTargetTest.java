@@ -135,7 +135,7 @@ class MongoConfiguredTargetTest {
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
     CommandListener listener =
         MongoTelemetry.create(OpenTelemetry.noop())
-            .createCommandListener(new ServerAddress("configured.example", 27017));
+            .createCommandListener(singletonList(new ServerAddress("configured.example", 27017)));
 
     listener.commandStarted(event);
 
