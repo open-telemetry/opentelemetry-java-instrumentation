@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
 import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.ServerException;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerEndpointUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
@@ -14,7 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseEndpointUtil;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -130,7 +130,7 @@ public class ClickHouseClientV2Singletons {
         int bracketEnd = authority.indexOf(']');
         if (bracketEnd <= 1
             || authority.indexOf(']', bracketEnd + 1) >= 0
-            || !ClickHouseEndpointUtil.isIpv6Literal(authority.substring(1, bracketEnd))) {
+            || !DbServerEndpointUtil.isIpv6Literal(authority.substring(1, bracketEnd))) {
           return null;
         }
         String rest = authority.substring(bracketEnd + 1);
@@ -154,7 +154,7 @@ public class ClickHouseClientV2Singletons {
         }
         Integer port = parsePort(authority.substring(lastColon + 1));
         String address = authority.substring(0, lastColon);
-        if (port != null && ClickHouseEndpointUtil.isIpv6Literal(address)) {
+        if (port != null && DbServerEndpointUtil.isIpv6Literal(address)) {
           return new EndpointTarget(scheme, address, port);
         }
       }

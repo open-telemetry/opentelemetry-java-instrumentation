@@ -11,12 +11,12 @@ import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.ClickHouseProtocol;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseRequestAccess;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerEndpointUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseEndpointUtil;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -121,7 +121,7 @@ public class ClickHouseClientV1Singletons {
         hostLength > 1 && host.charAt(0) == '[' && host.charAt(hostLength - 1) == ']'
             ? host.substring(1, hostLength - 1)
             : host;
-    if (hostToValidate.indexOf(':') >= 0 && !ClickHouseEndpointUtil.isIpv6Literal(hostToValidate)) {
+    if (hostToValidate.indexOf(':') >= 0 && !DbServerEndpointUtil.isIpv6Literal(hostToValidate)) {
       return false;
     }
     ClickHouseProtocol protocol = node.getProtocol();
