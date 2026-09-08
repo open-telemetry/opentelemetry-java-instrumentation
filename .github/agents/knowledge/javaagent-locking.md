@@ -27,7 +27,9 @@ for javaagent state attached to third-party objects; keep the related updates sa
 For shared mutable state:
 
 - use a safely published reference, such as a `volatile` field, when replacing one immutable value;
-- use a once-claim CAS when one of several callers must finish an operation;
+- use a once-claim CAS when supported completion paths can race across threads. For same-thread
+  reentrant completion, consuming or clearing request state before invoking code that can reenter
+  may be sufficient;
 - use one short private lock when several fields must be updated together.
 
 Descriptive connection metadata used only for attributes or span names may be temporarily stale
