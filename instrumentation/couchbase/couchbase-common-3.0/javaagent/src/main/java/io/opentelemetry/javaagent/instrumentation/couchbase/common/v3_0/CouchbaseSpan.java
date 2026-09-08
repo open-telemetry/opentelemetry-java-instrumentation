@@ -95,9 +95,7 @@ public final class CouchbaseSpan {
   }
 
   public void setRawAttribute(String key, @Nullable String value) {
-    if (value != null) {
-      span.setAttribute(key, value);
-    }
+    span.setAttribute(key, value);
   }
 
   public void setRawAttribute(String key, long value) {
