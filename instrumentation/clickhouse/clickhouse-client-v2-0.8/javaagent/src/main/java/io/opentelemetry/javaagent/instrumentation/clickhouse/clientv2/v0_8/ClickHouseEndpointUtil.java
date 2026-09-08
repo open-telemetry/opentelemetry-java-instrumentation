@@ -8,11 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-/**
- * Temporary endpoint validation helpers.
- *
- * <p>TODO(#20016): Replace this helper with DbServerEndpointUtil after #20015 merges.
- */
+// Temporary helper copied from PR #20015.
+// Remove it after PR #20015 merges and use DbServerEndpointUtil instead.
+// Migration tracked in issue #20016.
 final class ClickHouseEndpointUtil {
 
   static boolean isIpv6Literal(String host) {
