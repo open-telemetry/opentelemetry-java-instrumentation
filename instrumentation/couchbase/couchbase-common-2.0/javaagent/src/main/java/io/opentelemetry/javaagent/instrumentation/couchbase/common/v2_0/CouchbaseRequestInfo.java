@@ -161,7 +161,7 @@ public abstract class CouchbaseRequestInfo {
         return;
       }
       int portSeparator = backendAddress.lastIndexOf(':');
-      if (portSeparator < 0) {
+      if (portSeparator < 0 || (backendAddress.startsWith("[") && backendAddress.endsWith("]"))) {
         this.backendAddress = stripBrackets(backendAddress);
         this.backendPort = 0;
       } else {

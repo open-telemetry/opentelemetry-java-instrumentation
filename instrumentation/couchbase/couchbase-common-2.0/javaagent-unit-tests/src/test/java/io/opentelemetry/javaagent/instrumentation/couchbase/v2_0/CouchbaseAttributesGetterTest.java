@@ -138,6 +138,15 @@ class CouchbaseAttributesGetterTest {
   }
 
   @Test
+  void acceptsBracketedIpv6BackendAddressWithoutPort() {
+    CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", null, getClass(), "get");
+    request.setNode(new InetSocketAddress("192.0.2.1", 32768), "[2001:db8::1]");
+
+    assertThat(request.getNode().getBackendAddress()).isEqualTo("2001:db8::1");
+    assertThat(request.getNode().getBackendPort()).isZero();
+  }
+
+  @Test
   void keepsTheLastContactedNodeOfEverySubscriptionApart() {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
