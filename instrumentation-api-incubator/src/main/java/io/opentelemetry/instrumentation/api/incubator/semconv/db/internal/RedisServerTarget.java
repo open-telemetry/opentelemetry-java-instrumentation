@@ -153,29 +153,23 @@ public final class RedisServerTarget {
 
   @Nullable
   private static RedisServerTarget networkTarget(List<Endpoint> endpoints, boolean unordered) {
-    int maxEndpoints = Math.min(MAX_ENDPOINTS, endpoints.size());
-    while (maxEndpoints > 0) {
-      DbServerTarget target = buildNetworkTarget(endpoints, unordered, maxEndpoints);
-      if (target == null) {
-        return null;
-      }
-      if (target.getAddress().length() <= MAX_ENDPOINT_LIST_LENGTH) {
-        return fromSharedTarget(target);
-      }
-      maxEndpoints--;
-    }
-    return null;
-  }
-
-  @Nullable
-  private static DbServerTarget buildNetworkTarget(
-      List<Endpoint> endpoints, boolean unordered, int maxEndpoints) {
-    DbServerTargetBuilder builder =
-        DbServerTarget.builder(DEFAULT_PORT).setSorted(unordered).setMaxEndpoints(maxEndpoints);
+    DbServerTargetBuilder builder = DbServerTarget.builder(DEFAULT_PORT).setSorted(unordered);
     for (Endpoint endpoint : endpoints) {
       builder.addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port);
     }
-    return builder.build();
+    DbServerTarget target = builder.build();
+    if (target == null) {
+      return null;
+    }
+    String address = target.getAddress();
+    while (address.length() > MAX_ENDPOINT_LIST_LENGTH) {
+      int endpointEnd = address.lastIndexOf(',');
+      if (endpointEnd < 0) {
+        return null;
+      }
+      address = address.substring(0, endpointEnd);
+    }
+    return new RedisServerTarget(address, null);
   }
 
   @Nullable
@@ -254,7 +248,7 @@ public final class RedisServerTarget {
     }
     Integer port = Endpoint.parsePort(value.substring(portStart + 1));
     String host = value.substring(0, portStart);
-    return port != null && RedisServerTargetUtil.isIpv6Literal(host) ? endpoint(host, port) : value;
+    return port != null && DbServerEndpointUtil.isIpv6Literal(host) ? endpoint(host, port) : value;
   }
 
   private static void appendHost(StringBuilder builder, String host, boolean hasPort) {
@@ -349,7 +343,7 @@ public final class RedisServerTarget {
           return null;
         }
         String host = authority.substring(1, hostEnd);
-        if (!RedisServerTargetUtil.isIpv6Literal(host)) {
+        if (!DbServerEndpointUtil.isIpv6Literal(host)) {
           return null;
         }
         String rest = authority.substring(hostEnd + 1);
@@ -373,7 +367,7 @@ public final class RedisServerTarget {
         return port == null ? null : new Endpoint(authority.substring(0, portStart), port, false);
       }
       // an unbracketed literal IPv6 address has more than one colon and carries no port
-      if (secondColon >= 0 && RedisServerTargetUtil.isIpv6Literal(authority)) {
+      if (secondColon >= 0 && DbServerEndpointUtil.isIpv6Literal(authority)) {
         return new Endpoint(authority, null, false);
       }
       if (portStart >= 0) {
