@@ -53,23 +53,41 @@ public final class MongoTelemetry {
   }
 
   /**
-   * Returns a new {@link CommandListener} for a client configured with exactly the given server
-   * address.
+   * Returns a new {@link CommandListener} using the supplied server address to derive the client's
+   * logical MongoDB server target.
    *
-   * <p>Where stable database conventions are emitted, the configured address is reported as the
-   * logical server target. Where the old conventions are emitted, {@code db.connection_string}
-   * describes the server that the driver selected.
+   * <p>Use this overload when the client is configured with exactly one server address. The address
+   * must come from the client's configuration, not from the server selected for a command.
+   *
+   * <p>The address is captured when the listener is created and is used only to derive stable
+   * database server attributes. It does not change the client's connections or configuration.
+   *
+   * <p>Where the old database conventions are emitted, {@code db.connection_string} continues to
+   * describe the server selected by the driver.
+   *
+   * @param configuredServerAddress the server address configured for the client
+   * @return a command listener
    */
   public CommandListener createCommandListener(ServerAddress configuredServerAddress) {
     return createCommandListener(singletonList(configuredServerAddress));
   }
 
   /**
-   * Returns a new {@link CommandListener} for a client configured with the given seed list.
+   * Returns a new {@link CommandListener} using the supplied seed list to derive the client's
+   * logical MongoDB server target.
    *
-   * <p>Where stable database conventions are emitted, the configured seeds are reported as the
-   * logical server target. Where the old conventions are emitted, {@code db.connection_string}
-   * describes the server that the driver selected.
+   * <p>Use this overload when the client is configured with multiple seed addresses. The seed list
+   * must contain every address from the client's configuration. Do not pass the server selected for
+   * a command, discovered cluster nodes, or only a subset of the configured seeds.
+   *
+   * <p>The seed list is captured when the listener is created and is used only to derive stable
+   * database server attributes. It does not change the client's connections or configuration.
+   *
+   * <p>Where the old database conventions are emitted, {@code db.connection_string} continues to
+   * describe the server selected by the driver.
+   *
+   * @param configuredServerAddresses all seed addresses configured for the client
+   * @return a command listener
    */
   public CommandListener createCommandListener(List<ServerAddress> configuredServerAddresses) {
     return new TracingCommandListener(
