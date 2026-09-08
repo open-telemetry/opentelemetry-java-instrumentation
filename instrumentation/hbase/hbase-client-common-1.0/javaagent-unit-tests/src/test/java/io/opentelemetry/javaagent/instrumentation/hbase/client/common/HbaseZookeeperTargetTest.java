@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.ENDPOINT_SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.hadoop.conf.Configuration;
@@ -33,7 +32,7 @@ class HbaseZookeeperTargetTest {
 
     assertThat(HbaseZookeeperTarget.from(configuration, false, true))
         .isEqualTo("external-zk-a,external-zk-b,external-zk-b:3218:/external");
-    assertThat(ENDPOINT_SEPARATOR.split(ZKConfig.getZKQuorumServersString(configuration), -1))
+    assertThat(ZKConfig.getZKQuorumServersString(configuration).split(",", -1))
         .containsExactlyInAnyOrder(
             "external-zk-a:3218", "external-zk-b:3218", "external-zk-b:3218");
   }
