@@ -57,8 +57,8 @@ public final class MongoTelemetry {
    * <p>Use this overload when you have the seed addresses from the client's configuration. Pass the
    * complete seed list used to configure the client.
    *
-   * <p>The seed list is captured when the listener is created and is used only to derive stable
-   * database server attributes. It does not change the client's connections or configuration.
+   * <p>The supplied addresses are used to derive the stable {@code server.address} and {@code
+   * server.port} attributes when stable database semantic conventions are enabled.
    *
    * <p>Where the old database conventions are emitted, {@code db.connection_string} continues to
    * describe the server selected by the driver.
