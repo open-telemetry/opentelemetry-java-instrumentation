@@ -28,6 +28,8 @@ public class ClickHouseClientV1Singletons {
 
   private static final VirtualField<ClickHouseNodes, DbServerTarget> NODES_SERVER_TARGET =
       VirtualField.find(ClickHouseNodes.class, DbServerTarget.class);
+  private static final VirtualField<ClickHouseNode, CapturedServerTarget> NODE_SERVER_TARGET =
+      VirtualField.find(ClickHouseNode.class, CapturedServerTarget.class);
   private static final VirtualField<ClickHouseRequest<?>, CapturedServerTarget>
       REQUEST_SERVER_TARGET =
           VirtualField.find(ClickHouseRequest.class, CapturedServerTarget.class);
@@ -80,7 +82,18 @@ public class ClickHouseClientV1Singletons {
       return NODES_SERVER_TARGET.get(nodes);
     }
     ClickHouseNode node = ClickHouseRequestAccess.getDirectNode(request);
-    return node == null ? null : createServerTarget(node);
+    return node == null ? null : nodeServerTarget(node);
+  }
+
+  @Nullable
+  private static DbServerTarget nodeServerTarget(ClickHouseNode node) {
+    CapturedServerTarget capturedTarget = NODE_SERVER_TARGET.get(node);
+    if (capturedTarget == null) {
+      DbServerTarget target = createServerTarget(node);
+      capturedTarget = target == null ? NO_SERVER_TARGET : new CapturedServerTarget(target);
+      NODE_SERVER_TARGET.set(node, capturedTarget);
+    }
+    return capturedTarget.target;
   }
 
   @Nullable
