@@ -55,12 +55,17 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import net.spy.memcached.CASResponse;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ConnectionFactoryBuilder;
+import net.spy.memcached.ConnectionFactoryBuilder.Protocol;
 import net.spy.memcached.DefaultConnectionFactory;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.MemcachedConnection;
@@ -76,6 +81,8 @@ import net.spy.memcached.protocol.ascii.AsciiMemcachedNodeImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -1543,8 +1550,9 @@ class SpymemcachedTest {
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
-  @Test
-  void redistributionOmitsPeer() throws Exception {
+  @ParameterizedTest
+  @CsvSource({"TEXT,1", "TEXT,2", "BINARY,1", "BINARY,2"})
+  void sequentialSingleKeyRetriesUseLastPeer(Protocol protocol, int retries) throws Exception {
     List<InetSocketAddress> configuredNodes = asList(memcachedAddress, secondMemcachedAddress);
     ReentrantLock queueLock = new ReentrantLock();
     OperationQueueFactory lockableQueueFactory = () -> getLockableQueue(queueLock);
@@ -1553,13 +1561,18 @@ class SpymemcachedTest {
             configuredNodes,
             builder ->
                 builder
-                    .setProtocol(TEXT)
+                    .setProtocol(protocol)
                     .setFailureMode(Redistribute)
                     .setOpQueueFactory(lockableQueueFactory));
     MemcachedConnection connection = memcached.getConnection();
     waitForNodes(connection);
     String requestKey = key("redistribution");
     MemcachedNode initialNode = connection.getLocator().getPrimary(requestKey);
+    MemcachedNode retryNode =
+        connection.getLocator().getAll().stream()
+            .filter(node -> node != initialNode)
+            .findFirst()
+            .get();
 
     GetFuture<Object> future;
     queueLock.lock();
@@ -1569,12 +1582,22 @@ class SpymemcachedTest {
       markForRetry(initialOperation);
       initialNode.reconnecting();
       connection.redistributeOperation(initialOperation);
+      if (retries == 2) {
+        Operation retryOperation = onlyOperation(retryNode.destroyInputQueue());
+        assertThat(retryOperation).isNotSameAs(initialOperation);
+        markForRetry(retryOperation);
+        initialNode.connected();
+        retryNode.reconnecting();
+        connection.redistributeOperation(retryOperation);
+      }
     } finally {
       queueLock.unlock();
     }
 
     assertThat(future.get()).isNull();
 
+    InetSocketAddress peer =
+        (InetSocketAddress) (retries == 1 ? retryNode : initialNode).getSocketAddress();
     String target =
         memcachedAddress.getHostString()
             + ":"
@@ -1594,10 +1617,115 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
                             equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? target : null),
-                            equalTo(NETWORK_PEER_ADDRESS, null),
-                            equalTo(NETWORK_PEER_PORT, null),
-                            equalTo(SERVER_PORT, null),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? target : peer.getHostString()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peer.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) peer.getPort() : null),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : (long) peer.getPort()),
+                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+  }
+
+  @Test
+  void retryBeforeInitialEnqueueReturnsKeepsRetryPeer() throws Exception {
+    ReentrantLock queueLock = new ReentrantLock();
+    AtomicReference<BiConsumer<BlockingQueue<Operation>, Operation>> afterEnqueue =
+        new AtomicReference<>();
+    ExecutorService ioThread = Executors.newSingleThreadExecutor();
+    cleanup.deferCleanup(ioThread::shutdownNow);
+    MemcachedClient memcached =
+        getMemcached(
+            asList(memcachedAddress, secondMemcachedAddress),
+            builder ->
+                builder
+                    .setProtocol(TEXT)
+                    .setFailureMode(Redistribute)
+                    .setOpQueueFactory(
+                        () ->
+                            getLockableQueue(
+                                queueLock,
+                                (queue, operation) -> {
+                                  BiConsumer<BlockingQueue<Operation>, Operation> action =
+                                      afterEnqueue.getAndSet(null);
+                                  if (action != null) {
+                                    action.accept(queue, operation);
+                                  }
+                                })));
+    MemcachedConnection connection = memcached.getConnection();
+    waitForNodes(connection);
+    String requestKey = key("early-retry");
+    MemcachedNode initialNode = connection.getLocator().getPrimary(requestKey);
+    InetSocketAddress retryPeer =
+        (InetSocketAddress)
+            connection.getLocator().getAll().stream()
+                .filter(node -> node != initialNode)
+                .findFirst()
+                .get()
+                .getSocketAddress();
+
+    GetFuture<Object> future;
+    queueLock.lock();
+    try {
+      afterEnqueue.set(
+          (queue, operation) -> {
+            assertThat(queue.remove(operation)).isTrue();
+            assertThat(
+                    ioThread.submit(
+                        () -> {
+                          markForRetry(operation);
+                          initialNode.reconnecting();
+                          connection.redistributeOperation(operation);
+                          return null;
+                        }))
+                .succeedsWithin(Duration.ofSeconds(10));
+          });
+      future = testing.runWithSpan("parent", () -> memcached.asyncGet(requestKey));
+    } finally {
+      queueLock.unlock();
+    }
+
+    assertThat(future.get()).isNull();
+    String target =
+        memcachedAddress.getHostString()
+            + ":"
+            + memcachedAddress.getPort()
+            + ","
+            + secondMemcachedAddress.getHostString()
+            + ":"
+            + secondMemcachedAddress.getPort();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(spanName("get", target))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? target : retryPeer.getHostString()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? retryPeer.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) retryPeer.getPort() : null),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : (long) retryPeer.getPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
@@ -1772,7 +1900,22 @@ class SpymemcachedTest {
   }
 
   private static BlockingQueue<Operation> getLockableQueue(ReentrantLock queueLock) {
+    return getLockableQueue(queueLock, (queue, operation) -> {});
+  }
+
+  private static BlockingQueue<Operation> getLockableQueue(
+      ReentrantLock queueLock, BiConsumer<BlockingQueue<Operation>, Operation> afterEnqueue) {
     return new ArrayBlockingQueue<Operation>(DefaultConnectionFactory.DEFAULT_OP_QUEUE_LEN) {
+
+      @Override
+      public boolean offer(Operation operation, long timeout, TimeUnit unit)
+          throws InterruptedException {
+        boolean added = super.offer(operation, timeout, unit);
+        if (added) {
+          afterEnqueue.accept(this, operation);
+        }
+        return added;
+      }
 
       @Override
       public int drainTo(Collection<? super Operation> c, int maxElements) {

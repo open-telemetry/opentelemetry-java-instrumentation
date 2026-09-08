@@ -28,18 +28,24 @@ public abstract class SpymemcachedRequest {
   @Nullable
   public abstract DbServerTarget getServerTarget();
 
-  // Node capture runs on the client-call thread. The I/O thread only sets the omission flag,
-  // which is never reset, so a late capture cannot restore a redistributed peer.
+  // Sequential single-key retries replace the peer, as recommended by database semantic
+  // conventions. Bulk and optimized retries suppress the address instead of tracking per-key
+  // routing. Capture runs before queue publication, so initial updates cannot overwrite retries.
+  // Once suppressHandlingNodeAddress is true, even an in-progress capture cannot expose a peer.
   @Nullable private MemcachedNode handlingNode;
   @Nullable private volatile InetSocketAddress handlingNodeAddress;
-  private volatile boolean handlingNodeOmitted;
+  private volatile boolean suppressHandlingNodeAddress;
 
   public void setHandlingNode(@Nullable MemcachedNode node) {
-    if (node == null || handlingNodeOmitted) {
+    setHandlingNode(node, false);
+  }
+
+  private void setHandlingNode(@Nullable MemcachedNode node, boolean retry) {
+    if (node == null || suppressHandlingNodeAddress) {
       return;
     }
-    if (handlingNode != null && node != handlingNode) {
-      handlingNodeOmitted = true;
+    if (!retry && handlingNode != null && node != handlingNode) {
+      suppressHandlingNodeAddress = true;
       handlingNode = null;
       handlingNodeAddress = null;
       return;
@@ -47,18 +53,21 @@ public abstract class SpymemcachedRequest {
 
     handlingNode = node;
     SocketAddress socketAddress = node.getSocketAddress();
-    if (socketAddress instanceof InetSocketAddress) {
-      handlingNodeAddress = (InetSocketAddress) socketAddress;
-    }
+    handlingNodeAddress =
+        socketAddress instanceof InetSocketAddress ? (InetSocketAddress) socketAddress : null;
   }
 
-  public void markRedistributed() {
-    handlingNodeOmitted = true;
+  public void setRetryHandlingNode(@Nullable MemcachedNode node) {
+    setHandlingNode(node, true);
+  }
+
+  public void suppressHandlingNodeAddress() {
+    suppressHandlingNodeAddress = true;
   }
 
   @Nullable
   public InetSocketAddress getHandlingNodeAddress() {
-    return handlingNodeOmitted ? null : handlingNodeAddress;
+    return suppressHandlingNodeAddress ? null : handlingNodeAddress;
   }
 
   /** Returns the memcached command that corresponds to the client method. */

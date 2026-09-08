@@ -9,9 +9,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -45,19 +47,21 @@ class MemcachedConnectionInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.Argument(1) Operation operation) {
       SpymemcachedRequestHolder.trackOperation(Java8BytecodeBridge.currentContext(), operation);
     }
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Argument(1) Operation operation) {
-      SpymemcachedRequestHolder.captureHandlingNode(
-          Java8BytecodeBridge.currentContext(), operation);
-    }
   }
 
   @SuppressWarnings("unused")
   public static class RedistributeOperationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(0) Operation operation) {
-      SpymemcachedRequestHolder.markRedistributed(operation);
+    @Nullable
+    public static Scope onEnter(@Advice.Argument(0) Operation operation) {
+      return SpymemcachedRequestHolder.startRetry(operation);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }
