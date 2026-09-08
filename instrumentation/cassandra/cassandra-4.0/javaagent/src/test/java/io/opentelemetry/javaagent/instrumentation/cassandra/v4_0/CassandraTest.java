@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,13 +46,15 @@ class CassandraTest extends AbstractCassandraTest {
   void configuredContactPointsRemainSeparateFromTheCoordinator() {
     DriverConfigLoader configLoader =
         DefaultDriverConfigLoader.builder()
+            .withStringList(
+                DefaultDriverOption.CONTACT_POINTS,
+                singletonList(cassandraIp + ':' + cassandraPort))
             .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
             .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(10))
             .build();
     CqlSession session =
         CqlSession.builder()
             .addContactPoint(new InetSocketAddress(cassandraHost, cassandraPort))
-            .addContactPoint(new InetSocketAddress("127.0.0.2", 9042))
             .withConfigLoader(configLoader)
             .withLocalDatacenter("datacenter1")
             .build();
@@ -60,7 +63,7 @@ class CassandraTest extends AbstractCassandraTest {
     session.execute("DROP KEYSPACE IF EXISTS configured_target_test");
 
     String configuredTarget =
-        Stream.of("127.0.0.2:9042", cassandraHost + ':' + cassandraPort)
+        Stream.of(cassandraIp + ':' + cassandraPort, cassandraHost + ':' + cassandraPort)
             .sorted()
             .collect(joining(","));
     testing.waitAndAssertTraces(
