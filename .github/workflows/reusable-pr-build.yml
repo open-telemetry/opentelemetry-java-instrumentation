@@ -65,7 +65,7 @@ jobs:
       - muzzle
       - lint
       - build-servlet-images
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     if: ${{ always() }}
     steps:
       - if: |
