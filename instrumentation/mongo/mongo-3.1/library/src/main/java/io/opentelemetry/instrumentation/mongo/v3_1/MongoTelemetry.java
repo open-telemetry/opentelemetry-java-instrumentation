@@ -50,10 +50,6 @@ public final class MongoTelemetry {
    * available, use {@link #createCommandListener(List)} so that stable database semantic
    * conventions can derive {@code server.address} and {@code server.port} from the configured
    * target.
-   *
-   * <p>When no configured seed list is supplied, stable database semantic conventions do not emit
-   * these attributes because the server selected for an individual command may not represent the
-   * client's logical target.
    */
   public CommandListener createCommandListener() {
     return new TracingCommandListener(instrumenter);
