@@ -553,7 +553,6 @@ public final class UrlParsingUtils {
   private static String renderSpecialServerAddressGroup(
       List<String> entries, List<HostPort> endpoints, @Nullable Integer defaultPort) {
     boolean hasNonDefaultPort = false;
-    boolean hasUnknownPort = false;
     for (int i = 0; i < endpoints.size(); i++) {
       HostPort endpoint = endpoints.get(i);
       if (endpoint.host().startsWith("/")) {
@@ -561,9 +560,7 @@ public final class UrlParsingUtils {
       }
       Integer effectivePort = endpoint.port();
       if (effectivePort == null && defaultPort != null) {
-        if (endpoint.host().indexOf('\\') >= 0) {
-          hasUnknownPort = true;
-        } else {
+        if (endpoint.host().indexOf('\\') < 0) {
           effectivePort = defaultPort;
         }
       }
@@ -572,10 +569,6 @@ public final class UrlParsingUtils {
         hasNonDefaultPort = true;
       }
     }
-    if (hasNonDefaultPort && hasUnknownPort) {
-      return null;
-    }
-
     StringBuilder address = new StringBuilder();
     for (int i = 0; i < endpoints.size() && i < DbServerTargetBuilder.MAX_ENDPOINTS; i++) {
       HostPort endpoint = endpoints.get(i);
