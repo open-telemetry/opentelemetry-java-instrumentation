@@ -73,7 +73,7 @@ public final class CouchbaseConnectionStrings {
         return null;
       }
       DbServerTargetBuilder builder =
-          DbServerTarget.builder(defaultPort(scheme(type, connectionString)));
+          DbServerTarget.builder(defaultPort(scheme(type, connectionString))).setSorted(true);
       for (Object seed : seeds) {
         addSeed(builder, seed);
       }

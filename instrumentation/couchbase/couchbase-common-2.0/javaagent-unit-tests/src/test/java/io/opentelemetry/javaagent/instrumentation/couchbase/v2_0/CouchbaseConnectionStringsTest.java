@@ -45,7 +45,7 @@ class CouchbaseConnectionStringsTest {
             ConnectionString.create("couchbases://two.example:11208,one.example:11208"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("two.example:11208,one.example:11208");
+    assertThat(target.getAddress()).isEqualTo("one.example:11208,two.example:11208");
     assertThat(target.getPort()).isNull();
   }
 
@@ -56,18 +56,18 @@ class CouchbaseConnectionStringsTest {
             ConnectionString.create("couchbases://two.example:11208,one.example"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("two.example:11208,one.example:11207");
+    assertThat(target.getAddress()).isEqualTo("one.example:11207,two.example:11208");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void readsSeveralSeedsInConfiguredOrder() {
+  void sortsSeveralSeedsLexicographically() {
     DbServerTarget target =
         CouchbaseConnectionStrings.target(
             ConnectionString.create("couchbases://two.example,one.example"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("two.example,one.example");
+    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
     assertThat(target.getPort()).isNull();
   }
 
@@ -104,7 +104,7 @@ class CouchbaseConnectionStringsTest {
                     InetSocketAddress.createUnresolved("one.example", 11211))));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("two.example:11211,one.example:11211");
+    assertThat(target.getAddress()).isEqualTo("one.example:11211,two.example:11211");
     assertThat(target.getPort()).isNull();
   }
 
@@ -118,7 +118,7 @@ class CouchbaseConnectionStringsTest {
                     InetSocketAddress.createUnresolved("one.example", 0))));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("two.example:11211,one.example:11210");
+    assertThat(target.getAddress()).isEqualTo("one.example:11210,two.example:11211");
     assertThat(target.getPort()).isNull();
   }
 
@@ -144,7 +144,7 @@ class CouchbaseConnectionStringsTest {
                 asList(new Seed("node.example", 0), new Seed("2001:db8::1", 11207)), "COUCHBASES"));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("node.example,2001:db8::1");
+    assertThat(target.getAddress()).isEqualTo("2001:db8::1,node.example");
     assertThat(target.getPort()).isNull();
   }
 
