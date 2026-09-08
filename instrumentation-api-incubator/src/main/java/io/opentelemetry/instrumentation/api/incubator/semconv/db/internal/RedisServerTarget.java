@@ -189,20 +189,18 @@ public final class RedisServerTarget {
 
   @Nullable
   private static String renderEndpointList(List<String> endpoints) {
-    if (endpoints.size() > MAX_ENDPOINTS) {
-      endpoints.subList(MAX_ENDPOINTS, endpoints.size()).clear();
-    }
-    int length = endpoints.size() - 1;
-    for (String endpoint : endpoints) {
-      length += endpoint.length();
-    }
-    while (!endpoints.isEmpty() && length > MAX_ENDPOINT_LIST_LENGTH) {
-      length -= endpoints.remove(endpoints.size() - 1).length();
-      if (!endpoints.isEmpty()) {
-        length--;
+    int length = 0;
+    int size = 0;
+    while (size < endpoints.size() && size < MAX_ENDPOINTS) {
+      String endpoint = endpoints.get(size);
+      int nextLength = length + endpoint.length() + (size == 0 ? 0 : 1);
+      if (nextLength > MAX_ENDPOINT_LIST_LENGTH) {
+        break;
       }
+      length = nextLength;
+      size++;
     }
-    return endpoints.isEmpty() ? null : String.join(",", endpoints);
+    return size == 0 ? null : String.join(",", endpoints.subList(0, size));
   }
 
   private static boolean isSafeLogicalName(String value) {
