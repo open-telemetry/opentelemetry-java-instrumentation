@@ -135,7 +135,7 @@ public class ClickHouseClientV2Singletons {
             rest.isEmpty() ? null : parsePort(rest.startsWith(":") ? rest.substring(1) : "");
         return !rest.isEmpty() && port == null
             ? null
-            : new EndpointTarget(scheme, authority.substring(1, bracketEnd), port);
+            : new EndpointTarget(scheme, authority.substring(0, bracketEnd + 1), port);
       }
       if (authority.indexOf('[') >= 0 || authority.indexOf(']') >= 0) {
         return null;

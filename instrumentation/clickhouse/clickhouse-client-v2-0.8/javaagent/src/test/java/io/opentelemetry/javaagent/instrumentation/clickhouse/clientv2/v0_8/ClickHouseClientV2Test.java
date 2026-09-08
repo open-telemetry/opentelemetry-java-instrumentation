@@ -172,6 +172,7 @@ class ClickHouseClientV2Test {
       strings = {
         "http://user:password@host.example:8123",
         "http://host.example:not-a-port",
+        "http://[example.com]:8123",
         "http://host.example%3fpassword%3dsecret:8123",
         "http://first.example,second.example:8123",
         " http://host.example:8123"
