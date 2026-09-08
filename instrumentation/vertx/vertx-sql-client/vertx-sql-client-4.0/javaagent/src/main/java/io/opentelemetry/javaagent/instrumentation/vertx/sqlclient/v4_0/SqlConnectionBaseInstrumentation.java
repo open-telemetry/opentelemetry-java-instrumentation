@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.attachPreparedStatementData;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.attachPreparedStatementInfoReference;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -14,10 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoReference;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.PreparedStatement;
-import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.SqlClientBase;
 import io.vertx.sqlclient.impl.SqlConnectionBase;
 import javax.annotation.Nullable;
@@ -63,17 +61,12 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
         return future;
       }
 
-      SqlConnectOptions connectOptions =
-          VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
-      String dbSystem = null;
-      if (connectOptions != null) {
-        dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
-        if (dbSystem == null) {
-          dbSystem = getDbSystemNameFromClassName(connectOptions);
-        }
+      VertxSqlClientInfoReference infoReference =
+          VertxSqlClientSingletons.getClientInfoReference(sqlClientBase);
+      if (infoReference == null || infoReference.get() == null) {
+        return future;
       }
-      return wrapContext(
-          attachPreparedStatementData(future, new VertxSqlClientData(connectOptions, dbSystem)));
+      return wrapContext(attachPreparedStatementInfoReference(future, infoReference));
     }
   }
 }

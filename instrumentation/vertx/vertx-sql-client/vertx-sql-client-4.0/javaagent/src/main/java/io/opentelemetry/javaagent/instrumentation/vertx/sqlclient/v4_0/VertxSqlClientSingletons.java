@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoReference;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.vertx.core.Future;
-import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.SqlClientBase;
 import javax.annotation.Nullable;
@@ -20,47 +20,33 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final VirtualField<SqlClientBase<?>, SqlConnectOptions> CONNECT_OPTIONS =
-      VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
-
-  private static final VirtualField<SqlConnectOptions, String> CONNECT_OPTIONS_DB_SYSTEM =
-      VirtualField.find(SqlConnectOptions.class, String.class);
+  private static final VirtualField<SqlClientBase<?>, VertxSqlClientInfoReference>
+      CLIENT_INFO_REFERENCE =
+          VirtualField.find(SqlClientBase.class, VertxSqlClientInfoReference.class);
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
     return instrumenter;
   }
 
-  public static void storeConnectOptionsDbSystem(
-      SqlConnectOptions connectOptions, String dbSystem) {
-    CONNECT_OPTIONS_DB_SYSTEM.set(connectOptions, dbSystem);
+  public static void attachClientInfoReference(
+      SqlClientBase<?> sqlClientBase, @Nullable VertxSqlClientInfoReference infoReference) {
+    CLIENT_INFO_REFERENCE.set(sqlClientBase, infoReference);
   }
 
-  @Nullable
-  public static String getConnectOptionsDbSystem(SqlConnectOptions connectOptions) {
-    // null when db system was not captured at pool creation time; callers should fall back
-    // to getDbSystemNameFromClassName() on the connect options instance
-    return CONNECT_OPTIONS_DB_SYSTEM.get(connectOptions);
-  }
-
-  @Nullable
-  public static SqlConnectOptions getSqlConnectOptions(SqlClientBase<?> sqlClientBase) {
-    return CONNECT_OPTIONS.get(sqlClientBase);
-  }
-
-  public static void attachConnectOptions(
-      SqlClientBase<?> sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
-    CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
-  }
-
-  public static Future<SqlConnection> attachConnectOptions(
-      Future<SqlConnection> future, @Nullable SqlConnectOptions connectOptions) {
+  public static Future<SqlConnection> attachClientInfoReference(
+      Future<SqlConnection> future, @Nullable VertxSqlClientInfoReference infoReference) {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {
-            CONNECT_OPTIONS.set((SqlClientBase<?>) sqlConnection, connectOptions);
+            attachClientInfoReference((SqlClientBase<?>) sqlConnection, infoReference);
           }
           return sqlConnection;
         });
+  }
+
+  @Nullable
+  public static VertxSqlClientInfoReference getClientInfoReference(SqlClientBase<?> sqlClientBase) {
+    return CLIENT_INFO_REFERENCE.get(sqlClientBase);
   }
 
   private VertxSqlClientSingletons() {}
