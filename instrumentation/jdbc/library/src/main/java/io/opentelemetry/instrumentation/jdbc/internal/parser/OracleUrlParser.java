@@ -196,11 +196,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
   }
 
   private static void applyAddressListGroup(String description, ParseContext ctx) {
-    Matcher targetMatcher = ADDRESS_PATTERN.matcher(description);
-    if (!targetMatcher.find()) {
-      return;
-    }
-    if (!targetMatcher.find()) {
+    if (!hasMultipleAddresses(description)) {
       return;
     }
     ctx.multiTarget();
@@ -226,6 +222,14 @@ public final class OracleUrlParser implements JdbcUrlParser {
     }
     String group = UrlParsingUtils.parseServerAddressGroup(addresses.toString(), DEFAULT_PORT);
     ctx.configuredServerAddress(group);
+  }
+
+  private static boolean hasMultipleAddresses(String description) {
+    Matcher addressMatcher = ADDRESS_PATTERN.matcher(description);
+    if (!addressMatcher.find()) {
+      return false;
+    }
+    return addressMatcher.find();
   }
 
   private static int findClosingParen(String text, int openParen) {
