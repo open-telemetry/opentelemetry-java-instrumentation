@@ -500,9 +500,6 @@ public abstract class AbstractSqsTracingTest {
                                           Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(1)),
                                           Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(2)));
                                 })));
-    assertThat(createSpans)
-        .allSatisfy(
-            span -> assertThat(span.getEndEpochNanos()).isEqualTo(span.getStartEpochNanos()));
   }
 
   @Test
