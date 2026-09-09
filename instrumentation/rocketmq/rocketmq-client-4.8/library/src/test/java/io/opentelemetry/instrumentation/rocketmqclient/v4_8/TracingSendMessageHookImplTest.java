@@ -337,6 +337,42 @@ class TracingSendMessageHookImplTest {
         });
   }
 
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void propagatesCreationContextsWhenBatchSendIsSuppressed() throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
+    MessageBatch batch = batch();
+    SendMessageContext request = request(batch);
+    SendMessageHook hook =
+        RocketMqTelemetry.create(testing.getOpenTelemetry()).createSendMessageHook();
+    Instrumenter<String, Void> parentInstrumenter =
+        Instrumenter.<String, Void>builder(
+                testing.getOpenTelemetry(), "test-parent", parent -> parent)
+            .buildInstrumenter(parent -> CLIENT);
+    Context parentContext = parentInstrumenter.start(Context.root(), "parent");
+
+    try (Scope ignored = parentContext.makeCurrent()) {
+      hook.sendMessageBefore(request);
+      finish(request, hook, null);
+    } finally {
+      parentInstrumenter.end(parentContext, "parent", null, null);
+    }
+
+    List<Message> decoded = decode(batch);
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSize(3);
+          SpanData parent = spanNamed(trace, 3, "parent");
+          for (int i = 0; i < 2; i++) {
+            SpanData creation = creationSpan(trace, 3, i);
+            assertThat(creation).hasKind(PRODUCER).hasParent(parent);
+            assertThat(extract(decoded.get(i))).isEqualTo(remote(creation.getSpanContext()));
+          }
+        });
+  }
+
   @ParameterizedTest
   @CsvSource({"true, false", "false, false", "true, true", "false, true"})
   void singleSendIsUnaffected(boolean enabled, boolean failed) {

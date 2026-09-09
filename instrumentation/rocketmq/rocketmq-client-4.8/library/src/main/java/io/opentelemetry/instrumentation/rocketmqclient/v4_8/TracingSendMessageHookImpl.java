@@ -72,6 +72,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
             ? context.getMessage()
             : null;
     List<Message> messagesWithoutCreationContext = emptyList();
+    boolean batchNeedsEncoding = false;
     if (batch != null) {
       List<Context> creationContexts = new ArrayList<>();
       messagesWithoutCreationContext = new ArrayList<>();
@@ -101,6 +102,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
                   creationContext,
                   message,
                   (carrier, key, value) -> carrier.getProperties().put(key, value));
+              batchNeedsEncoding = true;
             }
           }
         }
@@ -112,6 +114,13 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
       RocketMqBatchSendSpanLinksExtractor.setContexts(context, creationContexts);
     }
     if (!instrumenter.shouldStart(parentContext, context)) {
+      if (batch != null && batchNeedsEncoding) {
+        try {
+          encodeBatch(batch);
+        } catch (ReflectiveOperationException ignored) {
+          // The original body remains valid when re-encoding fails.
+        }
+      }
       RocketMqBatchSendSpanLinksExtractor.clearContexts(context);
       return;
     }
@@ -122,13 +131,8 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
         propagator.inject(
             sendContext, message, (carrier, key, value) -> carrier.getProperties().put(key, value));
       }
-      // DefaultMQProducer encodes batches before invoking the send hook.
       try {
-        byte[] body = (byte[]) batchEncoders.get(batch.getClass()).invoke(batch);
-        // The broker appends batch-level properties after per-message properties, so propagation
-        // headers on the envelope would overwrite the individual creation contexts.
-        propagator.fields().forEach(batch.getProperties()::remove);
-        batch.setBody(body);
+        encodeBatch(batch);
       } catch (ReflectiveOperationException e) {
         instrumenter.end(sendContext, context, null, e);
         CONTEXT_FIELD.set(context, null);
@@ -151,6 +155,15 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
       CONTEXT_FIELD.set(context, null);
       RocketMqBatchSendSpanLinksExtractor.clearContexts(context);
     }
+  }
+
+  private void encodeBatch(Message batch) throws ReflectiveOperationException {
+    // DefaultMQProducer encodes batches before invoking the send hook.
+    byte[] body = (byte[]) batchEncoders.get(batch.getClass()).invoke(batch);
+    // The broker appends batch-level properties after per-message properties, so propagation
+    // headers on the envelope would overwrite the individual creation contexts.
+    propagator.fields().forEach(batch.getProperties()::remove);
+    batch.setBody(body);
   }
 
   static final class MessageCreateContext extends SendMessageContext {
