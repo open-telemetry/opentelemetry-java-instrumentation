@@ -164,7 +164,7 @@ public final class SelectorConfig {
         config,
         instrumentationName,
         selectorName,
-        replacementIncludedProperty,
+        selectorFlatProperties(replacementInstrumentationName, selectorName, replacementStability),
         replacementIncludedProperty,
         systemPropertyFallback);
   }

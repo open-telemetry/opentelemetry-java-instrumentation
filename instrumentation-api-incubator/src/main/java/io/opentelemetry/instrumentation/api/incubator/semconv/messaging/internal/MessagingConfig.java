@@ -32,8 +32,9 @@ public final class MessagingConfig {
   private static final Logger logger = Logger.getLogger(MessagingConfig.class.getName());
   private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
   private static final IncludeExclude NONE = IncludeExclude.builder().build();
+  private static final String COMMON_MESSAGING_INSTRUMENTATION_NAME = "common.messaging";
   private static final String COMMON_MESSAGING_PROPERTY_PREFIX =
-      "otel.instrumentation.common.messaging";
+      "otel.instrumentation." + COMMON_MESSAGING_INSTRUMENTATION_NAME;
   private static final String DEPRECATED_MESSAGING_PROPERTY_PREFIX =
       "otel.instrumentation.messaging";
 
@@ -79,7 +80,7 @@ public final class MessagingConfig {
             messagingConfig,
             "messaging",
             "headers",
-            "common.messaging",
+            COMMON_MESSAGING_INSTRUMENTATION_NAME,
             EXPERIMENTAL,
             systemPropertyFallback);
     return selector == null ? NONE : selector;
