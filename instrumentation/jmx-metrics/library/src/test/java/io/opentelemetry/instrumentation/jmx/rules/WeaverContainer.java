@@ -43,7 +43,7 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
   @Nullable private JsonNode result = null;
 
   WeaverContainer(Path registryRoot, String... registryFiles) {
-    super("otel/weaver:v0.25.1");
+    super("otel/weaver:v0.26.1");
 
     super.withExposedPorts(OTLP_PORT, ADMIN_PORT);
     super.waitingFor(Wait.forListeningPorts(OTLP_PORT, ADMIN_PORT));
