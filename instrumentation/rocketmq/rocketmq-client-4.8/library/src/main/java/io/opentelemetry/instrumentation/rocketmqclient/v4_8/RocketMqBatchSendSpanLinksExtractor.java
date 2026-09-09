@@ -27,16 +27,17 @@ final class RocketMqBatchSendSpanLinksExtractor implements SpanLinksExtractor<Se
     MESSAGE_CREATION_CONTEXTS.set(request, null);
   }
 
-  static boolean hasCreationContexts(SendMessageContext request) {
+  static boolean allMessagesHaveCreationContext(SendMessageContext request) {
     MessageCreationContexts contexts = MESSAGE_CREATION_CONTEXTS.get(request);
-    if (contexts != null) {
-      for (Context context : contexts.contexts) {
-        if (Span.fromContext(context).getSpanContext().isValid()) {
-          return true;
-        }
+    if (contexts == null || contexts.contexts.isEmpty()) {
+      return false;
+    }
+    for (Context context : contexts.contexts) {
+      if (!Span.fromContext(context).getSpanContext().isValid()) {
+        return false;
       }
     }
-    return false;
+    return true;
   }
 
   @Override

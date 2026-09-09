@@ -85,7 +85,8 @@ class RocketMqInstrumenterFactory {
         new MapSetter(),
         MessagingSpanKindExtractor.create(
             operationType,
-            request -> !RocketMqBatchSendSpanLinksExtractor.hasCreationContexts(request)));
+            request ->
+                !RocketMqBatchSendSpanLinksExtractor.allMessagesHaveCreationContext(request)));
   }
 
   static Instrumenter<SendMessageContext, Void> createMessageCreateInstrumenter(

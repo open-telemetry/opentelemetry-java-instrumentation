@@ -36,6 +36,7 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
@@ -183,7 +184,7 @@ class TracingSendMessageHookImplTest {
         trace -> {
           trace.hasSize(enabled ? 3 : 2);
           SpanData send = trace.getSpan(enabled ? 2 : 1);
-          assertThat(send).hasKind(CLIENT);
+          assertThat(send).hasKind(enabled ? CLIENT : PRODUCER);
           if (enabled) {
             assertThat(send)
                 .hasLinks(
@@ -193,6 +194,42 @@ class TracingSendMessageHookImplTest {
           }
           assertThat(extract(decoded.get(1))).isEqualTo(remote(trace.getSpan(1).getSpanContext()));
         });
+  }
+
+  @Test
+  void usesClientKindWhenAllMessagesHaveExistingContextsAndCreationIsDisabled() throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
+    MessageBatch batch = batch();
+    List<SpanContext> existing = new ArrayList<>();
+    int id = 1;
+    for (Message message : batch) {
+      message.putUserProperty(
+          "traceparent", "00-00000000000000000000000000000001-000000000000000" + id++ + "-01");
+      existing.add(extract(message));
+    }
+    batch.setBody(batch.encode());
+    SendMessageContext request = request(batch);
+    SendMessageHook hook =
+        RocketMqTelemetry.builder(testing.getOpenTelemetry())
+            .setBatchSendMessageCreationSpansEnabled(false)
+            .build()
+            .createSendMessageHook();
+
+    hook.sendMessageBefore(request);
+    finish(request, hook, null);
+
+    assertThat(decode(batch))
+        .extracting(TracingSendMessageHookImplTest::extract)
+        .containsExactlyElementsOf(existing);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("send topic")
+                        .hasKind(CLIENT)
+                        .hasNoParent()
+                        .hasLinks(
+                            LinkData.create(existing.get(0)), LinkData.create(existing.get(1)))));
   }
 
   @ParameterizedTest
