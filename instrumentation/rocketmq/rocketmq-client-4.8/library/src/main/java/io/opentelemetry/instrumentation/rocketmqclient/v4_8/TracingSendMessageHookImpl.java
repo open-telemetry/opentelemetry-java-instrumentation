@@ -122,12 +122,13 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
         propagator.inject(
             sendContext, message, (carrier, key, value) -> carrier.getProperties().put(key, value));
       }
-      // The broker appends batch-level properties after per-message properties, so propagation
-      // headers on the envelope would overwrite the individual creation contexts.
-      propagator.fields().forEach(batch.getProperties()::remove);
       // DefaultMQProducer encodes batches before invoking the send hook.
       try {
-        batch.setBody((byte[]) batchEncoders.get(batch.getClass()).invoke(batch));
+        byte[] body = (byte[]) batchEncoders.get(batch.getClass()).invoke(batch);
+        // The broker appends batch-level properties after per-message properties, so propagation
+        // headers on the envelope would overwrite the individual creation contexts.
+        propagator.fields().forEach(batch.getProperties()::remove);
+        batch.setBody(body);
       } catch (ReflectiveOperationException e) {
         instrumenter.end(sendContext, context, null, e);
         CONTEXT_FIELD.set(context, null);
