@@ -155,6 +155,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                     span.hasName("send " + SHARED_TOPIC)
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getEndEpochNanos())
+                                    .isEqualTo(spanData.getStartEpochNanos()))
                         .hasAttributesSatisfyingExactly(
                             publishAttributes(captureExperimentalSpanAttributes())),
                 span ->
@@ -200,6 +204,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                   span.hasName(SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
+                      .satisfies(
+                          spanData ->
+                              assertThat(spanData.getEndEpochNanos())
+                                  .isEqualTo(spanData.getStartEpochNanos()))
                       .hasAttributesSatisfyingExactly(
                           publishAttributes(captureExperimentalSpanAttributes())));
           producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));

@@ -78,6 +78,10 @@ class WrapperTest extends AbstractWrapperTest {
                     span.hasName("send " + SHARED_TOPIC)
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getEndEpochNanos())
+                                    .isGreaterThan(spanData.getStartEpochNanos()))
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(testHeaders, testExperimental)),
                 span ->
@@ -121,6 +125,10 @@ class WrapperTest extends AbstractWrapperTest {
                   span.hasName(SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
+                      .satisfies(
+                          spanData ->
+                              assertThat(spanData.getEndEpochNanos())
+                                  .isGreaterThan(spanData.getStartEpochNanos()))
                       .hasAttributesSatisfyingExactly(
                           sendAttributes(testHeaders, testExperimental)),
               span ->
