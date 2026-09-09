@@ -10,7 +10,7 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
-import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 
 /**
@@ -19,12 +19,12 @@ import javax.annotation.Nullable;
  */
 public class MongoClusterTargets {
 
-  // weak keys release targets together with their clients
-  private static final Cache<ClusterId, MongoServerTarget> targets = Cache.weak();
+  private static final VirtualField<ClusterId, MongoServerTarget> CLUSTER_TARGET =
+      VirtualField.find(ClusterId.class, MongoServerTarget.class);
 
   public static void register(ClusterId clusterId, @Nullable MongoServerTarget target) {
     if (target != null) {
-      targets.put(clusterId, target);
+      CLUSTER_TARGET.set(clusterId, target);
     }
   }
 
@@ -38,7 +38,7 @@ public class MongoClusterTargets {
   @Nullable
   static MongoServerTarget get(CommandStartedEvent event) {
     ClusterId clusterId = clusterId(event);
-    return clusterId == null ? null : targets.get(clusterId);
+    return clusterId == null ? null : CLUSTER_TARGET.get(clusterId);
   }
 
   @Nullable

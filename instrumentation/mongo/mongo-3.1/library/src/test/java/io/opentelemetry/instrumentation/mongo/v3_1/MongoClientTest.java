@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
+import static java.util.Collections.singletonList;
+
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -20,7 +22,7 @@ class MongoClientTest extends AbstractMongo31ClientTest {
   protected void configureMongoClientOptions(MongoClientOptions.Builder options) {
     options.addCommandListener(
         MongoTelemetry.create(testing().getOpenTelemetry())
-            .createCommandListener(new ServerAddress(host, port)));
+            .createCommandListener(singletonList(new ServerAddress(host, port))));
   }
 
   @Override

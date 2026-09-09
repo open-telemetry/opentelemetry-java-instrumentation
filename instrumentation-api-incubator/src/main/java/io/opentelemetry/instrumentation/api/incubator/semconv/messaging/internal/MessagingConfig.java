@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.EXPERIMENTAL;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -50,7 +52,8 @@ public final class MessagingConfig {
   static IncludeExclude getHeaders(
       DeclarativeConfigProperties messagingConfig, boolean systemPropertyFallback) {
     IncludeExclude selector =
-        SelectorConfig.resolve(messagingConfig, "messaging", "headers", systemPropertyFallback);
+        SelectorConfig.resolve(
+            messagingConfig, "messaging", "headers", EXPERIMENTAL, systemPropertyFallback);
     return selector == null ? NONE : selector;
   }
 

@@ -91,6 +91,18 @@ class MongoServerTargetTest {
   }
 
   @Test
+  void duplicateUnixSocketSeedsAreRemoved() {
+    MongoServerTarget target =
+        MongoServerTarget.seeds(
+            asList(
+                new ServerAddress("/tmp/mongodb-27017.sock"),
+                new ServerAddress("/tmp/mongodb-27017.sock")));
+
+    assertThat(target.getAddress()).isEqualTo("/tmp/mongodb-27017.sock");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void onlyTheFirstFiveConfiguredSeedsAreReported() {
     MongoServerTarget target =
         MongoServerTarget.seeds(
@@ -218,7 +230,7 @@ class MongoServerTargetTest {
   @Test
   void srvHostOmitsCredentialsPathQueryAndFragment() {
     MongoServerTarget target =
-        MongoServerTarget.srvHost(
+        MongoClusterSettings.srvConnectionString(
             "mongodb+srv://user:password@cluster0.example.com/database?tls=true#fragment");
 
     assertThat(target.getAddress()).isEqualTo("mongodb+srv://cluster0.example.com");
@@ -228,10 +240,16 @@ class MongoServerTargetTest {
   @Test
   void unsafeEncodedSrvIdentityIsNotReported() {
     assertThat(
-            MongoServerTarget.srvConnectionString(
+            MongoClusterSettings.srvConnectionString(
                 "mongodb+srv://user%3Apassword%40cluster0.example.com"))
         .isNull();
-    assertThat(MongoServerTarget.srvConnectionString("mongodb://cluster0.example.com")).isNull();
+    assertThat(MongoClusterSettings.srvConnectionString("mongodb://cluster0.example.com")).isNull();
+  }
+
+  @Test
+  void srvHostOnlyAcceptsAnExtractedHostname() {
+    assertThat(MongoServerTarget.srvHost("mongodb+srv://cluster0.example.com")).isNull();
+    assertThat(MongoServerTarget.srvHost("cluster0.example.com/database")).isNull();
   }
 
   @Test

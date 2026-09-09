@@ -28,6 +28,7 @@ import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingle
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons.instrumenter;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -56,6 +57,11 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     sd.updateServerSpanName(parentContext, exchange, route.getEndpoint(), CamelDirection.INBOUND);
 
     if (!instrumenter(request).shouldStart(parentContext, request)) {
+      if (request.isMessaging()
+          && emitStableMessagingSemconv()
+          && !InstrumentationUtil.shouldSuppressInstrumentation(parentContext)) {
+        CamelProcessMetrics.start(route, parentContext, request);
+      }
       return null;
     }
     Context context = instrumenter(request).start(parentContext, request);
@@ -83,6 +89,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
   /** Route exchange done. Get active CAMEL span, finish, remove from CAMEL holder. */
   @Override
   public void onExchangeDone(Route route, Exchange exchange) {
+    CamelProcessMetrics.end(route, exchange);
     Context context = ActiveContextManager.deactivate(exchange);
     logger.log(FINE, "[Route finished] Receiver span finished {0}", context);
   }

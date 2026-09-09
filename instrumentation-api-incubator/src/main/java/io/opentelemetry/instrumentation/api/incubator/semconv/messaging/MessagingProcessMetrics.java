@@ -17,6 +17,8 @@ import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -51,9 +53,20 @@ public final class MessagingProcessMetrics implements OperationListener {
     if (processDurationHistogram == null) {
       return context;
     }
-    return context.with(
-        MESSAGING_PROCESS_METRICS_STATE,
-        new AutoValue_MessagingProcessMetrics_State(startAttributes, startNanos));
+    boolean recordProcessDuration =
+        !MessagingTelemetryState.contains(
+            context, MessagingOperationType.PROCESS, MessagingTelemetrySignal.PROCESS_DURATION);
+    Context contextWithState =
+        context.with(
+            MESSAGING_PROCESS_METRICS_STATE,
+            new AutoValue_MessagingProcessMetrics_State(
+                startAttributes, startNanos, recordProcessDuration));
+    return recordProcessDuration
+        ? MessagingTelemetryState.addIfEnabled(
+            contextWithState,
+            MessagingOperationType.PROCESS,
+            MessagingTelemetrySignal.PROCESS_DURATION)
+        : contextWithState;
   }
 
   @Override
@@ -70,11 +83,13 @@ public final class MessagingProcessMetrics implements OperationListener {
       return;
     }
 
-    Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
-    processDurationHistogram.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_S,
-        MessagingMetricsAdvice.filterAttributes(attributes),
-        context);
+    if (state.recordProcessDuration()) {
+      Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
+      processDurationHistogram.record(
+          (endNanos - state.startTimeNanos()) / NANOS_PER_S,
+          MessagingMetricsAdvice.filterAttributes(attributes),
+          context);
+    }
   }
 
   private static DoubleHistogram buildProcessDuration(Meter meter) {
@@ -93,5 +108,7 @@ public final class MessagingProcessMetrics implements OperationListener {
     abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
+
+    abstract boolean recordProcessDuration();
   }
 }

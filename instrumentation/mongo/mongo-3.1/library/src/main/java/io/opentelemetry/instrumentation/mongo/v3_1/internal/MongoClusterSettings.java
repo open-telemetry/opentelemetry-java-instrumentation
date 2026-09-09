@@ -21,6 +21,8 @@ import javax.annotation.Nullable;
  */
 public class MongoClusterSettings {
 
+  private static final String SRV_SCHEME = "mongodb+srv://";
+
   // getSrvHost was added in 3.10; reflection keeps this compatible with older drivers
   @Nullable private static final Method GET_SRV_HOST = findGetSrvHost();
 
@@ -45,7 +47,7 @@ public class MongoClusterSettings {
   public static void connectionString(
       ClusterSettings.Builder builder, ConnectionString connectionString) {
     String value = connectionString.getConnectionString();
-    if (!MongoServerTarget.isSrvConnectionString(value)) {
+    if (!isSrvConnectionString(value)) {
       List<ServerAddress> hosts = new ArrayList<>();
       for (String host : connectionString.getHosts()) {
         hosts.add(new ServerAddress(host));
@@ -53,7 +55,7 @@ public class MongoClusterSettings {
       BUILDER_CONFIGURATION.set(builder, new Configuration(true, MongoServerTarget.seeds(hosts)));
       return;
     }
-    MongoServerTarget target = MongoServerTarget.srvConnectionString(value);
+    MongoServerTarget target = srvConnectionString(value);
     BUILDER_CONFIGURATION.set(
         builder, target == null ? UNKNOWN_CONFIGURATION : new Configuration(false, target));
   }
@@ -106,13 +108,40 @@ public class MongoClusterSettings {
 
   @Nullable
   public static LegacySrvTargetScope openLegacySrvTargetScope(@Nullable String connectionString) {
-    MongoServerTarget target = MongoServerTarget.srvConnectionString(connectionString);
+    MongoServerTarget target = srvConnectionString(connectionString);
     if (target == null) {
       return null;
     }
     MongoServerTarget previous = legacySrvTarget.get();
     legacySrvTarget.set(target);
     return new LegacySrvTargetScope(previous);
+  }
+
+  @Nullable
+  static MongoServerTarget srvConnectionString(@Nullable String connectionString) {
+    if (connectionString == null || !isSrvConnectionString(connectionString)) {
+      return null;
+    }
+    return MongoServerTarget.srvHost(sanitizeSrvHost(connectionString));
+  }
+
+  private static boolean isSrvConnectionString(String connectionString) {
+    return connectionString.regionMatches(true, 0, SRV_SCHEME, 0, SRV_SCHEME.length());
+  }
+
+  private static String sanitizeSrvHost(String value) {
+    int schemeSeparator = value.indexOf("://");
+    String host = schemeSeparator < 0 ? value : value.substring(schemeSeparator + 3);
+    int end = host.length();
+    for (char separator : new char[] {'/', '?', '#'}) {
+      int index = host.indexOf(separator);
+      if (index >= 0 && index < end) {
+        end = index;
+      }
+    }
+    host = host.substring(0, end);
+    int credentialsSeparator = host.lastIndexOf('@');
+    return credentialsSeparator < 0 ? host : host.substring(credentialsSeparator + 1);
   }
 
   @Nullable

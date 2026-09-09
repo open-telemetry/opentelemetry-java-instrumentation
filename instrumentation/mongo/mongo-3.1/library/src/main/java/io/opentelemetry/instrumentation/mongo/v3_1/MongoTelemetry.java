@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
-import static java.util.Collections.singletonList;
-
 import com.mongodb.ServerAddress;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
@@ -45,34 +43,37 @@ public final class MongoTelemetry {
   }
 
   /**
-   * Returns a new {@link CommandListener} that can be used with methods like {@link
-   * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
-   */
-  public CommandListener createCommandListener() {
-    return new TracingCommandListener(instrumenter);
-  }
-
-  /**
-   * Returns a new {@link CommandListener} for a client configured with exactly the given server
-   * address.
+   * Returns a new {@link CommandListener} using the supplied seed list to derive the client's
+   * logical MongoDB server target.
    *
-   * <p>Where stable database conventions are emitted, the configured address is reported as the
-   * logical server target. Where the old conventions are emitted, {@code db.connection_string}
-   * describes the server that the driver selected.
-   */
-  public CommandListener createCommandListener(ServerAddress configuredServerAddress) {
-    return createCommandListener(singletonList(configuredServerAddress));
-  }
-
-  /**
-   * Returns a new {@link CommandListener} for a client configured with the given seed list.
+   * <p>Use this overload when you have the seed addresses from the client's configuration. Pass the
+   * complete seed list used to configure the client.
    *
-   * <p>Where stable database conventions are emitted, the configured seeds are reported as the
-   * logical server target. Where the old conventions are emitted, {@code db.connection_string}
-   * describes the server that the driver selected.
+   * <p>The supplied addresses are used to derive the stable {@code server.address} and {@code
+   * server.port} attributes when stable database semantic conventions are enabled.
+   *
+   * <p>Where the old database conventions are emitted, {@code db.connection_string} continues to
+   * describe the server selected by the driver.
+   *
+   * @param configuredServerAddresses all seed addresses configured for the client
+   * @return a command listener
    */
   public CommandListener createCommandListener(List<ServerAddress> configuredServerAddresses) {
     return new TracingCommandListener(
         instrumenter, MongoServerTarget.seeds(configuredServerAddresses));
   }
+
+  /**
+   * Returns a new {@link CommandListener} that can be used with methods like {@link
+   * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
+   *
+   * <p>Use this method only when the client's configured seed addresses are not available. If they
+   * are available, use {@link #createCommandListener(List)} so that stable database semantic
+   * conventions can derive {@code server.address} and {@code server.port} from the configured
+   * target.
+   */
+  public CommandListener createCommandListener() {
+    return new TracingCommandListener(instrumenter);
+  }
+
 }

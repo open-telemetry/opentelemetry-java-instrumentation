@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -24,8 +22,9 @@ import javax.annotation.Nullable;
  *
  * <p>Duplicate endpoints are kept. A single endpoint is rendered as a bare host with its port
  * reported separately, and it is reported only when it differs from the default port. Several
- * endpoints are rendered as a comma separated list, and their ports are omitted only when every
- * endpoint listens on its default port; otherwise every endpoint carries its port.
+ * endpoints are rendered as a comma separated list. Their ports are omitted when every endpoint
+ * listens on its default port. Otherwise known ports are included, while endpoints without either a
+ * configured or known default port remain bare.
  *
  * <p>Instances are not thread safe.
  *
@@ -34,21 +33,20 @@ import javax.annotation.Nullable;
  */
 public class DbServerTargetBuilder {
 
-  private static final int DEFAULT_MAX_ENDPOINTS = 5;
+  public static final int MAX_ENDPOINTS = 5;
   private static final int MIN_PORT = 1;
   private static final int MAX_PORT = 65535;
   private static final int MAX_HOST_NAME_LENGTH = 253;
   private static final int MAX_HOST_NAME_SEGMENT_LENGTH = 63;
 
-  private final int defaultPort;
+  @Nullable private final Integer defaultPort;
   private final List<Endpoint> endpoints = new ArrayList<>();
-  private int maxEndpoints = DEFAULT_MAX_ENDPOINTS;
   private boolean sorted;
   private boolean portAlwaysInline;
   @Nullable private String suffix;
   private boolean complete = true;
 
-  DbServerTargetBuilder(int defaultPort) {
+  DbServerTargetBuilder(@Nullable Integer defaultPort) {
     this.defaultPort = defaultPort;
   }
 
@@ -59,16 +57,6 @@ public class DbServerTargetBuilder {
   @CanIgnoreReturnValue
   public DbServerTargetBuilder setSorted(boolean sorted) {
     this.sorted = sorted;
-    return this;
-  }
-
-  /** Render at most {@code maxEndpoints} endpoints. Default is 5. */
-  @CanIgnoreReturnValue
-  public DbServerTargetBuilder setMaxEndpoints(int maxEndpoints) {
-    if (maxEndpoints < 1) {
-      throw new IllegalArgumentException("maxEndpoints must be positive");
-    }
-    this.maxEndpoints = maxEndpoints;
     return this;
   }
 
@@ -96,12 +84,12 @@ public class DbServerTargetBuilder {
   }
 
   /**
-   * Add an endpoint. A negative {@code port} means that the endpoint has no configured port and
-   * listens on the default port.
+   * Add an endpoint. A negative {@code port} means that the endpoint has no configured port. The
+   * target's default port is used when known.
    */
   @CanIgnoreReturnValue
   public DbServerTargetBuilder addEndpoint(@Nullable String host, int port) {
-    return addEndpoint(host, port, defaultPort);
+    return addEndpointInternal(host, port, defaultPort);
   }
 
   /**
@@ -110,14 +98,7 @@ public class DbServerTargetBuilder {
    */
   @CanIgnoreReturnValue
   public DbServerTargetBuilder addEndpoint(@Nullable String host, int port, int defaultPort) {
-    String sanitizedHost = sanitizeHost(host);
-    int effectivePort = port < 0 ? defaultPort : port;
-    if (sanitizedHost == null || !isValidPort(effectivePort)) {
-      complete = false;
-      return this;
-    }
-    endpoints.add(new Endpoint(sanitizedHost, effectivePort, effectivePort == defaultPort));
-    return this;
+    return addEndpointInternal(host, port, defaultPort);
   }
 
   /**
@@ -132,6 +113,23 @@ public class DbServerTargetBuilder {
       return this;
     }
     return addEndpoint(address.getHostString(), address.getPort());
+  }
+
+  @CanIgnoreReturnValue
+  private DbServerTargetBuilder addEndpointInternal(
+      @Nullable String host, int port, @Nullable Integer defaultPort) {
+    String sanitizedHost = sanitizeHost(host);
+    Integer effectivePort = port < 0 ? defaultPort : Integer.valueOf(port);
+    if (sanitizedHost == null || (effectivePort != null && !isValidPort(effectivePort))) {
+      complete = false;
+      return this;
+    }
+    endpoints.add(
+        new Endpoint(
+            sanitizedHost,
+            effectivePort,
+            port < 0 || (defaultPort != null && port == defaultPort)));
+    return this;
   }
 
   /** Returns the target, or {@code null} when it cannot be rendered safely. */
@@ -166,16 +164,19 @@ public class DbServerTargetBuilder {
   private String render(boolean includePort) {
     List<String> rendered = new ArrayList<>(endpoints.size());
     for (Endpoint endpoint : endpoints) {
-      rendered.add(includePort ? renderHostAndPort(endpoint.host, endpoint.port) : endpoint.host);
+      rendered.add(
+          includePort && endpoint.port != null
+              ? renderHostAndPort(endpoint.host, endpoint.port)
+              : endpoint.host);
     }
     if (sorted) {
       rendered.sort(String::compareTo);
     }
-    return String.join(",", rendered.subList(0, Math.min(maxEndpoints, rendered.size())));
+    return String.join(",", rendered.subList(0, Math.min(MAX_ENDPOINTS, rendered.size())));
   }
 
   private DbServerTarget target(String address, @Nullable Integer port) {
-    return new DbServerTarget(suffix == null ? address : address + "/" + suffix, port);
+    return DbServerTarget.create(suffix == null ? address : address + "/" + suffix, port);
   }
 
   private static String renderHostAndPort(String host, int port) {
@@ -210,51 +211,15 @@ public class DbServerTargetBuilder {
       return null;
     }
     if (sanitized.indexOf(':') >= 0) {
-      return isIpv6Literal(sanitized) ? sanitized : null;
+      return DbServerEndpointUtil.isIpv6Literal(sanitized) ? sanitized : null;
     }
     if (bracketed) {
       return null;
     }
     if (looksLikeIpv4Literal(sanitized)) {
-      return isIpv4Literal(sanitized) ? sanitized : null;
+      return DbServerEndpointUtil.isIpv4Literal(sanitized) ? sanitized : null;
     }
     return isHostName(sanitized) ? sanitized : null;
-  }
-
-  private static boolean isIpv6Literal(String host) {
-    int zoneStart = host.indexOf('%');
-    String literal = zoneStart < 0 ? host : host.substring(0, zoneStart);
-    if (zoneStart >= 0 && !isZoneId(host.substring(zoneStart + 1))) {
-      return false;
-    }
-    for (int i = 0; i < literal.length(); i++) {
-      char c = literal.charAt(i);
-      if (c != ':' && c != '.' && !isAsciiHexDigit(c)) {
-        return false;
-      }
-    }
-    int ipv4Start = literal.lastIndexOf(':') + 1;
-    if (literal.indexOf('.') >= 0 && !isIpv4Literal(literal.substring(ipv4Start))) {
-      return false;
-    }
-    try {
-      // URI parses a bracketed literal without resolving any name
-      return new URI("db://[" + literal + "]").getHost() != null;
-    } catch (URISyntaxException ignored) {
-      return false;
-    }
-  }
-
-  private static boolean isZoneId(String zoneId) {
-    if (zoneId.isEmpty()) {
-      return false;
-    }
-    for (int i = 0; i < zoneId.length(); i++) {
-      if (!isUnreserved(zoneId.charAt(i))) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private static boolean looksLikeIpv4Literal(String host) {
@@ -265,30 +230,6 @@ public class DbServerTargetBuilder {
       }
     }
     return host.indexOf('.') >= 0;
-  }
-
-  private static boolean isIpv4Literal(String host) {
-    int parts = 0;
-    int digits = 0;
-    int value = 0;
-    for (int i = 0; i <= host.length(); i++) {
-      char c = i == host.length() ? '.' : host.charAt(i);
-      if (c == '.') {
-        // a part with a leading zero reads as octal to some resolvers
-        if (digits == 0 || (digits > 1 && host.charAt(i - digits) == '0') || value > 255) {
-          return false;
-        }
-        parts++;
-        digits = 0;
-        value = 0;
-      } else {
-        if (++digits > 3) {
-          return false;
-        }
-        value = value * 10 + c - '0';
-      }
-    }
-    return parts == 4;
   }
 
   private static boolean isHostName(String host) {
@@ -350,10 +291,6 @@ public class DbServerTargetBuilder {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || isAsciiDigit(c);
   }
 
-  private static boolean isAsciiHexDigit(char c) {
-    return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || isAsciiDigit(c);
-  }
-
   private static boolean isAsciiDigit(char c) {
     return c >= '0' && c <= '9';
   }
@@ -361,10 +298,10 @@ public class DbServerTargetBuilder {
   private static class Endpoint {
 
     private final String host;
-    private final int port;
+    @Nullable private final Integer port;
     private final boolean defaultPort;
 
-    private Endpoint(String host, int port, boolean defaultPort) {
+    private Endpoint(String host, @Nullable Integer port, boolean defaultPort) {
       this.host = host;
       this.port = port;
       this.defaultPort = defaultPort;
