@@ -24,12 +24,16 @@ import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -196,6 +200,52 @@ class TracingSendMessageHookImplTest {
           }
           assertThat(extract(decoded.get(1))).isEqualTo(remote(trace.getSpan(1).getSpanContext()));
         });
+  }
+
+  @Test
+  void preservesBaggageWhenCreatingMessageSpans() throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
+    TextMapPropagator propagator =
+        TextMapPropagator.composite(
+            W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance());
+    OpenTelemetry openTelemetry =
+        new OpenTelemetry() {
+          @Override
+          public TracerProvider getTracerProvider() {
+            return testing.getOpenTelemetry().getTracerProvider();
+          }
+
+          @Override
+          public ContextPropagators getPropagators() {
+            return ContextPropagators.create(propagator);
+          }
+        };
+    MessageBatch batch = batch();
+    batch.iterator().next().putUserProperty("baggage", "key=message");
+    batch.setBody(batch.encode());
+    SendMessageContext request = request(batch);
+    SendMessageHook hook = RocketMqTelemetry.create(openTelemetry).createSendMessageHook();
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          try (Scope ignored = Baggage.builder().put("key", "parent").build().makeCurrent()) {
+            hook.sendMessageBefore(request);
+            finish(request, hook, null);
+          }
+        });
+
+    List<Message> decoded = decode(batch);
+    assertThat(
+            Baggage.fromContext(
+                    propagator.extract(Context.root(), decoded.get(0), new MessageExtractAdapter()))
+                .getEntryValue("key"))
+        .isEqualTo("message");
+    assertThat(
+            Baggage.fromContext(
+                    propagator.extract(Context.root(), decoded.get(1), new MessageExtractAdapter()))
+                .getEntryValue("key"))
+        .isEqualTo("parent");
   }
 
   @Test

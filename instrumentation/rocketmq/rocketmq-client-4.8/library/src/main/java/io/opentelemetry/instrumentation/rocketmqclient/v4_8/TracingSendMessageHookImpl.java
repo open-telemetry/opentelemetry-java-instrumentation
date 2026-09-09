@@ -78,16 +78,17 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     if (batch != null) {
       List<Context> creationContexts = new ArrayList<>();
       messagesWithoutCreationContext = new ArrayList<>();
+      Context propagationContext = parentContext.with(Span.getInvalid());
       for (Object item : (Iterable<?>) batch) {
         Message message = (Message) item;
-        Context creationContext = propagator.extract(Context.root(), message, getter);
+        Context creationContext = propagator.extract(propagationContext, message, getter);
         boolean hasCreationContext = Span.fromContext(creationContext).getSpanContext().isValid();
         if (!hasCreationContext) {
           SendMessageContext request =
               new MessageCreateContext(message, RocketMqNamespaceUtil.getNamespace(context));
           if (messageCreateInstrumenter.shouldStart(parentContext, request)) {
             Instant timestamp = Instant.now();
-            creationContext =
+            Context createdContext =
                 InstrumenterUtil.startAndEnd(
                     messageCreateInstrumenter,
                     parentContext,
@@ -96,6 +97,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
                     null,
                     timestamp,
                     timestamp);
+            creationContext = creationContext.with(Span.fromContext(createdContext));
             hasCreationContext = Span.fromContext(creationContext).getSpanContext().isValid();
             if (hasCreationContext) {
               propagator.inject(
