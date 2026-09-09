@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +26,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@SuppressWarnings("deprecation") // testing deprecated API
 class ElasticsearchDbAttributesGetterTest {
 
   private static final String SEARCH_BODY =
