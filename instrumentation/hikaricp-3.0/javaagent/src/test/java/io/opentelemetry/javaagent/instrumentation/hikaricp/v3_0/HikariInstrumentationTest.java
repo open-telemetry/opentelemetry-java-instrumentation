@@ -46,7 +46,8 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
     config.setJdbcUrl("jdbc:postgresql://db.example:5432/orders");
     config.setDataSource(dataSourceMock);
 
-    assertPoolName(startDataSource(config), "db.example:5432/orders");
+    assertPoolName(
+        startDataSource(config), emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
   }
 
   @Test
@@ -56,7 +57,8 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
     config.setDataSource(dataSourceMock);
     config.validate();
 
-    assertPoolName(startDataSource(config), "db.example:5432/orders");
+    assertPoolName(
+        startDataSource(config), emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
   }
 
   @Test
@@ -67,7 +69,8 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
     config.setJdbcUrl("jdbc:postgresql://db.example:5432/orders");
     config.setDataSource(dataSourceMock);
 
-    assertPoolName(startDataSource(config), "db.example:5432/orders");
+    assertPoolName(
+        startDataSource(config), emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
   }
 
   @Test
@@ -84,7 +87,8 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
 
     try {
       assertThat(userMetricsPoolName.get()).startsWith("HikariPool-");
-      assertConnectionUsagePoolNames("db.example:5432/orders");
+      assertConnectionUsagePoolNames(
+          emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
     } finally {
       dataSource.close();
     }
@@ -153,7 +157,8 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
 
     try {
       assertThat(dataSource.getPoolName()).startsWith("HikariPool-");
-      assertConnectionUsagePoolNames("db.example:5432/orders");
+      assertConnectionUsagePoolNames(
+          emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
     } finally {
       dataSource.close();
     }
@@ -173,7 +178,8 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
     startDataSource(secondDataSource);
 
     try {
-      assertConnectionUsagePoolNames("db.example:5432/orders");
+      assertConnectionUsagePoolNames(
+          emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
     } finally {
       firstDataSource.close();
       secondDataSource.close();
