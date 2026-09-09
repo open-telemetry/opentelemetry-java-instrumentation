@@ -699,11 +699,13 @@ class ClickHouseClientV1Test {
   }
 
   private static String serverTargetAddress(Object serverTarget) throws Exception {
-    return (String) serverTarget.getClass().getMethod("getAddress").invoke(serverTarget);
+    return (String)
+        serverTarget.getClass().getSuperclass().getMethod("getAddress").invoke(serverTarget);
   }
 
   private static Integer serverTargetPort(Object serverTarget) throws Exception {
-    return (Integer) serverTarget.getClass().getMethod("getPort").invoke(serverTarget);
+    return (Integer)
+        serverTarget.getClass().getSuperclass().getMethod("getPort").invoke(serverTarget);
   }
 
   private static Class<?> singletons(ClickHouseRequest<?> request) throws Exception {

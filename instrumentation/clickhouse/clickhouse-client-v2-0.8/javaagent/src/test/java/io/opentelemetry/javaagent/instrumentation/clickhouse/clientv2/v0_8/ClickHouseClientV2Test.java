@@ -553,9 +553,9 @@ class ClickHouseClientV2Test {
       return;
     }
     assertThat(serverTarget).isNotNull();
-    assertThat(serverTarget.getClass().getMethod("getAddress").invoke(serverTarget))
-        .isEqualTo(address);
-    assertThat(serverTarget.getClass().getMethod("getPort").invoke(serverTarget)).isEqualTo(port);
+    Class<?> serverTargetType = serverTarget.getClass().getSuperclass();
+    assertThat(serverTargetType.getMethod("getAddress").invoke(serverTarget)).isEqualTo(address);
+    assertThat(serverTargetType.getMethod("getPort").invoke(serverTarget)).isEqualTo(port);
   }
 
   private static Class<?> singletons() throws Exception {
