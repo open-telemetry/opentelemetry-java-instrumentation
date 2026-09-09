@@ -20,6 +20,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -37,9 +38,9 @@ class JdbcServicePeerTest {
         request(
             DbInfo.builder()
                 .dbSystemName(POSTGRESQL)
-                .serverAddress("localhost")
-                .serverPort(5432)
-                .configuredServerAddress(GROUP_TARGET)
+                .legacyServerAddress("localhost")
+                .legacyServerPort(5432)
+                .configuredServerTarget(DbServerTarget.create(GROUP_TARGET, null))
                 .build());
 
     if (emitStableDatabaseSemconv()) {
@@ -59,10 +60,9 @@ class JdbcServicePeerTest {
         request(
             DbInfo.builder()
                 .dbSystemName(POSTGRESQL)
-                .serverAddress("localhost")
-                .serverPort(5432)
-                .configuredServerAddress("localhost")
-                .configuredServerPort(5432)
+                .legacyServerAddress("localhost")
+                .legacyServerPort(5432)
+                .configuredServerTarget(DbServerTarget.create("localhost", 5432))
                 .build());
 
     assertThat(resolve(request, "localhost"))
@@ -75,9 +75,9 @@ class JdbcServicePeerTest {
         request(
             DbInfo.builder()
                 .dbSystemName("oracle.db")
-                .serverAddress("orcl.host1")
-                .serverPort(1521)
-                .configuredServerAddress(DEFAULT_PORT_GROUP_TARGET)
+                .legacyServerAddress("orcl.host1")
+                .legacyServerPort(1521)
+                .configuredServerTarget(DbServerTarget.create(DEFAULT_PORT_GROUP_TARGET, null))
                 .build());
 
     if (emitStableDatabaseSemconv()) {

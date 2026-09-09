@@ -8,9 +8,10 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
@@ -108,9 +109,9 @@ public final class GenericUrlParser implements JdbcUrlParser {
         return jdbcUrl.indexOf("://") < 0;
       }
     }
-    String hostList = parseServerAddressGroup(authority, defaultPort);
-    if (hostList != null || hasMultipleTargets(jdbcUrl)) {
-      ctx.configuredServerAddress(hostList);
+    DbServerTarget target = parseServerTargetGroup(authority, defaultPort);
+    if (target != null || hasMultipleTargets(jdbcUrl)) {
+      ctx.configuredServerTarget(target);
     }
     return true;
   }

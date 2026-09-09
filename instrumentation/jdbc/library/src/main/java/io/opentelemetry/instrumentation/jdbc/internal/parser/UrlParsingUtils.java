@@ -529,7 +529,8 @@ public final class UrlParsingUtils {
 
   /** Parse and normalize a comma-separated configured server group. */
   @Nullable
-  public static String parseServerAddressGroup(String authority, @Nullable Integer defaultPort) {
+  public static DbServerTarget parseServerTargetGroup(
+      String authority, @Nullable Integer defaultPort) {
     String sanitized = sanitizeHostList(authority);
     if (sanitized == null) {
       return null;
@@ -550,8 +551,7 @@ public final class UrlParsingUtils {
       for (HostPort endpoint : endpoints) {
         builder.addEndpoint(endpoint.host(), endpoint.port() == null ? -1 : endpoint.port());
       }
-      DbServerTarget target = builder.build();
-      return target == null ? null : target.getAddress();
+      return builder.build();
     }
 
     for (HostPort endpoint : endpoints) {
@@ -568,10 +568,10 @@ public final class UrlParsingUtils {
         return null;
       }
     }
-    return renderSpecialServerAddressGroup(entries, endpoints, defaultPort);
+    return DbServerTarget.create(
+        renderSpecialServerAddressGroup(entries, endpoints, defaultPort), null);
   }
 
-  @Nullable
   private static String renderSpecialServerAddressGroup(
       List<String> entries, List<HostPort> endpoints, @Nullable Integer defaultPort) {
     boolean hasNonDefaultPort = false;

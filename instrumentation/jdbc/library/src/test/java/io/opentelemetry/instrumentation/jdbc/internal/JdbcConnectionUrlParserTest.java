@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse;
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DERBY;
@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,10 +88,10 @@ class JdbcConnectionUrlParserTest {
   void singletonUrlIsNotMarkedAsMultiTarget() {
     DbInfo dbInfo = parse("jdbc:postgresql://pg.host:5432/db", null);
 
-    assertThat(dbInfo.getServerAddress()).isEqualTo("pg.host");
-    assertThat(dbInfo.getServerPort()).isEqualTo(5432);
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo("pg.host");
-    assertThat(dbInfo.getConfiguredServerPort()).isEqualTo(5432);
+    assertThat(dbInfo.getLegacyServerAddress()).isEqualTo("pg.host");
+    assertThat(dbInfo.getLegacyServerPort()).isEqualTo(5432);
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("pg.host", 5432));
   }
 
   @Test
@@ -101,30 +102,30 @@ class JdbcConnectionUrlParserTest {
                 + "?user=admin@corp.com&options=search_path=test,public",
             null);
 
-    assertThat(dbInfo.getServerAddress()).isEqualTo("pg.host");
-    assertThat(dbInfo.getServerPort()).isEqualTo(5432);
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo("pg.host");
-    assertThat(dbInfo.getConfiguredServerPort()).isEqualTo(5432);
+    assertThat(dbInfo.getLegacyServerAddress()).isEqualTo("pg.host");
+    assertThat(dbInfo.getLegacyServerPort()).isEqualTo(5432);
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("pg.host", 5432));
   }
 
   @Test
   void commaAfterAtInFinalQueryParameterDoesNotMarkSingletonAsMultiTarget() {
     DbInfo dbInfo = parse("jdbc:postgresql://pg.host:5432/db?password=prefix@domain,suffix", null);
 
-    assertThat(dbInfo.getServerAddress()).isEqualTo("pg.host");
-    assertThat(dbInfo.getServerPort()).isEqualTo(5432);
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo("pg.host");
-    assertThat(dbInfo.getConfiguredServerPort()).isEqualTo(5432);
+    assertThat(dbInfo.getLegacyServerAddress()).isEqualTo("pg.host");
+    assertThat(dbInfo.getLegacyServerPort()).isEqualTo(5432);
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("pg.host", 5432));
   }
 
   @Test
   void commaAfterAtInSqlServerPropertyDoesNotMarkSingletonAsMultiTarget() {
     DbInfo dbInfo = parse("jdbc:sqlserver://ss.host;password=prefix@domain,suffix", null);
 
-    assertThat(dbInfo.getServerAddress()).isEqualTo("ss.host");
-    assertThat(dbInfo.getServerPort()).isEqualTo(1433);
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo("ss.host");
-    assertThat(dbInfo.getConfiguredServerPort()).isEqualTo(1433);
+    assertThat(dbInfo.getLegacyServerAddress()).isEqualTo("ss.host");
+    assertThat(dbInfo.getLegacyServerPort()).isEqualTo(1433);
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("ss.host", 1433));
   }
 
   @ParameterizedTest
@@ -145,8 +146,7 @@ class JdbcConnectionUrlParserTest {
   void incompleteMultiTargetIsMarkedWithoutAConfiguredTarget(String url) {
     DbInfo dbInfo = parse(url, null);
 
-    assertThat(dbInfo.getConfiguredServerAddress()).isNull();
-    assertThat(dbInfo.getConfiguredServerPort()).isNull();
+    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
   }
 
   @ParameterizedTest
@@ -162,7 +162,7 @@ class JdbcConnectionUrlParserTest {
       })
   void ambiguousMariaDbCredentialsDoNotBecomeAConfiguredTarget(String url) {
     DbInfo dbInfo = parse(url, null);
-    assertThat(dbInfo.getConfiguredServerAddress()).isNull();
+    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
     assertThat(dbInfo.getHost()).isNull();
     assertThat(dbInfo.getName()).isNull();
   }
@@ -175,7 +175,7 @@ class JdbcConnectionUrlParserTest {
       })
   void ambiguousPostgresCredentialsDoNotBecomeAConfiguredTarget(String url) {
     DbInfo dbInfo = parse(url, null);
-    assertThat(dbInfo.getConfiguredServerAddress()).isNull();
+    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
     assertThat(dbInfo.getHost()).isEqualTo("localhost");
     assertThat(dbInfo.getName()).isNull();
   }
@@ -187,7 +187,8 @@ class JdbcConnectionUrlParserTest {
             "jdbc:postgresql://pg.host1:5432,pg.host2:5433/pgdb"
                 + "?user=admin@corp.com&currentSchema=test,public",
             null);
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo("pg.host1:5432,pg.host2:5433");
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("pg.host1:5432,pg.host2:5433", null));
     assertThat(dbInfo.getName()).isEqualTo("pgdb");
   }
 
@@ -196,7 +197,7 @@ class JdbcConnectionUrlParserTest {
     DbInfo dbInfo =
         parse("jdbc:postgresql://h1:5432,h2:5432?options=email=user@example.com,mode=strict", null);
 
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo("h1,h2");
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1,h2", null));
   }
 
   @ParameterizedTest
@@ -217,7 +218,7 @@ class JdbcConnectionUrlParserTest {
 
     DbInfo dbInfo = parse(url, null);
 
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo("h1,h2");
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1,h2", null));
     assertThat(dbInfo.getHost()).isEqualTo("h1");
     assertThat(dbInfo.getName()).isEqualTo("db");
     assertThat(dbInfo.getDbUser()).isEqualTo("admin@corp.com");
@@ -260,7 +261,7 @@ class JdbcConnectionUrlParserTest {
                 + "?sessionVariables=email='user@example.com',sql_mode=ANSI",
             null);
 
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo("h1,h2");
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1,h2", null));
     assertThat(dbInfo.getHost()).isEqualTo("h1");
   }
 
@@ -274,10 +275,9 @@ class JdbcConnectionUrlParserTest {
   void atInMariaDbSingletonQueryPreservesOrdinaryParsing(String url) {
     DbInfo dbInfo = parse(url, null);
 
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo("h1");
-    assertThat(dbInfo.getConfiguredServerPort()).isEqualTo(3306);
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", 3306));
     assertThat(dbInfo.getHost()).isEqualTo("h1");
-    assertThat(dbInfo.getServerPort()).isEqualTo(3306);
+    assertThat(dbInfo.getLegacyServerPort()).isEqualTo(3306);
   }
 
   @Test
@@ -288,7 +288,7 @@ class JdbcConnectionUrlParserTest {
                 + "?sessionVariables=email='user@example.com',sql_mode=ANSI",
             null);
 
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo("h1,h2");
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1,h2", null));
     assertThat(dbInfo.getHost()).isEqualTo("h1");
   }
 
@@ -1056,10 +1056,10 @@ class JdbcConnectionUrlParserTest {
 
     DbInfo info = parse("jdbc:sqlserver://url.host1:1433;failoverPartner=url.host2", properties);
 
-    assertThat(info.getServerAddress()).isEqualTo("property.host1");
-    assertThat(info.getServerPort()).isEqualTo(1444);
-    assertThat(info.getConfiguredServerAddress())
-        .isEqualTo("property.host1:1444,property.host2:1433");
+    assertThat(info.getLegacyServerAddress()).isEqualTo("property.host1");
+    assertThat(info.getLegacyServerPort()).isEqualTo(1444);
+    assertThat(info.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("property.host1:1444,property.host2:1433", null));
   }
 
   @Test
@@ -1070,11 +1070,11 @@ class JdbcConnectionUrlParserTest {
                 + "[2001:db8::2]:2521/orclsn?retry_count=3",
             null);
 
-    assertThat(info.getServerAddress()).isEqualTo("2001:db8::1");
-    assertThat(info.getServerPort()).isEqualTo(2521);
+    assertThat(info.getLegacyServerAddress()).isEqualTo("2001:db8::1");
+    assertThat(info.getLegacyServerPort()).isEqualTo(2521);
     assertThat(info.getDbNamespace()).isEqualTo("orclsn");
-    assertThat(info.getConfiguredServerAddress())
-        .isEqualTo("[2001:db8::1]:2521,[2001:db8::2]:2521");
+    assertThat(info.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("[2001:db8::1]:2521,[2001:db8::2]:2521", null));
   }
 
   private static Stream<Arguments> oracleArguments() {
@@ -2407,7 +2407,8 @@ class JdbcConnectionUrlParserTest {
   void normalizesServerAddressGroupPorts(String url, String expectedServerAddressGroup) {
     DbInfo dbInfo = parse(url, null);
 
-    assertThat(dbInfo.getConfiguredServerAddress()).isEqualTo(expectedServerAddressGroup);
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create(expectedServerAddressGroup, null));
   }
 
   private static Stream<Arguments> limitedServerAddressGroupArguments() {
@@ -2439,34 +2440,34 @@ class JdbcConnectionUrlParserTest {
   @MethodSource("limitedServerAddressGroupArguments")
   void limitsServerAddressGroupAfterInspectingTheCompleteList(
       String url, String expectedServerAddressGroup) {
-    assertThat(parse(url, null).getConfiguredServerAddress()).isEqualTo(expectedServerAddressGroup);
+    assertThat(parse(url, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create(expectedServerAddressGroup, null));
   }
 
   @Test
   void invalidEndpointAfterTheFifthEndpointFailsClosed() {
     DbInfo dbInfo = parse("jdbc:postgresql://h1,h2,h3,h4,h5,unexpected=value/db", null);
 
-    assertThat(dbInfo.getConfiguredServerAddress()).isNull();
-    assertThat(dbInfo.getConfiguredServerPort()).isNull();
+    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
   }
 
   @Test
   void invalidUnixSocketInServerAddressGroupFailsClosed() {
-    assertThat(parseServerAddressGroup("/valid.sock,/invalid?sock", null)).isNull();
+    assertThat(parseServerTargetGroup("/valid.sock,/invalid?sock", null)).isNull();
   }
 
   @Test
   void invalidExplicitPortsInServerAddressGroupFailClosed() {
     DbInfo dbInfo = parse("jdbc:unknown://h1:70000,h2:70000/db", null);
 
-    assertThat(dbInfo.getConfiguredServerAddress()).isNull();
-    assertThat(dbInfo.getConfiguredServerPort()).isNull();
+    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
   }
 
   @ParameterizedTest
   @MethodSource("configuredOrderServerAddressGroupArguments")
   void preservesConfiguredServerAddressGroupOrder(String url, String expectedServerAddressGroup) {
-    assertThat(parse(url, null).getConfiguredServerAddress()).isEqualTo(expectedServerAddressGroup);
+    assertThat(parse(url, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create(expectedServerAddressGroup, null));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -2505,10 +2506,9 @@ class JdbcConnectionUrlParserTest {
     DbInfo expected = argument.dbInfo;
     assertThat(info.getDbConnectionString()).isEqualTo(expected.getDbConnectionString());
     assertThat(info.getDbSystemName()).isEqualTo(expected.getDbSystemName());
-    assertThat(info.getServerAddress()).isEqualTo(expected.getServerAddress());
-    assertThat(info.getServerPort()).isEqualTo(expected.getServerPort());
-    assertThat(info.getConfiguredServerAddress()).isEqualTo(expected.getConfiguredServerAddress());
-    assertThat(info.getConfiguredServerPort()).isEqualTo(expected.getConfiguredServerPort());
+    assertThat(info.getLegacyServerAddress()).isEqualTo(expected.getLegacyServerAddress());
+    assertThat(info.getLegacyServerPort()).isEqualTo(expected.getLegacyServerPort());
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(expected.getConfiguredServerTarget());
     assertThat(info.getDbUser()).isEqualTo(expected.getDbUser());
     assertThat(info.getDbNamespace()).isEqualTo(expected.getDbNamespace());
     assertThat(info.getDbName()).isEqualTo(expected.getDbName());
@@ -2536,21 +2536,16 @@ class JdbcConnectionUrlParserTest {
               .dbUser(builder.user)
               .dbNamespace(namespace)
               .dbName(oldDbName)
-              .serverAddress(builder.host)
-              .serverPort(builder.port)
-              .configuredServerAddress(
-                  !builder.configuredTarget || builder.multiTarget
-                      ? null
-                      : builder.serverAddressGroup != null
-                          ? builder.serverAddressGroup
-                          : builder.host)
-              .configuredServerPort(
+              .legacyServerAddress(builder.host)
+              .legacyServerPort(builder.port)
+              .configuredServerTarget(
                   !builder.configuredTarget
                           || builder.multiTarget
-                          || builder.serverAddressGroup != null
-                          || builder.host == null
+                          || (builder.serverAddressGroup == null && builder.host == null)
                       ? null
-                      : builder.port)
+                      : builder.serverAddressGroup != null
+                          ? DbServerTarget.create(builder.serverAddressGroup, null)
+                          : DbServerTarget.create(builder.host, builder.port))
               .build();
     }
 

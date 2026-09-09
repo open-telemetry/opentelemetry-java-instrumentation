@@ -131,8 +131,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
       return null;
     }
     ctx.multiTarget();
-    String group = UrlParsingUtils.parseServerAddressGroup(authority, DEFAULT_PORT);
-    ctx.configuredServerAddress(group);
+    ctx.configuredServerTarget(UrlParsingUtils.parseServerTargetGroup(authority, DEFAULT_PORT));
     return authority;
   }
 
@@ -220,8 +219,8 @@ public final class OracleUrlParser implements JdbcUrlParser {
       addresses.append(description, addressMatcher.start() + 1, end);
       searchFrom = end + 1;
     }
-    String group = UrlParsingUtils.parseServerAddressGroup(addresses.toString(), DEFAULT_PORT);
-    ctx.configuredServerAddress(group);
+    ctx.configuredServerTarget(
+        UrlParsingUtils.parseServerTargetGroup(addresses.toString(), DEFAULT_PORT));
   }
 
   private static boolean hasMultipleAddresses(String description) {

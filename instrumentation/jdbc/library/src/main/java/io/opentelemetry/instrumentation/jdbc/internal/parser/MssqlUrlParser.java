@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import java.util.Map;
@@ -108,8 +108,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     appendPrimary(group, ctx, host, instanceName, portConfigured);
     group.append(',');
     appendServerAddress(group, failoverPartner);
-    String serverAddressGroup = parseServerAddressGroup(group.toString(), DEFAULT_PORT);
-    ctx.configuredServerAddress(serverAddressGroup);
+    ctx.configuredServerTarget(parseServerTargetGroup(group.toString(), DEFAULT_PORT));
   }
 
   /** Returns whether a server was configured by the data source, parameters, or URL authority. */

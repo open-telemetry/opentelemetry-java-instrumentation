@@ -10,8 +10,9 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerAddressGroup;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -229,9 +230,9 @@ public final class MysqlUrlParser implements JdbcUrlParser {
         return false;
       }
     }
-    String hostList = parseServerAddressGroup(authority, DEFAULT_PORT);
-    if (hostList != null || hasMultipleTargets(jdbcUrl)) {
-      ctx.configuredServerAddress(hostList);
+    DbServerTarget target = parseServerTargetGroup(authority, DEFAULT_PORT);
+    if (target != null || hasMultipleTargets(jdbcUrl)) {
+      ctx.configuredServerTarget(target);
     }
     return true;
   }

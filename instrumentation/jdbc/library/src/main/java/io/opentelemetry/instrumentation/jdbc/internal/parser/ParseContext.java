@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.buildShortUrl;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.UrlParams;
@@ -28,8 +29,9 @@ public final class ParseContext {
   @Nullable private String subtype;
   @Nullable private String host;
   @Nullable private Integer port;
-  @Nullable private String configuredServerAddress;
-  @Nullable private Integer configuredServerPort;
+  @Nullable private String configuredHost;
+  @Nullable private Integer configuredPort;
+  @Nullable private DbServerTarget configuredServerTarget;
   private boolean multipleTargets;
   private boolean configuredTargetResolved;
   @Nullable private String user;
@@ -104,7 +106,7 @@ public final class ParseContext {
   public void host(@Nullable String host) {
     this.host = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
     if (!configuredTargetResolved) {
-      configuredServerAddress = this.host;
+      configuredHost = this.host;
     }
   }
 
@@ -123,7 +125,7 @@ public final class ParseContext {
   public void port(@Nullable Integer port) {
     this.port = port;
     if (!configuredTargetResolved) {
-      configuredServerPort = port;
+      configuredPort = port;
     }
   }
 
@@ -132,11 +134,10 @@ public final class ParseContext {
     this.port = port;
   }
 
-  /** Set a normalized configured target when parsing succeeds. */
-  public void configuredServerAddress(@Nullable String configuredServerAddress) {
+  /** Set the resolved configured target, or {@code null} when it cannot be represented safely. */
+  public void configuredServerTarget(@Nullable DbServerTarget configuredServerTarget) {
     this.configuredTargetResolved = true;
-    this.configuredServerAddress = configuredServerAddress;
-    this.configuredServerPort = null;
+    this.configuredServerTarget = configuredServerTarget;
   }
 
   /** Mark the connection as having multiple configured targets for parser-local validation. */
@@ -349,10 +350,10 @@ public final class ParseContext {
     String oldSystem = oldSemconvSystem != null ? oldSemconvSystem : system;
     DbInfo.Builder builder = DbInfo.builder().dbSystemName(system).dbSystem(oldSystem);
     if (host != null) {
-      builder.serverAddress(host);
+      builder.legacyServerAddress(host);
     }
     if (port != null) {
-      builder.serverPort(port);
+      builder.legacyServerPort(port);
     }
     if (user != null) {
       builder.dbUser(user);
@@ -371,20 +372,19 @@ public final class ParseContext {
     }
     String legacyConnectionString = buildShortUrl(type, subtype, host, port);
     builder.dbConnectionString(legacyConnectionString);
-    String configuredAddress = configuredServerAddress;
-    Integer configuredPort = configuredServerPort;
-    if (multipleTargets && !configuredTargetResolved) {
-      configuredAddress = null;
-      configuredPort = null;
-    } else if (!multipleTargets
-        && configuredAddress != null
-        && configuredPort == null
-        && port != null) {
-      // Preserve the existing single-server default-port behavior in stable telemetry.
-      configuredPort = port;
-    }
-    builder.configuredServerAddress(configuredAddress);
-    builder.configuredServerPort(configuredPort);
+    builder.configuredServerTarget(buildConfiguredServerTarget());
     return builder.build();
+  }
+
+  @Nullable
+  private DbServerTarget buildConfiguredServerTarget() {
+    if (configuredTargetResolved) {
+      return configuredServerTarget;
+    }
+    if (multipleTargets || configuredHost == null) {
+      return null;
+    }
+    // Single-server JDBC targets include the parser's default port when none was configured.
+    return DbServerTarget.create(configuredHost, configuredPort != null ? configuredPort : port);
   }
 }

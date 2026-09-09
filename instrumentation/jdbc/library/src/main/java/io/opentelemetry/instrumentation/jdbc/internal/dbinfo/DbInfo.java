@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal.dbinfo;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import javax.annotation.Nullable;
 
 /**
@@ -50,17 +51,20 @@ public abstract class DbInfo {
   @Nullable
   public abstract String getDbNamespace();
 
+  /** The parser's single host, including defaults, used for legacy telemetry and pool names. */
   @Nullable
-  public abstract String getServerAddress();
+  public abstract String getLegacyServerAddress();
 
+  /** The parser's single port, including defaults, used for legacy telemetry and pool names. */
   @Nullable
-  public abstract Integer getServerPort();
+  public abstract Integer getLegacyServerPort();
 
+  /**
+   * The logical configured target for stable telemetry, or {@code null} when unavailable. This is
+   * not the endpoint that handled an individual query.
+   */
   @Nullable
-  public abstract String getConfiguredServerAddress();
-
-  @Nullable
-  public abstract Integer getConfiguredServerPort();
+  public abstract DbServerTarget getConfiguredServerTarget();
 
   @Nullable
   public final String getSystem() {
@@ -84,12 +88,12 @@ public abstract class DbInfo {
 
   @Nullable
   public final String getHost() {
-    return getServerAddress();
+    return getLegacyServerAddress();
   }
 
   @Nullable
   public final Integer getPort() {
-    return getServerPort();
+    return getLegacyServerPort();
   }
 
   public Builder toBuilder() {
@@ -101,10 +105,9 @@ public abstract class DbInfo {
         .dbUser(getDbUser())
         .dbName(getDbName())
         .dbNamespace(getDbNamespace())
-        .serverAddress(getServerAddress())
-        .serverPort(getServerPort())
-        .configuredServerAddress(getConfiguredServerAddress())
-        .configuredServerPort(getConfiguredServerPort());
+        .legacyServerAddress(getLegacyServerAddress())
+        .legacyServerPort(getLegacyServerPort())
+        .configuredServerTarget(getConfiguredServerTarget());
   }
 
   /**
@@ -133,13 +136,11 @@ public abstract class DbInfo {
 
     public abstract Builder dbNamespace(String dbNamespace);
 
-    public abstract Builder serverAddress(String serverAddress);
+    public abstract Builder legacyServerAddress(String legacyServerAddress);
 
-    public abstract Builder serverPort(Integer serverPort);
+    public abstract Builder legacyServerPort(Integer legacyServerPort);
 
-    public abstract Builder configuredServerAddress(String configuredServerAddress);
-
-    public abstract Builder configuredServerPort(Integer configuredServerPort);
+    public abstract Builder configuredServerTarget(@Nullable DbServerTarget configuredServerTarget);
 
     public final Builder system(String system) {
       return dbSystemName(system).dbSystem(system);
@@ -158,11 +159,11 @@ public abstract class DbInfo {
     }
 
     public final Builder host(String host) {
-      return serverAddress(host);
+      return legacyServerAddress(host);
     }
 
     public final Builder port(Integer port) {
-      return serverPort(port);
+      return legacyServerPort(port);
     }
 
     public abstract DbInfo build();
