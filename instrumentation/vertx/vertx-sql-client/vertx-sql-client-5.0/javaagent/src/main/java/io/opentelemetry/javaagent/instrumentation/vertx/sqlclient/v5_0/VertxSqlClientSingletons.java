@@ -13,12 +13,15 @@ import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.Ve
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.impl.ClientBuilderBase;
 import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.internal.SqlClientBase;
+import java.util.List;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {
@@ -27,17 +30,16 @@ public class VertxSqlClientSingletons {
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
   private static final ThreadLocal<VertxSqlClientInfo> clientInfo = new ThreadLocal<>();
+  private static final ThreadLocal<VertxSqlClientConstructionState> constructionState =
+      new ThreadLocal<>();
   private static final VirtualField<PreparedStatement, VertxSqlClientInfo> PREPARED_STATEMENT_INFO =
       VirtualField.find(PreparedStatement.class, VertxSqlClientInfo.class);
-
-  private static final VirtualField<Pool, String> POOL_DB_SYSTEM =
-      VirtualField.find(Pool.class, String.class);
-
-  private static final VirtualField<SqlConnectOptions, String> CONNECT_OPTIONS_DB_SYSTEM =
-      VirtualField.find(SqlConnectOptions.class, String.class);
-
-  private static final VirtualField<SqlClientBase, SqlConnectOptions> CONNECT_OPTIONS =
-      VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
+  private static final VirtualField<Pool, VertxSqlClientInfo> POOL_INFO =
+      VirtualField.find(Pool.class, VertxSqlClientInfo.class);
+  private static final VirtualField<SqlClientBase, VertxSqlClientInfo> CLIENT_INFO =
+      VirtualField.find(SqlClientBase.class, VertxSqlClientInfo.class);
+  private static final VirtualField<ClientBuilderBase<?>, List<SqlConnectOptions>>
+      BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
 
   @Nullable
   private static final VirtualField<Object, Context> COMMAND_CONTEXT =
@@ -60,6 +62,11 @@ public class VertxSqlClientSingletons {
     return clientInfo.get();
   }
 
+  @Nullable
+  public static VertxSqlClientInfo getClientInfo(SqlClientBase sqlClientBase) {
+    return CLIENT_INFO.get(sqlClientBase);
+  }
+
   public static void setQueryExecutorInfo(Object queryExecutor, @Nullable VertxSqlClientInfo info) {
     QueryExecutorUtil.setData(queryExecutor, info);
   }
@@ -67,6 +74,15 @@ public class VertxSqlClientSingletons {
   @Nullable
   public static VertxSqlClientInfo getQueryExecutorInfo(Object queryExecutor) {
     return (VertxSqlClientInfo) QueryExecutorUtil.getData(queryExecutor);
+  }
+
+  public static void setPoolInfo(Pool pool, @Nullable VertxSqlClientInfo info) {
+    POOL_INFO.set(pool, info);
+  }
+
+  @Nullable
+  public static VertxSqlClientInfo getPoolInfo(Pool pool) {
+    return POOL_INFO.get(pool);
   }
 
   public static Future<PreparedStatement> attachPreparedStatementInfo(
@@ -118,41 +134,61 @@ public class VertxSqlClientSingletons {
     }
   }
 
-  public static void storePoolDbSystem(Pool pool, String dbSystem) {
-    POOL_DB_SYSTEM.set(pool, dbSystem);
+  public static void attachClientInfo(
+      SqlClientBase sqlClientBase, @Nullable VertxSqlClientInfo info) {
+    CLIENT_INFO.set(sqlClientBase, info);
+  }
+
+  public static Future<SqlConnection> attachClientInfo(
+      Future<SqlConnection> future, @Nullable VertxSqlClientInfo info) {
+    return future.map(
+        connection -> {
+          if (connection instanceof SqlClientBase) {
+            attachClientInfo((SqlClientBase) connection, info);
+          }
+          return connection;
+        });
   }
 
   @Nullable
-  public static String getConnectOptionsDbSystem(SqlConnectOptions sqlConnectOptions) {
-    return CONNECT_OPTIONS_DB_SYSTEM.get(sqlConnectOptions);
+  public static Handler<SqlConnection> wrapConnectHandler(
+      @Nullable Handler<SqlConnection> handler, VertxSqlClientInfo info) {
+    if (handler == null) {
+      return null;
+    }
+    return connection -> {
+      if (connection instanceof SqlClientBase) {
+        attachClientInfo((SqlClientBase) connection, info);
+      }
+      handler.handle(connection);
+    };
   }
 
-  public static void resolveAndStoreDbSystem(Pool pool, SqlConnectOptions sqlConnectOptions) {
-    String dbSystem = POOL_DB_SYSTEM.get(pool);
-    if (sqlConnectOptions != null && dbSystem != null) {
-      CONNECT_OPTIONS_DB_SYSTEM.set(sqlConnectOptions, dbSystem);
+  public static void setConstructionState(@Nullable VertxSqlClientConstructionState state) {
+    if (state == null) {
+      constructionState.remove();
+    } else {
+      constructionState.set(state);
     }
   }
 
   @Nullable
-  public static SqlConnectOptions getSqlConnectOptions(SqlClientBase sqlClientBase) {
-    return CONNECT_OPTIONS.get(sqlClientBase);
+  public static VertxSqlClientConstructionState getConstructionState() {
+    return constructionState.get();
   }
 
-  public static void attachConnectOptions(
-      SqlClientBase sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
-    CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
+  public static void storeBuilderDatabases(
+      Object clientBuilder, @Nullable List<SqlConnectOptions> databases) {
+    if (clientBuilder instanceof ClientBuilderBase) {
+      BUILDER_DATABASES.set((ClientBuilderBase<?>) clientBuilder, databases);
+    }
   }
 
-  public static Future<SqlConnection> attachConnectOptions(
-      Future<SqlConnection> future, @Nullable SqlConnectOptions connectOptions) {
-    return future.map(
-        sqlConnection -> {
-          if (sqlConnection instanceof SqlClientBase) {
-            CONNECT_OPTIONS.set((SqlClientBase) sqlConnection, connectOptions);
-          }
-          return sqlConnection;
-        });
+  @Nullable
+  public static List<SqlConnectOptions> getBuilderDatabases(Object clientBuilder) {
+    return clientBuilder instanceof ClientBuilderBase
+        ? BUILDER_DATABASES.get((ClientBuilderBase<?>) clientBuilder)
+        : null;
   }
 
   private VertxSqlClientSingletons() {}

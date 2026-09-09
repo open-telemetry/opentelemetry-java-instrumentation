@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -34,22 +35,30 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.counting;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.pgclient.PgBuilder;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgException;
+import io.vertx.sqlclient.ClientBuilder;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.PreparedQuery;
 import io.vertx.sqlclient.PreparedStatement;
+import io.vertx.sqlclient.SqlClient;
+import io.vertx.sqlclient.SqlConnectOptions;
+import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -69,6 +78,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -128,6 +138,432 @@ class VertxSqlClientTest {
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
+  }
+
+  @Test
+  void testConnectingToServerListReportsTheWholeConfiguredTarget() throws Exception {
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
+    Pool listPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(asList(first, second))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(listPool::close);
+
+    select(listPool);
+
+    testing.waitAndAssertTraces(
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)));
+  }
+
+  @Test
+  void testConnectingToServerListWithUnixSocketOmitsStableTarget() throws Exception {
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second =
+        new PgConnectOptions(first).setHost("/var/run/postgres:primary").setPort(5432);
+    Pool listPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(asList(first, second))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(listPool::close);
+
+    select(listPool);
+
+    testing.waitAndAssertTraces(trace -> assertServerGroup(trace, null));
+  }
+
+  @Test
+  void testConnectingToServerListFailureReportsTheWholeConfiguredTarget() {
+    PgConnectOptions first = new PgConnectOptions(connectOptions()).setHost("127.0.0.1").setPort(1);
+    PgConnectOptions second = new PgConnectOptions(first).setPort(2);
+    Pool listPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(asList(first, second))
+            .with(new PoolOptions().setMaxSize(1).setConnectionTimeout(5))
+            .build();
+    cleanup.deferCleanup(listPool::close);
+
+    Throwable thrown = catchThrowable(() -> select(listPool));
+
+    assertThat(thrown).isInstanceOf(ExecutionException.class);
+    Throwable error = thrown.getCause();
+    assertThat(error).isNotNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            assertServerGroup(
+                trace, "127.0.0.1", 1, "127.0.0.1:1,127.0.0.1:2", "select * from test", error));
+  }
+
+  @Test
+  void testConnectHandlerReportsTheWholeConfiguredTarget() throws Exception {
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
+    CompletableFuture<Void> handlerInvoked = new CompletableFuture<>();
+    Pool listPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(asList(first, second))
+            .withConnectHandler(
+                connection -> {
+                  connection
+                      .query("select * from test")
+                      .execute()
+                      .onComplete(ignored -> connection.close());
+                  handlerInvoked.complete(null);
+                })
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(listPool::close);
+
+    SqlConnection connection =
+        listPool.getConnection().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    cleanup.deferCleanup(connection::close);
+    handlerInvoked.get(30, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)));
+  }
+
+  @Test
+  void testGenericPoolOptionsUseDriverDbSystem() throws Exception {
+    SqlConnectOptions options = new PgConnectOptions(connectOptions()) {};
+    Pool genericPool = Pool.pool(vertx, options, new PoolOptions().setMaxSize(1));
+    cleanup.deferCleanup(genericPool::close);
+
+    select(genericPool);
+
+    testing.waitAndAssertTraces(VertxSqlClientTest::assertDirectTarget);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testExhaustedFixedPoolTimeoutRetainsConfiguredTarget(boolean serverList) throws Exception {
+    assumeTrue(testLatestDeps());
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
+    ClientBuilder<Pool> builder =
+        PgBuilder.pool()
+            .using(vertx)
+            .with(
+                new PoolOptions()
+                    .setMaxSize(1)
+                    .setConnectionTimeout(1)
+                    .setConnectionTimeoutUnit(SECONDS));
+    Pool fixedPool =
+        serverList
+            ? builder.connectingTo(asList(first, second)).build()
+            : builder.connectingTo(first).build();
+    cleanup.deferCleanup(
+        () -> fixedPool.close().toCompletionStage().toCompletableFuture().get(30, SECONDS));
+    SqlConnection connection =
+        fixedPool.getConnection().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    cleanup.deferCleanup(
+        () -> connection.close().toCompletionStage().toCompletableFuture().get(30, SECONDS));
+
+    Throwable thrown = catchThrowable(() -> select(fixedPool));
+
+    assertThat(thrown).isInstanceOf(ExecutionException.class);
+    Throwable timeout = thrown.getCause();
+    assertThat(timeout).hasMessage("Timeout waiting for connection");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, timeout.getClass().getName()),
+                                        equalTo(EXCEPTION_MESSAGE, timeout.getMessage()),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class))))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "test"),
+                            equalTo(
+                                maybeStablePeerService(),
+                                emitStableDatabaseSemconv() && serverList
+                                    ? null
+                                    : "test-peer-service"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() && serverList
+                                    ? host + ":" + port + "," + host + ":" + (port + 1)
+                                    : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() && serverList
+                                    ? null
+                                    : Long.valueOf(port)),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? timeout.getClass().getName()
+                                    : null))));
+  }
+
+  @Test
+  void testConnectingToDirectOptionsCapturesTarget() throws Exception {
+    PgConnectOptions options = connectOptions();
+    Pool directPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(options)
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(directPool::close);
+
+    select(directPool);
+
+    testing.waitAndAssertTraces(VertxSqlClientTest::assertDirectTarget);
+  }
+
+  @Test
+  void testExplicitPreparedStatementWithServerListReportsTheWholeConfiguredTarget()
+      throws Exception {
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
+    Pool listPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(asList(first, second))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(listPool::close);
+    String query = "select * from test where id = $1";
+
+    executePreparedStatement(listPool, query, Tuple.of(1), PreparedStatement::query)
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            assertServerGroup(trace, query, host + ":" + port + "," + host + ":" + (port + 1)));
+  }
+
+  @Test
+  void testOneBuilderGivesEachClientItsOwnTarget() throws Exception {
+    PgConnectOptions first = connectOptions();
+    ClientBuilder<Pool> builder =
+        PgBuilder.pool().using(vertx).with(new PoolOptions().setMaxSize(1));
+
+    Pool firstPool =
+        builder.connectingTo(asList(first, new PgConnectOptions(first).setPort(port + 1))).build();
+    cleanup.deferCleanup(firstPool::close);
+    Pool secondPool =
+        builder.connectingTo(asList(first, new PgConnectOptions(first).setPort(port + 2))).build();
+    cleanup.deferCleanup(secondPool::close);
+
+    select(firstPool);
+    select(secondPool);
+
+    testing.waitAndAssertTraces(
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)),
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 2)));
+  }
+
+  @Test
+  void testMutableServerListIsSnapshottedForEachBuild() throws Exception {
+    PgConnectOptions first = connectOptions();
+    String alternateHost = host.equals("localhost") ? "127.0.0.1" : "localhost";
+    PgConnectOptions second = new PgConnectOptions(first).setHost(alternateHost);
+    List<SqlConnectOptions> databases = new ArrayList<>(asList(first, second));
+    ClientBuilder<Pool> builder =
+        PgBuilder.pool().using(vertx).connectingTo(databases).with(new PoolOptions().setMaxSize(1));
+
+    Pool firstPool = builder.build();
+    cleanup.deferCleanup(firstPool::close);
+    select(firstPool);
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    first.setHost("mutated-first.example");
+    second.setHost("mutated-second.example");
+    databases.set(0, connectOptions());
+    databases.set(1, new PgConnectOptions(connectOptions()));
+    Pool secondPool = builder.build();
+    cleanup.deferCleanup(secondPool::close);
+
+    select(firstPool);
+    select(secondPool);
+
+    testing.waitAndAssertTraces(
+        trace -> assertServerGroup(trace, host + ":" + port + "," + alternateHost + ":" + port),
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + port));
+  }
+
+  @Test
+  void testSwitchingTheBuilderToOneServerDropsTheServerList() throws Exception {
+    PgConnectOptions first = connectOptions();
+    ClientBuilder<Pool> builder =
+        PgBuilder.pool().using(vertx).with(new PoolOptions().setMaxSize(1));
+    builder.connectingTo(asList(first, new PgConnectOptions(first).setPort(port + 1)));
+
+    Pool singlePool = builder.connectingTo(first).build();
+    cleanup.deferCleanup(singlePool::close);
+
+    select(singlePool);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "test"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
+  }
+
+  @Test
+  void testSwitchingTheBuilderToSupplierDropsTheFixedTarget() throws Exception {
+    PgConnectOptions first = connectOptions();
+    ClientBuilder<Pool> builder =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(asList(first, new PgConnectOptions(first).setPort(port + 1)))
+            .with(new PoolOptions().setMaxSize(1));
+    Pool fixedPool = builder.build();
+    cleanup.deferCleanup(fixedPool::close);
+    Pool supplierPool = builder.connectingTo(() -> Future.succeededFuture(first)).build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    select(fixedPool);
+    testing.runWithSpan("parent", () -> select(supplierPool));
+
+    testing.waitAndAssertTraces(
+        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+  }
+
+  private static void assertServerGroup(TraceAssert trace, String expectedStableAddress) {
+    assertServerGroup(trace, "select * from test", expectedStableAddress);
+  }
+
+  private static void assertServerGroup(
+      TraceAssert trace, String statement, String expectedStableAddress) {
+    assertServerGroup(trace, host, port, expectedStableAddress, statement, null);
+  }
+
+  private static void assertServerGroup(
+      TraceAssert trace,
+      String firstHost,
+      int firstPort,
+      String expectedStableAddress,
+      String statement,
+      Throwable error) {
+    Consumer<SpanDataAssert> operationSpan =
+        span ->
+            span.hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                    equalTo(maybeStable(DB_NAME), DB),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                    equalTo(maybeStable(DB_STATEMENT), statement),
+                    equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
+                    equalTo(
+                        maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                    equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
+                    equalTo(
+                        maybeStablePeerService(),
+                        emitStableDatabaseSemconv() ? null : "test-peer-service"),
+                    equalTo(
+                        SERVER_ADDRESS,
+                        emitStableDatabaseSemconv() ? expectedStableAddress : firstHost),
+                    equalTo(
+                        SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(firstPort)),
+                    equalTo(
+                        ERROR_TYPE,
+                        emitStableDatabaseSemconv() && error != null
+                            ? "io.netty.channel.AbstractChannel$AnnotatedConnectException"
+                            : null));
+    if (error == null) {
+      trace.hasSpansSatisfyingExactly(operationSpan);
+    } else {
+      trace.hasSpansSatisfyingExactly(
+          operationSpan, span -> span.hasName("CONNECT").hasParent(trace.getSpan(0)));
+    }
+  }
+
+  private static void assertDirectTarget(TraceAssert trace) {
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                    equalTo(maybeStable(DB_NAME), DB),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                    equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                    equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select test" : null),
+                    equalTo(
+                        maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                    equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "test"),
+                    equalTo(maybeStablePeerService(), "test-peer-service"),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port)));
+  }
+
+  private static void select(SqlClient client) throws Exception {
+    client
+        .query("select * from test")
+        .execute()
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+  }
+
+  private static PgConnectOptions connectOptions() {
+    return new PgConnectOptions()
+        .setPort(port)
+        .setHost(host)
+        .setDatabase(DB)
+        .setUser(USER_DB)
+        .setPassword(PW_DB);
   }
 
   @Test
@@ -423,7 +859,15 @@ class VertxSqlClientTest {
       String query,
       Tuple tuple,
       Function<PreparedStatement, PreparedQuery<?>> preparedQueryFactory) {
-    return pool.withConnection(
+    return executePreparedStatement(pool, query, tuple, preparedQueryFactory);
+  }
+
+  private static Future<?> executePreparedStatement(
+      Pool targetPool,
+      String query,
+      Tuple tuple,
+      Function<PreparedStatement, PreparedQuery<?>> preparedQueryFactory) {
+    return targetPool.withConnection(
         connection ->
             connection
                 .prepare(query)

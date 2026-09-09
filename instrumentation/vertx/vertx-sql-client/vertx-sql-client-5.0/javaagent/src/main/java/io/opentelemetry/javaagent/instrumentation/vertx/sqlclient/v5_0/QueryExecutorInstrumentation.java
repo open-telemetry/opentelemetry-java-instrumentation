@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystem;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -22,7 +20,6 @@ import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.Ve
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.core.Promise;
 import io.vertx.core.internal.PromiseInternal;
-import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.internal.PreparedStatement;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -50,21 +47,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
-      VertxSqlClientInfo info = VertxSqlClientSingletons.getClientInfo();
-      if (info != null) {
-        VertxSqlClientSingletons.setQueryExecutorInfo(queryExecutor, info);
-        return;
-      }
-      SqlConnectOptions connectOptions = getSqlConnectOptions();
-      String dbSystem = getDbSystem();
-      if (dbSystem == null && connectOptions != null) {
-        dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
-      }
-      if (dbSystem == null) {
-        dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
-      }
       VertxSqlClientSingletons.setQueryExecutorInfo(
-          queryExecutor, VertxSqlClientInfo.createLegacy(connectOptions, dbSystem));
+          queryExecutor, VertxSqlClientSingletons.getClientInfo());
     }
   }
 
