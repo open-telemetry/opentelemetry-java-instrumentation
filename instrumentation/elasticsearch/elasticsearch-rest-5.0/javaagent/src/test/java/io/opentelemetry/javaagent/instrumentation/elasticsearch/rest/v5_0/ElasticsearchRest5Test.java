@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
@@ -140,7 +139,7 @@ class ElasticsearchRest5Test {
   }
 
   @Test
-  void searchQueryCaptureFollowsV3Preview() throws IOException {
+  void capturesSanitizedSearchQuery() throws IOException {
     Response response =
         client.performRequest(
             "POST",
@@ -165,7 +164,7 @@ class ElasticsearchRest5Test {
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                v3Preview() ? "{\"query\":{\"match\":{\"title\":\"?\"}}}" : null),
+                                "{\"query\":{\"match\":{\"title\":\"?\"}}}"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),

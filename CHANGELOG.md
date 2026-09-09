@@ -12,6 +12,10 @@
   while preserving the query structure. Javaagent sanitization can be disabled with
   `otel.instrumentation.elasticsearch.query-sanitization.enabled=false`.
   ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
+- Remove `otel.instrumentation.elasticsearch.capture-search-query`,
+  `otel.instrumentation.opensearch.capture-search-query`, and their declarative configuration
+  equivalents. Elasticsearch and OpenSearch search query bodies are now always captured.
+  ([#19692](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/19692))
 - Remove the deprecated `HostIdResource.REGISTRY_QUERY` in favor of the absolute-path `reg.exe` lookup used by
   `HostIdResource`. ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
 
@@ -26,10 +30,6 @@
 - Deprecate `SelectorConfig.resolve` overloads that do not specify `SelectorConfig.Stability` in favor
   of overloads that require callers to choose the stability explicitly.
   ([#19969](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19969))
-- Deprecate `otel.instrumentation.opensearch.capture-search-query`. There is no replacement.
-- Deprecate `otel.instrumentation.elasticsearch.capture-search-query` There is no replacement.
-  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
-
 ## Version 2.31.1 (2026-08-23)
 
 This release targets the OpenTelemetry SDK 1.65.0.

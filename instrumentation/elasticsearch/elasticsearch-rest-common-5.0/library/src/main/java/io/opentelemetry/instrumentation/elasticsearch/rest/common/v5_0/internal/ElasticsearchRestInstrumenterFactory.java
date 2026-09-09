@@ -38,10 +38,9 @@ public final class ElasticsearchRestInstrumenterFactory {
           spanNameExtractorTransformer,
       Set<String> knownMethods,
       Set<String> sensitiveQueryParameters,
-      boolean captureSearchQuery,
       @Nullable UnaryOperator<String> sanitizer) {
     ElasticsearchDbAttributesGetter dbClientAttributesGetter =
-        new ElasticsearchDbAttributesGetter(captureSearchQuery, sanitizer);
+        new ElasticsearchDbAttributesGetter(sanitizer);
     ElasticsearchClientAttributeExtractor esClientAttributesExtractor =
         new ElasticsearchClientAttributeExtractor(knownMethods, sensitiveQueryParameters);
     SpanNameExtractor<? super ElasticsearchRestRequest> spanNameExtractor =

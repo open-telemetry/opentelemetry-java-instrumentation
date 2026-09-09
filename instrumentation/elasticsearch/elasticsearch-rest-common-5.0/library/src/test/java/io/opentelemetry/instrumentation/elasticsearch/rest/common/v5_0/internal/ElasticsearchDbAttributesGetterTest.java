@@ -52,7 +52,7 @@ class ElasticsearchDbAttributesGetterTest {
   @Test
   void returnsTheSanitizedBody() {
     RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(sanitizer);
 
     assertThat(
             getter.getDbQueryText(
@@ -87,7 +87,7 @@ class ElasticsearchDbAttributesGetterTest {
       })
   void recognizesSearchPathWithoutEndpointDefinition(String endpoint) {
     RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(sanitizer);
     ElasticsearchRestRequest request =
         ElasticsearchRestRequest.create(
             "POST", endpoint, null, new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON));
@@ -105,7 +105,7 @@ class ElasticsearchDbAttributesGetterTest {
       })
   void rejectsNonSearchPathWithoutEndpointDefinition(String endpoint) {
     RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(sanitizer);
     ElasticsearchRestRequest request =
         ElasticsearchRestRequest.create(
             "POST", endpoint, null, new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON));
@@ -119,7 +119,7 @@ class ElasticsearchDbAttributesGetterTest {
     // the sanitizer returns null when it cannot sanitize the body, which must never fall back to
     // capturing it raw
     RecordingSanitizer sanitizer = new RecordingSanitizer(null);
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(sanitizer);
 
     assertThat(
             getter.getDbQueryText(
@@ -132,7 +132,7 @@ class ElasticsearchDbAttributesGetterTest {
   void joinsMultiSearchNdJsonLinesBeforeSanitizing(
       String endpointName, String requestPath, String endpointRoute) {
     RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(sanitizer);
     String body =
         "{\"index\":\"private-index\"}\n"
             + "{\"query\":{\"match\":{\"title\":\"secret\"}}}\n"
@@ -158,7 +158,7 @@ class ElasticsearchDbAttributesGetterTest {
   @Test
   void capturesRawBodyWhenSanitizationDisabled() {
     // sanitization explicitly disabled: capture the body verbatim
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, null);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(null);
 
     assertThat(
             getter.getDbQueryText(
@@ -167,21 +167,9 @@ class ElasticsearchDbAttributesGetterTest {
   }
 
   @Test
-  void capturesNothingWhenCaptureDisabled() {
-    RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(false, sanitizer);
-
-    assertThat(
-            getter.getDbQueryText(
-                searchRequest(new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON))))
-        .isNull();
-    assertThat(sanitizer.sanitized).isEmpty();
-  }
-
-  @Test
   void capturesNothingForNonSearchEndpoint() {
     RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(sanitizer);
     ElasticsearchRestRequest request =
         ElasticsearchRestRequest.create(
             "PUT",
@@ -197,7 +185,7 @@ class ElasticsearchDbAttributesGetterTest {
   void doesNotReadNonRepeatableEntity() {
     // a non-repeatable entity must never be read, otherwise the request body would be consumed
     RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(sanitizer);
     HttpEntity entity =
         new InputStreamEntity(new ByteArrayInputStream(SEARCH_BODY.getBytes(UTF_8)));
 
@@ -208,7 +196,7 @@ class ElasticsearchDbAttributesGetterTest {
   @Test
   void dropsBodyWhenReadingFails() {
     RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(sanitizer);
     HttpEntity entity =
         new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON) {
           @Override

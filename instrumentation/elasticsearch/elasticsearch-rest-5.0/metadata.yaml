@@ -5,15 +5,6 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
 configurations:
-  - name: otel.instrumentation.elasticsearch.capture-search-query
-    declarative_name: java.elasticsearch.capture_search_query
-    description: >
-      Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this to
-      capture or omit search query bodies. Under v3-preview and in 3.0, the setting is ignored and
-      search query bodies are always captured. Sanitization remains separately configurable with
-      otel.instrumentation.elasticsearch.query-sanitization.enabled.
-    type: boolean
-    default: false
   - name: otel.instrumentation.elasticsearch.query-sanitization.enabled
     declarative_name: java.elasticsearch.query_sanitization.enabled
     description: >

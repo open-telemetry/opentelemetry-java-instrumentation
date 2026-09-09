@@ -50,50 +50,16 @@ tasks {
 
   test {
     filter {
-      excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
       excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
       excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
     }
   }
-
-  val testDisabledCaptureSearchQuery = register<Test>("testDisabledCaptureSearchQuery") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
-    }
-    jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=false")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.opensearch.capture-search-query=false",
-    )
-  }
-
-  val testDeprecatedCaptureSearchQueryV3Preview =
-    register<Test>("testDeprecatedCaptureSearchQueryV3Preview") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-
-      filter {
-        includeTestsMatching("OpenSearchCaptureSearchQueryTest")
-      }
-      jvmArgs(
-        "-Dotel.instrumentation.opensearch.capture-search-query=false",
-        "-Dotel.instrumentation.common.v3-preview=true",
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.opensearch.capture-search-query=false,otel.instrumentation.common.v3-preview=true",
-      )
-    }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
       excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
       excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
     }
@@ -150,8 +116,6 @@ tasks {
   check {
     dependsOn(
       testStableSemconv,
-      testDisabledCaptureSearchQuery,
-      testDeprecatedCaptureSearchQueryV3Preview,
       testQuerySanitizationDisabled,
       testQuerySanitizationDisabledStableSemconv,
       testQuerySanitizationEnabledOverride,

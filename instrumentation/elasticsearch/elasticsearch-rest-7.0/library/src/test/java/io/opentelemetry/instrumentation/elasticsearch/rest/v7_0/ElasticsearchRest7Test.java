@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.v7_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -101,7 +100,7 @@ class ElasticsearchRest7Test {
   }
 
   @Test
-  void searchQueryCaptureFollowsV3Preview() throws IOException {
+  void capturesSanitizedSearchQuery() throws IOException {
     Request request = new Request("POST", "/_search");
     request.setJsonEntity("{\"query\":{\"match\":{\"title\":\"secret user data\"}}}");
 
@@ -119,7 +118,7 @@ class ElasticsearchRest7Test {
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                v3Preview() ? "{\"query\":{\"match\":{\"title\":\"?\"}}}" : null),
+                                "{\"query\":{\"match\":{\"title\":\"?\"}}}"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
