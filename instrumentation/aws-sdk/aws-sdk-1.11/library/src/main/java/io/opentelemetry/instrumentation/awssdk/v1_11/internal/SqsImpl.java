@@ -178,8 +178,8 @@ public final class SqsImpl {
         preparedEntries.add(entry.clone());
         continue;
       }
+      // These spans provide creation contexts for message propagation and linking.
       Context creationContext = producerCreateInstrumenter.start(parentContext, createRequest);
-      // These synthetic spans provide creation contexts without measuring message creation.
       producerCreateInstrumenter.end(creationContext, createRequest, null, null);
       // A no-op tracer can pass shouldStart() but return a context with an invalid span.
       if (!Span.fromContext(creationContext).getSpanContext().isValid()) {

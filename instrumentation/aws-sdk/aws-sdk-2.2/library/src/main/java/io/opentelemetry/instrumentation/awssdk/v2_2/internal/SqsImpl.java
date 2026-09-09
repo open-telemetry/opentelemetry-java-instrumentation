@@ -237,9 +237,9 @@ public final class SqsImpl {
         continue;
       }
 
+      // These spans provide creation contexts for message propagation and linking.
       io.opentelemetry.context.Context creationContext =
           producerCreateInstrumenter.start(creationParentContext, createRequest);
-      // These synthetic spans provide creation contexts without measuring message creation.
       producerCreateInstrumenter.end(creationContext, createRequest, null, null);
       // A no-op tracer can pass shouldStart() but return a context with an invalid span.
       if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
