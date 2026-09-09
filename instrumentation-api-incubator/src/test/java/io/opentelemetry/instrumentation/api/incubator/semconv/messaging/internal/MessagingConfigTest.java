@@ -15,11 +15,6 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -29,7 +24,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @ResourceLock(Resources.SYSTEM_PROPERTIES)
-@ResourceLock("MessagingConfig.logger")
 class MessagingConfigTest {
 
   @Test
@@ -212,112 +206,6 @@ class MessagingConfigTest {
     }
   }
 
-  @Test
-  void replacementSystemPropertyTakesPrecedenceOverDeprecatedProperty() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    String replacementProperty = "otel.instrumentation.aws-sdk.message-create-spans.enabled";
-    String deprecatedProperty =
-        "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled";
-    System.setProperty(replacementProperty, "true");
-    System.setProperty(deprecatedProperty, "false");
-    try {
-      assertThat(
-              MessagingConfig.isBatchSendMessageCreationSpansEnabled(
-                  openTelemetry, "aws_sdk", true))
-          .isTrue();
-    } finally {
-      System.clearProperty(replacementProperty);
-      System.clearProperty(deprecatedProperty);
-    }
-  }
-
-  @Test
-  void readsDeprecatedMessageCreateSpansConfigOutsideV3PreviewAndWarnsOnce() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    DeclarativeConfigProperties instrumentationConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(openTelemetry.getInstrumentationConfig("warning_test")).thenReturn(instrumentationConfig);
-    when(messageCreateSpansConfig(instrumentationConfig).getBoolean("enabled")).thenReturn(null);
-    when(deprecatedMessageCreateSpansConfig(instrumentationConfig).getBoolean("enabled"))
-        .thenReturn(false);
-    TestHandler handler = attachWarningHandler();
-    try {
-      assertThat(
-              MessagingConfig.isBatchSendMessageCreationSpansEnabled(openTelemetry, "warning_test"))
-          .isFalse();
-      assertThat(
-              MessagingConfig.isBatchSendMessageCreationSpansEnabled(openTelemetry, "warning_test"))
-          .isFalse();
-
-      assertThat(handler.records).hasSize(1);
-      assertThat(handler.records.get(0).getMessage())
-          .isEqualTo(
-              "The otel.instrumentation.warning-test.batch-send.message-creation-spans.enabled"
-                  + " setting"
-                  + " and the equivalent declarative configuration property are deprecated and"
-                  + " will be removed in 3.0. Use"
-                  + " otel.instrumentation.warning-test.message-create-spans.enabled or equivalent"
-                  + " declarative configuration instead.");
-    } finally {
-      detachWarningHandler(handler);
-    }
-
-    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
-        .thenReturn(true);
-    assertThat(
-            MessagingConfig.isBatchSendMessageCreationSpansEnabled(openTelemetry, "warning_test"))
-        .isTrue();
-  }
-
-  @Test
-  void readsDeprecatedCommonMessageCreateSpansConfig() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(deprecatedMessageCreateSpansConfig(messagingConfig(openTelemetry)).getBoolean("enabled"))
-        .thenReturn(false);
-
-    assertThat(MessagingConfig.isBatchSendMessageCreationSpansEnabled(openTelemetry, "aws_sdk"))
-        .isFalse();
-  }
-
-  @Test
-  void replacementMessageCreateSpansConfigTakesPrecedenceOverDeprecatedConfig() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(messageCreateSpansConfig(instrumentationConfig(openTelemetry)).getBoolean("enabled"))
-        .thenReturn(true);
-    when(deprecatedMessageCreateSpansConfig(instrumentationConfig(openTelemetry))
-            .getBoolean("enabled"))
-        .thenReturn(false);
-
-    assertThat(MessagingConfig.isBatchSendMessageCreationSpansEnabled(openTelemetry, "aws_sdk"))
-        .isTrue();
-  }
-
-  @Test
-  void readsDeprecatedMessageCreateSpansSystemProperties() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    String instrumentationProperty =
-        "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled";
-    String commonProperty =
-        "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled";
-    try {
-      System.setProperty(instrumentationProperty, "false");
-      assertThat(
-              MessagingConfig.isBatchSendMessageCreationSpansEnabled(
-                  openTelemetry, "aws_sdk", true))
-          .isFalse();
-
-      System.clearProperty(instrumentationProperty);
-      System.setProperty(commonProperty, "false");
-      assertThat(
-              MessagingConfig.isBatchSendMessageCreationSpansEnabled(
-                  openTelemetry, "aws_sdk", true))
-          .isFalse();
-    } finally {
-      System.clearProperty(instrumentationProperty);
-      System.clearProperty(commonProperty);
-    }
-  }
-
   private static ExtendedOpenTelemetry mockOpenTelemetry() {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig =
@@ -334,10 +222,6 @@ class MessagingConfigTest {
         .thenReturn(null);
     when(messageCreateSpansConfig(instrumentationConfig).getBoolean("enabled")).thenReturn(null);
     when(messageCreateSpansConfig(messagingConfig).getBoolean("enabled")).thenReturn(null);
-    when(deprecatedMessageCreateSpansConfig(instrumentationConfig).getBoolean("enabled"))
-        .thenReturn(null);
-    when(deprecatedMessageCreateSpansConfig(messagingConfig).getBoolean("enabled"))
-        .thenReturn(null);
     when(messagingConfig.get("headers/development").getScalarList("included", String.class))
         .thenReturn(null);
     when(messagingConfig.get("headers/development").getScalarList("excluded", String.class))
@@ -372,11 +256,6 @@ class MessagingConfigTest {
     return config.get("message_create_spans");
   }
 
-  private static DeclarativeConfigProperties deprecatedMessageCreateSpansConfig(
-      DeclarativeConfigProperties config) {
-    return config.get("batch_send").get("message_creation_spans");
-  }
-
   private static DeclarativeConfigProperties instrumentationConfig(
       ExtendedOpenTelemetry openTelemetry) {
     return openTelemetry.getInstrumentationConfig("aws_sdk");
@@ -389,30 +268,5 @@ class MessagingConfigTest {
   private static DeclarativeConfigProperties deprecatedMessagingConfig(
       ExtendedOpenTelemetry openTelemetry) {
     return openTelemetry.getInstrumentationConfig("messaging");
-  }
-
-  private static TestHandler attachWarningHandler() {
-    TestHandler handler = new TestHandler();
-    Logger.getLogger(MessagingConfig.class.getName()).addHandler(handler);
-    return handler;
-  }
-
-  private static void detachWarningHandler(TestHandler handler) {
-    Logger.getLogger(MessagingConfig.class.getName()).removeHandler(handler);
-  }
-
-  private static final class TestHandler extends Handler {
-    private final List<LogRecord> records = new ArrayList<>();
-
-    @Override
-    public void publish(LogRecord record) {
-      records.add(record);
-    }
-
-    @Override
-    public void flush() {}
-
-    @Override
-    public void close() {}
   }
 }

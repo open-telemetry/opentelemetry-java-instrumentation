@@ -135,55 +135,25 @@ public final class MessagingConfig {
     String instrumentationPropertyPrefix =
         "otel.instrumentation." + instrumentationName.replace('_', '-');
     Boolean enabled =
-        getMessageCreateSpansEnabled(
-            openTelemetry,
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName),
+        getBoolean(
+            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName)
+                .get("message_create_spans"),
+            "enabled",
             instrumentationPropertyPrefix + ".message-create-spans.enabled",
-            instrumentationPropertyPrefix + ".batch-send.message-creation-spans.enabled",
             systemPropertyFallback);
     if (enabled != null) {
       return enabled;
     }
 
     enabled =
-        getMessageCreateSpansEnabled(
-            openTelemetry,
+        getBoolean(
             DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
-                .get("messaging"),
+                .get("messaging")
+                .get("message_create_spans"),
+            "enabled",
             COMMON_MESSAGING_PROPERTY_PREFIX + ".message-create-spans.enabled",
-            DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".batch-send.message-creation-spans.enabled",
             systemPropertyFallback);
     return enabled != null ? enabled : true;
-  }
-
-  @Nullable
-  private static Boolean getMessageCreateSpansEnabled(
-      OpenTelemetry openTelemetry,
-      DeclarativeConfigProperties config,
-      String replacementProperty,
-      String deprecatedProperty,
-      boolean systemPropertyFallback) {
-    Boolean enabled =
-        getBoolean(
-            config.get("message_create_spans"),
-            "enabled",
-            replacementProperty,
-            systemPropertyFallback);
-    if (enabled != null || SemconvStability.v3Preview(openTelemetry)) {
-      return enabled;
-    }
-
-    // TODO: remove the deprecated stable names in 3.0.
-    enabled =
-        getBoolean(
-            config.get("batch_send").get("message_creation_spans"),
-            "enabled",
-            deprecatedProperty,
-            systemPropertyFallback);
-    if (enabled != null) {
-      warnDeprecatedSetting(deprecatedProperty, replacementProperty);
-    }
-    return enabled;
   }
 
   private static IncludeExclude getDeprecatedHeaders(
@@ -294,18 +264,6 @@ public final class MessagingConfig {
               + " system property is deprecated and will be removed in 3.0. Use "
               + replacementProperty
               + " instead.");
-    }
-  }
-
-  private static void warnDeprecatedSetting(String deprecatedProperty, String replacementProperty) {
-    if (warnedDeprecatedProperties.add(deprecatedProperty)) {
-      logger.warning(
-          "The "
-              + deprecatedProperty
-              + " setting and the equivalent declarative configuration property are deprecated"
-              + " and will be removed in 3.0. Use "
-              + replacementProperty
-              + " or equivalent declarative configuration instead.");
     }
   }
 

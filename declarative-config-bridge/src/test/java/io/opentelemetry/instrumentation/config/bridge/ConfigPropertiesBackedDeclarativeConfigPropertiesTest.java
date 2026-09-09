@@ -205,23 +205,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
         .isFalse();
   }
 
-  @Test
-  void testDeprecatedMessagingMessageCreationSpansMapping() {
-    DeclarativeConfigProperties config =
-        createConfig(
-            "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled", "false");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructured("messaging")
-                .getStructured("batch_send")
-                .getStructured("message_creation_spans")
-                .getBoolean("enabled"))
-        .isFalse();
-  }
-
   @ParameterizedTest
   @MethodSource("messageCreateSpansCases")
   void testMessageCreateSpansPrecedence(Map<String, String> properties, boolean expected) {
