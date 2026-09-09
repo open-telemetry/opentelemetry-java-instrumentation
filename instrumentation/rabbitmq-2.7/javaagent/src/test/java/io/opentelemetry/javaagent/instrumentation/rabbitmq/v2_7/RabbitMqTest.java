@@ -104,7 +104,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   Connection conn;
   Channel channel;
@@ -145,11 +146,11 @@ class RabbitMqTest extends AbstractRabbitMqTest {
    * unexpected shutdown (not an application-initiated {@code close()}, which does not trigger
    * recovery) and asserts the attribute survives it.
    *
-   * <p>Automatic recovery ({@code Recoverable}, {@code RecoveryListener},
-   * {@code ConnectionFactory#setAutomaticRecoveryEnabled}) doesn't exist at the 2.7.0 muzzle
-   * floor, only at the newer client this test compiles against (see the {@code testCompileOnly}
-   * dependency), so this only actually runs under {@code -PtestLatestDeps=true}, where the test
-   * runtime classpath is bumped to a client new enough to have it.
+   * <p>Automatic recovery ({@code Recoverable}, {@code RecoveryListener}, {@code
+   * ConnectionFactory#setAutomaticRecoveryEnabled}) doesn't exist at the 2.7.0 muzzle floor, only
+   * at the newer client this test compiles against (see the {@code testCompileOnly} dependency), so
+   * this only actually runs under {@code -PtestLatestDeps=true}, where the test runtime classpath
+   * is bumped to a client new enough to have it.
    */
   @Test
   void testVhostSurvivesAutomaticRecovery() throws Exception {
@@ -165,7 +166,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     recoveringFactory.setNetworkRecoveryInterval(200);
 
     Connection recoveringConnection = recoveringFactory.newConnection();
-    cleanup.deferCleanup(recoveringConnection::close);
+    cleanup.deferCleanup(recoveringConnection);
     Channel recoveringChannel = recoveringConnection.createChannel();
 
     CountDownLatch recovered = new CountDownLatch(1);
@@ -197,6 +198,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
                         satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                         satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
+                        equalTo(
+                            stringKey("rabbitmq.command"),
+                            EXPERIMENTAL_ATTRIBUTES ? "queue.declare" : null),
                         equalTo(
                             stringKey("messaging.rabbitmq.vhost.name"),
                             EXPERIMENTAL_ATTRIBUTES ? "otel-test" : null),

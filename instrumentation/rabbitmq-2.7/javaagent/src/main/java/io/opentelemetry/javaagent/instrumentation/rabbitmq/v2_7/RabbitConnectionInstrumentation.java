@@ -28,8 +28,7 @@ class RabbitConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("start").and(takesNoArguments()),
-        getClass().getName() + "$StartAdvice");
+        named("start").and(takesNoArguments()), getClass().getName() + "$StartAdvice");
   }
 
   @SuppressWarnings("unused")

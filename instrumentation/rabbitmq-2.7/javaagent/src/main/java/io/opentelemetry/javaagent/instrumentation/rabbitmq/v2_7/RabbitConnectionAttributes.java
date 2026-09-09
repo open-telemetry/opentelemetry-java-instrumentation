@@ -16,7 +16,8 @@ import javax.annotation.Nullable;
  * The virtual host and cluster name of the RabbitMQ connection. Neither is part of the messaging
  * semantic conventions yet, see open-telemetry/semantic-conventions#3997, so both ride the same
  * {@code otel.instrumentation.rabbitmq.experimental-span-attributes} opt-in as the rest of this
- * module's experimental attributes, see {@link RabbitInstrumenterHelper#CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES}.
+ * module's experimental attributes, see {@link
+ * RabbitInstrumenterHelper#CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES}.
  */
 public final class RabbitConnectionAttributes {
 
