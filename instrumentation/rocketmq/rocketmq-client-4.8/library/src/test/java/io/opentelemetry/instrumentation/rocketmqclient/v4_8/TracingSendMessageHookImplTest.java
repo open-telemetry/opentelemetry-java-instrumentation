@@ -28,12 +28,14 @@ import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -58,7 +60,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class TracingSendMessageHookImplTest {
@@ -283,6 +287,53 @@ class TracingSendMessageHookImplTest {
                         .hasNoParent()
                         .hasLinks(
                             LinkData.create(existing.get(0)), LinkData.create(existing.get(1)))));
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = SpanKind.class,
+      names = {"CLIENT", "PRODUCER"})
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void usesFinalSpanKindForSuppression(SpanKind parentKind) throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
+    MessageBatch batch = batch();
+    int id = 1;
+    for (Message message : batch) {
+      message.putUserProperty(
+          "traceparent", "00-00000000000000000000000000000001-000000000000000" + id++ + "-01");
+    }
+    batch.setBody(batch.encode());
+    SendMessageContext request = request(batch);
+    SendMessageHook hook =
+        RocketMqTelemetry.builder(testing.getOpenTelemetry())
+            .setBatchSendMessageCreationSpansEnabled(false)
+            .build()
+            .createSendMessageHook();
+    Instrumenter<String, Void> parentInstrumenter =
+        Instrumenter.<String, Void>builder(
+                testing.getOpenTelemetry(), "test-parent", parent -> parent)
+            .buildInstrumenter(parent -> parentKind);
+    Context parentContext = parentInstrumenter.start(Context.root(), "parent");
+
+    try (Scope ignored = parentContext.makeCurrent()) {
+      hook.sendMessageBefore(request);
+      finish(request, hook, null);
+    } finally {
+      parentInstrumenter.end(parentContext, "parent", null, null);
+    }
+
+    testing.waitAndAssertTraces(
+        trace -> {
+          int size = parentKind == CLIENT ? 1 : 2;
+          trace.hasSize(size);
+          SpanData parent = spanNamed(trace, size, "parent");
+          assertThat(parent).hasKind(parentKind).hasNoParent();
+          if (parentKind == PRODUCER) {
+            assertThat(spanNamed(trace, size, "send topic")).hasKind(CLIENT).hasParent(parent);
+          }
+        });
   }
 
   @ParameterizedTest

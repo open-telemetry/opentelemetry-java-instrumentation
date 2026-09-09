@@ -67,9 +67,6 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
       return;
     }
     Context parentContext = Context.current();
-    if (!instrumenter.shouldStart(parentContext, context)) {
-      return;
-    }
     Message batch =
         emitStableMessagingSemconv() && context.getMessage() instanceof Iterable<?>
             ? context.getMessage()
@@ -113,6 +110,10 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
         creationContexts.add(creationContext);
       }
       RocketMqBatchSendSpanLinksExtractor.setContexts(context, creationContexts);
+    }
+    if (!instrumenter.shouldStart(parentContext, context)) {
+      RocketMqBatchSendSpanLinksExtractor.clearContexts(context);
+      return;
     }
     Context sendContext = instrumenter.start(parentContext, context);
     CONTEXT_FIELD.set(context, sendContext);
