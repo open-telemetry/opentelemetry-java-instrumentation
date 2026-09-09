@@ -55,6 +55,8 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
       }
 
       VertxSqlClientSingletons.setClientInfo(VertxSqlClientSingletons.getClientInfo(sqlClientBase));
+      VertxSqlClientSingletons.setQuerySupplier(
+          VertxSqlClientSingletons.getClientSupplier(sqlClientBase));
       return callDepth;
     }
 
@@ -65,6 +67,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
       }
 
       VertxSqlClientSingletons.setClientInfo(null);
+      VertxSqlClientSingletons.setQuerySupplier(null);
     }
   }
 }

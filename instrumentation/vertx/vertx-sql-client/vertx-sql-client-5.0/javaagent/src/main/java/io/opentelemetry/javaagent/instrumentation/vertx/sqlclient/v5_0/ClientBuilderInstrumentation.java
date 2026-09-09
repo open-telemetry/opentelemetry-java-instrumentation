@@ -87,24 +87,20 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
     // The returned array contains the handler to install at index 0 and the exit state at index 1.
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToFields(@ToField(value = "connectHandler", index = 0))
-    @Nullable
     public static Object[] onEnter(
         @Advice.This Object clientBuilder,
         @Advice.FieldValue("driver") Object driver,
         @Advice.FieldValue("connectHandler") @Nullable Handler<SqlConnection> connectHandler) {
       List<SqlConnectOptions> databases =
           VertxSqlClientSingletons.getBuilderDatabases(clientBuilder);
-      if (databases == null || databases.isEmpty()) {
-        VertxSqlClientSingletons.setConstructionState(null);
-        return null;
-      }
       VertxSqlClientConstructionState state =
           new VertxSqlClientConstructionState(
-              databases, VertxSqlClientUtil.getDbSystemNameFromClassName(driver));
+              databases != null && !databases.isEmpty() ? databases : null,
+              VertxSqlClientUtil.getDbSystemNameFromClassName(driver));
       VertxSqlClientSingletons.setConstructionState(state);
       VertxSqlClientInfo info = state.getInfo();
       return new Object[] {
-        info != null
+        state.getSupplier() == null && info != null
             ? VertxSqlClientSingletons.wrapConnectHandler(connectHandler, info)
             : connectHandler,
         new BuildState(state, connectHandler)

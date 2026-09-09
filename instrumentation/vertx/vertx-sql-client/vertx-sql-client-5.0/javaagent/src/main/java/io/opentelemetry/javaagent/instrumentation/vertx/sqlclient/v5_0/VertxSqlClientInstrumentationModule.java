@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import java.util.List;
 import java.util.function.BiConsumer;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -47,10 +48,14 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
     return asList(
         new ClientBuilderInstrumentation(),
         new CommandSchedulerInstrumentation(),
+        new ConnectionFactoryInstrumentation(),
+        new ConnectionPoolInstrumentation(),
         new DriverInstrumentation(),
         new PoolInstrumentation(),
+        new PoolWaiterInstrumentation(),
         new SqlClientBaseInstrumentation(),
         new SqlConnectionBaseInstrumentation(),
+        new SqlConnectionPoolInstrumentation(),
         new PreparedStatementInstrumentation(),
         new QueryBaseInstrumentation(),
         new QueryExecutorInstrumentation(),
@@ -65,8 +70,12 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
     // used in 5.0
     virtualFieldRegistrar.accept(
         "io.vertx.sqlclient.internal.command.CommandBase", Context.class.getName());
+    virtualFieldRegistrar.accept(
+        "io.vertx.sqlclient.internal.Connection", VertxSqlClientInfo.class.getName());
     // used in 5.1
     virtualFieldRegistrar.accept(
         "io.vertx.sqlclient.spi.protocol.CommandBase", Context.class.getName());
+    virtualFieldRegistrar.accept(
+        "io.vertx.sqlclient.spi.connection.Connection", VertxSqlClientInfo.class.getName());
   }
 }
