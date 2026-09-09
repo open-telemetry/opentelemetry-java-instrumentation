@@ -6,9 +6,14 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.Properties;
@@ -68,6 +73,111 @@ class JdbcConnectionPoolNameUtilTest {
   }
 
   @ParameterizedTest
+  @MethodSource("propertyArguments")
+  void parsesLegacyEndpointAndConfiguredTargetFromProperties(
+      String serverName,
+      String portNumber,
+      String expectedLegacyAddress,
+      Integer expectedLegacyPort,
+      DbServerTarget expectedTarget) {
+    Properties properties = new Properties();
+    if (serverName != null) {
+      properties.setProperty("serverName", serverName);
+    }
+    if (portNumber != null) {
+      properties.setProperty("portNumber", portNumber);
+    }
+
+    DbInfo dbInfo = JdbcConnectionPoolNameUtil.dbInfo(properties);
+
+    assertThat(dbInfo.getLegacyServerAddress()).isEqualTo(expectedLegacyAddress);
+    assertThat(dbInfo.getLegacyServerPort()).isEqualTo(expectedLegacyPort);
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(expectedTarget);
+  }
+
+  private static Stream<Arguments> propertyArguments() {
+    return Stream.of(
+        argumentSet(
+            "address and port",
+            "db.example",
+            "5432",
+            "db.example",
+            5432,
+            DbServerTarget.create("db.example", 5432)),
+        argumentSet(
+            "portless address",
+            "db.example",
+            null,
+            "db.example",
+            null,
+            DbServerTarget.create("db.example", null)),
+        argumentSet(
+            "invalid port",
+            "db.example",
+            "invalid",
+            "db.example",
+            null,
+            DbServerTarget.create("db.example", null)),
+        argumentSet(
+            "bracketed IPv6 address",
+            "[2001:db8::1]",
+            "5432",
+            "2001:db8::1",
+            5432,
+            DbServerTarget.create("2001:db8::1", 5432)),
+        argumentSet("missing address", null, "5432", null, 5432, null),
+        argumentSet("empty address", "", "5432", null, 5432, null),
+        argumentSet("empty bracketed address", "[]", "5432", "", 5432, null),
+        argumentSet("no endpoint", null, null, null, null, null));
+  }
+
+  @ParameterizedTest
+  @MethodSource("databaseAttributesArguments")
+  void returnsConfiguredDatabaseAttributes(DbServerTarget target, Attributes expectedAttributes) {
+    DbInfo dbInfo =
+        DbInfo.builder()
+            .dbSystemName("postgresql")
+            .dbNamespace("orders")
+            .legacyServerAddress("legacy.example")
+            .legacyServerPort(15432)
+            .configuredServerTarget(target)
+            .build();
+
+    assertThat(JdbcConnectionPoolNameUtil.databaseAttributes(dbInfo))
+        .isEqualTo(emitStableDatabaseSemconv() ? expectedAttributes : Attributes.empty());
+  }
+
+  private static Stream<Arguments> databaseAttributesArguments() {
+    return Stream.of(
+        argumentSet(
+            "configured address and port",
+            DbServerTarget.create("db.example", 5432),
+            Attributes.of(
+                DB_SYSTEM_NAME, "postgresql",
+                DB_NAMESPACE, "orders",
+                SERVER_ADDRESS, "db.example",
+                SERVER_PORT, 5432L)),
+        argumentSet(
+            "portless configured address",
+            DbServerTarget.create("db.example", null),
+            Attributes.of(
+                DB_SYSTEM_NAME, "postgresql",
+                DB_NAMESPACE, "orders",
+                SERVER_ADDRESS, "db.example")),
+        argumentSet(
+            "configured target list",
+            DbServerTarget.create("db-a:5432,db-b:6432", null),
+            Attributes.of(
+                DB_SYSTEM_NAME, "postgresql",
+                DB_NAMESPACE, "orders",
+                SERVER_ADDRESS, "db-a:5432,db-b:6432")),
+        argumentSet(
+            "no configured target",
+            null,
+            Attributes.of(DB_SYSTEM_NAME, "postgresql", DB_NAMESPACE, "orders")));
+  }
+
+  @ParameterizedTest
   @MethodSource("poolNameArguments")
   void returnsExpectedPoolName(
       DbInfo dbInfo, String oldExpectedPoolName, String stableExpectedPoolName) {
@@ -123,13 +233,31 @@ class JdbcConnectionPoolNameUtilTest {
             "orders",
             "orders"),
         argumentSet(
+            "configured address and port",
+            DbInfo.builder()
+                .configuredServerTarget(DbServerTarget.create("db.example", 5432))
+                .build(),
+            FALLBACK_NAME,
+            "db.example:5432"),
+        argumentSet(
+            "configured IPv6 address and port",
+            DbInfo.builder()
+                .configuredServerTarget(DbServerTarget.create("2001:db8::1", 5432))
+                .build(),
+            FALLBACK_NAME,
+            "[2001:db8::1]:5432"),
+        argumentSet(
             "configured target list",
-            DbInfo.builder().configuredServerAddress("db-a:5432,db-b:6432").build(),
+            DbInfo.builder()
+                .configuredServerTarget(DbServerTarget.create("db-a:5432,db-b:6432", null))
+                .build(),
             FALLBACK_NAME,
             "db-a:5432,db-b:6432"),
         argumentSet(
             "portless configured IPv6 address",
-            DbInfo.builder().configuredServerAddress("2001:db8::1").build(),
+            DbInfo.builder()
+                .configuredServerTarget(DbServerTarget.create("2001:db8::1", null))
+                .build(),
             FALLBACK_NAME,
             "2001:db8::1"),
         argumentSet(
