@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.deliverInstrumenter;
 
 import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
@@ -24,12 +24,12 @@ public class TracedDelegatingConsumer implements Consumer {
 
   private final String queue;
   private final Consumer delegate;
-  private final Channel channel;
+  private final Connection connection;
 
-  public TracedDelegatingConsumer(String queue, Consumer delegate, Channel channel) {
+  public TracedDelegatingConsumer(String queue, Consumer delegate, Connection connection) {
     this.queue = queue;
     this.delegate = delegate;
-    this.channel = channel;
+    this.connection = connection;
   }
 
   @Override
@@ -62,11 +62,7 @@ public class TracedDelegatingConsumer implements Consumer {
       String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
       throws IOException {
     Context parentContext = Context.current();
-    // Resolved per delivery, not cached, so this reflects the current inner connection after
-    // automatic recovery -- AutorecoveringChannel#getConnection() always returns that, but a
-    // Connection captured once at consumer-registration time would go stale across a reconnect.
-    DeliveryRequest request =
-        DeliveryRequest.create(queue, envelope, channel.getConnection(), properties, body);
+    DeliveryRequest request = DeliveryRequest.create(queue, envelope, connection, properties, body);
 
     if (!deliverInstrumenter().shouldStart(parentContext, request)) {
       delegate.handleDelivery(consumerTag, envelope, properties, body);
