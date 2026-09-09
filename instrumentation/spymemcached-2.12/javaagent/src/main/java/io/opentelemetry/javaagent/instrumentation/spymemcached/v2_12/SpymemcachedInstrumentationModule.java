@@ -24,6 +24,8 @@ public class SpymemcachedInstrumentationModule extends InstrumentationModule {
     return asList(
         new ConnectionFactoryInstrumentation(),
         new MemcachedClientInstrumentation(),
-        new MemcachedConnectionInstrumentation());
+        new MemcachedConnectionInstrumentation(),
+        new MemcachedNodeInstrumentation(),
+        new OptimizedOperationInstrumentation());
   }
 }
