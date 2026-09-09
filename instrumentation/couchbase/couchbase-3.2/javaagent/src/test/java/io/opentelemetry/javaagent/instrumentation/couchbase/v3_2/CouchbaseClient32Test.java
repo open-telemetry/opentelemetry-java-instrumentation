@@ -96,7 +96,8 @@ class CouchbaseClient32Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasKind(testLatestDeps() ? CLIENT : INTERNAL).hasName(spanName());
+                  span.hasKind(testLatestDeps() ? CLIENT : INTERNAL)
+                      .hasName(emitStableDatabaseSemconv() ? "get _default" : "get");
                   if (testLatestDeps()) {
                     span.hasStatus(StatusData.error());
                   }
@@ -109,28 +110,10 @@ class CouchbaseClient32Test {
                       equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
                       equalTo(longKey("db.couchbase.retries"), oldOrExperimental(0L)),
                       equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")),
-                      equalTo(SERVER_ADDRESS, serverAddress()),
-                      equalTo(SERVER_PORT, serverPort()));
+                      equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? seedAddress : null),
+                      equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? (long) seedPort : null));
                 },
                 span -> span.hasName("dispatch_to_server")));
-  }
-
-  private static String serverAddress() {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
-    return seedAddress;
-  }
-
-  private static Long serverPort() {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
-    return (long) seedPort;
-  }
-
-  private static String spanName() {
-    return emitStableDatabaseSemconv() ? "get _default" : "get";
   }
 
   private static <T> T oldOrExperimental(T value) {
