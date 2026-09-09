@@ -101,7 +101,7 @@ class RocketMqInstrumenterFactory {
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(getter, operationType, "create", headers))
         .addAttributesExtractor(producerAttributesExtractor())
-        .buildProducerInstrumenter(new MapSetter());
+        .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   private static AttributesExtractor<SendMessageContext, Void> producerAttributesExtractor() {
