@@ -10,8 +10,11 @@ import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.couchbase.client.core.Core;
+import com.couchbase.client.core.env.CoreEnvironment;
+import com.couchbase.client.core.env.IoConfig;
 import com.couchbase.client.core.env.SeedNode;
 import java.util.LinkedHashSet;
 import java.util.Optional;
@@ -72,6 +75,26 @@ class CouchbaseServerTargetsTest {
     assertThat(CouchbaseServerTargets.get(core)).isSameAs(connectionStringTarget);
     assertThat(connectionStringTarget.getAddress()).isEqualTo("couchbases://cluster.example");
     assertThat(connectionStringTarget.getPort()).isNull();
+  }
+
+  @Test
+  void dnsSrvTargetBecomesDirectWhenDnsSrvIsDisabled() {
+    Set<SeedNode> seedNodes =
+        singleton(SeedNode.create("cluster.example", Optional.empty(), Optional.empty()));
+    CouchbaseServerTarget connectionStringTarget =
+        CouchbaseConnectionStrings.target("couchbases://cluster.example");
+    assertThat(connectionStringTarget).isNotNull();
+    CoreEnvironment environment = mock(CoreEnvironment.class);
+    IoConfig ioConfig = mock(IoConfig.class);
+    when(environment.ioConfig()).thenReturn(ioConfig);
+    when(ioConfig.dnsSrvEnabled()).thenReturn(false);
+
+    Core core = mock(Core.class);
+    CouchbaseServerTargets.registerSeedNodes(seedNodes, connectionStringTarget);
+    CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, environment);
+
+    assertThat(CouchbaseServerTargets.get(core).getAddress()).isEqualTo("cluster.example");
+    assertThat(CouchbaseServerTargets.get(core).getPort()).isNull();
   }
 
   @ParameterizedTest

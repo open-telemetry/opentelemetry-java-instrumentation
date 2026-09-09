@@ -59,8 +59,12 @@ public class CouchbaseServerTargets {
         }
       }
     }
-    if (target == null && environment != null) {
-      target = target(seedNodes, environment.securityConfig().tlsEnabled());
+    if (environment != null) {
+      if (target == null) {
+        target = target(seedNodes, environment.securityConfig().tlsEnabled());
+      } else if (!environment.ioConfig().dnsSrvEnabled()) {
+        target = target.asDirect();
+      }
     }
     register(core, target);
   }

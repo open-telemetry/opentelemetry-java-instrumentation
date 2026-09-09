@@ -61,6 +61,10 @@ public class CouchbaseServerTarget {
     return target.getPort();
   }
 
+  CouchbaseServerTarget asDirect() {
+    return scheme == null ? this : new CouchbaseServerTarget(target, null);
+  }
+
   @Nullable
   static String cleanHost(@Nullable String host) {
     if (host == null) {

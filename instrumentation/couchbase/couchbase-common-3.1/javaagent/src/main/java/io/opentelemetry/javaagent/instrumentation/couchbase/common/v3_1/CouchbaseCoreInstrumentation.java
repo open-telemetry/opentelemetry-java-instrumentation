@@ -85,7 +85,10 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
       if (connectionString == null) {
         CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, environment);
       } else {
-        CouchbaseServerTargets.register(core, CouchbaseConnectionStrings.target(connectionString));
+        CouchbaseServerTargets.register(
+            core,
+            CouchbaseConnectionStrings.target(
+                connectionString, environment.ioConfig().dnsSrvEnabled()));
       }
     }
   }
@@ -101,7 +104,10 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
       if (connectionString == null) {
         CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, environment);
       } else {
-        CouchbaseServerTargets.register(core, CouchbaseConnectionStrings.target(connectionString));
+        CouchbaseServerTargets.register(
+            core,
+            CouchbaseConnectionStrings.target(
+                connectionString, environment.ioConfig().dnsSrvEnabled()));
       }
     }
   }
@@ -110,8 +116,13 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
   public static class ParsedConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void captureConfiguredTarget(
-        @Advice.This Core core, @Advice.Argument(2) ConnectionString connectionString) {
-      CouchbaseServerTargets.register(core, CouchbaseConnectionStrings.target(connectionString));
+        @Advice.This Core core,
+        @Advice.Argument(0) CoreEnvironment environment,
+        @Advice.Argument(2) ConnectionString connectionString) {
+      CouchbaseServerTargets.register(
+          core,
+          CouchbaseConnectionStrings.target(
+              connectionString, environment.ioConfig().dnsSrvEnabled()));
     }
   }
 }
