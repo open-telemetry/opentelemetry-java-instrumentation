@@ -250,7 +250,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(maybeStable(DB_STATEMENT), "POST /test-search-index/_doc"),
+                                equalTo(maybeStable(DB_STATEMENT), null),
                                 equalTo(NETWORK_TYPE, null),
                                 equalTo(
                                     SERVER_ADDRESS,

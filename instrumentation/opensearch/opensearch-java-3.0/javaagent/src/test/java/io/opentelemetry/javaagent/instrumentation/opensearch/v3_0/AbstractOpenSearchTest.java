@@ -104,7 +104,7 @@ abstract class AbstractOpenSearchTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(maybeStable(DB_STATEMENT), null),
                                 equalTo(NETWORK_TYPE, null),
                                 equalTo(
                                     SERVER_ADDRESS,
@@ -162,7 +162,7 @@ abstract class AbstractOpenSearchTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(maybeStable(DB_STATEMENT), null),
                                 equalTo(NETWORK_TYPE, null),
                                 equalTo(
                                     SERVER_ADDRESS,
@@ -216,7 +216,7 @@ abstract class AbstractOpenSearchTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                         equalTo(maybeStable(DB_OPERATION), "GET"),
-                        equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                        equalTo(maybeStable(DB_STATEMENT), null),
                         equalTo(NETWORK_TYPE, null),
                         equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null),
                         equalTo(SERVER_PORT, null)));
