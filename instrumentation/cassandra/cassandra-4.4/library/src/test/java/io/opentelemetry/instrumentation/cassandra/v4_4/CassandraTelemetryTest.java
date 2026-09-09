@@ -6,12 +6,15 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,14 +25,14 @@ import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.context.DriverContext;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
-import com.datastax.oss.driver.internal.core.context.InternalDriverContext;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
-import com.datastax.oss.driver.internal.core.metadata.DefaultNode;
-import com.datastax.oss.driver.internal.core.metadata.MetadataManager;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraTelemetryUtil;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,75 +61,77 @@ class CassandraTelemetryTest {
   }
 
   @Test
-  void standardWrapCapturesASingleConfiguredTarget() {
+  void standardWrapHasNoStableTarget() {
+    CassandraRequest request = execute(telemetry.wrap(session));
+
+    assertThat(request.getServerTarget()).isNull();
+    verify(session, never()).getContext();
+  }
+
+  @Test
+  void explicitContactPointsProvideTheCompleteTarget() {
+    CassandraRequest request =
+        execute(
+            telemetry.wrap(
+                session,
+                asList(
+                    InetSocketAddress.createUnresolved("configured.example.com", 9042),
+                    InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
+
+    assertTarget(request, "configured.example.com:9042,programmatic.example.com:9142", null);
+    verify(session, never()).getContext();
+  }
+
+  @Test
+  void explicitContactPointsAreCapturedWhenWrapped() {
+    List<InetSocketAddress> contactPoints =
+        new ArrayList<>(
+            singletonList(InetSocketAddress.createUnresolved("configured.example.com", 9142)));
+    CqlSession wrappedSession = telemetry.wrap(session, contactPoints);
+
+    contactPoints.clear();
+
+    assertTarget(execute(wrappedSession), "configured.example.com", 9142);
+  }
+
+  @Test
+  void capturedContactPointsIncludeDriverConfiguration() {
     if (emitStableDatabaseSemconv()) {
-      InternalDriverContext context = configuredContext("configured.example.com:9042");
-      MetadataManager metadataManager = context.getMetadataManager();
-      DefaultNode node = metadataManager.getContactPoints().iterator().next();
-      when(node.getEndPoint())
-          .thenReturn(
-              new DefaultEndPoint(
-                  InetSocketAddress.createUnresolved("configured.example.com", 9042)));
+      configureContactPoints("configured.example.com:9042");
     }
 
-    CassandraRequest request = execute(telemetry.wrap(session));
+    CassandraRequest request = execute(CassandraTelemetryUtil.wrap(telemetry, session, emptySet()));
 
     assertTarget(request, "configured.example.com", null);
   }
 
   @Test
-  void explicitContactPointsCoverASessionWithoutConfigurationProvenance() {
+  void capturedContactPointsCombineBuilderAndDriverConfiguration() {
+    if (emitStableDatabaseSemconv()) {
+      configureContactPoints("configured.example.com:9042");
+    }
+
     CassandraRequest request =
         execute(
-            telemetry.wrap(
+            CassandraTelemetryUtil.wrap(
+                telemetry,
                 session,
-                singletonList(InetSocketAddress.createUnresolved("configured.example.com", 9142))));
+                singleton(
+                    new DefaultEndPoint(
+                        InetSocketAddress.createUnresolved("programmatic.example.com", 9142)))));
 
-    assertTarget(request, "configured.example.com", 9142);
+    assertTarget(request, "configured.example.com:9042,programmatic.example.com:9142", null);
   }
 
-  @Test
-  void customSessionWithoutConfigurationProvenanceHasNoStableTarget() {
-    if (emitStableDatabaseSemconv()) {
-      when(session.getContext()).thenReturn(mock(DriverContext.class));
-    }
-
-    CassandraRequest request = execute(telemetry.wrap(session));
-
-    assertThat(request.getServerTarget()).isNull();
-  }
-
-  @Test
-  void configurationAndMetadataMismatchHasNoStableTarget() {
-    if (emitStableDatabaseSemconv()) {
-      InternalDriverContext context = configuredContext("configured.example.com:9042");
-      MetadataManager metadataManager = context.getMetadataManager();
-      DefaultNode node = metadataManager.getContactPoints().iterator().next();
-      when(node.getEndPoint())
-          .thenReturn(
-              new DefaultEndPoint(
-                  InetSocketAddress.createUnresolved("different.example.com", 9042)));
-    }
-
-    CassandraRequest request = execute(telemetry.wrap(session));
-
-    assertThat(request.getServerTarget()).isNull();
-  }
-
-  private InternalDriverContext configuredContext(String contactPoint) {
-    InternalDriverContext context = mock(InternalDriverContext.class);
+  private void configureContactPoints(String contactPoint) {
+    DriverContext context = mock(DriverContext.class);
     DriverConfig config = mock(DriverConfig.class);
     DriverExecutionProfile profile = mock(DriverExecutionProfile.class);
-    MetadataManager metadataManager = mock(MetadataManager.class);
-    DefaultNode node = mock(DefaultNode.class);
     when(session.getContext()).thenReturn(context);
     when(context.getConfig()).thenReturn(config);
     when(config.getDefaultProfile()).thenReturn(profile);
     when(profile.getStringList(DefaultDriverOption.CONTACT_POINTS, emptyList()))
         .thenReturn(singletonList(contactPoint));
-    when(context.getMetadataManager()).thenReturn(metadataManager);
-    when(metadataManager.getContactPoints()).thenReturn(singleton(node));
-    return context;
   }
 
   private CassandraRequest execute(CqlSession wrappedSession) {

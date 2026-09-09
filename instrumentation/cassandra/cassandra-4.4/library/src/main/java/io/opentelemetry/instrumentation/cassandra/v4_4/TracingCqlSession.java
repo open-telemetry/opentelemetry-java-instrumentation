@@ -40,11 +40,7 @@ final class TracingCqlSession {
   }
 
   CqlSession wrapSession(CqlSession session) {
-    // The driver configuration can be reloaded, so read the configured target once here and keep
-    // that snapshot for the life of the session.
-    DbServerTarget serverTarget =
-        emitStableDatabaseSemconv() ? CassandraServerTarget.of(session) : null;
-    return wrapSession(session, serverTarget);
+    return wrapSession(session, (DbServerTarget) null);
   }
 
   CqlSession wrapSession(CqlSession session, Set<EndPoint> programmaticContactPoints) {

@@ -46,6 +46,10 @@ public final class CassandraTelemetry {
   /**
    * Construct a new tracing-enabled CqlSession using the provided {@link CqlSession} instance.
    *
+   * <p>This overload omits stable {@code server.address} and {@code server.port} attributes because
+   * the session does not expose the complete original contact points. Use {@link #wrap(CqlSession,
+   * Collection)} when the configured contact points are available.
+   *
    * @param session An instance of CqlSession configured as desired.
    * @return a {@link TracingCqlSession}.
    */
@@ -57,13 +61,9 @@ public final class CassandraTelemetry {
    * Returns a tracing-enabled {@link CqlSession} using the supplied contact points to derive the
    * session's logical Cassandra server target.
    *
-   * <p>Use this overload when contact points were supplied directly with the session builder's
-   * contact-point methods. The driver does not expose those builder contact points through the
-   * resulting {@link CqlSession}, so the instrumentation cannot combine them with contact points
-   * from other configuration sources.
-   *
-   * <p>For sessions configured exclusively through a driver configuration file or {@link
-   * com.datastax.oss.driver.api.core.config.DriverConfigLoader}, use {@link #wrap(CqlSession)}.
+   * <p>Use this overload when the session's configured contact points are available, whether they
+   * were supplied through the session builder, a driver configuration file, or a {@link
+   * com.datastax.oss.driver.api.core.config.DriverConfigLoader}.
    *
    * <p>The contact points are captured when the session is wrapped and are used only to derive
    * stable database server attributes. They do not change the session's connections or

@@ -33,6 +33,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -86,7 +88,7 @@ public abstract class AbstractCassandraTest {
 
   protected abstract String getInstrumentationName();
 
-  protected CqlSession wrap(CqlSession session) {
+  protected CqlSession wrap(CqlSession session, List<InetSocketAddress> contactPoints) {
     return session;
   }
 
@@ -200,7 +202,9 @@ public abstract class AbstractCassandraTest {
     String unreachableContactPoint = "127.0.0.2:9042";
     CqlSession session =
         getSessionWithConfiguredContactPoints(
-            asList(cassandraIp + ":" + cassandraPort, unreachableContactPoint));
+            asList(
+                new InetSocketAddress(cassandraIp, cassandraPort),
+                new InetSocketAddress("127.0.0.2", 9042)));
     cleanup.deferCleanup(session);
 
     session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
@@ -653,7 +657,8 @@ public abstract class AbstractCassandraTest {
             .withConfigLoader(configLoader)
             .withLocalDatacenter("datacenter1")
             .withKeyspace(keyspace)
-            .build());
+            .build(),
+        singletonList(new InetSocketAddress(cassandraHost, cassandraPort)));
   }
 
   protected CqlSessionBuilder addContactPoint(CqlSessionBuilder sessionBuilder) {
@@ -661,18 +666,23 @@ public abstract class AbstractCassandraTest {
     return sessionBuilder;
   }
 
-  private CqlSession getSessionWithConfiguredContactPoints(List<String> contactPoints) {
+  private CqlSession getSessionWithConfiguredContactPoints(List<InetSocketAddress> contactPoints) {
     DriverConfigLoader configLoader =
         DefaultDriverConfigLoader.builder()
             .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
             .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(10))
-            .withStringList(DefaultDriverOption.CONTACT_POINTS, contactPoints)
+            .withStringList(
+                DefaultDriverOption.CONTACT_POINTS,
+                contactPoints.stream()
+                    .map(address -> address.getHostString() + ":" + address.getPort())
+                    .collect(toList()))
             .build();
     return wrap(
         CqlSession.builder()
             .withConfigLoader(configLoader)
             .withLocalDatacenter("datacenter1")
-            .build());
+            .build(),
+        contactPoints);
   }
 
   private static class BatchScenario {
