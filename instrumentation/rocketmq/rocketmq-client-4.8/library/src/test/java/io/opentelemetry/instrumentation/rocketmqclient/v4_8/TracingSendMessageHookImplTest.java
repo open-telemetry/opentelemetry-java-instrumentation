@@ -107,6 +107,7 @@ class TracingSendMessageHookImplTest {
                       emitStableMessagingSemconv() && failed
                           ? IllegalStateException.class.getName()
                           : null));
+          assertThat(send.getEndEpochNanos()).isGreaterThan(send.getStartEpochNanos());
           for (int i = 0; i < 2; i++) {
             SpanData creation = creates ? trace.getSpan(i + 1) : send;
             assertThat(extract(decoded.get(i))).isEqualTo(remote(creation.getSpanContext()));
@@ -124,6 +125,7 @@ class TracingSendMessageHookImplTest {
                       equalTo(MESSAGING_OPERATION_TYPE, "create"),
                       equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                       equalTo(MESSAGING_MESSAGE_ID, "message-" + i));
+              assertThat(creation.getEndEpochNanos()).isEqualTo(creation.getStartEpochNanos());
               assertThat(creation.getEndEpochNanos())
                   .isLessThanOrEqualTo(send.getStartEpochNanos());
             }
