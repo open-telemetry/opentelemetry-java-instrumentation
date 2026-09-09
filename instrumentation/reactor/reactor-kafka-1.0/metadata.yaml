@@ -12,9 +12,12 @@ configurations:
       only a span link connecting it to the producer trace.
     type: boolean
     default: false
+  - ref: messaging.deprecated-receive-telemetry.enabled
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
+  - ref: messaging.deprecated-headers.included
+  - ref: messaging.deprecated-headers.excluded
   - name: otel.instrumentation.kafka.experimental-span-attributes
     declarative_name: java.kafka.experimental_span_attributes/development
     description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.

@@ -126,6 +126,26 @@ configurations:
     type: list
     default: ""
 
+  # The deprecated names below are flat properties only: the declarative configuration schema keeps
+  # them under `java.common.messaging`, so they declare no declarative_name.
+  messaging.deprecated-headers.included:
+    name: otel.instrumentation.messaging.experimental.headers.included
+    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.included` instead. It may be removed in the next minor release."
+    type: list
+    default: ""
+
+  messaging.deprecated-headers.excluded:
+    name: otel.instrumentation.messaging.experimental.headers.excluded
+    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.excluded` instead. It may be removed in the next minor release."
+    type: list
+    default: ""
+
+  messaging.deprecated-receive-telemetry.enabled:
+    name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled` instead. It may be removed in the next minor release."
+    type: boolean
+    default: false
+
   common.messaging.message-create-spans.enabled:
     name: otel.instrumentation.common.messaging.message-create-spans.enabled
     declarative_name: java.common.messaging.message_create_spans.enabled

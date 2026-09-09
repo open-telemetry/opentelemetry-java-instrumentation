@@ -21,6 +21,8 @@ configurations:
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
+  - ref: messaging.deprecated-headers.included
+  - ref: messaging.deprecated-headers.excluded
   - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: >
@@ -28,3 +30,4 @@ configurations:
       only a span link connecting it to the producer trace.
     type: boolean
     default: false
+  - ref: messaging.deprecated-receive-telemetry.enabled
