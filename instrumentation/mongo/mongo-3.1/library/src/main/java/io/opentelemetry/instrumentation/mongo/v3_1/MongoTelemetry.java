@@ -75,5 +75,4 @@ public final class MongoTelemetry {
   public CommandListener createCommandListener() {
     return new TracingCommandListener(instrumenter);
   }
-
 }
