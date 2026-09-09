@@ -1,0 +1,98 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.api.incubator.config.internal;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Answers.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import java.util.function.Predicate;
+import org.junit.jupiter.api.Test;
+
+class LoggingConfigTest {
+
+  @Test
+  void commonSelectorTakesPrecedence() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry(false);
+    DeclarativeConfigProperties loggingConfig =
+        openTelemetry.getInstrumentationConfig("common").get("logging");
+    when(loggingConfig.get("structured_attributes").getScalarList("included", String.class))
+        .thenReturn(singletonList("key*"));
+    when(loggingConfig.get("structured_attributes").getScalarList("excluded", String.class))
+        .thenReturn(singletonList("key2"));
+    DeclarativeConfigProperties sourceConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+
+    Predicate<String> selector =
+        LoggingConfig.resolveStructuredAttributes(
+            openTelemetry, sourceConfig, "logback-appender", "key-value-pair-attributes");
+
+    assertThat(selector).isNotNull();
+    assertThat(selector.test("key1")).isTrue();
+    assertThat(selector.test("key2")).isFalse();
+    assertThat(selector.test("other")).isFalse();
+    verifyNoInteractions(sourceConfig);
+  }
+
+  @Test
+  void v3PreviewDefaultsToAllForAbsentOrEmptySelector() {
+    for (boolean empty : asList(false, true)) {
+      ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry(true);
+      if (empty) {
+        DeclarativeConfigProperties selectorConfig =
+            openTelemetry
+                .getInstrumentationConfig("common")
+                .get("logging")
+                .get("structured_attributes");
+        when(selectorConfig.getScalarList("included", String.class)).thenReturn(emptyList());
+        when(selectorConfig.getScalarList("excluded", String.class)).thenReturn(emptyList());
+      }
+      DeclarativeConfigProperties sourceConfig =
+          mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+
+      Predicate<String> selector =
+          LoggingConfig.resolveStructuredAttributes(
+              openTelemetry, sourceConfig, "log4j-appender", "map-message-attributes");
+
+      assertThat(selector).isNotNull();
+      assertThat(selector.test("anything")).isTrue();
+      verifyNoInteractions(sourceConfig);
+    }
+  }
+
+  @Test
+  void sourceSpecificSelectorRemainsFallbackOutsideV3Preview() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry(false);
+    DeclarativeConfigProperties sourceConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    when(sourceConfig
+            .get("map_message_attributes/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("selected"));
+
+    Predicate<String> selector =
+        LoggingConfig.resolveStructuredAttributes(
+            openTelemetry, sourceConfig, "log4j-appender", "map-message-attributes");
+
+    assertThat(selector).isNotNull();
+    assertThat(selector.test("selected")).isTrue();
+    assertThat(selector.test("other")).isFalse();
+  }
+
+  private static ExtendedOpenTelemetry mockOpenTelemetry(boolean v3Preview) {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class, RETURNS_DEEP_STUBS);
+    DeclarativeConfigProperties commonConfig = openTelemetry.getInstrumentationConfig("common");
+    when(commonConfig.getBoolean("v3_preview")).thenReturn(v3Preview);
+    return openTelemetry;
+  }
+}

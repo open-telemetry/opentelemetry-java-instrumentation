@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import static io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors.split;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -59,6 +60,10 @@ class LogbackAppenderInstaller {
       "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included";
   private static final String KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED =
       "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded";
+  private static final String STRUCTURED_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.common.logging.structured-attributes.included";
+  private static final String STRUCTURED_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.common.logging.structured-attributes.excluded";
 
   static void install(ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
     Optional<io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender>
@@ -176,14 +181,38 @@ class LogbackAppenderInstaller {
 
     initializeMdcAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
-    initializeKeyValuePairAttributesFromProperties(
-        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
     initializeLoggerContextAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
-    initializeLogstashMarkerAttributesFromProperties(
+    initializeStructuredAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
-    initializeLogstashStructuredArgumentAttributesFromProperties(
-        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
+  }
+
+  static void initializeStructuredAttributesFromProperties(
+      ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
+    List<String> included = getLoggingListProperty(environment, STRUCTURED_ATTRIBUTES_INCLUDED);
+    List<String> excluded = getLoggingListProperty(environment, STRUCTURED_ATTRIBUTES_EXCLUDED);
+    boolean v3Preview =
+        Boolean.TRUE.equals(
+            evaluateBooleanProperty(environment, "otel.instrumentation.common.v3-preview"));
+    if (isEmpty(included) && isEmpty(excluded) && !v3Preview) {
+      initializeKeyValuePairAttributesFromProperties(environment, openTelemetryAppender);
+      initializeLogstashMarkerAttributesFromProperties(environment, openTelemetryAppender);
+      initializeLogstashStructuredArgumentAttributesFromProperties(
+          environment, openTelemetryAppender);
+      return;
+    }
+
+    IncludeExclude selector =
+        IncludeExclude.builder()
+            .setIncluded(
+                isEmpty(included) && isEmpty(excluded)
+                    ? singletonList("*")
+                    : included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build();
+    openTelemetryAppender.setKeyValuePairAttributes(selector);
+    openTelemetryAppender.setLogstashMarkerAttributes(selector);
+    openTelemetryAppender.setLogstashStructuredArgumentAttributes(selector);
   }
 
   // the appender resolves the precedence between these settings, ignoring the deprecated one when

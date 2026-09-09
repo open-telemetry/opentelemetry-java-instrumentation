@@ -403,6 +403,46 @@ class LogbackAppenderTest {
     assertThat(keyValuePairDeprecationWarnings(properties)).isEmpty();
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  @SuppressWarnings("deprecation") // verifies the deprecated appender setting is replaced
+  void commonStructuredAttributeSelectorTakesPrecedence(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.common.logging.structured_attributes.excluded",
+          "*");
+    } else {
+      properties.put("otel.instrumentation.common.logging.structured-attributes.excluded", "*");
+    }
+
+    assertThat(
+            deprecationWarnings(
+                properties,
+                appender -> appender.setCaptureKeyValuePairAttributes(true),
+                LogbackAppenderInstaller::initializeStructuredAttributesFromProperties,
+                "otel.instrumentation.logback-appender.experimental"
+                    + ".capture-key-value-pair-attributes"))
+        .isEmpty();
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies v3 preview ignores the deprecated appender setting
+  void v3PreviewDefaultsStructuredAttributeCaptureToAll() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("otel.instrumentation.common.v3-preview", true);
+
+    assertThat(
+            deprecationWarnings(
+                properties,
+                appender -> appender.setCaptureKeyValuePairAttributes(false),
+                LogbackAppenderInstaller::initializeStructuredAttributesFromProperties,
+                "otel.instrumentation.logback-appender.experimental"
+                    + ".capture-key-value-pair-attributes"))
+        .isEmpty();
+  }
+
   @Test
   void declarativeYamlSequenceKeyValuePairSelectorTakesPrecedenceOverDeprecatedProperty() {
     Map<String, Object> properties = new HashMap<>();

@@ -435,6 +435,16 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.common.logging.structured-attributes.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. Excluded patterns take precedence. An absent or empty included list captures every key not excluded. Under v3-preview, all structured attributes are captured by default. MDC and logger-context attributes remain separate and opt-in."
+    },
+    {
+      "name": "otel.instrumentation.common.logging.structured-attributes.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys not to capture. Excluded patterns take precedence over included patterns. An exclude-only selector captures every key not excluded; `*` captures no structured attributes. This does not affect `otel.event.name`, MDC, or logger context."
+    },
+    {
       "name": "otel.instrumentation.log4j-appender.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Log4J2 appender instrumentation.",
