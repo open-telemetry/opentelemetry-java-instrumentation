@@ -132,6 +132,23 @@ class ElasticsearchTransportServerTargetsTest {
     assertThat(target.getPort()).isEqualTo(9301);
   }
 
+  @Test
+  void linkedClientUsesNestedDelegateTarget() {
+    AbstractClient client = initializedClient();
+    AbstractClient delegate = initializedClient();
+    AbstractClient nestedDelegate = initializedClient();
+    ElasticsearchTransportServerTargets.setDelegate(client, delegate);
+    ElasticsearchTransportServerTargets.setDelegate(delegate, nestedDelegate);
+
+    ElasticsearchTransportServerTargets.update(
+        nestedDelegate, singletonList(new Endpoint("10.0.0.1", 9301)));
+
+    DbServerTarget target = ElasticsearchTransportServerTargets.get(client);
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("10.0.0.1");
+    assertThat(target.getPort()).isEqualTo(9301);
+  }
+
   private static AbstractClient initializedClient() {
     AbstractClient client = mock(AbstractClient.class);
     ElasticsearchTransportServerTargets.initializeUpdateState(client);
