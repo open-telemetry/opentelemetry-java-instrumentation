@@ -13,6 +13,12 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
+/**
+ * Reads remote addresses from both regular and driver-shaded Netty objects.
+ *
+ * <p>The shaded Cassandra driver relocates Netty classes, so this code cannot refer to {@code
+ * ChannelHandlerContext} or {@code Channel} by type.
+ */
 public class CassandraChannel {
 
   private static final MethodType ACCESSOR_TYPE = MethodType.methodType(Object.class, Object.class);
@@ -55,6 +61,9 @@ public class CassandraChannel {
   }
 
   private static MethodHandle createAccessor(Class<?> type, String name) {
+    // A public method declared by a package-private implementation is not accessible through
+    // publicLookup(). Resolve the method from a public interface to get an accessible declaring
+    // type.
     Method method = findPublicInterfaceMethod(type, name);
     if (method == null) {
       return MISSING_ACCESSOR;
