@@ -86,11 +86,19 @@ class OpenSearchConfiguredHostTest {
     assertThat(target.getPort()).isNull();
   }
 
-  @Test
-  void userinfoAfterAuthorityHasNoTarget() {
-    assertThat(OpenSearchConfiguredHost.parse("os.example?token=user@secret")).isNull();
-    assertThat(OpenSearchConfiguredHost.parse("user:123/secret@os.example")).isNull();
-    assertThat(OpenSearchConfiguredHost.parse("os.example#user@secret")).isNull();
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "os.example/path@secret",
+        "os.example?token=user@secret",
+        "os.example#user@secret"
+      })
+  void atSignsInEndpointSuffixAreIgnored(String host) {
+    DbServerTarget target = OpenSearchConfiguredHost.parse(host, "https");
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("os.example");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test

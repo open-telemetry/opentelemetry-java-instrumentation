@@ -69,7 +69,7 @@ public class OpenSearchConfiguredHost {
     for (int i = 0; i < value.length(); i++) {
       char c = value.charAt(i);
       if (c == '/' || c == '?' || c == '#') {
-        return value.indexOf('@', i) >= 0 ? null : value.substring(0, i);
+        return value.substring(0, i);
       }
     }
     return value;
