@@ -93,7 +93,7 @@ final class CassandraServerTarget {
     }
     String host = contactPoint.substring(0, separator);
     if (host.startsWith("[")) {
-      if (!host.endsWith("]")) {
+      if (!host.endsWith("]") || host.indexOf(':') < 0) {
         target.addEndpoint((String) null, -1);
         return;
       }

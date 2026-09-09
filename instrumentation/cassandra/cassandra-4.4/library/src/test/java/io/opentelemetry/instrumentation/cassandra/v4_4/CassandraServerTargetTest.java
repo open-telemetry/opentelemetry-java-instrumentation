@@ -245,6 +245,7 @@ class CassandraServerTargetTest {
         argumentSet("non-numeric port", singletonList("node.example.com:not-a-port")),
         argumentSet("zero port", singletonList("node.example.com:0")),
         argumentSet("unclosed IPv6 bracket", singletonList("[::1:9042")),
+        argumentSet("bracketed hostname", singletonList("[node.example.com]:9042")),
         argumentSet("unbracketed loopback IPv6", singletonList("::1")),
         argumentSet("unbracketed IPv6", singletonList("2001:db8::1")),
         argumentSet("unbracketed IPv6 with an apparent port", singletonList("2001:db8::1:9042")),
