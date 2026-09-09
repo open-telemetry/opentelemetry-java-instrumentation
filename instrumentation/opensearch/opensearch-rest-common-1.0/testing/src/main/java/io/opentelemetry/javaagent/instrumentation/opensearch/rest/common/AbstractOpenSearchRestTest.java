@@ -104,7 +104,9 @@ public abstract class AbstractOpenSearchRestTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), null),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv() ? null : "GET _cluster/health"),
                                 equalTo(
                                     NETWORK_PEER_ADDRESS,
                                     emitOldDatabaseSemconv() ? responseAddress : null),
@@ -195,7 +197,9 @@ public abstract class AbstractOpenSearchRestTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), null),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv() ? null : "GET _cluster/health"),
                                 equalTo(
                                     NETWORK_PEER_ADDRESS,
                                     emitOldDatabaseSemconv() ? responseAddress : null),
@@ -293,7 +297,9 @@ public abstract class AbstractOpenSearchRestTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                         equalTo(maybeStable(DB_OPERATION), "GET"),
-                        equalTo(maybeStable(DB_STATEMENT), null),
+                        equalTo(
+                            maybeStable(DB_STATEMENT),
+                            emitStableDatabaseSemconv() ? null : "GET _cluster/health"),
                         equalTo(
                             NETWORK_PEER_ADDRESS,
                             emitOldDatabaseSemconv() ? responseAddress : null),

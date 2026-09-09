@@ -21,9 +21,9 @@ class OpenSearchAttributesGetterTest {
   }
 
   @Test
-  void omitsQueryTextWithoutCapturedBody() {
+  void returnsLegacyStatementWithoutCapturedBody() {
     OpenSearchRequest request = OpenSearchRequest.create("POST", "/_search", null, null);
 
-    assertThat(getter.getDbQueryText(request)).isNull();
+    assertThat(getter.getDbQueryText(request)).isEqualTo("POST /_search");
   }
 }

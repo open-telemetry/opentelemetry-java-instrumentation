@@ -31,7 +31,11 @@ final class OpenSearchAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(OpenSearchRequest request) {
-    return request.getBody();
+    String body = request.getBody();
+    if (body != null || emitStableDatabaseSemconv()) {
+      return body;
+    }
+    return request.getMethod() + " " + request.getEndpoint();
   }
 
   @Override

@@ -55,7 +55,7 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
         openSearchClient.search(searchRequest, TestDocument.class);
     assertThat(searchResponse.hits().total().value()).isGreaterThan(0);
 
-    // Verify trace does NOT include query text
+    // Verify trace does NOT include the query body
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -69,7 +69,11 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(maybeStable(DB_STATEMENT), null),
+                                satisfies(
+                                    maybeStable(DB_STATEMENT),
+                                    val ->
+                                        val.asString()
+                                            .startsWith("POST /" + INDEX_NAME + "/_search")),
                                 equalTo(NETWORK_TYPE, null),
                                 equalTo(
                                     SERVER_ADDRESS,

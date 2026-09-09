@@ -104,7 +104,9 @@ abstract class AbstractOpenSearchTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), null),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv() ? null : "GET /_cluster/health"),
                                 equalTo(NETWORK_TYPE, null),
                                 equalTo(
                                     SERVER_ADDRESS,
@@ -162,7 +164,9 @@ abstract class AbstractOpenSearchTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), null),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv() ? null : "GET /_cluster/health"),
                                 equalTo(NETWORK_TYPE, null),
                                 equalTo(
                                     SERVER_ADDRESS,
@@ -216,7 +220,9 @@ abstract class AbstractOpenSearchTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                         equalTo(maybeStable(DB_OPERATION), "GET"),
-                        equalTo(maybeStable(DB_STATEMENT), null),
+                        equalTo(
+                            maybeStable(DB_STATEMENT),
+                            emitStableDatabaseSemconv() ? null : "GET /_cluster/health"),
                         equalTo(NETWORK_TYPE, null),
                         equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null),
                         equalTo(SERVER_PORT, null)));

@@ -12,9 +12,10 @@ import org.junit.jupiter.api.Test;
 class OpenSearchRestAttributesGetterTest {
 
   @Test
-  void omitsQueryText() {
+  void returnsLegacyStatement() {
     OpenSearchRestRequest request = OpenSearchRestRequest.create("POST", "/_search", null);
 
-    assertThat(new OpenSearchRestAttributesGetter().getDbQueryText(request)).isNull();
+    assertThat(new OpenSearchRestAttributesGetter().getDbQueryText(request))
+        .isEqualTo("POST /_search");
   }
 }

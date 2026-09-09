@@ -245,7 +245,11 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), null),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv()
+                                        ? null
+                                        : "GET /invalid-index/_doc/1"),
                                 equalTo(NETWORK_TYPE, null),
                                 equalTo(
                                     SERVER_ADDRESS,
