@@ -232,7 +232,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     }
     DbServerTarget target = parseServerTargetGroup(authority, DEFAULT_PORT);
     if (target != null || hasMultipleTargets(jdbcUrl)) {
-      ctx.configuredServerTarget(target);
+      ctx.resolveConfiguredServerTarget(target);
     }
     return true;
   }

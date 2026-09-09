@@ -130,8 +130,9 @@ public final class OracleUrlParser implements JdbcUrlParser {
     if (authority == null || authority.indexOf(',') < 0) {
       return null;
     }
-    ctx.multiTarget();
-    ctx.configuredServerTarget(UrlParsingUtils.parseServerTargetGroup(authority, DEFAULT_PORT));
+    ctx.disableSingleServerFallback();
+    ctx.resolveConfiguredServerTarget(
+        UrlParsingUtils.parseServerTargetGroup(authority, DEFAULT_PORT));
     return authority;
   }
 
@@ -198,7 +199,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
     if (!hasMultipleAddresses(description)) {
       return;
     }
-    ctx.multiTarget();
+    ctx.disableSingleServerFallback();
 
     // A DESCRIPTION_LIST contains independent targets, not one failover/load-balancing group.
     if (DESCRIPTION_LIST_PATTERN.matcher(description).find()) {
@@ -219,7 +220,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
       addresses.append(description, addressMatcher.start() + 1, end);
       searchFrom = end + 1;
     }
-    ctx.configuredServerTarget(
+    ctx.resolveConfiguredServerTarget(
         UrlParsingUtils.parseServerTargetGroup(addresses.toString(), DEFAULT_PORT));
   }
 

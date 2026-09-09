@@ -111,7 +111,7 @@ public final class GenericUrlParser implements JdbcUrlParser {
     }
     DbServerTarget target = parseServerTargetGroup(authority, defaultPort);
     if (target != null || hasMultipleTargets(jdbcUrl)) {
-      ctx.configuredServerTarget(target);
+      ctx.resolveConfiguredServerTarget(target);
     }
     return true;
   }

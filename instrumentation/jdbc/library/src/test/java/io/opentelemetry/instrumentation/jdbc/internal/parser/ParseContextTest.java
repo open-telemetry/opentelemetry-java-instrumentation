@@ -51,11 +51,26 @@ class ParseContextTest {
   }
 
   @Test
+  void singleServerFallbackPreservesConfiguredValuesWhenDefaultsChange() {
+    ParseContext context = ParseContext.of("postgresql", null);
+    context.host("pg.host");
+    context.port(5433);
+    context.defaultHost("localhost");
+    context.defaultPort(5432);
+
+    DbInfo info = context.toDbInfo();
+
+    assertThat(info.getLegacyServerAddress()).isEqualTo("localhost");
+    assertThat(info.getLegacyServerPort()).isEqualTo(5432);
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("pg.host", 5433));
+  }
+
+  @Test
   void resolvedGroupIsNotOverwrittenByLegacyEndpoint() {
     ParseContext context = ParseContext.of("postgresql", null);
     DbServerTarget target = DbServerTarget.create("h1:5432,h2:5433", null);
-    context.multiTarget();
-    context.configuredServerTarget(target);
+    context.disableSingleServerFallback();
+    context.resolveConfiguredServerTarget(target);
     context.host("h1");
     context.port(5432);
 
@@ -63,11 +78,32 @@ class ParseContextTest {
   }
 
   @Test
+  void disablingFallbackPreservesResolvedTarget() {
+    ParseContext context = ParseContext.of("postgresql", null);
+    DbServerTarget target = DbServerTarget.create("h1:5432,h2:5433", null);
+    context.resolveConfiguredServerTarget(target);
+    context.disableSingleServerFallback();
+
+    assertThat(context.toDbInfo().getConfiguredServerTarget()).isSameAs(target);
+  }
+
+  @Test
   void rejectedTargetDoesNotFallBackToLegacyEndpoint() {
     ParseContext context = ParseContext.of("postgresql", null);
-    context.configuredServerTarget(null);
+    context.resolveConfiguredServerTarget(null);
     context.host("h1");
     context.port(5432);
+
+    assertThat(context.toDbInfo().getConfiguredServerTarget()).isNull();
+  }
+
+  @Test
+  void resolvingNullClearsTargetWithoutRestoringFallback() {
+    ParseContext context = ParseContext.of("postgresql", null);
+    context.host("h1");
+    context.port(5432);
+    context.resolveConfiguredServerTarget(DbServerTarget.create("h1:5432,h2:5433", null));
+    context.resolveConfiguredServerTarget(null);
 
     assertThat(context.toDbInfo().getConfiguredServerTarget()).isNull();
   }
@@ -77,7 +113,7 @@ class ParseContextTest {
     ParseContext context = ParseContext.of("postgresql", null);
     context.host("h1");
     context.port(5432);
-    context.multiTarget();
+    context.disableSingleServerFallback();
 
     assertThat(context.toDbInfo().getConfiguredServerTarget()).isNull();
   }

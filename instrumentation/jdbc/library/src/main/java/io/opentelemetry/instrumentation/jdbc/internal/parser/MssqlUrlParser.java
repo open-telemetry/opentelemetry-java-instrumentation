@@ -99,7 +99,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     if (failoverPartner == null || failoverPartner.isEmpty()) {
       return;
     }
-    ctx.multiTarget();
+    ctx.disableSingleServerFallback();
     String host = ctx.host();
     if (!serverConfigured || host == null) {
       return;
@@ -108,7 +108,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     appendPrimary(group, ctx, host, instanceName, portConfigured);
     group.append(',');
     appendServerAddress(group, failoverPartner);
-    ctx.configuredServerTarget(parseServerTargetGroup(group.toString(), DEFAULT_PORT));
+    ctx.resolveConfiguredServerTarget(parseServerTargetGroup(group.toString(), DEFAULT_PORT));
   }
 
   /** Returns whether a server was configured by the data source, parameters, or URL authority. */

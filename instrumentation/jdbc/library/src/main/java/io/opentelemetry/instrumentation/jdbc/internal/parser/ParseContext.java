@@ -27,13 +27,12 @@ public final class ParseContext {
   @Nullable private String system;
   @Nullable private String oldSemconvSystem;
   @Nullable private String subtype;
-  @Nullable private String host;
-  @Nullable private Integer port;
-  @Nullable private String configuredHost;
-  @Nullable private Integer configuredPort;
+  @Nullable private String legacyHost;
+  @Nullable private Integer legacyPort;
+  @Nullable private String singleServerHost;
+  @Nullable private Integer singleServerPort;
   @Nullable private DbServerTarget configuredServerTarget;
-  private boolean multipleTargets;
-  private boolean configuredTargetResolved;
+  private boolean allowSingleServerFallback = true;
   @Nullable private String user;
   @Nullable private String databaseName;
   @Nullable private String namespace;
@@ -93,56 +92,60 @@ public final class ParseContext {
     this.subtype = subtype;
   }
 
-  /** The host value accumulated so far. */
+  /** The legacy host accumulated so far, including any parser default. */
   @Nullable
   public String host() {
-    return host;
+    return legacyHost;
   }
 
   /**
-   * Set the host value. Enclosing brackets are removed from literal IPv6 addresses so that {@code
-   * server.address} always holds the address alone, regardless of which parser produced it.
+   * Record a parsed host for legacy output and, when allowed, single-server fallback. Enclosing
+   * brackets are removed from literal IPv6 addresses so that {@code server.address} holds the
+   * address alone.
    */
   public void host(@Nullable String host) {
-    this.host = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
-    if (!configuredTargetResolved) {
-      configuredHost = this.host;
+    legacyHost = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
+    if (allowSingleServerFallback) {
+      singleServerHost = legacyHost;
     }
   }
 
   /** Set a parser default host without marking it as configured. */
   public void defaultHost(@Nullable String host) {
-    this.host = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
+    legacyHost = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
   }
 
-  /** The port value accumulated so far. */
+  /** The legacy port accumulated so far, including any parser default. */
   @Nullable
   public Integer port() {
-    return port;
+    return legacyPort;
   }
 
-  /** Set the port value. */
+  /** Record a parsed port for legacy output and, when allowed, single-server fallback. */
   public void port(@Nullable Integer port) {
-    this.port = port;
-    if (!configuredTargetResolved) {
-      configuredPort = port;
+    legacyPort = port;
+    if (allowSingleServerFallback) {
+      singleServerPort = port;
     }
   }
 
   /** Set a parser default port without marking it as configured. */
   public void defaultPort(@Nullable Integer port) {
-    this.port = port;
+    legacyPort = port;
   }
 
-  /** Set the resolved configured target, or {@code null} when it cannot be represented safely. */
-  public void configuredServerTarget(@Nullable DbServerTarget configuredServerTarget) {
-    this.configuredTargetResolved = true;
+  /**
+   * Resolve the configured target, or {@code null} when it cannot be represented safely. Disables
+   * single-server fallback in either case.
+   */
+  public void resolveConfiguredServerTarget(@Nullable DbServerTarget configuredServerTarget) {
+    allowSingleServerFallback = false;
     this.configuredServerTarget = configuredServerTarget;
   }
 
-  /** Mark the connection as having multiple configured targets for parser-local validation. */
-  public void multiTarget() {
-    multipleTargets = true;
+  /** Prevent single-server fallback without discarding an already resolved target. */
+  public void disableSingleServerFallback() {
+    allowSingleServerFallback = false;
   }
 
   /** The user value accumulated so far. */
@@ -349,11 +352,11 @@ public final class ParseContext {
     // oldSemconvSystem falls back to system when not explicitly set (i.e., when both are the same)
     String oldSystem = oldSemconvSystem != null ? oldSemconvSystem : system;
     DbInfo.Builder builder = DbInfo.builder().dbSystemName(system).dbSystem(oldSystem);
-    if (host != null) {
-      builder.legacyServerAddress(host);
+    if (legacyHost != null) {
+      builder.legacyServerAddress(legacyHost);
     }
-    if (port != null) {
-      builder.legacyServerPort(port);
+    if (legacyPort != null) {
+      builder.legacyServerPort(legacyPort);
     }
     if (user != null) {
       builder.dbUser(user);
@@ -370,7 +373,7 @@ public final class ParseContext {
     } else if (namespace != null) {
       builder.dbName(namespace);
     }
-    String legacyConnectionString = buildShortUrl(type, subtype, host, port);
+    String legacyConnectionString = buildShortUrl(type, subtype, legacyHost, legacyPort);
     builder.dbConnectionString(legacyConnectionString);
     builder.configuredServerTarget(buildConfiguredServerTarget());
     return builder.build();
@@ -378,13 +381,14 @@ public final class ParseContext {
 
   @Nullable
   private DbServerTarget buildConfiguredServerTarget() {
-    if (configuredTargetResolved) {
+    if (!allowSingleServerFallback) {
       return configuredServerTarget;
     }
-    if (multipleTargets || configuredHost == null) {
+    if (singleServerHost == null) {
       return null;
     }
     // Single-server JDBC targets include the parser's default port when none was configured.
-    return DbServerTarget.create(configuredHost, configuredPort != null ? configuredPort : port);
+    return DbServerTarget.create(
+        singleServerHost, singleServerPort != null ? singleServerPort : legacyPort);
   }
 }
