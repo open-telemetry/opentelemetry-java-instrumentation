@@ -103,6 +103,10 @@ class WrapperTest extends AbstractWrapperTest {
                       span.hasName("poll " + SHARED_TOPIC)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
+                          .satisfies(
+                              spanData ->
+                                  assertThat(spanData.getEndEpochNanos())
+                                      .isGreaterThan(spanData.getStartEpochNanos()))
                           .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
                           .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
       assertMessagingMetrics();
@@ -131,6 +135,10 @@ class WrapperTest extends AbstractWrapperTest {
                     span.hasName(SHARED_TOPIC + " receive")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getEndEpochNanos())
+                                    .isGreaterThan(spanData.getStartEpochNanos()))
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
                         .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders)),
                 span ->

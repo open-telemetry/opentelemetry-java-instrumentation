@@ -176,6 +176,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                       span.hasName("poll " + SHARED_TOPIC)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
+                          .satisfies(
+                              spanData ->
+                                  assertThat(spanData.getEndEpochNanos())
+                                      .isEqualTo(spanData.getStartEpochNanos()))
                           .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
                           .hasAttributesSatisfyingExactly(receiveAttributes())),
           // ideally we'd want producer callback to be part of the main trace,
@@ -206,6 +210,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                     span.hasName(SHARED_TOPIC + " receive")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getEndEpochNanos())
+                                    .isEqualTo(spanData.getStartEpochNanos()))
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
                         .hasAttributesSatisfyingExactly(receiveAttributes()),
                 span ->

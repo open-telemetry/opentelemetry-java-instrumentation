@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingList;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +66,11 @@ public class KafkaConsumerTelemetry {
   public <K, V> Context buildAndFinishSpan(
       ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
     return buildAndFinishSpan(
-        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer), timer);
+        records,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        timer.startTime(),
+        timer.now());
   }
 
   @Nullable
@@ -73,7 +78,8 @@ public class KafkaConsumerTelemetry {
       ConsumerRecords<K, V> records,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      Timer timer) {
+      Instant startTime,
+      Instant endTime) {
     if (records.isEmpty()) {
       return null;
     }
@@ -84,13 +90,7 @@ public class KafkaConsumerTelemetry {
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
       receiveContext =
           InstrumenterUtil.startAndEnd(
-              consumerReceiveInstrumenter,
-              parentContext,
-              request,
-              null,
-              null,
-              timer.startTime(),
-              timer.now());
+              consumerReceiveInstrumenter, parentContext, request, null, null, startTime, endTime);
       receiveOperationStarted = true;
     }
 

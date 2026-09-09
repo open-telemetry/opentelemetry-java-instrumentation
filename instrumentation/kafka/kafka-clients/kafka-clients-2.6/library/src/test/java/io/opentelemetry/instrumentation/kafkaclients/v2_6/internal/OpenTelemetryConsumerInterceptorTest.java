@@ -16,11 +16,11 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -32,6 +32,8 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class OpenTelemetryConsumerInterceptorTest {
 
@@ -83,6 +85,41 @@ class OpenTelemetryConsumerInterceptorTest {
     SerializationTestUtil.testSerialize(
         consumerConfig(),
         OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void receiveSpanHasZeroDuration(boolean receiveTelemetryEnabled) {
+    KafkaTelemetry telemetry =
+        KafkaTelemetry.builder(testing.getOpenTelemetry())
+            .setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled)
+            .build();
+    OpenTelemetryConsumerInterceptor<String, String> interceptor =
+        new OpenTelemetryConsumerInterceptor<>();
+    interceptor.configure(telemetry.consumerInterceptorConfigProperties());
+
+    String topic = "test";
+    TopicPartition partition = new TopicPartition(topic, 0);
+    ConsumerRecord<String, String> record = new ConsumerRecord<>(topic, 0, 0, "key", "value");
+    ConsumerRecords<String, String> records =
+        new ConsumerRecords<>(singletonMap(partition, singletonList(record)));
+
+    assertThat(interceptor.onConsume(records).count()).isEqualTo(1);
+
+    if (receiveTelemetryEnabled) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(emitStableMessagingSemconv() ? "poll test" : "test receive")
+                          .hasNoParent()
+                          .satisfies(
+                              spanData ->
+                                  assertThat(spanData.getEndEpochNanos())
+                                      .isEqualTo(spanData.getStartEpochNanos()))));
+    } else {
+      testing.waitAndAssertTraces();
+    }
   }
 
   @Test
@@ -140,9 +177,10 @@ class OpenTelemetryConsumerInterceptorTest {
     Context inheritedContext =
         KafkaConsumerContextUtil.withReceiveOperation(Context.current(), true);
     try (Scope ignored = inheritedContext.makeCurrent()) {
+      Instant timestamp = Instant.now();
       receiveContext =
           requireNonNull(
-              supplier.get().buildAndFinishSpan(records, "test", "client", Timer.start()));
+              supplier.get().buildAndFinishSpan(records, "test", "client", timestamp, timestamp));
     }
 
     assertThat(KafkaConsumerContextUtil.hasReceiveOperation(receiveContext)).isFalse();
