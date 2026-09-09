@@ -152,7 +152,7 @@ public final class UrlParsingUtils {
   }
 
   /** Append a host and optional port, adding brackets around an unbracketed IPv6 address. */
-  public static void appendHostPort(StringBuilder builder, String host, @Nullable Integer port) {
+  static void appendHostPort(StringBuilder builder, String host, @Nullable Integer port) {
     // Brackets keep an IPv6 literal unambiguous when a port follows.
     if (host.contains(":") && !host.startsWith("[")) {
       builder.append('[');
@@ -285,7 +285,7 @@ public final class UrlParsingUtils {
 
   /** Extract an authority when an at sign in a later query parameter obscures its boundary. */
   @Nullable
-  public static String extractAuthorityWithQueryAt(String url) {
+  static String extractAuthorityWithQueryAt(String url) {
     int authorityStart = url.indexOf("://");
     authorityStart = authorityStart < 0 ? 0 : authorityStart + 3;
     int authorityEnd = indexOfAny(url, authorityStart, '/', '?', '#');

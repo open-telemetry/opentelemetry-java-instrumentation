@@ -47,7 +47,7 @@ public final class GenericUrlParser implements JdbcUrlParser {
     parse(jdbcUrl, ctx, null);
   }
 
-  public void parse(String jdbcUrl, ParseContext ctx, @Nullable Integer defaultPort) {
+  void parse(String jdbcUrl, ParseContext ctx, @Nullable Integer defaultPort) {
     if (ctx.system() == null) {
       ctx.system(OTHER_SQL);
     }
