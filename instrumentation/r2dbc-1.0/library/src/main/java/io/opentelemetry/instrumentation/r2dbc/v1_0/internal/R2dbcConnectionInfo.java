@@ -67,10 +67,7 @@ final class R2dbcConnectionInfo {
     this.serverPort =
         factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
     Integer defaultPort =
-        resolveDefaultPort(
-            resolvedDriver,
-            resolvedProtocol,
-            factoryOptions.hasOption(SSL) && Boolean.TRUE.equals(factoryOptions.getValue(SSL)));
+        resolveDefaultPort(resolvedDriver, resolvedProtocol, isSslEnabled(factoryOptions));
     this.configuredServerTarget = R2dbcServerTarget.create(serverAddress, serverPort, defaultPort);
     this.connectionString =
         String.format(
@@ -154,6 +151,14 @@ final class R2dbcConnectionInfo {
     }
     int separator = protocol.indexOf(':');
     return separator < 0 ? null : protocol.substring(separator + 1);
+  }
+
+  private static boolean isSslEnabled(ConnectionFactoryOptions factoryOptions) {
+    Object ssl = factoryOptions.hasOption(SSL) ? factoryOptions.getValue(SSL) : null;
+    // a connection url query parameter keeps its string form, while the r2dbcs scheme and the
+    // programmatic option carry a boolean
+    return Boolean.TRUE.equals(ssl)
+        || (ssl instanceof String && Boolean.parseBoolean((String) ssl));
   }
 
   @Nullable

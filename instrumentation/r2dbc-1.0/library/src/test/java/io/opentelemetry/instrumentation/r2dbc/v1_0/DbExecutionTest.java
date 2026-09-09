@@ -295,6 +295,17 @@ class DbExecutionTest {
   }
 
   @Test
+  void dbExecutionReadsTheSslOptionFromAConnectionUrl() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.parse("r2dbc:clickhouse:tcp://host1:9440/db?ssl=true");
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getConfiguredServerAddress()).isEqualTo("host1");
+    assertThat(dbExecution.getConfiguredServerPort()).isNull();
+  }
+
+  @Test
   void dbExecutionUsesNestedPoolProtocolDefaults() {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
