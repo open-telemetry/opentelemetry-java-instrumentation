@@ -42,7 +42,7 @@ class OptimizedOperationInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Operation optimizedOperation, @Advice.Argument(0) Operation operation) {
-      SpymemcachedRequestHolder.propagateOperation(optimizedOperation, operation);
+      SpymemcachedRequestContext.propagateOperation(optimizedOperation, operation);
     }
   }
 }

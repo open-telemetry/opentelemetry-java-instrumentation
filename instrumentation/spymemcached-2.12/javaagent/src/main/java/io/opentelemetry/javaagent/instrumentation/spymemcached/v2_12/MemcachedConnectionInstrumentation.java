@@ -45,7 +45,7 @@ class MemcachedConnectionInstrumentation implements TypeInstrumentation {
   public static class AddOperationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) Operation operation) {
-      SpymemcachedRequestHolder.trackOperation(Java8BytecodeBridge.currentContext(), operation);
+      SpymemcachedRequestContext.trackOperation(Java8BytecodeBridge.currentContext(), operation);
     }
   }
 
@@ -54,7 +54,7 @@ class MemcachedConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(@Advice.Argument(0) Operation operation) {
-      return SpymemcachedRequestHolder.startRetry(operation);
+      return SpymemcachedRequestContext.startRetry(operation);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

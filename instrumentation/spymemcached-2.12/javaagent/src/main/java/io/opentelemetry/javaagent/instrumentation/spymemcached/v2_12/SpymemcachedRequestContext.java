@@ -17,17 +17,17 @@ import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 
-public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
+public class SpymemcachedRequestContext implements ImplicitContextKeyed {
 
-  private static final ContextKey<SpymemcachedRequestHolder> KEY =
-      named("opentelemetry-spymemcached-request-holder");
+  private static final ContextKey<SpymemcachedRequestContext> KEY =
+      named("opentelemetry-spymemcached-request-context");
   private static final VirtualField<Operation, SpymemcachedRequestSet> REQUESTS =
       VirtualField.find(Operation.class, SpymemcachedRequestSet.class);
 
   private final SpymemcachedRequest request;
   private final boolean retry;
 
-  private SpymemcachedRequestHolder(SpymemcachedRequest request, boolean retry) {
+  private SpymemcachedRequestContext(SpymemcachedRequest request, boolean retry) {
     this.request = request;
     this.retry = retry;
   }
@@ -36,23 +36,23 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
     if (context.get(KEY) != null) {
       return context;
     }
-    return context.with(new SpymemcachedRequestHolder(request, false));
+    return context.with(new SpymemcachedRequestContext(request, false));
   }
 
   public static void trackOperation(Context context, Operation operation) {
-    SpymemcachedRequestHolder holder = context.get(KEY);
-    if (holder == null) {
+    SpymemcachedRequestContext requestContext = context.get(KEY);
+    if (requestContext == null) {
       return;
     }
-    if (holder.retry && !isSingleKeyOperation(operation)) {
-      holder.request.suppressHandlingNodeAddress();
+    if (requestContext.retry && !isSingleKeyOperation(operation)) {
+      requestContext.request.suppressHandlingNodeAddress();
     }
     SpymemcachedRequestSet requestSet = REQUESTS.get(operation);
     if (requestSet == null) {
       requestSet = new SpymemcachedRequestSet();
       REQUESTS.set(operation, requestSet);
     }
-    requestSet.add(holder.request);
+    requestSet.add(requestContext.request);
   }
 
   public static void propagateOperation(Operation target, Operation source) {
@@ -69,15 +69,17 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
   }
 
   public static void captureHandlingNode(Context context, Operation operation, MemcachedNode node) {
-    SpymemcachedRequestHolder holder = context.get(KEY);
+    SpymemcachedRequestContext requestContext = context.get(KEY);
     SpymemcachedRequestSet requestSet = REQUESTS.get(operation);
-    if (holder == null || requestSet == null || requestSet.getSingleRequest() != holder.request) {
+    if (requestContext == null
+        || requestSet == null
+        || requestSet.getSingleRequest() != requestContext.request) {
       return;
     }
-    if (holder.retry) {
-      holder.request.setRetryHandlingNode(node);
+    if (requestContext.retry) {
+      requestContext.request.setRetryHandlingNode(node);
     } else {
-      holder.request.setHandlingNode(node);
+      requestContext.request.setHandlingNode(node);
     }
   }
 
@@ -92,7 +94,7 @@ public class SpymemcachedRequestHolder implements ImplicitContextKeyed {
         && !request.getOperationName().equals("getBulk")
         && isSingleKeyOperation(operation)) {
       // Bind cloned operations while redistributeOperation enqueues them, before publication.
-      return Context.current().with(new SpymemcachedRequestHolder(request, true)).makeCurrent();
+      return Context.current().with(new SpymemcachedRequestContext(request, true)).makeCurrent();
     }
     for (SpymemcachedRequest trackedRequest : requestSet.requests()) {
       trackedRequest.suppressHandlingNodeAddress();

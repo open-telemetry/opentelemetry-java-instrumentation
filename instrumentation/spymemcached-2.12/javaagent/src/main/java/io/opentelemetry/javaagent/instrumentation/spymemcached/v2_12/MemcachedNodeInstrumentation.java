@@ -46,7 +46,7 @@ class MemcachedNodeInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.This MemcachedNode node, @Advice.Argument(0) Operation operation) {
-      SpymemcachedRequestHolder.captureHandlingNode(
+      SpymemcachedRequestContext.captureHandlingNode(
           Java8BytecodeBridge.currentContext(), operation, node);
     }
   }

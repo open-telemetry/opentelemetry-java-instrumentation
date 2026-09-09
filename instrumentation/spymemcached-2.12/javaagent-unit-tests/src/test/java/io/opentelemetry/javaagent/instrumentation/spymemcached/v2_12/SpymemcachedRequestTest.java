@@ -109,12 +109,12 @@ class SpymemcachedRequestTest {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGetBulk");
     Operation operation = operation("one.example", 11211);
-    Context context = SpymemcachedRequestHolder.init(Context.root(), request);
-    SpymemcachedRequestHolder.trackOperation(context, operation);
-    SpymemcachedRequestHolder.captureHandlingNode(context, operation, operation.getHandlingNode());
+    Context context = SpymemcachedRequestContext.init(Context.root(), request);
+    SpymemcachedRequestContext.trackOperation(context, operation);
+    SpymemcachedRequestContext.captureHandlingNode(context, operation, operation.getHandlingNode());
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("one.example", 11211));
 
-    assertThat(SpymemcachedRequestHolder.startRetry(operation)).isNull();
+    assertThat(SpymemcachedRequestContext.startRetry(operation)).isNull();
     assertThat(request.getHandlingNodeAddress()).isNull();
     request.setHandlingNode(memcachedNode("two.example", 11212));
 
@@ -170,19 +170,19 @@ class SpymemcachedRequestTest {
     SpymemcachedRequest secondRequest = SpymemcachedRequest.create(connection, "asyncGet");
     Operation firstOperation = operation("one.example", 11211);
     Operation secondOperation = operation("one.example", 11211);
-    Context firstContext = SpymemcachedRequestHolder.init(Context.root(), firstRequest);
-    Context secondContext = SpymemcachedRequestHolder.init(Context.root(), secondRequest);
-    SpymemcachedRequestHolder.trackOperation(firstContext, firstOperation);
-    SpymemcachedRequestHolder.captureHandlingNode(
+    Context firstContext = SpymemcachedRequestContext.init(Context.root(), firstRequest);
+    Context secondContext = SpymemcachedRequestContext.init(Context.root(), secondRequest);
+    SpymemcachedRequestContext.trackOperation(firstContext, firstOperation);
+    SpymemcachedRequestContext.captureHandlingNode(
         firstContext, firstOperation, firstOperation.getHandlingNode());
-    SpymemcachedRequestHolder.trackOperation(secondContext, secondOperation);
-    SpymemcachedRequestHolder.captureHandlingNode(
+    SpymemcachedRequestContext.trackOperation(secondContext, secondOperation);
+    SpymemcachedRequestContext.captureHandlingNode(
         secondContext, secondOperation, secondOperation.getHandlingNode());
     Operation optimizedOperation = mock(Operation.class);
-    SpymemcachedRequestHolder.propagateOperation(optimizedOperation, firstOperation);
-    SpymemcachedRequestHolder.propagateOperation(optimizedOperation, secondOperation);
+    SpymemcachedRequestContext.propagateOperation(optimizedOperation, firstOperation);
+    SpymemcachedRequestContext.propagateOperation(optimizedOperation, secondOperation);
 
-    assertThat(SpymemcachedRequestHolder.startRetry(optimizedOperation)).isNull();
+    assertThat(SpymemcachedRequestContext.startRetry(optimizedOperation)).isNull();
 
     assertThat(firstRequest.getHandlingNodeAddress()).isNull();
     assertThat(secondRequest.getHandlingNodeAddress()).isNull();
@@ -193,27 +193,27 @@ class SpymemcachedRequestTest {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedSingletons.setServerTarget(connection, singletonList(node("configured", 11211)));
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
-    Context context = SpymemcachedRequestHolder.init(Context.root(), request);
+    Context context = SpymemcachedRequestContext.init(Context.root(), request);
     Context original = Context.current();
     Operation initialOperation = operation("first", 11211);
-    SpymemcachedRequestHolder.trackOperation(context, initialOperation);
-    SpymemcachedRequestHolder.captureHandlingNode(
+    SpymemcachedRequestContext.trackOperation(context, initialOperation);
+    SpymemcachedRequestContext.captureHandlingNode(
         context, initialOperation, initialOperation.getHandlingNode());
 
     Operation firstRetry = operation("second", 11212);
-    try (Scope scope = SpymemcachedRequestHolder.startRetry(initialOperation)) {
+    try (Scope scope = SpymemcachedRequestContext.startRetry(initialOperation)) {
       assertThat(scope).isNotNull();
-      SpymemcachedRequestHolder.trackOperation(Context.current(), firstRetry);
-      SpymemcachedRequestHolder.captureHandlingNode(
+      SpymemcachedRequestContext.trackOperation(Context.current(), firstRetry);
+      SpymemcachedRequestContext.captureHandlingNode(
           Context.current(), firstRetry, firstRetry.getHandlingNode());
     }
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("second", 11212));
 
     Operation secondRetry = operation("third", 11213);
-    try (Scope scope = SpymemcachedRequestHolder.startRetry(firstRetry)) {
+    try (Scope scope = SpymemcachedRequestContext.startRetry(firstRetry)) {
       assertThat(scope).isNotNull();
-      SpymemcachedRequestHolder.trackOperation(Context.current(), secondRetry);
-      SpymemcachedRequestHolder.captureHandlingNode(
+      SpymemcachedRequestContext.trackOperation(Context.current(), secondRetry);
+      SpymemcachedRequestContext.captureHandlingNode(
           Context.current(), secondRetry, secondRetry.getHandlingNode());
     }
 
@@ -226,14 +226,14 @@ class SpymemcachedRequestTest {
   void optimizedRetryWithOneTrackedRequestStillOmitsHandlingNode() {
     SpymemcachedRequest request =
         SpymemcachedRequest.create(mock(MemcachedConnection.class), "asyncGet");
-    Context context = SpymemcachedRequestHolder.init(Context.root(), request);
+    Context context = SpymemcachedRequestContext.init(Context.root(), request);
     Operation operation = operation("first", 11211);
-    SpymemcachedRequestHolder.trackOperation(context, operation);
-    SpymemcachedRequestHolder.captureHandlingNode(context, operation, operation.getHandlingNode());
+    SpymemcachedRequestContext.trackOperation(context, operation);
+    SpymemcachedRequestContext.captureHandlingNode(context, operation, operation.getHandlingNode());
     Operation optimizedOperation = operation("first", 11211);
-    SpymemcachedRequestHolder.propagateOperation(optimizedOperation, operation);
+    SpymemcachedRequestContext.propagateOperation(optimizedOperation, operation);
 
-    assertThat(SpymemcachedRequestHolder.startRetry(optimizedOperation)).isNull();
+    assertThat(SpymemcachedRequestContext.startRetry(optimizedOperation)).isNull();
     assertThat(request.getHandlingNodeAddress()).isNull();
   }
 
@@ -241,18 +241,18 @@ class SpymemcachedRequestTest {
   void multiKeyRetryChildSuppressesHandlingNode() {
     SpymemcachedRequest request =
         SpymemcachedRequest.create(mock(MemcachedConnection.class), "asyncGet");
-    Context context = SpymemcachedRequestHolder.init(Context.root(), request);
+    Context context = SpymemcachedRequestContext.init(Context.root(), request);
     Operation initialOperation = operation("first", 11211);
-    SpymemcachedRequestHolder.trackOperation(context, initialOperation);
-    SpymemcachedRequestHolder.captureHandlingNode(
+    SpymemcachedRequestContext.trackOperation(context, initialOperation);
+    SpymemcachedRequestContext.captureHandlingNode(
         context, initialOperation, initialOperation.getHandlingNode());
     KeyedOperation retryOperation = mock(KeyedOperation.class);
     when(retryOperation.getKeys()).thenReturn(asList("one", "two"));
 
-    try (Scope scope = SpymemcachedRequestHolder.startRetry(initialOperation)) {
+    try (Scope scope = SpymemcachedRequestContext.startRetry(initialOperation)) {
       assertThat(scope).isNotNull();
-      SpymemcachedRequestHolder.trackOperation(Context.current(), retryOperation);
-      SpymemcachedRequestHolder.captureHandlingNode(
+      SpymemcachedRequestContext.trackOperation(Context.current(), retryOperation);
+      SpymemcachedRequestContext.captureHandlingNode(
           Context.current(), retryOperation, memcachedNode("second", 11212));
     }
 
@@ -264,14 +264,14 @@ class SpymemcachedRequestTest {
   void cancelledOrTimedOutOperationDoesNotInvalidatePeer(boolean timedOut) {
     SpymemcachedRequest request =
         SpymemcachedRequest.create(mock(MemcachedConnection.class), "asyncGetBulk");
-    Context context = SpymemcachedRequestHolder.init(Context.root(), request);
+    Context context = SpymemcachedRequestContext.init(Context.root(), request);
     Operation operation = operation("first", 11211);
-    SpymemcachedRequestHolder.trackOperation(context, operation);
-    SpymemcachedRequestHolder.captureHandlingNode(context, operation, operation.getHandlingNode());
+    SpymemcachedRequestContext.trackOperation(context, operation);
+    SpymemcachedRequestContext.captureHandlingNode(context, operation, operation.getHandlingNode());
     when(operation.isCancelled()).thenReturn(!timedOut);
     when(operation.isTimedOut()).thenReturn(timedOut);
 
-    assertThat(SpymemcachedRequestHolder.startRetry(operation)).isNull();
+    assertThat(SpymemcachedRequestContext.startRetry(operation)).isNull();
     assertThat(request.getHandlingNodeAddress()).isEqualTo(node("first", 11211));
   }
 
@@ -292,9 +292,9 @@ class SpymemcachedRequestTest {
   void unrelatedOperationCannotUpdateHandlingNode() {
     SpymemcachedRequest request =
         SpymemcachedRequest.create(mock(MemcachedConnection.class), "asyncGet");
-    Context context = SpymemcachedRequestHolder.init(Context.root(), request);
+    Context context = SpymemcachedRequestContext.init(Context.root(), request);
 
-    SpymemcachedRequestHolder.captureHandlingNode(
+    SpymemcachedRequestContext.captureHandlingNode(
         context, operation("first", 11211), memcachedNode("first", 11211));
 
     assertThat(request.getHandlingNodeAddress()).isNull();
