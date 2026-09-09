@@ -42,6 +42,15 @@ void configure(OpenTelemetry openTelemetry, DefaultMQProducerImpl producer, Defa
 }
 ```
 
+## Batch sends
+
+With the stable messaging semantic conventions enabled, batch sends create a `Create` span for
+each message without an existing creation context and a `Send` span linking to those contexts.
+To omit the per-message spans, use
+`RocketMqTelemetry.builder(openTelemetry).setBatchSendMessageCreationSpansEnabled(false).build()`.
+The default is `true`. Disabling this retains the `Send` span and context propagation, preserves
+existing message creation contexts, and does not affect single-message sends.
+
 ## Reported errors
 
 When RocketMQ reports a [`ConsumeReturnType`][consume-return-type] other than `SUCCESS` for a

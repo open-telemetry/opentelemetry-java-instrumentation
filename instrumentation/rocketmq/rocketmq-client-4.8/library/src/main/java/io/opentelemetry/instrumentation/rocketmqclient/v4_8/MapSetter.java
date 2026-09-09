@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
@@ -18,7 +20,7 @@ final class MapSetter implements TextMapSetter<SendMessageContext> {
       return;
     }
     Message message = carrier.getMessage();
-    if (message == null) {
+    if (message == null || (emitStableMessagingSemconv() && message instanceof Iterable<?>)) {
       return;
     }
     message.getProperties().put(key, value);

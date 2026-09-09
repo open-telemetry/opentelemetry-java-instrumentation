@@ -6,6 +6,15 @@ semantic_conventions:
   - MESSAGING_SPANS
 library_link: https://rocketmq.apache.org/
 configurations:
+  - ref: common.messaging.message-create-spans.enabled
+  - name: otel.instrumentation.rocketmq-client.experimental.message-create-spans.enabled
+    declarative_name: java.rocketmq_client.message_create_spans/development.enabled
+    description: >
+      Enables per-message Create spans for batch sends when stable messaging semantic conventions
+      are enabled. Overrides the common messaging setting. Disabling this retains Send spans and
+      context propagation and does not affect single-message sends.
+    type: boolean
+    default: true
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
   - ref: messaging.capture-headers

@@ -18,9 +18,20 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.common.message.MessageClientIDSetter;
 
 final class RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<SendMessageContext, Void> {
+
+  private final boolean messageCreation;
+
+  RocketMqProducerAttributeGetter() {
+    this(false);
+  }
+
+  RocketMqProducerAttributeGetter(boolean messageCreation) {
+    this.messageCreation = messageCreation;
+  }
 
   @Override
   public String getSystem(SendMessageContext request) {
@@ -78,6 +89,9 @@ final class RocketMqProducerAttributeGetter
   @Nullable
   @Override
   public String getMessageId(SendMessageContext request, @Nullable Void unused) {
+    if (messageCreation) {
+      return MessageClientIDSetter.getUniqID(request.getMessage());
+    }
     // the send result of a batch carries the concatenated ids of every message it contains, which
     // is not a per-message id, so it is not reported
     if (isBatch(request)) {

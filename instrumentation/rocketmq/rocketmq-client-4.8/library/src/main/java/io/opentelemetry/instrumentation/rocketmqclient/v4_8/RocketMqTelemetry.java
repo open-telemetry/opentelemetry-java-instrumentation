@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
@@ -16,6 +17,8 @@ import org.apache.rocketmq.client.hook.SendMessageHook;
 public final class RocketMqTelemetry {
   private final RocketMqConsumerInstrumenter rocketMqConsumerInstrumenter;
   private final Instrumenter<SendMessageContext, Void> rocketMqProducerInstrumenter;
+  private final Instrumenter<SendMessageContext, Void> messageCreateInstrumenter;
+  private final TextMapPropagator propagator;
 
   /** Returns a new {@link RocketMqTelemetry} configured with the given {@link OpenTelemetry}. */
   public static RocketMqTelemetry create(OpenTelemetry openTelemetry) {
@@ -32,13 +35,18 @@ public final class RocketMqTelemetry {
   RocketMqTelemetry(
       OpenTelemetry openTelemetry,
       IncludeExclude headers,
-      boolean captureExperimentalSpanAttributes) {
+      boolean captureExperimentalSpanAttributes,
+      boolean batchSendMessageCreationSpansEnabled) {
     rocketMqConsumerInstrumenter =
         RocketMqInstrumenterFactory.createConsumerInstrumenter(
             openTelemetry, headers, captureExperimentalSpanAttributes);
     rocketMqProducerInstrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
             openTelemetry, headers, captureExperimentalSpanAttributes);
+    messageCreateInstrumenter =
+        RocketMqInstrumenterFactory.createMessageCreateInstrumenter(
+            openTelemetry, headers, batchSendMessageCreationSpansEnabled);
+    propagator = openTelemetry.getPropagators().getTextMapPropagator();
   }
 
   /**
@@ -54,6 +62,7 @@ public final class RocketMqTelemetry {
    * org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl#registerSendMessageHook(SendMessageHook)}.
    */
   public SendMessageHook createSendMessageHook() {
-    return new TracingSendMessageHookImpl(rocketMqProducerInstrumenter);
+    return new TracingSendMessageHookImpl(
+        rocketMqProducerInstrumenter, messageCreateInstrumenter, propagator);
   }
 }

@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -29,6 +30,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageContext;
@@ -69,23 +71,8 @@ class RocketMqInstrumenterFactory {
                     getter, operationType, SEND_OPERATION_NAME, headers))
             .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
     if (emitStableMessagingSemconv()) {
-      instrumenterBuilder.addAttributesExtractor(
-          new AttributesExtractor<SendMessageContext, Void>() {
-            @Override
-            public void onStart(
-                AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
-              String namespace = RocketMqNamespaceUtil.getNamespace(request);
-              attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, namespace == null ? "" : namespace);
-            }
-
-            @Override
-            public void onEnd(
-                AttributesBuilder attributes,
-                Context context,
-                SendMessageContext request,
-                @Nullable Void unused,
-                @Nullable Throwable error) {}
-          });
+      instrumenterBuilder.addSpanLinksExtractor(new RocketMqBatchSendSpanLinksExtractor());
+      instrumenterBuilder.addAttributesExtractor(producerAttributesExtractor());
     }
     if (captureExperimentalSpanAttributes) {
       instrumenterBuilder.addAttributesExtractor(
@@ -93,7 +80,46 @@ class RocketMqInstrumenterFactory {
     }
     setMessagingSendExceptionEventExtractor(instrumenterBuilder);
 
-    return instrumenterBuilder.buildProducerInstrumenter(new MapSetter());
+    return InstrumenterUtil.buildDownstreamInstrumenter(
+        instrumenterBuilder,
+        new MapSetter(),
+        MessagingSpanKindExtractor.create(
+            operationType,
+            request -> !RocketMqBatchSendSpanLinksExtractor.hasCreationContexts(request)));
+  }
+
+  static Instrumenter<SendMessageContext, Void> createMessageCreateInstrumenter(
+      OpenTelemetry openTelemetry, IncludeExclude headers, boolean enabled) {
+    RocketMqProducerAttributeGetter getter = new RocketMqProducerAttributeGetter(true);
+    MessagingOperationType operationType = MessagingOperationType.CREATE;
+    return Instrumenter.<SendMessageContext, Void>builder(
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            MessagingSpanNameExtractor.create(getter, operationType, "create"))
+        .setEnabled(enabled && emitStableMessagingSemconv())
+        .addAttributesExtractor(
+            buildMessagingAttributesExtractor(getter, operationType, "create", headers))
+        .addAttributesExtractor(producerAttributesExtractor())
+        .buildProducerInstrumenter(new MapSetter());
+  }
+
+  private static AttributesExtractor<SendMessageContext, Void> producerAttributesExtractor() {
+    return new AttributesExtractor<SendMessageContext, Void>() {
+      @Override
+      public void onStart(
+          AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
+        String namespace = RocketMqNamespaceUtil.getNamespace(request);
+        attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, namespace == null ? "" : namespace);
+      }
+
+      @Override
+      public void onEnd(
+          AttributesBuilder attributes,
+          Context context,
+          SendMessageContext request,
+          @Nullable Void unused,
+          @Nullable Throwable error) {}
+    };
   }
 
   static RocketMqConsumerInstrumenter createConsumerInstrumenter(
