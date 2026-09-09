@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.concurrent.CompletionException;
 import javax.annotation.Nullable;
@@ -56,5 +59,25 @@ final class OpenSearchAttributesGetter
       }
     }
     return null;
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(OpenSearchRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    DbServerTarget target = request.getServerTarget();
+    return target != null ? target.getAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(OpenSearchRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    DbServerTarget target = request.getServerTarget();
+    return target != null ? target.getPort() : null;
   }
 }

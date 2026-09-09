@@ -5,15 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -24,6 +27,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
@@ -57,6 +61,8 @@ abstract class AbstractOpenSearchTest {
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   protected InstrumentationExtension getTesting() {
     return testing;
   }
@@ -85,18 +91,29 @@ abstract class AbstractOpenSearchTest {
   void shouldGetStatusWithTraces() throws IOException {
     HealthResponse healthResponse = openSearchClient.cluster().health();
     assertThat(healthResponse).isNotNull();
-
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -114,7 +131,6 @@ abstract class AbstractOpenSearchTest {
   @Test
   void shouldGetStatusAsyncWithTraces() throws Exception {
     CountDownLatch countDownLatch = new CountDownLatch(1);
-
     CompletableFuture<HealthResponse> responseCompletableFuture =
         getTesting()
             .runWithSpan(
@@ -137,13 +153,25 @@ abstract class AbstractOpenSearchTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -170,6 +198,27 @@ abstract class AbstractOpenSearchTest {
     getTesting().waitForTraces(1);
 
     assertDurationMetric(
-        getTesting(), "io.opentelemetry.opensearch-java-3.0", DB_OPERATION_NAME, DB_SYSTEM_NAME);
+        getTesting(),
+        "io.opentelemetry.opensearch-java-3.0",
+        DB_OPERATION_NAME,
+        DB_SYSTEM_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+  }
+
+  void assertNodeListTarget(String nodeList) {
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                assertThat(trace.getSpan(0))
+                    .hasName(emitStableDatabaseSemconv() ? "GET " + nodeList : "GET")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                        equalTo(maybeStable(DB_OPERATION), "GET"),
+                        equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                        equalTo(NETWORK_TYPE, null),
+                        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null),
+                        equalTo(SERVER_PORT, null)));
   }
 }
