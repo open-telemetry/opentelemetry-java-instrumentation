@@ -658,9 +658,6 @@ abstract class AbstractRocketMqClientTest {
                             .hasParent(trace.getSpan(2))));
   }
 
-  // Spans within a trace are ordered by start timestamp. Create spans are stamped with the wall
-  // clock while every other span takes its timestamp from the SDK clock, so the two orders can
-  // disagree and each span has to be looked up by name.
   private static SpanData spanNamed(TraceAssert trace, int size, String name) {
     List<SpanData> spans = spansNamed(trace, size, name);
     assertThat(spans).hasSize(1);

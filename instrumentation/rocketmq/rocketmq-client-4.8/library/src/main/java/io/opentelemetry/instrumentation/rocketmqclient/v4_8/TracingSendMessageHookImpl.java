@@ -12,10 +12,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -85,16 +83,8 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
           SendMessageContext request =
               new MessageCreateContext(message, RocketMqNamespaceUtil.getNamespace(context));
           if (messageCreateInstrumenter.shouldStart(parentContext, request)) {
-            Instant timestamp = Instant.now();
-            Context createdContext =
-                InstrumenterUtil.startAndEnd(
-                    messageCreateInstrumenter,
-                    parentContext,
-                    request,
-                    null,
-                    null,
-                    timestamp,
-                    timestamp);
+            Context createdContext = messageCreateInstrumenter.start(parentContext, request);
+            messageCreateInstrumenter.end(createdContext, request, null, null);
             creationContext = creationContext.with(Span.fromContext(createdContext));
             hasCreationContext = Span.fromContext(creationContext).getSpanContext().isValid();
             if (hasCreationContext) {

@@ -136,7 +136,6 @@ class TracingSendMessageHookImplTest {
                       equalTo(MESSAGING_OPERATION_TYPE, "create"),
                       equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                       equalTo(MESSAGING_MESSAGE_ID, "message-" + i));
-              assertThat(creation.getEndEpochNanos()).isEqualTo(creation.getStartEpochNanos());
             }
           }
           if (creates) {
@@ -546,9 +545,6 @@ class TracingSendMessageHookImplTest {
         });
   }
 
-  // Spans within a trace are ordered by start timestamp. Create spans are stamped with the wall
-  // clock while every other span takes its timestamp from the SDK clock, so the two orders can
-  // disagree and each span has to be looked up by identity.
   private static SpanData spanNamed(TraceAssert trace, int size, String name) {
     return findSpan(trace, size, span -> name.equals(span.getName()));
   }
