@@ -83,8 +83,8 @@ class JdbcTelemetryTest {
 
   @ParameterizedTest
   @MethodSource("groupTargets")
-  void groupTargetUsesNormalizedPortsOnlyInStableSemconv(
-      String url, String stableAddress, Long stablePort) throws SQLException {
+  void groupTargetUsesNormalizedPortsOnlyInStableSemconv(String url, String stableAddress)
+      throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
     DataSource dataSource = telemetry.wrap(new TestDataSource(url));
 
@@ -113,7 +113,7 @@ class JdbcTelemetryTest {
                             emitStableDatabaseSemconv() ? stableAddress : "localhost"),
                         equalTo(
                             SERVER_PORT,
-                            emitStableDatabaseSemconv() ? stablePort : Long.valueOf(5432)))));
+                            emitStableDatabaseSemconv() ? null : Long.valueOf(5432)))));
   }
 
   private static Stream<Arguments> groupTargets() {
@@ -121,18 +121,15 @@ class JdbcTelemetryTest {
         argumentSet(
             "default ports",
             "jdbc:postgresql://pg.host1,pg.host2:5432/dbname",
-            "pg.host1,pg.host2",
-            null),
+            "pg.host1,pg.host2"),
         argumentSet(
             "shared non-default port",
             "jdbc:postgresql://pg.host1:15432,pg.host2:15432/dbname",
-            "pg.host1:15432,pg.host2:15432",
-            null),
+            "pg.host1:15432,pg.host2:15432"),
         argumentSet(
             "mixed ports",
             "jdbc:postgresql://pg.host1:5432,pg.host2:15432/dbname",
-            "pg.host1:5432,pg.host2:15432",
-            null));
+            "pg.host1:5432,pg.host2:15432"));
   }
 
   @Test
