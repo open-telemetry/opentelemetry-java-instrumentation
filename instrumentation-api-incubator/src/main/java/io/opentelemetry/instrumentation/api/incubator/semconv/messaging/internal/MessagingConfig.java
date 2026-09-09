@@ -149,6 +149,14 @@ public final class MessagingConfig {
     return false;
   }
 
+  /**
+   * Returns whether an instrumentation should emit a creation span for each message in a batch
+   * send.
+   *
+   * <p>Resolves the instrumentation-specific {@code message_create_spans} declarative setting and
+   * {@code message-create-spans.enabled} flat property, then falls back to the common messaging
+   * setting.
+   */
   public static boolean isBatchSendMessageCreationSpansEnabled(
       OpenTelemetry openTelemetry, String instrumentationName) {
     return isBatchSendMessageCreationSpansEnabled(openTelemetry, instrumentationName, false);
@@ -157,6 +165,10 @@ public final class MessagingConfig {
   /**
    * Returns whether an instrumentation should emit a creation span for each message in a batch
    * send.
+   *
+   * <p>Resolves the instrumentation-specific {@code message_create_spans} declarative setting and
+   * {@code message-create-spans.enabled} flat property, then falls back to the common messaging
+   * setting.
    *
    * @param systemPropertyFallback whether to fall back to flat system properties when declarative
    *     configuration does not contain a value. This is needed by library instrumentation entry
