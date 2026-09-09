@@ -39,8 +39,12 @@ public class CouchbaseServerTargets {
     }
   }
 
-  public static void register(Core core, @Nullable CouchbaseServerTarget target) {
+  public static void register(
+      Core core, @Nullable CouchbaseServerTarget target, @Nullable CoreEnvironment environment) {
     if (target != null) {
+      if (environment != null && !environment.ioConfig().dnsSrvEnabled()) {
+        target = target.asDirect();
+      }
       CORE_TARGETS.set(core, target);
     }
   }
@@ -62,11 +66,9 @@ public class CouchbaseServerTargets {
     if (environment != null) {
       if (target == null) {
         target = target(seedNodes, environment.securityConfig().tlsEnabled());
-      } else if (!environment.ioConfig().dnsSrvEnabled()) {
-        target = target.asDirect();
       }
     }
-    register(core, target);
+    register(core, target, environment);
   }
 
   @Nullable

@@ -86,9 +86,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
         CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, environment);
       } else {
         CouchbaseServerTargets.register(
-            core,
-            CouchbaseConnectionStrings.target(
-                connectionString, environment.ioConfig().dnsSrvEnabled()));
+            core, CouchbaseConnectionStrings.target(connectionString), environment);
       }
     }
   }
@@ -105,9 +103,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
         CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, environment);
       } else {
         CouchbaseServerTargets.register(
-            core,
-            CouchbaseConnectionStrings.target(
-                connectionString, environment.ioConfig().dnsSrvEnabled()));
+            core, CouchbaseConnectionStrings.target(connectionString), environment);
       }
     }
   }
@@ -120,9 +116,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) CoreEnvironment environment,
         @Advice.Argument(2) ConnectionString connectionString) {
       CouchbaseServerTargets.register(
-          core,
-          CouchbaseConnectionStrings.target(
-              connectionString, environment.ioConfig().dnsSrvEnabled()));
+          core, CouchbaseConnectionStrings.target(connectionString), environment);
     }
   }
 }

@@ -79,8 +79,6 @@ class CouchbaseServerTargetsTest {
 
   @Test
   void dnsSrvTargetBecomesDirectWhenDnsSrvIsDisabled() {
-    Set<SeedNode> seedNodes =
-        singleton(SeedNode.create("cluster.example", Optional.empty(), Optional.empty()));
     CouchbaseServerTarget connectionStringTarget =
         CouchbaseConnectionStrings.target("couchbases://cluster.example");
     assertThat(connectionStringTarget).isNotNull();
@@ -90,8 +88,7 @@ class CouchbaseServerTargetsTest {
     when(ioConfig.dnsSrvEnabled()).thenReturn(false);
 
     Core core = mock(Core.class);
-    CouchbaseServerTargets.registerSeedNodes(seedNodes, connectionStringTarget);
-    CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, environment);
+    CouchbaseServerTargets.register(core, connectionStringTarget, environment);
 
     assertThat(CouchbaseServerTargets.get(core).getAddress()).isEqualTo("cluster.example");
     assertThat(CouchbaseServerTargets.get(core).getPort()).isNull();

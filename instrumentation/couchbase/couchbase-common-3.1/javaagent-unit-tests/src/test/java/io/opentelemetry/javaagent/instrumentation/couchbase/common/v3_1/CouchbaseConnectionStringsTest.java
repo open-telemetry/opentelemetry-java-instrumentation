@@ -50,15 +50,6 @@ class CouchbaseConnectionStringsTest {
   }
 
   @Test
-  void dnsSrvCandidateIsDirectTargetWhenDnsSrvIsDisabled() {
-    CouchbaseServerTarget target =
-        CouchbaseConnectionStrings.target("couchbases://cluster.example", false);
-
-    assertThat(target.getAddress()).isEqualTo("cluster.example");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
   void severalDefaultPortSeedsKeepTheirOrderAndDuplicates() {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target("couchbase://two.example,one.example:11210,two.example");

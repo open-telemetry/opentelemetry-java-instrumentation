@@ -16,17 +16,11 @@ public class CouchbaseConnectionStrings {
 
   @Nullable
   public static CouchbaseServerTarget target(@Nullable String connectionString) {
-    return target(connectionString, true);
-  }
-
-  @Nullable
-  public static CouchbaseServerTarget target(
-      @Nullable String connectionString, boolean dnsSrvEnabled) {
     if (connectionString == null || connectionString.isEmpty()) {
       return null;
     }
     try {
-      return target(ConnectionString.create(connectionString), dnsSrvEnabled);
+      return target(ConnectionString.create(connectionString));
     } catch (RuntimeException ignored) {
       return null;
     }
@@ -34,12 +28,6 @@ public class CouchbaseConnectionStrings {
 
   @Nullable
   public static CouchbaseServerTarget target(@Nullable ConnectionString connectionString) {
-    return target(connectionString, true);
-  }
-
-  @Nullable
-  public static CouchbaseServerTarget target(
-      @Nullable ConnectionString connectionString, boolean dnsSrvEnabled) {
     if (connectionString == null) {
       return null;
     }
@@ -54,9 +42,7 @@ public class CouchbaseConnectionStrings {
         if (seed == null || seeds.hasNext()) {
           return null;
         }
-        CouchbaseServerTarget target =
-            CouchbaseServerTarget.forServiceDiscovery(scheme, seed.hostname());
-        return dnsSrvEnabled || target == null ? target : target.asDirect();
+        return CouchbaseServerTarget.forServiceDiscovery(scheme, seed.hostname());
       }
       DbServerTargetBuilder target =
           DbServerTarget.builder(CouchbaseServerTarget.defaultPort(scheme)).setSorted(false);
