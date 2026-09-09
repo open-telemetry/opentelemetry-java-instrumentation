@@ -50,6 +50,7 @@ class OpenTelemetryCallUtilTest {
 
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
         .isSameAs(requestAndContext);
+    assertThat(requestAndContext.getRequest().getNetworkPeerInetSocketAddress()).isNull();
   }
 
   @Test
@@ -65,6 +66,7 @@ class OpenTelemetryCallUtilTest {
 
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
         .isSameAs(requestAndContext);
+    assertThat(requestAndContext.getRequest().getNetworkPeerInetSocketAddress()).isNull();
   }
 
   @Test
