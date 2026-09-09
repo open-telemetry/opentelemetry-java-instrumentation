@@ -5,10 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientInfoReference;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientInfoReference;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.attachClientInfoReference;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.getClientInfoReference;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -39,7 +35,8 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase<?> sqlClientBase) {
-      attachClientInfoReference(sqlClientBase, getClientInfoReference());
+      VertxSqlClientSingletons.attachClientInfoReference(
+          sqlClientBase, VertxSqlClientSingletons.getClientInfoReference());
     }
   }
 
@@ -52,7 +49,8 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
 
-      setClientInfoReference(getClientInfoReference(sqlClientBase));
+      VertxSqlClientSingletons.setClientInfoReference(
+          VertxSqlClientSingletons.getClientInfoReference(sqlClientBase));
       return callDepth;
     }
 
@@ -62,7 +60,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      setClientInfoReference(null);
+      VertxSqlClientSingletons.setClientInfoReference(null);
     }
   }
 }

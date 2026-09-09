@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.attachPreparedStatementInfoReference;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.fixedInfoReference;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -15,7 +13,6 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoReference;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -71,10 +68,9 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
               ? VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions)
               : null;
       VertxSqlClientInfo info = VertxSqlClientInfo.createLegacy(connectOptions, dbSystem);
-      VertxSqlClientInfoReference infoReference = fixedInfoReference(info);
-      return infoReference == null
+      return info == null
           ? future
-          : wrapContext(attachPreparedStatementInfoReference(future, infoReference));
+          : wrapContext(VertxSqlClientSingletons.attachPreparedStatementInfo(future, info));
     }
   }
 }

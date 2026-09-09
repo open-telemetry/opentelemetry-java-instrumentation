@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPreparedStatementInfoReference;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientInfoReference;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -33,12 +31,13 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This PreparedStatement preparedStatement) {
-      setClientInfoReference(getPreparedStatementInfoReference(preparedStatement));
+      VertxSqlClientSingletons.setClientInfoReference(
+          VertxSqlClientSingletons.getPreparedStatementInfoReference(preparedStatement));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit() {
-      setClientInfoReference(null);
+      VertxSqlClientSingletons.setClientInfoReference(null);
     }
   }
 }

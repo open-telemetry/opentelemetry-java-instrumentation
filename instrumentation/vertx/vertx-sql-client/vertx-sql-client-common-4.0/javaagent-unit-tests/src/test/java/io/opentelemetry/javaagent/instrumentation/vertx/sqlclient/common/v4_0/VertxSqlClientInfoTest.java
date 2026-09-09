@@ -80,33 +80,6 @@ class VertxSqlClientInfoTest {
   }
 
   @Test
-  void constructionSnapshotUpdatesDoNotChangeExistingRequests() {
-    SqlConnectOptions options = options("db.example", 5432, "database", "user");
-    MutableVertxSqlClientInfoReference reference =
-        new MutableVertxSqlClientInfoReference(VertxSqlClientInfo.create(options, null));
-    VertxSqlClientRequest request =
-        new VertxSqlClientRequest("select 1", reference.get(), false, null);
-    VertxSqlClientInfo resolved = VertxSqlClientInfo.create(options, "postgresql");
-
-    reference.set(resolved);
-
-    assertThat(reference.get()).isSameAs(resolved);
-    assertThat(reference.get().getDbSystemName()).isEqualTo("postgresql");
-    assertThat(reference.get().getServerTarget().getPort()).isNull();
-    assertThat(request.getDbSystemName()).isEqualTo("other_sql");
-    assertThat(request.getConfiguredServerPort()).isEqualTo(5432);
-  }
-
-  @Test
-  void fixedReferenceReturnsTheSameInfo() {
-    VertxSqlClientInfo info =
-        VertxSqlClientInfo.create(options("db.example", 5432, "database", "user"), "postgresql");
-    FixedVertxSqlClientInfoReference reference = new FixedVertxSqlClientInfoReference(info);
-
-    assertThat(reference.get()).isSameAs(info);
-  }
-
-  @Test
   void resolvesDbSystemBeforeSnapshotConstruction() {
     assertThat(
             VertxSqlClientUtil.resolveDbSystemName(

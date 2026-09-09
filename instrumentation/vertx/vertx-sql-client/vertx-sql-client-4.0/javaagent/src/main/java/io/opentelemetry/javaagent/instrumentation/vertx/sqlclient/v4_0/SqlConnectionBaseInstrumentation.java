@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.attachPreparedStatementInfoReference;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -13,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoReference;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.impl.SqlClientBase;
@@ -66,7 +64,8 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
       if (infoReference == null || infoReference.get() == null) {
         return future;
       }
-      return wrapContext(attachPreparedStatementInfoReference(future, infoReference));
+      return wrapContext(
+          VertxSqlClientSingletons.attachPreparedStatementInfoReference(future, infoReference));
     }
   }
 }

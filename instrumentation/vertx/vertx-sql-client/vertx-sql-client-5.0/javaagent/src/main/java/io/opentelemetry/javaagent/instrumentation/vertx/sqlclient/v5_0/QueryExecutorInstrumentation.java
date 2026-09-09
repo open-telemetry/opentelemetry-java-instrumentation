@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientInfoReference;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
@@ -19,7 +18,6 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfoReference;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.core.Promise;
@@ -52,9 +50,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
-      VertxSqlClientInfoReference infoReference = getClientInfoReference();
-      if (infoReference != null) {
-        VertxSqlClientUtil.setQueryExecutorData(queryExecutor, infoReference);
+      VertxSqlClientInfo info = VertxSqlClientSingletons.getClientInfo();
+      if (info != null) {
+        VertxSqlClientSingletons.setQueryExecutorInfo(queryExecutor, info);
         return;
       }
       SqlConnectOptions connectOptions = getSqlConnectOptions();
@@ -65,10 +63,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
       if (dbSystem == null) {
         dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
       }
-      VertxSqlClientUtil.setQueryExecutorData(
-          queryExecutor,
-          VertxSqlClientUtil.fixedInfoReference(
-              VertxSqlClientInfo.createLegacy(connectOptions, dbSystem)));
+      VertxSqlClientSingletons.setQueryExecutorInfo(
+          queryExecutor, VertxSqlClientInfo.createLegacy(connectOptions, dbSystem));
     }
   }
 
@@ -122,7 +118,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
 
-        VertxSqlClientInfo info = VertxSqlClientUtil.getQueryExecutorInfo(queryExecutor);
+        VertxSqlClientInfo info = VertxSqlClientSingletons.getQueryExecutorInfo(queryExecutor);
         if (info == null) {
           return new AdviceScope(callDepth);
         }

@@ -19,9 +19,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -29,38 +27,13 @@ import javax.annotation.Nullable;
 
 public class VertxSqlClientUtil {
 
-  private static final ThreadLocal<VertxSqlClientInfoReference> clientInfoReference =
-      new ThreadLocal<>();
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
   private static final ThreadLocal<String> dbSystem = new ThreadLocal<>();
-  private static final VirtualField<Pool, VertxSqlClientInfoReference> POOL_CLIENT_INFO_REFERENCE =
-      VirtualField.find(Pool.class, VertxSqlClientInfoReference.class);
   private static final VirtualField<Pool, SqlConnectOptions> POOL_CONNECT_OPTIONS =
       VirtualField.find(Pool.class, SqlConnectOptions.class);
   private static final Map<String, String> dbSystemNameByPackage = buildPackageDbSystemNameMap();
   private static final VirtualField<Promise<?>, RequestData> REQUEST_DATA =
       VirtualField.find(Promise.class, RequestData.class);
-  private static final VirtualField<PreparedStatement, VertxSqlClientInfoReference>
-      PREPARED_STATEMENT_INFO_REFERENCE =
-          VirtualField.find(PreparedStatement.class, VertxSqlClientInfoReference.class);
-
-  public static void setClientInfoReference(@Nullable VertxSqlClientInfoReference value) {
-    if (value == null) {
-      clientInfoReference.remove();
-    } else {
-      clientInfoReference.set(value);
-    }
-  }
-
-  @Nullable
-  public static VertxSqlClientInfoReference getClientInfoReference() {
-    return clientInfoReference.get();
-  }
-
-  @Nullable
-  public static VertxSqlClientInfoReference fixedInfoReference(@Nullable VertxSqlClientInfo info) {
-    return info == null ? null : new FixedVertxSqlClientInfoReference(info);
-  }
 
   public static void setSqlConnectOptions(@Nullable SqlConnectOptions value) {
     if (value == null) {
@@ -88,16 +61,6 @@ public class VertxSqlClientUtil {
     return dbSystem.get();
   }
 
-  public static void setPoolClientInfoReference(
-      Pool pool, @Nullable VertxSqlClientInfoReference value) {
-    POOL_CLIENT_INFO_REFERENCE.set(pool, value);
-  }
-
-  @Nullable
-  public static VertxSqlClientInfoReference getPoolClientInfoReference(Pool pool) {
-    return POOL_CLIENT_INFO_REFERENCE.get(pool);
-  }
-
   public static void setPoolConnectOptions(Pool pool, SqlConnectOptions value) {
     POOL_CONNECT_OPTIONS.set(pool, value);
   }
@@ -105,33 +68,6 @@ public class VertxSqlClientUtil {
   @Nullable
   public static SqlConnectOptions getPoolSqlConnectOptions(Pool pool) {
     return POOL_CONNECT_OPTIONS.get(pool);
-  }
-
-  public static void setQueryExecutorData(
-      Object queryExecutor, @Nullable VertxSqlClientInfoReference infoReference) {
-    QueryExecutorUtil.setData(queryExecutor, infoReference);
-  }
-
-  @Nullable
-  public static VertxSqlClientInfo getQueryExecutorInfo(Object queryExecutor) {
-    VertxSqlClientInfoReference infoReference =
-        (VertxSqlClientInfoReference) QueryExecutorUtil.getData(queryExecutor);
-    return infoReference != null ? infoReference.get() : null;
-  }
-
-  public static Future<PreparedStatement> attachPreparedStatementInfoReference(
-      Future<PreparedStatement> future, VertxSqlClientInfoReference infoReference) {
-    return future.map(
-        preparedStatement -> {
-          PREPARED_STATEMENT_INFO_REFERENCE.set(preparedStatement, infoReference);
-          return preparedStatement;
-        });
-  }
-
-  @Nullable
-  public static VertxSqlClientInfoReference getPreparedStatementInfoReference(
-      PreparedStatement preparedStatement) {
-    return PREPARED_STATEMENT_INFO_REFERENCE.get(preparedStatement);
   }
 
   public static String getDbSystemNameFromClassName(@Nullable Object instance) {

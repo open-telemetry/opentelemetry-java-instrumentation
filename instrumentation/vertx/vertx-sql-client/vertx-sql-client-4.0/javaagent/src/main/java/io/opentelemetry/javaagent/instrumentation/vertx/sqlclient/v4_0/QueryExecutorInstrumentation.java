@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getClientInfoReference;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -48,7 +47,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
-      VertxSqlClientUtil.setQueryExecutorData(queryExecutor, getClientInfoReference());
+      VertxSqlClientSingletons.setQueryExecutorInfoReference(
+          queryExecutor, VertxSqlClientSingletons.getClientInfoReference());
     }
   }
 
@@ -103,7 +103,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
 
-        VertxSqlClientInfo info = VertxSqlClientUtil.getQueryExecutorInfo(queryExecutor);
+        VertxSqlClientInfo info = VertxSqlClientSingletons.getQueryExecutorInfo(queryExecutor);
         if (info == null) {
           return new AdviceScope(callDepth);
         }

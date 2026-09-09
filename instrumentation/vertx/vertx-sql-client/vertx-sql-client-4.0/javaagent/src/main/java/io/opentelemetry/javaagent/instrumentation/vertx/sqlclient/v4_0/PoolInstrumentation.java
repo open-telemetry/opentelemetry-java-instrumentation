@@ -8,13 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolClientInfoReference;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.isKnownDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.resolveDbSystemName;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setClientInfoReference;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolClientInfoReference;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.attachClientInfoReference;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,7 +23,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.MutableVertxSqlClientInfoReference;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
@@ -44,10 +39,10 @@ class PoolInstrumentation implements TypeInstrumentation {
 
   public static final class PoolConstructionState {
     private final CallDepth callDepth;
-    @Nullable private final MutableVertxSqlClientInfoReference infoReference;
+    @Nullable private final VertxSqlClientInfoReference infoReference;
 
     public PoolConstructionState(
-        CallDepth callDepth, @Nullable MutableVertxSqlClientInfoReference infoReference) {
+        CallDepth callDepth, @Nullable VertxSqlClientInfoReference infoReference) {
       this.callDepth = callDepth;
       this.infoReference = infoReference;
     }
@@ -57,7 +52,7 @@ class PoolInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    public MutableVertxSqlClientInfoReference getInfoReference() {
+    public VertxSqlClientInfoReference getInfoReference() {
       return infoReference;
     }
   }
@@ -112,10 +107,10 @@ class PoolInstrumentation implements TypeInstrumentation {
       }
 
       String dbSystemName = resolveDbSystemName(sqlConnectOptions, declaringTypeName);
-      MutableVertxSqlClientInfoReference infoReference =
-          new MutableVertxSqlClientInfoReference(
+      VertxSqlClientInfoReference infoReference =
+          new VertxSqlClientInfoReference(
               VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
-      setClientInfoReference(infoReference);
+      VertxSqlClientSingletons.setClientInfoReference(infoReference);
       return new PoolConstructionState(callDepth, infoReference);
     }
 
@@ -128,7 +123,7 @@ class PoolInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      MutableVertxSqlClientInfoReference infoReference = state.getInfoReference();
+      VertxSqlClientInfoReference infoReference = state.getInfoReference();
       if (pool != null && infoReference != null) {
         VertxSqlClientInfo info = infoReference.get();
         String dbSystemName = info != null ? info.getDbSystemName() : null;
@@ -138,9 +133,9 @@ class PoolInstrumentation implements TypeInstrumentation {
         infoReference.set(VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
       }
       if (pool != null) {
-        setPoolClientInfoReference(pool, infoReference);
+        VertxSqlClientSingletons.setPoolClientInfoReference(pool, infoReference);
       }
-      setClientInfoReference(null);
+      VertxSqlClientSingletons.setClientInfoReference(null);
     }
   }
 
@@ -157,10 +152,9 @@ class PoolInstrumentation implements TypeInstrumentation {
 
       SqlConnectOptions first = databases == null || databases.isEmpty() ? null : databases.get(0);
       String dbSystemName = resolveDbSystemName(first, declaringTypeName);
-      MutableVertxSqlClientInfoReference infoReference =
-          new MutableVertxSqlClientInfoReference(
-              VertxSqlClientInfo.create(databases, dbSystemName));
-      setClientInfoReference(infoReference);
+      VertxSqlClientInfoReference infoReference =
+          new VertxSqlClientInfoReference(VertxSqlClientInfo.create(databases, dbSystemName));
+      VertxSqlClientSingletons.setClientInfoReference(infoReference);
       return new PoolConstructionState(callDepth, infoReference);
     }
 
@@ -173,7 +167,7 @@ class PoolInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      MutableVertxSqlClientInfoReference infoReference = state.getInfoReference();
+      VertxSqlClientInfoReference infoReference = state.getInfoReference();
       if (client != null && infoReference != null) {
         VertxSqlClientInfo info = infoReference.get();
         String dbSystemName = info != null ? info.getDbSystemName() : null;
@@ -183,9 +177,9 @@ class PoolInstrumentation implements TypeInstrumentation {
         infoReference.set(VertxSqlClientInfo.create(databases, dbSystemName));
       }
       if (client instanceof Pool) {
-        setPoolClientInfoReference((Pool) client, infoReference);
+        VertxSqlClientSingletons.setPoolClientInfoReference((Pool) client, infoReference);
       }
-      setClientInfoReference(null);
+      VertxSqlClientSingletons.setClientInfoReference(null);
     }
   }
 
@@ -195,7 +189,9 @@ class PoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<SqlConnection> onExit(
         @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
-      return wrapContext(attachClientInfoReference(future, getPoolClientInfoReference(pool)));
+      return wrapContext(
+          VertxSqlClientSingletons.attachClientInfoReference(
+              future, VertxSqlClientSingletons.getPoolClientInfoReference(pool)));
     }
   }
 }
