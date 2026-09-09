@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.couchbase;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -127,11 +128,16 @@ public abstract class AbstractCouchbaseTest {
   }
 
   protected StringAssertConsumer serverAddress() {
+    if (emitStableDatabaseSemconv()) {
+      return val -> val.isEqualTo("127.0.0.1");
+    }
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
   protected LongAssertConsumer serverPort() {
-    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+    return !emitStableDatabaseSemconv() && includesNetworkAttributes()
+        ? val -> val.isNotNull()
+        : val -> val.isNull();
   }
 
   protected StringAssertConsumer experimentalAttribute() {
