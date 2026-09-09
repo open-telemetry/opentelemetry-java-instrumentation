@@ -25,12 +25,12 @@ import javax.annotation.Nullable;
  * predecessor, so that precedence and deprecation warnings are uniform across instrumentations.
  *
  * <p>The property names are derived from the instrumentation and selector names. For {@code
- * ("common.messaging", "headers")}, experimental resolution reads the {@code headers/development}
- * node and {@code otel.instrumentation.common.messaging.experimental.headers.included|excluded}.
- * Stable resolution reads the {@code headers} node and {@code
- * otel.instrumentation.common.messaging.headers.included|excluded}. Both modes fall back to the
- * deprecated experimental {@code capture_headers/development} node and {@code
- * otel.instrumentation.common.messaging.experimental.capture-headers} flat property.
+ * ("messaging", "headers")}, experimental resolution reads the {@code headers/development} node and
+ * {@code otel.instrumentation.messaging.experimental.headers.included|excluded}. Stable resolution
+ * reads the {@code headers} node and {@code
+ * otel.instrumentation.messaging.headers.included|excluded}. Both modes fall back to the deprecated
+ * experimental {@code capture_headers/development} node and {@code
+ * otel.instrumentation.messaging.experimental.capture-headers} flat property.
  *
  * <p>Flat system properties are read directly only when {@code systemPropertyFallback} is {@code
  * true}; otherwise the flat names describe the equivalent form of the supplied declarative
@@ -128,8 +128,55 @@ public final class SelectorConfig {
     if (selector != null) {
       return selector;
     }
-    String replacementFlatProperties =
-        selectorFlatProperties(instrumentationName, selectorName, stability);
+    String replacementIncludedProperty =
+        flatProperty(instrumentationName, selectorName, ".included", stability);
+    return resolveDeprecatedCapture(
+        config,
+        instrumentationName,
+        selectorName,
+        selectorFlatProperties(instrumentationName, selectorName, stability),
+        replacementIncludedProperty,
+        systemPropertyFallback);
+  }
+
+  /**
+   * Resolves the deprecated include-only predecessor of a selector.
+   *
+   * @param instrumentationName the instrumentation namespace of the deprecated setting
+   * @param replacementInstrumentationName the instrumentation namespace of the replacement
+   * @param replacementStability whether the replacement selector is stable or experimental
+   * @param systemPropertyFallback whether to fall back to the flat system property when the
+   *     declarative configuration does not contain a value
+   */
+  @Nullable
+  public static IncludeExclude resolveDeprecatedCapture(
+      DeclarativeConfigProperties config,
+      String instrumentationName,
+      String selectorName,
+      String replacementInstrumentationName,
+      Stability replacementStability,
+      boolean systemPropertyFallback) {
+    requireNonNull(replacementStability, "replacementStability");
+    String replacementIncludedProperty =
+        flatProperty(
+            replacementInstrumentationName, selectorName, ".included", replacementStability);
+    return resolveDeprecatedCapture(
+        config,
+        instrumentationName,
+        selectorName,
+        replacementIncludedProperty,
+        replacementIncludedProperty,
+        systemPropertyFallback);
+  }
+
+  @Nullable
+  private static IncludeExclude resolveDeprecatedCapture(
+      DeclarativeConfigProperties config,
+      String instrumentationName,
+      String selectorName,
+      String replacementFlatProperties,
+      String replacementIncludedProperty,
+      boolean systemPropertyFallback) {
     List<String> deprecated =
         getDeprecated(
             config,
@@ -142,8 +189,7 @@ public final class SelectorConfig {
         "the "
             + deprecatedFlatProperty(instrumentationName, selectorName)
             + " setting or equivalent declarative configuration",
-        flatProperty(instrumentationName, selectorName, ".included", stability)
-            + " or equivalent declarative configuration");
+        replacementIncludedProperty + " or equivalent declarative configuration");
   }
 
   /**

@@ -38,7 +38,7 @@ class MessagingConfigTest {
   }
 
   @Test
-  void readsDeprecatedSelectorFromCommonMessagingConfig() {
+  void readsDeprecatedCaptureHeadersFromCommonMessagingConfig() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("deprecated"));
@@ -54,8 +54,7 @@ class MessagingConfigTest {
             .get("headers/development")
             .getScalarList("included", String.class))
         .thenReturn(emptyList());
-    when(deprecatedMessagingConfig(openTelemetry)
-            .getScalarList("capture_headers/development", String.class))
+    when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("deprecated-capture"));
 
     assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
@@ -91,6 +90,43 @@ class MessagingConfigTest {
 
       when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
           .thenReturn(true);
+      assertThat(MessagingConfig.getHeaders(openTelemetry, true).isEmpty()).isTrue();
+    } finally {
+      System.clearProperty(property);
+    }
+  }
+
+  @Test
+  void v3PreviewStillReadsDeprecatedCaptureHeaders() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
+        .thenReturn(singletonList("deprecated"));
+    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
+        .thenReturn(true);
+
+    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded())
+        .containsExactly("deprecated");
+  }
+
+  @Test
+  void readsDeprecatedCaptureHeadersSystemProperty() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    String property = "otel.instrumentation.messaging.experimental.capture-headers";
+    System.setProperty(property, "deprecated");
+    try {
+      assertThat(MessagingConfig.getHeaders(openTelemetry, true).getIncluded())
+          .containsExactly("deprecated");
+    } finally {
+      System.clearProperty(property);
+    }
+  }
+
+  @Test
+  void doesNotReadCommonCaptureHeadersSystemProperty() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    String property = "otel.instrumentation.common.messaging.experimental.capture-headers";
+    System.setProperty(property, "not-supported");
+    try {
       assertThat(MessagingConfig.getHeaders(openTelemetry, true).isEmpty()).isTrue();
     } finally {
       System.clearProperty(property);
@@ -237,8 +273,6 @@ class MessagingConfigTest {
     when(deprecatedMessagingConfig
             .get("headers/development")
             .getScalarList("excluded", String.class))
-        .thenReturn(null);
-    when(deprecatedMessagingConfig.getScalarList("capture_headers/development", String.class))
         .thenReturn(null);
     return openTelemetry;
   }

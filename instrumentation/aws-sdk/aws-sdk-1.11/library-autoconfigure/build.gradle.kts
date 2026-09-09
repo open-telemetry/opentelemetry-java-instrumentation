@@ -23,7 +23,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.common.messaging.experimental.capture-headers", "Test-Message-Header")
+    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 

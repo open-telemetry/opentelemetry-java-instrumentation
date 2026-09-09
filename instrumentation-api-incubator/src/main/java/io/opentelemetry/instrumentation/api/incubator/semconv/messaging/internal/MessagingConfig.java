@@ -13,7 +13,6 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
-import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.List;
@@ -60,21 +59,49 @@ public final class MessagingConfig {
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
     boolean configured = hasHeadersConfig(messagingConfig, systemPropertyFallback);
     IncludeExclude selector = getHeaders(messagingConfig, systemPropertyFallback);
-    if (!selector.isEmpty() || configured || SemconvStability.v3Preview(openTelemetry)) {
+    if (!selector.isEmpty() || configured) {
       return selector;
     }
 
-    // TODO: remove the deprecated flat messaging names in 3.0.
-    return getDeprecatedHeaders(openTelemetry, systemPropertyFallback);
+    if (!SemconvStability.v3Preview(openTelemetry)) {
+      // TODO: remove the deprecated flat messaging names in 3.0.
+      selector = getDeprecatedHeaderAliases(openTelemetry, systemPropertyFallback);
+      if (selector != null) {
+        return selector;
+      }
+    }
+
+    selector =
+        SelectorConfig.resolveDeprecatedCapture(
+            messagingConfig,
+            "messaging",
+            "headers",
+            "common.messaging",
+            EXPERIMENTAL,
+            systemPropertyFallback);
+    return selector == null ? NONE : selector;
   }
 
   // visible for testing
   static IncludeExclude getHeaders(
       DeclarativeConfigProperties messagingConfig, boolean systemPropertyFallback) {
-    IncludeExclude selector =
-        SelectorConfig.resolve(
-            messagingConfig, "common.messaging", "headers", EXPERIMENTAL, systemPropertyFallback);
-    return selector == null ? NONE : selector;
+    DeclarativeConfigProperties headers = messagingConfig.get("headers/development");
+    List<String> included =
+        getList(
+            headers,
+            "included",
+            COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.included",
+            systemPropertyFallback);
+    List<String> excluded =
+        getList(
+            headers,
+            "excluded",
+            COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.excluded",
+            systemPropertyFallback);
+    return IncludeExclude.builder()
+        .setIncluded(included == null ? emptyList() : included)
+        .setExcluded(excluded == null ? emptyList() : excluded)
+        .build();
   }
 
   /**
@@ -156,7 +183,8 @@ public final class MessagingConfig {
     return enabled != null ? enabled : true;
   }
 
-  private static IncludeExclude getDeprecatedHeaders(
+  @Nullable
+  private static IncludeExclude getDeprecatedHeaderAliases(
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
     DeclarativeConfigProperties deprecatedConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging");
@@ -185,25 +213,7 @@ public final class MessagingConfig {
       }
       return selector;
     }
-
-    String deprecatedCaptureProperty =
-        DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.capture-headers";
-    List<String> captureHeaders =
-        getList(
-            deprecatedConfig,
-            "capture_headers/development",
-            deprecatedCaptureProperty,
-            systemPropertyFallback);
-    if (captureHeaders == null) {
-      return NONE;
-    }
-    String replacementProperty =
-        COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.included";
-    warnDeprecatedFlatProperty(deprecatedCaptureProperty, replacementProperty);
-    IncludeExclude deprecatedSelector =
-        DeprecatedCaptureNames.toSelector(
-            captureHeaders, "the " + deprecatedCaptureProperty + " setting", replacementProperty);
-    return deprecatedSelector == null ? NONE : deprecatedSelector;
+    return null;
   }
 
   private static boolean hasHeadersConfig(
@@ -219,12 +229,6 @@ public final class MessagingConfig {
                 headers,
                 "excluded",
                 COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.excluded",
-                systemPropertyFallback)
-            != null
-        || getList(
-                messagingConfig,
-                "capture_headers/development",
-                COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.capture-headers",
                 systemPropertyFallback)
             != null;
   }

@@ -148,7 +148,7 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
     Map<String, String> properties = new HashMap<>();
     properties.put("otel.instrumentation.common.messaging.experimental.headers.included", "a,b");
     properties.put("otel.instrumentation.common.messaging.experimental.headers.excluded", "c");
-    properties.put("otel.instrumentation.common.messaging.experimental.capture-headers", "legacy");
+    properties.put("otel.instrumentation.messaging.experimental.capture-headers", "legacy");
 
     DeclarativeConfigProperties messaging =
         DeclarativeConfigBridge.createInstrumentationConfig(

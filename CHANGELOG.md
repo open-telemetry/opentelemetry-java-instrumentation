@@ -25,8 +25,7 @@
   ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
 - Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled`,
   `otel.instrumentation.messaging.experimental.headers.included`,
-  `otel.instrumentation.messaging.experimental.headers.excluded`, and
-  `otel.instrumentation.messaging.experimental.capture-headers` in favor of the corresponding
+  and `otel.instrumentation.messaging.experimental.headers.excluded` in favor of the corresponding
   `otel.instrumentation.common.messaging.experimental` properties.
   ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060))
 

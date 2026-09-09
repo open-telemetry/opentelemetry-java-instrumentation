@@ -361,7 +361,7 @@
       "description": "A comma-separated list of message header name patterns to exclude from span attributes. Excluded patterns take precedence over included patterns. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded headers are captured, which may expose sensitive information."
     },
     {
-      "name": "otel.instrumentation.common.messaging.experimental.capture-headers",
+      "name": "otel.instrumentation.messaging.experimental.capture-headers",
       "type": "java.util.List<java.lang.String>",
       "description": "Deprecated: use otel.instrumentation.common.messaging.experimental.headers.included instead. A comma-separated list of header names to capture as span attributes.",
       "deprecation": {
