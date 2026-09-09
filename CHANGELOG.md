@@ -28,11 +28,13 @@
   `otel.instrumentation.messaging.experimental.headers.excluded`, and
   `otel.instrumentation.messaging.experimental.capture-headers` in favor of the corresponding
   `otel.instrumentation.common.messaging.experimental` properties.
+  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060))
 - Deprecate `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled` and
   `otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled` in favor of
   `otel.instrumentation.common.messaging.message-create-spans.enabled` and
   `otel.instrumentation.aws-sdk.message-create-spans.enabled`, including their equivalent
   declarative configuration names.
+  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060))
 
 ## Version 2.31.1 (2026-08-23)
 
