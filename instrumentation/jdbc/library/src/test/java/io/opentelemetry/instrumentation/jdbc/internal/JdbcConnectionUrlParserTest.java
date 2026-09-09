@@ -301,7 +301,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem(MYSQL)
             .setHost("localhost")
             .setPort(3306)
-            .setConfiguredTarget(false)
+            .setNoConfiguredTarget()
             .build(),
         arg("jdbc:mysql:///")
             .setProperties(stdProps())
@@ -522,7 +522,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem(POSTGRESQL)
             .setHost("localhost")
             .setPort(5432)
-            .setConfiguredTarget(false)
+            .setNoConfiguredTarget()
             .build(),
         arg("jdbc:postgresql:///")
             .setProperties(stdProps())
@@ -1197,7 +1197,7 @@ class JdbcConnectionUrlParserTest {
             .setOldSystem("oracle")
             .setSubtype("oci8")
             .setPort(1521)
-            .setConfiguredTarget(false)
+            .setNoConfiguredTarget()
             .build(),
         arg("jdbc:oracle:oci8:@")
             .setProperties(stdProps())
@@ -1217,7 +1217,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("oci8")
             .setPort(1521)
             .setName("orclsn")
-            .setConfiguredTarget(false)
+            .setNoConfiguredTarget()
             .build(),
         arg("jdbc:oracle:oci:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=orcl.host)(PORT=55))(CONNECT_DATA=(SERVICE_NAME=orclsn)))")
             .setShortUrl("oracle:oci://orcl.host:55")
@@ -2058,7 +2058,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem(MYSQL)
             .setHost("localhost")
             .setPort(3306)
-            .setConfiguredTarget(false)
+            .setNoConfiguredTarget()
             .build(),
         arg("jdbc:aws-wrapper:mariadb://mdb.host:33/mdbdb?user=mdbuser&password=PW")
             .setShortUrl("mariadb://mdb.host:33")
@@ -2074,7 +2074,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem(POSTGRESQL)
             .setHost("localhost")
             .setPort(5432)
-            .setConfiguredTarget(false)
+            .setNoConfiguredTarget()
             .build());
   }
 
@@ -2539,7 +2539,7 @@ class JdbcConnectionUrlParserTest {
               .legacyServerAddress(builder.host)
               .legacyServerPort(builder.port)
               .configuredServerTarget(
-                  !builder.configuredTarget
+                  builder.noConfiguredTarget
                           || builder.multiTarget
                           || (builder.serverAddressGroup == null && builder.host == null)
                       ? null
@@ -2568,7 +2568,7 @@ class JdbcConnectionUrlParserTest {
     String name;
     String serverAddressGroup;
     boolean multiTarget;
-    boolean configuredTarget = true;
+    boolean noConfiguredTarget;
 
     ParseTestArgumentBuilder(String url) {
       this.url = url;
@@ -2637,8 +2637,8 @@ class JdbcConnectionUrlParserTest {
       return this;
     }
 
-    ParseTestArgumentBuilder setConfiguredTarget(boolean configuredTarget) {
-      this.configuredTarget = configuredTarget;
+    ParseTestArgumentBuilder setNoConfiguredTarget() {
+      this.noConfiguredTarget = true;
       return this;
     }
 
