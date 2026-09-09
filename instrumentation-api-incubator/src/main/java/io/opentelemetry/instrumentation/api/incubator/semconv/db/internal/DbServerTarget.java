@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
+import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;
 
 /**
@@ -17,10 +18,16 @@ import javax.annotation.Nullable;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public class DbServerTarget {
+@AutoValue
+public abstract class DbServerTarget {
 
-  private final String address;
-  @Nullable private final Integer port;
+  /**
+   * Creates a target from already parsed and sanitized attribute values without further
+   * normalization. Use {@link #builder()} when collecting raw endpoints.
+   */
+  public static DbServerTarget create(String address, @Nullable Integer port) {
+    return new AutoValue_DbServerTarget(address, port);
+  }
 
   /**
    * Returns a builder for a target whose endpoints listen on {@code defaultPort} unless they are
@@ -56,25 +63,19 @@ public class DbServerTarget {
         || path.indexOf('#') >= 0) {
       return null;
     }
-    return new DbServerTarget(path, null);
+    return create(path, null);
   }
 
-  DbServerTarget(String address, @Nullable Integer port) {
-    this.address = address;
-    this.port = port;
-  }
+  DbServerTarget() {}
 
   /** Returns the value for {@code server.address}. */
-  public String getAddress() {
-    return address;
-  }
+  public abstract String getAddress();
 
   /**
-   * Returns the value for {@code server.port}, or {@code null} when the target listens on its
-   * default port or already carries its ports inside {@link #getAddress()}.
+   * Returns the value for {@code server.port}, or {@code null} when no separate port is reported.
+   * Targets built with {@link DbServerTargetBuilder} omit default ports and ports already carried
+   * inside {@link #getAddress()}.
    */
   @Nullable
-  public Integer getPort() {
-    return port;
-  }
+  public abstract Integer getPort();
 }
