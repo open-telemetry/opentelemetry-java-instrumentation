@@ -25,10 +25,6 @@ public class TomcatDbcpDataSourceMetrics {
   private static final Map<BasicDataSourceMXBean, BatchCallback> dataSourceMetrics =
       new ConcurrentHashMap<>();
 
-  public static void registerMetrics(BasicDataSourceMXBean dataSource, String dataSourceName) {
-    registerMetrics(dataSource, dataSourceName, Attributes.empty());
-  }
-
   public static void registerMetrics(
       BasicDataSourceMXBean dataSource, String dataSourceName, Attributes databaseAttributes) {
     dataSourceMetrics.computeIfAbsent(
