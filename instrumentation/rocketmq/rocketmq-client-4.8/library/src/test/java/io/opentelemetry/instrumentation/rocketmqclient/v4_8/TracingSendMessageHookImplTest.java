@@ -36,12 +36,14 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 import org.apache.rocketmq.client.impl.CommunicationMode;
@@ -86,12 +88,12 @@ class TracingSendMessageHookImplTest {
     List<Message> decoded = decode(batch);
     testing.waitAndAssertTraces(
         trace -> {
-          trace.hasSize(creates ? 4 : 2);
-          SpanData parent = trace.getSpan(0);
-          assertThat(parent).hasName("parent");
-          SpanData send = trace.getSpan(creates ? 3 : 1);
+          int size = creates ? 4 : 2;
+          trace.hasSize(size);
+          SpanData parent = spanNamed(trace, size, "parent");
+          SpanData send =
+              spanNamed(trace, size, emitStableMessagingSemconv() ? "send topic" : "topic publish");
           assertThat(send)
-              .hasName(emitStableMessagingSemconv() ? "send topic" : "topic publish")
               .hasKind(creates ? CLIENT : PRODUCER)
               .hasParent(parent)
               .hasStatus(failed ? StatusData.error() : StatusData.unset())
@@ -113,7 +115,7 @@ class TracingSendMessageHookImplTest {
                           : null));
           assertThat(send.getEndEpochNanos()).isGreaterThan(send.getStartEpochNanos());
           for (int i = 0; i < 2; i++) {
-            SpanData creation = creates ? trace.getSpan(i + 1) : send;
+            SpanData creation = creates ? creationSpan(trace, size, i) : send;
             assertThat(extract(decoded.get(i))).isEqualTo(remote(creation.getSpanContext()));
             if (creates) {
               assertThat(creation)
@@ -130,15 +132,13 @@ class TracingSendMessageHookImplTest {
                       equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                       equalTo(MESSAGING_MESSAGE_ID, "message-" + i));
               assertThat(creation.getEndEpochNanos()).isEqualTo(creation.getStartEpochNanos());
-              assertThat(creation.getEndEpochNanos())
-                  .isLessThanOrEqualTo(send.getStartEpochNanos());
             }
           }
           if (creates) {
             assertThat(send)
                 .hasLinks(
-                    LinkData.create(trace.getSpan(1).getSpanContext()),
-                    LinkData.create(trace.getSpan(2).getSpanContext()));
+                    LinkData.create(creationSpan(trace, size, 0).getSpanContext()),
+                    LinkData.create(creationSpan(trace, size, 1).getSpanContext()));
           } else {
             assertThat(send).hasTotalRecordedLinks(0);
           }
@@ -188,17 +188,18 @@ class TracingSendMessageHookImplTest {
     assertThat(extract(decoded.get(0))).isEqualTo(existing);
     testing.waitAndAssertTraces(
         trace -> {
-          trace.hasSize(enabled ? 3 : 2);
-          SpanData send = trace.getSpan(enabled ? 2 : 1);
+          int size = enabled ? 3 : 2;
+          trace.hasSize(size);
+          SpanData send = spanNamed(trace, size, "send topic");
           assertThat(send).hasKind(enabled ? CLIENT : PRODUCER);
+          SpanData second = enabled ? creationSpan(trace, size, 1) : send;
           if (enabled) {
             assertThat(send)
-                .hasLinks(
-                    LinkData.create(existing), LinkData.create(trace.getSpan(1).getSpanContext()));
+                .hasLinks(LinkData.create(existing), LinkData.create(second.getSpanContext()));
           } else {
             assertThat(send).hasLinks(LinkData.create(existing));
           }
-          assertThat(extract(decoded.get(1))).isEqualTo(remote(trace.getSpan(1).getSpanContext()));
+          assertThat(extract(decoded.get(1))).isEqualTo(remote(second.getSpanContext()));
         });
   }
 
@@ -380,11 +381,11 @@ class TracingSendMessageHookImplTest {
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSize(4);
-          assertThat(trace.getSpan(3))
+          assertThat(spanNamed(trace, 4, "send topic"))
               .hasKind(CLIENT)
               .hasLinks(
-                  LinkData.create(trace.getSpan(1).getSpanContext()),
-                  LinkData.create(trace.getSpan(2).getSpanContext()));
+                  LinkData.create(creationSpan(trace, 4, 0).getSpanContext()),
+                  LinkData.create(creationSpan(trace, 4, 1).getSpanContext()));
         });
   }
 
@@ -411,12 +412,36 @@ class TracingSendMessageHookImplTest {
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSize(4);
-          for (int i = 1; i <= 2; i++) {
-            assertThat(trace.getSpan(i))
+          for (int i = 0; i < 2; i++) {
+            assertThat(creationSpan(trace, 4, i))
                 .hasName("create topic")
                 .hasAttribute(MESSAGING_ROCKETMQ_NAMESPACE, "namespace");
           }
         });
+  }
+
+  // Spans within a trace are ordered by start timestamp. Create spans are stamped with the wall
+  // clock while every other span takes its timestamp from the SDK clock, so the two orders can
+  // disagree and each span has to be looked up by identity.
+  private static SpanData spanNamed(TraceAssert trace, int size, String name) {
+    return findSpan(trace, size, span -> name.equals(span.getName()));
+  }
+
+  private static SpanData creationSpan(TraceAssert trace, int size, int message) {
+    return findSpan(
+        trace,
+        size,
+        span -> ("message-" + message).equals(span.getAttributes().get(MESSAGING_MESSAGE_ID)));
+  }
+
+  private static SpanData findSpan(TraceAssert trace, int size, Predicate<SpanData> predicate) {
+    for (int i = 0; i < size; i++) {
+      SpanData span = trace.getSpan(i);
+      if (predicate.test(span)) {
+        return span;
+      }
+    }
+    throw new AssertionError("no matching span in trace");
   }
 
   private static MessageBatch batch() {
