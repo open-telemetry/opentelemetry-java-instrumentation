@@ -72,6 +72,7 @@ readonly INSTRUMENTATIONS=(
   "clickhouse:clickhouse-client-v2-0.8:javaagent:test"
   "clickhouse:clickhouse-client-v2-0.8:javaagent:testStableSemconv"
   "couchbase:couchbase-2.0:javaagent:test"
+  "couchbase:couchbase-2.0:javaagent:testExperimental"
   "couchbase:couchbase-2.0:javaagent:testStableSemconv"
   "couchbase:couchbase-2.6:javaagent:test"
   "couchbase:couchbase-2.6:javaagent:testExperimental"
