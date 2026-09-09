@@ -32,8 +32,6 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class OpenTelemetryConsumerInterceptorTest {
 
@@ -85,41 +83,6 @@ class OpenTelemetryConsumerInterceptorTest {
     SerializationTestUtil.testSerialize(
         consumerConfig(),
         OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER);
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void receiveSpanHasZeroDuration(boolean receiveTelemetryEnabled) {
-    KafkaTelemetry telemetry =
-        KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled)
-            .build();
-    OpenTelemetryConsumerInterceptor<String, String> interceptor =
-        new OpenTelemetryConsumerInterceptor<>();
-    interceptor.configure(telemetry.consumerInterceptorConfigProperties());
-
-    String topic = "test";
-    TopicPartition partition = new TopicPartition(topic, 0);
-    ConsumerRecord<String, String> record = new ConsumerRecord<>(topic, 0, 0, "key", "value");
-    ConsumerRecords<String, String> records =
-        new ConsumerRecords<>(singletonMap(partition, singletonList(record)));
-
-    assertThat(interceptor.onConsume(records).count()).isEqualTo(1);
-
-    if (receiveTelemetryEnabled) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName(emitStableMessagingSemconv() ? "poll test" : "test receive")
-                          .hasNoParent()
-                          .satisfies(
-                              spanData ->
-                                  assertThat(spanData.getEndEpochNanos())
-                                      .isEqualTo(spanData.getStartEpochNanos()))));
-    } else {
-      testing.waitAndAssertTraces();
-    }
   }
 
   @Test

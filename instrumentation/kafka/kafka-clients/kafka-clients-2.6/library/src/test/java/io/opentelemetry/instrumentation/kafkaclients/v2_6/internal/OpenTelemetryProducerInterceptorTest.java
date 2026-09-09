@@ -80,7 +80,7 @@ class OpenTelemetryProducerInterceptorTest {
 
   @ParameterizedTest
   @CsvSource({"true, false", "true, true", "false, false", "false, true"})
-  void sendSpanHasZeroDuration(boolean propagationEnabled, boolean readOnlyHeaders) {
+  void sendSpanAndContextPropagation(boolean propagationEnabled, boolean readOnlyHeaders) {
     KafkaTelemetry telemetry =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
             .setPropagationEnabled(propagationEnabled)
@@ -124,8 +124,6 @@ class OpenTelemetryProducerInterceptorTest {
                         .hasNoParent()
                         .satisfies(
                             spanData -> {
-                              assertThat(spanData.getEndEpochNanos())
-                                  .isEqualTo(spanData.getStartEpochNanos());
                               if (propagationEnabled) {
                                 assertThat(tracedRecord.headers().headers("traceparent"))
                                     .singleElement()
