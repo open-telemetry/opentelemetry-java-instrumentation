@@ -59,23 +59,22 @@ public final class CassandraTelemetry {
    *
    * <p>Use this overload when contact points were supplied directly with the session builder's
    * contact-point methods. The driver does not expose those builder contact points through the
-   * resulting {@link CqlSession}, so the instrumentation cannot derive the logical server target
-   * from the session alone.
+   * resulting {@link CqlSession}, so the instrumentation cannot combine them with contact points
+   * from other configuration sources.
    *
-   * <p>For sessions configured through a driver configuration file or {@link
-   * com.datastax.oss.driver.api.core.config.DriverConfigLoader}, use {@link #wrap(CqlSession)}
-   * instead.
+   * <p>For sessions configured exclusively through a driver configuration file or {@link
+   * com.datastax.oss.driver.api.core.config.DriverConfigLoader}, use {@link #wrap(CqlSession)}.
    *
    * <p>The contact points are captured when the session is wrapped and are used only to derive
    * stable database server attributes. They do not change the session's connections or
    * configuration.
    *
-   * <p>{@code contactPoints} must contain every contact point supplied to the builder. Do not pass
-   * the current coordinator, discovered cluster nodes, or only a subset of the configured contact
-   * points.
+   * <p>{@code contactPoints} must contain every original contact point from every source, including
+   * the session builder and driver configuration. Do not pass the current coordinator, discovered
+   * cluster nodes, or only a subset of the configured contact points.
    *
    * @param session the configured session to wrap
-   * @param contactPoints all contact points supplied directly to the session builder
+   * @param contactPoints all original contact points from every configuration source
    * @return a tracing-enabled session
    * @throws NullPointerException if {@code session} or {@code contactPoints} is {@code null}
    */
