@@ -73,10 +73,10 @@ Flag production Java regular-expression literals passed directly to regex-compil
 another cold path. Do not apply this rule to test code.
 
 `String.split` compiles a `Pattern` only when its argument misses the JDK fast path, so flag it
-only then. That fast path covers a one-character literal that is neither a surrogate nor one of
-`.$|()[{^?*+\`, and a backslash followed by one character that is neither a surrogate nor an
-ASCII letter or digit. Calls such as `value.split(",")` and `version.split("\\.")` already run
-an `indexOf` loop with no `Pattern`, so precompiling them makes the code slower.
+only then. That fast path covers a one-character literal that is not a surrogate, a backslash, or
+one of `.$|()[{^?*+`, and a backslash followed by one character that is neither a surrogate nor
+an ASCII letter or digit. Calls such as `value.split(",")` and `version.split("\\.")` already
+run an `indexOf` loop with no `Pattern`, so precompiling them makes the code slower.
 
 ## [Javaagent] Best-Effort Suppressed Failures
 
