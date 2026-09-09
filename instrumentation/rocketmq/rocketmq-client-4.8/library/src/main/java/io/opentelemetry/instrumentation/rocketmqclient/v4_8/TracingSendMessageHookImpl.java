@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -71,12 +72,15 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
         emitStableMessagingSemconv() && context.getMessage() instanceof Iterable<?>
             ? context.getMessage()
             : null;
+    List<Message> messagesWithoutCreationContext = emptyList();
     if (batch != null) {
       List<Context> creationContexts = new ArrayList<>();
+      messagesWithoutCreationContext = new ArrayList<>();
       for (Object item : (Iterable<?>) batch) {
         Message message = (Message) item;
         Context creationContext = propagator.extract(Context.root(), message, getter);
-        if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
+        boolean hasCreationContext = Span.fromContext(creationContext).getSpanContext().isValid();
+        if (!hasCreationContext) {
           SendMessageContext request =
               new MessageCreateContext(message, RocketMqNamespaceUtil.getNamespace(context));
           if (messageCreateInstrumenter.shouldStart(parentContext, request)) {
@@ -86,7 +90,11 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
                 creationContext,
                 message,
                 (carrier, key, value) -> carrier.getProperties().put(key, value));
+            hasCreationContext = Span.fromContext(creationContext).getSpanContext().isValid();
           }
+        }
+        if (!hasCreationContext) {
+          messagesWithoutCreationContext.add(message);
         }
         creationContexts.add(creationContext);
       }
@@ -95,14 +103,9 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     Context sendContext = instrumenter.start(parentContext, context);
     CONTEXT_FIELD.set(context, sendContext);
     if (batch != null) {
-      for (Object item : (Iterable<?>) batch) {
-        Message message = (Message) item;
-        if (!hasCreationContext(message)) {
-          propagator.inject(
-              sendContext,
-              message,
-              (carrier, key, value) -> carrier.getProperties().put(key, value));
-        }
+      for (Message message : messagesWithoutCreationContext) {
+        propagator.inject(
+            sendContext, message, (carrier, key, value) -> carrier.getProperties().put(key, value));
       }
       // The broker appends batch-level properties after per-message properties, so propagation
       // headers on the envelope would overwrite the individual creation contexts.
@@ -116,12 +119,6 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
         RocketMqBatchSendSpanLinksExtractor.clearContexts(context);
       }
     }
-  }
-
-  private boolean hasCreationContext(Message message) {
-    return Span.fromContext(propagator.extract(Context.root(), message, getter))
-        .getSpanContext()
-        .isValid();
   }
 
   @Override
