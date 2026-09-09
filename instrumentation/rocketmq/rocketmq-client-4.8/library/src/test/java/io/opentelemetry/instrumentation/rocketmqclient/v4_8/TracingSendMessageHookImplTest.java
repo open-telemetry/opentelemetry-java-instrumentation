@@ -44,6 +44,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 import org.apache.rocketmq.client.hook.SendMessageContext;
@@ -365,6 +366,24 @@ class TracingSendMessageHookImplTest {
   }
 
   @Test
+  void singleIterableMessageIsUnaffected() {
+    Message message = new IterableMessage();
+    SendMessageContext request = request(message);
+    SendMessageHook hook =
+        RocketMqTelemetry.create(testing.getOpenTelemetry()).createSendMessageHook();
+
+    hook.sendMessageBefore(request);
+    finish(request, hook, null);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableMessagingSemconv() ? "send topic" : "topic publish")
+                        .hasKind(PRODUCER)));
+  }
+
+  @Test
   void asynchronousSendWaitsForCompletion() {
     SendMessageContext request = request(batch());
     request.setCommunicationMode(CommunicationMode.ASYNC);
@@ -549,5 +568,16 @@ class TracingSendMessageHookImplTest {
         context.getSpanId(),
         context.getTraceFlags(),
         context.getTraceState());
+  }
+
+  private static final class IterableMessage extends Message implements Iterable<String> {
+    private IterableMessage() {
+      super("topic", new byte[] {1});
+    }
+
+    @Override
+    public Iterator<String> iterator() {
+      return asList("not", "messages").iterator();
+    }
   }
 }
