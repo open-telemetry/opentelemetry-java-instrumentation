@@ -23,6 +23,7 @@ import static java.util.Collections.singleton;
 import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.DocumentNotFoundException;
+import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.ClusterOptions;
@@ -85,11 +86,10 @@ class CouchbaseClient31Test {
             .build();
     cleanup.deferAfterAll(environment::shutdown);
 
-    String connectionString = couchbase.getConnectionString();
-    String seed = connectionString.substring(connectionString.indexOf("://") + 3);
-    int portSeparator = seed.lastIndexOf(':');
-    seedAddress = seed.substring(0, portSeparator);
-    kvPort = Integer.parseInt(seed.substring(portSeparator + 1));
+    ConnectionString.UnresolvedSocket seed =
+        ConnectionString.create(couchbase.getConnectionString()).hosts().get(0);
+    seedAddress = seed.hostname();
+    kvPort = seed.port();
     clusterManagerPort = couchbase.getMappedPort(8091);
     cluster =
         Cluster.connect(

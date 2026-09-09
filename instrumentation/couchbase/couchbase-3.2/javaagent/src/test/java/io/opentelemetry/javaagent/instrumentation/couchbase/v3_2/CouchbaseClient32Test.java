@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
 import com.couchbase.client.core.error.DocumentNotFoundException;
+import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
@@ -54,7 +55,8 @@ class CouchbaseClient32Test {
   private static final Logger logger = LoggerFactory.getLogger("couchbase-container");
 
   private static CouchbaseContainer couchbase;
-  private static String connectionString;
+  private static String seedAddress;
+  private static int seedPort;
   private static Cluster cluster;
   private static Collection collection;
 
@@ -69,7 +71,11 @@ class CouchbaseClient32Test {
             .withStartupTimeout(Duration.ofMinutes(2));
     couchbase.start();
     cleanup.deferAfterAll(couchbase::stop);
-    connectionString = couchbase.getConnectionString();
+    String connectionString = couchbase.getConnectionString();
+    ConnectionString.UnresolvedSocket seed =
+        ConnectionString.create(connectionString).hosts().get(0);
+    seedAddress = seed.hostname();
+    seedPort = seed.port();
 
     cluster = Cluster.connect(connectionString, couchbase.getUsername(), couchbase.getPassword());
     cleanup.deferAfterAll(cluster::disconnect);
@@ -113,15 +119,14 @@ class CouchbaseClient32Test {
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    String seed = connectionString.substring(connectionString.indexOf("://") + 3);
-    return seed.substring(0, seed.lastIndexOf(':'));
+    return seedAddress;
   }
 
   private static Long serverPort() {
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    return Long.valueOf(connectionString.substring(connectionString.lastIndexOf(':') + 1));
+    return (long) seedPort;
   }
 
   private static String spanName() {
