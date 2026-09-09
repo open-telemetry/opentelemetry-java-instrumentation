@@ -9,7 +9,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -40,11 +39,7 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
     if (consumerTelemetry == null) {
       return records;
     }
-    // There is no callback before fetching ConsumerRecords, so the receive duration is unknown.
-    Instant timestamp = Instant.now();
-    Context receiveContext =
-        consumerTelemetry.buildAndFinishSpan(
-            records, consumerGroup, clientId, timestamp, timestamp);
+    Context receiveContext = consumerTelemetry.buildAndFinishSpan(records, consumerGroup, clientId);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }

@@ -20,7 +20,6 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -140,10 +139,7 @@ class OpenTelemetryConsumerInterceptorTest {
     Context inheritedContext =
         KafkaConsumerContextUtil.withReceiveOperation(Context.current(), true);
     try (Scope ignored = inheritedContext.makeCurrent()) {
-      Instant timestamp = Instant.now();
-      receiveContext =
-          requireNonNull(
-              supplier.get().buildAndFinishSpan(records, "test", "client", timestamp, timestamp));
+      receiveContext = requireNonNull(supplier.get().buildAndFinishSpan(records, "test", "client"));
     }
 
     assertThat(KafkaConsumerContextUtil.hasReceiveOperation(receiveContext)).isFalse();

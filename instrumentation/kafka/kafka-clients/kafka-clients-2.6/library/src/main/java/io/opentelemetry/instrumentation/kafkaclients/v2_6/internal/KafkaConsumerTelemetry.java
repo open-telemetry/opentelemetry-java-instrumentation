@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingList;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,20 +65,21 @@ public class KafkaConsumerTelemetry {
   public <K, V> Context buildAndFinishSpan(
       ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
     return buildAndFinishSpan(
-        records,
-        KafkaUtil.getConsumerGroup(consumer),
-        KafkaUtil.getClientId(consumer),
-        timer.startTime(),
-        timer.now());
+        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer), timer);
   }
 
   @Nullable
-  public <K, V> Context buildAndFinishSpan(
+  <K, V> Context buildAndFinishSpan(
+      ConsumerRecords<K, V> records, @Nullable String consumerGroup, @Nullable String clientId) {
+    return buildAndFinishSpan(records, consumerGroup, clientId, null);
+  }
+
+  @Nullable
+  private <K, V> Context buildAndFinishSpan(
       ConsumerRecords<K, V> records,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      Instant startTime,
-      Instant endTime) {
+      @Nullable Timer timer) {
     if (records.isEmpty()) {
       return null;
     }
@@ -88,9 +88,22 @@ public class KafkaConsumerTelemetry {
     Context receiveContext = null;
     boolean receiveOperationStarted = false;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      receiveContext =
-          InstrumenterUtil.startAndEnd(
-              consumerReceiveInstrumenter, parentContext, request, null, null, startTime, endTime);
+      if (timer == null) {
+        // The interceptor runs after poll, so let the SDK time an immediate span, not poll
+        // duration.
+        receiveContext = consumerReceiveInstrumenter.start(parentContext, request);
+        consumerReceiveInstrumenter.end(receiveContext, request, null, null);
+      } else {
+        receiveContext =
+            InstrumenterUtil.startAndEnd(
+                consumerReceiveInstrumenter,
+                parentContext,
+                request,
+                null,
+                null,
+                timer.startTime(),
+                timer.now());
+      }
       receiveOperationStarted = true;
     }
 

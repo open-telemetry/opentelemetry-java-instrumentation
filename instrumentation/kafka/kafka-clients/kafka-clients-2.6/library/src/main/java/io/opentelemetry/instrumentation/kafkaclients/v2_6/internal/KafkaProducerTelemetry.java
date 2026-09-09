@@ -9,10 +9,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaPropagation;
-import java.time.Instant;
 import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
@@ -60,11 +58,9 @@ public class KafkaProducerTelemetry {
       return record;
     }
 
-    // The interceptor only injects headers, so this synthetic span has no operation duration.
-    Instant timestamp = Instant.now();
-    Context context =
-        InstrumenterUtil.startAndEnd(
-            producerInstrumenter, parentContext, request, null, null, timestamp, timestamp);
+    // The interceptor runs before send, so end immediately without measuring send duration.
+    Context context = producerInstrumenter.start(parentContext, request);
+    producerInstrumenter.end(context, request, null, null);
     if (producerPropagationEnabled) {
       record = KafkaPropagation.propagateContext(propagator, context, record);
     }
