@@ -18,11 +18,13 @@ import org.apache.kafka.clients.Metadata;
  * VirtualField} to the same {@code Producer}/{@code Consumer} classes — {@code VirtualField} is
  * keyed by target type + value type.
  *
- * <p>Lifecycle: {@link #UNAVAILABLE} (reflection cannot reach the metadata at all) → {@link
- * #of(Metadata)} (pending: broker response not yet received) → {@link #resolved(String)} (cluster
- * id known; hot path returns it directly without acquiring the Metadata lock). The pending state is
- * never converted to {@link #UNAVAILABLE}: a slow broker must not permanently suppress the
- * attribute, so pending reads are rate limited instead of capped.
+ * <p>A client starts in one of two states, depending on whether reflection can reach its {@code
+ * Metadata}: {@link #UNAVAILABLE} if it cannot, which is terminal, or {@link #of(Metadata)}
+ * (pending) if it can but the broker has not reported an id yet. Only a pending entry advances, to
+ * {@link #resolved(String)} once the id is known, after which the hot path returns it directly
+ * without acquiring the Metadata lock. Pending is never converted to {@link #UNAVAILABLE}: a slow
+ * broker must not permanently suppress the attribute, so pending reads are rate limited instead of
+ * capped.
  */
 final class KafkaClusterId {
 
