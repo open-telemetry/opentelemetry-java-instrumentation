@@ -56,11 +56,7 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      SocketAddress address = coordinator.getEndPoint().resolve();
-      if (address instanceof InetSocketAddress) {
-        attributes.put(SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
-        attributes.put(SERVER_PORT, ((InetSocketAddress) address).getPort());
-      }
+      updateServerAddressAndPort(attributes, coordinator);
       String coordinatorDc = coordinator.getDatacenter();
       if (emitStableDatabaseSemconv()) {
         attributes.put(CASSANDRA_COORDINATOR_DC, coordinatorDc);
@@ -130,6 +126,17 @@ final class CassandraAttributesExtractor
     }
     if (emitOldDatabaseSemconv()) {
       attributes.put(DB_CASSANDRA_IDEMPOTENCE, idempotent);
+    }
+  }
+
+  static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
+    if (emitStableDatabaseSemconv()) {
+      return;
+    }
+    SocketAddress address = coordinator.getEndPoint().resolve();
+    if (address instanceof InetSocketAddress) {
+      attributes.put(SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
+      attributes.put(SERVER_PORT, ((InetSocketAddress) address).getPort());
     }
   }
 }
