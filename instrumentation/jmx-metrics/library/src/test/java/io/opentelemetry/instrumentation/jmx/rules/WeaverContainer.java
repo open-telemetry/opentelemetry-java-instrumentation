@@ -55,7 +55,9 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
         "--inactivity-timeout=0",
         "--output=http",
         "--format",
-        "json");
+        "json",
+        "--otlp-grpc-address",
+        "0.0.0.0");
     super.withLogConsumer(new Slf4jLogConsumer(logger));
 
     // main registry definition
@@ -147,10 +149,14 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
               sample -> {
                 JsonNode resource = sample.get("resource");
                 JsonNode metric = sample.get("metric");
+                JsonNode instrumentationScope = sample.get("instrumentation_scope");
                 if (resource != null) {
                   resource.get("attributes").forEach(parseValidationAdvice);
                 } else if (metric != null) {
                   parseValidationAdvice.accept(metric);
+                } else if (instrumentationScope != null) {
+                  parseValidationAdvice.accept(instrumentationScope);
+                  instrumentationScope.get("attributes").forEach(parseValidationAdvice);
                 } else {
                   throw new IllegalStateException("unexpected weaver validation result type");
                 }
