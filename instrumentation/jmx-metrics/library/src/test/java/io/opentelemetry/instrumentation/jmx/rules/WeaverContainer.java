@@ -43,7 +43,7 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
   @Nullable private JsonNode result = null;
 
   WeaverContainer(Path registryRoot, String... registryFiles) {
-    super("otel/weaver:v0.25.1");
+    super("otel/weaver:v0.26.1");
 
     super.withExposedPorts(OTLP_PORT, ADMIN_PORT);
     super.waitingFor(Wait.forListeningPorts(OTLP_PORT, ADMIN_PORT));
@@ -55,7 +55,9 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
         "--inactivity-timeout=0",
         "--output=http",
         "--format",
-        "json");
+        "json",
+        "--otlp-grpc-address",
+        "0.0.0.0");
     super.withLogConsumer(new Slf4jLogConsumer(logger));
 
     // main registry definition
@@ -147,11 +149,12 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
               sample -> {
                 JsonNode resource = sample.get("resource");
                 JsonNode metric = sample.get("metric");
+                JsonNode instrumentationScope = sample.get("instrumentation_scope");
                 if (resource != null) {
                   resource.get("attributes").forEach(parseValidationAdvice);
                 } else if (metric != null) {
                   parseValidationAdvice.accept(metric);
-                } else {
+                } else if (instrumentationScope == null) {
                   throw new IllegalStateException("unexpected weaver validation result type");
                 }
               });
