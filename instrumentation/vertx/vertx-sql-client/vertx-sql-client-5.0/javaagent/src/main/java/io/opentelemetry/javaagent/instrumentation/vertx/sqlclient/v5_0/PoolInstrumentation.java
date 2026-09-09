@@ -34,26 +34,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class PoolInstrumentation implements TypeInstrumentation {
 
-  public static final class PoolConstructionState {
-    private final CallDepth callDepth;
-    @Nullable private final VertxSqlClientConstructionState constructionState;
-
-    public PoolConstructionState(
-        CallDepth callDepth, @Nullable VertxSqlClientConstructionState constructionState) {
-      this.callDepth = callDepth;
-      this.constructionState = constructionState;
-    }
-
-    public boolean isNested() {
-      return callDepth.decrementAndGet() > 0;
-    }
-
-    @Nullable
-    public VertxSqlClientConstructionState getConstructionState() {
-      return constructionState;
-    }
-  }
-
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("io.vertx.sqlclient.Pool");
@@ -112,6 +92,26 @@ class PoolInstrumentation implements TypeInstrumentation {
           constructionState.setDbSystemName(getDbSystemNameFromClassName(pool));
         }
         constructionState.complete(pool);
+      }
+    }
+
+    public static final class PoolConstructionState {
+      private final CallDepth callDepth;
+      @Nullable private final VertxSqlClientConstructionState constructionState;
+
+      public PoolConstructionState(
+          CallDepth callDepth, @Nullable VertxSqlClientConstructionState constructionState) {
+        this.callDepth = callDepth;
+        this.constructionState = constructionState;
+      }
+
+      public boolean isNested() {
+        return callDepth.decrementAndGet() > 0;
+      }
+
+      @Nullable
+      public VertxSqlClientConstructionState getConstructionState() {
+        return constructionState;
       }
     }
   }
