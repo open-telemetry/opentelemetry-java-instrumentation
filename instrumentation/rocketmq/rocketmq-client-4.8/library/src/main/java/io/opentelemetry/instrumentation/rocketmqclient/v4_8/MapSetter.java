@@ -20,7 +20,7 @@ final class MapSetter implements TextMapSetter<SendMessageContext> {
       return;
     }
     Message message = carrier.getMessage();
-    if (message == null || (emitStableMessagingSemconv() && message instanceof Iterable<?>)) {
+    if (message == null || (emitStableMessagingSemconv() && RocketMqMessageUtil.isBatch(message))) {
       return;
     }
     message.getProperties().put(key, value);

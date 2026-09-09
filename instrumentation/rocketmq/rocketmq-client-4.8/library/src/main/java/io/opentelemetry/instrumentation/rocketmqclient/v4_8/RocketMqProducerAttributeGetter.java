@@ -121,7 +121,7 @@ final class RocketMqProducerAttributeGetter
   }
 
   private static boolean isBatch(SendMessageContext request) {
-    return emitStableMessagingSemconv() && request.getMessage() instanceof Iterable<?>;
+    return emitStableMessagingSemconv() && RocketMqMessageUtil.isBatch(request.getMessage());
   }
 
   @Override

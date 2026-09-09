@@ -380,7 +380,27 @@ class TracingSendMessageHookImplTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(emitStableMessagingSemconv() ? "send topic" : "topic publish")
-                        .hasKind(PRODUCER)));
+                        .hasKind(PRODUCER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, null),
+                            equalTo(
+                                MESSAGING_ROCKETMQ_NAMESPACE,
+                                emitStableMessagingSemconv() ? "" : null),
+                            equalTo(MESSAGING_MESSAGE_ID, "result-id"))
+                        .satisfies(
+                            spanData ->
+                                assertThat(extract(message))
+                                    .isEqualTo(remote(spanData.getSpanContext())))));
   }
 
   @Test

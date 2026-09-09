@@ -68,7 +68,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     }
     Context parentContext = Context.current();
     Message batch =
-        emitStableMessagingSemconv() && isMessageBatch(context.getMessage())
+        emitStableMessagingSemconv() && RocketMqMessageUtil.isBatch(context.getMessage())
             ? context.getMessage()
             : null;
     List<Message> messagesWithoutCreationContext = emptyList();
@@ -151,11 +151,6 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
       CONTEXT_FIELD.set(context, null);
       RocketMqBatchSendSpanLinksExtractor.clearContexts(context);
     }
-  }
-
-  private static boolean isMessageBatch(@Nullable Message message) {
-    return message != null
-        && message.getClass().getName().equals("org.apache.rocketmq.common.message.MessageBatch");
   }
 
   static final class MessageCreateContext extends SendMessageContext {
