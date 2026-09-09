@@ -17,22 +17,6 @@ final class R2dbcServerTarget {
     if (isUnixDomainSocket(serverAddress)) {
       return DbServerTarget.unixSocket(serverAddress);
     }
-    return isServerAddressGroupCandidate(serverAddress)
-        ? buildServerAddressGroup(serverAddress, serverPort, defaultPort)
-        : buildServerTarget(serverAddress, serverPort, defaultPort);
-  }
-
-  private static boolean isUnixDomainSocket(@Nullable String serverAddress) {
-    return serverAddress != null && serverAddress.startsWith("/");
-  }
-
-  private static boolean isServerAddressGroupCandidate(@Nullable String serverAddress) {
-    return serverAddress != null && serverAddress.indexOf(',') >= 0;
-  }
-
-  @Nullable
-  private static DbServerTarget buildServerAddressGroup(
-      @Nullable String serverAddress, @Nullable Integer serverPort, @Nullable Integer defaultPort) {
     if (serverAddress == null
         || serverAddress.indexOf('/') >= 0
         || serverAddress.indexOf('?') >= 0
@@ -43,14 +27,14 @@ final class R2dbcServerTarget {
 
     int firstComma = serverAddress.indexOf(',');
     int userInfoEnd = serverAddress.indexOf('@');
-    if (userInfoEnd > firstComma
+    // user info belongs to the whole address, so it must appear once and ahead of every host
+    if ((firstComma >= 0 && userInfoEnd > firstComma)
         || (userInfoEnd >= 0 && userInfoEnd != serverAddress.lastIndexOf('@'))) {
       return null;
     }
 
-    String[] hosts = stripUserInfo(serverAddress).split(",", -1);
     DbServerTargetBuilder builder = builder(defaultPort);
-    for (String host : hosts) {
+    for (String host : stripUserInfo(serverAddress).split(",", -1)) {
       ParsedEndpoint endpoint = parseEndpoint(host, serverPort);
       if (endpoint == null) {
         return null;
@@ -60,25 +44,8 @@ final class R2dbcServerTarget {
     return builder.build();
   }
 
-  @Nullable
-  private static DbServerTarget buildServerTarget(
-      @Nullable String serverAddress, @Nullable Integer serverPort, @Nullable Integer defaultPort) {
-    if (serverAddress != null
-        && (serverAddress.indexOf('/') >= 0
-            || serverAddress.indexOf('?') >= 0
-            || serverAddress.indexOf('#') >= 0)) {
-      return null;
-    }
-    if (serverPort != null && !isValidPort(serverPort)) {
-      return null;
-    }
-    ParsedEndpoint endpoint = parseEndpoint(serverAddress, serverPort);
-    if (endpoint == null) {
-      return null;
-    }
-    return builder(defaultPort)
-        .addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port)
-        .build();
+  private static boolean isUnixDomainSocket(@Nullable String serverAddress) {
+    return serverAddress != null && serverAddress.startsWith("/");
   }
 
   private static DbServerTargetBuilder builder(@Nullable Integer defaultPort) {
@@ -86,17 +53,8 @@ final class R2dbcServerTarget {
   }
 
   @Nullable
-  private static ParsedEndpoint parseEndpoint(
-      @Nullable String serverAddress, @Nullable Integer serverPort) {
-    if (serverAddress == null) {
-      return null;
-    }
-    int userInfoEnd = serverAddress.indexOf('@');
-    if (userInfoEnd >= 0 && userInfoEnd != serverAddress.lastIndexOf('@')) {
-      return null;
-    }
-
-    String host = stripUserInfo(serverAddress).trim();
+  private static ParsedEndpoint parseEndpoint(String serverAddress, @Nullable Integer serverPort) {
+    String host = serverAddress.trim();
     if (host.startsWith("[")) {
       int closingBracket = host.indexOf(']');
       if (closingBracket < 0 || host.indexOf(']', closingBracket + 1) >= 0) {
