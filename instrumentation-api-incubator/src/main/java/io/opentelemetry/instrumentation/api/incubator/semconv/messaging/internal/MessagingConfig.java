@@ -13,7 +13,6 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.List;
 import java.util.Set;
@@ -67,12 +66,10 @@ public final class MessagingConfig {
       return selector;
     }
 
-    if (!SemconvStability.v3Preview(openTelemetry)) {
-      // TODO: remove the deprecated flat messaging names in 3.0.
-      selector = getDeprecatedHeaderAliases(openTelemetry, systemPropertyFallback);
-      if (selector != null) {
-        return selector;
-      }
+    // TODO: remove the deprecated flat messaging names in a future minor release.
+    selector = getDeprecatedHeaderAliases(openTelemetry, systemPropertyFallback);
+    if (selector != null) {
+      return selector;
     }
 
     selector =
@@ -126,11 +123,11 @@ public final class MessagingConfig {
             "enabled",
             COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.receive-telemetry.enabled",
             systemPropertyFallback);
-    if (enabled != null || SemconvStability.v3Preview(openTelemetry)) {
-      return enabled != null && enabled;
+    if (enabled != null) {
+      return enabled;
     }
 
-    // TODO: remove the deprecated flat messaging name in 3.0.
+    // TODO: remove the deprecated flat messaging name in a future minor release.
     String deprecatedProperty =
         DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.receive-telemetry.enabled";
     enabled =
@@ -260,7 +257,7 @@ public final class MessagingConfig {
           "The "
               + deprecatedProperty
               + " setting and the equivalent declarative configuration property are deprecated"
-              + " and will be removed in 3.0. Use "
+              + " and may be removed in the next minor release. Use "
               + replacementProperty
               + " or equivalent declarative configuration instead.");
     }
