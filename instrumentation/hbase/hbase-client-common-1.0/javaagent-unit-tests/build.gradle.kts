@@ -14,7 +14,7 @@ testing {
     register<JvmTestSuite>("hbase14Test") {
       sources {
         java {
-          setSrcDirs(listOf("src/callTimeoutTest/java"))
+          setSrcDirs(listOf("src/hbase14Test/java", "src/callTimeoutTest/java"))
         }
       }
       dependencies {
