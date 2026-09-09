@@ -659,8 +659,9 @@ class ClickHouseClientV2Test {
     }
 
     assertThat(peer).isNotNull();
-    assertThat(peer.getClass().getMethod("getAddress").invoke(peer)).isEqualTo(address);
-    assertThat(peer.getClass().getMethod("getPort").invoke(peer)).isEqualTo(port);
+    assertThat(peer.getClass().getSuperclass().getMethod("getAddress").invoke(peer))
+        .isEqualTo(address);
+    assertThat(peer.getClass().getSuperclass().getMethod("getPort").invoke(peer)).isEqualTo(port);
   }
 
   private static Object createDbRequest() throws Exception {
