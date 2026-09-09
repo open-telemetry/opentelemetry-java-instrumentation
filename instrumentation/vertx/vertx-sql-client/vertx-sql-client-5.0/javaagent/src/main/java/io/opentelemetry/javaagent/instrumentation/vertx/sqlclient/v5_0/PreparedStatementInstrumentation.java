@@ -33,11 +33,13 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.This PreparedStatement preparedStatement) {
       VertxSqlClientSingletons.setClientInfo(
           VertxSqlClientSingletons.getPreparedStatementInfo(preparedStatement));
+      VertxSqlClientSingletons.setQuerySupplier(null);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit() {
       VertxSqlClientSingletons.setClientInfo(null);
+      VertxSqlClientSingletons.setQuerySupplier(null);
     }
   }
 }
