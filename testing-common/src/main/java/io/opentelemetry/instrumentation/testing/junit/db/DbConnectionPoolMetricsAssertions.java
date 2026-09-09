@@ -107,8 +107,8 @@ public class DbConnectionPoolMetricsAssertions {
   /**
    * Declares the database attributes that every metric point is expected to carry when stable
    * database semantic conventions are enabled. Declaring them makes each point assertion exact, so
-   * an unexpected attribute fails the assertion. Under the old semantic conventions the points are
-   * expected to carry the pool name only.
+   * an unexpected attribute fails the assertion. Under the old semantic conventions each point is
+   * expected to carry only the pool name and the attributes that the metric itself defines.
    */
   @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions withDatabaseAttributes(
