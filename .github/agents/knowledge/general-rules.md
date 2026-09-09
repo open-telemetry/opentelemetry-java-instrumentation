@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - Use when: always — load this file for every review
-- Review focus: engineering correctness, style, naming, semconv, config, testing, new modules
+- Review focus: engineering correctness, performance, style, naming, semconv, config, testing, new modules
 
 ## Review Checklist
 
@@ -14,6 +14,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Category     | Rule                                                                                                                                                                                                                                                                                                                                                                                                          | Scope Trigger                                                                                                                                                   | Knowledge File                     |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
 | General      | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments                                                                                                                                                                                                                                                                                                                              | Always                                                                                                                                                          | —                                  |
+| Performance  | Precompile production Java regular-expression literals that may be evaluated repeatedly in reusable `static final Pattern` fields                                                                                                                                                                                                                                                                             | Repeated production Java regex literals passed to `String.replaceAll`, `String.matches`, or similar APIs; `String.split` outside the JDK fast path              | —                                  |
 | Style        | Style guide                                                                                                                                                                                                                                                                                                                                                                                                   | Always                                                                                                                                                          | —                                  |
 | Style        | Reflow avoidable short lines that Spotless creates between consecutive `//` prose-comment lines; allow short lines when the line-length limit requires them                                                                                                                                                                                                                                                   | Multi-line `//` prose comments                                                                                                                                  | —                                  |
 | Style        | Add `// visible for testing` when a production member has broader visibility solely so tests can access it                                                                                                                                                                                                                                                                                                    | Production members accessed directly only by tests                                                                                                              | —                                  |
@@ -64,6 +65,19 @@ Flag real defects, including:
 - security regressions
 
 Only flag substantive problems, not stylistic preference.
+
+## [Performance] Precompile Reused Regular Expressions
+
+Flag production Java regular-expression literals passed directly to regex-compiling APIs such as
+`String.replaceAll` or `String.matches` when the call may execute repeatedly. Require them to be
+precompiled in reusable `static final Pattern` fields. Do not apply this rule to test code or to a
+call that is provably executed only once, such as one-time startup initialization.
+
+`String.split` compiles a `Pattern` only when its argument misses the JDK fast path, so flag it
+only then. That fast path covers a one-character literal that is not a surrogate, a backslash, or
+one of `.$|()[{^?*+`, and a backslash followed by one character that is neither a surrogate nor
+an ASCII letter or digit. Calls such as `value.split(",")` and `version.split("\\.")` already
+run an `indexOf` loop with no `Pattern`, so precompiling them makes the code slower.
 
 ## [Javaagent] Best-Effort Suppressed Failures
 
