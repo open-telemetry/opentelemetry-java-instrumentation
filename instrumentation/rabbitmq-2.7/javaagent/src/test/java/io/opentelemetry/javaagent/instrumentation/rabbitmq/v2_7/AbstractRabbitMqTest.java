@@ -28,7 +28,7 @@ abstract class AbstractRabbitMqTest {
   private static final Logger logger =
       LoggerFactory.getLogger("io.opentelemetry.testing.rabbitmq-container");
 
-  protected static GenericContainer<?> rabbitMqContainer;
+  static GenericContainer<?> rabbitMqContainer;
   protected static ConnectionFactory connectionFactory;
 
   protected static String rabbitMqHost;
