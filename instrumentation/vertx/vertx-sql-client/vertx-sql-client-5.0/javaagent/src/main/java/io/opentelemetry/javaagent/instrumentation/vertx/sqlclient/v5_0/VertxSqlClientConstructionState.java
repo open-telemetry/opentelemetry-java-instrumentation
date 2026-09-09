@@ -52,7 +52,7 @@ public final class VertxSqlClientConstructionState {
       publish(constructedClient);
     }
     if (client instanceof Pool) {
-      VertxSqlClientSingletons.setPoolInfo((Pool) client, info);
+      VertxSqlClientSingletons.setPoolClientInfo((Pool) client, info);
     }
   }
 

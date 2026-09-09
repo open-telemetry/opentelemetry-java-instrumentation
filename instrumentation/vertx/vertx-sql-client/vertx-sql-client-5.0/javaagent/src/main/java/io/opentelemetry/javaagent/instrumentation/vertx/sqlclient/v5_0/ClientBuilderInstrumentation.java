@@ -61,8 +61,7 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This Object clientBuilder,
         @Advice.Argument(0) SqlConnectOptions sqlConnectOptions) {
-      VertxSqlClientSingletons.storeBuilderDatabases(
-          clientBuilder, singletonList(sqlConnectOptions));
+      VertxSqlClientSingletons.setBuilderDatabases(clientBuilder, singletonList(sqlConnectOptions));
     }
   }
 
@@ -70,7 +69,7 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
   public static class ConnectingToSupplierAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Object clientBuilder) {
-      VertxSqlClientSingletons.storeBuilderDatabases(clientBuilder, null);
+      VertxSqlClientSingletons.setBuilderDatabases(clientBuilder, null);
     }
   }
 
@@ -79,7 +78,7 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Object clientBuilder, @Advice.Argument(0) List<SqlConnectOptions> databases) {
-      VertxSqlClientSingletons.storeBuilderDatabases(clientBuilder, databases);
+      VertxSqlClientSingletons.setBuilderDatabases(clientBuilder, databases);
     }
   }
 

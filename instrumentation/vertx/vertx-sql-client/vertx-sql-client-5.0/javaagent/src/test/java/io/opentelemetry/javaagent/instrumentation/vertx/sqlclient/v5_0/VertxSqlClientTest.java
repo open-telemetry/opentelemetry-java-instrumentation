@@ -35,6 +35,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.counting;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -47,6 +48,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgBuilder;
 import io.vertx.pgclient.PgConnectOptions;
@@ -60,6 +62,8 @@ import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
+import io.vertx.sqlclient.impl.ClientBuilderBase;
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -155,7 +159,7 @@ class VertxSqlClientTest {
     select(listPool);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)));
+        trace -> assertServerListTarget(trace, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -173,7 +177,7 @@ class VertxSqlClientTest {
 
     select(listPool);
 
-    testing.waitAndAssertTraces(trace -> assertServerGroup(trace, null));
+    testing.waitAndAssertTraces(trace -> assertServerListTarget(trace, null));
   }
 
   @Test
@@ -195,7 +199,7 @@ class VertxSqlClientTest {
     assertThat(error).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
-            assertServerGroup(
+            assertServerListTarget(
                 trace, "127.0.0.1", 1, "127.0.0.1:1,127.0.0.1:2", "select * from test", error));
   }
 
@@ -226,7 +230,7 @@ class VertxSqlClientTest {
     handlerInvoked.get(30, SECONDS);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)));
+        trace -> assertServerListTarget(trace, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -238,6 +242,65 @@ class VertxSqlClientTest {
     select(genericPool);
 
     testing.waitAndAssertTraces(VertxSqlClientTest::assertDirectTarget);
+  }
+
+  @Test
+  void testNullServerDoesNotPoisonLaterPoolTarget() throws Exception {
+    assertThatThrownBy(
+            () -> Pool.pool(vertx, (SqlConnectOptions) null, new PoolOptions().setMaxSize(1)))
+        .isInstanceOf(NullPointerException.class);
+
+    Pool validPool = Pool.pool(vertx, connectOptions(), new PoolOptions().setMaxSize(1));
+    cleanup.deferCleanup(validPool::close);
+
+    select(validPool);
+
+    testing.waitAndAssertTraces(VertxSqlClientTest::assertDirectTarget);
+  }
+
+  @Test
+  void testFailedBuilderRestoresConnectHandler() throws Exception {
+    CompletableFuture<Void> handlerInvoked = new CompletableFuture<>();
+    Handler<SqlConnection> connectHandler =
+        connection ->
+            connection
+                .query("select * from test")
+                .execute()
+                .onComplete(
+                    result -> {
+                      connection.close();
+                      if (result.succeeded()) {
+                        handlerInvoked.complete(null);
+                      } else {
+                        handlerInvoked.completeExceptionally(result.cause());
+                      }
+                    });
+    ClientBuilder<Pool> builder =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(connectOptions().setHost("failed.example"))
+            .withConnectHandler(connectHandler)
+            .with(new PoolOptions().setIdleTimeoutUnit(null));
+    Field connectHandlerField = ClientBuilderBase.class.getDeclaredField("connectHandler");
+    connectHandlerField.setAccessible(true);
+
+    assertThatThrownBy(builder::build).isInstanceOf(NullPointerException.class);
+    assertThat(connectHandlerField.get(builder)).isSameAs(connectHandler);
+
+    PgConnectOptions first = connectOptions();
+    PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
+    Pool rebuiltPool =
+        builder.connectingTo(asList(first, second)).with(new PoolOptions().setMaxSize(1)).build();
+    cleanup.deferCleanup(rebuiltPool::close);
+    assertThat(connectHandlerField.get(builder)).isSameAs(connectHandler);
+
+    SqlConnection connection =
+        rebuiltPool.getConnection().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    cleanup.deferCleanup(connection::close);
+    handlerInvoked.get(30, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace -> assertServerListTarget(trace, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @ParameterizedTest
@@ -363,7 +426,8 @@ class VertxSqlClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            assertServerGroup(trace, query, host + ":" + port + "," + host + ":" + (port + 1)));
+            assertServerListTarget(
+                trace, query, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @Test
@@ -383,8 +447,8 @@ class VertxSqlClientTest {
     select(secondPool);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)),
-        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 2)));
+        trace -> assertServerListTarget(trace, host + ":" + port + "," + host + ":" + (port + 1)),
+        trace -> assertServerListTarget(trace, host + ":" + port + "," + host + ":" + (port + 2)));
   }
 
   @Test
@@ -413,8 +477,9 @@ class VertxSqlClientTest {
     select(secondPool);
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, host + ":" + port + "," + alternateHost + ":" + port),
-        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + port));
+        trace ->
+            assertServerListTarget(trace, host + ":" + port + "," + alternateHost + ":" + port),
+        trace -> assertServerListTarget(trace, host + ":" + port + "," + host + ":" + port));
   }
 
   @Test
@@ -472,22 +537,22 @@ class VertxSqlClientTest {
     testing.runWithSpan("parent", () -> select(supplierPool));
 
     testing.waitAndAssertTraces(
-        trace -> assertServerGroup(trace, host + ":" + port + "," + host + ":" + (port + 1)),
+        trace -> assertServerListTarget(trace, host + ":" + port + "," + host + ":" + (port + 1)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
-  private static void assertServerGroup(TraceAssert trace, String expectedStableAddress) {
-    assertServerGroup(trace, "select * from test", expectedStableAddress);
+  private static void assertServerListTarget(TraceAssert trace, String expectedStableAddress) {
+    assertServerListTarget(trace, "select * from test", expectedStableAddress);
   }
 
-  private static void assertServerGroup(
+  private static void assertServerListTarget(
       TraceAssert trace, String statement, String expectedStableAddress) {
-    assertServerGroup(trace, host, port, expectedStableAddress, statement, null);
+    assertServerListTarget(trace, host, port, expectedStableAddress, statement, null);
   }
 
-  private static void assertServerGroup(
+  private static void assertServerListTarget(
       TraceAssert trace,
       String firstHost,
       int firstPort,

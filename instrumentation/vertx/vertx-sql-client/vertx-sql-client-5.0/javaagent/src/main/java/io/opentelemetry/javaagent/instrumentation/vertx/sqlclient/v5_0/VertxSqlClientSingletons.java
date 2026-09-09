@@ -34,7 +34,7 @@ public class VertxSqlClientSingletons {
       new ThreadLocal<>();
   private static final VirtualField<PreparedStatement, VertxSqlClientInfo> PREPARED_STATEMENT_INFO =
       VirtualField.find(PreparedStatement.class, VertxSqlClientInfo.class);
-  private static final VirtualField<Pool, VertxSqlClientInfo> POOL_INFO =
+  private static final VirtualField<Pool, VertxSqlClientInfo> POOL_CLIENT_INFO =
       VirtualField.find(Pool.class, VertxSqlClientInfo.class);
   private static final VirtualField<SqlClientBase, VertxSqlClientInfo> CLIENT_INFO =
       VirtualField.find(SqlClientBase.class, VertxSqlClientInfo.class);
@@ -76,13 +76,13 @@ public class VertxSqlClientSingletons {
     return (VertxSqlClientInfo) QueryExecutorUtil.getData(queryExecutor);
   }
 
-  public static void setPoolInfo(Pool pool, @Nullable VertxSqlClientInfo info) {
-    POOL_INFO.set(pool, info);
+  public static void setPoolClientInfo(Pool pool, @Nullable VertxSqlClientInfo info) {
+    POOL_CLIENT_INFO.set(pool, info);
   }
 
   @Nullable
-  public static VertxSqlClientInfo getPoolInfo(Pool pool) {
-    return POOL_INFO.get(pool);
+  public static VertxSqlClientInfo getPoolClientInfo(Pool pool) {
+    return POOL_CLIENT_INFO.get(pool);
   }
 
   public static Future<PreparedStatement> attachPreparedStatementInfo(
@@ -177,7 +177,7 @@ public class VertxSqlClientSingletons {
     return constructionState.get();
   }
 
-  public static void storeBuilderDatabases(
+  public static void setBuilderDatabases(
       Object clientBuilder, @Nullable List<SqlConnectOptions> databases) {
     if (clientBuilder instanceof ClientBuilderBase) {
       BUILDER_DATABASES.set((ClientBuilderBase<?>) clientBuilder, databases);
