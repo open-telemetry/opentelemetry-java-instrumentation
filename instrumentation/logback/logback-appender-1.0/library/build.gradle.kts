@@ -194,7 +194,20 @@ tasks {
     }
   }
 
+  val structuredAttributeSuites = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name in setOf("slf4j2ApiTest", "logstashMarkerTest", "logstashStructuredArgsTest") }
+    .map { suite ->
+      register<Test>("${suite.name}V3Preview") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+        filter {
+          includeTestsMatching("*SelectorTest")
+        }
+        jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+      }
+    }
+
   check {
-    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
+    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites, structuredAttributeSuites)
   }
 }

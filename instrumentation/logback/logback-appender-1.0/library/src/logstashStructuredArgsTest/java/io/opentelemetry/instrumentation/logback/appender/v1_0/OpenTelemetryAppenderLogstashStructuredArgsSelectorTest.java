@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,11 +20,15 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.util.ArrayList;
 import java.util.List;
 import net.logstash.logback.argument.StructuredArguments;
+import net.logstash.logback.marker.Markers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
@@ -88,11 +94,119 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
   }
 
   @Test
-  void noSelectorCapturesNothing() {
+  void defaultStructuredAttributeCapture() {
     log();
 
-    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), v3Preview() ? "value1" : null),
+                equalTo(stringKey("key2"), v3Preview() ? "value2" : null),
+                equalTo(stringKey("other"), v3Preview() ? "value3" : null)));
     assertThat(warnings()).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", "*", " , "})
+  void unifiedXmlSelectorCapturesAll(String included) {
+    appender.setLogstashStructuredArgumentAttributesIncluded("none");
+    appender.setStructuredAttributesIncluded(included);
+
+    log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
+  }
+
+  @Test
+  void emptyUnifiedApiSelectorOverridesXml() {
+    appender.setStructuredAttributes(IncludeExclude.builder().build());
+    appender.setStructuredAttributesExcluded("*");
+    appender.setLogstashStructuredArgumentAttributesIncluded("none");
+
+    log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
+  }
+
+  @Test
+  void unifiedApiSelectorFiltersKeys() {
+    appender.setStructuredAttributes(
+        IncludeExclude.builder().setIncluded("key?").setExcluded("*2").build());
+    appender.setLogstashStructuredArgumentAttributesIncluded("*");
+
+    log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+  }
+
+  @Test
+  void unifiedExcludeOnlySelector() {
+    appender.setStructuredAttributesExcluded("key2,other");
+
+    log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void unifiedSelectorPreservesAmbientAttributesAndCollisionPrecedence(boolean disabled) {
+    appender.setStructuredAttributes(
+        IncludeExclude.builder().setExcluded(disabled ? "*" : "secret").build());
+    appender.setMdcAttributesIncluded("collision,ambient");
+    appender.setLoggerContextAttributesIncluded("collision,context");
+    loggerContext.putProperty("collision", "context");
+    loggerContext.putProperty("context", "context-value");
+    appender.setOpenTelemetry(testing.getOpenTelemetry());
+    appender.start();
+    logger.addAppender(appender);
+
+    MDC.put("ambient", "mdc-value");
+    MDC.put("collision", "mdc");
+    try {
+      logger
+          .atInfo()
+          .addMarker(Markers.append("collision", "marker"))
+          .addMarker(Markers.append("marker", 1))
+          .addKeyValue("collision", "kvp")
+          .addKeyValue("kvp", 3)
+          .addKeyValue("secret", "hidden")
+          .log(
+              "log message",
+              StructuredArguments.keyValue("collision", "argument"),
+              StructuredArguments.keyValue("argument", 2),
+              StructuredArguments.keyValue("otel.event.name", "test.event"));
+    } finally {
+      MDC.clear();
+      loggerContext.putProperty("collision", null);
+      loggerContext.putProperty("context", null);
+    }
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasEventName("test.event")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("ambient"), "mdc-value"),
+                    equalTo(stringKey("context"), "context-value"),
+                    equalTo(stringKey("collision"), disabled ? "mdc" : "kvp"),
+                    equalTo(longKey("marker"), disabled ? null : 1L),
+                    equalTo(longKey("argument"), disabled ? null : 2L),
+                    equalTo(longKey("kvp"), disabled ? null : 3L)));
   }
 
   @Test
@@ -173,7 +287,11 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
         StructuredArguments.keyValue("key1", "value1"));
 
     testing.waitAndAssertLogRecords(
-        logRecord -> logRecord.hasEventName("test.event").hasAttributesSatisfyingExactly());
+        logRecord ->
+            logRecord
+                .hasEventName("test.event")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("key1"), v3Preview() ? "value1" : null)));
   }
 
   private void log() {

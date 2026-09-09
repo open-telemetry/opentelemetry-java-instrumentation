@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
@@ -104,6 +105,52 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("client")
                 .getScalarList("request_captured_headers", String.class))
         .containsExactly("header1", "header2");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"included", "excluded"})
+  void testCommonLoggingStructuredAttributesMapping(String leaf) {
+    DeclarativeConfigProperties config =
+        createConfig(
+            "otel.instrumentation.common.logging.structured-attributes." + leaf,
+            "public.*,single?,exact");
+
+    assertThat(
+            config
+                .get("java")
+                .get("common")
+                .get("logging")
+                .get("structured_attributes")
+                .getScalarList(leaf, String.class))
+        .containsExactly("public.*", "single?", "exact");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"included", "excluded"})
+  void testCommonLoggingStructuredAttributesPreservesExplicitEmptyList(String leaf) {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.common.logging.structured-attributes." + leaf, "");
+
+    assertThat(
+            config
+                .get("java")
+                .get("common")
+                .get("logging")
+                .get("structured_attributes")
+                .getScalarList(leaf, String.class))
+        .isEmpty();
+  }
+
+  @Test
+  void testAbsentCommonLoggingStructuredAttributesLists() {
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(emptyMap()));
+    DeclarativeConfigProperties selector =
+        config.get("java").get("common").get("logging").get("structured_attributes");
+
+    assertThat(selector.getScalarList("included", String.class)).isNull();
+    assertThat(selector.getScalarList("excluded", String.class)).isNull();
   }
 
   @Test

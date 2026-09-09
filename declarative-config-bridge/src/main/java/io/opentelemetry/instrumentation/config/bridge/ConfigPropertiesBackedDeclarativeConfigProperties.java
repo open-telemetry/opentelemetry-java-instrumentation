@@ -214,8 +214,18 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     if (scalarType != String.class) {
       return null;
     }
-    List<String> list = configProperties.getList(resolvePropertyKey(name));
+    String propertyKey = resolvePropertyKey(name);
+    List<String> list = configProperties.getList(propertyKey);
     if (list.isEmpty()) {
+      // An explicitly empty common logging selector overrides legacy source-specific settings.
+      if (instrumentationConfig
+          && (propertyKey.equals(
+                  "otel.instrumentation.common.logging.structured-attributes.included")
+              || propertyKey.equals(
+                  "otel.instrumentation.common.logging.structured-attributes.excluded"))
+          && configProperties.getString(propertyKey) != null) {
+        return emptyList();
+      }
       // returning null instead of empty list here has some implications,
       // such as that there's no way to explicitly set an empty list using env var / sys props,
       // e.g. for known_methods or sensitive_query_parameters,

@@ -5,6 +5,34 @@ library_link: https://logging.apache.org/log4j/2.x/
 features:
   - LOGGING_BRIDGE
 configurations:
+  - name: otel.instrumentation.common.logging.structured-attributes.included
+    declarative_name: java.common.logging.structured_attributes.included
+    description: >
+      Comma-separated list of case-sensitive glob patterns for event-local structured log attributes:
+      Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
+      arguments. "*" matches any number of characters and "?" matches one character. Excluded
+      patterns take precedence. An empty included list selects everything not excluded. Under
+      otel.instrumentation.common.v3-preview, all structured fields are captured by default and the
+      source-specific experimental settings are ignored. Outside preview, those settings remain a
+      fallback when the common selector is absent. MDC and logger-context attributes remain separate
+      and opt-in. Structured fields may contain sensitive information; use selectors to limit capture.
+    type: list
+    default: ''
+    examples:
+      - "request-*,user-?"
+  - name: otel.instrumentation.common.logging.structured-attributes.excluded
+    declarative_name: java.common.logging.structured_attributes.excluded
+    description: >
+      Comma-separated list of case-sensitive glob patterns for event-local structured log attribute
+      keys to exclude. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash
+      markers, and Logstash structured arguments. Exclusions take precedence over inclusions.
+      An exclude-only selector captures everything not excluded; "*" disables structured attribute
+      capture. This does not affect the special handling of otel.event.name, MDC, or logger context.
+    type: list
+    default: ''
+    examples:
+      - "*-secret"
+      - "*"
   - name: otel.instrumentation.log4j-appender.experimental-log-attributes
     declarative_name: java.log4j_appender.experimental_log_attributes/development
     description: >
@@ -21,6 +49,9 @@ configurations:
   - name: otel.instrumentation.log4j-appender.experimental.map-message-attributes.included
     declarative_name: java.log4j_appender.map_message_attributes/development.included
     description: >
+      Deprecated: use otel.instrumentation.common.logging.structured-attributes.included instead.
+      Ignored in v3-preview or when the common selector is configured; removed in 3.0.
+      Outside preview, when the common selector is absent:
       Comma-separated list of case-sensitive glob patterns for MapMessage keys to capture as log
       attributes. "*" matches any number of characters and "?" matches one character. Excluded
       patterns take precedence over included patterns. No MapMessage attributes are captured unless
@@ -36,6 +67,9 @@ configurations:
   - name: otel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded
     declarative_name: java.log4j_appender.map_message_attributes/development.excluded
     description: >
+      Deprecated: use otel.instrumentation.common.logging.structured-attributes.excluded instead.
+      Ignored in v3-preview or when the common selector is configured; removed in 3.0.
+      Outside preview, when the common selector is absent:
       Comma-separated list of case-sensitive glob patterns for MapMessage keys not to capture as log
       attributes. "*" matches any number of characters and "?" matches one character. Excluded
       patterns take precedence over included patterns. No MapMessage attributes are captured unless
@@ -51,10 +85,10 @@ configurations:
   - name: otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
     declarative_name: java.log4j_appender.capture_map_message_attributes/development
     description: >
-      Deprecated boolean alias for
-      otel.instrumentation.log4j-appender.experimental.map-message-attributes.included, where true
-      captures all MapMessage attributes and false captures none. It is ignored when an included or
-      excluded pattern is configured, and it may be removed in the next minor release.
+      Deprecated: use otel.instrumentation.common.logging.structured-attributes instead.
+      Ignored in v3-preview or when the common selector is configured; removed in 3.0.
+      Outside preview, true captures all MapMessage attributes and false captures none. It is
+      ignored when a source-specific included or excluded pattern is configured.
     type: boolean
     default: false
   - name: otel.instrumentation.log4j-appender.experimental.capture-marker-attribute

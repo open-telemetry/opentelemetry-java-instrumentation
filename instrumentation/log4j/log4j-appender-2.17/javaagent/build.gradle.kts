@@ -49,8 +49,8 @@ tasks {
     jvmArgs(
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
-      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.included=key1,key2,order-*,user-?",
-      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded=*-secret",
+      "-Dotel.instrumentation.common.logging.structured-attributes.included=key1,key2,order-*,user-?",
+      "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret",
     )
   }
 
@@ -61,8 +61,8 @@ tasks {
       "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
-      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.included=key1,key2,order-*,user-?",
-      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded=*-secret",
+      "-Dotel.instrumentation.common.logging.structured-attributes.included=key1,key2,order-*,user-?",
+      "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret",
     )
   }
 
@@ -73,8 +73,8 @@ tasks {
       "-Dotel.instrumentation.common.v3-preview=true",
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
-      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.included=key1,key2,order-*,user-?",
-      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded=*-secret",
+      "-Dotel.instrumentation.common.logging.structured-attributes.included=key1,key2,order-*,user-?",
+      "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret",
     )
   }
 
@@ -124,7 +124,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
 
-    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded=*-secret")
+    jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret")
     systemProperty("testMapMessageConfiguration", "exclude-only")
   }
 
@@ -134,14 +134,36 @@ tasks {
     filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
 
     jvmArgs(
-      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.included=order-id",
+      "-Dotel.instrumentation.common.logging.structured-attributes.included=order-id",
+      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.included=other",
       "-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true",
     )
     systemProperty("testMapMessageConfiguration", "precedence")
   }
 
+  val structuredAttributeTests = listOf("default", "empty", "none").map { configuration ->
+    register<Test>("testStructuredAttributes${configuration.replaceFirstChar { it.uppercase() }}") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
+      jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+      // Source-specific selectors no longer control capture in 3.0.
+      jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.included=other")
+      when (configuration) {
+        "empty" -> jvmArgs(
+          "-Dotel.instrumentation.common.logging.structured-attributes.included=",
+          "-Dotel.instrumentation.common.logging.structured-attributes.excluded=",
+        )
+
+        "none" -> jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*")
+      }
+      systemProperty("testMapMessageConfiguration", configuration)
+    }
+  }
+
   check {
     dependsOn(
+      structuredAttributeTests,
       testAsync,
       testV3Preview,
       testLegacyMdcAttributes,

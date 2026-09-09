@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +23,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 
 class OpenTelemetryAppenderLogstashMarkerSelectorTest {
@@ -87,11 +90,88 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
   }
 
   @Test
-  void noSelectorCapturesNothing() {
+  void defaultStructuredAttributeCapture() {
     log();
 
-    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), v3Preview() ? "value1" : null),
+                equalTo(stringKey("key2"), v3Preview() ? "value2" : null),
+                equalTo(stringKey("other"), v3Preview() ? "value3" : null)));
     assertThat(warnings()).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", "*", " , "})
+  void unifiedXmlSelectorCapturesAll(String included) {
+    appender.setLogstashMarkerAttributesIncluded("none");
+    appender.setStructuredAttributesIncluded(included);
+
+    log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
+  }
+
+  @Test
+  void emptyUnifiedApiSelectorOverridesXml() {
+    appender.setStructuredAttributes(IncludeExclude.builder().build());
+    appender.setStructuredAttributesExcluded("*");
+    appender.setLogstashMarkerAttributesIncluded("none");
+
+    log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
+  }
+
+  @Test
+  void unifiedApiSelectorFiltersKeys() {
+    appender.setStructuredAttributes(
+        IncludeExclude.builder().setIncluded("key?").setExcluded("*2").build());
+    appender.setLogstashMarkerAttributesIncluded("*");
+
+    log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+  }
+
+  @Test
+  void unifiedExcludeOnlySelector() {
+    appender.setStructuredAttributesExcluded("key2,other");
+
+    log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+  }
+
+  @Test
+  void disablingStructuredAttributesPreservesEventName() {
+    appender.setStructuredAttributesExcluded("*");
+    appender.setLogstashMarkerAttributesIncluded("*");
+    appender.setOpenTelemetry(testing.getOpenTelemetry());
+    appender.start();
+    logger.addAppender(appender);
+
+    logger.info(
+        Markers.append("otel.event.name", "test.event").and(Markers.append("key1", "value1")),
+        "log message");
+
+    testing.waitAndAssertLogRecords(
+        logRecord -> logRecord.hasEventName("test.event").hasAttributesSatisfyingExactly());
   }
 
   @Test

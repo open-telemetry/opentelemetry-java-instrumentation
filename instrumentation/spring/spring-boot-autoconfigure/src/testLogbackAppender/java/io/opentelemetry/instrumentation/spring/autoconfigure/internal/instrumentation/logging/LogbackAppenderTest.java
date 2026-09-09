@@ -104,6 +104,12 @@ class LogbackAppenderTest {
       properties.put(
           "otel.instrumentation/development.java.logback_appender.capture_template/development",
           true);
+      properties.put(
+          "otel.instrumentation/development.java.common.logging.structured_attributes.excluded",
+          "*");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_key_value_pair_attributes/development",
+          "not-a-boolean");
     } else {
       properties.put(
           "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "key*");
@@ -114,6 +120,10 @@ class LogbackAppenderTest {
       properties.put(
           "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
       properties.put("otel.instrumentation.logback-appender.experimental.capture-template", true);
+      properties.put("otel.instrumentation.common.logging.structured-attributes.excluded", "*");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
+          "not-a-boolean");
     }
 
     SpringApplication app =

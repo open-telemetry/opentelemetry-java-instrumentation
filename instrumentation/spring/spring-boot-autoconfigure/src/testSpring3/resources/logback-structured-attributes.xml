@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <appender name="OpenTelemetry"
+            class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+    <captureKeyValuePairAttributes>false</captureKeyValuePairAttributes>
+    <keyValuePairAttributesIncluded>public.*</keyValuePairAttributesIncluded>
+    <captureLogstashMarkerAttributes>false</captureLogstashMarkerAttributes>
+    <logstashMarkerAttributesExcluded>private.*,Public.*</logstashMarkerAttributesExcluded>
+    <captureLogstashStructuredArguments>false</captureLogstashStructuredArguments>
+    <logstashStructuredArgumentAttributesExcluded>private.*,Public.*</logstashStructuredArgumentAttributesExcluded>
+  </appender>
+  <root level="INFO">
+    <appender-ref ref="OpenTelemetry"/>
+  </root>
+</configuration>

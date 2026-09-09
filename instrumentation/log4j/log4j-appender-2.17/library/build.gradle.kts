@@ -45,7 +45,16 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*OpenTelemetryAppenderStructuredAttributesTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
   check {
-    dependsOn(testAsyncLogger, testStableSemconv, testBothSemconv)
+    dependsOn(testAsyncLogger, testStableSemconv, testBothSemconv, testV3Preview)
   }
 }

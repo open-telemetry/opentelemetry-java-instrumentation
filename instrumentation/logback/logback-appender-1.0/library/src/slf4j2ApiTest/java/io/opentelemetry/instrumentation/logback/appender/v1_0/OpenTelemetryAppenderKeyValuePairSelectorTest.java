@@ -6,14 +6,19 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.status.Status;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +27,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.slf4j.spi.LoggingEventBuilder;
 
@@ -82,11 +89,113 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
   }
 
   @Test
-  void noSelectorCapturesNothing() {
+  void defaultStructuredAttributeCapture() {
     log(keyValuePairs("key1", "value1"));
 
-    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), v3Preview() ? "value1" : null)));
     assertThat(warnings()).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", "*", " , "})
+  void unifiedXmlSelectorCapturesAll(String included) {
+    appender.setKeyValuePairAttributesIncluded("none");
+    appender.setStructuredAttributesIncluded(included);
+
+    log(keyValuePairs("key1", "value1", "key2", "value2"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
+  }
+
+  @Test
+  void emptyUnifiedApiSelectorOverridesXml() {
+    appender.setStructuredAttributes(IncludeExclude.builder().build());
+    appender.setStructuredAttributesExcluded("*");
+    appender.setKeyValuePairAttributesIncluded("none");
+
+    log(keyValuePairs("key1", "value1"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+  }
+
+  @Test
+  void clearingUnifiedApiSelectorRestoresSourceSpecificSelector() {
+    appender.setStructuredAttributes(IncludeExclude.builder().build());
+    appender.setStructuredAttributes(null);
+    appender.setKeyValuePairAttributesIncluded("key1");
+
+    log(keyValuePairs("key1", "value1", "key2", "value2"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"*", ","})
+  void unifiedSelectorIsAppliedFromXml(String included) throws JoranException {
+    String xml =
+        "<configuration><appender name='unified' class='"
+            + OpenTelemetryAppender.class.getName()
+            + "'><structuredAttributesIncluded>"
+            + included
+            + "</structuredAttributesIncluded>"
+            + "<keyValuePairAttributesIncluded>none</keyValuePairAttributesIncluded>"
+            + "</appender><logger name='key-value-pair-selector-test' additive='false'>"
+            + "<appender-ref ref='unified'/></logger></configuration>";
+    JoranConfigurator configurator = new JoranConfigurator();
+    configurator.setContext(logger.getLoggerContext());
+    configurator.doConfigure(new ByteArrayInputStream(xml.getBytes(UTF_8)));
+    appender = (OpenTelemetryAppender) logger.getAppender("unified");
+
+    log(keyValuePairs("key1", "value1"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+  }
+
+  @Test
+  void unifiedApiSelectorFiltersKeys() {
+    appender.setStructuredAttributes(
+        IncludeExclude.builder().setIncluded("key?").setExcluded("*2").build());
+    appender.setKeyValuePairAttributesIncluded("*");
+
+    log(keyValuePairs("key1", "value1", "key2", "value2", "other", "value3"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+  }
+
+  @Test
+  void unifiedExcludeOnlySelector() {
+    appender.setStructuredAttributesExcluded("*2");
+
+    log(keyValuePairs("key1", "value1", "key2", "value2"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+  }
+
+  @Test
+  void disablingStructuredAttributesPreservesEventName() {
+    appender.setStructuredAttributesExcluded("*");
+    appender.setKeyValuePairAttributesIncluded("*");
+
+    log(keyValuePairs("otel.event.name", "test.event", "key1", "value1"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord -> logRecord.hasEventName("test.event").hasAttributesSatisfyingExactly());
   }
 
   @Test

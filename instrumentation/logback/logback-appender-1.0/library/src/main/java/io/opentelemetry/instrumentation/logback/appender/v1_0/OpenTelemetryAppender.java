@@ -15,6 +15,7 @@ import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.ArrayList;
@@ -39,6 +40,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureMarkerAttribute = false;
   private boolean captureTemplate = false;
   private boolean captureArguments = false;
+  @Nullable private IncludeExclude structuredAttributes;
+  @Nullable private String structuredAttributesIncluded;
+  @Nullable private String structuredAttributesExcluded;
   @Nullable private IncludeExclude mdcAttributes;
   @Nullable private String mdcAttributesIncluded;
   @Nullable private String mdcAttributesExcluded;
@@ -116,21 +120,83 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   @Override
   public void start() {
+    Predicate<String> structuredAttributes = resolveStructuredAttributes();
+    boolean v3Preview =
+        SemconvStability.v3Preview(openTelemetry == null ? OpenTelemetry.noop() : openTelemetry);
     mapper =
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
             .setMdcAttributes(resolveMdcAttributes())
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
-            .setKeyValuePairAttributes(resolveKeyValuePairAttributes())
+            .setKeyValuePairAttributes(
+                structuredAttributes != null
+                    ? structuredAttributes
+                    : resolveKeyValuePairAttributes(v3Preview))
             .setLoggerContextAttributes(resolveLoggerContextAttributes())
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
-            .setLogstashMarkerAttributes(resolveLogstashMarkerAttributes())
-            .setLogstashStructuredArgumentAttributes(resolveLogstashStructuredArgumentAttributes())
+            .setLogstashMarkerAttributes(
+                structuredAttributes != null
+                    ? structuredAttributes
+                    : resolveLogstashMarkerAttributes(v3Preview))
+            .setLogstashStructuredArgumentAttributes(
+                structuredAttributes != null
+                    ? structuredAttributes
+                    : resolveLogstashStructuredArgumentAttributes(v3Preview))
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
+  }
+
+  @Nullable
+  private Predicate<String> resolveStructuredAttributes() {
+    if (structuredAttributes != null) {
+      return structuredAttributes::matches;
+    }
+    if (structuredAttributesIncluded != null || structuredAttributesExcluded != null) {
+      return IncludeExclude.builder()
+              .setIncluded(split(structuredAttributesIncluded))
+              .setExcluded(split(structuredAttributesExcluded))
+              .build()
+          ::matches;
+    }
+    return null;
+  }
+
+  /**
+   * Selects attributes from SLF4J key value pairs, Logstash markers and structured arguments.
+   *
+   * <p>Patterns are case-sensitive globs: {@code *} matches any number of characters and {@code ?}
+   * matches one. Exclusions win; an empty or exclude-only selector includes all non-excluded keys.
+   * Use {@code excluded("*")} to disable capture. Event names, MDC and logger context selection are
+   * unaffected.
+   *
+   * <p>A non-null selector, including an empty selector, overrides the unified XML settings and all
+   * source-specific settings. Null clears this override. Without unified settings, source-specific
+   * settings remain supported, and otherwise capture defaults to all in v3 preview and none outside
+   * it.
+   */
+  public void setStructuredAttributes(@Nullable IncludeExclude structuredAttributes) {
+    this.structuredAttributes = structuredAttributes;
+  }
+
+  /**
+   * Sets comma-separated structured attribute key patterns to include. An empty value includes all
+   * keys. Ignored when {@link #setStructuredAttributes(IncludeExclude)} supplies a non-null
+   * selector.
+   */
+  public void setStructuredAttributesIncluded(String structuredAttributesIncluded) {
+    this.structuredAttributesIncluded = structuredAttributesIncluded;
+  }
+
+  /**
+   * Sets comma-separated structured attribute key patterns to exclude. Exclusions win over
+   * inclusions; {@code *} disables capture. Ignored when {@link
+   * #setStructuredAttributes(IncludeExclude)} supplies a non-null selector.
+   */
+  public void setStructuredAttributesExcluded(String structuredAttributesExcluded) {
+    this.structuredAttributesExcluded = structuredAttributesExcluded;
   }
 
   @Nullable
@@ -163,7 +229,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   @Nullable
-  private Predicate<String> resolveKeyValuePairAttributes() {
+  private Predicate<String> resolveKeyValuePairAttributes(boolean v3Preview) {
     Predicate<String> selector = AttributeSelectors.create(keyValuePairAttributes);
     if (selector == null) {
       selector =
@@ -186,7 +252,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
               + " keyValuePairAttributesExcluded, or otel.instrumentation.logback-appender"
               + ".experimental.key-value-pair-attributes.included instead.");
     }
-    return AttributeSelectors.createDeprecated(captureKeyValuePairAttributes);
+    return AttributeSelectors.createDeprecated(
+        captureKeyValuePairAttributes == null ? v3Preview : captureKeyValuePairAttributes);
   }
 
   @Nullable
@@ -217,7 +284,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   @Nullable
-  private Predicate<String> resolveLogstashMarkerAttributes() {
+  private Predicate<String> resolveLogstashMarkerAttributes(boolean v3Preview) {
     Predicate<String> selector = AttributeSelectors.create(logstashMarkerAttributes);
     if (selector == null) {
       selector =
@@ -240,11 +307,12 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
               + " logstashMarkerAttributesExcluded, or otel.instrumentation.logback-appender"
               + ".experimental.logstash-marker-attributes.included instead.");
     }
-    return AttributeSelectors.createDeprecated(captureLogstashMarkerAttributes);
+    return AttributeSelectors.createDeprecated(
+        captureLogstashMarkerAttributes == null ? v3Preview : captureLogstashMarkerAttributes);
   }
 
   @Nullable
-  private Predicate<String> resolveLogstashStructuredArgumentAttributes() {
+  private Predicate<String> resolveLogstashStructuredArgumentAttributes(boolean v3Preview) {
     Predicate<String> selector = AttributeSelectors.create(logstashStructuredArgumentAttributes);
     if (selector == null) {
       selector =
@@ -268,7 +336,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
               + " otel.instrumentation.logback-appender.experimental"
               + ".logstash-structured-argument-attributes.included instead.");
     }
-    return AttributeSelectors.createDeprecated(captureLogstashStructuredArguments);
+    return AttributeSelectors.createDeprecated(
+        captureLogstashStructuredArguments == null
+            ? v3Preview
+            : captureLogstashStructuredArguments);
   }
 
   @SuppressWarnings("SystemOut")
@@ -351,6 +422,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   /**
    * Configures the key value pair attributes that will be copied to logs.
+   *
+   * <p>Unified structured attribute settings take precedence over this source-specific setting.
+   * Without either, capture defaults to all in v3 preview and none outside it.
    *
    * <p>Key value pair keys and selector patterns are matched case-sensitively. {@code ?} matches
    * any single character and {@code *} matches any number of characters, including none, so {@code
@@ -516,6 +590,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   /**
    * Configures the Logstash marker attributes that will be copied to logs.
    *
+   * <p>Unified structured attribute settings take precedence over this source-specific setting.
+   *
    * <p>Logstash marker keys and selector patterns are matched case-sensitively. {@code ?} matches
    * any single character and {@code *} matches any number of characters, including none, so {@code
    * *} captures all Logstash marker attributes. Excluded patterns take precedence over included
@@ -526,8 +602,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * which case the Logstash marker attributes are selected by {@link
    * #setLogstashMarkerAttributesIncluded(String)} and {@link
    * #setLogstashMarkerAttributesExcluded(String)}, and then by the deprecated {@link
-   * #setCaptureLogstashMarkerAttributes(boolean)}. No Logstash marker attributes are captured when
-   * all of these are absent or empty.
+   * #setCaptureLogstashMarkerAttributes(boolean)}. When all settings are absent or empty, capture
+   * defaults to all in v3 preview and none outside it.
    *
    * <p>Captured Logstash marker attributes may contain sensitive information. Configure included
    * and excluded patterns to limit the data exported as log attributes.
@@ -587,6 +663,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   /**
    * Configures the Logstash structured argument attributes that will be copied to logs.
    *
+   * <p>Unified structured attribute settings take precedence over this source-specific setting.
+   *
    * <p>Logstash structured argument keys and selector patterns are matched case-sensitively. {@code
    * ?} matches any single character and {@code *} matches any number of characters, including none,
    * so {@code *} captures all Logstash structured argument attributes. Excluded patterns take
@@ -597,8 +675,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * which case the Logstash structured argument attributes are selected by {@link
    * #setLogstashStructuredArgumentAttributesIncluded(String)} and {@link
    * #setLogstashStructuredArgumentAttributesExcluded(String)}, and then by the deprecated {@link
-   * #setCaptureLogstashStructuredArguments(boolean)}. No Logstash structured argument attributes
-   * are captured when all of these are absent or empty.
+   * #setCaptureLogstashStructuredArguments(boolean)}. When all settings are absent or empty,
+   * capture defaults to all in v3 preview and none outside it.
    *
    * <p>Captured Logstash structured argument attributes may contain sensitive information.
    * Configure included and excluded patterns to limit the data exported as log attributes.

@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.mapMessageKey;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -35,11 +38,21 @@ class Log4jMapMessageSelectorTest {
   void capturesConfiguredMapMessageAttributes() {
     StringMapMessage message = new StringMapMessage();
     MAP_MESSAGE_ENTRIES.forEach(message::put);
-    logger.info(message);
+    message.put("otel.event.name", "map-event");
+    ThreadContext.put("ambient", "not-captured");
+    ThreadContext.put("otel.event.name", "mdc-event");
+    try {
+      logger.info(message);
+    } finally {
+      ThreadContext.clearMap();
+    }
 
     testing.waitAndAssertLogRecords(
         logRecord -> {
+          logRecord.hasEventName("map-event");
           Attributes attributes = logRecord.actual().getAttributes();
+          assertThat(attributes.get(mapMessageKey("otel.event.name"))).isNull();
+          assertThat(attributes.get(stringKey("ambient"))).isNull();
           assertThat(capturedMapMessageAttributes(attributes))
               .containsExactlyInAnyOrderEntriesOf(expectedMapMessageAttributes());
         });
@@ -71,8 +84,12 @@ class Log4jMapMessageSelectorTest {
     List<String> expectedKeys;
     switch (System.getProperty("testMapMessageConfiguration", "new")) {
       case "legacy":
-        // the deprecated boolean captures every attribute
+      case "default":
+      case "empty":
         expectedKeys = asList("order-id", "order-secret", "user-1", "user-22", "other");
+        break;
+      case "none":
+        expectedKeys = emptyList();
         break;
       case "precedence":
         expectedKeys = singletonList("order-id");

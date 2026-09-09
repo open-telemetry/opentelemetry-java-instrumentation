@@ -4,6 +4,15 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- With `otel.instrumentation.common.v3-preview=true`, logging bridges capture event-local structured
+  attributes by default: Log4j `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers,
+  and Logstash structured arguments. Configure them together using
+  `otel.instrumentation.common.logging.structured-attributes.included` / `.excluded`
+  (declarative `java.common.logging.structured_attributes.included` / `.excluded`).
+  The source-specific experimental selectors and capture booleans are ignored in preview and will
+  be removed in 3.0. Outside preview they remain a fallback when the common selector is absent.
+  To retain no capture, set `otel.instrumentation.common.logging.structured-attributes.excluded=*`.
+  MDC and logger-context capture remain separate and opt-in; `otel.event.name` handling is unchanged.
 - Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
   ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
 - Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query

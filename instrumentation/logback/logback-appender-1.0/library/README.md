@@ -87,6 +87,8 @@ Settings can be configured in `logback.xml`, for example:
 ```xml
 <appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
   <captureExperimentalAttributes>true</captureExperimentalAttributes>
+  <structuredAttributesIncluded>order-*,user-?</structuredAttributesIncluded>
+  <structuredAttributesExcluded>*-secret</structuredAttributesExcluded>
   <mdcAttributesIncluded>request-*,user-?</mdcAttributesIncluded>
   <mdcAttributesExcluded>*-secret</mdcAttributesExcluded>
 </appender>
@@ -103,6 +105,8 @@ The available settings are:
 | `captureLoggerContext`                         | Boolean | `false` | **Deprecated.** Enable the capture of all Logback logger context properties as attributes. It may be removed in the next minor release; use `loggerContextAttributesIncluded` instead.                                                                                                                                 |
 | `captureTemplate`                              | Boolean | `false` | Enable the capture of Logback log event message template (if arguments are provided).                                                                                                                                                                                                                                  |
 | `captureArguments`                             | Boolean | `false` | Enable the capture of Logback log event arguments.                                                                                                                                                                                                                                                                     |
+| `structuredAttributesIncluded`                | String  |         | Comma-separated case-sensitive glob patterns for structured attribute keys from SLF4J key value pairs, Logstash markers and structured arguments. |
+| `structuredAttributesExcluded`                | String  |         | Comma-separated structured attribute key patterns to exclude. Exclusions win; `*` disables structured attribute capture. |
 | `captureLogstashMarkerAttributes`              | Boolean | `false` | **Deprecated.** Enable the capture of all Logstash markers as attributes, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods. It may be removed in the next minor release; use `logstashMarkerAttributesIncluded` instead. |
 | `captureLogstashStructuredArguments`           | Boolean | `false` | **Deprecated.** Enable the capture of all Logstash StructuredArguments as attributes (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`). It may be removed in the next minor release; use `logstashStructuredArgumentAttributesIncluded` instead.                                                  |
 | `keyValuePairAttributesIncluded`               | String  |         | Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to capture as log attributes.                                                                                                                                                                                                     |
@@ -141,6 +145,47 @@ No MDC attributes are captured when all of these are absent or empty.
 Captured MDC attributes may contain sensitive information. Configure included and excluded patterns
 to limit the data exported as log attributes.
 
+#### Unified structured attributes
+
+Use the same selector for SLF4J 2.x fluent key value pairs, Logstash markers and Logstash structured
+arguments:
+
+```java
+appender.setStructuredAttributes(
+    IncludeExclude.builder()
+        .setIncluded("order-*", "user-?")
+        .setExcluded("*-secret")
+        .build());
+```
+
+The XML equivalents are `structuredAttributesIncluded` and `structuredAttributesExcluded`.
+Patterns match raw keys case-sensitively: `?` matches one character and `*` matches any number.
+Exclusions win. An empty selector captures all attributes; an exclude-only selector captures
+everything else. To disable capture, use
+`setStructuredAttributes(IncludeExclude.builder().setExcluded("*").build())` or
+`<structuredAttributesExcluded>*</structuredAttributesExcluded>`.
+
+A non-null programmatic selector, including an empty selector, overrides the unified XML settings.
+Explicit unified settings override all source-specific settings below. Without unified settings,
+the source-specific APIs and XML settings remain supported with their existing precedence.
+Otherwise, capture defaults to all with `otel.instrumentation.common.v3-preview=true`, and none
+outside v3 preview. A declarative `common.v3_preview` value on the OpenTelemetry instance supplied
+before `start()` takes precedence over the system property. Standalone selectors are configured
+through these APIs/XML, not through `otel.instrumentation.*.structured-attributes` properties.
+
+For XML, use `*` to explicitly select all: Logback may ignore an element with no text rather than
+call its setter. Calling `setStructuredAttributesIncluded("")` directly selects all.
+The existing deprecated boolean setters remain supported; an explicit `false` disables that
+source when no unified selector is configured.
+
+This selector does not affect MDC, logger context properties, ordinary marker names, message
+templates or ordinary argument capture. `otel.event.name` extraction remains independent, even
+with `excluded("*")`. Value conversion and source collision precedence are unchanged.
+Structured attributes can contain sensitive information; exclude sensitive keys before enabling
+capture in production.
+
+#### Source-specific compatibility settings
+
 The key value pair attributes captured from the SLF4J 2.x fluent API are selected the same way:
 
 ```xml
@@ -166,8 +211,8 @@ excluded patterns captures every key value pair attribute that it does not exclu
 Key value pair attributes are captured only when at least one of these settings is configured. A
 non-empty `setKeyValuePairAttributes(IncludeExclude)` selector takes precedence over
 `keyValuePairAttributesIncluded` and `keyValuePairAttributesExcluded`, which in turn take precedence
-over the deprecated `captureKeyValuePairAttributes`. No key value pair attributes are captured when
-all of these are absent or empty.
+over the deprecated `captureKeyValuePairAttributes`. Outside v3 preview, no key value pair
+attributes are captured when all of these are absent or empty and no unified selector is configured.
 
 Captured key value pair attributes may contain sensitive information. Configure included and
 excluded patterns to limit the data exported as log attributes.
@@ -228,8 +273,9 @@ excluded patterns captures every Logstash marker attribute that it does not excl
 Logstash marker attributes are captured only when at least one of these settings is configured. A
 non-empty `setLogstashMarkerAttributes(IncludeExclude)` selector takes precedence over
 `logstashMarkerAttributesIncluded` and `logstashMarkerAttributesExcluded`, which in turn take
-precedence over the deprecated `captureLogstashMarkerAttributes`. No Logstash marker attributes are
-captured when all of these are absent or empty.
+precedence over the deprecated `captureLogstashMarkerAttributes`. Outside v3 preview, no Logstash
+marker attributes are captured when all of these are absent or empty and no unified selector is
+configured.
 
 Captured Logstash marker attributes may contain sensitive information. Configure included and
 excluded patterns to limit the data exported as log attributes.
@@ -261,8 +307,8 @@ Logstash structured argument attributes are captured only when at least one of t
 configured. A non-empty `setLogstashStructuredArgumentAttributes(IncludeExclude)` selector takes
 precedence over `logstashStructuredArgumentAttributesIncluded` and
 `logstashStructuredArgumentAttributesExcluded`, which in turn take precedence over the deprecated
-`captureLogstashStructuredArguments`. No Logstash structured argument attributes are captured when
-all of these are absent or empty.
+`captureLogstashStructuredArguments`. Outside v3 preview, no Logstash structured argument attributes
+are captured when all of these are absent or empty and no unified selector is configured.
 
 Captured Logstash structured argument attributes may contain sensitive information. Configure
 included and excluded patterns to limit the data exported as log attributes.
