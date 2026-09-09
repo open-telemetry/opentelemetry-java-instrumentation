@@ -72,13 +72,16 @@ class OpenTelemetryAppenderStructuredAttributesTest {
 
   @Test
   void clearingUnifiedApiSelectorRestoresSourceSpecificSelector() {
-    log(builder()
-        .setStructuredAttributes(IncludeExclude.builder().build())
-        .setStructuredAttributes(null)
-        .setMapMessageAttributesIncluded("key1"));
+    log(
+        builder()
+            .setStructuredAttributes(IncludeExclude.builder().build())
+            .setStructuredAttributes(null)
+            .setMapMessageAttributesIncluded("key1"));
 
-    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly(
-        equalTo(stringKey(v3Preview() ? "key1" : "log4j.map_message.key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey(v3Preview() ? "key1" : "log4j.map_message.key1"), "value1")));
   }
 
   @Test

@@ -30,7 +30,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.slf4j.event.KeyValuePair;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
@@ -70,7 +69,7 @@ class LogbackStructuredAttributesTest {
 
     assertThat(testing.logRecords())
         .extracting(LogRecordData::getAttributes)
-        .containsExactly(expected, expected, expected);
+        .containsExactly(expected, expected);
   }
 
   private static Stream<Arguments> selectors() {
@@ -173,7 +172,7 @@ class LogbackStructuredAttributesTest {
 
     assertThat(testing.logRecords())
         .extracting(LogRecordData::getAttributes)
-        .containsExactly(ALL_ATTRIBUTES, ALL_ATTRIBUTES, ALL_ATTRIBUTES);
+        .containsExactly(ALL_ATTRIBUTES, ALL_ATTRIBUTES);
     assertThat(context.getStatusManager().getCopyOfStatusList()).isEmpty();
   }
 
@@ -191,7 +190,7 @@ class LogbackStructuredAttributesTest {
 
     assertThat(testing.logRecords())
         .extracting(LogRecordData::getAttributes)
-        .containsExactly(ALL_ATTRIBUTES, ALL_ATTRIBUTES, ALL_ATTRIBUTES);
+        .containsExactly(ALL_ATTRIBUTES, ALL_ATTRIBUTES);
     assertThat(context.getStatusManager().getCopyOfStatusList()).isEmpty();
   }
 
@@ -211,7 +210,7 @@ class LogbackStructuredAttributesTest {
     Attributes expected = Attributes.builder().put("public.value", "public").build();
     assertThat(testing.logRecords())
         .extracting(LogRecordData::getAttributes)
-        .containsExactly(expected, expected, expected);
+        .containsExactly(expected, expected);
   }
 
   @ParameterizedTest
@@ -227,7 +226,7 @@ class LogbackStructuredAttributesTest {
 
     assertThat(testing.logRecords())
         .extracting(LogRecordData::getAttributes)
-        .containsExactly(ALL_ATTRIBUTES, ALL_ATTRIBUTES, ALL_ATTRIBUTES);
+        .containsExactly(ALL_ATTRIBUTES, ALL_ATTRIBUTES);
   }
 
   @ParameterizedTest
@@ -263,7 +262,7 @@ class LogbackStructuredAttributesTest {
             : Attributes.builder().put("public.value", "public").build();
     assertThat(testing.logRecords())
         .extracting(LogRecordData::getAttributes)
-        .containsExactly(expected, expected, expected);
+        .containsExactly(expected, expected);
   }
 
   @ParameterizedTest
@@ -291,7 +290,7 @@ class LogbackStructuredAttributesTest {
         Attributes.builder().put("ambient.mdc", "mdc").put("ambient.context", "context").build();
     assertThat(testing.logRecords())
         .extracting(LogRecordData::getAttributes)
-        .containsExactly(expected, expected, expected);
+        .containsExactly(expected, expected);
   }
 
   private static Map<String, Object> configuration(boolean declarativeConfig, boolean preview) {
@@ -386,10 +385,6 @@ class LogbackStructuredAttributesTest {
     Map<String, String> values =
         Map.of(
             "public.value", "public", "private.value", "private", "Public.value", "case-sensitive");
-    LoggingEvent keyValuePairs = event(context);
-    values.forEach((key, value) -> keyValuePairs.addKeyValue(new KeyValuePair(key, value)));
-    appender.doAppend(keyValuePairs);
-
     LoggingEvent markers = event(context);
     markers.addMarker(Markers.appendEntries(values));
     appender.doAppend(markers);
