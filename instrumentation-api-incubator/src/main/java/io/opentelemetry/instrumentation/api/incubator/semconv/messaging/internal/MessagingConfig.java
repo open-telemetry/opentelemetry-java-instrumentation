@@ -136,7 +136,7 @@ public final class MessagingConfig {
             deprecatedProperty,
             systemPropertyFallback);
     if (enabled != null) {
-      warnDeprecatedFlatProperty(
+      warnDeprecatedProperty(
           deprecatedProperty,
           COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.receive-telemetry.enabled");
       return enabled;
@@ -202,12 +202,12 @@ public final class MessagingConfig {
             .build();
     if (included != null || excluded != null) {
       if (included != null) {
-        warnDeprecatedFlatProperty(
+        warnDeprecatedProperty(
             deprecatedHeadersPrefix + "included",
             COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.included");
       }
       if (excluded != null) {
-        warnDeprecatedFlatProperty(
+        warnDeprecatedProperty(
             deprecatedHeadersPrefix + "excluded",
             COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.excluded");
       }
@@ -259,15 +259,16 @@ public final class MessagingConfig {
     return systemPropertyFallback ? SystemProperty.getList(flatProperty) : null;
   }
 
-  private static void warnDeprecatedFlatProperty(
+  private static void warnDeprecatedProperty(
       String deprecatedProperty, String replacementProperty) {
     if (warnedDeprecatedProperties.add(deprecatedProperty)) {
       logger.warning(
           "The "
               + deprecatedProperty
-              + " system property is deprecated and will be removed in 3.0. Use "
+              + " setting and the equivalent declarative configuration property are deprecated"
+              + " and will be removed in 3.0. Use "
               + replacementProperty
-              + " instead.");
+              + " or equivalent declarative configuration instead.");
     }
   }
 
