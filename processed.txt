@@ -611,3 +611,4 @@ cassandra-3.0:javaagent-unit-tests
 couchbase-3.0:javaagent
 cassandra-4.0:javaagent-unit-tests
 couchbase-common-3.0:javaagent
+couchbase-common-3.0:javaagent-unit-tests
