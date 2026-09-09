@@ -94,14 +94,14 @@ class CassandraServerTargetTest {
             "::1",
             null),
         argumentSet(
-            "configured contact points preserve order and omit the shared default port",
+            "configured contact points are sorted and omit the shared default port",
             asList("node1.example.com:9042", "10.0.0.5:9042"),
-            "node1.example.com,10.0.0.5",
+            "10.0.0.5,node1.example.com",
             null),
         argumentSet(
             "several contact points inline every shared non-default port",
             asList("node1.example.com:9142", "10.0.0.5:9142"),
-            "node1.example.com:9142,10.0.0.5:9142",
+            "10.0.0.5:9142,node1.example.com:9142",
             null),
         argumentSet(
             "duplicate configured contact points are preserved",
@@ -111,12 +111,12 @@ class CassandraServerTargetTest {
         argumentSet(
             "IPv6 contact points omit brackets when they share a port",
             asList("[::1]:9042", "[2001:db8::1]:9042", "10.0.0.5:9042"),
-            "::1,2001:db8::1,10.0.0.5",
+            "10.0.0.5,2001:db8::1,::1",
             null),
         argumentSet(
             "IPv6 contact points stay bracketed when ports are mixed",
             asList("[::1]:9042", "[2001:db8::1]:9142", "10.0.0.5:9042"),
-            "[::1]:9042,[2001:db8::1]:9142,10.0.0.5:9042",
+            "10.0.0.5:9042,[2001:db8::1]:9142,[::1]:9042",
             null),
         argumentSet(
             "five long endpoints are included without a length limit",
@@ -126,10 +126,10 @@ class CassandraServerTargetTest {
                 first + ":9042",
                 fourth + ":9042",
                 second + ":9042"),
-            String.join(",", fifth, third, first, fourth, second),
+            String.join(",", first, second, third, fourth, fifth),
             null),
         argumentSet(
-            "configured endpoint list keeps the first five endpoints",
+            "configured endpoint list keeps the first five sorted endpoints",
             asList(
                 "node6.example.com:9042",
                 "node3.example.com:9042",
@@ -137,13 +137,13 @@ class CassandraServerTargetTest {
                 "node5.example.com:9142",
                 "node2.example.com:9042",
                 "node4.example.com:9042"),
-            "node6.example.com:9042,node3.example.com:9042,node1.example.com:9042,"
-                + "node5.example.com:9142,node2.example.com:9042",
+            "node1.example.com:9042,node2.example.com:9042,node3.example.com:9042,"
+                + "node4.example.com:9042,node5.example.com:9142",
             null));
   }
 
   @Test
-  void configuredMixedPortContactPointOrderIsPreserved() {
+  void configuredMixedPortContactPointOrderIsNormalized() {
     DbServerTarget first =
         CassandraServerTarget.of(asList("node2.example.com:9142", "node1.example.com:9042"));
     DbServerTarget second =
@@ -151,7 +151,7 @@ class CassandraServerTargetTest {
 
     assertThat(first).isNotNull();
     assertThat(second).isNotNull();
-    assertThat(first.getAddress()).isEqualTo("node2.example.com:9142,node1.example.com:9042");
+    assertThat(first.getAddress()).isEqualTo("node1.example.com:9042,node2.example.com:9142");
     assertThat(second.getAddress()).isEqualTo("node1.example.com:9042,node2.example.com:9142");
     assertThat(first.getPort()).isNull();
     assertThat(second.getPort()).isNull();
@@ -338,6 +338,29 @@ class CassandraServerTargetTest {
   }
 
   @Test
+  void sessionSortsConfiguredContactPoints() {
+    Set<DefaultNode> contactPoints = new LinkedHashSet<>(asList(configuredNode, programmaticNode));
+    configureContactPoints(asList("configured2.example.com:9042", "configured1.example.com:9042"));
+    when(session.getContext()).thenReturn(context);
+    when(context.getMetadataManager()).thenReturn(metadataManager);
+    when(metadataManager.getContactPoints()).thenReturn(contactPoints);
+    when(configuredNode.getEndPoint())
+        .thenReturn(
+            new DefaultEndPoint(
+                InetSocketAddress.createUnresolved("configured2.example.com", 9042)));
+    when(programmaticNode.getEndPoint())
+        .thenReturn(
+            new DefaultEndPoint(
+                InetSocketAddress.createUnresolved("configured1.example.com", 9042)));
+
+    DbServerTarget target = CassandraServerTarget.of(session);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("configured1.example.com,configured2.example.com");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void sessionUsesSeveralProgrammaticContactPoints() {
     Set<DefaultNode> contactPoints = new LinkedHashSet<>(asList(configuredNode, programmaticNode));
     configureContactPoints(emptyList());
@@ -418,7 +441,7 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void sessionPreservesConfiguredOrderBeforeSortedProgrammaticContactPoints() {
+  void sessionSortsConfiguredAndProgrammaticContactPointsTogether() {
     configureContactPoints(asList("configured2.example.com:9042", "configured1.example.com:9042"));
     when(session.getContext()).thenReturn(context);
     EndPoint first =
@@ -432,7 +455,7 @@ class CassandraServerTargetTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
         .isEqualTo(
-            "configured2.example.com,configured1.example.com,programmatic1.example.com,"
+            "configured1.example.com,configured2.example.com,programmatic1.example.com,"
                 + "programmatic2.example.com");
   }
 
