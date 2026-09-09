@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.stat.DruidDataSourceStatManager;
 import io.opentelemetry.instrumentation.alibabadruid.AbstractDruidInstrumentationTest;
@@ -38,7 +40,8 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
     DruidDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    assertDataSourceName(dataSource, "db.example:5432/orders");
+    assertDataSourceName(
+        dataSource, emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
   }
 
   @Test
@@ -46,7 +49,8 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
     DruidDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
 
-    assertDataSourceName(dataSource, "[2001:db8::1]:5432/orders");
+    assertDataSourceName(
+        dataSource, emitStableDatabaseSemconv() ? "orders" : "[2001:db8::1]:5432/orders");
   }
 
   @Test
@@ -57,7 +61,9 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
     dataSource.addConnectionProperty("portNumber", "5433");
     dataSource.addConnectionProperty("databaseName", "inventory");
 
-    assertDataSourceName(dataSource, "properties.example:5433/inventory");
+    assertDataSourceName(
+        dataSource,
+        emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
   }
 
   @Test
