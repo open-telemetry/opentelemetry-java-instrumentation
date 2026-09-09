@@ -57,9 +57,12 @@ public final class MessagingConfig {
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
     DeclarativeConfigProperties messagingConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
-    boolean configured = hasHeadersConfig(messagingConfig, systemPropertyFallback);
-    IncludeExclude selector = getHeaders(messagingConfig, systemPropertyFallback);
-    if (!selector.isEmpty() || configured) {
+    IncludeExclude selector =
+        getHeaders(
+            messagingConfig.get("headers/development"),
+            COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.",
+            systemPropertyFallback);
+    if (selector != null) {
       return selector;
     }
 
@@ -82,26 +85,27 @@ public final class MessagingConfig {
     return selector == null ? NONE : selector;
   }
 
-  // visible for testing
-  static IncludeExclude getHeaders(
-      DeclarativeConfigProperties messagingConfig, boolean systemPropertyFallback) {
-    DeclarativeConfigProperties headers = messagingConfig.get("headers/development");
+  /**
+   * Returns the header selector configured under the given node and flat property prefix, or {@code
+   * null} when nothing is configured to be captured. An empty selector is equivalent to no selector
+   * at all, matching flat configuration where empty property values cannot be distinguished from
+   * unset ones.
+   */
+  @Nullable
+  private static IncludeExclude getHeaders(
+      DeclarativeConfigProperties headers,
+      String flatPropertyPrefix,
+      boolean systemPropertyFallback) {
     List<String> included =
-        getList(
-            headers,
-            "included",
-            COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.included",
-            systemPropertyFallback);
+        getList(headers, "included", flatPropertyPrefix + "included", systemPropertyFallback);
     List<String> excluded =
-        getList(
-            headers,
-            "excluded",
-            COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.excluded",
-            systemPropertyFallback);
-    return IncludeExclude.builder()
-        .setIncluded(included == null ? emptyList() : included)
-        .setExcluded(excluded == null ? emptyList() : excluded)
-        .build();
+        getList(headers, "excluded", flatPropertyPrefix + "excluded", systemPropertyFallback);
+    IncludeExclude selector =
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build();
+    return selector.isEmpty() ? null : selector;
   }
 
   /**
@@ -186,51 +190,28 @@ public final class MessagingConfig {
   @Nullable
   private static IncludeExclude getDeprecatedHeaderAliases(
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
-    DeclarativeConfigProperties deprecatedConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging");
-    DeclarativeConfigProperties headers = deprecatedConfig.get("headers/development");
     String deprecatedHeadersPrefix =
         DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.";
-    List<String> included =
-        getList(headers, "included", deprecatedHeadersPrefix + "included", systemPropertyFallback);
-    List<String> excluded =
-        getList(headers, "excluded", deprecatedHeadersPrefix + "excluded", systemPropertyFallback);
     IncludeExclude selector =
-        IncludeExclude.builder()
-            .setIncluded(included == null ? emptyList() : included)
-            .setExcluded(excluded == null ? emptyList() : excluded)
-            .build();
-    if (included != null || excluded != null) {
-      if (included != null) {
-        warnDeprecatedProperty(
-            deprecatedHeadersPrefix + "included",
-            COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.included");
-      }
-      if (excluded != null) {
-        warnDeprecatedProperty(
-            deprecatedHeadersPrefix + "excluded",
-            COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.excluded");
-      }
-      return selector;
+        getHeaders(
+            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
+                .get("headers/development"),
+            deprecatedHeadersPrefix,
+            systemPropertyFallback);
+    if (selector == null) {
+      return null;
     }
-    return null;
-  }
-
-  private static boolean hasHeadersConfig(
-      DeclarativeConfigProperties messagingConfig, boolean systemPropertyFallback) {
-    DeclarativeConfigProperties headers = messagingConfig.get("headers/development");
-    return getList(
-                headers,
-                "included",
-                COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.included",
-                systemPropertyFallback)
-            != null
-        || getList(
-                headers,
-                "excluded",
-                COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.excluded",
-                systemPropertyFallback)
-            != null;
+    if (!selector.getIncluded().isEmpty()) {
+      warnDeprecatedProperty(
+          deprecatedHeadersPrefix + "included",
+          COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.included");
+    }
+    if (!selector.getExcluded().isEmpty()) {
+      warnDeprecatedProperty(
+          deprecatedHeadersPrefix + "excluded",
+          COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.excluded");
+    }
+    return selector;
   }
 
   @Nullable

@@ -48,7 +48,7 @@ class MessagingConfigTest {
   }
 
   @Test
-  void emptyDeprecatedHeadersTakePrecedenceOverDeprecatedCaptureHeaders() {
+  void emptyDeprecatedHeadersFallBackToDeprecatedCaptureHeaders() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(deprecatedMessagingConfig(openTelemetry)
             .get("headers/development")
@@ -57,7 +57,22 @@ class MessagingConfigTest {
     when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("deprecated-capture"));
 
-    assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
+    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded())
+        .containsExactly("deprecated-capture");
+  }
+
+  @Test
+  void emptySelectorFallsBackToDeprecatedCaptureHeaders() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(emptyList());
+    when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
+        .thenReturn(singletonList("deprecated-capture"));
+
+    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded())
+        .containsExactly("deprecated-capture");
   }
 
   @Test
