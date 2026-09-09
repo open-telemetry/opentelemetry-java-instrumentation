@@ -59,6 +59,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -83,6 +84,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -101,6 +103,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 class RabbitMqTest extends AbstractRabbitMqTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   Connection conn;
   Channel channel;
@@ -131,7 +135,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   /**
-   * The vhost attribute is populated from a {@code VirtualField} keyed on {@code AMQConnection} and
+   * The vhost attribute is populated from a {@code VirtualField} keyed on {@code Connection} and
    * set from {@code AMQConnection.start()} (see {@link RabbitConnectionInstrumentation}),
    * specifically so it keeps working across automatic recovery: {@code
    * AutorecoveringChannel.getConnection()} returns the current inner {@code AMQConnection}, which
@@ -140,9 +144,19 @@ class RabbitMqTest extends AbstractRabbitMqTest {
    * hook only fires once, on the original {@code newConnection()} call. This test forces an
    * unexpected shutdown (not an application-initiated {@code close()}, which does not trigger
    * recovery) and asserts the attribute survives it.
+   *
+   * <p>Automatic recovery ({@code Recoverable}, {@code RecoveryListener},
+   * {@code ConnectionFactory#setAutomaticRecoveryEnabled}) doesn't exist at the 2.7.0 muzzle
+   * floor, only at the newer client this test compiles against (see the {@code testCompileOnly}
+   * dependency), so this only actually runs under {@code -PtestLatestDeps=true}, where the test
+   * runtime classpath is bumped to a client new enough to have it.
    */
   @Test
   void testVhostSurvivesAutomaticRecovery() throws Exception {
+    Assumptions.assumeTrue(
+        Boolean.getBoolean("testLatestDeps"),
+        "automatic recovery is not available at the 2.7.0 muzzle floor");
+
     ConnectionFactory recoveringFactory = new ConnectionFactory();
     recoveringFactory.setHost(rabbitMqHost);
     recoveringFactory.setPort(rabbitMqPort);
@@ -151,40 +165,44 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     recoveringFactory.setNetworkRecoveryInterval(200);
 
     Connection recoveringConnection = recoveringFactory.newConnection();
-    try {
-      Channel recoveringChannel = recoveringConnection.createChannel();
+    cleanup.deferCleanup(recoveringConnection::close);
+    Channel recoveringChannel = recoveringConnection.createChannel();
 
-      CountDownLatch recovered = new CountDownLatch(1);
-      ((RecoverableConnection) recoveringConnection)
-          .addRecoveryListener(
-              new RecoveryListener() {
-                @Override
-                public void handleRecovery(Recoverable recoverable) {
-                  recovered.countDown();
-                }
+    CountDownLatch recovered = new CountDownLatch(1);
+    ((RecoverableConnection) recoveringConnection)
+        .addRecoveryListener(
+            new RecoveryListener() {
+              @Override
+              public void handleRecovery(Recoverable recoverable) {
+                recovered.countDown();
+              }
 
-                @Override
-                public void handleRecoveryStarted(Recoverable recoverable) {}
-              });
+              @Override
+              public void handleRecoveryStarted(Recoverable recoverable) {}
+            });
 
-      rabbitMqContainer.execInContainer(
-          "rabbitmqctl", "close_all_connections", "-p", "otel-test", "otel recovery test");
-      assertThat(recovered.await(10, SECONDS)).isTrue();
+    rabbitMqContainer.execInContainer(
+        "rabbitmqctl", "close_all_connections", "-p", "otel-test", "otel recovery test");
+    assertThat(recovered.await(10, SECONDS)).isTrue();
 
-      testing.clearData();
-      recoveringChannel.queueDeclare();
+    testing.clearData();
+    recoveringChannel.queueDeclare();
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasAttributesSatisfying(
-                          equalTo(
-                              stringKey("messaging.rabbitmq.vhost.name"),
-                              CAPTURE_VHOST_NAME ? "otel-test" : null))));
-    } finally {
-      recoveringConnection.close();
-    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                        satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
+                        satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
+                        equalTo(
+                            stringKey("messaging.rabbitmq.vhost.name"),
+                            EXPERIMENTAL_ATTRIBUTES ? "otel-test" : null),
+                        equalTo(
+                            stringKey("messaging.rabbitmq.cluster.name"),
+                            EXPERIMENTAL_ATTRIBUTES ? "otel-test-cluster" : null))));
   }
 
   @Test
@@ -914,10 +932,10 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)),
             equalTo(
                 stringKey("messaging.rabbitmq.vhost.name"),
-                CAPTURE_VHOST_NAME ? "otel-test" : null),
+                EXPERIMENTAL_ATTRIBUTES ? "otel-test" : null),
             equalTo(
                 stringKey("messaging.rabbitmq.cluster.name"),
-                CAPTURE_CLUSTER_NAME ? "otel-test-cluster" : null));
+                EXPERIMENTAL_ATTRIBUTES ? "otel-test-cluster" : null));
   }
 
   private static Stream<Arguments> provideParametersForMessageCountAndTimestamp() {
@@ -1186,10 +1204,11 @@ class RabbitMqTest extends AbstractRabbitMqTest {
               }
             }),
         equalTo(
-            stringKey("messaging.rabbitmq.vhost.name"), CAPTURE_VHOST_NAME ? "otel-test" : null),
+            stringKey("messaging.rabbitmq.vhost.name"),
+            EXPERIMENTAL_ATTRIBUTES ? "otel-test" : null),
         equalTo(
             stringKey("messaging.rabbitmq.cluster.name"),
-            CAPTURE_CLUSTER_NAME ? "otel-test-cluster" : null));
+            EXPERIMENTAL_ATTRIBUTES ? "otel-test-cluster" : null));
   }
 
   private static SpanKind expectedSpanKind(String operation) {

@@ -6,18 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import com.rabbitmq.client.Connection;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
  * The virtual host and cluster name of the RabbitMQ connection. Neither is part of the messaging
- * semantic conventions yet, see open-telemetry/semantic-conventions#3997, so both are opt-in.
+ * semantic conventions yet, see open-telemetry/semantic-conventions#3997, so both ride the same
+ * {@code otel.instrumentation.rabbitmq.experimental-span-attributes} opt-in as the rest of this
+ * module's experimental attributes, see {@link RabbitInstrumenterHelper#CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES}.
  */
 public final class RabbitConnectionAttributes {
 
@@ -33,35 +32,21 @@ public final class RabbitConnectionAttributes {
   public static final VirtualField<Connection, String> VIRTUAL_HOST =
       VirtualField.find(Connection.class, String.class);
 
-  static final boolean CAPTURE_VHOST_NAME;
-  static final boolean CAPTURE_CLUSTER_NAME;
-
-  static {
-    DeclarativeConfigProperties config =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "rabbitmq");
-    CAPTURE_VHOST_NAME = config.getBoolean("capture_vhost_name/development", false);
-    CAPTURE_CLUSTER_NAME = config.getBoolean("capture_cluster_name/development", false);
-  }
-
   static boolean enabled() {
-    return CAPTURE_VHOST_NAME || CAPTURE_CLUSTER_NAME;
+    return RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES;
   }
 
   static void apply(AttributesBuilder attributes, @Nullable Connection connection) {
-    if (connection == null) {
+    if (connection == null || !RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       return;
     }
-    if (CAPTURE_VHOST_NAME) {
-      String vhost = VIRTUAL_HOST.get(connection);
-      if (vhost != null && !vhost.isEmpty()) {
-        attributes.put(MESSAGING_RABBITMQ_VHOST_NAME, vhost);
-      }
+    String vhost = VIRTUAL_HOST.get(connection);
+    if (vhost != null && !vhost.isEmpty()) {
+      attributes.put(MESSAGING_RABBITMQ_VHOST_NAME, vhost);
     }
-    if (CAPTURE_CLUSTER_NAME) {
-      String clusterName = clusterName(connection);
-      if (clusterName != null && !clusterName.isEmpty()) {
-        attributes.put(MESSAGING_RABBITMQ_CLUSTER_NAME, clusterName);
-      }
+    String clusterName = clusterName(connection);
+    if (clusterName != null && !clusterName.isEmpty()) {
+      attributes.put(MESSAGING_RABBITMQ_CLUSTER_NAME, clusterName);
     }
   }
 

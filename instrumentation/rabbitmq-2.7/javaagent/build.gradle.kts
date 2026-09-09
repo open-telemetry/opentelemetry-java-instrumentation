@@ -15,9 +15,12 @@ dependencies {
   library("com.rabbitmq:amqp-client:2.7.0")
 
   // automatic recovery (Recoverable, RecoveryListener, ConnectionFactory#setAutomaticRecoveryEnabled)
-  // does not exist at the 2.7.0 muzzle floor; the recovery test needs a client new enough to have
-  // it, so bump just the test classpath -- the muzzle floor above is unaffected
-  testLibrary("com.rabbitmq:amqp-client:4.0.0")
+  // does not exist at the 2.7.0 muzzle floor. testCompileOnly lets the recovery test compile
+  // against a client new enough to have it without pulling a newer client onto the test runtime
+  // classpath, so the floor (2.7.0) still gets exercised by every other test; the recovery test
+  // itself is gated with Assumptions.assumeTrue(testLatestDeps) and only actually runs when
+  // testLatestDeps bumps the library() floor to a version that has the feature.
+  testCompileOnly("com.rabbitmq:amqp-client:4.0.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -64,26 +67,11 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
 
-  val testCaptureConnectionAttributes = register<Test>("testCaptureConnectionAttributes") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.rabbitmq.experimental.capture-vhost-name=true",
-      "-Dotel.instrumentation.rabbitmq.experimental.capture-cluster-name=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.rabbitmq.experimental.capture-vhost-name=true," +
-        "otel.instrumentation.rabbitmq.experimental.capture-cluster-name=true",
-    )
-  }
-
   check {
     dependsOn(
       testExperimental,
       testMessagingPreview,
       testBothSemconv,
-      testCaptureConnectionAttributes,
     )
   }
 }

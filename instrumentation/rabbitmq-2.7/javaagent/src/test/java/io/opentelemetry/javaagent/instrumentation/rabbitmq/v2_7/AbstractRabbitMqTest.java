@@ -20,10 +20,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 abstract class AbstractRabbitMqTest {
   protected static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.rabbitmq.experimental-span-attributes");
-  protected static final boolean CAPTURE_VHOST_NAME =
-      Boolean.getBoolean("otel.instrumentation.rabbitmq.experimental.capture-vhost-name");
-  protected static final boolean CAPTURE_CLUSTER_NAME =
-      Boolean.getBoolean("otel.instrumentation.rabbitmq.experimental.capture-cluster-name");
 
   static <T> T experimental(T value) {
     return EXPERIMENTAL_ATTRIBUTES ? value : null;

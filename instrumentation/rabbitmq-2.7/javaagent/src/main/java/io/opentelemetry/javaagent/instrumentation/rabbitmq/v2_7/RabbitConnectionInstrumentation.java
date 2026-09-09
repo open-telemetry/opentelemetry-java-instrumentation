@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
@@ -21,11 +19,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 class RabbitConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.rabbitmq.client.impl.AMQConnection");
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // RecoveryAwareAMQConnection inherits start() rather than overriding it, so advising the
     // declaring class covers the recovering connections too
@@ -35,7 +28,7 @@ class RabbitConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("start")).and(takesNoArguments()),
+        named("start").and(takesNoArguments()),
         getClass().getName() + "$StartAdvice");
   }
 

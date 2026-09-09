@@ -8,7 +8,8 @@ configurations:
     declarative_name: java.rabbitmq.experimental_span_attributes/development
     description: >
       Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
-      `rabbitmq.queue`, and `rabbitmq.record.queue_time_ms`.
+      `rabbitmq.queue`, `rabbitmq.record.queue_time_ms`, `messaging.rabbitmq.vhost.name`, and
+      `messaging.rabbitmq.cluster.name`.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
@@ -22,19 +23,3 @@ configurations:
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
-  - name: otel.instrumentation.rabbitmq.experimental.capture-vhost-name
-    declarative_name: java.rabbitmq.capture_vhost_name/development
-    description: >
-      Enables the `messaging.rabbitmq.vhost.name` span attribute, set to the virtual host of the
-      connection. Not part of the messaging semantic conventions yet, see
-      open-telemetry/semantic-conventions#3997.
-    type: boolean
-    default: false
-  - name: otel.instrumentation.rabbitmq.experimental.capture-cluster-name
-    declarative_name: java.rabbitmq.capture_cluster_name/development
-    description: >
-      Enables the `messaging.rabbitmq.cluster.name` span attribute, set to the broker's
-      `cluster_name` server property. Not part of the messaging semantic conventions yet, see
-      open-telemetry/semantic-conventions#3997.
-    type: boolean
-    default: false
