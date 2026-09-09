@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.internal.HttpSchemeUti
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -34,6 +35,11 @@ public final class NettyHttpServerAttributesGetter
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(NettyCommonRequest requestAndChannel) {
+    return requestAndChannel.getRequest().headers().names();
+  }
+
+  @Override
   public Integer getHttpResponseStatusCode(
       NettyCommonRequest requestAndChannel, HttpResponse response, @Nullable Throwable error) {
     return response.getStatus().code();
@@ -43,6 +49,12 @@ public final class NettyHttpServerAttributesGetter
   public List<String> getHttpResponseHeader(
       NettyCommonRequest requestAndChannel, HttpResponse response, String name) {
     return response.headers().getAll(name);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(
+      NettyCommonRequest requestAndChannel, HttpResponse response) {
+    return response.headers().names();
   }
 
   @Override

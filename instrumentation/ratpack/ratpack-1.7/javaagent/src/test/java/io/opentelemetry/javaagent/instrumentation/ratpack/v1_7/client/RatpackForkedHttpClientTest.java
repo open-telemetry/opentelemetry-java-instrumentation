@@ -22,6 +22,11 @@ class RatpackForkedHttpClientTest extends AbstractRatpackForkedHttpClientTest {
   }
 
   @Override
+  protected boolean capturesProtocolVersion() {
+    return true;
+  }
+
+  @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
     optionsBuilder.setClientSpanErrorMapper(RatpackTestUtils::ratpackClientSpanErrorMapper);

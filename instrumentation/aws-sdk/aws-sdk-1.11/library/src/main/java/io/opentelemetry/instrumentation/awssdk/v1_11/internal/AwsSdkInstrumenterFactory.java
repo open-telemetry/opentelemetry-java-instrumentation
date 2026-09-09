@@ -24,12 +24,16 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
@@ -54,6 +58,7 @@ public final class AwsSdkInstrumenterFactory {
 
   // messaging.operation.name values, named after the SQS API operations
   private static final String SEND_OPERATION_NAME = "send";
+  private static final String CREATE_OPERATION_NAME = "create";
   private static final String RECEIVE_OPERATION_NAME = "receive";
   private static final String PROCESS_OPERATION_NAME = "process";
   private static final String DELETE_OPERATION_NAME = "delete";
@@ -136,6 +141,7 @@ public final class AwsSdkInstrumenterFactory {
         toSqsRequestExtractors(attributesExtractors()),
         singletonList(messagingAttributeExtractor),
         builder -> {
+          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
           setMessagingReceiveExceptionEventExtractor(builder);
           if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
@@ -165,7 +171,11 @@ public final class AwsSdkInstrumenterFactory {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractors(toSqsRequestExtractors(attributesExtractors()))
-            .addAttributesExtractor(messagingAttributeExtractor);
+            .addAttributesExtractor(messagingAttributeExtractor)
+            .addOperationMetrics(MessagingProcessMetrics.get());
+    if (!messagingReceiveInstrumentationEnabled && emitStableMessagingSemconv()) {
+      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+    }
     setMessagingProcessExceptionEventExtractor(builder);
 
     if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
@@ -236,11 +246,42 @@ public final class AwsSdkInstrumenterFactory {
     return createInstrumenter(
         openTelemetry,
         MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME),
-        SpanKindExtractor.alwaysProducer(),
+        request ->
+            emitStableMessagingSemconv()
+                    && SqsAccess.isBatchRequest(request)
+                    && !SqsAccess.getBatchMessageContexts(request).isEmpty()
+                ? SpanKind.CLIENT
+                : SpanKind.PRODUCER,
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
-        builder -> setMessagingSendExceptionEventExtractor(builder),
+        builder -> {
+          builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+          setMessagingSendExceptionEventExtractor(builder);
+          if (emitStableMessagingSemconv()) {
+            builder.addSpanLinksExtractor(
+                (spanLinks, parentContext, request) -> {
+                  for (Context creationContext : SqsAccess.getBatchMessageContexts(request)) {
+                    SpanContext spanContext = Span.fromContext(creationContext).getSpanContext();
+                    if (spanContext.isValid()) {
+                      spanLinks.addLink(spanContext);
+                    }
+                  }
+                });
+          }
+        },
         true);
+  }
+
+  public Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter() {
+    MessagingOperationType operationType = MessagingOperationType.CREATE;
+    SqsCreateRequestAttributesGetter getter = new SqsCreateRequestAttributesGetter();
+    return Instrumenter.<SqsCreateRequest, Void>builder(
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            MessagingSpanNameExtractor.create(getter, operationType, CREATE_OPERATION_NAME))
+        .addAttributesExtractor(
+            messagingAttributesExtractor(getter, operationType, CREATE_OPERATION_NAME))
+        .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public Instrumenter<Request<?>, Response<?>> settleInstrumenter() {
@@ -255,7 +296,10 @@ public final class AwsSdkInstrumenterFactory {
         MessagingSpanKindExtractor.create(operationType),
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
-        builder -> setMessagingSettleExceptionEventExtractor(builder),
+        builder -> {
+          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+          setMessagingSettleExceptionEventExtractor(builder);
+        },
         true);
   }
 

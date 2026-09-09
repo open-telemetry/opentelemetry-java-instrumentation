@@ -26,6 +26,7 @@ abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
 
+  @SuppressWarnings("deprecation") // testing deprecated API
   @Override
   protected Restlet wrapRestlet(Restlet restlet, String path) {
     RestletTelemetry telemetry =

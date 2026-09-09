@@ -79,7 +79,6 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
                 .execute()
                 .actionGet(TIMEOUT));
     testing.waitForTraces(1);
-    testing.clearData();
   }
 
   @Override

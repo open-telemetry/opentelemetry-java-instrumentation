@@ -2,20 +2,18 @@
 """Merge per-PR decision.json files into a CHANGELOG Unreleased section.
 
 Reads build/changelog-bundle/prs/<N>/decision.json for every PR that has
-one, groups kept entries by section, sorts each section by ascending PR
+one, groups kept entries by section, sorts new entries by ascending PR
 number, and prints the Unreleased markdown block to stdout.
 
 The output contains only the `## Unreleased` heading and section bullets;
 the SDK-version preamble is inserted at release time by
 .github/scripts/update-changelog-for-release.sh.
 
+By default writes to stdout. Use --splice to replace the existing Unreleased
+block in CHANGELOG.md.
+
 Any entry in state other than `include`/`omit`, or `include` without a
 section and bullet, is reported on stderr and excluded.
-
-By default writes to stdout. Use --splice to rewrite CHANGELOG.md in
-place, replacing the entire `## Unreleased` block. Any hand-written
-content in that block is discarded; review the resulting diff to recover
-anything worth keeping.
 """
 
 from __future__ import annotations
@@ -91,6 +89,30 @@ def format_bullet(bullet: str, pr: int) -> str:
     return f"{wrapped}\n  ([#{pr}]({PR_URL.format(pr=pr)}))"
 
 
+def render_generated_block(grouped: dict[str, list[dict]]) -> str:
+    out_lines = [
+        "## Unreleased",
+        "",
+    ]
+    for key, header in SECTION_ORDER:
+        items = sorted(grouped[key], key=lambda d: d["pr"])
+        if not items:
+            continue
+        out_lines.append(header)
+        out_lines.append("")
+        for d in items:
+            out_lines.append(format_bullet(d["bullet"], d["pr"]))
+        out_lines.append("")
+    return "\n".join(out_lines).rstrip() + "\n"
+
+
+def splice_unreleased(changelog: str, block: str) -> str:
+    match = re.search(r"^## Unreleased\n.*?(?=^## |\Z)", changelog, re.S | re.M)
+    if match is None:
+        raise ValueError("## Unreleased section not found in CHANGELOG.md")
+    return changelog[: match.start()] + block + "\n" + changelog[match.end():]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--missing-ok", action="store_true",
@@ -98,7 +120,7 @@ def main() -> int:
     ap.add_argument("--report", action="store_true",
                     help="also print a section-count summary on stderr")
     ap.add_argument("--splice", action="store_true",
-                    help="rewrite CHANGELOG.md in place (otherwise write to stdout)")
+                    help="replace Unreleased in CHANGELOG.md (otherwise write to stdout)")
     args = ap.parse_args()
 
     decisions = load_decisions()
@@ -137,38 +159,22 @@ def main() -> int:
             continue
         grouped[section].append(d)
 
-    out_lines = [
-        "## Unreleased",
-        "",
-    ]
-
-    for key, header in SECTION_ORDER:
-        items = sorted(grouped[key], key=lambda d: d["pr"])
-        if not items:
-            continue
-        out_lines.append(header)
-        out_lines.append("")
-        for d in items:
-            out_lines.append(format_bullet(d["bullet"], d["pr"]))
-        out_lines.append("")
-
-    block = "\n".join(out_lines)
-    if not block.endswith("\n"):
-        block += "\n"
+    block = render_generated_block(grouped)
+    added = sum(len(values) for values in grouped.values())
 
     if args.splice:
         if not CHANGELOG.exists():
             sys.exit(f"{CHANGELOG} not found")
         text = CHANGELOG.read_text(encoding="utf-8")
-        # Match `## Unreleased` through the next `## ` heading, or end of file
-        # if Unreleased is the final heading.
-        m = re.search(r"^## Unreleased\n.*?(?=^## |\Z)", text, re.S | re.M)
-        if not m:
-            sys.exit("## Unreleased section not found in CHANGELOG.md")
-        new_text = text[: m.start()] + block + "\n" + text[m.end():]
+        try:
+            new_text = splice_unreleased(text, block)
+        except ValueError as error:
+            sys.exit(str(error))
         CHANGELOG.write_text(new_text, encoding="utf-8")
-        bullet_count = sum(len(v) for v in grouped.values())
-        print(f"Rewrote {CHANGELOG} ({bullet_count} PR-linked bullets)", file=sys.stderr)
+        print(
+            f"Updated {CHANGELOG} ({added} PR-linked bullets generated)",
+            file=sys.stderr,
+        )
     else:
         sys.stdout.write(block)
 

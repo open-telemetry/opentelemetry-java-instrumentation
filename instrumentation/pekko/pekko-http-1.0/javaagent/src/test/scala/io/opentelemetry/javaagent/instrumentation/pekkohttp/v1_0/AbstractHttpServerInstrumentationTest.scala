@@ -60,10 +60,12 @@ abstract class AbstractHttpServerInstrumentationTest
     options.disableTestNonStandardHttpMethod
   }
 
+  protected def protocolPrefix: String = "h1c://"
+
   @Test def testTimeout(): Unit = {
     val request = AggregatedHttpRequest.of(
       HttpMethod.GET,
-      h1Address.resolve(TIMEOUT.rawPath()).toString
+      resolveAddress(TIMEOUT, protocolPrefix)
     )
     val response = client.execute(request).aggregate.join
     assertThat(response.status.code).isEqualTo(TIMEOUT.getStatus)

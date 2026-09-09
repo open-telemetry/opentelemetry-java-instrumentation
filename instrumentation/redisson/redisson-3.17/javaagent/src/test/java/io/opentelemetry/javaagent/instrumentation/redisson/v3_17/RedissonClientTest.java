@@ -19,4 +19,9 @@ class RedissonClientTest extends AbstractRedissonClientTest {
   protected boolean lockHas3Traces() {
     return testLatestDeps();
   }
+
+  @Override
+  protected boolean hasDatabaseIndex() {
+    return true;
+  }
 }

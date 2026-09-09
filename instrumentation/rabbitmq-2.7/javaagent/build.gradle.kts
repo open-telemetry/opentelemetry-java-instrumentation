@@ -12,6 +12,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:rabbitmq-2.7:bootstrap"))
+
   library("com.rabbitmq:amqp-client:2.7.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")

@@ -360,7 +360,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     Set<String> metricNames = metrics.stream().map(MetricData::getName).collect(toSet());
     assertThat(metricNames).containsAll(expectedMetricNames);
 
-    assertThat(metrics)
+    assertThat(metrics.stream().filter(metric -> metric.getName().startsWith("kafka.")))
         .allSatisfy(
             metricData -> {
               Set<String> expectedKeys =

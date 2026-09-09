@@ -51,14 +51,6 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName("poll " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasLinks(emptyList())
-                          .hasAttributesSatisfyingExactly(receiveAttributes(false))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
                       span.hasName("process " + SHARED_TOPIC)
                           .hasKind(SpanKind.CONSUMER)
                           .hasNoParent()

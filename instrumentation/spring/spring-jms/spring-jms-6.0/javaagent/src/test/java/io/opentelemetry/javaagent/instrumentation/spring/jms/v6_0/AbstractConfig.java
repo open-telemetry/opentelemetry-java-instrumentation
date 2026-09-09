@@ -27,6 +27,9 @@ abstract class AbstractConfig {
   JmsListenerContainerFactory<?> jmsListenerContainerFactory(ConnectionFactory connectionFactory) {
     DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
     factory.setConnectionFactory(connectionFactory);
+    factory.setPubSubDomain(true);
+    factory.setSubscriptionDurable(true);
+    factory.setClientId("spring-jms-6-test");
     return factory;
   }
 

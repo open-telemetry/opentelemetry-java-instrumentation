@@ -5,24 +5,19 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class SqsEventRecordAttributesTest {
-
-  private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
-      AttributeKey.stringKey("messaging.destination.name");
-  private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
-      AttributeKey.stringKey("messaging.message.id");
-
   @Test
   void noRecords() {
     assertThat(SqsEventRecordAttributes.create(new SQSEvent()).getCommonDestination()).isNull();

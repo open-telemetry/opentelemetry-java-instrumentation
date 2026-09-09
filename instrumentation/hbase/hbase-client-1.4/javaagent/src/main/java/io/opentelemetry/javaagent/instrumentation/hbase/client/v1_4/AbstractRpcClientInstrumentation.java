@@ -52,7 +52,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
                         "com.google.protobuf.Descriptors$MethodDescriptor",
                         "org.apache.hadoop.hbase.shaded.com.google.protobuf.Descriptors$MethodDescriptor")))
             .and(takesArgument(4, named("org.apache.hadoop.hbase.security.User")))
-            .and(takesArgument(5, named("java.net.InetSocketAddress"))),
+            .and(takesArgument(5, InetSocketAddress.class)),
         getClass().getName() + "$CallMethodAdvice");
   }
 

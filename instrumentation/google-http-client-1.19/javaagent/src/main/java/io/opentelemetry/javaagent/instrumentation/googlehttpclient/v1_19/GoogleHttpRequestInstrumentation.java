@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient.v1_19;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.v1_19.GoogleHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -64,7 +63,7 @@ class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(HttpRequest request) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }

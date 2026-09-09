@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.garbagecollection;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
@@ -45,9 +48,7 @@ public final class YoungGarbageCollectionHandler implements RecordedEventHandler
             .build();
     // Set the attribute's GC based on which GC is being used.
     // G1 young collection is already handled by G1GarbageCollectionHandler.
-    attributes =
-        Attributes.of(
-            Constants.ATTR_GC_NAME, gc, Constants.ATTR_GC_ACTION, Constants.END_OF_MINOR_GC);
+    attributes = Attributes.of(JVM_GC_NAME, gc, JVM_GC_ACTION, Constants.END_OF_MINOR_GC);
   }
 
   @Override

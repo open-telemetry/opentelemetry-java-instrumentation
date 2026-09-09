@@ -11,10 +11,15 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.extension.kotlin.ContextExtensionsKt;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.intrinsics.IntrinsicsKt;
+import kotlin.coroutines.jvm.internal.CoroutineStackFrame;
+import kotlinx.coroutines.ThreadContextElement;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Instrumentation helper that is called through bytecode instrumentation. When using invokedynamic
@@ -61,6 +66,15 @@ public class AnnotationInstrumentationHelper {
     } else {
       return continuation != null ? CONTEXT_FIELD.get(continuation) : null;
     }
+  }
+
+  public static Context currentContext() {
+    return Context.current();
+  }
+
+  public static <T> Continuation<T> wrapContinuation(
+      Continuation<T> continuation, Context context, Context parentContext, Object request) {
+    return new ContextContinuation<>(continuation, context, parentContext, request);
   }
 
   @Nullable
@@ -175,6 +189,57 @@ public class AnnotationInstrumentationHelper {
       Span.current().setAttribute(name, (Long) value);
     }
     // TODO: arrays and List not supported see AttributeBindingFactoryTest
+  }
+
+  public static final class ContextContinuation<T> implements Continuation<T>, CoroutineStackFrame {
+    private final Continuation<T> delegate;
+    private final CoroutineContext coroutineContext;
+    private final ThreadContextElement<Scope> delegateContextElement;
+    private final Context spanContext;
+    private final Object request;
+
+    @SuppressWarnings("unchecked") // asContextElement returns CoroutineContext to Java
+    ContextContinuation(
+        Continuation<T> delegate, Context spanContext, Context parentContext, Object request) {
+      this.delegate = delegate;
+      this.coroutineContext =
+          delegate.getContext().plus(ContextExtensionsKt.asContextElement(spanContext));
+      this.delegateContextElement =
+          (ThreadContextElement<Scope>) ContextExtensionsKt.asContextElement(parentContext);
+      this.spanContext = spanContext;
+      this.request = request;
+    }
+
+    @NotNull
+    @Override
+    public CoroutineContext getContext() {
+      return coroutineContext;
+    }
+
+    @Nullable
+    @Override
+    public CoroutineStackFrame getCallerFrame() {
+      return delegate instanceof CoroutineStackFrame ? (CoroutineStackFrame) delegate : null;
+    }
+
+    @Nullable
+    @Override
+    public StackTraceElement getStackTraceElement() {
+      return null;
+    }
+
+    @Override
+    public void resumeWith(@NotNull Object result) {
+      Throwable error = KotlinResultUtilKt.exceptionOrNull(result);
+      instrumenter().end(spanContext, (MethodRequest) request, null, error);
+
+      Scope scope = delegateContextElement.updateThreadContext(delegate.getContext());
+      try {
+        delegate.resumeWith(result);
+      } finally {
+        delegateContextElement.restoreThreadContext(delegate.getContext(), scope);
+      }
+    }
   }
 
   public static void init() {}

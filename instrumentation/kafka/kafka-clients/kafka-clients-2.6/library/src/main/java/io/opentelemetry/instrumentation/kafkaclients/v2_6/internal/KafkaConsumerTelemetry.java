@@ -80,6 +80,7 @@ public class KafkaConsumerTelemetry {
     Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
     Context receiveContext = null;
+    boolean receiveOperationStarted = false;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
       receiveContext =
           InstrumenterUtil.startAndEnd(
@@ -90,9 +91,13 @@ public class KafkaConsumerTelemetry {
               null,
               timer.startTime(),
               timer.now());
+      receiveOperationStarted = true;
     }
 
-    return emitStableMessagingSemconv() ? parentContext : receiveContext;
+    if (!emitStableMessagingSemconv()) {
+      return receiveContext;
+    }
+    return KafkaConsumerContextUtil.withReceiveOperation(parentContext, receiveOperationStarted);
   }
 
   public <K, V> void buildAndFinishErrorSpan(

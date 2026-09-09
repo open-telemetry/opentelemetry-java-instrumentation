@@ -24,6 +24,7 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
   InstrumentationTestRunner testing;
   private SERVER server;
   public WebClient client;
+  WebClient clientWithoutForwardedFor;
   public int port;
   public URI address;
   public URI h1Address;
@@ -106,13 +107,23 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
     return url;
   }
 
-  void setTesting(InstrumentationTestRunner testing, WebClient client, int port) {
-    setTesting(testing, client, port, null);
+  void setTesting(
+      InstrumentationTestRunner testing,
+      WebClient client,
+      WebClient clientWithoutForwardedFor,
+      int port) {
+    setTesting(testing, client, clientWithoutForwardedFor, port, null);
   }
 
-  void setTesting(InstrumentationTestRunner testing, WebClient client, int port, URI address) {
+  void setTesting(
+      InstrumentationTestRunner testing,
+      WebClient client,
+      WebClient clientWithoutForwardedFor,
+      int port,
+      URI address) {
     this.testing = testing;
     this.client = client;
+    this.clientWithoutForwardedFor = clientWithoutForwardedFor;
     this.port = port;
     this.address = address;
   }

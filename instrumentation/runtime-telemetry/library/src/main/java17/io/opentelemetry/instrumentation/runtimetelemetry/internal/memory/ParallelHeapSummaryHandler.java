@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.memory;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
@@ -35,17 +38,11 @@ public final class ParallelHeapSummaryHandler implements RecordedEventHandler {
   private static final String WHEN = "when";
   private static final String SIZE = "size";
   private static final Attributes ATTR_MEMORY_EDEN =
-      Attributes.of(
-          Constants.ATTR_MEMORY_TYPE, Constants.HEAP, Constants.ATTR_MEMORY_POOL, "PS Eden Space");
+      Attributes.of(JVM_MEMORY_TYPE, Constants.HEAP, JVM_MEMORY_POOL_NAME, "PS Eden Space");
   private static final Attributes ATTR_MEMORY_SURVIVOR =
-      Attributes.of(
-          Constants.ATTR_MEMORY_TYPE,
-          Constants.HEAP,
-          Constants.ATTR_MEMORY_POOL,
-          "PS Survivor Space");
+      Attributes.of(JVM_MEMORY_TYPE, Constants.HEAP, JVM_MEMORY_POOL_NAME, "PS Survivor Space");
   private static final Attributes ATTR_MEMORY_OLD =
-      Attributes.of(
-          Constants.ATTR_MEMORY_TYPE, Constants.HEAP, Constants.ATTR_MEMORY_POOL, "PS Old Gen");
+      Attributes.of(JVM_MEMORY_TYPE, Constants.HEAP, JVM_MEMORY_POOL_NAME, "PS Old Gen");
 
   private final List<AutoCloseable> observables = new ArrayList<>();
   private final Set<String> metricNames;

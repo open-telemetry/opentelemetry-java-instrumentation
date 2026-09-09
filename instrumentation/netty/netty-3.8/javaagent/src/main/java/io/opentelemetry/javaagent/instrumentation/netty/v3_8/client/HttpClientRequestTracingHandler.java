@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.VirtualFieldHelper.CONNECTION_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
@@ -20,9 +21,7 @@ import org.jboss.netty.handler.codec.http.HttpRequest;
 
 public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHandler {
 
-  private static final VirtualField<Channel, NettyConnectionContext> connectionContextField =
-      VirtualField.find(Channel.class, NettyConnectionContext.class);
-  private static final VirtualField<Channel, NettyClientRequestAndContexts> requestContextsField =
+  private static final VirtualField<Channel, NettyClientRequestAndContexts> REQUEST_AND_CONTEXTS =
       VirtualField.find(Channel.class, NettyClientRequestAndContexts.class);
 
   @Override
@@ -34,7 +33,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     }
 
     Context parentContext = null;
-    NettyConnectionContext connectionContext = connectionContextField.get(ctx.getChannel());
+    NettyConnectionContext connectionContext = CONNECTION_CONTEXT.get(ctx.getChannel());
     if (connectionContext != null) {
       parentContext = connectionContext.remove();
     }
@@ -49,7 +48,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     }
 
     Context context = instrumenter().start(parentContext, request);
-    requestContextsField.set(
+    REQUEST_AND_CONTEXTS.set(
         ctx.getChannel(), NettyClientRequestAndContexts.create(parentContext, context, request));
 
     try (Scope ignored = context.makeCurrent()) {

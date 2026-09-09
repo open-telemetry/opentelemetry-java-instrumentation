@@ -26,15 +26,22 @@ class SpringRabbitMetricsAssertions {
 
   static void assertProcessMetrics(
       InstrumentationExtension testing, String destination, String springErrorType) {
+    assertProcessMetrics(testing, destination, springErrorType, 1);
+  }
+
+  static void assertProcessMetrics(
+      InstrumentationExtension testing,
+      String destination,
+      String springErrorType,
+      long consumedMessagesCount) {
     if (!emitStableMessagingSemconv()) {
       assertNoMessagingMetrics(testing);
       return;
     }
 
-    assertProcessDuration(testing, RABBIT_INSTRUMENTATION_NAME, destination, null);
     assertProcessDuration(testing, SPRING_INSTRUMENTATION_NAME, destination, springErrorType);
     testing.waitAndAssertMetrics(
-        RABBIT_INSTRUMENTATION_NAME,
+        SPRING_INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(
@@ -49,11 +56,11 @@ class SpringRabbitMetricsAssertions {
                                     .hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(1)
+                                                .hasValue(consumedMessagesCount)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
                                                     equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                                                    equalTo(ERROR_TYPE, null),
+                                                    equalTo(ERROR_TYPE, springErrorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination),
                                                     satisfies(
@@ -63,10 +70,25 @@ class SpringRabbitMetricsAssertions {
     assertThat(testing.metrics())
         .filteredOn(
             metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(SPRING_INSTRUMENTATION_NAME)
+                metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
+                    && metric.getName().equals("messaging.process.duration"))
+        .isEmpty();
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
                     && metric.getName().equals("messaging.client.consumed.messages"))
         .isEmpty();
     assertNoDeprecatedMessagingMetrics(testing);
+  }
+
+  static void assertRabbitProcessDuration(InstrumentationExtension testing, String destination) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoMessagingMetrics(testing);
+      return;
+    }
+
+    assertProcessDuration(testing, RABBIT_INSTRUMENTATION_NAME, destination, null);
   }
 
   private static void assertProcessDuration(
@@ -98,25 +120,9 @@ class SpringRabbitMetricsAssertions {
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination),
                                                     satisfies(
-                                                        SERVER_ADDRESS,
-                                                        val -> {
-                                                          if (instrumentationName.equals(
-                                                              RABBIT_INSTRUMENTATION_NAME)) {
-                                                            val.isNotBlank();
-                                                          } else {
-                                                            val.isNull();
-                                                          }
-                                                        }),
+                                                        SERVER_ADDRESS, val -> val.isNotBlank()),
                                                     satisfies(
-                                                        SERVER_PORT,
-                                                        val -> {
-                                                          if (instrumentationName.equals(
-                                                              RABBIT_INSTRUMENTATION_NAME)) {
-                                                            val.isPositive();
-                                                          } else {
-                                                            val.isNull();
-                                                          }
-                                                        }))))));
+                                                        SERVER_PORT, val -> val.isPositive()))))));
   }
 
   private static void assertNoMessagingMetrics(InstrumentationExtension testing) {

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
@@ -488,7 +487,7 @@ public abstract class AbstractAws2ClientCoreTest {
                             .satisfies(
                                 s ->
                                     assertThat(s.getAttributes().asMap())
-                                        .containsKey(stringArrayKey("aws.dynamodb.table_names"))
+                                        .containsKey(AWS_DYNAMODB_TABLE_NAMES)
                                         .doesNotContainKey(DB_COLLECTION_NAME))));
   }
 

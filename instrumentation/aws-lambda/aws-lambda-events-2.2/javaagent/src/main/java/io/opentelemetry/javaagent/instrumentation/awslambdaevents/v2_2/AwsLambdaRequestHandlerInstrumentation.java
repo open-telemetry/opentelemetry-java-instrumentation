@@ -129,7 +129,7 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
-        @Advice.Return @Nullable Object result,
+        @Advice.Return(typing = Typing.DYNAMIC) @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {

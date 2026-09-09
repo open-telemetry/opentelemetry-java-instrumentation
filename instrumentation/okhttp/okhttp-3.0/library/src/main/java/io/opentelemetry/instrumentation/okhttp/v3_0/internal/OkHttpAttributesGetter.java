@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import okhttp3.Connection;
@@ -38,6 +39,11 @@ public final class OkHttpAttributesGetter
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(Interceptor.Chain chain) {
+    return chain.request().headers().names();
+  }
+
+  @Override
   public Integer getHttpResponseStatusCode(
       Interceptor.Chain chain, Response response, @Nullable Throwable error) {
     return response.code();
@@ -47,6 +53,11 @@ public final class OkHttpAttributesGetter
   public List<String> getHttpResponseHeader(
       Interceptor.Chain chain, Response response, String name) {
     return response.headers(name);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(Interceptor.Chain chain, Response response) {
+    return response.headers().names();
   }
 
   @Nullable

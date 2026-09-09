@@ -22,7 +22,7 @@ class AnnotatedTestListener {
     this.receivedMessage = receivedMessage;
   }
 
-  @JmsListener(destination = "spring-jms-listener")
+  @JmsListener(destination = "spring-jms-listener", subscription = "durable-subscription")
   void receiveMessage(String message) {
     runWithSpan("consumer", () -> receivedMessage.complete(message));
   }

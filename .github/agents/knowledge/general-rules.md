@@ -15,15 +15,20 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
 | General      | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments                                                                                                                                                                                                                                                                                                                              | Always                                                                                                                                                          | —                                  |
 | Style        | Style guide                                                                                                                                                                                                                                                                                                                                                                                                   | Always                                                                                                                                                          | —                                  |
+| Style        | Reflow avoidable short lines that Spotless creates between consecutive `//` prose-comment lines; allow short lines when the line-length limit requires them                                                                                                                                                                                                                                                   | Multi-line `//` prose comments                                                                                                                                  | —                                  |
+| Style        | Add `// visible for testing` when a production member has broader visibility solely so tests can access it                                                                                                                                                                                                                                                                                                    | Production members accessed directly only by tests                                                                                                              | —                                  |
 | Style        | Uppercase field names should reflect semantic constants or immutable value constants such as `Duration` timeouts/intervals, not simply `static final`                                                                                                                                                                                                                                                         | Always                                                                                                                                                          | —                                  |
+| Style        | Non-private collection constants and escaping private collection constants must be unmodifiable; source sets target Java 8 by default, so use `Collections.unmodifiableList`/`unmodifiableSet`/`unmodifiableMap` there, and prefer `List.of`/`Set.of`/`Map.of` only in source sets targeting Java 9 or later; do not add unmodifiable wrappers to private non-escaping constants                              | Static final collection fields                                                                                                                                  | —                                  |
 | Naming       | Getter naming (`get` / `is`)                                                                                                                                                                                                                                                                                                                                                                                  | Always                                                                                                                                                          | —                                  |
 | Style        | Prefer `e` for used exceptions, prefer `f` for used exceptions in nested catch clauses when an outer catch already uses `e`, allow `error` for specific `*Error` catch types, prefer `t` for used `Throwable` catch values, prefer `ignored` for intentionally unused catch parameters, and use `ignore` for nested intentionally unused catch parameters when `ignored` would shadow an outer catch variable | Catch clauses                                                                                                                                                   | —                                  |
 | Naming       | Module/package naming                                                                                                                                                                                                                                                                                                                                                                                         | New or renamed modules/packages                                                                                                                                 | `module-naming.md`                 |
-| Javaagent    | Advice patterns                                                                                                                                                                                                                                                                                                                                                                                               | `@Advice` classes                                                                                                                                               | `javaagent-advice-patterns.md`     |
+| Javaagent    | Advice patterns                                                                                                                                                                                                                                                                                                                                                                                               | `@Advice` classes or methods, helpers called by advice, or `Java8BytecodeBridge` usage                                                                          | `javaagent-advice-patterns.md`     |
 | Javaagent    | Module structure patterns                                                                                                                                                                                                                                                                                                                                                                                     | `InstrumentationModule`, `TypeInstrumentation`                                                                                                                  | `javaagent-module-patterns.md`     |
+| Javaagent    | Per-object state storage and `VirtualField` selection                                                                                                                                                                                                                                                                                                                                                         | `VirtualField`; `WeakReference`; `WeakHashMap`; `Cache.weak()`; identity-keyed, per-object, or `Object`-keyed registries in javaagent or shared bootstrap code  | `javaagent-virtual-fields.md`      |
+| Javaagent    | Lock ownership, critical sections, and safe publication                                                                                                                                                                                                                                                                                                                                                       | Synchronization protecting javaagent or library instrumentation state                                                                                           | `javaagent-locking.md`             |
 | Javaagent    | Singletons patterns                                                                                                                                                                                                                                                                                                                                                                                           | `*Singletons`, `*SpanNaming`, and similar holder classes; singleton accessors; callers of singleton accessors/fields                                            | `javaagent-singletons-patterns.md` |
 | Javaagent    | Incorrect `classLoaderMatcher()`                                                                                                                                                                                                                                                                                                                                                                              | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range)                  | `javaagent-module-patterns.md`     |
-| Semconv      | Library vs javaagent semconv constant usage                                                                                                                                                                                                                                                                                                                                                                   | Semconv constants/assertions                                                                                                                                    | —                                  |
+| Semconv      | Search for an exact name-and-type semconv constant before constructing an `AttributeKey`; follow module-specific import/copy boundaries                                                                                                                                                                                                                                                                       | Semconv-looking `AttributeKey` constants/assertions                                                                                                             | —                                  |
 | Semconv      | Dual semconv testing                                                                                                                                                                                                                                                                                                                                                                                          | `SemconvStability`, `maybeStable`, semconv Gradle tasks                                                                                                         | `testing-semconv-stability.md`     |
 | Testing      | General test patterns                                                                                                                                                                                                                                                                                                                                                                                         | Test files in scope — assertion style, test method signatures and throws clauses, resource cleanup, attribute assertions                                        | `testing-general-patterns.md`      |
 | Testing      | Experimental flag tests                                                                                                                                                                                                                                                                                                                                                                                       | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties                                                    | `testing-experimental-flags.md`    |
@@ -83,10 +88,32 @@ Do not flag the following patterns (common false positives):
   allocation/performance reasons — it is pure noise. If a PR makes that hoist,
   flag it and recommend reverting to the in-line lambda.
 
+### Reflow avoidable short lines in prose comments
+
+Spotless may wrap overflow from one `//` line onto a short intermediate line without reflowing that
+text into the following `//` line. When the following line has room, move the short fragment to its
+start and reflow the remainder. A single-word line is acceptable when the line-length limit requires
+it.
+
+```java
+// BAD
+// Elasticsearch does not implement ElasticsearchWrapperException, so Elasticsearch does
+// not
+// treat this exception as a wrapper.
+
+// GOOD
+// Elasticsearch does not implement ElasticsearchWrapperException, so Elasticsearch does
+// not treat this exception as a wrapper.
+```
+
 ## [Style] Visibility modifiers
 
 Follow the principle of minimal necessary visibility. Use the most restrictive access modifier that
 still allows the code to function correctly.
+
+When a production member has broader visibility solely so tests can access it directly, add
+`// visible for testing` immediately above its declaration. Do not add the comment when production
+code also requires that visibility.
 
 **Exception — Single public class**: If a module has only one public class then don't change it to
 package-private. Javadoc task fails when module has no public classes.
@@ -171,7 +198,6 @@ variable (`MyGetter g = MyGetter.INSTANCE`), keep the variable and only change t
 right-hand side to `new MyGetter()`.
 
 Convert the class declaration from `enum` / singleton-holder to a plain `class`.
-If the implementation is a private nested class, omit the `final` keyword.
 
 **Exception — Kotlin `object` declarations**: Kotlin `object` is an idiomatic
 language-level singleton. Do not convert `object` declarations to `class`. This
@@ -385,16 +411,18 @@ ambiguous and the cast would otherwise be required). Do not flag those cases.
 
 ## [Semconv] Constants by Module Type
 
-- `library/src/main/`: constants from `io.opentelemetry.semconv.incubating.*` must be
-  copied locally as `private static final` fields with a `// copied from <ClassName>`
-  comment. Constants from `io.opentelemetry.semconv.*` (stable) must be imported
-  directly via `import static` and must not be copied locally.
-- `javaagent/src/main/`: all semconv artifact constants (stable and incubating) may be used
-  directly.
-- tests: all semconv artifact constants are allowed.
-
-The trigger for copying is the import package, not the constant name. Only convert an
-import to a local copy when it comes from `io.opentelemetry.semconv.incubating.*`.
+- Before constructing an `AttributeKey` for a semantic-convention attribute, search both the
+  stable and incubating semconv artifacts. Reuse a constant only when its attribute name and
+  `AttributeKey` type match exactly; direct reuse prevents local copies from drifting from the
+  canonical name or type.
+- In `javaagent/src/main/`, import stable and incubating constants directly, including deprecated
+  constants intentionally used for legacy semconv emission. The Java agent vendors the semconv
+  artifacts into the agent artifact, so these imports do not expose an incubating or deprecated
+  dependency to applications.
+- In `library/src/main/`, import stable constants directly, but copy incubating constants locally
+  as `private static final` fields with a `// copied from <ClassName>` comment. Library artifacts
+  must not depend on or expose the incubating semconv artifact.
+- In tests, import stable and incubating constants directly.
 
 ## [NewModule] New Instrumentation Checklist
 

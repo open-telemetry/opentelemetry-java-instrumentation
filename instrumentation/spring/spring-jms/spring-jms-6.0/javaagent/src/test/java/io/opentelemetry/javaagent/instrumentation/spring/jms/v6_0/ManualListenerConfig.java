@@ -35,6 +35,7 @@ class ManualListenerConfig extends AbstractConfig {
                 AbstractMessageListenerContainer container =
                     (AbstractMessageListenerContainer) listenerContainer;
                 container.setDestinationName("spring-jms-listener");
+                container.setSubscriptionName("durable-subscription");
                 container.setupMessageListener(
                     (SessionAwareMessageListener<TextMessage>)
                         (message, session) ->

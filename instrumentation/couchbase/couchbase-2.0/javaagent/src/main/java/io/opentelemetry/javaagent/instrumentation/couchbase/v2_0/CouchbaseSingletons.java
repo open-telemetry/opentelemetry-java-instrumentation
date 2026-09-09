@@ -33,6 +33,7 @@ public class CouchbaseSingletons {
         Instrumenter.<CouchbaseRequestInfo, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(DbClientAttributesExtractor.create(couchbaseAttributesGetter))
+            .addAttributesExtractor(couchbaseAttributesGetter)
             .addContextCustomizer(
                 (context, couchbaseRequest, startAttributes) ->
                     CouchbaseRequestInfo.init(context, couchbaseRequest))

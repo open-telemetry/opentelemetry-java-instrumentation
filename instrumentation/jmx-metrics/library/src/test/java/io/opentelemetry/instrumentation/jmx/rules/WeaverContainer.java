@@ -32,7 +32,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
 
-class WeaverContainer extends GenericContainer<WeaverContainer> {
+public class WeaverContainer extends GenericContainer<WeaverContainer> {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 

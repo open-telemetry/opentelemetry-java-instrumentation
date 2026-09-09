@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import ratpack.http.client.HttpResponse;
@@ -36,6 +37,11 @@ final class RatpackHttpClientAttributesGetter
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(RequestSpec requestSpec) {
+    return requestSpec.getHeaders().getNames();
+  }
+
+  @Override
   public Integer getHttpResponseStatusCode(
       RequestSpec requestSpec, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.getStatusCode();
@@ -45,6 +51,12 @@ final class RatpackHttpClientAttributesGetter
   public List<String> getHttpResponseHeader(
       RequestSpec requestSpec, HttpResponse httpResponse, String name) {
     return httpResponse.getHeaders().getAll(name);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(
+      RequestSpec requestSpec, HttpResponse httpResponse) {
+    return httpResponse.getHeaders().getNames();
   }
 
   @Override

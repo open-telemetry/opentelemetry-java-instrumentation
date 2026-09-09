@@ -13,6 +13,7 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.Experiment
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -60,7 +61,6 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     syncCommands.set("TESTKEY", "TESTVAL");
 
     testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
-    testing.clearData();
   }
 
   @AfterAll
@@ -101,6 +101,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET")),
                 span ->
@@ -134,6 +135,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
@@ -175,6 +177,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
                             equalTo(maybeStable(DB_OPERATION), "GET")),
                 span ->
@@ -210,6 +213,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"))));
   }
@@ -231,6 +235,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             satisfies(
@@ -259,6 +264,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             equalTo(booleanKey("lettuce.command.cancelled"), experimental(true)),
@@ -300,6 +306,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, port),
                                   equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                  equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
                                   equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
         });
@@ -325,6 +332,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, port),
                                   equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                  equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
                                   equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
         });
@@ -348,6 +356,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET")),
                 span ->
@@ -358,6 +367,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET a"),
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
@@ -380,6 +390,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET")),
                 span ->
@@ -390,6 +401,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET a"),
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
@@ -417,6 +429,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET")),
                 span ->
@@ -427,6 +440,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET a"),
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
   }

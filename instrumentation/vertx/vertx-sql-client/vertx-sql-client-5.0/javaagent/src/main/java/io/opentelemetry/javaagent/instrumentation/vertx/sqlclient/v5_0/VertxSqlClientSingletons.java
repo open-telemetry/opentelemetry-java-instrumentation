@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -25,17 +23,17 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final VirtualField<Pool, String> poolDbSystem =
+  private static final VirtualField<Pool, String> POOL_DB_SYSTEM =
       VirtualField.find(Pool.class, String.class);
 
-  private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
+  private static final VirtualField<SqlConnectOptions, String> CONNECT_OPTIONS_DB_SYSTEM =
       VirtualField.find(SqlConnectOptions.class, String.class);
 
-  private static final VirtualField<SqlClientBase, SqlConnectOptions> connectOptionsField =
+  private static final VirtualField<SqlClientBase, SqlConnectOptions> CONNECT_OPTIONS =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
 
   @Nullable
-  private static final VirtualField<Object, Context> commandContextField =
+  private static final VirtualField<Object, Context> COMMAND_CONTEXT =
       getCommandContextVirtualField();
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
@@ -68,42 +66,39 @@ public class VertxSqlClientSingletons {
 
   @Nullable
   public static Context getCommandContext(Object command) {
-    return commandContextField != null ? commandContextField.get(command) : null;
+    return COMMAND_CONTEXT != null ? COMMAND_CONTEXT.get(command) : null;
   }
 
   public static void setCommandContext(Object command, Context context) {
-    if (commandContextField != null) {
-      commandContextField.set(command, context);
+    if (COMMAND_CONTEXT != null) {
+      COMMAND_CONTEXT.set(command, context);
     }
   }
 
   public static void storePoolDbSystem(Pool pool, String dbSystem) {
-    poolDbSystem.set(pool, dbSystem);
+    POOL_DB_SYSTEM.set(pool, dbSystem);
   }
 
+  @Nullable
   public static String getConnectOptionsDbSystem(SqlConnectOptions sqlConnectOptions) {
-    String dbSystem = connectOptionsDbSystem.get(sqlConnectOptions);
-    if (dbSystem != null) {
-      return dbSystem;
-    }
-    return OTHER_SQL;
+    return CONNECT_OPTIONS_DB_SYSTEM.get(sqlConnectOptions);
   }
 
   public static void resolveAndStoreDbSystem(Pool pool, SqlConnectOptions sqlConnectOptions) {
-    String dbSystem = poolDbSystem.get(pool);
+    String dbSystem = POOL_DB_SYSTEM.get(pool);
     if (sqlConnectOptions != null && dbSystem != null) {
-      connectOptionsDbSystem.set(sqlConnectOptions, dbSystem);
+      CONNECT_OPTIONS_DB_SYSTEM.set(sqlConnectOptions, dbSystem);
     }
   }
 
   @Nullable
   public static SqlConnectOptions getSqlConnectOptions(SqlClientBase sqlClientBase) {
-    return connectOptionsField.get(sqlClientBase);
+    return CONNECT_OPTIONS.get(sqlClientBase);
   }
 
   public static void attachConnectOptions(
       SqlClientBase sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
-    connectOptionsField.set(sqlClientBase, connectOptions);
+    CONNECT_OPTIONS.set(sqlClientBase, connectOptions);
   }
 
   public static Future<SqlConnection> attachConnectOptions(
@@ -111,7 +106,7 @@ public class VertxSqlClientSingletons {
     return future.map(
         sqlConnection -> {
           if (sqlConnection instanceof SqlClientBase) {
-            connectOptionsField.set((SqlClientBase) sqlConnection, connectOptions);
+            CONNECT_OPTIONS.set((SqlClientBase) sqlConnection, connectOptions);
           }
           return sqlConnection;
         });

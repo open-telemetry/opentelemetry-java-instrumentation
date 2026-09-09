@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.ktor.v2_0
 
 import io.ktor.client.*
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -20,8 +21,8 @@ class KtorHttpClientTest : AbstractKtorHttpClientTest() {
   override fun HttpClientConfig<*>.installTracing() {
     install(KtorClientTelemetry) {
       setOpenTelemetry(testingExtension.openTelemetry)
-      capturedRequestHeaders(TEST_REQUEST_HEADER)
-      capturedResponseHeaders(TEST_RESPONSE_HEADER)
+      requestHeaders(AbstractHttpClientTest.TEST_HEADERS)
+      responseHeaders(AbstractHttpClientTest.TEST_HEADERS)
     }
   }
 }

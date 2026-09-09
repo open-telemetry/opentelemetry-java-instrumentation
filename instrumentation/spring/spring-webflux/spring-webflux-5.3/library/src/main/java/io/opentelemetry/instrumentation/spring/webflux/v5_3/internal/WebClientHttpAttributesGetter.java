@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -35,6 +36,11 @@ public class WebClientHttpAttributesGetter
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(ClientRequest request) {
+    return HeaderUtil.getKeys(request.headers());
+  }
+
+  @Override
   @Nullable
   public Integer getHttpResponseStatusCode(
       ClientRequest request, ClientResponse response, @Nullable Throwable error) {
@@ -45,6 +51,12 @@ public class WebClientHttpAttributesGetter
   public List<String> getHttpResponseHeader(
       ClientRequest request, ClientResponse response, String name) {
     return response.headers().header(name);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(
+      ClientRequest request, ClientResponse response) {
+    return HeaderUtil.getKeys(response.headers().asHttpHeaders());
   }
 
   @Nullable

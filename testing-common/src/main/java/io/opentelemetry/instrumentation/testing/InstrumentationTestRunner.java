@@ -90,6 +90,19 @@ public abstract class InstrumentationTestRunner {
 
   public abstract boolean forceFlushCalled();
 
+  /**
+   * Returns the peer service name expected on spans that target a local test server, or {@code
+   * null} when no peer service is expected.
+   *
+   * <p>Peer service mapping is a javaagent-only feature, so only javaagent tests expect a value.
+   * Library instrumentation never applies the peer service extractor; library users add peer
+   * service through their own attributes extractor.
+   */
+  @Nullable
+  public String expectedPeerService() {
+    return null;
+  }
+
   /** Return a list of all captured traces, where each trace is a sorted list of spans. */
   public List<List<SpanData>> traces() {
     return TelemetryDataUtil.groupTraces(getExportedSpans());

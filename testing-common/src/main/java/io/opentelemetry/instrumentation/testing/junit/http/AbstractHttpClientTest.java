@@ -31,7 +31,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TEMPLATE;
@@ -48,6 +47,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
@@ -88,6 +88,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
   public static final String TEST_REQUEST_HEADER = "X-Test-Request";
   public static final String TEST_RESPONSE_HEADER = "X-Test-Response";
+
+  /**
+   * Header selector that the shared client tests configure. The wildcard pattern makes the tests
+   * exercise capturing headers by name enumeration.
+   */
+  public static final IncludeExclude TEST_HEADERS =
+      IncludeExclude.builder().setIncluded("X-Test-*").build();
 
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
@@ -612,7 +619,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasStatus(StatusData.error())
                       .hasException(emitExceptionAsSpanEvents() ? ex : null),
               span ->
-                  assertClientSpan(span, uri, method, null, null)
+                  assertClientSpanWithoutResponse(span, uri, method)
                       .hasParent(trace.getSpan(0))
                       .hasException(emitExceptionAsSpanEvents() ? clientError : null));
         });
@@ -653,7 +660,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
           trace.hasSpansSatisfyingExactlyInAnyOrder(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  assertClientSpan(span, uri, method, null, null)
+                  assertClientSpanWithoutResponse(span, uri, method)
                       .hasParent(trace.getSpan(0))
                       .hasException(emitExceptionAsSpanEvents() ? clientError : null),
               span ->
@@ -693,7 +700,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasStatus(StatusData.error())
                       .hasException(emitExceptionAsSpanEvents() ? ex : null),
               span ->
-                  assertClientSpan(span, uri, method, null, null)
+                  assertClientSpanWithoutResponse(span, uri, method)
                       .hasParent(trace.getSpan(0))
                       .hasException(emitExceptionAsSpanEvents() ? clientError : null));
         });
@@ -732,7 +739,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasStatus(StatusData.error())
                       .hasException(emitExceptionAsSpanEvents() ? ex : null),
               span ->
-                  assertClientSpan(span, uri, method, null, null)
+                  assertClientSpanWithoutResponse(span, uri, method)
                       .hasParent(trace.getSpan(0))
                       .hasException(emitExceptionAsSpanEvents() ? clientError : null),
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
@@ -1090,26 +1097,38 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         });
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
+  private SpanDataAssert assertClientSpanWithoutResponse(
+      SpanDataAssert span, URI uri, String method) {
+    return assertClientSpan(span, uri, method, null, null, false);
+  }
+
   protected SpanDataAssert assertClientSpan(
       SpanDataAssert span,
       URI uri,
       String method,
       @Nullable Integer responseCode,
       @Nullable Integer resendCount) {
+    return assertClientSpan(span, uri, method, responseCode, resendCount, true);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private SpanDataAssert assertClientSpan(
+      SpanDataAssert span,
+      URI uri,
+      String method,
+      Integer responseCode,
+      Integer resendCount,
+      boolean responseReceived) {
     Set<AttributeKey<?>> httpClientAttributes = options.getHttpAttributes().apply(uri);
     return span.hasName(options.getExpectedClientSpanNameMapper().apply(uri, method))
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              // Check for service.peer.name when running with javaagent instrumentation
-              String distroName = span.actual().getResource().getAttribute(TELEMETRY_DISTRO_NAME);
-              if ("opentelemetry-java-instrumentation".equals(distroName)) {
-                String expectedServicePeerName = options.getExpectedServicePeerName().apply(uri);
-                if (expectedServicePeerName != null) {
-                  assertThat(attrs)
-                      .containsEntry(maybeStablePeerService(), expectedServicePeerName);
-                }
+              String expectedPeerService = testing.expectedPeerService();
+              if (expectedPeerService != null) {
+                assertThat(attrs).containsEntry(maybeStablePeerService(), expectedPeerService);
+              } else {
+                assertThat(attrs).doesNotContainKey(maybeStablePeerService());
               }
 
               // we're opting out of these attributes in the new semconv
@@ -1117,7 +1136,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                   .doesNotContainKey(NETWORK_TRANSPORT)
                   .doesNotContainKey(NETWORK_TYPE)
                   .doesNotContainKey(NETWORK_PROTOCOL_NAME);
-              if (httpClientAttributes.contains(NETWORK_PROTOCOL_VERSION)) {
+              if (responseReceived
+                  ? httpClientAttributes.contains(NETWORK_PROTOCOL_VERSION)
+                  : attrs.get(NETWORK_PROTOCOL_VERSION) != null) {
                 assertThat(attrs)
                     .containsEntry(
                         NETWORK_PROTOCOL_VERSION, options.getHttpProtocolVersion().apply(uri));

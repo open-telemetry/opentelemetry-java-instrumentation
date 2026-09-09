@@ -69,4 +69,26 @@ class HostAddressAndPortExtractorTest {
     verify(sink).setPort(42);
     verifyNoMoreInteractions(sink);
   }
+
+  @Test
+  void ipv6Host() {
+    when(getter.getHttpRequestHeader(REQUEST, "host")).thenReturn(singletonList("[2001:db8::1]"));
+
+    underTest.extract(sink, REQUEST);
+
+    verify(sink).setAddress("2001:db8::1");
+    verifyNoMoreInteractions(sink);
+  }
+
+  @Test
+  void ipv6HostAndPort() {
+    when(getter.getHttpRequestHeader(REQUEST, "host"))
+        .thenReturn(singletonList("[2001:db8::1]:42"));
+
+    underTest.extract(sink, REQUEST);
+
+    verify(sink).setAddress("2001:db8::1");
+    verify(sink).setPort(42);
+    verifyNoMoreInteractions(sink);
+  }
 }

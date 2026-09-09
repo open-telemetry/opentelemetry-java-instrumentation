@@ -40,7 +40,12 @@ Database, code, and service-peer domains do not need a `testBothSemconv` task �
 `testStableSemconv` (and the default `test` task for the legacy/unset mode).
 
 See [gradle-conventions.md](gradle-conventions.md) for `testClassesDirs`, `classpath`,
-`collectMetadata`, `metadataConfig`, and `check` wiring requirements.
+`collectMetadata`, `metadataConfig`, and `check` wiring requirements. In a module that also
+registers custom `JvmTestSuite`s, add opt-in tasks only for suites whose tests exercise the
+affected semconv attributes. Use `testing.suites.withType(JvmTestSuite::class)` when every suite
+is relevant and shares the same configuration. Otherwise keep the task bound to
+`sourceSets.test`, or select the relevant suites explicitly when the added coverage justifies
+the extra build-script complexity.
 
 Database domain example (stable-only task):
 
@@ -90,22 +95,24 @@ semconv and the value is identical:
 span.hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?"));
 ```
 
-`maybeStable()` does **not** cover `/dup` mode (it returns one key, not both), and does
-**not** apply where the mapping isn't 1:1 — for example `DB_RESPONSE_STATUS_CODE` →
-`ERROR_TYPE`. Use `emitOld*()` / `emitStable*()` `if` blocks for those.
+`maybeStable()` returns one key, so use it for database tests that run only the default
+and stable modes. Do not add a `database/dup` test task. It does **not** apply where the
+mapping isn't 1:1 or where tests run in `/dup` mode.
 
-### `if` blocks (not `if/else`) when structure differs
+### Inline mode-dependent expectations
 
-When the _set_ of asserted attributes differs between modes — not just values — use
-separate top-level `if` blocks rather than `if/else`. For domains that support `/dup` mode
-(currently RPC), this is required so both branches run; for other domains it's a habit
-that keeps the assertion `/dup`-safe if the domain ever adopts it:
+When no established semconv utility applies, keep each mode-dependent expectation at the
+assertion site. Gate the expected value with the matching `emitOld*()` or `emitStable*()`
+accessor and use `null` to expect the attribute to be absent:
 
 ```java
-if (emitStableCodeSemconv()) {
-  assertThat(attributes).containsEntry(CODE_FUNCTION_NAME, "MyClass.myMethod");
-}
-if (emitOldCodeSemconv()) {
-  assertThat(attributes).containsEntry(CODE_NAMESPACE, "MyClass");
-}
+equalTo(
+    RPC_GRPC_STATUS_CODE,
+    emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null)
+equalTo(
+    RPC_RESPONSE_STATUS_CODE,
+    emitStableRpcSemconv() ? Status.Code.OK.name() : null)
 ```
+
+This paired form also covers `/dup` mode because both accessors return true. Do not hide
+these expectations in separate conditional attribute blocks or helper-built lists.

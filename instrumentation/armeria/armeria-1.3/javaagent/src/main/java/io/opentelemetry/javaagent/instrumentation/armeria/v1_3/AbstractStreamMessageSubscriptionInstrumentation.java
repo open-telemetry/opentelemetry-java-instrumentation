@@ -46,7 +46,7 @@ class AbstractStreamMessageSubscriptionInstrumentation implements TypeInstrument
         isConstructor()
             .and(
                 takesArgument(0, named("com.linecorp.armeria.common.stream.AbstractStreamMessage")))
-            .and(takesArgument(4, named("java.util.concurrent.CompletableFuture"))),
+            .and(takesArgument(4, CompletableFuture.class)),
         getClass().getName() + "$WrapCompletableFutureAdvice");
   }
 

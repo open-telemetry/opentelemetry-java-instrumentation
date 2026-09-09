@@ -70,19 +70,23 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
-        "otel.semconv-stability.opt-in=service.peer"
-    )
-  }
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+        systemProperty(
+          "metadataConfig",
+          "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
+            "otel.semconv-stability.opt-in=service.peer"
+        )
+      }
+    }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, stableSemconvSuites)
   }
 }
 

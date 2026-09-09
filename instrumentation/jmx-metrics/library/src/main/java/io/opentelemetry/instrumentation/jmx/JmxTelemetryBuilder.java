@@ -12,12 +12,15 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
+import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.logging.Logger;
 
 /** Builder for {@link JmxTelemetry} */
@@ -64,7 +67,11 @@ public final class JmxTelemetryBuilder {
       throw new IllegalArgumentException("missing JMX rules");
     }
     RuleParser parserInstance = RuleParser.get();
-    parserInstance.addMetricDefsTo(metricConfiguration, input);
+    List<MetricDef> metricDefs = parserInstance.parseMetricDefs(input);
+
+    for (MetricDef metricDef : metricDefs) {
+      metricConfiguration.addMetricDef(metricDef);
+    }
     return this;
   }
 
@@ -97,6 +104,8 @@ public final class JmxTelemetryBuilder {
   }
 
   public JmxTelemetry build() {
-    return new JmxTelemetry(openTelemetry, discoveryDelayMs, metricConfiguration, componentLoader);
+    HandlerRegistry handlerRegistry = new HandlerRegistry();
+    handlerRegistry.load(componentLoader);
+    return new JmxTelemetry(openTelemetry, discoveryDelayMs, metricConfiguration, handlerRegistry);
   }
 }

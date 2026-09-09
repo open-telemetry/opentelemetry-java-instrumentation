@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.restlet.v2_0;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.restlet.v2_0.RestletSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.restlet.v2_0.RestletSingletons.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -54,7 +53,7 @@ class ServerInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(Request request) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
 
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

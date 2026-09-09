@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
@@ -45,7 +44,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
                         "com.google.protobuf.Descriptors$MethodDescriptor",
                         "org.apache.hadoop.hbase.shaded.com.google.protobuf.Descriptors$MethodDescriptor")))
             .and(takesArgument(4, named("org.apache.hadoop.hbase.security.User")))
-            .and(takesArgument(5, named("java.net.InetSocketAddress"))),
+            .and(takesArgument(5, InetSocketAddress.class)),
         getClass().getName() + "$CallBlockingMethodAdvice");
   }
 
@@ -63,7 +62,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
     @Nullable
     public static AdviceScope start(Object md, Object param, User ticket, InetSocketAddress addr) {
       HbaseRequest request = createRequest(md, param, ticket, addr);
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }

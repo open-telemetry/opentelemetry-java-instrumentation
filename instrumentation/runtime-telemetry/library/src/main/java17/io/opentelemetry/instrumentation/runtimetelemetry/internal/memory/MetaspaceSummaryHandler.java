@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.memory;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
@@ -30,14 +33,10 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
   private static final String EVENT_NAME = "jdk.MetaspaceSummary";
 
   private static final Attributes ATTR_MEMORY_METASPACE =
-      Attributes.of(
-          Constants.ATTR_MEMORY_TYPE, Constants.NON_HEAP, Constants.ATTR_MEMORY_POOL, "Metaspace");
+      Attributes.of(JVM_MEMORY_TYPE, Constants.NON_HEAP, JVM_MEMORY_POOL_NAME, "Metaspace");
   private static final Attributes ATTR_MEMORY_COMPRESSED_CLASS_SPACE =
       Attributes.of(
-          Constants.ATTR_MEMORY_TYPE,
-          Constants.NON_HEAP,
-          Constants.ATTR_MEMORY_POOL,
-          "Compressed Class Space");
+          JVM_MEMORY_TYPE, Constants.NON_HEAP, JVM_MEMORY_POOL_NAME, "Compressed Class Space");
 
   private final List<AutoCloseable> observables = new ArrayList<>();
   private final Set<String> metricNames;

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.log4j.appender.v1_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,7 +46,7 @@ class Log4jMdcSelectorTest {
         logRecord -> {
           logRecord.hasEventName("MyEventName");
           Attributes attributes = logRecord.actual().getAttributes();
-          assertThat(attributes.get(stringKey("otel.event.name"))).isNull();
+          assertThat(attributes.get(OTEL_EVENT_NAME)).isNull();
           assertThat(capturedMdcAttributes(attributes))
               .containsExactlyInAnyOrderEntriesOf(expectedMdcAttributes());
         });

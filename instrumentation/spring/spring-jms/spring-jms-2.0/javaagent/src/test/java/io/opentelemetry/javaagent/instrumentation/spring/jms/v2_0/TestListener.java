@@ -21,7 +21,7 @@ class TestListener {
     LoggerUtils.setLevel(logger, Level.INFO);
   }
 
-  @JmsListener(destination = "SpringListenerJms2")
+  @JmsListener(destination = "SpringListenerJms2", subscription = "durable-subscription")
   void receiveMessage(String message) {
     logger.info("received: {}", message);
   }

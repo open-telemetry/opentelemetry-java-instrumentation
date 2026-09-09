@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -56,8 +55,8 @@ class TestWebSpringBootApp {
   @Bean
   Filter telemetryFilter() {
     return SpringWebMvcTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+        .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
+        .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
         .build()
         .createServletFilter();
   }

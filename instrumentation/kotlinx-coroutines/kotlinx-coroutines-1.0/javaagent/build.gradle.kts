@@ -27,6 +27,7 @@ muzzle {
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-kotlin")
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+  compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
   compileOnly(project(":opentelemetry-instrumentation-annotations-shaded-for-instrumenting", configuration = "shadow"))
 
   implementation("org.ow2.asm:asm-tree")
@@ -55,6 +56,10 @@ kotlin {
 }
 
 tasks {
+  named("byteBuddyKotlin") {
+    enabled = false
+  }
+
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath

@@ -42,8 +42,8 @@ public class Log4jHelper {
     captureExperimentalAttributes =
         config.getBoolean("experimental_log_attributes/development", false);
     boolean captureCodeAttributes = config.getBoolean("capture_code_attributes/development", false);
-    boolean captureMapMessageAttributes =
-        config.getBoolean("capture_map_message_attributes/development", false);
+    Predicate<String> mapMessageAttributes =
+        SelectorConfig.resolveLegacyBoolean(config, "log4j-appender", "map-message-attributes");
     boolean captureMarkerAttribute =
         config.getBoolean("capture_marker_attribute/development", false);
     boolean captureTemplate = config.getBoolean("capture_template/development", false);
@@ -57,7 +57,7 @@ public class Log4jHelper {
             new ContextDataAccessorImpl(),
             captureExperimentalAttributes,
             captureCodeAttributes,
-            captureMapMessageAttributes,
+            mapMessageAttributes,
             captureMarkerAttribute,
             captureTemplate,
             captureArguments,

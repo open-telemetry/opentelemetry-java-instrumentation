@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
@@ -156,6 +157,9 @@ public final class GrpcTelemetryBuilder {
   /**
    * Sets which metadata request values should be captured as span attributes on client spans.
    *
+   * <p>The metadata keys are matched literally. Keys containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
+   *
    * @deprecated Use {@link #setClientRequestMetadata(IncludeExclude)} instead. May be removed in
    *     the next minor release.
    */
@@ -164,9 +168,10 @@ public final class GrpcTelemetryBuilder {
   public GrpcTelemetryBuilder setCapturedClientRequestMetadata(
       List<String> capturedClientRequestMetadata) {
     clientRequestMetadata =
-        capturedClientRequestMetadata.isEmpty()
-            ? null
-            : IncludeExclude.builder().setIncluded(capturedClientRequestMetadata).build();
+        DeprecatedCaptureNames.toSelector(
+            capturedClientRequestMetadata,
+            "GrpcTelemetryBuilder.setCapturedClientRequestMetadata()",
+            "setClientRequestMetadata(IncludeExclude)");
     return this;
   }
 
@@ -188,6 +193,9 @@ public final class GrpcTelemetryBuilder {
   /**
    * Sets which metadata request values should be captured as span attributes on server spans.
    *
+   * <p>The metadata keys are matched literally. Keys containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
+   *
    * @deprecated Use {@link #setServerRequestMetadata(IncludeExclude)} instead. May be removed in
    *     the next minor release.
    */
@@ -196,9 +204,10 @@ public final class GrpcTelemetryBuilder {
   public GrpcTelemetryBuilder setCapturedServerRequestMetadata(
       List<String> capturedServerRequestMetadata) {
     serverRequestMetadata =
-        capturedServerRequestMetadata.isEmpty()
-            ? null
-            : IncludeExclude.builder().setIncluded(capturedServerRequestMetadata).build();
+        DeprecatedCaptureNames.toSelector(
+            capturedServerRequestMetadata,
+            "GrpcTelemetryBuilder.setCapturedServerRequestMetadata()",
+            "setServerRequestMetadata(IncludeExclude)");
     return this;
   }
 

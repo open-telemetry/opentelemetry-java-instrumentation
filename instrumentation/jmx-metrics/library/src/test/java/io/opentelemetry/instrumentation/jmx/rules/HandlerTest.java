@@ -25,6 +25,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import javax.management.MBeanServerConnection;
@@ -208,6 +209,11 @@ class HandlerTest {
     BaseThreadHandler(String name, String metricName) {
       this.name = name;
       this.metricName = metricName;
+    }
+
+    @Override
+    public List<String> getMetricNames() {
+      return singletonList(metricName);
     }
 
     @Override

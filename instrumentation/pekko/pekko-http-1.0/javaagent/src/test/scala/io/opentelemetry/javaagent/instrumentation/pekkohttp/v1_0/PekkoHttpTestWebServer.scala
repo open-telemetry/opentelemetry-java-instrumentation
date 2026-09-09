@@ -28,7 +28,7 @@ object PekkoHttpTestWebServer {
   var route = get {
     concat(
       path(TIMEOUT.rawPath()) {
-        headerValueByType[`Timeout-Access`]() { timeout =>
+        headerValueByType[`Timeout-Access`](()) { timeout =>
           timeout.timeoutAccess.updateTimeout(Duration(1, MILLISECONDS))
           complete {
             after(Duration(1, SECONDS)) {
@@ -39,7 +39,8 @@ object PekkoHttpTestWebServer {
       },
       path(SUCCESS.rawPath()) {
         complete(
-          AbstractHttpServerTest.controller(SUCCESS, supplier(SUCCESS.getBody))
+          AbstractHttpServerTest
+            .controller[String, Exception](SUCCESS, supplier(SUCCESS.getBody))
         )
       },
       path(INDEXED_CHILD.rawPath()) {
@@ -53,33 +54,43 @@ object PekkoHttpTestWebServer {
               INDEXED_CHILD.getBody
             }
           }
-          complete(AbstractHttpServerTest.controller(INDEXED_CHILD, supplier))
+          complete(
+            AbstractHttpServerTest
+              .controller[String, Exception](INDEXED_CHILD, supplier)
+          )
         }
       },
       path(QUERY_PARAM.rawPath()) {
         extractUri { uri =>
           complete(
             AbstractHttpServerTest
-              .controller(QUERY_PARAM, supplier(uri.queryString().orNull))
+              .controller[String, Exception](
+                QUERY_PARAM,
+                supplier(uri.queryString().orNull)
+              )
           )
         }
       },
       path(REDIRECT.rawPath()) {
         redirect(
           AbstractHttpServerTest
-            .controller(REDIRECT, supplier(REDIRECT.getBody)),
+            .controller[String, Exception](
+              REDIRECT,
+              supplier(REDIRECT.getBody)
+            ),
           Found
         )
       },
       path(ERROR.rawPath()) {
         complete(
           500 -> AbstractHttpServerTest
-            .controller(ERROR, supplier(ERROR.getBody))
+            .controller[String, Exception](ERROR, supplier(ERROR.getBody))
         )
       },
       path("path" / LongNumber / "param") { id =>
         complete(
-          AbstractHttpServerTest.controller(PATH_PARAM, supplier(id.toString))
+          AbstractHttpServerTest
+            .controller[String, Exception](PATH_PARAM, supplier(id.toString))
         )
       },
       path(

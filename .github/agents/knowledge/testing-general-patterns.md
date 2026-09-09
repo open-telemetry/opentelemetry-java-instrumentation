@@ -186,6 +186,21 @@ fresh container.
   possible metric name. Do not add an exporter-interval sleep before or after `clearData()` solely
   to wait for metrics; the test runners force-flush metrics when reading them.
 
+## Trace Clearing After Asynchronous Operations
+
+- When test setup or cleanup performs an operation that can complete or export spans
+  asynchronously, call `testing.waitForTraces(expectedTraceCount)` before its captured telemetry
+  is cleared, whether by `testing.clearData()` or an `InstrumentationExtension` lifecycle clear.
+  Keep the wait at the end of setup or cleanup even when removing a redundant explicit clear. The
+  expected count is the total number of traces that should be captured at that point. Waiting
+  prevents spans exported after the clear from leaking into the next assertion or test.
+- Add the wait only when the exact trace count is deterministic. Do not guess a count when it can
+  vary because of retries, concurrent/background work, timing, or external-system behavior.
+- `InstrumentationExtension` already clears captured telemetry before each test. Do not add or keep
+  a setup/cleanup `clearData()` solely for per-test isolation when that lifecycle clear is
+  sufficient; keep explicit clears only when the test needs a mid-test reset, including to discard
+  telemetry from a preceding asynchronous operation after its exports have been drained.
+
 ## Attribute Assertion `satisfies()` Lambda Parameters
 
 **Attribute-assertion `satisfies()` lambda parameters are `AbstractAssert` instances, not raw
@@ -261,16 +276,76 @@ site.
 | `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
 
-### Inline ternary in `equalTo(...)` with `null` for "absent"
+### Mode-dependent expected values
 
-Push the ternary as deep as possible — into the `equalTo` value or single attribute key —
-rather than duplicating two whole `hasAttributesSatisfyingExactly(...)` blocks under a
-`flag ? a : b`. The assertion API treats `null` as "expect attribute absent":
+Database instrumentation tests run either the default or stable database
+semconv mode. Do not add `database/dup` test tasks or expand assertions to
+cover both modes at once. Duplicate-mode coverage belongs in tests for the
+semconv stability API itself.
+
+Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
+carry the same expected value:
+
+```java
+equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH)
+equalTo(maybeStable(DB_OPERATION), "info")
+```
+
+Do not replace these with separate null-gated assertions for the old and stable
+keys:
+
+```java
+equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null)
+equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null)
+```
+
+When no established semconv utility applies, put the ternary inside the
+`equalTo` value or single attribute key. Do not duplicate two whole
+`hasAttributesSatisfyingExactly(...)` blocks under a `flag ? a : b`. This
+includes attributes that exist in only one mode and attributes whose expected
+values differ by mode. The assertion API treats `null` as "expect attribute
+absent":
 
 ```java
 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
 equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)
-equalTo(SOME_KEY, EXPERIMENTAL_ATTRIBUTES ? "value" : null)
+equalTo(SOME_KEY, experimental("value"))
 span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
 .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
+```
+
+Keep short conditional expected values directly in the assertion when no
+established semconv utility applies, even when several assertions repeat the
+same condition. Do not extract the branch selection into helpers such as
+`spanName(...)`, `oldOrExperimental(value)`, or `expectedNamespace()`. Those
+helpers hide the expected values at the point where a reader needs them. The
+conventional `experimental(value)` helper is the exception. It means the value
+is expected only when experimental attributes are enabled, and `null`
+otherwise, so keep it instead of inlining
+`EXPERIMENTAL_ATTRIBUTES ? value : null`.
+
+A helper may obtain the mode flag or derive a value from test data. Do not
+conditionally build a `List<AttributeAssertion>` and then pass that list to
+`hasAttributesSatisfyingExactly(...)`. Pass each assertion directly and keep
+the mode check with its expected value. Keep helpers for genuinely nontrivial
+derivation only:
+
+```java
+// Bad: the helper conditionally builds a list and hides the expected shape.
+private static List<AttributeAssertion> databaseAttributes() {
+  List<AttributeAssertion> attributes = new ArrayList<>();
+  if (emitOldDatabaseSemconv()) {
+    attributes.add(equalTo(DB_USER, USER_DB));
+  }
+  if (emitStableDatabaseSemconv()) {
+    attributes.add(equalTo(ERROR_TYPE, "42601"));
+  }
+  return attributes;
+}
+span.hasAttributesSatisfyingExactly(databaseAttributes());
+
+// Good: pass each assertion directly and keep its mode check visible.
+span.hasAttributesSatisfyingExactly(
+    equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
+    equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
 ```

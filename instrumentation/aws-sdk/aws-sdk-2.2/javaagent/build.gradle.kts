@@ -164,6 +164,14 @@ testing {
         }
       }
     }
+
+    register<JvmTestSuite>("testRdsData") {
+      dependencies {
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        val version = baseVersion("2.5.54").orLatest()
+        implementation("software.amazon.awssdk:rdsdata:$version")
+      }
+    }
   }
 }
 
@@ -199,6 +207,15 @@ tasks {
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  val testRdsDataStableSemconv = register<Test>("testRdsDataStableSemconv") {
+    val testRdsDataSourceSet = sourceSets["testRdsData"]
+    testClassesDirs = testRdsDataSourceSet.output.classesDirs
+    classpath = testRdsDataSourceSet.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
@@ -255,6 +272,7 @@ tasks {
       testing.suites,
       testExperimentalSqs,
       testStableSemconv,
+      testRdsDataStableSemconv,
       testReceiveSpansDisabled,
       testMessagingPreview,
       testMessagingPreviewReceiveSpansDisabled,

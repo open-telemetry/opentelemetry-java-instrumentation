@@ -11,18 +11,18 @@ import javax.annotation.Nullable;
 
 // Helper for accessing the virtual field on package-private Call.
 public final class OpenTelemetryCallUtil {
-  private static final VirtualField<Call, RequestAndContext> requestAndContextField =
+  private static final VirtualField<Call, RequestAndContext> REQUEST_AND_CONTEXT =
       VirtualField.find(Call.class, RequestAndContext.class);
 
   public static void setRequestAndContext(
       Object call, @Nullable RequestAndContext requestAndContext) {
-    requestAndContextField.set((Call) call, requestAndContext);
+    REQUEST_AND_CONTEXT.set((Call) call, requestAndContext);
   }
 
   @Nullable
   public static RequestAndContext getAndClearRequestAndContext(Object call) {
-    RequestAndContext requestAndContext = requestAndContextField.get((Call) call);
-    requestAndContextField.set((Call) call, null);
+    RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get((Call) call);
+    REQUEST_AND_CONTEXT.set((Call) call, null);
     return requestAndContext;
   }
 

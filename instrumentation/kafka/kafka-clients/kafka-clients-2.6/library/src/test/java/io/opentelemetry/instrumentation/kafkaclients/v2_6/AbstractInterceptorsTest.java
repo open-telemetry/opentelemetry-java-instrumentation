@@ -10,6 +10,11 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertClientOperationDurationMetricAbsent;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertConsumedMessagesMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSentMessagesMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -31,6 +36,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
@@ -59,9 +65,15 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
 
   static final String greeting = "Hello Kafka!";
 
+  private long consumedOffset;
+
   protected abstract KafkaTelemetry kafkaTelemetry();
 
   protected abstract boolean captureExperimentalSpanAttributes();
+
+  protected boolean receiveTelemetryEnabled() {
+    return true;
+  }
 
   @Override
   public Map<String, Object> producerProps() {
@@ -112,10 +124,22 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     for (ConsumerRecord<?, ?> record : records) {
       assertThat(record.value()).isEqualTo(greeting);
       assertThat(record.key()).isNull();
+      consumedOffset = record.offset();
       testing.runWithSpan("process child", () -> {});
     }
 
     assertTraces();
+    String instrumentationName = "io.opentelemetry.kafka-clients-2.6";
+    assertSentMessagesMetrics(testing, instrumentationName, SHARED_TOPIC, null, 1, null);
+    assertClientOperationDurationMetricAbsent(testing, instrumentationName);
+    if (receiveTelemetryEnabled()) {
+      assertConsumedMessagesMetrics(
+          testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
+      assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
+    } else {
+      assertProcessMetricsWithConsumedMessages(
+          testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, 1, null);
+    }
   }
 
   void assertTraces() {
@@ -144,8 +168,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(2)));
-            SpanContext spanContext = trace.getSpan(1).getSpanContext();
-            producerSpanContext.set(asRemote(spanContext));
+            producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
           },
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -153,7 +176,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                       span.hasName("poll " + SHARED_TOPIC)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasLinks(LinkData.create(producerSpanContext.get()))
+                          .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
                           .hasAttributesSatisfyingExactly(receiveAttributes())),
           // ideally we'd want producer callback to be part of the main trace,
           // we just aren't able to instrument that
@@ -175,8 +198,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           publishAttributes(captureExperimentalSpanAttributes())));
-          SpanContext spanContext = trace.getSpan(1).getSpanContext();
-          producerSpanContext.set(asRemote(spanContext));
+          producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -211,6 +233,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
         spanContext.getSpanId(),
         spanContext.getTraceFlags(),
         spanContext.getTraceState());
+  }
+
+  private static LinkData batchRecordLink(SpanContext producerSpanContext, long offset) {
+    return LinkData.create(producerSpanContext, Attributes.of(MESSAGING_KAFKA_OFFSET, offset));
   }
 
   private static List<AttributeAssertion> publishAttributes(boolean experimental) {
@@ -249,6 +275,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                     MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     addClientIdAssertions(assertions, "consumer");
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
+    }
     return assertions;
   }
 

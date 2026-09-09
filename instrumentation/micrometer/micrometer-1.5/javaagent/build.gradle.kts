@@ -47,8 +47,32 @@ tasks {
       includeTestsMatching("*HistogramGaugesTest")
     }
     include("**/*HistogramGaugesTest.*")
+    jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
+  }
+
+  val testDeprecatedHistogramGauges = register<Test>("testDeprecatedHistogramGauges") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*HistogramGaugesTest")
+    }
+    include("**/*HistogramGaugesTest.*")
     jvmArgs("-Dotel.instrumentation.micrometer.histogram-gauges.enabled=true")
   }
+
+  val testDeprecatedHistogramGaugesV3Preview =
+    register<Test>("testDeprecatedHistogramGaugesV3Preview") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("*DistributionSummaryTest")
+      }
+      include("**/DistributionSummaryTest.*")
+      jvmArgs(
+        "-Dotel.instrumentation.micrometer.histogram-gauges.enabled=true",
+        "-Dotel.instrumentation.common.v3-preview=true",
+      )
+    }
 
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -70,7 +94,14 @@ tasks {
   }
 
   check {
-    dependsOn(testBaseTimeUnit, testPrometheusMode, testHistogramGauges, testV3Preview)
+    dependsOn(
+      testBaseTimeUnit,
+      testPrometheusMode,
+      testHistogramGauges,
+      testDeprecatedHistogramGauges,
+      testDeprecatedHistogramGaugesV3Preview,
+      testV3Preview,
+    )
   }
 
   withType<Test>().configureEach {

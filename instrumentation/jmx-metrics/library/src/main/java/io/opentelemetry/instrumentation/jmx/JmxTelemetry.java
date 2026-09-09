@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.jmx;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.jmx.internal.engine.JmxMetricInsight;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
+import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.management.MBeanServerConnection;
@@ -18,7 +18,7 @@ import javax.management.MBeanServerFactory;
 public final class JmxTelemetry {
   private final JmxMetricInsight service;
   private final MetricConfiguration metricConfiguration;
-  private final ComponentLoader componentLoader;
+  private final HandlerRegistry handlerRegistry;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static JmxTelemetry create(OpenTelemetry openTelemetry) {
@@ -34,10 +34,10 @@ public final class JmxTelemetry {
       OpenTelemetry openTelemetry,
       long discoveryDelayMs,
       MetricConfiguration metricConfiguration,
-      ComponentLoader componentLoader) {
+      HandlerRegistry handlerRegistry) {
     this.service = JmxMetricInsight.createService(openTelemetry, discoveryDelayMs);
     this.metricConfiguration = metricConfiguration;
-    this.componentLoader = componentLoader;
+    this.handlerRegistry = handlerRegistry;
   }
 
   /**
@@ -56,6 +56,6 @@ public final class JmxTelemetry {
    * @return a {@link AutoCloseable} that can be used to stop the collection of metrics
    */
   public AutoCloseable start(Supplier<List<? extends MBeanServerConnection>> connections) {
-    return service.start(metricConfiguration, connections, componentLoader);
+    return service.start(metricConfiguration, connections, handlerRegistry);
   }
 }

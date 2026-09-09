@@ -16,6 +16,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
 
   private final ConsumerRecords<?, ?> records;
+  @Nullable private KafkaBatchRecordAttributes batchRecordAttributes;
 
   public static KafkaReceiveRequest create(
       ConsumerRecords<?, ?> records, @Nullable Consumer<?, ?> consumer) {
@@ -40,5 +41,14 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
 
   public ConsumerRecords<?, ?> getRecords() {
     return records;
+  }
+
+  // both the attributes extractor and the span links extractor need this, and they are always
+  // called on the same thread while the span is being started
+  KafkaBatchRecordAttributes getBatchRecordAttributes() {
+    if (batchRecordAttributes == null) {
+      batchRecordAttributes = KafkaBatchRecordAttributes.create(records);
+    }
+    return batchRecordAttributes;
   }
 }

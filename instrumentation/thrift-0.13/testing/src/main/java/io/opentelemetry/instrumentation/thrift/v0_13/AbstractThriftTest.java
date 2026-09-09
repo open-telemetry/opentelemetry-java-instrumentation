@@ -449,7 +449,7 @@ public abstract class AbstractThriftTest {
     assertMetrics(port);
   }
 
-  private static Stream<Arguments> transports() throws Exception {
+  private static TTransportFactory framedTransportFactory() throws Exception {
     Class<?> framedTransportClass;
     try {
       framedTransportClass = Class.forName("org.apache.thrift.transport.TFramedTransport$Factory");
@@ -457,6 +457,10 @@ public abstract class AbstractThriftTest {
       framedTransportClass =
           Class.forName("org.apache.thrift.transport.layered.TFramedTransport$Factory");
     }
+    return (TTransportFactory) framedTransportClass.getConstructor().newInstance();
+  }
+
+  private static Stream<Arguments> transports() throws Exception {
     Class<?> fastFramedTransportClass;
     try {
       fastFramedTransportClass =
@@ -465,12 +469,10 @@ public abstract class AbstractThriftTest {
       fastFramedTransportClass =
           Class.forName("org.apache.thrift.transport.layered.TFastFramedTransport$Factory");
     }
-    TTransportFactory framedTransportFactory =
-        (TTransportFactory) framedTransportClass.getConstructor().newInstance();
     TTransportFactory fastFramedTransportFactory =
         (TTransportFactory) fastFramedTransportClass.getConstructor().newInstance();
     return Stream.of(
-        Arguments.of(named("framed", framedTransportFactory)),
+        Arguments.of(named("framed", framedTransportFactory())),
         Arguments.of(named("fast framed", fastFramedTransportFactory)));
   }
 
@@ -1070,5 +1072,43 @@ public abstract class AbstractThriftTest {
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void asyncServerErrorDoesNotAffectFollowingRequestOnSameConnection() throws Exception {
+    int port = startAsyncServer();
+    CustomService.Iface client = createClient(port, framedTransportFactory());
+
+    assertThatThrownBy(client::withError).isInstanceOf(TApplicationException.class);
+    assertThat(client.say("After", "Error")).isEqualTo("Say After Error");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        assertClientSpan(span, "withError", port, true)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error()),
+                    span ->
+                        assertServerSpan(
+                                span,
+                                CustomAsyncHandler.class.getName(),
+                                "withError",
+                                port,
+                                IllegalStateException.class.getName())
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        assertClientSpan(span, "say", port)
+                            .hasNoParent()
+                            .hasStatus(StatusData.unset()),
+                    span ->
+                        assertServerSpan(
+                                span, CustomAsyncHandler.class.getName(), "say", port, null)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.unset())));
   }
 }

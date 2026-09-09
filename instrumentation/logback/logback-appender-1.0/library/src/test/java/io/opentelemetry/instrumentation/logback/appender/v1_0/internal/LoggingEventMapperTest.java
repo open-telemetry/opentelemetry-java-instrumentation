@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -94,7 +95,7 @@ class LoggingEventMapperTest {
     mapper.captureMdcAttributes(builder, contextData);
 
     verify(builder).setAttribute(stringKey("request-id"), "123");
-    verify(builder).setAttribute(stringKey("user.name"), "alice");
+    verify(builder).setAttribute(USER_NAME, "alice");
     verifyNoMoreInteractions(builder);
   }
 
@@ -103,7 +104,7 @@ class LoggingEventMapperTest {
     LoggingEventMapper mapper =
         LoggingEventMapper.builder()
             .setMdcAttributes(
-                MdcAttributeSelectors.create(
+                AttributeSelectors.create(
                     IncludeExclude.builder().setExcluded(singletonList("*secret*")).build()))
             .build();
     Map<String, String> contextData = new HashMap<>();
@@ -122,7 +123,7 @@ class LoggingEventMapperTest {
     LoggingEventMapper mapper =
         LoggingEventMapper.builder()
             .setMdcAttributes(
-                MdcAttributeSelectors.create(
+                AttributeSelectors.create(
                     IncludeExclude.builder()
                         .setIncluded(singletonList("request-*"))
                         .setExcluded(singletonList("*-secret"))
@@ -143,7 +144,7 @@ class LoggingEventMapperTest {
   void testEmptySelectorCapturesNothing() {
     LoggingEventMapper mapper =
         LoggingEventMapper.builder()
-            .setMdcAttributes(MdcAttributeSelectors.create(IncludeExclude.builder().build()))
+            .setMdcAttributes(AttributeSelectors.create(IncludeExclude.builder().build()))
             .build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -257,7 +258,7 @@ class LoggingEventMapperTest {
   }
 
   private static Predicate<String> include(String... patterns) {
-    return MdcAttributeSelectors.create(
+    return AttributeSelectors.create(
         IncludeExclude.builder().setIncluded(asList(patterns)).build());
   }
 }

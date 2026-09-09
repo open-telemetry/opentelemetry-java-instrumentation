@@ -75,11 +75,10 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
               .updateSettings(
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
-                          singletonMap(
-                              "cluster.routing.allocation.disk.threshold_enabled", false)));
+                          singletonMap("cluster.routing.allocation.disk.threshold_enabled", false)))
+              .actionGet(TIMEOUT);
         });
     testing.waitForTraces(1);
-    testing.clearData();
   }
 
   @AfterAll

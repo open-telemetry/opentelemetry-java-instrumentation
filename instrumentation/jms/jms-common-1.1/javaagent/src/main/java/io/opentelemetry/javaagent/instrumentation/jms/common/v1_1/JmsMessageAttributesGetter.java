@@ -88,6 +88,12 @@ final class JmsMessageAttributesGetter
 
   @Nullable
   @Override
+  public String getDestinationSubscriptionName(MessageWithDestination messageWithDestination) {
+    return messageWithDestination.destinationSubscriptionName();
+  }
+
+  @Nullable
+  @Override
   public Long getBatchMessageCount(
       MessageWithDestination messageWithDestination, @Nullable Void unused) {
     return null;

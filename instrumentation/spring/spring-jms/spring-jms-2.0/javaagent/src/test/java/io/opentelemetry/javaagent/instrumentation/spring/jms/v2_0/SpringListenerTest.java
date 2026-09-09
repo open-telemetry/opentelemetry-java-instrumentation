@@ -9,11 +9,18 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -30,6 +37,7 @@ import javax.jms.ConnectionFactory;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -42,8 +50,10 @@ import org.springframework.jms.annotation.JmsListenerConfigurer;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerEndpoint;
+import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.AbstractMessageListenerContainer;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
 import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.jms.listener.SessionAwareMessageListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -55,6 +65,17 @@ class SpringListenerTest extends AbstractJmsTest {
 
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  @Test
+  void capturesDefaultSubscriptionName() {
+    runListenerTest(
+        DefaultSubscriptionNameConfig.class, DefaultSubscriptionNameListener.class.getName());
+  }
+
+  @Test
+  void capturesLegacyDurableSubscriptionName() {
+    runListenerTest(LegacyDurableSubscriptionConfig.class, "legacy-durable-subscription");
+  }
 
   @Test
   @SuppressWarnings("unchecked")
@@ -123,10 +144,22 @@ class SpringListenerTest extends AbstractJmsTest {
   @ParameterizedTest
   @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
   void receivingMessageInSpringListenerGeneratesSpans(Class<? extends AbstractConfig> config) {
+    runListenerTest(config, "durable-subscription");
+  }
+
+  private void runListenerTest(Class<? extends AbstractConfig> config, String subscriptionName) {
     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(config);
     cleanup.deferCleanup(context);
+    JmsListenerEndpointRegistry registry = context.getBean(JmsListenerEndpointRegistry.class);
+    await()
+        .until(
+            () ->
+                registry.getListenerContainers().stream()
+                    .map(DefaultMessageListenerContainer.class::cast)
+                    .allMatch(DefaultMessageListenerContainer::isRegisteredWithDestination));
     ConnectionFactory factory = context.getBean(ConnectionFactory.class);
     JmsTemplate template = new JmsTemplate(factory);
+    template.setPubSubDomain(true);
 
     template.convertAndSend("SpringListenerJms2", "a message");
 
@@ -145,7 +178,8 @@ class SpringListenerTest extends AbstractJmsTest {
                         "SpringListenerJms2",
                         "process",
                         false,
-                        null));
+                        null,
+                        subscriptionName));
             producerSpan.set(trace.getSpan(0));
           },
           trace ->
@@ -158,7 +192,8 @@ class SpringListenerTest extends AbstractJmsTest {
                           "SpringListenerJms2",
                           "receive",
                           false,
-                          null)));
+                          null,
+                          subscriptionName)));
       return;
     }
 
@@ -179,7 +214,8 @@ class SpringListenerTest extends AbstractJmsTest {
                         "SpringListenerJms2",
                         "receive",
                         false,
-                        null),
+                        null,
+                        subscriptionName),
                 span ->
                     assertConsumerSpan(
                         span,
@@ -188,7 +224,59 @@ class SpringListenerTest extends AbstractJmsTest {
                         "SpringListenerJms2",
                         "process",
                         false,
-                        null)));
+                        null,
+                        subscriptionName)));
+  }
+
+  @ParameterizedTest
+  @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
+  @EnabledIfSystemProperty(named = "testJmsDisabled", matches = "true")
+  void receivingMessageInSpringListenerGeneratesSpansWithJmsDisabled(
+      Class<? extends AbstractConfig> config) {
+    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(config);
+    cleanup.deferCleanup(context);
+    JmsListenerEndpointRegistry registry = context.getBean(JmsListenerEndpointRegistry.class);
+    await()
+        .until(
+            () ->
+                registry.getListenerContainers().stream()
+                    .map(DefaultMessageListenerContainer.class::cast)
+                    .allMatch(DefaultMessageListenerContainer::isRegisteredWithDestination));
+    ConnectionFactory factory = context.getBean(ConnectionFactory.class);
+    JmsTemplate template = new JmsTemplate(factory);
+    template.setPubSubDomain(true);
+
+    template.convertAndSend("SpringListenerJms2", "a message");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertConsumerSpan(
+                        span,
+                        null,
+                        null,
+                        "SpringListenerJms2",
+                        "process",
+                        false,
+                        null,
+                        "durable-subscription")));
+
+    // the jms instrumentation that would create the receive operation is disabled, so the process
+    // operation counts the consumed message
+    Attributes processAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "process")
+            .put(MESSAGING_SYSTEM, "jms")
+            .put(MESSAGING_DESTINATION_NAME, "SpringListenerJms2")
+            .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
+            .build();
+    assertCounter(
+        testing,
+        "io.opentelemetry.spring-jms-2.0",
+        "messaging.client.consumed.messages",
+        1,
+        processAttributes);
   }
 
   @TestConfiguration

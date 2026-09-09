@@ -12,9 +12,13 @@ muzzle {
 }
 
 dependencies {
+  implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:javaagent"))
+
   library("org.redisson:redisson:3.26.0")
 
-  testImplementation("org.testcontainers:testcontainers")
+  testImplementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
+  testInstrumentation(project(":instrumentation:redisson:redisson-metrics-2.3:javaagent"))
+  testInstrumentation(project(":instrumentation:redisson:redisson-metrics-3.18:javaagent"))
 }
 
 tasks {

@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServerEndpoint {
-  private static final Map<String, ServerEndpoint> PATH_MAP = new HashMap<>();
+  private static final Map<String, ServerEndpoint> pathMap = new HashMap<>();
   public static final ServerEndpoint SUCCESS =
       new ServerEndpoint("SUCCESS", "success", 200, "success");
   public static final ServerEndpoint REDIRECT =
@@ -96,7 +96,7 @@ public class ServerEndpoint {
     this.status = status;
     this.body = body;
     if (registerPath) {
-      PATH_MAP.put(this.getPath(), this);
+      pathMap.put(this.getPath(), this);
     }
   }
 
@@ -145,7 +145,7 @@ public class ServerEndpoint {
   }
 
   public static ServerEndpoint forPath(String path) {
-    return PATH_MAP.get(path);
+    return pathMap.get(path);
   }
 
   public interface UrlParameterProvider {

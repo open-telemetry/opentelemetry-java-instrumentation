@@ -11,6 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
@@ -34,7 +35,6 @@ public final class KafkaTelemetryBuilder {
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
   private boolean messagingReceiveInstrumentationEnabled = false;
-  private boolean messagingReceiveInstrumentationConfigured = false;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = requireNonNull(openTelemetry);
@@ -83,6 +83,9 @@ public final class KafkaTelemetryBuilder {
   /**
    * Configures the messaging headers that will be captured as span attributes.
    *
+   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
+   *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
    *     release.
@@ -90,7 +93,11 @@ public final class KafkaTelemetryBuilder {
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
+    return setHeaders(
+        DeprecatedCaptureNames.toSelectorOrEmpty(
+            capturedHeaders,
+            "KafkaTelemetryBuilder.setCapturedHeaders()",
+            "setHeaders(IncludeExclude)"));
   }
 
   /**
@@ -128,7 +135,6 @@ public final class KafkaTelemetryBuilder {
   public KafkaTelemetryBuilder setMessagingReceiveTelemetryEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
-    this.messagingReceiveInstrumentationConfigured = true;
     return this;
   }
 
@@ -136,17 +142,17 @@ public final class KafkaTelemetryBuilder {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setHeaders(headers)
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes);
-    if (messagingReceiveInstrumentationConfigured) {
-      instrumenterFactory.setMessagingReceiveTelemetryEnabled(
-          messagingReceiveInstrumentationEnabled);
-    }
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
 
     return new KafkaTelemetry(
         openTelemetry,
         instrumenterFactory.createProducerInstrumenter(producerAttributesExtractors),
         instrumenterFactory.createConsumerReceiveInstrumenter(consumerReceiveAttributesExtractors),
         instrumenterFactory.createConsumerProcessInstrumenter(consumerProcessAttributesExtractors),
+        instrumenterFactory.createProducerInterceptorInstrumenter(producerAttributesExtractors),
+        instrumenterFactory.createConsumerReceiveInterceptorInstrumenter(
+            consumerReceiveAttributesExtractors),
         propagationEnabled);
   }
 }

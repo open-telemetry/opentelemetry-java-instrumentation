@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,15 +41,7 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            null,
-            false);
+            ContextDataAccessorImpl.INSTANCE, false, false, null, false, false, false, null, false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -69,7 +62,7 @@ class LogEventMapperTest {
             ContextDataAccessorImpl.INSTANCE,
             false,
             false,
-            false,
+            null,
             false,
             false,
             false,
@@ -96,7 +89,7 @@ class LogEventMapperTest {
             ContextDataAccessorImpl.INSTANCE,
             false,
             false,
-            false,
+            null,
             false,
             false,
             false,
@@ -124,7 +117,7 @@ class LogEventMapperTest {
             ContextDataAccessorImpl.INSTANCE,
             false,
             false,
-            false,
+            null,
             false,
             false,
             false,
@@ -151,7 +144,7 @@ class LogEventMapperTest {
             ContextDataAccessorImpl.INSTANCE,
             false,
             false,
-            false,
+            null,
             false,
             false,
             false,
@@ -166,7 +159,7 @@ class LogEventMapperTest {
     mapper.captureContextDataAttributes(builder, contextData);
 
     verify(builder).setAttribute(stringKey("request-id"), "123");
-    verify(builder).setAttribute(stringKey("user.name"), "alice");
+    verify(builder).setAttribute(USER_NAME, "alice");
     verifyNoMoreInteractions(builder);
   }
 
@@ -177,7 +170,7 @@ class LogEventMapperTest {
             ContextDataAccessorImpl.INSTANCE,
             false,
             false,
-            false,
+            null,
             false,
             false,
             false,
@@ -201,7 +194,7 @@ class LogEventMapperTest {
             ContextDataAccessorImpl.INSTANCE,
             false,
             false,
-            false,
+            null,
             false,
             false,
             false,
@@ -230,7 +223,7 @@ class LogEventMapperTest {
             ContextDataAccessorImpl.INSTANCE,
             false,
             false,
-            false,
+            null,
             false,
             false,
             false,
@@ -260,7 +253,7 @@ class LogEventMapperTest {
             ContextDataAccessorImpl.INSTANCE,
             false,
             false,
-            true,
+            include("*"),
             false,
             false,
             false,
@@ -292,7 +285,7 @@ class LogEventMapperTest {
             ContextDataAccessorImpl.INSTANCE,
             false,
             false,
-            true,
+            include("*"),
             false,
             false,
             false,
@@ -326,7 +319,7 @@ class LogEventMapperTest {
             ContextDataAccessorImpl.INSTANCE,
             false,
             false,
-            true,
+            include("*"),
             false,
             false,
             false,
@@ -352,11 +345,76 @@ class LogEventMapperTest {
   }
 
   @Test
+  void testCaptureMapMessageWithSelector() {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            include("order-*", "user-?"),
+            false,
+            false,
+            false,
+            null,
+            false);
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "123");
+    message.put("user-1", "alice");
+    message.put("user-22", "ignored");
+    message.put("other", "ignored");
+
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMessage(builder, message);
+
+    // then
+    verify(builder).setAttribute(stringKey("log4j.map_message.order-id"), "123");
+    verify(builder).setAttribute(stringKey("log4j.map_message.user-1"), "alice");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testCaptureMapMessageExclusionsTakePrecedence() {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            IncludeExclude.builder()
+                    .setIncluded(singletonList("order-*"))
+                    .setExcluded(singletonList("*-secret"))
+                    .build()
+                ::matches,
+            false,
+            false,
+            false,
+            null,
+            false);
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "123");
+    message.put("order-secret", "ignored");
+
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMessage(builder, message);
+
+    // then
+    verify(builder).setAttribute(stringKey("log4j.map_message.order-id"), "123");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
   void testCaptureTemplateAndArguments() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, false, false, true, true, null, false);
+            ContextDataAccessorImpl.INSTANCE, false, false, null, false, true, true, null, false);
     ParameterizedMessage message = new ParameterizedMessage("hello {}", "world");
     LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
@@ -384,15 +442,7 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            null,
-            false);
+            ContextDataAccessorImpl.INSTANCE, false, false, null, false, false, false, null, false);
     ParameterizedMessage message = new ParameterizedMessage("hello {}", "world");
     LogRecordBuilder builder = mock(LogRecordBuilder.class);
 

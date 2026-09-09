@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -86,10 +87,6 @@ class RpcAttributesExtractorTest {
   void client() {
     testExtractor(RpcClientAttributesExtractor.create(new TestGetter()));
   }
-
-  // Stable semconv keys
-  private static final AttributeKey<String> RPC_SYSTEM_NAME =
-      AttributeKey.stringKey("rpc.system.name");
 
   private static void testExtractor(AttributesExtractor<Map<String, String>, Void> extractor) {
     Map<String, String> request = new HashMap<>();

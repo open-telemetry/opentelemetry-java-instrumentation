@@ -99,6 +99,29 @@ class GrpcConfigTest {
   }
 
   @Test
+  void deprecatedConfigMatchesMetadataKeysExactlyAndIgnoresWildcards() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.get("capture_metadata").get("client").getScalarList("request", String.class))
+        .thenReturn(asList("exact-key", "prefix-*"));
+
+    GrpcConfig grpcConfig = new GrpcConfig(config, false);
+
+    IncludeExclude client = grpcConfig.getClientRequestMetadata();
+    assertThat(client).isNotNull();
+    assertThat(client.matches("exact-key")).isTrue();
+    assertThat(client.matches("prefix-value")).isFalse();
+  }
+
+  @Test
+  void deprecatedConfigWithOnlyWildcardsCapturesNothing() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.get("capture_metadata").get("client").getScalarList("request", String.class))
+        .thenReturn(singletonList("*"));
+
+    assertThat(new GrpcConfig(config, false).getClientRequestMetadata()).isNull();
+  }
+
+  @Test
   void emptyDeprecatedConfigCapturesNothing() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.get("capture_metadata").get("client").getScalarList("request", String.class))

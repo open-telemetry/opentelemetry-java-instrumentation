@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.net.ConnectException;
@@ -169,8 +170,14 @@ class HttpClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
-            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
-            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setRequestHeaders(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList("Custom-Request-Header"))
+                    .build())
+            .setResponseHeaders(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList("Custom-Response-Header"))
+                    .build())
             .setResendCountIncrementer(resendCountFromContext)
             .build();
 

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.internal.EnumerationUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,6 +30,11 @@ class SpringWebMvcHttpAttributesGetter
   public List<String> getHttpRequestHeader(HttpServletRequest request, String name) {
     Enumeration<String> headers = request.getHeaders(name);
     return headers == null ? emptyList() : Collections.list(headers);
+  }
+
+  @Override
+  public Iterable<String> getHttpRequestHeaderNames(HttpServletRequest request) {
+    return () -> EnumerationUtil.asIterator(request.getHeaderNames());
   }
 
   @Override
@@ -61,6 +67,13 @@ class SpringWebMvcHttpAttributesGetter
       return (List<String>) headers;
     }
     return new ArrayList<>(headers);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(
+      HttpServletRequest request, HttpServletResponse response) {
+    Collection<String> headerNames = response.getHeaderNames();
+    return headerNames == null ? emptyList() : headerNames;
   }
 
   @Override

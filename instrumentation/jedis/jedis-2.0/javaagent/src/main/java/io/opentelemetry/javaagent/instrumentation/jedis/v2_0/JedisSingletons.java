@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import javax.annotation.Nullable;
 
 class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-2.0";
@@ -23,12 +24,22 @@ class JedisSingletons {
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
+    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
+    // span name.
+    JedisDbAttributesGetter spanNameAttributesGetter =
+        new JedisDbAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(JedisRequest request) {
+            return null;
+          }
+        };
 
     InstrumenterBuilder<JedisRequest, Void> builder =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(

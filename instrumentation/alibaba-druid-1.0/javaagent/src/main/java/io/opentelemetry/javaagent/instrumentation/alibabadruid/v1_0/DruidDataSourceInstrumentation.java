@@ -32,8 +32,8 @@ class DruidDataSourceInstrumentation implements TypeInstrumentation {
         isPublic()
             .and(isStatic())
             .and(named("addDataSource"))
-            .and(takesArgument(0, named("java.lang.Object")))
-            .and(takesArgument(1, named("java.lang.String"))),
+            .and(takesArgument(0, Object.class))
+            .and(takesArgument(1, String.class)),
         getClass().getName() + "$AddDataSourceAdvice");
 
     typeTransformer.applyAdviceToMethod(

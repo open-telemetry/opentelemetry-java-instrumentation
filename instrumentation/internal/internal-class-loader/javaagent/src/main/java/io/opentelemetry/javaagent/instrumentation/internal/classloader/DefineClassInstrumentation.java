@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
-import static io.opentelemetry.javaagent.instrumentation.internal.classloader.AdviceUtil.applyInlineAdvice;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -28,15 +27,13 @@ class DefineClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    applyInlineAdvice(
-        transformer,
+    transformer.applyAdviceToMethod(
         named("defineClass")
             .and(
                 takesArguments(
                     String.class, byte[].class, int.class, int.class, ProtectionDomain.class)),
         getClass().getName() + "$DefineClassAdvice");
-    applyInlineAdvice(
-        transformer,
+    transformer.applyAdviceToMethod(
         named("defineClass")
             .and(takesArguments(String.class, ByteBuffer.class, ProtectionDomain.class)),
         getClass().getName() + "$DefineClassWithThreeArgsAdvice");
@@ -55,15 +52,9 @@ class DefineClassInstrumentation implements TypeInstrumentation {
           classLoader, className, classBytes, offset, length);
     }
 
-    // TODO: the ToReturned does nothing except for signaling the AdviceTransformer that it must
-    // not touch this advice
-    // this is done because we do not want the return values to be wrapped in array types
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    @Advice.AssignReturned.ToReturned
-    public static Class<?> onExit(
-        @Advice.Enter DefineClassContext context, @Advice.Return Class<?> returned) {
+    public static void onExit(@Advice.Enter DefineClassContext context) {
       DefineClassHelper.afterDefineClass(context);
-      return returned;
     }
   }
 
@@ -77,15 +68,9 @@ class DefineClassInstrumentation implements TypeInstrumentation {
       return DefineClassHelper.beforeDefineClass(classLoader, className, classBytes);
     }
 
-    // TODO: the ToReturned does nothing except for signaling the AdviceTransformer that it must
-    // not touch this advice
-    // this is done because we do not want the return values to be wrapped in array types
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    @Advice.AssignReturned.ToReturned
-    public static Class<?> onExit(
-        @Advice.Enter DefineClassContext context, @Advice.Return Class<?> returned) {
+    public static void onExit(@Advice.Enter DefineClassContext context) {
       DefineClassHelper.afterDefineClass(context);
-      return returned;
     }
   }
 }

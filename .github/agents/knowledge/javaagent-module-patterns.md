@@ -2,7 +2,7 @@
 
 ## Quick Reference
 
-- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, `VirtualField`, or `CallDepth` code
+- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, or `CallDepth` code
 - Review focus: registration and naming, matcher performance, safe advice wiring
 
 ## InstrumentationModule
@@ -472,12 +472,31 @@ sufficient for optimization.
 
 ### Rules
 
-- Do not flag or change the visibility or `final` modifier on advice classes.
+- Do not flag or change the visibility of advice classes.
 - `typeMatcher()` should match only the types the instrumentation genuinely needs. Prefer
   `named("fully.qualified.ClassName")` or `namedOneOf(...)` for single classes.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
+- Direct argument and return-type matchers inside `transform()` use `Type.class` only when the type
+  is loadable from the agent class loader. For JDK types, use class literals only for primitives and
+  primitive arrays, or types from these exact package names: `java.io`, `java.lang`,
+  `java.lang.reflect`, `java.net`, `java.nio`, `java.time`, `java.util`, `java.util.concurrent`, and
+  `java.util.function`. These exact packages belong to the mandatory `java.base` module, so an
+  accessible type from one of them is present in every supported runtime image and safe to use as a
+  class literal when it is available at the module's minimum supported Java version. Package
+  matching is not recursive: `java.util` does not include `java.util.logging`.
+  Use `takesArgument(0, String.class)` and `returns(CompletableFuture.class)`, not
+  `takesArgument(0, named("java.lang.String"))` or
+  `returns(named("java.util.concurrent.CompletableFuture"))`.
+  Compiling against a type is not enough — `transform()` runs in the agent class loader, which sees
+  only JDK and agent classes, so a class literal for any other type fails to resolve and the whole
+  instrumentation module is dropped.
+  Keep `named(...)` for `typeMatcher()`, class-loader optimization, hierarchy matchers
+  (`extendsClass`, `implementsInterface`), all instrumented-library types, JDK types outside the
+  allowlist or unavailable at the module's minimum Java version, inaccessible JDK-internal classes,
+  and advice-class name strings. This method-signature convention does not change the type-level and
+  advice-class classloading guidance above and below.
 - `isMethod()` in method matchers inside `transform()` is redundant when the matcher
   already names a specific, non-empty method — e.g. `named("foo")` or `namedOneOf("foo", "bar")`.
   Keep `isMethod()` when the name could be empty, since `named("")` matches constructors and
@@ -504,20 +523,9 @@ to prevent nested spans.
 - In `@OnMethodEnter`: call `getAndIncrement()`, return the `CallDepth`.
 - In `@OnMethodExit`: if `decrementAndGet() > 0`, skip span-ending logic (still nested).
 
-## VirtualField (Attaching Context to Library Objects)
+## VirtualField (Per-Object State Attached to Library Objects)
 
-`VirtualField` attaches virtual fields to library classes without modifying their bytecode,
-for associating OpenTelemetry context or state with library objects.
-
-### Rules
-
-- Call `VirtualField.find(Carrier.class, Value.class)` with class literals.
-- **Inside `@Advice` methods** these calls are **rewritten at bytecode transformation time**
-  by `VirtualFieldFindRewriter` into direct static calls to generated implementations —
-  they are never executed at runtime. It is perfectly fine to call `VirtualField.find()`
-  inside advice methods; do **not** extract them into helper classes or static final fields.
-- **Outside advice** (helper classes, singletons, etc.) the call executes at runtime, so
-  declare the result as a `static final` field to avoid repeated lookups.
-- The first type parameter is the "carrier" class (the library object); the second is the
-  attached value type.
-- Uses weak-key semantics: when the carrier is garbage-collected, the value is released.
+Load [Virtual Fields](javaagent-virtual-fields.md) when code uses `VirtualField` or introduces weak
+or identity-keyed storage for state associated with third-party object instances. That article
+covers storage selection, typed carrier boundaries, lookup placement, lifetime, fallback behavior,
+and concurrency.

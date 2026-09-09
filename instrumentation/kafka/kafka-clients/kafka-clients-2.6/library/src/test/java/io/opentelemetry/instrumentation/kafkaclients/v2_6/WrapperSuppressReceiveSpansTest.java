@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -51,6 +54,11 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                     span.hasName("producer callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+    String instrumentationName = "io.opentelemetry.kafka-clients-2.6";
+    assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
+    assertProcessMetricsWithConsumedMessages(
+        testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, 1, null);
+    assertTotalConsumedMessages(testing, instrumentationName, 1);
   }
 
   static List<AttributeAssertion> sendAttributes(boolean testHeaders, boolean testExperimental) {

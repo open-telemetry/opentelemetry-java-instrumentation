@@ -42,6 +42,7 @@ import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.impl.ContextDataFactory;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.status.StatusData;
 import org.apache.logging.log4j.status.StatusListener;
 import org.apache.logging.log4j.status.StatusLogger;
@@ -354,6 +355,179 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
                 .hasBody("log message")
                 .hasAttributesSatisfyingExactly(
                     equalTo(stringKey("selector-included"), "captured")));
+  }
+
+  @Test
+  void mapMessageSelector() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setMapMessageAttributes(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList("order-*"))
+                    .setExcluded(singletonList("*-secret"))
+                    .build())
+            .build();
+    appender.start();
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "captured");
+    message.put("order-secret", "ignored");
+    message.put("other", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(message)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured")));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void deprecatedSetterDelegatesToMapMessageSelector() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setCaptureMapMessageAttributes(true)
+            .setMapMessageAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("order-*")).build())
+            .build();
+    appender.start();
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "captured");
+    message.put("other", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(message)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured")));
+  }
+
+  @Test
+  void programmaticMapMessageSelectorTakesPrecedenceOverConfigurationFileSelector() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setMapMessageAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("order-*")).build())
+            .setMapMessageAttributesIncluded("other-*")
+            .setMapMessageAttributesExcluded("*-secret")
+            .build();
+    appender.start();
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "captured");
+    // the configuration file exclusion is ignored, so this is captured
+    message.put("order-secret", "captured");
+    // the configuration file inclusion is ignored, so this is not captured
+    message.put("other-1", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(message)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured"),
+                equalTo(AbstractLog4j2Test.mapMessageKey("order-secret"), "captured")));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void deprecatedCaptureMapMessageAttributesCapturesEverything() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setCaptureMapMessageAttributes(true)
+            .build();
+    appender.start();
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "captured");
+    message.put("other", "captured");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(message)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured"),
+                equalTo(AbstractLog4j2Test.mapMessageKey("other"), "captured")));
+  }
+
+  @Test
+  void emptyMapMessageSelectorCapturesNothing() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setMapMessageAttributes(IncludeExclude.builder().build())
+            .build();
+    appender.start();
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(message)
+            .build());
+
+    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasTotalAttributeCount(0));
+  }
+
+  @Test
+  void configurationFileMapMessageSelector() {
+    Logger selectorLogger = LogManager.getLogger("MapMessageSelectorTestLogger");
+    StringMapMessage message = new StringMapMessage();
+    message.put("selector-included", "captured");
+    message.put("selector-secret", "ignored");
+    message.put("other", "ignored");
+    selectorLogger.info(message);
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
+  }
+
+  @Test
+  void configurationFileMapMessageSelectorTakesPrecedenceOverDeprecatedAlias() {
+    Logger selectorLogger = LogManager.getLogger("MapMessageSelectorPrecedenceTestLogger");
+    StringMapMessage message = new StringMapMessage();
+    message.put("selector-included", "captured");
+    message.put("selector-secret", "ignored");
+    message.put("other", "ignored");
+    selectorLogger.info(message);
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
   }
 
   @Test

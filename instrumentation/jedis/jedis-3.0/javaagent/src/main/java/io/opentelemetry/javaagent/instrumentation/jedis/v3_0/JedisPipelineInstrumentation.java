@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -82,7 +81,7 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
           return null;
         }
         JedisRequest request = JedisRequest.createPipeline(requests);
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }

@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -32,8 +34,11 @@ final class ElasticsearchClientAttributeExtractor
     implements AttributesExtractor<ElasticsearchRestRequest, Response> {
 
   private static final String PATH_PARTS_ATTRIBUTE_PREFIX = "db.elasticsearch.path_parts.";
+  private static final String OPERATION_PARAMETER_ATTRIBUTE_PREFIX = "db.operation.parameter.";
 
   private static final Cache<String, AttributeKey<String>> pathPartKeysCache = Cache.bounded(64);
+  private static final Cache<String, AttributeKey<String>> operationParameterKeysCache =
+      Cache.bounded(64);
 
   private final Set<String> knownMethods;
   private final Set<String> sensitiveQueryParameters;
@@ -70,10 +75,18 @@ final class ElasticsearchClientAttributeExtractor
     endpointDef.processPathParts(
         request.getEndpoint(),
         (key, value) -> {
-          AttributeKey<String> attributeKey =
-              pathPartKeysCache.computeIfAbsent(
-                  key, k -> AttributeKey.stringKey(PATH_PARTS_ATTRIBUTE_PREFIX + k));
-          attributes.put(attributeKey, value);
+          if (emitStableDatabaseSemconv()) {
+            attributes.put(
+                operationParameterKeysCache.computeIfAbsent(
+                    key, k -> AttributeKey.stringKey(OPERATION_PARAMETER_ATTRIBUTE_PREFIX + k)),
+                value);
+          }
+          if (emitOldDatabaseSemconv()) {
+            attributes.put(
+                pathPartKeysCache.computeIfAbsent(
+                    key, k -> AttributeKey.stringKey(PATH_PARTS_ATTRIBUTE_PREFIX + k)),
+                value);
+          }
         });
   }
 

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3.
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -87,12 +88,19 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(assertFunctionName("findAll")),
                 span ->
-                    span.hasName("SearchAction")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "indices:data/read/search"
+                                : "SearchAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv()
+                                    ? "indices:data/read/search"
+                                    : "SearchAction"),
                             equalTo(
                                 stringKey("elasticsearch.action"), experimental("SearchAction")),
                             equalTo(
@@ -121,12 +129,16 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(assertFunctionName("index")),
                 span ->
-                    span.hasName("IndexAction")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "indices:data/write/index"
+                                : "IndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(indexActionAssertions(201)),
                 span ->
-                    span.hasName("RefreshAction")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "indices:admin/refresh" : "RefreshAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(refreshActionAssertions())));
@@ -143,7 +155,8 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(assertFunctionName("findById")),
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(getActionAssertions(1))));
@@ -163,12 +176,16 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(assertFunctionName("index")),
                 span ->
-                    span.hasName("IndexAction")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "indices:data/write/index"
+                                : "IndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(indexActionAssertions(200)),
                 span ->
-                    span.hasName("RefreshAction")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "indices:admin/refresh" : "RefreshAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(refreshActionAssertions())),
@@ -180,7 +197,8 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(assertFunctionName("findById")),
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(getActionAssertions(2))));
@@ -198,12 +216,19 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(assertFunctionName("deleteById")),
                 span ->
-                    span.hasName("DeleteAction")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "indices:data/write/delete"
+                                : "DeleteAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "DeleteAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv()
+                                    ? "indices:data/write/delete"
+                                    : "DeleteAction"),
                             equalTo(
                                 stringKey("elasticsearch.action"), experimental("DeleteAction")),
                             equalTo(
@@ -223,7 +248,8 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                             equalTo(
                                 longKey("elasticsearch.shard.replication.total"), experimental(2))),
                 span ->
-                    span.hasName("RefreshAction")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "indices:admin/refresh" : "RefreshAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(refreshActionAssertions())),
@@ -235,12 +261,19 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(assertFunctionName("findAll")),
                 span ->
-                    span.hasName("SearchAction")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "indices:data/read/search"
+                                : "SearchAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv()
+                                    ? "indices:data/read/search"
+                                    : "SearchAction"),
                             equalTo(
                                 stringKey("elasticsearch.action"), experimental("SearchAction")),
                             equalTo(
@@ -257,7 +290,9 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
     return new ArrayList<>(
         asList(
             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
+            equalTo(
+                maybeStable(DB_OPERATION),
+                emitStableDatabaseSemconv() ? "indices:data/write/index" : "IndexAction"),
             equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("IndexRequest")),
             equalTo(stringKey("elasticsearch.request.indices"), experimental("test-index")),
@@ -273,7 +308,9 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
     return new ArrayList<>(
         asList(
             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
+            equalTo(
+                maybeStable(DB_OPERATION),
+                emitStableDatabaseSemconv() ? "indices:admin/refresh" : "RefreshAction"),
             equalTo(stringKey("elasticsearch.action"), experimental("RefreshAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("RefreshRequest")),
             equalTo(stringKey("elasticsearch.request.indices"), experimental("test-index")),
@@ -286,7 +323,9 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
     return new ArrayList<>(
         asList(
             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-            equalTo(maybeStable(DB_OPERATION), "GetAction"),
+            equalTo(
+                maybeStable(DB_OPERATION),
+                emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction"),
             equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
             equalTo(stringKey("elasticsearch.request.indices"), experimental("test-index")),

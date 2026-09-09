@@ -121,8 +121,8 @@ RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(openTelemetry);
 Experimental.setJfrMetrics(
     builder,
     IncludeExclude.builder()
-        .setIncluded(Arrays.asList("jvm.memory.*", "jvm.cpu.longloc?"))
-        .setExcluded(Collections.singletonList("jvm.memory.allocation"))
+        .setIncluded("jvm.memory.*", "jvm.cpu.longloc?")
+        .setExcluded("jvm.memory.allocation")
         .build());
 RuntimeTelemetry runtimeTelemetry = builder.build();
 ```
@@ -159,13 +159,15 @@ These metrics are collected via JMX on all Java versions unless selected for JFR
 
 #### JMX-based (all Java versions)
 
-| Metric                       | Description                                 |
-| ---------------------------- | ------------------------------------------- |
-| `jvm.buffer.count`           | Number of buffers in the pool               |
-| `jvm.buffer.memory.limit`    | Measure of total memory capacity of buffers |
-| `jvm.buffer.memory.used`     | Measure of memory used by buffers           |
-| `jvm.memory.init`            | Measure of initial memory requested         |
-| `jvm.system.cpu.utilization` | System-wide CPU utilization                 |
+| Metric                       | Description                                            |
+| ---------------------------- | ------------------------------------------------------ |
+| `jvm.buffer.count`           | Number of buffers in the pool                          |
+| `jvm.buffer.memory.limit`    | Measure of total memory capacity of buffers            |
+| `jvm.buffer.memory.used`     | Measure of memory used by buffers                      |
+| `jvm.file_descriptor.count`  | Number of open file descriptors (Unix systems only)    |
+| `jvm.file_descriptor.limit`  | Maximum number of file descriptors (Unix systems only) |
+| `jvm.memory.init`            | Measure of initial memory requested                    |
+| `jvm.system.cpu.utilization` | System-wide CPU utilization                            |
 
 #### JFR-based (Java 17+ only)
 

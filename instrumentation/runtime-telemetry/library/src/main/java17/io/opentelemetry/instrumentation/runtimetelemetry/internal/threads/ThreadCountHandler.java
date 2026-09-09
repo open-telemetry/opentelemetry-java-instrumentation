@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.threads;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_THREAD_DAEMON;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
@@ -26,8 +28,8 @@ public final class ThreadCountHandler implements RecordedEventHandler {
   private static final String METRIC_NAME = "jvm.thread.count";
   private static final String EVENT_NAME = "jdk.JavaThreadStatistics";
   private static final String METRIC_DESCRIPTION = "Number of executing platform threads.";
-  private static final Attributes ATTR_DAEMON_TRUE = Attributes.of(Constants.ATTR_DAEMON, true);
-  private static final Attributes ATTR_DAEMON_FALSE = Attributes.of(Constants.ATTR_DAEMON, false);
+  private static final Attributes ATTR_DAEMON_TRUE = Attributes.of(JVM_THREAD_DAEMON, true);
+  private static final Attributes ATTR_DAEMON_FALSE = Attributes.of(JVM_THREAD_DAEMON, false);
 
   private final List<AutoCloseable> observables = new ArrayList<>();
 

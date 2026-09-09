@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp.v6_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.activejhttp.v6_0.ActivejHttpServerSingletons.instrumenter;
@@ -64,7 +63,7 @@ class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(HttpRequest request) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }

@@ -4,10 +4,10 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.41.0")
+  implementation("com.linecorp.armeria:armeria-junit5:1.41.1")
   implementation("com.google.errorprone:error_prone_annotations")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
-  implementation("com.google.protobuf:protobuf-java-util:4.35.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.36.1")
   implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   // we'll replace caffeine shaded in armeria with a later version that doesn't use Unsafe. Caffeine

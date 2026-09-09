@@ -32,9 +32,17 @@ public final class HttpProtocolUtil {
   public static String normalizeHttpVersion(String version) {
     if ("2.0".equals(version)) {
       return "2";
+    } else if ("3.0".equals(version)) {
+      return "3";
     }
 
     return version;
+  }
+
+  public static String formatVersion(int majorVersion, int minorVersion) {
+    return majorVersion > 1 && minorVersion == 0
+        ? Integer.toString(majorVersion)
+        : majorVersion + "." + minorVersion;
   }
 
   private HttpProtocolUtil() {}

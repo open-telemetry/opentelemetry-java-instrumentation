@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4.ElasticsearchRest6Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -61,7 +60,7 @@ class RestClientInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(ElasticsearchRestRequest request) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }
@@ -90,7 +89,8 @@ class RestClientInstrumentation implements TypeInstrumentation {
       ResponseListener responseListener = originalResponseListener;
 
       ElasticsearchRestRequest otelRequest =
-          ElasticsearchRestRequest.create(request.getMethod(), request.getEndpoint());
+          ElasticsearchRestRequest.create(
+              request.getMethod(), request.getEndpoint(), null, request.getEntity());
       AdviceScope adviceScope = AdviceScope.start(otelRequest);
       if (adviceScope == null) {
         return new Object[] {null, responseListener};

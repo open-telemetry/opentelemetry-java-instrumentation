@@ -5,10 +5,12 @@
 
 package io.opentelemetry.test.annotation;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.api.trace.SpanId;
@@ -339,6 +341,27 @@ class WithSpanInstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("TracedWithSpan.withSpanAttributes")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(assertions)));
+  }
+
+  @Test
+  void captureGenericAttributes() {
+    String result =
+        new TracedWithSpan().withGenericSpanAttributes("foo", new String[] {"bar", "baz"});
+    assertThat(result).isEqualTo("foo");
+
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(codeAttributeAssertions("withGenericSpanAttributes"));
+    assertions.add(equalTo(stringKey("value"), "foo"));
+    assertions.add(equalTo(stringArrayKey("values"), asList("bar", "baz")));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.withGenericSpanAttributes")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(assertions)));

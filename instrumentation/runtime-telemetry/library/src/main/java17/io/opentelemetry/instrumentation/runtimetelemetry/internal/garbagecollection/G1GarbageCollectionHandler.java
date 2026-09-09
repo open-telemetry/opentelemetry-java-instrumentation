@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.garbagecollection;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
@@ -25,11 +28,7 @@ import jdk.jfr.consumer.RecordedEvent;
 public final class G1GarbageCollectionHandler implements RecordedEventHandler {
   private static final String EVENT_NAME = "jdk.G1GarbageCollection";
   private static final Attributes ATTR =
-      Attributes.of(
-          Constants.ATTR_GC_NAME,
-          "G1 Young Generation",
-          Constants.ATTR_GC_ACTION,
-          Constants.END_OF_MINOR_GC);
+      Attributes.of(JVM_GC_NAME, "G1 Young Generation", JVM_GC_ACTION, Constants.END_OF_MINOR_GC);
   private final DoubleHistogram histogram;
 
   @Nullable

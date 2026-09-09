@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.util.concurrent.CompletionException;
 import javax.annotation.Nullable;
+import org.opensearch.client.opensearch._types.OpenSearchException;
 
 final class OpenSearchAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRequest, Void> {
@@ -38,5 +40,21 @@ final class OpenSearchAttributesGetter
   @Nullable
   public String getDbOperationName(OpenSearchRequest request) {
     return request.getMethod();
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      OpenSearchRequest request, @Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof CompletionException) {
+      error = error.getCause();
+    }
+    if (error instanceof OpenSearchException) {
+      int statusCode = ((OpenSearchException) error).status();
+      if (statusCode >= 400 || statusCode < 100) {
+        return Integer.toString(statusCode);
+      }
+    }
+    return null;
   }
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import java.util.Collection;
 
 /** A builder of {@link AwsSdkTelemetry}. */
@@ -18,6 +19,7 @@ public final class AwsSdkTelemetryBuilder {
   private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean captureExperimentalSpanAttributes;
   private boolean messagingReceiveTelemetryEnabled;
+  private boolean batchSendMessageCreationSpansEnabled = true;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -45,6 +47,9 @@ public final class AwsSdkTelemetryBuilder {
   /**
    * Configures the messaging headers that will be captured as span attributes.
    *
+   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
+   *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
    *     release.
@@ -52,7 +57,11 @@ public final class AwsSdkTelemetryBuilder {
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public AwsSdkTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
+    return setHeaders(
+        DeprecatedCaptureNames.toSelectorOrEmpty(
+            capturedHeaders,
+            "AwsSdkTelemetryBuilder.setCapturedHeaders()",
+            "setHeaders(IncludeExclude)"));
   }
 
   /**
@@ -81,6 +90,21 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Sets whether a producer "Create" span is emitted for each eligible entry in an SQS batch send.
+   * An entry is eligible when it does not already contain a creation context and the AWS SDK
+   * version supports the per-entry {@code AWSTraceHeader} system attribute.
+   *
+   * <p>This option only applies when the stable messaging semantic conventions are enabled. It is
+   * enabled by default.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setBatchSendMessageCreationSpansEnabled(
+      boolean batchSendMessageCreationSpansEnabled) {
+    this.batchSendMessageCreationSpansEnabled = batchSendMessageCreationSpansEnabled;
+    return this;
+  }
+
+  /**
    * Returns a new {@link AwsSdkTelemetry} with the settings of this {@link AwsSdkTelemetryBuilder}.
    */
   public AwsSdkTelemetry build() {
@@ -88,6 +112,7 @@ public final class AwsSdkTelemetryBuilder {
         openTelemetry,
         headers,
         captureExperimentalSpanAttributes,
-        messagingReceiveTelemetryEnabled);
+        messagingReceiveTelemetryEnabled,
+        batchSendMessageCreationSpansEnabled);
   }
 }

@@ -87,7 +87,10 @@ public final class BedrockRuntimeImpl {
     private GenAiOperationNameIncubatingValues() {}
   }
 
+  // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
+
+  // copied from GenAiIncubatingAttributes
   private static final AttributeKey<String> GEN_AI_PROVIDER_NAME =
       stringKey("gen_ai.provider.name");
 
@@ -197,6 +200,12 @@ public final class BedrockRuntimeImpl {
     }
 
     return null;
+  }
+
+  static boolean isRequestStreaming(ExecutionAttributes executionAttributes) {
+    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
+    return request instanceof ConverseStreamRequest
+        || request instanceof InvokeModelWithResponseStreamRequest;
   }
 
   @Nullable

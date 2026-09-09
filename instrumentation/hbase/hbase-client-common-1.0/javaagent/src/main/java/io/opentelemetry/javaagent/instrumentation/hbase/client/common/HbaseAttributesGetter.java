@@ -29,7 +29,7 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
   @Override
   public String getDbCollectionName(HbaseRequest hbaseRequest) {
     TableName tableName = hbaseRequest.getTableName();
-    return tableName == null ? null : tableName.getNameAsString();
+    return tableName == null ? null : tableName.getQualifierAsString();
   }
 
   @Nullable

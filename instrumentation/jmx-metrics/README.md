@@ -28,7 +28,7 @@ No targets are enabled by default. The supported target environments are listed 
 - [activemq](library/activemq.md)
 - [camel](library/camel.md)
 - [jetty](library/jetty.md)
-- [experimental-kafka-broker](javaagent/kafka-broker.md)
+- [experimental-kafka-broker](library/kafka-broker.md)
 - [experimental-kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
@@ -517,3 +517,6 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 - when metrics represent an upper and lower bounds or a resource, use the `.limit.upper` and `.limit.lower`suffixes, for example:
   - `pool.limit.upper` to represent the upper limit of the pool size (maximum capacity)
   - `pool.limit.lower` to represent the minimum number of threads that should be kept in the pool, even if there is no load.
+- when a metric represents a percentile, use the `.pXX` suffix where `XX` is the percentile value, for example:
+  - `request.duration.p50` for the 50th percentile (median)
+  - `request.duration.p99` for the 99th percentile

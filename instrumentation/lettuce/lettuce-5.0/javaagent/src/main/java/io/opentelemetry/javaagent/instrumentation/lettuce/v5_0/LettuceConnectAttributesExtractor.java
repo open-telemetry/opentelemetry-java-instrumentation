@@ -33,13 +33,12 @@ final class LettuceConnectAttributesExtractor implements AttributesExtractor<Red
     }
 
     int database = redisUri.getDatabase();
-    if (database != 0) {
-      if (emitStableDatabaseSemconv()) {
-        attributes.put(DB_NAMESPACE, String.valueOf(database));
-      }
-      if (emitOldDatabaseSemconv()) {
-        attributes.put(DB_REDIS_DATABASE_INDEX, (long) database);
-      }
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(DB_NAMESPACE, String.valueOf(database));
+    }
+    // Old semconv output is deliberately left unchanged: it still drops the default database 0.
+    if (emitOldDatabaseSemconv() && database != 0) {
+      attributes.put(DB_REDIS_DATABASE_INDEX, (long) database);
     }
   }
 

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableMap;
 
 import java.util.HashMap;
 import java.util.List;
@@ -351,7 +350,7 @@ public final class RedisCommandSanitizer {
       sanitizers.put(command, KeepAllArgs.INSTANCE);
     }
 
-    SANITIZERS = unmodifiableMap(sanitizers);
+    SANITIZERS = sanitizers;
   }
 
   public static RedisCommandSanitizer create(boolean querySanitizationEnabled) {

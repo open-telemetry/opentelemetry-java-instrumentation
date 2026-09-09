@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -64,6 +65,9 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * replaced by underscores unless {@code otel.instrumentation.common.v3-preview} is enabled, in
    * which case dashes are preserved.
    *
+   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
+   *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
    *     release.
@@ -72,7 +76,11 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedHeaders(
       Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
+    return setHeaders(
+        DeprecatedCaptureNames.toSelectorOrEmpty(
+            capturedHeaders,
+            "MessagingAttributesExtractorBuilder.setCapturedHeaders()",
+            "setHeaders(IncludeExclude)"));
   }
 
   /**
