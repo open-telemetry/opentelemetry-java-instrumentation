@@ -176,7 +176,7 @@ public class DbServerTargetBuilder {
   }
 
   private DbServerTarget target(String address, @Nullable Integer port) {
-    return new DbServerTarget(suffix == null ? address : address + "/" + suffix, port);
+    return DbServerTarget.create(suffix == null ? address : address + "/" + suffix, port);
   }
 
   private static String renderHostAndPort(String host, int port) {
