@@ -158,9 +158,13 @@ public abstract class AbstractCouchbaseTest {
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
+  protected String configuredServerAddress() {
+    return emitStableDatabaseSemconv() ? "127.0.0.1" : null;
+  }
+
   protected StringAssertConsumer serverAddress() {
     if (emitStableDatabaseSemconv()) {
-      return val -> val.isEqualTo("127.0.0.1");
+      return val -> val.isEqualTo(configuredServerAddress());
     }
     return includesOldServerAddressAttribute() ? val -> val.isNotNull() : val -> val.isNull();
   }
