@@ -23,6 +23,7 @@ import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -89,7 +90,7 @@ class ThreadPoolExecutorMetricsTest {
           .withActiveThreads(1)
           .withIdleThreads(0)
           .withCoreThreads(1)
-          .withMaxThreads(1)
+          .withThreadLimit(1)
           .withQueueSize(1)
           .withQueueCapacity(1)
           .withCompletedTasks(0)
@@ -112,6 +113,123 @@ class ThreadPoolExecutorMetricsTest {
     }
 
     assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "metrics-pool-*");
+  }
+
+  @Test
+  void countsExceptionalTaskAsCompleted() throws Exception {
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            MILLISECONDS,
+            new ArrayBlockingQueue<>(1),
+            new NamedThreadFactory("exception-pool"));
+
+    try {
+      Future<?> future =
+          executor.submit(
+              () -> {
+                throw new IllegalStateException("expected");
+              });
+
+      assertThatThrownBy(() -> future.get(10, SECONDS))
+          .hasCauseInstanceOf(IllegalStateException.class);
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "exception-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withCompletedTasks(1)
+          .assertExecutorEmitsMetrics();
+    } finally {
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
+  }
+
+  @Test
+  void countsCancellationOnlyAfterProcessingEnds() throws Exception {
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            MILLISECONDS,
+            new ArrayBlockingQueue<>(1),
+            new NamedThreadFactory("cancel-pool"));
+    CountDownLatch started = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+
+    try {
+      Future<?> future =
+          executor.submit(
+              () -> {
+                started.countDown();
+                awaitLatch(release);
+              });
+
+      assertThat(started.await(10, SECONDS)).isTrue();
+      assertThat(future.cancel(true)).isTrue();
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "cancel-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withCompletedTasks(0)
+          .assertExecutorEmitsMetrics();
+
+      release.countDown();
+
+      await()
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted(
+              () ->
+                  JvmExecutorMetricsAssertions.create(
+                          testing, INSTRUMENTATION_NAME, "cancel-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+                      .withCompletedTasks(1)
+                      .assertExecutorEmitsMetrics());
+    } finally {
+      release.countDown();
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
+  }
+
+  @Test
+  void doesNotCountTaskRemovedBeforeProcessing() throws Exception {
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            MILLISECONDS,
+            new ArrayBlockingQueue<>(1),
+            new NamedThreadFactory("remove-pool"));
+    CountDownLatch started = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+
+    try {
+      Future<?> running =
+          executor.submit(
+              () -> {
+                started.countDown();
+                awaitLatch(release);
+              });
+
+      assertThat(started.await(10, SECONDS)).isTrue();
+
+      Future<?> removed = executor.submit(() -> {});
+      assertThat(executor.remove((Runnable) removed)).isTrue();
+
+      release.countDown();
+      running.get(10, SECONDS);
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "remove-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withCompletedTasks(1)
+          .assertExecutorEmitsMetrics();
+    } finally {
+      release.countDown();
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
   }
 
   @Test
@@ -177,7 +295,7 @@ class ThreadPoolExecutorMetricsTest {
   }
 
   @Test
-  void doesNotExportEffectivelyUnboundedMaximumThreadCount() throws Exception {
+  void doesNotExportEffectivelyUnboundedThreadLimit() throws Exception {
     ThreadPoolExecutor executor =
         new ThreadPoolExecutor(
             0,
@@ -202,7 +320,7 @@ class ThreadPoolExecutorMetricsTest {
           .withActiveThreads(1)
           .assertExecutorEmitsMetrics();
       assertNoExecutorMetric(
-          testing, INSTRUMENTATION_NAME, "jvm.executor.thread.max", "cached-pool-*");
+          testing, INSTRUMENTATION_NAME, "jvm.executor.thread.limit", "cached-pool-*");
     } finally {
       release.countDown();
       executor.shutdown();
@@ -335,7 +453,7 @@ class ThreadPoolExecutorMetricsTest {
     executor.submit(() -> {}).get(10, SECONDS);
     JvmExecutorMetricsAssertions.create(
             testing, INSTRUMENTATION_NAME, "collected-pool-*", THREAD_POOL_EXECUTOR_TYPE)
-        .withMaxThreads(1)
+        .withThreadLimit(1)
         .assertExecutorEmitsMetrics();
 
     await()
@@ -495,7 +613,7 @@ class ThreadPoolExecutorMetricsTest {
               testing, INSTRUMENTATION_NAME, "shared-pool-*", THREAD_POOL_EXECUTOR_TYPE)
           .withActiveThreads(0)
           .withIdleThreads(2)
-          .withMaxThreads(2)
+          .withThreadLimit(2)
           .withCoreThreads(2)
           .withQueueSize(0)
           .assertExecutorEmitsMetrics();

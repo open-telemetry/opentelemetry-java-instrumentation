@@ -72,7 +72,7 @@ public final class JdkExecutorMetrics {
       LongAdder rejectedTaskCount) {
     ObservableLongMeasurement threadCount = metrics.threadCount();
     ObservableLongMeasurement coreThreads = metrics.coreThreads();
-    ObservableLongMeasurement maxThreads = metrics.maxThreads();
+    ObservableLongMeasurement threadLimit = metrics.threadLimit();
     ObservableLongMeasurement queueSize = metrics.queueSize();
     ObservableLongMeasurement queueCapacity = metrics.queueCapacity();
     ObservableLongMeasurement completedTasks = metrics.completedTasks();
@@ -97,7 +97,7 @@ public final class JdkExecutorMetrics {
               coreThreads.record(threadPoolExecutor.getCorePoolSize(), metrics.getAttributes());
               int maximumPoolSize = threadPoolExecutor.getMaximumPoolSize();
               if (maximumPoolSize < Integer.MAX_VALUE) {
-                maxThreads.record(maximumPoolSize, metrics.getAttributes());
+                threadLimit.record(maximumPoolSize, metrics.getAttributes());
               }
               queueSize.record(threadPoolExecutor.getQueue().size(), metrics.getAttributes());
               if (queueCapacityValue < Integer.MAX_VALUE) {
@@ -112,7 +112,7 @@ public final class JdkExecutorMetrics {
             },
             threadCount,
             coreThreads,
-            maxThreads,
+            threadLimit,
             queueSize,
             queueCapacity,
             completedTasks,

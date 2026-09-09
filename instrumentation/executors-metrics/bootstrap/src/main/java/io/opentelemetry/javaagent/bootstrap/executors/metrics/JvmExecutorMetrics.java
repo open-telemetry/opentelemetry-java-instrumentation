@@ -81,9 +81,9 @@ final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  ObservableLongMeasurement maxThreads() {
+  ObservableLongMeasurement threadLimit() {
     return meter
-        .upDownCounterBuilder("jvm.executor.thread.max")
+        .upDownCounterBuilder("jvm.executor.thread.limit")
         .setUnit("{thread}")
         .setDescription("The maximum number of threads allowed for the executor.")
         .buildObserver();

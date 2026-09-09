@@ -39,7 +39,7 @@ public class JvmExecutorMetricsAssertions {
   private Long expectedActiveThreads;
   private Long expectedIdleThreads;
   private Long expectedCoreThreads;
-  private Long expectedMaxThreads;
+  private Long expectedThreadLimit;
   private Long expectedQueueSize;
   private Long expectedQueueCapacity;
   private Long expectedCompletedTasks;
@@ -159,8 +159,8 @@ public class JvmExecutorMetricsAssertions {
   }
 
   @CanIgnoreReturnValue
-  public JvmExecutorMetricsAssertions withMaxThreads(long value) {
-    expectedMaxThreads = value;
+  public JvmExecutorMetricsAssertions withThreadLimit(long value) {
+    expectedThreadLimit = value;
     return this;
   }
 
@@ -192,7 +192,7 @@ public class JvmExecutorMetricsAssertions {
     if (expectedActiveThreads == null
         && expectedIdleThreads == null
         && expectedCoreThreads == null
-        && expectedMaxThreads == null
+        && expectedThreadLimit == null
         && expectedQueueSize == null
         && expectedQueueCapacity == null
         && expectedCompletedTasks == null
@@ -206,8 +206,8 @@ public class JvmExecutorMetricsAssertions {
     if (expectedCoreThreads != null) {
       verifyCoreThreads(expectedCoreThreads);
     }
-    if (expectedMaxThreads != null) {
-      verifyMaxThreads(expectedMaxThreads);
+    if (expectedThreadLimit != null) {
+      verifyThreadLimit(expectedThreadLimit);
     }
     if (expectedQueueSize != null) {
       verifyQueueSize(expectedQueueSize);
@@ -271,10 +271,10 @@ public class JvmExecutorMetricsAssertions {
                         expectedValue)));
   }
 
-  private void verifyMaxThreads(long expectedValue) {
+  private void verifyThreadLimit(long expectedValue) {
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "jvm.executor.thread.max",
+        "jvm.executor.thread.limit",
         metrics ->
             metrics.anySatisfy(
                 metric ->
