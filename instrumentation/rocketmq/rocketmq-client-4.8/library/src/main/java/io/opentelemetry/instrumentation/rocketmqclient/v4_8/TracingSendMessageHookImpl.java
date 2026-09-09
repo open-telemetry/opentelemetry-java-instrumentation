@@ -82,6 +82,10 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
           if (messageCreateInstrumenter.shouldStart(parentContext, request)) {
             creationContext = messageCreateInstrumenter.start(parentContext, request);
             messageCreateInstrumenter.end(creationContext, request, null, null);
+            propagator.inject(
+                creationContext,
+                message,
+                (carrier, key, value) -> carrier.getProperties().put(key, value));
           }
         }
         creationContexts.add(creationContext);
