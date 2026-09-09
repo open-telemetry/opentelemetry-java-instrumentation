@@ -84,12 +84,9 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
           SendMessageContext request =
               new MessageCreateContext(message, RocketMqNamespaceUtil.getNamespace(context));
           if (messageCreateInstrumenter.shouldStart(parentContext, request)) {
+            // starting the instrumenter injects the creation context into the message
             creationContext = messageCreateInstrumenter.start(parentContext, request);
             messageCreateInstrumenter.end(creationContext, request, null, null);
-            propagator.inject(
-                creationContext,
-                message,
-                (carrier, key, value) -> carrier.getProperties().put(key, value));
             hasCreationContext = Span.fromContext(creationContext).getSpanContext().isValid();
           }
         }
