@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
@@ -49,27 +50,40 @@ class KafkaUtilTest {
   }
 
   @Test
-  void pendingClusterId_stopsRetryingAfterBudget() {
-    // A pending entry re-reads Metadata on each span. Metadata.fetch() synchronizes on the instance
-    // shared with the Kafka network thread, so the budget must run out on a client whose broker
-    // never reports an id; otherwise every span contends on that lock forever.
+  void pendingClusterId_throttlesMetadataReads() {
+    // Metadata.fetch() locks the instance shared with the Kafka network thread, so only one span
+    // per interval may read it; the spans queued behind it must be turned away.
     KafkaClusterId pending = KafkaClusterId.of(new Metadata(0, Long.MAX_VALUE, false));
 
-    int attempts = 0;
-    while (!pending.pendingAttemptsExhausted()) {
-      attempts++;
-      assertThat(attempts).describedAs("retry budget is unbounded").isLessThan(1000);
+    assertThat(pending.shouldReadMetadataNow()).isTrue();
+    for (int i = 0; i < 100; i++) {
+      assertThat(pending.shouldReadMetadataNow()).isFalse();
     }
-    assertThat(attempts).isPositive();
-    // Stays exhausted, so the caller cannot be talked back into retrying.
-    assertThat(pending.pendingAttemptsExhausted()).isTrue();
   }
 
   @Test
-  void resolvedAndUnavailableClusterId_neverReportExhaustion() {
-    // Only the pending state has a budget; these two are terminal and must not claim exhaustion.
-    assertThat(KafkaClusterId.resolved("test-cluster").pendingAttemptsExhausted()).isFalse();
-    assertThat(KafkaClusterId.UNAVAILABLE.pendingAttemptsExhausted()).isFalse();
+  void pendingClusterId_neverBecomesTerminal() throws InterruptedException {
+    // A burst of concurrent sends at startup asks far more often than any fixed attempt budget
+    // would allow, and each producer span asks twice (at span start and again at span end). None of
+    // that may latch the entry closed, or a client whose broker is merely slow would lose the
+    // attribute for its whole lifetime.
+    KafkaClusterId pending = KafkaClusterId.of(new Metadata(0, Long.MAX_VALUE, false));
+    for (int i = 0; i < 1000; i++) {
+      pending.shouldReadMetadataNow();
+    }
+
+    Thread.sleep(NANOSECONDS.toMillis(KafkaClusterId.RETRY_INTERVAL_NANOS) + 50);
+
+    assertThat(pending.shouldReadMetadataNow())
+        .describedAs("pending entry stopped reading metadata permanently")
+        .isTrue();
+  }
+
+  @Test
+  void resolvedAndUnavailableClusterId_neverReadMetadata() {
+    // Terminal states hold no Metadata reference, so they must never ask to read one.
+    assertThat(KafkaClusterId.resolved("test-cluster").shouldReadMetadataNow()).isFalse();
+    assertThat(KafkaClusterId.UNAVAILABLE.shouldReadMetadataNow()).isFalse();
   }
 
   @Test
