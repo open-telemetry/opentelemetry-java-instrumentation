@@ -47,10 +47,20 @@ class CouchbaseSpanNameTest {
         CouchbaseServerTarget.direct(
             DbServerTarget.builder(11210).addEndpoint("node.example", 11211).build()));
     spanName.captureAttribute("db.namespace", "bucket");
-    spanName.captureAttribute("db.collection.name", "collection");
+    spanName.captureAttribute("couchbase.collection.name", "collection");
     spanName.captureAttribute("db.operation.name", "upsert");
 
     assertThat(spanName.spanName()).isEqualTo("upsert collection");
+  }
+
+  @Test
+  void statementDoesNotBecomeQuerySummary() {
+    CouchbaseSpanName spanName = new CouchbaseSpanName("query");
+    spanName.captureAttribute("db.statement", "SELECT * FROM bucket WHERE id = 123");
+    spanName.captureAttribute("db.namespace", "bucket");
+    spanName.captureServerTarget(null);
+
+    assertThat(spanName.spanName()).isEqualTo("query bucket");
   }
 
   @Test

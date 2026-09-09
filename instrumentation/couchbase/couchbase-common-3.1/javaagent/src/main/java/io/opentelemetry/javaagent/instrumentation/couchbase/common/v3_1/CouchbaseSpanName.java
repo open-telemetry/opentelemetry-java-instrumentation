@@ -28,7 +28,9 @@ public class CouchbaseSpanName {
   public void captureAttribute(String key, @Nullable String value) {
     if (DB_QUERY_SUMMARY.getKey().equals(key)) {
       querySummary = value;
-    } else if (DB_COLLECTION_NAME.getKey().equals(key) || "db.couchbase.collection".equals(key)) {
+    } else if (DB_COLLECTION_NAME.getKey().equals(key)
+        || "db.couchbase.collection".equals(key)
+        || "couchbase.collection.name".equals(key)) {
       collection = value;
     } else if (DB_NAMESPACE.getKey().equals(key) || "db.name".equals(key)) {
       namespace = value;
@@ -36,8 +38,6 @@ public class CouchbaseSpanName {
       if (value != null) {
         operation = value;
       }
-    } else if ("db.statement".equals(key)) {
-      querySummary = value;
     }
   }
 
