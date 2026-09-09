@@ -41,8 +41,8 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", true)
-    systemProperty("otel.instrumentation.messaging.experimental.headers.included", "Test-Message-*")
-    systemProperty("otel.instrumentation.messaging.experimental.headers.excluded", "*-Excluded-Header")
+    systemProperty("otel.instrumentation.common.messaging.experimental.headers.included", "Test-Message-*")
+    systemProperty("otel.instrumentation.common.messaging.experimental.headers.excluded", "*-Excluded-Header")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 

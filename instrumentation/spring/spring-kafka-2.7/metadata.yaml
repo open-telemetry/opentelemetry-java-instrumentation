@@ -4,7 +4,7 @@ library_link: https://spring.io/projects/spring-kafka
 semantic_conventions:
   - MESSAGING_SPANS
 configurations:
-  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+  - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: >
       Enables experimental receive telemetry, which will cause consumers to start a new trace, with

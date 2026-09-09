@@ -25,12 +25,12 @@ import javax.annotation.Nullable;
  * predecessor, so that precedence and deprecation warnings are uniform across instrumentations.
  *
  * <p>The property names are derived from the instrumentation and selector names. For {@code
- * ("messaging", "headers")}, experimental resolution reads the {@code headers/development} node and
- * {@code otel.instrumentation.messaging.experimental.headers.included|excluded}. Stable resolution
- * reads the {@code headers} node and {@code
- * otel.instrumentation.messaging.headers.included|excluded}. Both modes fall back to the deprecated
- * experimental {@code capture_headers/development} node and {@code
- * otel.instrumentation.messaging.experimental.capture-headers} flat property.
+ * ("common.messaging", "headers")}, experimental resolution reads the {@code headers/development}
+ * node and {@code otel.instrumentation.common.messaging.experimental.headers.included|excluded}.
+ * Stable resolution reads the {@code headers} node and {@code
+ * otel.instrumentation.common.messaging.headers.included|excluded}. Both modes fall back to the
+ * deprecated experimental {@code capture_headers/development} node and {@code
+ * otel.instrumentation.common.messaging.experimental.capture-headers} flat property.
  *
  * <p>Flat system properties are read directly only when {@code systemPropertyFallback} is {@code
  * true}; otherwise the flat names describe the equivalent form of the supplied declarative
