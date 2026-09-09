@@ -154,7 +154,10 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
                   resource.get("attributes").forEach(parseValidationAdvice);
                 } else if (metric != null) {
                   parseValidationAdvice.accept(metric);
-                } else if (instrumentationScope == null) {
+                } else if (instrumentationScope != null) {
+                  parseValidationAdvice.accept(instrumentationScope);
+                  instrumentationScope.get("attributes").forEach(parseValidationAdvice);
+                } else {
                   throw new IllegalStateException("unexpected weaver validation result type");
                 }
               });
