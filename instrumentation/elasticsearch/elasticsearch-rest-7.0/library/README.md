@@ -4,10 +4,11 @@ Provides OpenTelemetry instrumentation for the [Elasticsearch REST Client](https
 enabling database client spans and metrics.
 
 > **Deprecated:** This library instrumentation may be removed in the next
-> minor release. The recommended replacement is the [Elasticsearch Java API
-> Client's native OpenTelemetry support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
-> available in 7.17.20+ on the 7.x line and 8.10+. The javaagent remains
-> supported and is separate from this library deprecation.
+> minor release. Elasticsearch Java API Client users should use its
+> [native OpenTelemetry support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
+> available in 7.17.20+ on the 7.x line and 8.10+. Applications that use the
+> REST Client directly have no drop-in library replacement; they can use the
+> javaagent or migrate to the Java API Client.
 
 ## Quickstart
 
