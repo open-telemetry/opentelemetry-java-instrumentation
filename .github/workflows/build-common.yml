@@ -154,7 +154,6 @@ jobs:
                -r instrumentation \
             | grep -v testing/build.gradle.kts \
             | grep -v com.azure:azure-core-tracing-opentelemetry \
-            | grep -v com.couchbase.client:tracing-opentelemetry \
             > dependencies.txt
 
           if [ -s dependencies.txt ]; then
