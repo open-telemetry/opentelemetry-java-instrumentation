@@ -1,7 +1,7 @@
 # Settings for the elasticsearch instrumentation
 
-The Elasticsearch REST library artifacts are deprecated and may be removed in
-the next minor release. Elasticsearch Java API Client users should use its
+The Elasticsearch REST library artifacts are deprecated and will be removed in
+3.0. Elasticsearch Java API Client users should use its
 [native OpenTelemetry support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
 available in 7.17.20+ on the 7.x line and 8.10+. Applications that use the REST
 Client directly have no drop-in library replacement; they can use the

@@ -19,10 +19,9 @@ import org.elasticsearch.client.RestClient;
  *     href="https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html">native
  *     OpenTelemetry support</a>, available in 7.17.20+ on the 7.x line and 8.10+. Applications that
  *     use {@code RestClient} directly have no drop-in library replacement; they can use the
- *     OpenTelemetry Java agent or migrate to the Java API Client. May be removed in the next minor
- *     release.
+ *     OpenTelemetry Java agent or migrate to the Java API Client. Will be removed in 3.0.
  */
-@Deprecated // may be removed in the next minor release
+@Deprecated // to be removed in 3.0
 @SuppressWarnings("deprecation")
 public final class ElasticsearchRest7Telemetry {
   private final Instrumenter<ElasticsearchRestRequest, Response> instrumenter;
