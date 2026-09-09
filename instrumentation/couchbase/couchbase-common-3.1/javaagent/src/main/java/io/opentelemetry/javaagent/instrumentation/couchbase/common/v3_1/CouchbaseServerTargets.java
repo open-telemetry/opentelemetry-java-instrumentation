@@ -67,25 +67,24 @@ public class CouchbaseServerTargets {
 
   @Nullable
   static CouchbaseServerTarget target(Set<SeedNode> seedNodes, boolean tlsEnabled) {
-    DbServerTargetBuilder target =
-        DbServerTarget.builder(
-                CouchbaseServerTarget.defaultPort(tlsEnabled ? "couchbases" : "couchbase"))
-            .setSorted(true);
+    int defaultPort = CouchbaseServerTarget.defaultPort(tlsEnabled ? "couchbases" : "couchbase");
+    DbServerTargetBuilder target = DbServerTarget.builder(defaultPort).setSorted(true);
     Map<String, Set<Integer>> portsByAddress = new HashMap<>();
     for (SeedNode seedNode : seedNodes) {
       if (seedNode == null) {
-        addSeed(target, portsByAddress, null, 0);
+        addSeed(target, portsByAddress, null, 0, defaultPort);
       } else {
         Optional<Integer> kvPort = seedNode.kvPort();
         Optional<Integer> clusterManagerPort = seedNode.clusterManagerPort();
         if (!kvPort.isPresent() && !clusterManagerPort.isPresent()) {
-          addSeed(target, portsByAddress, seedNode.address(), 0);
+          addSeed(target, portsByAddress, seedNode.address(), 0, defaultPort);
         } else {
           if (kvPort.isPresent()) {
-            addSeed(target, portsByAddress, seedNode.address(), kvPort.get());
+            addSeed(target, portsByAddress, seedNode.address(), kvPort.get(), defaultPort);
           }
           if (clusterManagerPort.isPresent() && !clusterManagerPort.equals(kvPort)) {
-            addSeed(target, portsByAddress, seedNode.address(), clusterManagerPort.get());
+            addSeed(
+                target, portsByAddress, seedNode.address(), clusterManagerPort.get(), defaultPort);
           }
         }
       }
@@ -97,13 +96,14 @@ public class CouchbaseServerTargets {
       DbServerTargetBuilder target,
       Map<String, Set<Integer>> portsByAddress,
       @Nullable String address,
-      int port) {
+      int port,
+      int defaultPort) {
     if (address == null) {
       target.addEndpoint(null, port > 0 ? port : -1);
       return;
     }
     Set<Integer> ports = portsByAddress.computeIfAbsent(address, ignored -> new HashSet<>());
-    if (ports.add(port)) {
+    if (ports.add(port > 0 ? port : defaultPort)) {
       target.addEndpoint(address, port > 0 ? port : -1);
     }
   }

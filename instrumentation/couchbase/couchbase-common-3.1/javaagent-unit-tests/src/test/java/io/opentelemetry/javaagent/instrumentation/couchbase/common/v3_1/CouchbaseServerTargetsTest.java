@@ -97,6 +97,20 @@ class CouchbaseServerTargetsTest {
   }
 
   @Test
+  void missingAndExplicitDefaultPortsAreTheSameEndpoint() {
+    Set<SeedNode> seedNodes =
+        new LinkedHashSet<>(
+            asList(
+                SeedNode.create("node.example", Optional.empty(), Optional.empty()),
+                SeedNode.create("node.example", Optional.of(11210), Optional.empty())));
+
+    CouchbaseServerTarget target = CouchbaseServerTargets.target(seedNodes, false);
+
+    assertThat(target.getAddress()).isEqualTo("node.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void nonDefaultSixthDirectEndpointControlsPortRenderingBeforeLimit() {
     Set<SeedNode> seedNodes =
         new LinkedHashSet<>(
