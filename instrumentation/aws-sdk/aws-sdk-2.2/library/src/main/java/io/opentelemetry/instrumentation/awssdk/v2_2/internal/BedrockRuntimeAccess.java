@@ -73,6 +73,11 @@ final class BedrockRuntimeAccess {
     return enabled ? BedrockRuntimeImpl.getOperationName(executionAttributes) : null;
   }
 
+  @NoMuzzle
+  static boolean isRequestStreaming(ExecutionAttributes executionAttributes) {
+    return enabled && BedrockRuntimeImpl.isRequestStreaming(executionAttributes);
+  }
+
   @Nullable
   @NoMuzzle
   static Long getMaxTokens(ExecutionAttributes executionAttributes) {

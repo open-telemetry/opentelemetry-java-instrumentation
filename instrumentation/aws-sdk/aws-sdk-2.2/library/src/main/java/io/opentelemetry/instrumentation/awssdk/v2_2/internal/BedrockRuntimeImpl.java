@@ -202,6 +202,12 @@ public final class BedrockRuntimeImpl {
     return null;
   }
 
+  static boolean isRequestStreaming(ExecutionAttributes executionAttributes) {
+    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
+    return request instanceof ConverseStreamRequest
+        || request instanceof InvokeModelWithResponseStreamRequest;
+  }
+
   @Nullable
   private static String getOperationNameInvokeModel(@Nullable String modelId) {
     if (modelId == null) {

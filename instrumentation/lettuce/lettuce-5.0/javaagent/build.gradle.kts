@@ -28,11 +28,88 @@ dependencies {
   latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see lettuce-5.1 module
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("v3PreviewLettuce51Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        val lettuceVersion = baseVersion("5.1.0.RELEASE").orLatest("5.+")
+        implementation("com.google.guava:guava")
+        implementation("io.lettuce:lettuce-core:$lettuceVersion")
+        implementation("org.testcontainers:testcontainers")
+      }
+
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+        }
+      }
+    }
+
+    register<JvmTestSuite>("v3PreviewLettuce60Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        val lettuceVersion = baseVersion("6.0.0.RELEASE").orLatest("6.4.+")
+        implementation("com.google.guava:guava")
+        implementation("io.lettuce:lettuce-core:$lettuceVersion")
+        implementation("org.testcontainers:testcontainers")
+      }
+
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+        }
+      }
+    }
+
+    register<JvmTestSuite>("v3PreviewLettuce65Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        val lettuceVersion = baseVersion("6.5.0.RELEASE").orLatest()
+        implementation("com.google.guava:guava")
+        implementation("io.lettuce:lettuce-core:$lettuceVersion")
+        implementation("org.testcontainers:testcontainers")
+      }
+
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  if (otelProps.denyUnsafe) {
+    // Lettuce 5.1.0 pulls in Reactor 3.2.0, whose RingBuffer accesses sun.misc.Unsafe directly.
+    named("v3PreviewLettuce51Test", Test::class) {
+      enabled = false
+    }
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -83,6 +160,7 @@ tasks {
 
   check {
     dependsOn(
+      testing.suites,
       testConnectionTelemetryEnabled,
       testConnectionTelemetryEnabledStableSemconv,
       testStableSemconv,

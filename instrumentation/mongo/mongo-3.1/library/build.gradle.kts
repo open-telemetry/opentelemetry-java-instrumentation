@@ -6,6 +6,8 @@ plugins {
 dependencies {
   library("org.mongodb:mongo-java-driver:3.1.0")
 
+  implementation(project(":instrumentation-api-incubator"))
+
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 

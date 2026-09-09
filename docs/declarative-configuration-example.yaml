@@ -55,6 +55,13 @@ instrumentation/development:
       # Flush timeout in milliseconds.
       flush_timeout: 10000
     aws_sdk:
+      batch_send:
+        message_creation_spans:
+          # Determines whether to create a producer span for each eligible message in an SQS batch
+          # send when stable messaging semantic conventions are enabled. Overrides
+          # `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled`.
+          enabled: true
+
       # Enables the experimental span attributes `aws.agent`, `aws.queue.name`,
       # `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
       experimental_span_attributes/development: false
@@ -152,6 +159,13 @@ instrumentation/development:
         # list of attribute keys.
         resource_attributes: []
       messaging:
+        batch_send:
+          message_creation_spans:
+            # Provides the default for whether to create a producer span for each eligible message
+            # in a batch send when stable messaging semantic conventions are enabled. An
+            # instrumentation-specific setting takes precedence.
+            enabled: true
+
         # Deprecated: use `otel.instrumentation.messaging.experimental.headers.included` instead. A
         # comma-separated list of header names to capture as span attributes. It does not support
         # glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
@@ -199,8 +213,10 @@ instrumentation/development:
       # Enables experimental span attributes emitted from the underlying Couchbase library.
       experimental_span_attributes/development: false
     elasticsearch:
-      # Enable the capture of search query bodies. It is important to note that Elasticsearch
-      # queries may contain personal or sensitive information.
+      # Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this
+      # to capture or omit search query bodies. Under v3-preview and in 3.0, the setting is ignored
+      # and search query bodies are always captured. Sanitization remains separately configurable
+      # with otel.instrumentation.elasticsearch.query-sanitization.enabled.
       capture_search_query: false
 
       # Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
@@ -210,6 +226,10 @@ instrumentation/development:
       # `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version`
       # experimental span attributes.
       experimental_span_attributes/development: false
+      query_sanitization:
+        # Enables sanitization of the captured search query bodies. Takes precedence over
+        # otel.instrumentation.common.db.query-sanitization.enabled.
+        enabled: true
     executors:
       # List of Executor subclasses to be instrumented.
       include: []
@@ -680,10 +700,15 @@ instrumentation/development:
         # Enable SSL telemetry.
         enabled: false
     opensearch:
-      # Deprecated and will be removed in 3.0, when sanitized search query bodies are always
-      # captured. There is no replacement. Until then, set this to false to disable capture. Search
-      # queries may contain personal or sensitive information.
+      # Deprecated and will be removed in 3.0, when search query bodies are always captured. There
+      # is no replacement. Until then, set this to false to disable capture. Search queries may
+      # contain personal or sensitive information.
       capture_search_query: true
+      query_sanitization:
+        # Enables sanitization of captured search query bodies. Takes precedence over
+        # otel.instrumentation.common.db.query-sanitization.enabled. When disabled, bodies are
+        # captured verbatim and may contain personal or sensitive information.
+        enabled: true
     opentelemetry_extension_annotations:
       # All methods to be excluded from auto-instrumentation by annotation-based advices.
       exclude_methods: ''

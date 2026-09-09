@@ -146,13 +146,9 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                                 ? "update " + COLLECTION_NAME
                                 : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()));
+                        .hasParent(trace.getSpan(0))));
+
+    assertConnectMessagingMetrics(testTopicName);
   }
 
   @Test

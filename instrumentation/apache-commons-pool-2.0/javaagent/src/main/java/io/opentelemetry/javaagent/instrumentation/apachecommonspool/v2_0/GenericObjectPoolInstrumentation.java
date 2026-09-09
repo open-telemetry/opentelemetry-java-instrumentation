@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecommonspool.v2_0;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachecommonspool.v2_0.CommonsPoolSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -12,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.javaagent.bootstrap.apachecommonspool.CommonsPoolMetricsSuppression;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -53,6 +55,10 @@ class GenericObjectPoolInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This BaseGenericObjectPool<?> pool,
         @Advice.Argument(1) BaseObjectPoolConfig config) {
+      if (CommonsPoolMetricsSuppression.isSuppressed(currentContext())) {
+        return;
+      }
+
       String poolName = config.getJmxNamePrefix();
       if (poolName == null || poolName.isEmpty()) {
         poolName = "unknown";

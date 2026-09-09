@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.recordTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -103,6 +106,10 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
         for (ConsumerRecord<?, ?> record : records) {
           KafkaConsumerContextUtil.set(record, consumerContext);
+          // The receive span covers the whole batch, so record only the per-message counter here.
+          if (receiveOperationStarted && emitStableMessagingSemconv()) {
+            recordTelemetry().add(record, RECEIVE, CONSUMED_MESSAGES);
+          }
         }
       } finally {
         KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);

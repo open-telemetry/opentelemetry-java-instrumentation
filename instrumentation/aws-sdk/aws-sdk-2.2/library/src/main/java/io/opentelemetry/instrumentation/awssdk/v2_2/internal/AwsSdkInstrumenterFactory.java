@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -24,10 +25,13 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
@@ -52,6 +56,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
@@ -64,6 +69,7 @@ public final class AwsSdkInstrumenterFactory {
 
   // messaging.operation.name values, named after the SQS API operations
   private static final String SEND_OPERATION_NAME = "send";
+  private static final String CREATE_OPERATION_NAME = "create";
   private static final String RECEIVE_OPERATION_NAME = "receive";
   private static final String PROCESS_OPERATION_NAME = "process";
   private static final String DELETE_OPERATION_NAME = "delete";
@@ -306,14 +312,46 @@ public final class AwsSdkInstrumenterFactory {
     return createInstrumenter(
         openTelemetry,
         MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME),
-        SpanKindExtractor.alwaysProducer(),
+        request -> {
+          SdkRequest sdkRequest =
+              request.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
+          return emitStableMessagingSemconv()
+                  && SqsAccess.isBatchRequest(sdkRequest)
+                  && !TracingExecutionInterceptor.getBatchMessageContexts(request).isEmpty()
+              ? SpanKind.CLIENT
+              : SpanKind.PRODUCER;
+        },
         attributesExtractorsWithLateServerAttributes(),
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
           setMessagingSendExceptionEventExtractor(builder);
+          if (emitStableMessagingSemconv()) {
+            builder.addSpanLinksExtractor(
+                (spanLinks, parentContext, request) -> {
+                  for (Context creationContext :
+                      TracingExecutionInterceptor.getBatchMessageContexts(request)) {
+                    SpanContext spanContext = Span.fromContext(creationContext).getSpanContext();
+                    if (spanContext.isValid()) {
+                      spanLinks.addLink(spanContext);
+                    }
+                  }
+                });
+          }
         },
         true);
+  }
+
+  public Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter() {
+    MessagingOperationType operationType = MessagingOperationType.CREATE;
+    SqsCreateRequestAttributesGetter getter = new SqsCreateRequestAttributesGetter();
+    return Instrumenter.<SqsCreateRequest, Void>builder(
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            MessagingSpanNameExtractor.create(getter, operationType, CREATE_OPERATION_NAME))
+        .addAttributesExtractor(
+            messagingAttributesExtractor(getter, operationType, CREATE_OPERATION_NAME))
+        .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public Instrumenter<ExecutionAttributes, Response> settleInstrumenter() {
@@ -344,6 +382,26 @@ public final class AwsSdkInstrumenterFactory {
         builder -> {
           builder
               .addAttributesExtractor(new DynamoDbAttributesExtractor())
+              .addOperationMetrics(DbClientMetrics.get());
+          setDbClientExceptionEventExtractor(builder);
+        },
+        true);
+  }
+
+  public Instrumenter<ExecutionAttributes, Response> rdsDataInstrumenter() {
+    RdsDataSqlAttributesGetter getter = new RdsDataSqlAttributesGetter();
+    SpanNameExtractor<ExecutionAttributes> spanNameExtractor =
+        emitStableDatabaseSemconv()
+            ? DbClientSpanNameExtractor.create(getter)
+            : AwsSdkInstrumenterFactory::spanName;
+    return createInstrumenter(
+        openTelemetry,
+        spanNameExtractor,
+        SpanKindExtractor.alwaysClient(),
+        attributesExtractors(),
+        builder -> {
+          builder
+              .addAttributesExtractor(SqlClientAttributesExtractor.create(getter))
               .addOperationMetrics(DbClientMetrics.get());
           setDbClientExceptionEventExtractor(builder);
         },

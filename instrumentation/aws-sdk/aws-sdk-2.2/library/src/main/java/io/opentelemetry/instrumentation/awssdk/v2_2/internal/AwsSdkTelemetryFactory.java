@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
+import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetryBuilder;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -39,28 +40,34 @@ public final class AwsSdkTelemetryFactory {
     DeclarativeConfigProperties awsSdk =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk");
 
-    return AwsSdkTelemetry.builder(openTelemetry)
-        .setHeaders(
-            MessagingConfig.getHeaders(openTelemetry, systemProperties == SystemProperties.ENABLED))
-        .setCaptureExperimentalSpanAttributes(
-            awsSdk.getBoolean(
-                "experimental_span_attributes/development",
-                systemProperties.getBoolean(
-                    "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
-        .setMessagingReceiveTelemetryEnabled(
-            messaging
-                .get("receive_telemetry/development")
-                .getBoolean(
-                    "enabled",
+    AwsSdkTelemetryBuilder builder =
+        AwsSdkTelemetry.builder(openTelemetry)
+            .setHeaders(
+                MessagingConfig.getHeaders(
+                    openTelemetry, systemProperties == SystemProperties.ENABLED))
+            .setCaptureExperimentalSpanAttributes(
+                awsSdk.getBoolean(
+                    "experimental_span_attributes/development",
                     systemProperties.getBoolean(
-                        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
-                        false)))
-        .setUseConfiguredPropagatorForMessaging(
-            awsSdk.getBoolean(
-                "use_propagator_for_messaging/development",
-                systemProperties.getBoolean(
-                    "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging",
-                    false)))
+                        "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
+            .setMessagingReceiveTelemetryEnabled(
+                messaging
+                    .get("receive_telemetry/development")
+                    .getBoolean(
+                        "enabled",
+                        systemProperties.getBoolean(
+                            "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+                            false)))
+            .setUseConfiguredPropagatorForMessaging(
+                awsSdk.getBoolean(
+                    "use_propagator_for_messaging/development",
+                    systemProperties.getBoolean(
+                        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging",
+                        false)));
+    return builder
+        .setBatchSendMessageCreationSpansEnabled(
+            MessagingConfig.isBatchSendMessageCreationSpansEnabled(
+                openTelemetry, "aws_sdk", systemProperties == SystemProperties.ENABLED))
         .setRecordIndividualHttpError(
             awsSdk.getBoolean(
                 "record_individual_http_error/development",

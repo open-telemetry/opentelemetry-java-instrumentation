@@ -1,6 +1,6 @@
 plugins {
   id("java")
-  id("com.diffplug.spotless") version "8.10.0"
+  id("com.diffplug.spotless") version "8.10.2"
 }
 
 spotless {
@@ -26,7 +26,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:okhttp:5.5.0")
   testImplementation("org.jooq:joox:2.0.1")
   testImplementation("com.jayway.jsonpath:json-path:3.0.0")
-  testImplementation("org.slf4j:slf4j-simple:2.0.18")
+  testImplementation("org.slf4j:slf4j-simple:2.0.19")
   testImplementation("org.assertj:assertj-core:3.27.7")
 
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")

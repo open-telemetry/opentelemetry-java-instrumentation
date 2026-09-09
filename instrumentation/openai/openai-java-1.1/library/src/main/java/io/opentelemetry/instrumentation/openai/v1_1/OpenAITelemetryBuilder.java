@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.inter
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.openai.models.chat.completions.ChatCompletion;
-import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.OpenTelemetry;
@@ -51,15 +50,15 @@ public final class OpenAITelemetryBuilder {
    */
   public OpenAITelemetry build() {
     ChatAttributesGetter chatAttributesGetter = new ChatAttributesGetter();
-    InstrumenterBuilder<ChatCompletionCreateParams, ChatCompletion> chatBuilder =
-        Instrumenter.<ChatCompletionCreateParams, ChatCompletion>builder(
+    InstrumenterBuilder<ChatCompletionRequest, ChatCompletion> chatBuilder =
+        Instrumenter.<ChatCompletionRequest, ChatCompletion>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(chatAttributesGetter))
             .addAttributesExtractor(GenAiAttributesExtractor.create(chatAttributesGetter))
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(chatBuilder);
-    Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter =
+    Instrumenter<ChatCompletionRequest, ChatCompletion> chatInstrumenter =
         chatBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     EmbeddingAttributesGetter embeddingAttributesGetter = new EmbeddingAttributesGetter();

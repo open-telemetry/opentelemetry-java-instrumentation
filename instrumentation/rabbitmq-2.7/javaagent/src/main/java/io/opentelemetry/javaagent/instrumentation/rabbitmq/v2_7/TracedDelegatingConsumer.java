@@ -25,11 +25,14 @@ public class TracedDelegatingConsumer implements Consumer {
   private final String queue;
   private final Consumer delegate;
   private final Connection connection;
+  private final boolean traceProcess;
 
-  public TracedDelegatingConsumer(String queue, Consumer delegate, Connection connection) {
+  public TracedDelegatingConsumer(
+      String queue, Consumer delegate, Connection connection, boolean traceProcess) {
     this.queue = queue;
     this.delegate = delegate;
     this.connection = connection;
+    this.traceProcess = traceProcess;
   }
 
   @Override
@@ -61,6 +64,11 @@ public class TracedDelegatingConsumer implements Consumer {
   public void handleDelivery(
       String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
       throws IOException {
+    if (!traceProcess) {
+      delegate.handleDelivery(consumerTag, envelope, properties, body);
+      return;
+    }
+
     Context parentContext = Context.current();
     DeliveryRequest request = DeliveryRequest.create(queue, envelope, connection, properties, body);
 

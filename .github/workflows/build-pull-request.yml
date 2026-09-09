@@ -1,19 +1,22 @@
 name: Build pull request
 
-# Optional test variants (openj9, windows) are gated by `test openj9` /
-# `test windows` labels on the PR, read from the event payload. We
+# Optional test variants (openj9, windows, full smoke) are gated by
+# `test openj9`, `test windows`, and `test full smoke` labels on the PR,
+# read from the event payload. We
 # deliberately do NOT subscribe to `pull_request: [labeled]` — see
 # https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18446
 # for the history of why every previous attempt to use that trigger failed.
 #
-# Practical consequence: adding a `test openj9` / `test windows` label
+# Practical consequence: adding a `test openj9`, `test windows`, or
+# `test full smoke` label
 # doesn't retrigger the build. Push another commit or close/reopen the
-# PR to pick it up. `comment-on-test-label.yml` posts a reminder when
-# one of those labels is added.
+# PR to pick it up. `comment-on-test-label.yml` posts a reminder when one
+# of those labels is added. `test openj9` and `test full smoke` also disable
+# reduced app-server selection; `test openj9` enables the OpenJ9 jobs.
 #
-# `test native` is detected automatically from the PR's changed paths
-# (the `resolve-native` job below). The manual `test native` label is
-# still honored as a force-enable.
+# `test native` is detected automatically from the PR's changed paths (the
+# `resolve-native` job below). The manual `test native` label is still
+# honored as a force-enable.
 
 on:
   pull_request:
@@ -96,4 +99,5 @@ jobs:
       skip-native-tests: ${{ !(needs.resolve-native.outputs.run-native-tests == 'true' || contains(github.event.pull_request.labels.*.name, 'test native')) }}
       skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
+      reduced-appserver-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test full smoke') && !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-servlet-images: ${{ needs.resolve-servlet-images.outputs.build-servlet-images != 'true' }}

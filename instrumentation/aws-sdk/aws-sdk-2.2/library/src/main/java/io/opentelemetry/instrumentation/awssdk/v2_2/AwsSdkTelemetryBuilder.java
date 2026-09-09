@@ -23,6 +23,7 @@ public final class AwsSdkTelemetryBuilder {
   private boolean useXrayPropagator = true;
   private boolean messagingReceiveTelemetryEnabled;
   private boolean genaiCaptureMessageContent;
+  private boolean batchSendMessageCreationSpansEnabled = true;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -143,6 +144,23 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Sets whether a producer "Create" span is emitted for each eligible entry in an SQS batch send.
+   * An entry is eligible when it does not already contain a creation context and an enabled
+   * propagation carrier can inject one. User message-attribute capacity applies only to the
+   * configured messaging propagator; the {@code AWSTraceHeader} system attribute does not use those
+   * slots.
+   *
+   * <p>This option only applies when the stable messaging semantic conventions are enabled. It is
+   * enabled by default.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setBatchSendMessageCreationSpansEnabled(
+      boolean batchSendMessageCreationSpansEnabled) {
+    this.batchSendMessageCreationSpansEnabled = batchSendMessageCreationSpansEnabled;
+    return this;
+  }
+
+  /**
    * Set whether Generative AI events include full content of user and assistant messages.
    *
    * <p>Note that full content can have data privacy and size concerns and care should be taken when
@@ -166,6 +184,7 @@ public final class AwsSdkTelemetryBuilder {
         useXrayPropagator,
         recordIndividualHttpError,
         messagingReceiveTelemetryEnabled,
-        genaiCaptureMessageContent);
+        genaiCaptureMessageContent,
+        batchSendMessageCreationSpansEnabled);
   }
 }

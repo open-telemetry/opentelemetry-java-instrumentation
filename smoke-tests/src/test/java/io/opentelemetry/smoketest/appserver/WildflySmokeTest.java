@@ -20,13 +20,13 @@ abstract class WildflySmokeTest extends AppServerTest {
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*started in.*"));
   }
 
-  @AppServer(version = "13.0.0.Final", jdk = "8")
+  @AppServer(version = "13.0.0.Final", jdk = "8", inReducedMatrix = true)
   static class Wildfly13Jdk8 extends WildflySmokeTest {}
 
   @AppServer(version = "13.0.0.Final", jdk = "8-openj9")
   static class Wildfly13Jdk8Openj9 extends WildflySmokeTest {}
 
-  @AppServer(version = "17.0.1.Final", jdk = "8")
+  @AppServer(version = "17.0.1.Final", jdk = "8", inReducedMatrix = true)
   static class Wildfly17Jdk8 extends WildflySmokeTest {}
 
   @AppServer(version = "17.0.1.Final", jdk = "8-openj9")
@@ -50,7 +50,7 @@ abstract class WildflySmokeTest extends AppServerTest {
   @AppServer(version = "17.0.1.Final", jdk = "21-openj9")
   static class Wildfly17Jdk21Openj9 extends WildflySmokeTest {}
 
-  @AppServer(version = "21.0.0.Final", jdk = "8")
+  @AppServer(version = "21.0.0.Final", jdk = "8", inReducedMatrix = true)
   static class Wildfly21Jdk8 extends WildflySmokeTest {}
 
   @AppServer(version = "21.0.0.Final", jdk = "8-openj9")
@@ -74,7 +74,7 @@ abstract class WildflySmokeTest extends AppServerTest {
   @AppServer(version = "21.0.0.Final", jdk = "21-openj9")
   static class Wildfly21Jdk21Openj9 extends WildflySmokeTest {}
 
-  @AppServer(version = "28.0.1.Final", jdk = "11")
+  @AppServer(version = "28.0.1.Final", jdk = "11", inReducedMatrix = true)
   static class Wildfly28Jdk11 extends WildflySmokeTest {}
 
   @AppServer(version = "28.0.1.Final", jdk = "11-openj9")
@@ -92,7 +92,7 @@ abstract class WildflySmokeTest extends AppServerTest {
   @AppServer(version = "28.0.1.Final", jdk = "21-openj9")
   static class Wildfly28Jdk21Openj9 extends WildflySmokeTest {}
 
-  @AppServer(version = "29.0.1.Final", jdk = "11")
+  @AppServer(version = "29.0.1.Final", jdk = "11", inReducedMatrix = true)
   static class Wildfly29Jdk11 extends WildflySmokeTest {}
 
   @AppServer(version = "29.0.1.Final", jdk = "11-openj9")
@@ -110,7 +110,7 @@ abstract class WildflySmokeTest extends AppServerTest {
   @AppServer(version = "29.0.1.Final", jdk = "21-openj9")
   static class Wildfly29Jdk21Openj9 extends WildflySmokeTest {}
 
-  @AppServer(version = "30.0.1.Final", jdk = "11")
+  @AppServer(version = "30.0.1.Final", jdk = "11", inReducedMatrix = true)
   static class Wildfly30Jdk11 extends WildflySmokeTest {}
 
   @AppServer(version = "30.0.1.Final", jdk = "11-openj9")

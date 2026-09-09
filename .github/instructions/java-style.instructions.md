@@ -9,10 +9,9 @@ Follow `docs/contributing/style-guide.md`.
 - **Visibility**: principle of least access. Use the most restrictive modifier
   that still works. Static fields should be `private` unless they are
   constant-like with a `SCREAMING_SNAKE_CASE` name.
-- **`final` on classes**: declare public API classes `final` where possible. Do
-  **not** add `final` in `javaagent/src/main/`, in `.internal` packages, or in
-  test code (paths under `src/test/` or modules whose name starts/ends with
-  `testing` or `tests`).
+- **`final` on classes**: declare
+  [public API classes](../../docs/contributing/style-guide.md#public-api) `final`
+  where possible.
 - **`final` on parameters and local variables**: never declare them `final`.
 - **Null comparisons**: use `value == null` / `value != null`, not
   `null == value` / `null != value`. Applies to Java, Kotlin, and Scala.

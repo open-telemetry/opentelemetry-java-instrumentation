@@ -16,6 +16,8 @@ dependencies {
 
   implementation(project(":instrumentation:apache-commons-pool-2.0:library"))
 
+  bootstrap(project(":instrumentation:apache-commons-pool-2.0:bootstrap"))
+
   testImplementation(project(":instrumentation:apache-commons-pool-2.0:testing"))
 }
 

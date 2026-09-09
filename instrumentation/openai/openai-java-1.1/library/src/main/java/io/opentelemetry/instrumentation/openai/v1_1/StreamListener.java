@@ -9,7 +9,6 @@ import static java.util.stream.Collectors.toList;
 
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionChunk;
-import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.completions.CompletionUsage;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
@@ -22,10 +21,10 @@ import javax.annotation.Nullable;
 final class StreamListener {
 
   private final Context context;
-  private final ChatCompletionCreateParams request;
+  private final ChatCompletionRequest request;
   private final Map<Long, StreamedMessageBuffer> choiceBuffers;
 
-  private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
+  private final Instrumenter<ChatCompletionRequest, ChatCompletion> instrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
   private final boolean newSpan;
@@ -37,8 +36,8 @@ final class StreamListener {
 
   StreamListener(
       Context context,
-      ChatCompletionCreateParams request,
-      Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter,
+      ChatCompletionRequest request,
+      Instrumenter<ChatCompletionRequest, ChatCompletion> instrumenter,
       Logger eventLogger,
       boolean captureMessageContent,
       boolean newSpan) {

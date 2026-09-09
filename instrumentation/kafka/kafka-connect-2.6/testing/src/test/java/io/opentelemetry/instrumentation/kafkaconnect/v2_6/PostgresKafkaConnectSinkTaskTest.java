@@ -178,13 +178,9 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                               : "INSERT " + DATABASE_NAME + "." + DB_TABLE_PERSON)
                       .hasKind(SpanKind.CLIENT)
                       .hasParent(trace.getSpan(0)));
-        },
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()));
+        });
+
+    assertConnectMessagingMetrics(testTopicName);
   }
 
   @Test

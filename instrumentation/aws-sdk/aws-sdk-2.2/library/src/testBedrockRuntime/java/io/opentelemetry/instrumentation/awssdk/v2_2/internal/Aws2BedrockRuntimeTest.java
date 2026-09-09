@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVEN
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_TOKEN_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_INPUT_TOKENS;
@@ -670,6 +671,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
@@ -1369,6 +1371,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 165),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
@@ -1576,6 +1579,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 558),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 58),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
@@ -2207,6 +2211,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 144),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
@@ -2389,6 +2394,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 601),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 145),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));

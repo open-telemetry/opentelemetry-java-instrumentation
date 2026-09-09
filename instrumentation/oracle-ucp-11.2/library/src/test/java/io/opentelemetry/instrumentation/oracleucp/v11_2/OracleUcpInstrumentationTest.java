@@ -46,4 +46,9 @@ class OracleUcpInstrumentationTest extends AbstractOracleUcpInstrumentationTest 
             .getConnectionPool(connectionPool.getConnectionPoolName());
     telemetry.unregisterMetrics(universalConnectionPool);
   }
+
+  @Override
+  protected String expectedPoolName(PoolDataSource connectionPool, boolean explicitPoolName) {
+    return connectionPool.getConnectionPoolName();
+  }
 }

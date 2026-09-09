@@ -185,6 +185,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.http.")
         .allowClass("org.springframework.http.client.reactive.AbstractClientHttpRequest$$Lambda")
         .allowClass("org.springframework.http.client.reactive.ReactorClientHttpConnector$$Lambda")
+        .allowClass("org.springframework.http.client.reactive.ReactorClientHttpResponse")
         .allowClass("org.springframework.http.codec.multipart.FileStorage$TempFileStorage$$Lambda")
         // There are some Mono implementation that get instrumented
         .allowClass("org.springframework.http.server.reactive.");
@@ -283,7 +284,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.h2.store.FileLock")
         .allowClass("org.h2.engine.DatabaseCloser")
         .allowClass("org.h2.engine.OnExitDatabaseCloser")
-        .allowClass("org.h2.server.web.WebServlet");
+        .allowClass("org.h2.server.web.WebServlet")
+        .allowClass("org.h2.command.dml.Update$$Lambda");
 
     builder
         .ignoreClass("com.carrotsearch.hppc.")
