@@ -94,7 +94,7 @@ final class HbaseZookeeperTarget {
     String quorumServers;
     try {
       quorumServers = ZKConfig.getZKQuorumServersString(configuration);
-    } catch (IndexOutOfBoundsException | SecurityException | LinkageError ignored) {
+    } catch (IndexOutOfBoundsException ignored) {
       return null;
     }
 
