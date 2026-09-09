@@ -297,7 +297,7 @@ class TracingSendMessageHookImplTest {
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "span-kind")
-  void usesFinalSpanKindForSuppression(SpanKind parentKind) throws Exception {
+  void usesFinalSpanKindForSuppression(SpanKind parentKind) {
     assumeTrue(emitStableMessagingSemconv());
     MessageBatch batch = batch();
     int id = 1;
