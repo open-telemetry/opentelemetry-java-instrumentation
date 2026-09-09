@@ -71,21 +71,18 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       HbaseRequest request, @Nullable Void unused) {
-    if (request.getHost() == null || request.getPort() == null) {
-      return null;
-    }
-    return InetSocketAddress.createUnresolved(request.getHost(), request.getPort());
+    return emitStableDatabaseSemconv() ? request.getNetworkPeerInetSocketAddress() : null;
   }
 
   @Nullable
   @Override
   public String getServerAddress(HbaseRequest request) {
-    return emitStableDatabaseSemconv() ? request.getServerTarget() : request.getHost();
+    return emitStableDatabaseSemconv() ? request.getServerTarget() : request.getServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(HbaseRequest request) {
-    return emitStableDatabaseSemconv() ? null : request.getPort();
+    return emitStableDatabaseSemconv() ? null : request.getServerPort();
   }
 }
