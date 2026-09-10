@@ -530,7 +530,7 @@ public class Resilience4jCircuitBreakerSpans {
     private final Resilience4jCircuitBreakerRequest request;
     private final Context context;
     @Nullable private Scope operationScope;
-    private volatile boolean ended;
+    private boolean ended;
 
     private PendingSpan(
         CircuitBreaker circuitBreaker,
