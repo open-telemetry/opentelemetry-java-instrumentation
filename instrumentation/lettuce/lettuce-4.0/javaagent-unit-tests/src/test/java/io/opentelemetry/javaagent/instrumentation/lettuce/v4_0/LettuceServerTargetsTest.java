@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,6 +29,11 @@ class LettuceServerTargetsTest {
     assertThat(ipv4.getPort()).isEqualTo(6380);
     assertThat(ipv6.getAddress()).isEqualTo("::1");
     assertThat(ipv6.getPort()).isEqualTo(6381);
+  }
+
+  @Test
+  void noUri() {
+    assertThat(LettuceServerTargets.of(null)).isNull();
   }
 
   @Test
@@ -54,6 +60,24 @@ class LettuceServerTargetsTest {
   }
 
   @Test
+  void blankOrUnsafeSentinelMasterNameDropsSuffixButKeepsSentinels() {
+    RedisURI blankMaster =
+        RedisURI.Builder.sentinel("sentinel2", 26380).withSentinel("sentinel1", 26379).build();
+    blankMaster.setSentinelMasterId("  ");
+    RedisURI unsafeMaster =
+        RedisURI.Builder.sentinel("sentinel2", 26380).withSentinel("sentinel1", 26379).build();
+    unsafeMaster.setSentinelMasterId("master,name");
+
+    RedisServerTarget blankTarget = LettuceServerTargets.of(blankMaster);
+    RedisServerTarget unsafeTarget = LettuceServerTargets.of(unsafeMaster);
+
+    assertThat(blankTarget.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
+    assertThat(blankTarget.getPort()).isNull();
+    assertThat(unsafeTarget.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
+    assertThat(unsafeTarget.getPort()).isNull();
+  }
+
+  @Test
   void masterReplicaSentinelIterableKeepsMasterSuffix() {
     RedisURI sentinel =
         RedisURI.Builder.sentinel("sentinel2", 26380, "mymaster")
@@ -64,6 +88,22 @@ class LettuceServerTargetsTest {
 
     assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void masterIdWithoutSentinelsUsesTheUriItself() {
+    RedisURI master = RedisURI.create("redis://cache.service.consul:6379");
+    master.setSentinelMasterId("mymaster");
+    RedisURI replica = RedisURI.create("redis://replica:7001");
+
+    RedisServerTarget target = LettuceServerTargets.of(master);
+    RedisServerTarget masterReplica =
+        LettuceServerTargets.ofMasterSlaveUris(asList(master, replica));
+
+    assertThat(target.getAddress()).isEqualTo("cache.service.consul");
+    assertThat(target.getPort()).isNull();
+    assertThat(masterReplica.getAddress()).isEqualTo("cache.service.consul:6379,replica:7001");
+    assertThat(masterReplica.getPort()).isNull();
   }
 
   @Test
@@ -90,6 +130,8 @@ class LettuceServerTargetsTest {
             LettuceServerTargets.ofUris(
                 asList(RedisURI.create("redis://node1:7000"), "unsupported")))
         .isNull();
+    assertThat(LettuceServerTargets.ofUris(asList(RedisURI.create("redis://node1:7000"), null)))
+        .isNull();
   }
 
   @Test
@@ -113,5 +155,30 @@ class LettuceServerTargetsTest {
                     RedisURI.Builder.socket("/var/run/redis1.sock").build(),
                     RedisURI.Builder.socket("/var/run/redis2.sock").build())))
         .isNull();
+  }
+
+  @Test
+  void singleMemberClusterKeepsItsPort() {
+    RedisServerTarget target =
+        LettuceServerTargets.ofUris(singletonList(RedisURI.create("redis://node1:7000")));
+
+    assertThat(target.getAddress()).isEqualTo("node1");
+    assertThat(target.getPort()).isEqualTo(7000);
+  }
+
+  @Test
+  void singleUnixSocketMemberClusterKeepsItsPath() {
+    RedisServerTarget target =
+        LettuceServerTargets.ofUris(
+            singletonList(RedisURI.Builder.socket("/var/run/redis1.sock").build()));
+
+    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void noClusterUris() {
+    assertThat(LettuceServerTargets.ofUris(null)).isNull();
+    assertThat(LettuceServerTargets.ofUris(emptyList())).isNull();
   }
 }

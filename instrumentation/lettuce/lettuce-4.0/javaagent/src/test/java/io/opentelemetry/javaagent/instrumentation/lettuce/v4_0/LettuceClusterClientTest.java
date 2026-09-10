@@ -332,18 +332,7 @@ class LettuceClusterClientTest {
 
     private void writeResponse(List<String> command, OutputStream output) throws IOException {
       String name = command.get(0).toUpperCase(Locale.ROOT);
-      if ("CLUSTER".equals(name)
-          && command.size() > 1
-          && "NODES".equals(command.get(1).toUpperCase(Locale.ROOT))) {
-        String nodes =
-            FIRST_NODE_ID
-                + " "
-                + getHost()
-                + ":"
-                + getPort()
-                + " myself,master - 0 0 1 connected 0-16383\n";
-        write(output, "$" + nodes.getBytes(UTF_8).length + "\r\n" + nodes + "\r\n");
-      } else if ("SET".equals(name)) {
+      if ("SET".equals(name)) {
         String key = command.get(1);
         receivedSetKeys.add(key);
         TestRedisCluster redirect = setRedirects.remove(key);
