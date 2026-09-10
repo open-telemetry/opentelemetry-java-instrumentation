@@ -75,10 +75,7 @@ class FilteringMeter implements Meter {
         .forEach(measurements::add);
 
     if (measurements.isEmpty()) {
-      return new BatchCallback() {
-        @Override
-        public void close() {}
-      };
+      return NOOP_METER.batchCallback(callback, observableMeasurement, additionalMeasurements);
     }
 
     if (measurements.size() == 1) {
