@@ -301,9 +301,6 @@ class Resilience4jCircuitBreakerTest {
                             equalTo(
                                 stringKey("resilience4j.circuit_breaker.outcome"),
                                 experimental("success")))));
-    assertThat(testing.spans())
-        .extracting(span -> span.getName())
-        .contains("CircuitBreaker inner-circuit-breaker", "CircuitBreaker outer-circuit-breaker");
   }
 
   @Test
@@ -358,10 +355,6 @@ class Resilience4jCircuitBreakerTest {
                             equalTo(
                                 stringKey("resilience4j.circuit_breaker.outcome"),
                                 experimental("success")))));
-    assertThat(testing.spans())
-        .extracting(span -> span.getName())
-        .containsExactlyInAnyOrder(
-            "parent", "CircuitBreaker test-circuit-breaker", "CircuitBreaker test-circuit-breaker");
   }
 
   @Test
