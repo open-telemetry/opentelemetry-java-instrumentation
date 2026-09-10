@@ -36,6 +36,8 @@ configurations:
       excluded are collected. With neither selector property configured, all metrics are collected.
     type: list
     default: ""
+    examples:
+      - "jvm.memory.*,jvm.thread.count"
   - name: otel.jmx.metrics.excluded
     declarative_name: java.jmx.metrics.excluded
     description: >
@@ -46,3 +48,5 @@ configurations:
       collected.
     type: list
     default: ""
+    examples:
+      - "jvm.memory.limit,kafka.connect.*"
