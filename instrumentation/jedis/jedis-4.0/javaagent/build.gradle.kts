@@ -14,6 +14,7 @@ muzzle {
 dependencies {
   library("redis.clients:jedis:4.0.0-beta1")
 
+  compileOnly(project(":muzzle")) // For @NoMuzzle
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
@@ -30,6 +31,7 @@ tasks {
     jvmArgs("-Djava.net.preferIPv4Stack=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
