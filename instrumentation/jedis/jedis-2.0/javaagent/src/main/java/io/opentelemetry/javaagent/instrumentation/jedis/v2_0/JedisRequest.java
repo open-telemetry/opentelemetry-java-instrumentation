@@ -100,12 +100,10 @@ public abstract class JedisRequest {
     return peerAddress;
   }
 
-  public boolean useLaterPeerAddress(JedisRequest request) {
+  public void useLaterPeerAddress(JedisRequest request) {
     if (request.peerAddress != null) {
       peerAddress = request.peerAddress;
-      return true;
     }
-    return false;
   }
 
   @Nullable
