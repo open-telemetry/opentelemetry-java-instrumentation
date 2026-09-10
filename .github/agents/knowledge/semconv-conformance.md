@@ -10,10 +10,13 @@
 ## Establish the review target
 
 Determine the semantic-conventions version that the instrumentation targets. Start with
-`semConvVersion` in `dependencyManagement/build.gradle.kts`, then account for the applicable
-`otel.semconv-stability.opt-in` mode. Use the matching released documentation rather than silently
-comparing released code with the latest unreleased conventions. See
-[testing-semconv-stability.md](testing-semconv-stability.md) for this repository's modes.
+`semConvVersion` in `dependencyManagement/build.gradle.kts`. Then resolve the affected domain's
+effective mode through
+[`SemconvSelectionResolver`](../../../instrumentation-api/src/main/java/io/opentelemetry/instrumentation/api/internal/SemconvSelectionResolver.java).
+The resolver applies structured per-domain settings before stability and preview flags and accounts
+for v3-preview behavior. Use the matching released documentation rather than silently comparing
+released code with the latest unreleased conventions. See
+[testing-semconv-stability.md](testing-semconv-stability.md) for legacy opt-in test modes.
 
 Identify all dimensions of the applicable convention:
 
