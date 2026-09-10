@@ -547,12 +547,12 @@ public class Resilience4jCircuitBreakerDecorators {
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, @Nullable Object[] args) throws Throwable {
       if (method.getDeclaringClass() == Object.class) {
         String methodName = method.getName();
-        if ("equals".equals(methodName)) {
-          return proxy == args[0];
-        } else if ("hashCode".equals(methodName)) {
+        if (methodName.equals("equals")) {
+          return args != null && args.length == 1 && proxy == args[0];
+        } else if (methodName.equals("hashCode")) {
           return System.identityHashCode(proxy);
         }
         return method.invoke(delegate, args);
@@ -607,12 +607,12 @@ public class Resilience4jCircuitBreakerDecorators {
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, @Nullable Object[] args) throws Throwable {
       if (method.getDeclaringClass() == Object.class) {
         String methodName = method.getName();
-        if ("equals".equals(methodName)) {
-          return proxy == args[0];
-        } else if ("hashCode".equals(methodName)) {
+        if (methodName.equals("equals")) {
+          return args != null && args.length == 1 && proxy == args[0];
+        } else if (methodName.equals("hashCode")) {
           return System.identityHashCode(proxy);
         }
         return method.invoke(delegate, args);
@@ -658,12 +658,12 @@ public class Resilience4jCircuitBreakerDecorators {
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, @Nullable Object[] args) throws Throwable {
       if (method.getDeclaringClass() == Object.class) {
         String methodName = method.getName();
-        if ("equals".equals(methodName)) {
-          return proxy == args[0];
-        } else if ("hashCode".equals(methodName)) {
+        if (methodName.equals("equals")) {
+          return args != null && args.length == 1 && proxy == args[0];
+        } else if (methodName.equals("hashCode")) {
           return System.identityHashCode(proxy);
         }
         return method.invoke(delegate, args);
