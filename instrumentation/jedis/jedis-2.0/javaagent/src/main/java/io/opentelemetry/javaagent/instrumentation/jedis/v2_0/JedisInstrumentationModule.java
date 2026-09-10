@@ -21,6 +21,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JedisInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
+  private static final String CLUSTER_TARGET_ACCESSOR =
+      "io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterTargetAccessor";
+  private static final String CLUSTER_TARGET_STATE =
+      CLUSTER_TARGET_ACCESSOR + "$ClusterTargetState";
+
   public JedisInstrumentationModule() {
     super("jedis", "jedis-2.0");
   }
@@ -34,10 +39,14 @@ public class JedisInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public List<String> getAdditionalHelperClassNames() {
+    return asList(CLUSTER_TARGET_ACCESSOR, CLUSTER_TARGET_STATE);
+  }
+
+  @Override
   public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
     virtualFieldRegistrar.accept(
-        "redis.clients.jedis.JedisClusterConnectionHandler",
-        JedisSingletons.ClusterTargetState.class.getName());
+        "redis.clients.jedis.JedisClusterConnectionHandler", CLUSTER_TARGET_STATE);
   }
 
   @Override
