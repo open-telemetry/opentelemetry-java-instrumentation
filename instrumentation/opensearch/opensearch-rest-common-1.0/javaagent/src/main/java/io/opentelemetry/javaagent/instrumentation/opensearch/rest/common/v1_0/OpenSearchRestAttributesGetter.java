@@ -31,8 +31,9 @@ final class OpenSearchRestAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getDbQueryText(OpenSearchRestRequest request) {
-    return request.getMethod() + " " + request.getEndpoint();
+    return emitStableDatabaseSemconv() ? null : request.getMethod() + " " + request.getEndpoint();
   }
 
   @Override
