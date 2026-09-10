@@ -12,10 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -53,11 +54,6 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
             .and(returns(named("redis.clients.jedis.Jedis"))),
         getClass().getName() + "$GetConnectionAdvice");
     transformer.applyAdviceToMethod(
-        named("getNodes")
-            .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
-            .and(returns(named("java.util.Map"))),
-        getClass().getName() + "$GetNodesAdvice");
-    transformer.applyAdviceToMethod(
         named("renewSlotCache")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler"))),
         getClass().getName() + "$RenewSlotCacheAdvice");
@@ -78,10 +74,15 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitializeAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static JedisSingletons.ConfiguredTargetScope onEnter(
+    @NoMuzzle
+    public static Scope onEnter(
+        @Advice.This JedisClusterConnectionHandler handler,
         @Advice.Argument(0) @Nullable Set<?> nodes) {
-      return JedisSingletons.openConfiguredTargetScope(JedisServerTargets.ofNodes(nodes));
+      RedisServerTarget target = JedisServerTargets.ofNodes(nodes);
+      JedisClusterTargetAccessor.setTarget(handler, target);
+      return JedisSingletons.openConfiguredTargetScope(target);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -89,14 +90,15 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This JedisClusterConnectionHandler handler,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable JedisSingletons.ConfiguredTargetScope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Enter @Nullable Scope scope) {
       try {
-        JedisClusterTargetAccessor.setTarget(handler, throwable == null ? scope.getTarget() : null);
+        if (throwable != null) {
+          JedisClusterTargetAccessor.setTarget(handler, null);
+        }
       } finally {
-        scope.close();
+        if (scope != null) {
+          scope.close();
+        }
       }
     }
   }
@@ -107,36 +109,15 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @NoMuzzle
-    public static JedisSingletons.ConfiguredTargetScope onEnter(
-        @Advice.This JedisClusterConnectionHandler handler) {
+    public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
       return JedisClusterTargetAccessor.openTargetScope(handler);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    @NoMuzzle
-    public static void onExit(
-        @Advice.This JedisClusterConnectionHandler handler,
-        @Advice.Return @Nullable Object connection,
-        @Advice.Enter @Nullable JedisSingletons.ConfiguredTargetScope scope) {
-      try {
-        JedisClusterTargetAccessor.attachTarget(handler, connection);
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
       }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class GetNodesAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    @NoMuzzle
-    public static void onExit(
-        @Advice.This JedisClusterConnectionHandler handler,
-        @Advice.Return @Nullable Map<?, ?> pools) {
-      JedisClusterTargetAccessor.attachTargetToPools(handler, pools);
     }
   }
 
@@ -146,13 +127,12 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @NoMuzzle
-    public static JedisSingletons.ConfiguredTargetScope onEnter(
-        @Advice.This JedisClusterConnectionHandler handler) {
+    public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
       return JedisClusterTargetAccessor.openTargetScope(handler);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable JedisSingletons.ConfiguredTargetScope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
