@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -32,6 +34,8 @@ import javax.annotation.Nullable;
  */
 public class ServicePeerResolver {
 
+  private static final Pattern ADDRESS_GROUP_PATTERN =
+      Pattern.compile("\\(\\s*address\\s*=", Pattern.CASE_INSENSITIVE);
   private static final Logger logger = Logger.getLogger(ServicePeerResolver.class.getName());
 
   // copied from PeerIncubatingAttributes
@@ -105,16 +109,23 @@ public class ServicePeerResolver {
   private static boolean hasMultipleEndpoints(String peer) {
     int schemeEnd = peer.indexOf("://");
     int authorityStart = schemeEnd < 0 ? 0 : schemeEnd + 3;
+    int authorityEnd = peer.length();
     for (int i = authorityStart; i < peer.length(); i++) {
       char c = peer.charAt(i);
       if (c == '/' || c == '?' || c == '#') {
-        return false;
+        authorityEnd = i;
+        break;
       }
       if (c == ',') {
         return true;
       }
     }
-    return false;
+    Matcher addressGroups = ADDRESS_GROUP_PATTERN.matcher(peer);
+    addressGroups.region(authorityStart, authorityEnd);
+    if (!addressGroups.find()) {
+      return false;
+    }
+    return addressGroups.find();
   }
 
   public boolean isEmpty() {

@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ServicePeerResolverTest {
   // resolver with a rich set of mappings exercising name, namespace, and specificity
@@ -105,6 +106,24 @@ class ServicePeerResolverTest {
 
     attrs = Attributes.builder();
     r.resolve("node1", 6379, () -> null, attrs::put);
+    assertThat(attrs.build().isEmpty()).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "oracle:thin:@(description=(address=(host=h1))(address=(host=h2)))",
+        "oracle:thin:@(DESCRIPTION=(ADDRESS = (HOST=h1))(ADDRESS = (HOST=h2)))"
+      })
+  void oracleDescriptorDoesNotAlsoMatchParsedHost(String target) {
+    ServicePeerResolver r = createResolver(mapping(target, "cluster", null));
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve(target, null, () -> null, attrs::put);
+    assertName("cluster", attrs.build());
+
+    attrs = Attributes.builder();
+    r.resolve("oracle", null, () -> null, attrs::put);
     assertThat(attrs.build().isEmpty()).isTrue();
   }
 
