@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v
 import static io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v2_0.Resilience4jCircuitBreakerSingletons.instrumenter;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -287,7 +288,7 @@ public class Resilience4jCircuitBreakerSpans {
     } else if (result != null && result.resultRecordedAsFailure) {
       end(circuitBreaker, "failure", null);
     } else {
-      endResult(circuitBreaker, null);
+      endResult(circuitBreaker);
     }
   }
 
@@ -324,11 +325,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  public static void endResult(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
-    if (throwable != null) {
-      end(circuitBreaker, "failure", throwable);
-      return;
-    }
+  public static void endResult(CircuitBreaker circuitBreaker) {
     // Do not invoke Resilience4j's recordResult predicate from instrumentation. Result predicate
     // failures are handled when Resilience4j publishes its synthetic circuit error event.
     // Otherwise, treat onResult() completion as success.
@@ -343,11 +340,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
     OnResult result = results.peek();
     if (isCurrentCompletion(circuitBreaker, result.token, result.pendingSpan)
-        // ResultRecordedAsFailureException was added in newer Resilience4j versions and is not
-        // present across the full supported range, so avoid a hard reference that would break
-        // muzzle on older versions.
-        && "io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException"
-            .equals(throwable.getClass().getName())) {
+        && throwable instanceof ResultRecordedAsFailureException) {
       result.resultRecordedAsFailure = true;
     }
   }
@@ -558,18 +551,24 @@ public class Resilience4jCircuitBreakerSpans {
       return context.makeCurrent();
     }
 
-    public synchronized void closeOperationScope() {
-      if (operationScope != null) {
-        operationScope.close();
+    public void closeOperationScope() {
+      Scope scope;
+      synchronized (this) {
+        scope = operationScope;
         operationScope = null;
+      }
+      if (scope != null) {
+        scope.close();
       }
     }
 
-    public synchronized void end(String outcome, @Nullable Throwable throwable) {
-      if (ended) {
-        return;
+    public void end(String outcome, @Nullable Throwable throwable) {
+      synchronized (this) {
+        if (ended) {
+          return;
+        }
+        ended = true;
       }
-      ended = true;
       clearRecentAcquisition(this);
       closeOperationScope();
       instrumenter().end(context, request, outcome, throwable);
