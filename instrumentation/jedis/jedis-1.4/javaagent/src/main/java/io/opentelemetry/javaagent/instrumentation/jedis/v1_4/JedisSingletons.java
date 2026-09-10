@@ -89,6 +89,10 @@ public class JedisSingletons {
 
   @Nullable
   static RedisServerTarget connectionTarget(Connection connection) {
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    if (configuredTarget != null) {
+      return configuredTarget.target;
+    }
     ConfiguredTarget target = CONNECTION_TARGET.get(connection);
     return target != null ? target.target : null;
   }
