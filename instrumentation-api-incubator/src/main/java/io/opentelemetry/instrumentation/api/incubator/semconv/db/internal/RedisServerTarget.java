@@ -63,6 +63,33 @@ public final class RedisServerTarget {
     return createFromEndpoints(endpoints, true);
   }
 
+  /**
+   * Returns a target that keeps {@code endpoint} in front, such as the master of a master and
+   * replicas deployment, and sorts {@code otherEndpoints} so that permutations of the same
+   * deployment render identically.
+   */
+  @Nullable
+  public static RedisServerTarget ofEndpointAndUnorderedEndpoints(
+      @Nullable String endpoint, @Nullable List<String> otherEndpoints) {
+    Endpoint first = Endpoint.parse(endpoint);
+    if (first == null) {
+      return null;
+    }
+    List<Endpoint> others = parseConfiguredEndpoints(otherEndpoints, false);
+    if (others == null) {
+      return null;
+    }
+    List<String> sorted = new ArrayList<>(others.size());
+    for (Endpoint other : others) {
+      sorted.add(other.renderConfigured());
+    }
+    sorted.sort(String::compareTo);
+    List<String> endpoints = new ArrayList<>(sorted.size() + 1);
+    endpoints.add(first.renderConfigured());
+    endpoints.addAll(sorted);
+    return createFromEndpoints(endpoints, false);
+  }
+
   @Nullable
   public static RedisServerTarget ofUnorderedEndpointsAndLogicalName(
       @Nullable List<String> endpoints, @Nullable String name) {

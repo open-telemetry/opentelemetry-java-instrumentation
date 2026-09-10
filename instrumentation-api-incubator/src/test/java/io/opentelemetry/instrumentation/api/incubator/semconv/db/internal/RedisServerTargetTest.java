@@ -386,6 +386,56 @@ class RedisServerTargetTest {
   }
 
   @Test
+  void firstEndpointKeepsItsPositionWhileTheRestAreSorted() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+            "redis://node3:6381", asList("redis://node2:6380", "rediss://node1:6379"));
+
+    assertThat(target.getAddress()).isEqualTo("node3:6381,node1:6379,node2:6380");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void firstEndpointAndUnorderedRestPermutationsRenderIdentically() {
+    RedisServerTarget first =
+        RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+            "node1:6379", asList("node3:6381", "node2:6380"));
+    RedisServerTarget second =
+        RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+            "node1:6379", asList("node2:6380", "node3:6381"));
+
+    assertThat(first.getAddress()).isEqualTo("node1:6379,node2:6380,node3:6381");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+  }
+
+  @Test
+  void firstEndpointWithoutOthersIsSingular() {
+    RedisServerTarget target =
+        RedisServerTarget.ofEndpointAndUnorderedEndpoints("redis://node1:6380", null);
+
+    assertThat(target.getAddress()).isEqualTo("node1");
+    assertThat(target.getPort()).isEqualTo(6380);
+  }
+
+  @Test
+  void missingOrUnrepresentableEndpointsOmitTheTarget() {
+    assertThat(RedisServerTarget.ofEndpointAndUnorderedEndpoints(null, singletonList("node1:6379")))
+        .isNull();
+    assertThat(
+            RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+                "node1:6379", asList("node2:6380", null)))
+        .isNull();
+    assertThat(
+            RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+                "node1:6379", singletonList("redis://node2:99999")))
+        .isNull();
+    assertThat(
+            RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+                "unix:///var/run/redis.sock", singletonList("node1:6379")))
+        .isNull();
+  }
+
+  @Test
   void endpointListsContainingUnixSocketsAreOmitted() {
     assertThat(
             RedisServerTarget.ofEndpoints(
