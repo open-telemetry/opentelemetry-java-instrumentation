@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Set;
@@ -65,11 +66,12 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable Set<?> sentinels,
         @Advice.Argument(1) @Nullable String masterName) {
-      JedisSingletons.ConfiguredTargetScope scope =
-          JedisSingletons.openConfiguredTargetScope(
-              JedisServerTargets.ofSentinels(masterName, sentinels));
-      JedisSingletons.setPoolTarget(pool, scope.getTarget());
-      return scope;
+      // the pool target has to be published before initSentinels starts its master listener
+      // threads, and before anything is made current, so that a failure here cannot strand an
+      // open scope on this thread
+      RedisServerTarget target = JedisServerTargets.ofSentinels(masterName, sentinels);
+      JedisSingletons.setPoolTarget(pool, target);
+      return JedisSingletons.openConfiguredTargetScope(target);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
