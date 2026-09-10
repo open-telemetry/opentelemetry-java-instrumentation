@@ -545,6 +545,26 @@ class Resilience4jCircuitBreakerTest {
 
   @Test
   @SuppressWarnings("unchecked")
+  void createsCancelledSpanWhenDecoratedCompletionStageIsCancelled() throws Exception {
+    Method decorateCompletionStage = decorateCompletionStageMethod();
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    CompletableFuture<String> future = new CompletableFuture<>();
+    Supplier<CompletionStage<String>> supplier = () -> future;
+    Supplier<CompletionStage<String>> decoratedSupplier =
+        (Supplier<CompletionStage<String>>)
+            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+
+    CompletionStage<String> stage = testing.runWithSpan("parent", decoratedSupplier::get);
+    assertThat(future.cancel(true)).isTrue();
+
+    Throwable thrown = catchThrowable(() -> stage.toCompletableFuture().get());
+
+    assertThat(thrown).isInstanceOf(CancellationException.class);
+    assertCircuitBreakerSpan("closed", "cancelled");
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
   void createsCircuitBreakerSpanWhenDecoratedCompletionStageResultMatchesRecordResult()
       throws Exception {
     Method recordResult = recordResultMethod();

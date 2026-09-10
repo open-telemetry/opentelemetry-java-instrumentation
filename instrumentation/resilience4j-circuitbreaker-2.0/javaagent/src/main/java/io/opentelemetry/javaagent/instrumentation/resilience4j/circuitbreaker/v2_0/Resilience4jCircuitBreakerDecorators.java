@@ -685,6 +685,15 @@ public class Resilience4jCircuitBreakerDecorators {
 
     private BiConsumer<Object, Throwable> wrapWhenComplete(BiConsumer<?, ?> callback) {
       return (result, throwable) -> {
+        Throwable unwrapped =
+            throwable == null
+                ? null
+                : Resilience4jCircuitBreakerSpans.unwrapCompletionException(throwable);
+        if (unwrapped instanceof CancellationException) {
+          pendingSpan.end("cancelled", null);
+          invokeWhenComplete(callback, result, throwable);
+          return;
+        }
         if (throwable instanceof Error) {
           // Do not make a span current while invoking application callbacks for Error results. If
           // the callback also fails, the original Error should remain the circuit-breaker outcome
@@ -696,11 +705,7 @@ public class Resilience4jCircuitBreakerDecorators {
         Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
         try {
           invokeWhenComplete(callback, result, throwable);
-          pendingSpan.end(
-              throwable == null ? "success" : "failure",
-              throwable == null
-                  ? null
-                  : Resilience4jCircuitBreakerSpans.unwrapCompletionException(throwable));
+          pendingSpan.end(throwable == null ? "success" : "failure", unwrapped);
         } catch (Throwable t) {
           pendingSpan.end("failure", t);
           throw t;
