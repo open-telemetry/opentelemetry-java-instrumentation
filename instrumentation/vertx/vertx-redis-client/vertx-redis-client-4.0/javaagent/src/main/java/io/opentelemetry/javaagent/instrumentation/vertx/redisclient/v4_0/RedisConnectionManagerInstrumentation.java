@@ -31,8 +31,9 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("io.vertx.redis.client.RedisOptions"))),
         getClass().getName() + "$ConstructorAdvice");
-    // 4.0.3 through 4.4.4 build the connection provider here, out of reach of the manager, so the
-    // thread local carries the captured target to that provider's constructor advice
+    // 4.0.3 and later build the connection provider here, out of reach of the manager, so the
+    // thread local carries the captured target to that provider's constructor advice, both the one
+    // below and the one in the 4.4.5 instrumentation
     transformer.applyAdviceToMethod(
         named("connectionEndpointProvider"),
         getClass().getName() + "$ConnectionEndpointProviderAdvice");
