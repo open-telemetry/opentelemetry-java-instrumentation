@@ -5,24 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.MASTER_SLAVE_CONNECTION_DELEGATE;
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
-import io.lettuce.core.masterslave.StatefulRedisMasterSlaveConnection;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -33,9 +27,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf(
-        "io.lettuce.core.masterslave.MasterSlave",
-        "io.lettuce.core.masterslave.MasterSlaveConnectionWrapper");
+    return named("io.lettuce.core.masterslave.MasterSlave");
   }
 
   @Override
@@ -43,19 +35,12 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(isStatic())
-            .and(namedOneOf("connect", "connectAsync"))
+            .and(named("connect"))
             .and(takesArguments(3))
             .and(
                 takesArgument(2, named("io.lettuce.core.RedisURI"))
                     .or(takesArgument(2, named("java.lang.Iterable")))),
         getClass().getName() + "$ConnectAdvice");
-    transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(
-                takesArgument(
-                    0,
-                    named("io.lettuce.core.masterreplica.StatefulRedisMasterReplicaConnection"))),
-        getClass().getName() + "$WrapperConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -77,7 +62,6 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
       return new Object[] {LettuceServerTargets.ofMasterSlaveUris(snapshot), snapshot};
     }
 
-    @SuppressWarnings("FutureReturnValueIgnored")
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter Object[] enter, @Advice.Return @Nullable Object connection) {
@@ -85,26 +69,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
       if (target == null) {
         return;
       }
-      if (connection instanceof CompletableFuture) {
-        ((CompletableFuture<?>) connection)
-            .whenComplete(new SetMasterSlaveTargetBiConsumer(target));
-      } else {
-        SetMasterSlaveTargetBiConsumer.setTarget(connection, target);
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class WrapperConstructorAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This StatefulRedisMasterSlaveConnection<?, ?> connection,
-        @Advice.Argument(0) Object delegate) {
-      if (LettuceServerTargets.configuredTargetsSupported()
-          && delegate instanceof RedisChannelHandler) {
-        MASTER_SLAVE_CONNECTION_DELEGATE.set(connection, (RedisChannelHandler<?, ?>) delegate);
-      }
+      LettuceMasterSlaveConnectionTargets.setTarget(connection, target);
     }
   }
 }
