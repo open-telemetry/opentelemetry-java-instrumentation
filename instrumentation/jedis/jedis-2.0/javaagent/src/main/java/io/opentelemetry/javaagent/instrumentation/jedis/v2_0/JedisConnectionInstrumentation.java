@@ -74,6 +74,8 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceScope {
+    private static final String CONNECTION_HEALTH_CHECK_COMMAND = Protocol.Command.PING.name();
+
     @Nullable private final Context context;
     @Nullable private final Scope scope;
     private final JedisRequest request;
@@ -106,10 +108,12 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       }
       JedisClusterCommandContext clusterCommandContext = JedisClusterCommandContext.current();
       if (clusterCommandContext != null) {
-        if (clusterCommandContext.isAcquiringConnection()) {
+        if (clusterCommandContext.isAcquiringConnection()
+            && CONNECTION_HEALTH_CHECK_COMMAND.equals(request.getOperationName())) {
           // Jedis validates a pooled cluster connection with a health check command before handing
           // it out; that command belongs to getting the connection rather than being an operation
-          // of its own.
+          // of its own. Anything else sent while getting a connection, such as the slot cache
+          // refresh a missing slot triggers, is an operation of its own.
           return null;
         }
         if (clusterCommandContext.isExecuting()
