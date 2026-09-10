@@ -28,6 +28,8 @@ public final class JedisClusterCommandContext {
     return commandContext;
   }
 
+  private JedisClusterCommandContext() {}
+
   @Nullable
   public static JedisClusterCommandContext current() {
     return current.get();
@@ -70,6 +72,4 @@ public final class JedisClusterCommandContext {
       instrumenter().end(context, request, null, throwable);
     }
   }
-
-  private JedisClusterCommandContext() {}
 }
