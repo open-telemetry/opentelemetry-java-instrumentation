@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.context.Context;
 import java.net.InetAddress;
@@ -172,6 +173,8 @@ class JedisNetworkAttributesGetterTest {
 
   @Test
   void clusterContextIgnoresConnectionAcquisitionCommands() {
+    assumeTrue(emitStableDatabaseSemconv());
+
     JedisClusterCommandContext commandContext = JedisClusterCommandContext.start();
     JedisRequest pingRequest =
         requestWithPeer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379));
