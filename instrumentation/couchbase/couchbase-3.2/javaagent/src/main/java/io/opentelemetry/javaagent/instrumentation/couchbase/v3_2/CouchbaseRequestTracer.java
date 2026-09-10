@@ -151,7 +151,11 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void requestContext(RequestContext requestContext) {
-      CouchbaseConfiguredTarget.capture(delegate, spanName, requestContext);
+      CouchbaseConfiguredTarget.capture(
+          delegate,
+          spanName,
+          requestContext,
+          CouchbaseProtostellarTargets.getRequestTarget(requestContext.request()));
     }
   }
 }
