@@ -6,8 +6,12 @@
 package io.opentelemetry.instrumentation.resources.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonMap;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -16,19 +20,24 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.assertj.core.util.Strings;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class ResourceProviderPropertiesCustomizerTest {
 
+  private static final String HOST_ID_RESOURCE_PROVIDER =
+      "io.opentelemetry.instrumentation.resources.HostIdResourceProvider";
   private static final String PROVIDER_CLASS_NAME = Provider.class.getName();
 
   public static class Provider implements ResourceProvider {
@@ -70,6 +79,26 @@ class ResourceProviderPropertiesCustomizerTest {
     } else {
       assertThat(attributes.get(stringKey("key"))).isNull();
     }
+  }
+
+  @Test
+  void hostIdResourceProviderDisabledByDefault() {
+    assertThat(disabledProviders(emptyMap())).contains(HOST_ID_RESOURCE_PROVIDER);
+  }
+
+  @Test
+  void hostIdResourceProviderCanBeEnabled() {
+    assertThat(disabledProviders(singletonMap("otel.resource.providers.host-id.enabled", "true")))
+        .doesNotContain(HOST_ID_RESOURCE_PROVIDER);
+  }
+
+  private static List<String> disabledProviders(Map<String, String> config) {
+    Map<String, String> customized =
+        new ResourceProviderPropertiesCustomizer()
+            .customize(DefaultConfigProperties.createFromMap(config));
+    return asList(
+        requireNonNull(customized.get(ResourceProviderPropertiesCustomizer.DISABLED_KEY))
+            .split(","));
   }
 
   private static Stream<Arguments> enabledTestCases() {
