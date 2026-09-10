@@ -5,43 +5,63 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 
+import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
-public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T, Throwable> {
+public class LettuceMonoDualConsumer<T> implements LettuceReactiveCommandHandler {
 
-  private final RedisCommand<?, ?, ?> command;
-  private final boolean finishSpanOnClose;
-  private Context context;
+  private static final Logger logger = Logger.getLogger(LettuceMonoDualConsumer.class.getName());
 
-  public LettuceMonoDualConsumer(RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
-    this.command = command;
-    this.finishSpanOnClose = finishSpanOnClose;
+  private final StatefulConnection<?, ?> connection;
+  @Nullable private RedisCommand<?, ?, ?> command;
+  @Nullable private Context context;
+  private boolean expectsResponse;
+
+  public static <T> Mono<T> monitor(Mono<T> publisher, StatefulConnection<?, ?> connection) {
+    return new Mono<T>() {
+      @Override
+      public void subscribe(CoreSubscriber<? super T> actual) {
+        LettuceMonoDualConsumer<T> handler = new LettuceMonoDualConsumer<>(connection);
+        handler
+            .finishSpanOnTerminal(publisher)
+            .subscribe(new LettuceReactiveCommandSubscriber<>(actual, handler));
+      }
+    };
+  }
+
+  private LettuceMonoDualConsumer(StatefulConnection<?, ?> connection) {
+    this.connection = connection;
   }
 
   @Override
-  public void accept(R r) {
-    context = instrumenter().start(Context.current(), command);
-    if (finishSpanOnClose) {
-      instrumenter().end(context, command, null, null);
+  public void onCommand(RedisCommand<?, ?, ?> subscriptionCommand) {
+    command = subscriptionCommand;
+    expectsResponse = expectsResponse(subscriptionCommand);
+    LettuceSingletons.initializeCommandPeerForSubscription(subscriptionCommand);
+    LettuceSingletons.attachConnectionState(subscriptionCommand, connection);
+    context = instrumenter().start(Context.current(), subscriptionCommand);
+    if (!expectsResponse) {
+      instrumenter().end(context, subscriptionCommand, null, null);
     }
   }
 
-  @Override
   public void accept(T t, Throwable throwable) {
-    if (context != null) {
+    if (!expectsResponse) {
+      return;
+    }
+    if (context != null && command != null) {
       instrumenter().end(context, command, null, throwable);
     } else {
-      Logger.getLogger(Mono.class.getName())
-          .severe(
-              "Failed to finish this.span, BiConsumer cannot find this.span because "
-                  + "it probably wasn't started.");
+      logger.fine("Failed to finish this.span because it probably wasn't started.");
     }
   }
 
@@ -53,7 +73,7 @@ public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T,
    * become private synthetic methods on the advice class (which the instrumented class cannot
    * access).
    */
-  public Mono<T> finishSpanOnTerminal(Mono<T> publisher) {
+  private Mono<T> finishSpanOnTerminal(Mono<T> publisher) {
     return publisher
         .doOnSuccess(value -> accept(value, (Throwable) null))
         .doOnError(error -> accept(null, error));
