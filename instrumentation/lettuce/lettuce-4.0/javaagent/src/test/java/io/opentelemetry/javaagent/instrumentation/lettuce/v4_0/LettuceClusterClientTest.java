@@ -56,6 +56,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -372,6 +373,74 @@ class LettuceClusterClientTest {
     secondRedisServer.assertNoFailure();
   }
 
+  // Lettuce 4.0 uses a Guava API that is not available in the test runtime when following
+  // redirects.
+  @Test
+  @EnabledIfSystemProperty(named = "testLatestDeps", matches = "true")
+  void redirectedCommandUsesLastPeer() throws Exception {
+    TestRedisCluster firstRedisServer = new TestRedisCluster();
+    cleanup.deferCleanup(firstRedisServer);
+    TestRedisCluster secondRedisServer = new TestRedisCluster();
+    cleanup.deferCleanup(secondRedisServer);
+
+    RedisURI firstNodeUri =
+        RedisURI.create("redis://" + firstRedisServer.getHost() + ":" + firstRedisServer.getPort());
+    RedisURI alternateSeed = RedisURI.create("redis://seed.invalid:6379");
+    String peerConfiguredTarget =
+        "seed.invalid:6379," + firstRedisServer.getHost() + ":" + firstRedisServer.getPort();
+    List<RedisURI> nodeUris =
+        asList(
+            firstNodeUri,
+            RedisURI.create(
+                "redis://" + secondRedisServer.getHost() + ":" + secondRedisServer.getPort()));
+    RedisClusterClient client =
+        new TestRedisClusterClient(asList(alternateSeed, firstNodeUri), nodeUris);
+    cleanup.deferCleanup(() -> client.shutdown(0, 15, SECONDS));
+    StatefulRedisClusterConnection<String, String> peerConnection = client.connect();
+    cleanup.deferCleanup(peerConnection);
+
+    RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = peerConnection.async();
+    String redirectedKey = keyInSlotRange("redirected", 0, SLOT_SPLIT);
+    firstRedisServer.redirectSetOnce(redirectedKey, secondRedisServer);
+
+    assertThat(asyncCommands.set(redirectedKey, "value").get(10, SECONDS)).isEqualTo("OK");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "SET " + peerConfiguredTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, null),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerConfiguredTarget
+                                    : firstRedisServer.getHost()),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : Long.valueOf(secondRedisServer.getPort())),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? secondRedisServer.getHost() : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(secondRedisServer.getPort())
+                                    : null))));
+
+    firstRedisServer.assertReceivedSet(redirectedKey);
+    secondRedisServer.assertReceivedSet(redirectedKey);
+    firstRedisServer.assertNoFailure();
+    secondRedisServer.assertNoFailure();
+  }
+
   private static String keyInSlotRange(String prefix, int startInclusive, int endExclusive) {
     for (int i = 0; ; i++) {
       String key = prefix + "-" + i;
@@ -429,6 +498,8 @@ class LettuceClusterClientTest {
     private final ServerSocket serverSocket;
     private final Set<Socket> connections = ConcurrentHashMap.newKeySet();
     private final Set<String> receivedSetKeys = ConcurrentHashMap.newKeySet();
+    private final ConcurrentHashMap<String, TestRedisCluster> setRedirects =
+        new ConcurrentHashMap<>();
     private final AtomicReference<Throwable> failure = new AtomicReference<>();
     private final Thread acceptThread;
     private volatile boolean closed;
@@ -500,7 +571,20 @@ class LettuceClusterClientTest {
       } else if ("SET".equals(name)) {
         String key = command.get(1);
         receivedSetKeys.add(key);
-        write(output, "+OK\r\n");
+        TestRedisCluster redirect = setRedirects.remove(key);
+        if (redirect == null) {
+          write(output, "+OK\r\n");
+        } else {
+          write(
+              output,
+              "-MOVED "
+                  + SlotHash.getSlot(key)
+                  + " "
+                  + redirect.getHost()
+                  + ":"
+                  + redirect.getPort()
+                  + "\r\n");
+        }
       } else if ("CLIENT".equals(name)) {
         write(output, "+OK\r\n");
       } else if ("COMMAND".equals(name)) {
@@ -552,6 +636,10 @@ class LettuceClusterClientTest {
         throw new IOException("Expected RESP line ending");
       }
       return new String(line.toByteArray(), US_ASCII);
+    }
+
+    private void redirectSetOnce(String key, TestRedisCluster target) {
+      setRedirects.put(key, target);
     }
 
     private static void write(OutputStream output, String value) throws IOException {
