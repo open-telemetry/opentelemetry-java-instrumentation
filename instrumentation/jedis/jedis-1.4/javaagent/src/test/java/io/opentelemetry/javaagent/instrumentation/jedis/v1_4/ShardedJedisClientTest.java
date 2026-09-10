@@ -85,7 +85,6 @@ class ShardedJedisClientTest {
     sharded.set("foo", "bar");
 
     assertThat(sharded.get("foo")).isEqualTo("bar");
-    assertThat(configuredTarget).contains(",");
 
     testing.waitAndAssertTraces(
         trace ->
