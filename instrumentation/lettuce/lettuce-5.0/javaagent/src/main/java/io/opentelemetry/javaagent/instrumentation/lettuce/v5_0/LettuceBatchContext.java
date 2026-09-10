@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.batchInstrumenter;
 
 import io.lettuce.core.protocol.AsyncCommand;
@@ -21,10 +19,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,9 +69,7 @@ public final class LettuceBatchContext {
         state.commands,
         state.asyncCommands,
         state.parentContext,
-        ENDPOINT_ADDRESS.get(endpoint),
-        ENDPOINT_DATABASE_INDEX.get(endpoint),
-        state.getServerTarget(ENDPOINT_TARGET.get(endpoint)));
+        state.getConnectionState(ENDPOINT_STATE.get(endpoint)));
   }
 
   private LettuceBatchContext() {}
@@ -97,11 +91,8 @@ public final class LettuceBatchContext {
         List<RedisCommand<?, ?, ?>> commands,
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
-        @Nullable InetSocketAddress serverAddress,
-        @Nullable Integer databaseIndex,
-        @Nullable RedisServerTarget serverTarget) {
-      LettuceBatchRequest request =
-          LettuceBatchRequest.create(commands, serverAddress, databaseIndex, serverTarget);
+        @Nullable LettuceConnectionState connectionState) {
+      LettuceBatchRequest request = LettuceBatchRequest.create(commands, connectionState);
       Context parentContext =
           capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {
@@ -152,11 +143,12 @@ public final class LettuceBatchContext {
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
-      RedisServerTarget commandTarget = COMMAND_TARGET.get(command);
+      LettuceConnectionState commandState = COMMAND_STATE.get(command);
+      RedisServerTarget commandTarget = commandState == null ? null : commandState.serverTarget;
       if (commandTarget != null && !serverTargetVaries) {
         if (serverTarget == null) {
           serverTarget = commandTarget;
-        } else if (!sameServerTarget(serverTarget, commandTarget)) {
+        } else if (!LettuceConnectionState.sameServerTarget(serverTarget, commandTarget)) {
           serverTarget = null;
           serverTargetVaries = true;
         }
@@ -174,16 +166,14 @@ public final class LettuceBatchContext {
     }
 
     @Nullable
-    private RedisServerTarget getServerTarget(@Nullable RedisServerTarget fallback) {
+    private LettuceConnectionState getConnectionState(
+        @Nullable LettuceConnectionState endpointState) {
       if (serverTargetVaries) {
-        return null;
+        return LettuceConnectionState.withServerTarget(endpointState, null);
       }
-      return serverTarget != null ? serverTarget : fallback;
-    }
-
-    private static boolean sameServerTarget(RedisServerTarget first, RedisServerTarget second) {
-      return first.getAddress().equals(second.getAddress())
-          && Objects.equals(first.getPort(), second.getPort());
+      return serverTarget == null
+          ? endpointState
+          : LettuceConnectionState.withServerTarget(endpointState, serverTarget);
     }
   }
 }
