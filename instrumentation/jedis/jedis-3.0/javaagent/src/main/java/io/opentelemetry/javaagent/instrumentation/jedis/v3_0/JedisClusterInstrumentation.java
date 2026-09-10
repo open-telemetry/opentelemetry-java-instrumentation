@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -44,20 +43,10 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         named("initializeSlotsCache").and(takesArgument(0, named("java.util.Set"))),
         getClass().getName() + "$InitializeAdvice");
     transformer.applyAdviceToMethod(
-        namedOneOf("getConnection", "getConnectionFromSlot")
-            .and(isDeclaredBy(named("redis.clients.jedis.JedisSlotBasedConnectionHandler")))
-            .and(returns(named("redis.clients.jedis.Jedis"))),
-        getClass().getName() + "$GetConnectionAdvice");
-    transformer.applyAdviceToMethod(
         named("getConnectionFromNode")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
             .and(returns(named("redis.clients.jedis.Jedis"))),
         getClass().getName() + "$GetConnectionAdvice");
-    transformer.applyAdviceToMethod(
-        named("getNodes")
-            .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
-            .and(returns(named("java.util.Map"))),
-        getClass().getName() + "$GetNodesAdvice");
     transformer.applyAdviceToMethod(
         named("renewSlotCache")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler"))),
@@ -101,28 +90,10 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This JedisClusterConnectionHandler handler,
-        @Advice.Return @Nullable Object connection,
-        @Advice.Enter @Nullable Scope scope) {
-      try {
-        JedisSingletons.attachClusterTarget(handler, connection);
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
       }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class GetNodesAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This JedisClusterConnectionHandler handler,
-        @Advice.Return @Nullable Map<?, ?> pools) {
-      JedisSingletons.attachClusterTargetToPools(handler, pools);
     }
   }
 

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -26,8 +27,18 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("getResource").and(takesArguments(0)), getClass().getName() + "$GetResourceAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Pool<?> pool) {
+      JedisSingletons.capturePoolTarget(pool);
+    }
   }
 
   @SuppressWarnings("unused")
@@ -40,16 +51,9 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This Pool<?> pool,
-        @Advice.Return @Nullable Object resource,
-        @Advice.Enter @Nullable Scope scope) {
-      try {
-        JedisSingletons.attachPoolTarget(pool, resource);
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
       }
     }
   }

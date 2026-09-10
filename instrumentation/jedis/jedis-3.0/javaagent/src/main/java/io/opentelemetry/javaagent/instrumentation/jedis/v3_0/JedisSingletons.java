@@ -22,15 +22,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
-import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClusterConnectionHandler;
 import redis.clients.jedis.util.Pool;
-import redis.clients.jedis.util.Sharded;
 
 public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-3.0";
@@ -39,9 +36,6 @@ public class JedisSingletons {
 
   private static final VirtualField<Connection, ConfiguredTarget> CONNECTION_TARGET =
       VirtualField.find(Connection.class, ConfiguredTarget.class);
-
-  private static final VirtualField<Sharded<?, ?>, ConfiguredTarget> SHARDED_TARGET =
-      VirtualField.find(Sharded.class, ConfiguredTarget.class);
 
   private static final VirtualField<Pool<?>, ConfiguredTarget> POOL_TARGET =
       VirtualField.find(Pool.class, ConfiguredTarget.class);
@@ -88,12 +82,15 @@ public class JedisSingletons {
     return instrumenter;
   }
 
-  public static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
-    SHARDED_TARGET.set(sharded, new ConfiguredTarget(target));
-  }
-
   public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
     POOL_TARGET.set(pool, new ConfiguredTarget(target));
+  }
+
+  public static void capturePoolTarget(Pool<?> pool) {
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    if (configuredTarget != null) {
+      POOL_TARGET.set(pool, configuredTarget);
+    }
   }
 
   public static void registerParsedSentinels(
@@ -134,41 +131,6 @@ public class JedisSingletons {
     CLUSTER_TARGET.set(handler, new ConfiguredTarget(target));
   }
 
-  public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
-    ConfiguredTarget configuredTarget = SHARDED_TARGET.get(sharded);
-    if (configuredTarget != null) {
-      attach(configuredTarget.target, shard);
-    }
-  }
-
-  public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
-    ConfiguredTarget configuredTarget = POOL_TARGET.get(pool);
-    if (configuredTarget != null) {
-      attach(configuredTarget.target, resource);
-    }
-  }
-
-  public static void attachClusterTarget(
-      JedisClusterConnectionHandler handler, @Nullable Object connection) {
-    ConfiguredTarget configuredTarget = CLUSTER_TARGET.get(handler);
-    if (configuredTarget != null) {
-      attach(configuredTarget.target, connection);
-    }
-  }
-
-  public static void attachClusterTargetToPools(
-      JedisClusterConnectionHandler handler, @Nullable Map<?, ?> pools) {
-    ConfiguredTarget configuredTarget = CLUSTER_TARGET.get(handler);
-    if (configuredTarget == null || pools == null) {
-      return;
-    }
-    for (Object pool : pools.values()) {
-      if (pool instanceof Pool<?>) {
-        setPoolTarget((Pool<?>) pool, configuredTarget.target);
-      }
-    }
-  }
-
   @Nullable
   public static Scope openClusterTargetScope(JedisClusterConnectionHandler handler) {
     ConfiguredTarget configuredTarget = CLUSTER_TARGET.get(handler);
@@ -187,20 +149,19 @@ public class JedisSingletons {
         .makeCurrent();
   }
 
-  private static void attach(@Nullable RedisServerTarget target, @Nullable Object jedis) {
-    if (!(jedis instanceof BinaryJedis)) {
-      return;
-    }
-    Connection connection = ((BinaryJedis) jedis).getClient();
-    setConnectionTarget(connection, target);
-  }
-
   public static void setConnectionTarget(
       @Nullable Connection connection, @Nullable RedisServerTarget target) {
     if (connection == null) {
       return;
     }
     CONNECTION_TARGET.set(connection, new ConfiguredTarget(target));
+  }
+
+  public static void captureConnectionTarget(
+      Connection connection, @Nullable RedisServerTarget fallbackTarget) {
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    setConnectionTarget(
+        connection, configuredTarget == null ? fallbackTarget : configuredTarget.target);
   }
 
   @Nullable
