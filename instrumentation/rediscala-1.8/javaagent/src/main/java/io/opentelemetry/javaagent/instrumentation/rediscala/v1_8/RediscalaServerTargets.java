@@ -351,7 +351,7 @@ public class RediscalaServerTargets {
   }
 
   @Nullable
-  public static String endpoint(@Nullable Object server) {
+  private static String endpoint(@Nullable Object server) {
     if (!(server instanceof RedisServer)) {
       return null;
     }
@@ -359,7 +359,7 @@ public class RediscalaServerTargets {
     return RedisServerTarget.endpoint(redisServer.host(), redisServer.port());
   }
 
-  public static final class MutablePoolState {
+  static final class MutablePoolState {
     // Requests may race pool updates, so only complete immutable snapshots are published.
     @Nullable private volatile RedisServerTarget target;
 
@@ -378,11 +378,11 @@ public class RediscalaServerTargets {
       return target;
     }
 
-    public void markUnavailable() {
+    void markUnavailable() {
       target = null;
     }
 
-    public void refresh(HashMap<?, ?> map) {
+    void refresh(HashMap<?, ?> map) {
       try {
         target = snapshot(map);
       } catch (RuntimeException e) {
