@@ -22,10 +22,17 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.AdditionalAnswers.delegatesTo;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -63,7 +70,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junitpioneer.jupiter.SetSystemProperty;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class TracingSendMessageHookImplTest {
@@ -293,9 +299,6 @@ class TracingSendMessageHookImplTest {
   @EnumSource(
       value = SpanKind.class,
       names = {"CLIENT", "PRODUCER"})
-  @SetSystemProperty(
-      key = "otel.instrumentation.experimental.span-suppression-strategy",
-      value = "span-kind")
   void usesFinalSpanKindForSuppression(SpanKind parentKind) {
     assumeTrue(emitStableMessagingSemconv());
     MessageBatch batch = batch();
@@ -306,14 +309,14 @@ class TracingSendMessageHookImplTest {
     }
     batch.setBody(batch.encode());
     SendMessageContext request = request(batch);
+    OpenTelemetry openTelemetry = openTelemetryWithSpanKindSuppression();
     SendMessageHook hook =
-        RocketMqTelemetry.builder(testing.getOpenTelemetry())
+        RocketMqTelemetry.builder(openTelemetry)
             .setBatchSendMessageCreationSpansEnabled(false)
             .build()
             .createSendMessageHook();
     Instrumenter<String, Void> parentInstrumenter =
-        Instrumenter.<String, Void>builder(
-                testing.getOpenTelemetry(), "test-parent", parent -> parent)
+        Instrumenter.<String, Void>builder(openTelemetry, "test-parent", parent -> parent)
             .buildInstrumenter(parent -> parentKind);
     Context parentContext = parentInstrumenter.start(Context.root(), "parent");
 
@@ -337,18 +340,14 @@ class TracingSendMessageHookImplTest {
   }
 
   @Test
-  @SetSystemProperty(
-      key = "otel.instrumentation.experimental.span-suppression-strategy",
-      value = "span-kind")
   void propagatesCreationContextsWhenBatchSendIsSuppressed() throws Exception {
     assumeTrue(emitStableMessagingSemconv());
     MessageBatch batch = batch();
     SendMessageContext request = request(batch);
-    SendMessageHook hook =
-        RocketMqTelemetry.create(testing.getOpenTelemetry()).createSendMessageHook();
+    OpenTelemetry openTelemetry = openTelemetryWithSpanKindSuppression();
+    SendMessageHook hook = RocketMqTelemetry.create(openTelemetry).createSendMessageHook();
     Instrumenter<String, Void> parentInstrumenter =
-        Instrumenter.<String, Void>builder(
-                testing.getOpenTelemetry(), "test-parent", parent -> parent)
+        Instrumenter.<String, Void>builder(openTelemetry, "test-parent", parent -> parent)
             .buildInstrumenter(parent -> CLIENT);
     Context parentContext = parentInstrumenter.start(Context.root(), "parent");
 
@@ -370,6 +369,19 @@ class TracingSendMessageHookImplTest {
             assertThat(extract(decoded.get(i))).isEqualTo(remote(creation.getSpanContext()));
           }
         });
+  }
+
+  @SuppressWarnings("MockitoDoSetup")
+  private static OpenTelemetry openTelemetryWithSpanKindSuppression() {
+    ExtendedOpenTelemetry openTelemetry =
+        mock(ExtendedOpenTelemetry.class, delegatesTo(testing.getOpenTelemetry()));
+    ConfigProvider configProvider = mock(ConfigProvider.class);
+    DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
+    doReturn(configProvider).when(openTelemetry).getConfigProvider();
+    doReturn(commonConfig).when(openTelemetry).getInstrumentationConfig("common");
+    when(configProvider.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(commonConfig.getString("span_suppression_strategy/development")).thenReturn("span-kind");
+    return openTelemetry;
   }
 
   @ParameterizedTest
