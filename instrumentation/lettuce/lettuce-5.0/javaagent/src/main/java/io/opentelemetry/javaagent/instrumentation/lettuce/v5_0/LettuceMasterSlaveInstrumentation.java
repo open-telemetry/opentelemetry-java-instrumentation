@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_STATE;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -71,7 +71,10 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
       if (target == null || !(connection instanceof RedisChannelHandler)) {
         return;
       }
-      CONNECTION_TARGET.set((RedisChannelHandler<?, ?>) connection, target);
+      RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
+      CONNECTION_STATE.set(
+          connectionHandler,
+          LettuceConnectionState.withServerTarget(CONNECTION_STATE.get(connectionHandler), target));
     }
   }
 }
