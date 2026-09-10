@@ -12,6 +12,7 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.protocol.AsyncCommand;
+import io.lettuce.core.protocol.DecoratedCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -28,6 +29,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.net.SocketAddress;
+import java.util.List;
 import javax.annotation.Nullable;
 
 public class LettuceSingletons {
@@ -48,6 +51,9 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisChannelHandler<?, ?>, LettuceConnectionState>
       CONNECTION_STATE = VirtualField.find(RedisChannelHandler.class, LettuceConnectionState.class);
+
+  private static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
+      VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
 
   public static final VirtualField<RedisCommand<?, ?, ?>, LettuceConnectionState> COMMAND_STATE =
       VirtualField.find(RedisCommand.class, LettuceConnectionState.class);
@@ -134,7 +140,7 @@ public class LettuceSingletons {
     if (!(connection instanceof RedisChannelHandler)) {
       return;
     }
-
+    RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
     RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
     LettuceConnectionState commandState = COMMAND_STATE.get(command);
     RedisServerTarget commandTarget = commandState == null ? null : commandState.serverTarget;
@@ -144,6 +150,79 @@ public class LettuceSingletons {
         commandTarget == null
             ? connectionState
             : LettuceConnectionState.withServerTarget(connectionState, commandTarget));
+  }
+
+  public static boolean markCommandSpanStarted(AsyncCommand<?, ?, ?> command) {
+    LettuceCommandPeer peer = findCommandPeer(command);
+    return peer != null && peer.markSpanStarted();
+  }
+
+  static void recordCommandPeer(RedisCommand<?, ?, ?> command, SocketAddress peerAddress) {
+    LettuceCommandPeer peer = findCommandPeer(command);
+    if (peer != null) {
+      peer.record(peerAddress);
+    }
+  }
+
+  public static void initializeCommandPeer(RedisCommand<?, ?, ?> command) {
+    if (COMMAND_PEER.get(command) == null) {
+      COMMAND_PEER.set(command, new LettuceCommandPeer());
+    }
+  }
+
+  public static void initializeCommandPeerForSubscription(RedisCommand<?, ?, ?> command) {
+    if (findCommandPeer(command) == null) {
+      COMMAND_PEER.set(command, new LettuceCommandPeer());
+    }
+  }
+
+  @Nullable
+  private static LettuceCommandPeer findCommandPeer(RedisCommand<?, ?, ?> command) {
+    RedisCommand<?, ?, ?> current = command;
+    while (current != null) {
+      LettuceCommandPeer peer = COMMAND_PEER.get(current);
+      if (peer != null) {
+        return peer;
+      }
+      current =
+          current instanceof DecoratedCommand
+              ? ((DecoratedCommand<?, ?, ?>) current).getDelegate()
+              : null;
+    }
+    return null;
+  }
+
+  @Nullable
+  static SocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
+    // A command that does not expect a response has its span ended synchronously in
+    // DefaultEndpoint.write, while the channel write that records the peer runs later on the netty
+    // event loop, so the peer is not known yet.
+    if (!LettuceInstrumentationUtil.expectsResponse(command)) {
+      return null;
+    }
+    LettuceCommandPeer peer = findCommandPeer(command);
+    return peer == null ? null : peer.getAddress();
+  }
+
+  @Nullable
+  static SocketAddress batchPeerAddress(List<RedisCommand<?, ?, ?>> commands) {
+    SocketAddress batchPeerAddress = null;
+    for (RedisCommand<?, ?, ?> command : commands) {
+      LettuceCommandPeer peer = findCommandPeer(command);
+      if (peer == null) {
+        return null;
+      }
+      SocketAddress commandPeerAddress = peer.getAddress();
+      if (commandPeerAddress == null) {
+        return null;
+      }
+      if (batchPeerAddress == null) {
+        batchPeerAddress = commandPeerAddress;
+      } else if (!batchPeerAddress.equals(commandPeerAddress)) {
+        return null;
+      }
+    }
+    return batchPeerAddress;
   }
 
   private LettuceSingletons() {}

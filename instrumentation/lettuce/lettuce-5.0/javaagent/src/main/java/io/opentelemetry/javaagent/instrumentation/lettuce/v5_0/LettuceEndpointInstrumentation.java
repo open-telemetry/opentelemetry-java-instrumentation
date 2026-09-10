@@ -16,9 +16,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.lettuce.core.protocol.AsyncCommand;
+import io.lettuce.core.protocol.CommandEncoder;
 import io.lettuce.core.protocol.CommandWrapper;
+import io.lettuce.core.protocol.DecoratedCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -52,6 +56,9 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$SetAutoFlushAdvice");
     transformer.applyAdviceToMethod(
         named("flushCommands").and(takesArguments(0)), getClass().getName() + "$FlushAdvice");
+    transformer.applyAdviceToMethod(
+        named("notifyChannelActive").and(takesArguments(1)),
+        getClass().getName() + "$ChannelActiveAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -78,6 +85,9 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       // LettuceReactiveCommandsInstrumentation; only async/sync commands backed by an
       // AsyncCommand get their span created here, to avoid a duplicate span for reactive commands.
       if (asyncCommand == null) {
+        return;
+      }
+      if (!LettuceSingletons.markCommandSpanStarted(asyncCommand)) {
         return;
       }
 
@@ -125,8 +135,8 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         if (current instanceof AsyncCommand) {
           return (AsyncCommand<?, ?, ?>) current;
         }
-        if (current instanceof CommandWrapper) {
-          current = ((CommandWrapper<?, ?, ?>) current).getDelegate();
+        if (current instanceof DecoratedCommand) {
+          current = ((DecoratedCommand<?, ?, ?>) current).getDelegate();
         } else {
           break;
         }
@@ -162,6 +172,21 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         // Normally, BatchScope.start attaches callbacks to the command futures, and those
         // callbacks report completion to the batch scope.
         batchScope.endOne(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ChannelActiveAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.Argument(0) Channel channel) {
+      if (channel.pipeline().get(LettuceCommandOutboundHandler.class) == null) {
+        ChannelHandlerContext encoder = channel.pipeline().context(CommandEncoder.class);
+        if (encoder != null) {
+          LettuceCommandOutboundHandler handler = new LettuceCommandOutboundHandler();
+          channel.pipeline().addAfter(encoder.name(), handler.getClass().getName(), handler);
+        }
       }
     }
   }
