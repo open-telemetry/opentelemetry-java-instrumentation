@@ -111,7 +111,11 @@ class JedisAggregateTargetTest {
   }
 
   @Test
-  void clusterRefreshUsesConfiguredTarget() throws Exception {
+  void clusterCommandsAndRefreshUseConfiguredTarget() throws Exception {
+    cluster.getClass().getMethod("set", String.class, String.class).invoke(cluster, "key", "value");
+    assertThat(cluster.getClass().getMethod("get", String.class).invoke(cluster, "key"))
+        .isEqualTo("value");
+
     Field handlerField =
         Class.forName("redis.clients.jedis.BinaryJedisCluster")
             .getDeclaredField("connectionHandler");
@@ -129,22 +133,39 @@ class JedisAggregateTargetTest {
 
     await()
         .untilAsserted(
-            () ->
-                assertThat(testing.spans())
-                    .filteredOn(span -> span.getName().startsWith("CLUSTER"))
-                    .isNotEmpty()
-                    .allSatisfy(
-                        span -> {
-                          if (emitStableDatabaseSemconv()) {
-                            assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                                .isEqualTo(clusterTarget);
-                            assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                          } else {
-                            assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                                .isNotEqualTo(clusterTarget);
-                            assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-                          }
-                        }));
+            () -> {
+              assertThat(testing.spans())
+                  .filteredOn(
+                      span -> span.getName().startsWith("SET") || span.getName().startsWith("GET"))
+                  .hasSize(2)
+                  .allSatisfy(
+                      span -> {
+                        if (emitStableDatabaseSemconv()) {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                        } else {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isNotEqualTo(clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
+                        }
+                      });
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().startsWith("CLUSTER"))
+                  .isNotEmpty()
+                  .allSatisfy(
+                      span -> {
+                        if (emitStableDatabaseSemconv()) {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                        } else {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isNotEqualTo(clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
+                        }
+                      });
+            });
   }
 
   private static void startSentinelServer() throws Exception {
