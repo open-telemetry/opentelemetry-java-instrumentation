@@ -38,8 +38,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class Resilience4jCircuitBreakerTest {
 
@@ -706,54 +710,35 @@ class Resilience4jCircuitBreakerTest {
     assertCircuitBreakerSpan("closed", "failure", null);
   }
 
-  @Test
-  void createsCancelledSpanWhenDecoratedFutureGetThrowsCancellationException() throws Exception {
-    CancellationException exception = new CancellationException("boom");
+  @ParameterizedTest
+  @MethodSource("futureGetFailures")
+  void decoratedFutureGetEndsSpan(
+      Throwable exception, String outcome, Throwable expectedException) throws Exception {
     Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
 
     Throwable thrown = catchThrowable(decoratedFuture::get);
 
     assertThat(thrown).isSameAs(exception);
-    assertCircuitBreakerSpan("closed", "cancelled");
+    assertCircuitBreakerSpan("closed", outcome, expectedException);
   }
 
-  @Test
-  void createsCancelledSpanWhenDecoratedFutureGetThrowsInterruptedException() throws Exception {
-    InterruptedException exception = new InterruptedException("boom");
-    Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
-
-    Throwable thrown = catchThrowable(decoratedFuture::get);
-
-    assertThat(thrown).isSameAs(exception);
-    assertCircuitBreakerSpan("closed", "cancelled");
-  }
-
-  @Test
-  void createsFailureSpanWhenDecoratedFutureGetThrowsExecutionException() throws Exception {
+  private static Stream<Arguments> futureGetFailures() {
     IllegalStateException cause = new IllegalStateException("boom");
-    ExecutionException exception = new ExecutionException(cause);
-    Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
-
-    Throwable thrown = catchThrowable(decoratedFuture::get);
-
-    assertThat(thrown).isSameAs(exception);
-    assertCircuitBreakerSpan("closed", "failure", cause);
+    ExecutionException executionException = new ExecutionException(cause);
+    IllegalStateException runtimeException = new IllegalStateException("boom");
+    return Stream.of(
+        Arguments.argumentSet(
+            "cancellation", new CancellationException("boom"), "cancelled", null),
+        Arguments.argumentSet(
+            "interruption", new InterruptedException("boom"), "cancelled", null),
+        Arguments.argumentSet("execution failure", executionException, "failure", cause),
+        Arguments.argumentSet(
+            "runtime failure", runtimeException, "failure", runtimeException));
   }
 
-  @Test
-  void createsCircuitBreakerSpanWhenDecoratedFutureGetThrowsRuntimeException() throws Exception {
-    IllegalStateException exception = new IllegalStateException("boom");
-    Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
-
-    Throwable thrown = catchThrowable(decoratedFuture::get);
-
-    assertThat(thrown).isSameAs(exception);
-    assertCircuitBreakerSpan("closed", "failure", exception);
-  }
-
-  @Test
-  void createsFailureSpanWhenDecoratedFutureTimedGetThrowsTimeoutException() throws Exception {
-    TimeoutException exception = new TimeoutException("boom");
+  @ParameterizedTest
+  @MethodSource("futureTimedGetFailures")
+  void decoratedFutureTimedGetEndsSpan(Throwable exception) throws Exception {
     Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
 
     Throwable thrown = catchThrowable(() -> decoratedFuture.get(1, MILLISECONDS));
@@ -762,15 +747,10 @@ class Resilience4jCircuitBreakerTest {
     assertCircuitBreakerSpan("closed", "failure", exception);
   }
 
-  @Test
-  void createsFailureSpanWhenDecoratedFutureTimedGetThrowsRuntimeException() throws Exception {
-    IllegalStateException exception = new IllegalStateException("boom");
-    Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
-
-    Throwable thrown = catchThrowable(() -> decoratedFuture.get(1, MILLISECONDS));
-
-    assertThat(thrown).isSameAs(exception);
-    assertCircuitBreakerSpan("closed", "failure", exception);
+  private static Stream<Arguments> futureTimedGetFailures() {
+    return Stream.of(
+        Arguments.argumentSet("timeout", new TimeoutException("boom")),
+        Arguments.argumentSet("runtime failure", new IllegalStateException("boom")));
   }
 
   @Test
