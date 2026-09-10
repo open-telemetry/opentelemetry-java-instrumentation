@@ -19,8 +19,6 @@ public final class LettuceMasterSlaveConnectionTargets {
     }
     RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
 
-    // the node connection was already attached to a single configured endpoint, which carries a
-    // port; the master/slave target describes the whole configured deployment, so it wins
     RedisServerTarget currentTarget = CONNECTION_TARGET.get(connectionHandler);
     if (currentTarget == null || currentTarget.getPort() != null || target.getPort() == null) {
       CONNECTION_TARGET.set(connectionHandler, target);
