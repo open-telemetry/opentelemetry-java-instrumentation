@@ -8,10 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.vertx.redis.client.RedisClientType;
 import io.vertx.redis.client.RedisClusterConnectOptions;
 import io.vertx.redis.client.RedisConnectOptions;
-import io.vertx.redis.client.RedisOptions;
 import io.vertx.redis.client.RedisSentinelConnectOptions;
 import io.vertx.redis.client.RedisStandaloneConnectOptions;
 import org.junit.jupiter.api.Test;
@@ -160,18 +158,6 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void staticReplicationPreservesEndpointOrder() {
-    RedisServerTarget target =
-        VertxRedisServerTargets.of(
-            new StaticReplicationRedisOptions()
-                .addConnectionString("redis://z-master:6380")
-                .addConnectionString("redis://a-replica:6380"));
-
-    assertThat(target.getAddress()).isEqualTo("z-master:6380,a-replica:6380");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
   void staticReplicationConnectOptionsPreserveEndpointOrder() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
@@ -181,24 +167,6 @@ class VertxRedisServerTargetsTest {
 
     assertThat(target.getAddress()).isEqualTo("z-master:6380,a-replica:6380");
     assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void discoverReplicationSortsBootstrapSeedsThroughRedisOptions() {
-    RedisServerTarget first =
-        VertxRedisServerTargets.of(
-            new DiscoverReplicationRedisOptions()
-                .addConnectionString("redis://z-seed:6380")
-                .addConnectionString("redis://a-seed:6380"));
-    RedisServerTarget second =
-        VertxRedisServerTargets.of(
-            new DiscoverReplicationRedisOptions()
-                .addConnectionString("redis://a-seed:6380")
-                .addConnectionString("redis://z-seed:6380"));
-
-    assertThat(first.getAddress()).isEqualTo("a-seed:6380,z-seed:6380");
-    assertThat(second.getAddress()).isEqualTo(first.getAddress());
-    assertThat(first.getPort()).isNull();
   }
 
   @Test
@@ -220,37 +188,14 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void discoverReplicationRendersIdenticallyThroughBothOptionsTypes() {
-    RedisServerTarget redisOptionsTarget =
-        VertxRedisServerTargets.of(
-            new DiscoverReplicationRedisOptions()
-                .addConnectionString("redis://z-seed:6380")
-                .addConnectionString("redis://a-seed:6380"));
-    RedisServerTarget connectOptionsTarget =
-        VertxRedisServerTargets.of(
-            new DiscoverReplicationConnectOptions()
-                .addConnectionString("redis://z-seed:6380")
-                .addConnectionString("redis://a-seed:6380"));
-
-    assertThat(redisOptionsTarget.getAddress()).isEqualTo(connectOptionsTarget.getAddress());
-    assertThat(redisOptionsTarget.getPort()).isEqualTo(connectOptionsTarget.getPort());
-  }
-
-  @Test
   void staticReplicationWithMultipleUnixSocketsIsUnrepresentable() {
-    RedisServerTarget redisOptionsTarget =
-        VertxRedisServerTargets.of(
-            new StaticReplicationRedisOptions()
-                .addConnectionString("unix:///var/run/redis-master.sock")
-                .addConnectionString("unix:///var/run/redis-replica.sock"));
-    RedisServerTarget connectOptionsTarget =
+    RedisServerTarget target =
         VertxRedisServerTargets.of(
             new StaticReplicationConnectOptions()
                 .addConnectionString("unix:///var/run/redis-master.sock")
                 .addConnectionString("unix:///var/run/redis-replica.sock"));
 
-    assertThat(redisOptionsTarget).isNull();
-    assertThat(connectOptionsTarget).isNull();
+    assertThat(target).isNull();
   }
 
   @Test
@@ -382,60 +327,8 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void configuredFactoryTargetIsAvailableDuringClientConstruction() {
-    VertxRedisServerTargets.pushFactoryTarget(
-        new RedisOptions().setConnectionString("redis://configured:6380"));
-    try {
-      assertThat(VertxRedisServerTargets.getFactoryTarget().getAddress()).isEqualTo("configured");
-      assertThat(VertxRedisServerTargets.getFactoryTarget().getPort()).isEqualTo(6380);
-    } finally {
-      VertxRedisServerTargets.popFactoryTarget();
-    }
-  }
-
-  @Test
-  void dynamicSupplierHasNoStableTarget() {
-    assertThat(VertxRedisServerTargets.getFactoryTarget()).isNull();
-  }
-
-  @Test
-  void nestedFactoryTargetsRestoreTheOuterTarget() {
-    VertxRedisServerTargets.pushFactoryTarget(
-        new RedisOptions().setConnectionString("redis://outer:6379"));
-    try {
-      VertxRedisServerTargets.pushFactoryTarget(
-          new RedisOptions().setConnectionString("redis://inner:6380"));
-      try {
-        assertThat(VertxRedisServerTargets.getFactoryTarget().getAddress()).isEqualTo("inner");
-      } finally {
-        VertxRedisServerTargets.popFactoryTarget();
-      }
-      assertThat(VertxRedisServerTargets.getFactoryTarget().getAddress()).isEqualTo("outer");
-    } finally {
-      VertxRedisServerTargets.popFactoryTarget();
-    }
-  }
-
-  @Test
   void noOptions() {
     assertThat(VertxRedisServerTargets.of((RedisConnectOptions) null)).isNull();
-    assertThat(VertxRedisServerTargets.of((RedisOptions) null)).isNull();
-  }
-
-  static class StaticReplicationRedisOptions extends RedisOptions {
-    private StaticReplicationRedisOptions() {
-      setType(RedisClientType.REPLICATION);
-    }
-
-    public String getTopology() {
-      return "STATIC";
-    }
-
-    @Override
-    public StaticReplicationRedisOptions addConnectionString(String connectionString) {
-      super.addConnectionString(connectionString);
-      return this;
-    }
   }
 
   static class StaticReplicationConnectOptions extends RedisConnectOptions {
@@ -445,22 +338,6 @@ class VertxRedisServerTargetsTest {
 
     @Override
     public StaticReplicationConnectOptions addConnectionString(String connectionString) {
-      super.addConnectionString(connectionString);
-      return this;
-    }
-  }
-
-  static class DiscoverReplicationRedisOptions extends RedisOptions {
-    private DiscoverReplicationRedisOptions() {
-      setType(RedisClientType.REPLICATION);
-    }
-
-    public String getTopology() {
-      return "DISCOVER";
-    }
-
-    @Override
-    public DiscoverReplicationRedisOptions addConnectionString(String connectionString) {
       super.addConnectionString(connectionString);
       return this;
     }
