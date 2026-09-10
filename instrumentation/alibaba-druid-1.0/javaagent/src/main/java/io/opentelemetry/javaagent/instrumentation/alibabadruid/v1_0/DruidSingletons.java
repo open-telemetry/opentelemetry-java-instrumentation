@@ -9,8 +9,7 @@ import com.alibaba.druid.pool.DruidAbstractDataSource;
 import com.alibaba.druid.pool.DruidDataSourceMBean;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.alibabadruid.v1_0.DruidTelemetry;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.util.Properties;
@@ -20,12 +19,14 @@ public class DruidSingletons {
 
   private static final DruidTelemetry telemetry = DruidTelemetry.create(GlobalOpenTelemetry.get());
 
-  public static JdbcConnectionPoolMetricsInfo getMetricsInfo(
-      DruidDataSourceMBean dataSource, @Nullable String poolName) {
+  public static void registerMetrics(DruidDataSourceMBean dataSource, @Nullable String poolName) {
     DbInfo dbInfo = getDbInfo(dataSource);
-    return poolName == null || poolName.isEmpty()
-        ? JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, "alibaba-druid")
-        : JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, poolName);
+    telemetry()
+        .registerMetrics(
+            dataSource,
+            JdbcConnectionPoolMetricsUtil.poolName(
+                dbInfo, poolName == null || poolName.isEmpty() ? null : poolName, "alibaba-druid"),
+            JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo));
   }
 
   private static DbInfo getDbInfo(DruidDataSourceMBean dataSource) {

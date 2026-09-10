@@ -7,8 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.apachedbcp.v2_0.ApacheDbcpTelemetry;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import javax.annotation.Nullable;
@@ -30,20 +29,18 @@ public class ApacheDbcpSingletons {
     return name != null ? name : objectName.toString();
   }
 
-  public static JdbcConnectionPoolMetricsInfo getMetricsInfo(
-      BasicDataSource dataSource, @Nullable String poolName) {
+  public static void registerMetrics(BasicDataSource dataSource, @Nullable String poolName) {
     DbInfo dbInfo = getDbInfo(dataSource);
-    return poolName == null
-        ? JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, "apache-dbcp2")
-        : JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, poolName);
+    telemetry()
+        .registerMetrics(
+            dataSource,
+            JdbcConnectionPoolMetricsUtil.poolName(dbInfo, poolName, "apache-dbcp2"),
+            JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo));
   }
 
   private static DbInfo getDbInfo(BasicDataSource dataSource) {
-    DbInfo dbInfo =
-        JdbcConnectionUrlParser.parse(
-            dataSource.getUrl(),
-            OpenTelemetryBasicDataSourceUtil.getConnectionProperties(dataSource));
-    return dbInfo;
+    return JdbcConnectionUrlParser.parse(
+        dataSource.getUrl(), OpenTelemetryBasicDataSourceUtil.getConnectionProperties(dataSource));
   }
 
   private ApacheDbcpSingletons() {}

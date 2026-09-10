@@ -23,24 +23,13 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class JdbcConnectionPoolNameUtil {
+public final class JdbcConnectionPoolMetricsUtil {
 
-  public static JdbcConnectionPoolMetricsInfo createMetricsInfo(
-      Properties properties, String fallbackName) {
-    return createMetricsInfo(dbInfo(properties), fallbackName);
-  }
+  public static String poolName(DbInfo dbInfo, @Nullable String explicitName, String fallbackName) {
+    if (explicitName != null) {
+      return explicitName;
+    }
 
-  public static JdbcConnectionPoolMetricsInfo createMetricsInfo(
-      DbInfo dbInfo, String fallbackName) {
-    return createMetricsInfoWithPoolName(dbInfo, poolName(dbInfo, fallbackName));
-  }
-
-  public static JdbcConnectionPoolMetricsInfo createMetricsInfoWithPoolName(
-      DbInfo dbInfo, String poolName) {
-    return new JdbcConnectionPoolMetricsInfo(poolName, databaseAttributes(dbInfo));
-  }
-
-  private static String poolName(DbInfo dbInfo, String fallbackName) {
     if (emitStableDatabaseSemconv()) {
       String dbNamespace = dbInfo.getDbNamespace();
       if (dbNamespace != null && !dbNamespace.isEmpty()) {
@@ -114,7 +103,7 @@ public final class JdbcConnectionPoolNameUtil {
     return dbInfoBuilder.build();
   }
 
-  private static Attributes databaseAttributes(DbInfo dbInfo) {
+  public static Attributes databaseAttributes(DbInfo dbInfo) {
     AttributesBuilder attributes = Attributes.builder();
     attributes.put(DB_SYSTEM_NAME, dbInfo.getDbSystemName());
     attributes.put(DB_NAMESPACE, dbInfo.getDbNamespace());
@@ -152,5 +141,5 @@ public final class JdbcConnectionPoolNameUtil {
     return value == null ? properties.getProperty(name) : value.toString();
   }
 
-  private JdbcConnectionPoolNameUtil() {}
+  private JdbcConnectionPoolMetricsUtil() {}
 }
