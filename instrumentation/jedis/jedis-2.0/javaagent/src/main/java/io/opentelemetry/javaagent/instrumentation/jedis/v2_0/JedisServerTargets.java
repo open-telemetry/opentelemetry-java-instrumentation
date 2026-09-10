@@ -1,0 +1,62 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import javax.annotation.Nullable;
+import redis.clients.jedis.JedisShardInfo;
+
+public class JedisServerTargets {
+
+  @Nullable
+  public static RedisServerTarget ofShards(@Nullable List<JedisShardInfo> shards) {
+    if (shards == null || shards.isEmpty()) {
+      return null;
+    }
+    List<String> endpoints = new ArrayList<>(shards.size());
+    for (JedisShardInfo shard : shards) {
+      endpoints.add(
+          shard == null ? null : RedisServerTarget.endpoint(shard.getHost(), shard.getPort()));
+    }
+    return RedisServerTarget.ofEndpoints(endpoints);
+  }
+
+  @Nullable
+  public static RedisServerTarget ofSentinels(
+      @Nullable String masterName, @Nullable Collection<?> sentinels) {
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+        endpointStrings(sentinels), masterName);
+  }
+
+  @Nullable
+  public static RedisServerTarget ofNodes(@Nullable Collection<?> nodes) {
+    return RedisServerTarget.ofUnorderedEndpoints(endpointStrings(nodes));
+  }
+
+  @Nullable
+  private static List<String> endpointStrings(@Nullable Collection<?> nodes) {
+    if (nodes == null || nodes.isEmpty()) {
+      return null;
+    }
+    List<String> endpoints = new ArrayList<>(nodes.size());
+    for (Object node : nodes) {
+      if (node instanceof String) {
+        endpoints.add(RedisServerTarget.normalizeHostAndPort((String) node));
+      } else if (node != null
+          && node.getClass().getName().equals("redis.clients.jedis.HostAndPort")) {
+        endpoints.add(RedisServerTarget.normalizeHostAndPort(node.toString()));
+      } else {
+        endpoints.add(null);
+      }
+    }
+    return endpoints;
+  }
+
+  private JedisServerTargets() {}
+}
