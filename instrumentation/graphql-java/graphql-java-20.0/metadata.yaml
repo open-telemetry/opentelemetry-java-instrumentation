@@ -39,19 +39,12 @@ configurations:
       fetcher spans, if enabled, are unaffected.
     type: boolean
     default: true
-  - name: otel.instrumentation.graphql.add-attributes-to-local-root-span
-    declarative_name: java.graphql.add_attributes_to_local_root_span
+  - name: otel.instrumentation.graphql.add-attributes-to-current-span
+    declarative_name: java.graphql.add_attributes_to_current_span
     description: >
       Whether to add GraphQL attributes (graphql.operation.name, graphql.operation.type, graphql.document) and
-      exception events to the local root span (typically the enclosing HTTP server span), in addition to or instead
-      of the operation span.
-    type: boolean
-    default: false
-  - name: otel.instrumentation.graphql.promote-error-status-to-local-root-span
-    declarative_name: java.graphql.promote_error_status_to_local_root_span
-    description: >
-      Whether to set the local root span status to ERROR when the GraphQL result contains any errors. WARNING: This
-      marks the enclosing (e.g. server) span as errored for any GraphQL error, including partial errors on an HTTP 200
-      response.
+      exception events to the current span (typically the enclosing HTTP server span), in addition to or instead of
+      the operation span. WARNING: when enabled, the current span's status is set to ERROR if the GraphQL result
+      contains any errors, which can mark an otherwise successful (e.g. HTTP 200) server span as errored.
     type: boolean
     default: false

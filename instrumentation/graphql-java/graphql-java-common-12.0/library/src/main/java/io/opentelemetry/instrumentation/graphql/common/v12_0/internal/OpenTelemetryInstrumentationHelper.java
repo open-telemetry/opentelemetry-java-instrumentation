@@ -40,7 +40,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import java.util.List;
 import java.util.Locale;
@@ -59,8 +58,7 @@ public class OpenTelemetryInstrumentationHelper {
   private final boolean sanitizeQuery;
   private final boolean addOperationNameToSpanName;
   private final boolean operationSpanEnabled;
-  private final boolean addAttributesToLocalRootSpan;
-  private final boolean promoteErrorStatusToLocalRootSpan;
+  private final boolean addAttributesToCurrentSpan;
 
   public static OpenTelemetryInstrumentationHelper create(
       OpenTelemetry openTelemetry,
@@ -75,8 +73,7 @@ public class OpenTelemetryInstrumentationHelper {
         sanitizeQuery,
         addOperationNameToSpanName,
         /* operationSpanEnabled= */ true,
-        /* addAttributesToLocalRootSpan= */ false,
-        /* promoteErrorStatusToLocalRootSpan= */ false);
+        /* addAttributesToCurrentSpan= */ false);
   }
 
   public static OpenTelemetryInstrumentationHelper create(
@@ -86,8 +83,7 @@ public class OpenTelemetryInstrumentationHelper {
       boolean sanitizeQuery,
       boolean addOperationNameToSpanName,
       boolean operationSpanEnabled,
-      boolean addAttributesToLocalRootSpan,
-      boolean promoteErrorStatusToLocalRootSpan) {
+      boolean addAttributesToCurrentSpan) {
     InstrumenterBuilder<OpenTelemetryInstrumentationState, ExecutionResult> builder =
         Instrumenter.<OpenTelemetryInstrumentationState, ExecutionResult>builder(
                 openTelemetry, instrumentationName, ignored -> "GraphQL Operation")
@@ -112,8 +108,7 @@ public class OpenTelemetryInstrumentationHelper {
         sanitizeQuery,
         addOperationNameToSpanName,
         operationSpanEnabled,
-        addAttributesToLocalRootSpan,
-        promoteErrorStatusToLocalRootSpan);
+        addAttributesToCurrentSpan);
   }
 
   private OpenTelemetryInstrumentationHelper(
@@ -122,15 +117,13 @@ public class OpenTelemetryInstrumentationHelper {
       boolean sanitizeQuery,
       boolean addOperationNameToSpanName,
       boolean operationSpanEnabled,
-      boolean addAttributesToLocalRootSpan,
-      boolean promoteErrorStatusToLocalRootSpan) {
+      boolean addAttributesToCurrentSpan) {
     this.instrumenter = instrumenter;
     this.captureQuery = captureQuery;
     this.sanitizeQuery = sanitizeQuery;
     this.addOperationNameToSpanName = addOperationNameToSpanName;
     this.operationSpanEnabled = operationSpanEnabled;
-    this.addAttributesToLocalRootSpan = addAttributesToLocalRootSpan;
-    this.promoteErrorStatusToLocalRootSpan = promoteErrorStatusToLocalRootSpan;
+    this.addAttributesToCurrentSpan = addAttributesToCurrentSpan;
   }
 
   public InstrumentationContext<ExecutionResult> beginExecution(
@@ -138,18 +131,25 @@ public class OpenTelemetryInstrumentationHelper {
 
     Context parentContext = Context.current();
 
-    // Capture the local root span (normally the enclosing HTTP server span) so it can be
-    // enriched with GraphQL telemetry. This is done independently of whether we create our own
-    // operation span. Null when there is no enclosing local root, e.g. the standalone case.
-    if (addAttributesToLocalRootSpan || promoteErrorStatusToLocalRootSpan) {
-      Span localRootSpan = LocalRootSpan.fromContextOrNull(parentContext);
-      if (localRootSpan != null && localRootSpan.getSpanContext().isValid()) {
-        state.setLocalRootSpan(localRootSpan);
+    // Capture the span that is current when execution begins (normally the enclosing server span)
+    // so GraphQL telemetry can be stamped onto it. Null when there is no valid current span, e.g.
+    // the standalone case.
+    Span currentSpan = null;
+    if (addAttributesToCurrentSpan) {
+      Span span = Span.fromContext(parentContext);
+      if (span.getSpanContext().isValid()) {
+        currentSpan = span;
+        state.setCurrentSpan(span);
       }
     }
 
+    // Create our own operation span when it is enabled, or as a fallback when stamping onto the
+    // current span was requested but there is no valid current span to stamp onto (so telemetry is
+    // never silently lost).
+    boolean wantOperationSpan =
+        operationSpanEnabled || (addAttributesToCurrentSpan && currentSpan == null);
     boolean createOperationSpan =
-        operationSpanEnabled && instrumenter.shouldStart(parentContext, state);
+        wantOperationSpan && instrumenter.shouldStart(parentContext, state);
     state.setOperationSpanCreated(createOperationSpan);
 
     if (createOperationSpan) {
@@ -161,19 +161,22 @@ public class OpenTelemetryInstrumentationHelper {
       state.setContext(parentContext);
     }
 
+    Span currentSpanForCompletion = currentSpan;
     return SimpleInstrumentationContext.whenCompleted(
         (result, throwable) -> {
-          Span localRootSpan = state.getLocalRootSpan();
           if (result != null) {
             List<GraphQLError> errors = result.getErrors();
             if (createOperationSpan) {
               addErrorEvents(Span.fromContext(state.getContext()), errors);
             }
-            if (addAttributesToLocalRootSpan && localRootSpan != null) {
-              addErrorEvents(localRootSpan, errors);
-            }
-            if (promoteErrorStatusToLocalRootSpan && localRootSpan != null && !errors.isEmpty()) {
-              localRootSpan.setStatus(StatusCode.ERROR);
+            if (currentSpanForCompletion != null) {
+              addErrorEvents(currentSpanForCompletion, errors);
+              // The error status is promoted onto the current span whenever GraphQL attributes are
+              // stamped onto it. This can mark an otherwise successful (e.g. HTTP 200) server span
+              // as errored.
+              if (!errors.isEmpty()) {
+                currentSpanForCompletion.setStatus(StatusCode.ERROR);
+              }
             }
           }
 
@@ -216,15 +219,15 @@ public class OpenTelemetryInstrumentationHelper {
       Span.fromContext(state.getContext()).updateName(spanName);
     }
 
-    Span localRootSpan = state.getLocalRootSpan();
-    if (addAttributesToLocalRootSpan && localRootSpan != null) {
-      enrichWithOperationAttributes(localRootSpan, operationName, operationType, query);
+    Span currentSpan = state.getCurrentSpan();
+    if (currentSpan != null) {
+      stampOperationAttributes(currentSpan, operationName, operationType, query);
     }
 
     return SimpleInstrumentationContext.noOp();
   }
 
-  private static void enrichWithOperationAttributes(
+  private static void stampOperationAttributes(
       Span span,
       @Nullable String operationName,
       @Nullable String operationType,
