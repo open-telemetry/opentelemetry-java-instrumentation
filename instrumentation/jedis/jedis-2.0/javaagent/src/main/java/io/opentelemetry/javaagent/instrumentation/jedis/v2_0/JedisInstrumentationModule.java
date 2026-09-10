@@ -57,6 +57,7 @@ public class JedisInstrumentationModule extends InstrumentationModule
         new JedisSentinelPoolInstrumentation(),
         new PoolResourceInstrumentation(),
         new JedisClusterInstrumentation(),
+        new JedisClusterCommandInstrumentation(),
         new JedisInstrumentation(),
         new JedisPipelineInstrumentation(),
         new JedisTransactionInstrumentation());
