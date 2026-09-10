@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
-import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_ENDPOINT;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_STATE;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -52,8 +54,16 @@ class TransactionInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(TransactionBuilder transactionBuilder) {
         Queue<Operation<?, ?>> operations = transactionBuilder.operations().result();
-        ServerEndpoint endpoint = TRANSACTION_ENDPOINT.get(transactionBuilder);
-        RediscalaRequest request = RediscalaRequest.createTransaction(operations, endpoint);
+        RediscalaTransactionState state = TRANSACTION_STATE.get(transactionBuilder);
+        Object client = state != null ? state.getClient() : null;
+        ServerEndpoint endpoint = state != null ? state.getEndpoint() : null;
+        RedisServerTarget serverTarget = null;
+        if (emitStableDatabaseSemconv()) {
+          endpoint = ServerEndpoint.create(client);
+          serverTarget = RediscalaServerTargets.get(client);
+        }
+        RediscalaRequest request =
+            RediscalaRequest.createTransaction(operations, endpoint, serverTarget);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
