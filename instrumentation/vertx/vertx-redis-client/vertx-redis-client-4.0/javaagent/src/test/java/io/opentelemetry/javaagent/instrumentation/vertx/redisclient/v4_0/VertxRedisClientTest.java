@@ -544,21 +544,19 @@ class VertxRedisClientTest {
 
   private static AttributeAssertion[] redisSpanAttributes(
       String operationName, String queryText, Long batchSize) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(maybeStable(DB_SYSTEM), REDIS));
-    assertions.add(equalTo(maybeStable(DB_STATEMENT), queryText));
-    assertions.add(equalTo(maybeStable(DB_OPERATION), operationName));
-    assertions.add(
-        equalTo(DB_REDIS_DATABASE_INDEX, emitStableDatabaseSemconv() ? null : Long.valueOf(1)));
-    assertions.add(equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null));
-    assertions.add(
-        equalTo(DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? batchSize : null));
-    assertions.add(equalTo(SERVER_ADDRESS, host));
-    assertions.add(equalTo(SERVER_PORT, port));
-    assertions.add(equalTo(maybeStablePeerService(), "test-peer-service"));
-    assertions.add(equalTo(NETWORK_PEER_PORT, port));
-    assertions.add(equalTo(NETWORK_PEER_ADDRESS, ip));
-    return assertions.toArray(new AttributeAssertion[0]);
+    return new AttributeAssertion[] {
+      equalTo(maybeStable(DB_SYSTEM), REDIS),
+      equalTo(maybeStable(DB_STATEMENT), queryText),
+      equalTo(maybeStable(DB_OPERATION), operationName),
+      equalTo(DB_REDIS_DATABASE_INDEX, emitStableDatabaseSemconv() ? null : Long.valueOf(1)),
+      equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null),
+      equalTo(DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? batchSize : null),
+      equalTo(SERVER_ADDRESS, host),
+      equalTo(SERVER_PORT, port),
+      equalTo(maybeStablePeerService(), "test-peer-service"),
+      equalTo(NETWORK_PEER_PORT, port),
+      equalTo(NETWORK_PEER_ADDRESS, ip)
+    };
   }
 
   private static class BatchScenario {
