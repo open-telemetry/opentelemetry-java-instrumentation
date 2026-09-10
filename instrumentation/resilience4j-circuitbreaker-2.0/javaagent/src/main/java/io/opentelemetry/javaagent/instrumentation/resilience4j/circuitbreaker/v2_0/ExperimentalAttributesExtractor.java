@@ -13,7 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-class Resilience4jCircuitBreakerAttributesExtractor
+class ExperimentalAttributesExtractor
     implements AttributesExtractor<Resilience4jCircuitBreakerRequest, String> {
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_NAME =

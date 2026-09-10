@@ -43,7 +43,7 @@ class Resilience4jCircuitBreakerSingletons {
     if (DeclarativeConfigUtil.getInstrumentationConfig(
             GlobalOpenTelemetry.get(), "resilience4j_circuitbreaker")
         .getBoolean("experimental_span_attributes/development", false)) {
-      builder.addAttributesExtractor(new Resilience4jCircuitBreakerAttributesExtractor());
+      builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }
 
     return builder.buildInstrumenter();
