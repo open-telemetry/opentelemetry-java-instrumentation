@@ -91,7 +91,17 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getLegacyServerAddress()).isEqualTo("pg.host");
     assertThat(dbInfo.getLegacyServerPort()).isEqualTo(5432);
     assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host", 5432));
+        .isEqualTo(DbServerTarget.create("pg.host", null));
+  }
+
+  @Test
+  void omittedDefaultPortIsNotReportedInConfiguredTarget() {
+    DbInfo dbInfo = parse("jdbc:postgresql://pg.host/db", null);
+
+    assertThat(dbInfo.getLegacyServerAddress()).isEqualTo("pg.host");
+    assertThat(dbInfo.getLegacyServerPort()).isEqualTo(5432);
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("pg.host", null));
   }
 
   @Test
@@ -105,7 +115,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getLegacyServerAddress()).isEqualTo("pg.host");
     assertThat(dbInfo.getLegacyServerPort()).isEqualTo(5432);
     assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host", 5432));
+        .isEqualTo(DbServerTarget.create("pg.host", null));
   }
 
   @Test
@@ -115,7 +125,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getLegacyServerAddress()).isEqualTo("pg.host");
     assertThat(dbInfo.getLegacyServerPort()).isEqualTo(5432);
     assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host", 5432));
+        .isEqualTo(DbServerTarget.create("pg.host", null));
   }
 
   @Test
@@ -125,7 +135,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getLegacyServerAddress()).isEqualTo("ss.host");
     assertThat(dbInfo.getLegacyServerPort()).isEqualTo(1433);
     assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("ss.host", 1433));
+        .isEqualTo(DbServerTarget.create("ss.host", null));
   }
 
   @ParameterizedTest
@@ -276,7 +286,7 @@ class JdbcConnectionUrlParserTest {
   void atInMariaDbSingletonQueryPreservesOrdinaryParsing(String url) {
     DbInfo dbInfo = parse(url, null);
 
-    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", 3306));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", null));
     assertThat(dbInfo.getHost()).isEqualTo("h1");
     assertThat(dbInfo.getLegacyServerPort()).isEqualTo(3306);
   }
@@ -294,7 +304,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   private static Stream<Arguments> mySqlArguments() {
-    return args(
+    return argsWithDefaultPort(
+        3306,
         // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html
         // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-configuration-properties.html
         arg("jdbc:mysql:///")
@@ -516,7 +527,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   private static Stream<Arguments> postgresArguments() {
-    return args(
+    return argsWithDefaultPort(
+        5432,
         // https://jdbc.postgresql.org/documentation/94/connect.html
         arg("jdbc:postgresql:///")
             .setShortUrl("postgresql://localhost:5432")
@@ -633,7 +645,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   private static Stream<Arguments> mariaDbArguments() {
-    return args(
+    return argsWithDefaultPort(
+        3306,
         // https://mariadb.com/kb/en/library/about-mariadb-connector-j/#connection-strings
         arg("jdbc:mariadb:127.0.0.1:33/mdbdb")
             .setShortUrl("mariadb://127.0.0.1:33")
@@ -766,7 +779,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   private static Stream<Arguments> sqlServerArguments() {
-    return args(
+    return argsWithDefaultPort(
+        1433,
         // https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url
         arg("jdbc:microsoft:sqlserver://;")
             .setShortUrl("microsoft:sqlserver://localhost:1433")
@@ -1092,7 +1106,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   private static Stream<Arguments> oracleArguments() {
-    return args(
+    return argsWithDefaultPort(
+        1521,
         // https://docs.oracle.com/cd/B28359_01/java.111/b31224/urls.htm
         // https://docs.oracle.com/cd/B28359_01/java.111/b31224/jdbcthin.htm
         arg("jdbc:oracle:thin:orcluser/PW@localhost:55:orclsn")
@@ -1262,7 +1277,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   private static Stream<Arguments> db2Arguments() {
-    return args(
+    return argsWithDefaultPort(
+        50000,
         // https://www.ibm.com/support/knowledgecenter/en/SSEPEK_10.0.0/java/src/tpc/imjcc_tjvjcccn.html
         // https://www.ibm.com/support/knowledgecenter/en/SSEPGG_10.5.0/com.ibm.db2.luw.apdv.java.doc/src/tpc/imjcc_r0052342.html
         arg("jdbc:db2://db2.host")
@@ -1364,7 +1380,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   private static Stream<Arguments> informixArguments() {
-    return args(
+    return argsWithDefaultPort(
+        9088,
         // https://www.ibm.com/support/pages/how-configure-informix-jdbc-connection-string-connect-group
         arg("jdbc:informix-sqli://infxhost:99/infxdb:INFORMIXSERVER=infxsn;user=infxuser;password=PW")
             .setSystem("ibm.informix")
@@ -1630,6 +1647,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("SA")
             .setHost("hs.host")
             .setPort(9001)
+            .setConfiguredServerTarget("hs.host", null)
             .setName("hsdb")
             .build(),
         arg("jdbc:hsqldb:http://hs.host")
@@ -1639,6 +1657,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("SA")
             .setHost("hs.host")
             .setPort(80)
+            .setConfiguredServerTarget("hs.host", null)
             .build(),
         arg("jdbc:hsqldb:http://hs.host:333/hsdb")
             .setShortUrl("hsqldb:http://hs.host:333")
@@ -1656,6 +1675,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("SA")
             .setHost("127.0.0.1")
             .setPort(443)
+            .setConfiguredServerTarget("127.0.0.1", null)
             .setName("hsdb")
             .build());
   }
@@ -1667,7 +1687,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   private static Stream<Arguments> derbyArguments() {
-    return args(
+    return argsWithDefaultPort(
+        1527,
         // https://db.apache.org/derby/papers/DerbyClientSpec.html#Connection+URL+Format
         // https://db.apache.org/derby/docs/10.8/devguide/cdevdvlp34964.html
         arg("jdbc:derby:derbydb")
@@ -2037,7 +2058,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   private static Stream<Arguments> polardbArguments() {
-    return args(
+    return argsWithDefaultPort(
+        1521,
         arg("jdbc:polardb://example.com:1901")
             .setShortUrl("polardb://example.com:1901")
             .setSystem("polardb")
@@ -2059,7 +2081,8 @@ class JdbcConnectionUrlParserTest {
   }
 
   private static Stream<Arguments> amazonAuroraArguments() {
-    return args(
+    return argsWithDefaultPort(
+        5432,
         // https://docs.aws.amazon.com/aurora-dsql/latest/userguide/SECTION_program-with-jdbc-connector.html
         arg("jdbc:aws-dsql:postgresql://your-cluster.dsql.us-east-1.on.aws/postgres")
             .setShortUrl("postgresql://your-cluster.dsql.us-east-1.on.aws:5432")
@@ -2321,6 +2344,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("failover")
             .setHost("mdb.host")
             .setPort(3306)
+            .setConfiguredServerTarget("mdb.host", null)
             .setName("mdbdb")
             .build(),
         // a single address block is not a group either, and its password stays out of every field
@@ -2332,6 +2356,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("mdbuser")
             .setHost("mdb.host")
             .setPort(3306)
+            .setConfiguredServerTarget("mdb.host", null)
             .setName("mdbdb")
             .build());
   }
@@ -2599,6 +2624,25 @@ class JdbcConnectionUrlParserTest {
               .build();
     }
 
+    private ParseTestArgument(String url, Properties properties, DbInfo dbInfo) {
+      this.url = url;
+      this.properties = properties;
+      this.dbInfo = dbInfo;
+    }
+
+    private ParseTestArgument withoutConfiguredDefaultPort(int defaultPort) {
+      DbServerTarget target = dbInfo.getConfiguredServerTarget();
+      if (target == null || !Integer.valueOf(defaultPort).equals(target.getPort())) {
+        return this;
+      }
+      return new ParseTestArgument(
+          url,
+          properties,
+          dbInfo.toBuilder()
+              .configuredServerTarget(DbServerTarget.create(target.getAddress(), null))
+              .build());
+    }
+
     @Override
     public String toString() {
       return dbInfo.getDbSystemName() + " parsing of " + url;
@@ -2711,6 +2755,15 @@ class JdbcConnectionUrlParserTest {
     List<Arguments> list = new ArrayList<>();
     for (ParseTestArgument arg : testArguments) {
       list.add(arguments(arg));
+    }
+    return list.stream();
+  }
+
+  private static Stream<Arguments> argsWithDefaultPort(
+      int defaultPort, ParseTestArgument... testArguments) {
+    List<Arguments> list = new ArrayList<>();
+    for (ParseTestArgument arg : testArguments) {
+      list.add(arguments(arg.withoutConfiguredDefaultPort(defaultPort)));
     }
     return list.stream();
   }

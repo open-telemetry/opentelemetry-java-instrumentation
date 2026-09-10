@@ -29,6 +29,7 @@ public final class ParseContext {
   @Nullable private String subtype;
   @Nullable private String legacyHost;
   @Nullable private Integer legacyPort;
+  @Nullable private Integer parserDefaultPort;
   @Nullable private String singleServerHost;
   @Nullable private Integer singleServerPort;
   @Nullable private DbServerTarget configuredServerTarget;
@@ -132,6 +133,7 @@ public final class ParseContext {
   /** Set a parser default port without marking it as configured. */
   public void defaultPort(@Nullable Integer port) {
     legacyPort = port;
+    parserDefaultPort = port;
   }
 
   /**
@@ -387,8 +389,10 @@ public final class ParseContext {
     if (singleServerHost == null) {
       return null;
     }
-    // Single-server JDBC targets include the parser's default port when none was configured.
-    return DbServerTarget.create(
-        singleServerHost, singleServerPort != null ? singleServerPort : legacyPort);
+    Integer configuredPort = singleServerPort != null ? singleServerPort : legacyPort;
+    if (parserDefaultPort != null && parserDefaultPort.equals(configuredPort)) {
+      configuredPort = null;
+    }
+    return DbServerTarget.create(singleServerHost, configuredPort);
   }
 }

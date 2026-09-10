@@ -77,8 +77,7 @@ class JdbcTelemetryTest {
         DB_NAMESPACE,
         DB_QUERY_SUMMARY,
         DB_SYSTEM_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        SERVER_ADDRESS);
   }
 
   @ParameterizedTest
@@ -190,7 +189,7 @@ class JdbcTelemetryTest {
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, 5432),
+                            equalTo(SERVER_PORT, null),
                             equalTo(ERROR_TYPE, expectedErrorType))));
 
     assertDurationMetric(
@@ -200,8 +199,7 @@ class JdbcTelemetryTest {
         DB_QUERY_SUMMARY,
         DB_SYSTEM_NAME,
         ERROR_TYPE,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        SERVER_ADDRESS);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jdbc",
         metric ->
@@ -333,8 +331,7 @@ class JdbcTelemetryTest {
         DB_NAMESPACE,
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        SERVER_ADDRESS);
   }
 
   @Test
@@ -408,6 +405,8 @@ class JdbcTelemetryTest {
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "BATCH INSERT test" : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, 5432))));
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(5432)))));
   }
 }

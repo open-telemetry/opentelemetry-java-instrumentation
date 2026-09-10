@@ -10,8 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class ParseContextTest {
 
@@ -29,25 +27,45 @@ class ParseContextTest {
   }
 
   @Test
-  void configuredHostKeepsParserDefaultPort() {
+  void configuredHostOmitsParserDefaultPort() {
     ParseContext context = ParseContext.of("postgresql", null);
     context.defaultPort(5432);
     context.host("[2001:db8::1]");
 
     assertThat(context.toDbInfo().getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("2001:db8::1", 5432));
+        .isEqualTo(DbServerTarget.create("2001:db8::1", null));
   }
 
-  @ParameterizedTest
-  @ValueSource(ints = {5432, 5433})
-  void configuredPortIsPreservedWhenSetBeforeHost(int port) {
+  @Test
+  void configuredDefaultPortIsOmittedWhenSetBeforeHost() {
     ParseContext context = ParseContext.of("postgresql", null);
     context.defaultPort(5432);
-    context.port(port);
+    context.port(5432);
     context.host("pg.host");
 
     assertThat(context.toDbInfo().getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host", port));
+        .isEqualTo(DbServerTarget.create("pg.host", null));
+  }
+
+  @Test
+  void configuredNonDefaultPortIsPreservedWhenSetBeforeHost() {
+    ParseContext context = ParseContext.of("postgresql", null);
+    context.defaultPort(5432);
+    context.port(5433);
+    context.host("pg.host");
+
+    assertThat(context.toDbInfo().getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("pg.host", 5433));
+  }
+
+  @Test
+  void configuredPortIsPreservedWithoutParserDefault() {
+    ParseContext context = ParseContext.of("unknown", null);
+    context.port(5432);
+    context.host("db.host");
+
+    assertThat(context.toDbInfo().getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("db.host", 5432));
   }
 
   @Test
