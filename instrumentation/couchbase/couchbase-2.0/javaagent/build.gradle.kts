@@ -14,6 +14,7 @@ muzzle {
     excludeInstrumentationName("couchbase-2.0-network")
   }
   pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
     name.set("Pre-2.6 network instrumentation")
     group.set("com.couchbase.client")
     module.set("java-client")
