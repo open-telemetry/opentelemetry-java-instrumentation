@@ -26,6 +26,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@SuppressWarnings("deprecation") // testing deprecated API
 class ElasticsearchDbAttributesGetterTest {
 
   private static final String SEARCH_BODY =

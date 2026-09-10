@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -35,14 +36,20 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -136,6 +143,64 @@ class ClickHouseClientV2Test {
         DB_NAMESPACE,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  void testConfiguredEndpointsSortNaturallyAndOmitDefaultPorts() throws Exception {
+    assertServerTarget(
+        new HashSet<>(asList("https://z.example:8443", "http://a.example:8123")),
+        "a.example,z.example",
+        null);
+    assertServerTarget(new HashSet<>(asList("http://single.example:9123")), "single.example", 9123);
+  }
+
+  @Test
+  void testConfiguredEndpointsInlineNonDefaultPortsAndIpv6() throws Exception {
+    assertServerTarget(
+        new HashSet<>(asList("http://z.example:9123", "https://[2001:db8::1]:9443")),
+        "[2001:db8::1]:9443,z.example:9123",
+        null);
+  }
+
+  @Test
+  void testConfiguredEndpointsExtractPortFromLegacyUnbracketedIpv6() throws Exception {
+    assertServerTarget(new HashSet<>(asList("http://2001:db8::1:9123")), "2001:db8::1", 9123);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "http://user:password@host.example:8123",
+        "http://host.example:not-a-port",
+        "http://[example.com]:8123",
+        "http://[fe80::1%3Apassword]:8123",
+        "http://host.example%3fpassword%3dsecret:8123",
+        "http://first.example,second.example:8123",
+        " http://host.example:8123",
+        "://host.example:8123",
+        "1http://host.example:8123",
+        "ht^tp://host.example:8123",
+        "http://",
+        "http:///"
+      })
+  void testConfiguredEndpointsRejectUnsafeOrMalformedValues(String endpoint) throws Exception {
+    assertServerTarget(new HashSet<>(asList(endpoint)), null, null);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "fe80::1%3Apassword",
+        "fe80::1%40password",
+        "fe80::1%2Fpassword",
+        "fe80::1%3Fpassword",
+        "fe80::1%23password",
+        "fe80::1%5Cpassword",
+        "fe80::1%25password",
+        "fe80::1%3Dpassword"
+      })
+  void testConfiguredEndpointsRejectIpv6EncodedZoneDelimiters(String host) throws Exception {
+    assertServerTarget(new HashSet<>(asList("http://[" + host + "]:8123")), null, null);
   }
 
   @Test
@@ -473,5 +538,46 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  private static void assertServerTarget(Set<String> endpoints, String address, Integer port)
+      throws Exception {
+    Class<?> singletons = singletons();
+    Method parseConfiguredServerTarget =
+        singletons.getDeclaredMethod("parseConfiguredServerTarget", Set.class);
+    parseConfiguredServerTarget.setAccessible(true);
+    Object serverTarget = parseConfiguredServerTarget.invoke(null, endpoints);
+
+    if (address == null) {
+      assertThat(serverTarget).isNull();
+      return;
+    }
+    assertThat(serverTarget).isNotNull();
+    Class<?> serverTargetType = serverTarget.getClass().getSuperclass();
+    assertThat(serverTargetType.getMethod("getAddress").invoke(serverTarget)).isEqualTo(address);
+    assertThat(serverTargetType.getMethod("getPort").invoke(serverTarget)).isEqualTo(port);
+  }
+
+  private static Class<?> singletons() throws Exception {
+    String singletonsName =
+        "io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8."
+            + "ClickHouseClientV2Singletons";
+    try {
+      return Class.forName(singletonsName, true, Client.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
+      Class<?> registry =
+          AgentClassLoaderAccess.loadClass(
+              "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+      Method getInstrumentationClassLoader =
+          registry.getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class);
+      ClassLoader instrumentationClassLoader =
+          (ClassLoader)
+              getInstrumentationClassLoader.invoke(
+                  null,
+                  "io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8."
+                      + "ClickHouseClientV2InstrumentationModule",
+                  Client.class.getClassLoader());
+      return Class.forName(singletonsName, true, instrumentationClassLoader);
+    }
   }
 }
