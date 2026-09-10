@@ -6,12 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0;
 
 import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.getDataSourceName;
-import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.getMetricsInfo;
+import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.registerMetrics;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.management.ObjectName;
@@ -48,9 +47,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
       String poolName = objectName == null ? null : getDataSourceName(objectName);
-      JdbcConnectionPoolMetricsInfo metricsInfo = getMetricsInfo(dataSource, poolName);
-      TomcatDbcpDataSourceMetrics.registerMetrics(
-          dataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
+      registerMetrics(dataSource, poolName);
     }
   }
 
@@ -71,12 +68,8 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      JdbcConnectionPoolMetricsInfo metricsInfo =
-          getMetricsInfo(dataSource, getDataSourceName(objectName));
-
       TomcatDbcpDataSourceMetrics.unregisterMetrics(dataSource);
-      TomcatDbcpDataSourceMetrics.registerMetrics(
-          dataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
+      registerMetrics(dataSource, getDataSourceName(objectName));
     }
   }
 }

@@ -14,8 +14,7 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -54,13 +53,15 @@ public class TomcatConnectionPoolMetrics {
     DbInfo dbInfo = getDbInfo(dataSource);
     PoolConfiguration poolProperties = dataSource.getPoolProperties();
     String configuredPoolName = dataSource.getPoolName();
-    JdbcConnectionPoolMetricsInfo metricsInfo =
+    String poolName =
         configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)
-            ? JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, configuredPoolName)
-            : JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, DEFAULT_POOL_NAME);
+            ? configuredPoolName
+            : null;
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(
-            meter, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
+            meter,
+            JdbcConnectionPoolMetricsUtil.poolName(dbInfo, poolName, DEFAULT_POOL_NAME),
+            JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo));
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();

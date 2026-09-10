@@ -10,11 +10,9 @@ import com.mchange.v2.c3p0.WrapperConnectionPoolDataSource;
 import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.c3p0.v0_9.C3p0Telemetry;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
-import javax.annotation.Nullable;
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.DataSource;
 
@@ -27,12 +25,18 @@ public class C3p0Singletons {
     return telemetry;
   }
 
-  public static JdbcConnectionPoolMetricsInfo getMetricsInfo(
-      AbstractPoolBackedDataSource dataSource, @Nullable String poolName) {
+  public static void registerMetrics(AbstractPoolBackedDataSource dataSource) {
+    String poolName = dataSource.getDataSourceName();
+    if (poolName != null && poolName.equals(dataSource.getIdentityToken())) {
+      poolName = null;
+    }
+
     DbInfo dbInfo = getDbInfo(dataSource);
-    return poolName == null
-        ? JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, DEFAULT_DATA_SOURCE_NAME)
-        : JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, poolName);
+    telemetry()
+        .registerMetrics(
+            dataSource,
+            JdbcConnectionPoolMetricsUtil.poolName(dbInfo, poolName, DEFAULT_DATA_SOURCE_NAME),
+            JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo));
   }
 
   private static DbInfo getDbInfo(AbstractPoolBackedDataSource dataSource) {

@@ -23,7 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class JdbcConnectionPoolNameUtilTest {
+class JdbcConnectionPoolMetricsUtilTest {
 
   private static final String FALLBACK_NAME = "fallback";
 
@@ -34,8 +34,9 @@ class JdbcConnectionPoolNameUtilTest {
     properties.put("portNumber", 5433);
     properties.setProperty("databaseName", "inventory");
 
-    assertThat(
-            JdbcConnectionPoolNameUtil.createMetricsInfo(properties, FALLBACK_NAME).getPoolName())
+    DbInfo dbInfo = JdbcConnectionPoolMetricsUtil.dbInfo(properties);
+
+    assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, FALLBACK_NAME))
         .isEqualTo(emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
   }
 
@@ -47,8 +48,9 @@ class JdbcConnectionPoolNameUtilTest {
     defaults.setProperty("databaseName", "inventory");
     Properties properties = new Properties(defaults);
 
-    assertThat(
-            JdbcConnectionPoolNameUtil.createMetricsInfo(properties, FALLBACK_NAME).getPoolName())
+    DbInfo dbInfo = JdbcConnectionPoolMetricsUtil.dbInfo(properties);
+
+    assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, FALLBACK_NAME))
         .isEqualTo(emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
   }
 
@@ -59,8 +61,9 @@ class JdbcConnectionPoolNameUtilTest {
     properties.setProperty("portNumber", "5432");
     properties.setProperty("databaseName", "orders");
 
-    assertThat(
-            JdbcConnectionPoolNameUtil.createMetricsInfo(properties, FALLBACK_NAME).getPoolName())
+    DbInfo dbInfo = JdbcConnectionPoolMetricsUtil.dbInfo(properties);
+
+    assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, FALLBACK_NAME))
         .isEqualTo(emitStableDatabaseSemconv() ? "orders" : "[2001:db8::1]:5432/orders");
   }
 
@@ -71,8 +74,9 @@ class JdbcConnectionPoolNameUtilTest {
     properties.setProperty("portNumber", "invalid");
     properties.setProperty("databaseName", "");
 
-    assertThat(
-            JdbcConnectionPoolNameUtil.createMetricsInfo(properties, FALLBACK_NAME).getPoolName())
+    DbInfo dbInfo = JdbcConnectionPoolMetricsUtil.dbInfo(properties);
+
+    assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, FALLBACK_NAME))
         .isEqualTo(FALLBACK_NAME);
   }
 
@@ -92,7 +96,7 @@ class JdbcConnectionPoolNameUtilTest {
       properties.setProperty("portNumber", portNumber);
     }
 
-    DbInfo dbInfo = JdbcConnectionPoolNameUtil.dbInfo(properties);
+    DbInfo dbInfo = JdbcConnectionPoolMetricsUtil.dbInfo(properties);
 
     assertThat(dbInfo.getLegacyServerAddress()).isEqualTo(expectedLegacyAddress);
     assertThat(dbInfo.getLegacyServerPort()).isEqualTo(expectedLegacyPort);
@@ -147,9 +151,7 @@ class JdbcConnectionPoolNameUtilTest {
             .configuredServerTarget(target)
             .build();
 
-    assertThat(
-            JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, FALLBACK_NAME)
-                .getDatabaseAttributes())
+    assertThat(JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo))
         .isEqualTo(expectedAttributes);
   }
 
@@ -192,11 +194,9 @@ class JdbcConnectionPoolNameUtilTest {
             .configuredServerTarget(DbServerTarget.create("db.example", 5432))
             .build();
 
-    JdbcConnectionPoolMetricsInfo metricsInfo =
-        JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, "explicit");
-
-    assertThat(metricsInfo.getPoolName()).isEqualTo("explicit");
-    assertThat(metricsInfo.getDatabaseAttributes())
+    assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, "explicit", FALLBACK_NAME))
+        .isEqualTo("explicit");
+    assertThat(JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo))
         .isEqualTo(
             Attributes.of(
                 DB_SYSTEM_NAME, "postgresql",
@@ -205,28 +205,11 @@ class JdbcConnectionPoolNameUtilTest {
                 SERVER_PORT, 5432L));
   }
 
-  @Test
-  void replacingPoolNamePreservesDatabaseAttributes() {
-    JdbcConnectionPoolMetricsInfo metricsInfo =
-        JdbcConnectionPoolNameUtil.createMetricsInfo(
-            DbInfo.builder()
-                .dbSystemName("postgresql")
-                .dbNamespace("orders")
-                .configuredServerTarget(DbServerTarget.create("db.example", 5432))
-                .build(),
-            FALLBACK_NAME);
-
-    JdbcConnectionPoolMetricsInfo renamed = metricsInfo.withPoolName("explicit");
-
-    assertThat(renamed.getPoolName()).isEqualTo("explicit");
-    assertThat(renamed.getDatabaseAttributes()).isSameAs(metricsInfo.getDatabaseAttributes());
-  }
-
   @ParameterizedTest
   @MethodSource("poolNameArguments")
   void returnsExpectedPoolName(
       DbInfo dbInfo, String oldExpectedPoolName, String stableExpectedPoolName) {
-    assertThat(JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, FALLBACK_NAME).getPoolName())
+    assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, FALLBACK_NAME))
         .isEqualTo(emitStableDatabaseSemconv() ? stableExpectedPoolName : oldExpectedPoolName);
   }
 

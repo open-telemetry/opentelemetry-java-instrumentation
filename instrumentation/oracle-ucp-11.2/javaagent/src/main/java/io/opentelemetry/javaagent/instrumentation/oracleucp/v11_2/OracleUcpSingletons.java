@@ -6,14 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.oracleucp.v11_2;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.oracleucp.v11_2.OracleUcpTelemetry;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.util.Properties;
-import javax.annotation.Nullable;
 import oracle.ucp.UniversalConnectionPool;
 import oracle.ucp.jdbc.PoolDataSource;
 
@@ -22,9 +21,8 @@ public class OracleUcpSingletons {
   private static final String DEFAULT_POOL_NAME = "oracle-ucp";
 
   // Keep the metric identity across stop/start because UCP restarts the same pool instance.
-  private static final VirtualField<UniversalConnectionPool, JdbcConnectionPoolMetricsInfo>
-      METRICS_INFO_FIELD =
-          VirtualField.find(UniversalConnectionPool.class, JdbcConnectionPoolMetricsInfo.class);
+  private static final VirtualField<UniversalConnectionPool, PoolMetricsState> METRICS_STATE_FIELD =
+      VirtualField.find(UniversalConnectionPool.class, PoolMetricsState.class);
 
   private static final OracleUcpTelemetry telemetry =
       OracleUcpTelemetry.create(GlobalOpenTelemetry.get());
@@ -44,16 +42,12 @@ public class OracleUcpSingletons {
         poolName = null;
       }
     }
-    JdbcConnectionPoolMetricsInfo metricsInfo = getMetricsInfo(dataSource, poolName);
-    METRICS_INFO_FIELD.set(connectionPool, metricsInfo);
-  }
-
-  private static JdbcConnectionPoolMetricsInfo getMetricsInfo(
-      PoolDataSource dataSource, @Nullable String poolName) {
     DbInfo dbInfo = getDbInfo(dataSource);
-    return poolName == null
-        ? JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, DEFAULT_POOL_NAME)
-        : JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, poolName);
+    PoolMetricsState metricsState =
+        new PoolMetricsState(
+            JdbcConnectionPoolMetricsUtil.poolName(dbInfo, poolName, DEFAULT_POOL_NAME),
+            JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo));
+    METRICS_STATE_FIELD.set(connectionPool, metricsState);
   }
 
   private static DbInfo getDbInfo(PoolDataSource dataSource) {
@@ -82,29 +76,42 @@ public class OracleUcpSingletons {
       poolNameProperties.setProperty("databaseName", databaseName);
     }
 
-    return JdbcConnectionPoolNameUtil.dbInfo(poolNameProperties);
+    return JdbcConnectionPoolMetricsUtil.dbInfo(poolNameProperties);
   }
 
   public static void updatePoolName(UniversalConnectionPool connectionPool) {
-    JdbcConnectionPoolMetricsInfo metricsInfo = METRICS_INFO_FIELD.get(connectionPool);
-    if (metricsInfo != null) {
+    PoolMetricsState metricsState = METRICS_STATE_FIELD.get(connectionPool);
+    if (metricsState != null) {
       String poolName = connectionPool.getName();
       if (poolName != null && !poolName.isEmpty()) {
-        METRICS_INFO_FIELD.set(connectionPool, metricsInfo.withPoolName(poolName));
+        METRICS_STATE_FIELD.set(connectionPool, metricsState.withPoolName(poolName));
       }
     }
   }
 
   public static void registerMetrics(UniversalConnectionPool connectionPool) {
-    JdbcConnectionPoolMetricsInfo metricsInfo = METRICS_INFO_FIELD.get(connectionPool);
-    if (metricsInfo != null) {
+    PoolMetricsState metricsState = METRICS_STATE_FIELD.get(connectionPool);
+    if (metricsState != null) {
       telemetry()
-          .registerMetrics(
-              connectionPool, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
+          .registerMetrics(connectionPool, metricsState.poolName, metricsState.databaseAttributes);
       return;
     }
 
     telemetry().registerMetrics(connectionPool);
+  }
+
+  private static final class PoolMetricsState {
+    private final String poolName;
+    private final Attributes databaseAttributes;
+
+    private PoolMetricsState(String poolName, Attributes databaseAttributes) {
+      this.poolName = poolName;
+      this.databaseAttributes = databaseAttributes;
+    }
+
+    private PoolMetricsState withPoolName(String poolName) {
+      return new PoolMetricsState(poolName, databaseAttributes);
+    }
   }
 
   private OracleUcpSingletons() {}
