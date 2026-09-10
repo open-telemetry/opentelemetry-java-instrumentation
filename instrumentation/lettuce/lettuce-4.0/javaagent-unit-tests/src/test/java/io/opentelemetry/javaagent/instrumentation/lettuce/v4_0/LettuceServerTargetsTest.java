@@ -67,6 +67,22 @@ class LettuceServerTargetsTest {
   }
 
   @Test
+  void masterIdWithoutSentinelsUsesTheUriItself() {
+    RedisURI master = RedisURI.create("redis://cache.service.consul:6379");
+    master.setSentinelMasterId("mymaster");
+    RedisURI replica = RedisURI.create("redis://replica:7001");
+
+    RedisServerTarget target = LettuceServerTargets.of(master);
+    RedisServerTarget masterReplica =
+        LettuceServerTargets.ofMasterSlaveUris(asList(master, replica));
+
+    assertThat(target.getAddress()).isEqualTo("cache.service.consul");
+    assertThat(target.getPort()).isNull();
+    assertThat(masterReplica.getAddress()).isEqualTo("cache.service.consul:6379,replica:7001");
+    assertThat(masterReplica.getPort()).isNull();
+  }
+
+  @Test
   void orderedTargetsPreserveOrderAndDuplicates() {
     RedisServerTarget target =
         LettuceServerTargets.ofUris(

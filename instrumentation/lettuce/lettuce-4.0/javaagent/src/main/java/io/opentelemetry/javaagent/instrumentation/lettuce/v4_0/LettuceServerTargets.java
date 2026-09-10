@@ -19,9 +19,8 @@ public class LettuceServerTargets {
       return null;
     }
 
-    RedisServerTarget sentinelTarget = ofSentinel(redisUri);
-    if (sentinelTarget != null) {
-      return sentinelTarget;
+    if (isSentinel(redisUri)) {
+      return ofSentinel(redisUri);
     }
 
     String socket = redisUri.getSocket();
@@ -51,8 +50,8 @@ public class LettuceServerTargets {
   public static RedisServerTarget ofMasterSlaveUris(List<?> redisUris) {
     if (!redisUris.isEmpty() && redisUris.get(0) instanceof RedisURI) {
       RedisURI first = (RedisURI) redisUris.get(0);
-      List<RedisURI> sentinels = first.getSentinels();
-      if (first.getSentinelMasterId() != null || (sentinels != null && !sentinels.isEmpty())) {
+      // MasterSlave.connect switches the whole list to sentinel mode based on the first URI alone.
+      if (isSentinel(first)) {
         return of(first);
       }
     }
@@ -66,13 +65,16 @@ public class LettuceServerTargets {
         : RedisServerTarget.endpoint(target.getAddress(), port);
   }
 
+  // A master name alone does not select sentinel mode: lettuce resolves the master through the
+  // sentinels and otherwise connects to the host and port of the URI itself.
+  private static boolean isSentinel(RedisURI redisUri) {
+    List<RedisURI> sentinels = redisUri.getSentinels();
+    return sentinels != null && !sentinels.isEmpty();
+  }
+
   @Nullable
   private static RedisServerTarget ofSentinel(RedisURI redisUri) {
     List<RedisURI> sentinels = redisUri.getSentinels();
-    if (sentinels == null || sentinels.isEmpty()) {
-      return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
-          null, redisUri.getSentinelMasterId());
-    }
     List<String> endpoints = new ArrayList<>(sentinels.size());
     for (RedisURI sentinel : sentinels) {
       String socket = sentinel.getSocket();
