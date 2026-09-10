@@ -137,25 +137,28 @@ public class OpenTelemetryInstrumentationHelper {
 
     Context parentContext = Context.current();
 
+    // False when instrumentation is suppressed. That must apply to enriching the current span as
+    // well as to creating the operation span.
+    boolean shouldStart = instrumenter.shouldStart(parentContext, state);
+
     // Capture the span that is current when execution begins (normally the enclosing server span)
-    // so GraphQL telemetry can be stamped onto it. Null when there is no valid current span, e.g.
-    // the standalone case.
+    // so GraphQL telemetry can be stamped onto it. Null when there is no recording current span,
+    // e.g. the standalone case or a non-recording remote parent.
     Span currentSpan = null;
-    if (addAttributesToCurrentSpan) {
+    if (addAttributesToCurrentSpan && shouldStart) {
       Span span = Span.fromContext(parentContext);
-      if (span.getSpanContext().isValid()) {
+      if (span.isRecording()) {
         currentSpan = span;
         state.setCurrentSpan(span);
       }
     }
 
     // Create our own operation span when it is enabled, or as a fallback when stamping onto the
-    // current span was requested but there is no valid current span to stamp onto (so telemetry is
-    // never silently lost).
+    // current span was requested but there is no recording current span to stamp onto (so telemetry
+    // is never silently lost).
     boolean wantOperationSpan =
         operationSpanEnabled || (addAttributesToCurrentSpan && currentSpan == null);
-    boolean createOperationSpan =
-        wantOperationSpan && instrumenter.shouldStart(parentContext, state);
+    boolean createOperationSpan = wantOperationSpan && shouldStart;
     state.setOperationSpanCreated(createOperationSpan);
 
     if (createOperationSpan) {

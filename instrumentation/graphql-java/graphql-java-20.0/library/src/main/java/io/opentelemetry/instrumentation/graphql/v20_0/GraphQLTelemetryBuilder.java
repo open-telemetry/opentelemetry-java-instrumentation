@@ -80,8 +80,8 @@ public final class GraphQLTelemetryBuilder {
    *
    * <p>When disabled, no {@code GraphQL Operation} span is created; spans for data fetchers, if
    * enabled, are unaffected and continue to nest under the current span. If disabled while {@link
-   * #setAddAttributesToCurrentSpan(boolean)} is enabled but there is no valid current span to stamp
-   * onto, the operation span is created anyway so that telemetry is not lost.
+   * #setAddAttributesToCurrentSpan(boolean)} is enabled but there is no recording current span to
+   * stamp onto, the operation span is created anyway so that telemetry is not lost.
    */
   @CanIgnoreReturnValue
   public GraphQLTelemetryBuilder setOperationSpanEnabled(boolean operationSpanEnabled) {
@@ -103,9 +103,9 @@ public final class GraphQLTelemetryBuilder {
    * status is set to {@code ERROR}. This can mark an otherwise successful (e.g. HTTP 200) server
    * span as errored, including for partial or expected GraphQL errors.
    *
-   * <p>When there is no valid current span, attributes are instead recorded on a GraphQL operation
-   * span (created even if {@link #setOperationSpanEnabled(boolean)} is disabled) so that telemetry
-   * is not lost.
+   * <p>When there is no recording current span (for example a non-recording remote parent),
+   * attributes are instead recorded on a GraphQL operation span (created even if {@link
+   * #setOperationSpanEnabled(boolean)} is disabled) so that telemetry is not lost.
    */
   @CanIgnoreReturnValue
   public GraphQLTelemetryBuilder setAddAttributesToCurrentSpan(boolean addAttributesToCurrentSpan) {

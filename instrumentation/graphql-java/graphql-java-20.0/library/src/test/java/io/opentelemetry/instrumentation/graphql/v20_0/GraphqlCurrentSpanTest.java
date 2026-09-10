@@ -25,6 +25,7 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -34,6 +35,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -210,6 +212,33 @@ class GraphqlCurrentSpanTest {
                                         equalTo(EXCEPTION_TYPE, "DataFetchingException"),
                                         equalTo(EXCEPTION_MESSAGE, "failed to fetch book"))),
                 span -> span.hasName("query").hasKind(SpanKind.INTERNAL)));
+  }
+
+  @Test
+  void suppressedExecutionDoesNotEnrichCurrentSpan() {
+    GraphQL graphql = graphql(b -> b.setAddAttributesToCurrentSpan(true));
+
+    ExecutionResult result =
+        testing.runWithHttpServerSpan(() -> {
+          AtomicReference<ExecutionResult> executed = new AtomicReference<>();
+          InstrumentationUtil.suppressInstrumentation(
+              () -> executed.set(graphql.execute(ERROR_QUERY)));
+          return executed.get();
+        });
+    assertThat(result.getErrors()).isNotEmpty();
+
+    // Suppression applies to enrichment as well as to the operation span: the enclosing span is
+    // left untouched, even though the result contains errors.
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(SERVER_SPAN_NAME)
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(StatusData.unset())
+                .hasAttributesSatisfying(attrs -> {
+                  assertThat(attrs.get(GRAPHQL_OPERATION_NAME)).isNull();
+                  assertThat(attrs.get(GRAPHQL_OPERATION_TYPE)).isNull();
+                  assertThat(attrs.get(GRAPHQL_DOCUMENT)).isNull();
+                })));
   }
 
   @Test
