@@ -53,10 +53,6 @@ finding on the changed line that newly exposes or relies on that behavior, and c
 helper as evidence. Do not move the finding to an earlier pull request merely because that pull
 request introduced the helper.
 
-When reviewing against an open semantic-conventions proposal, apply its normative language as the
-requested target but call it proposed guidance. Do not represent unmerged text as part of the
-published conventions.
-
 ## Review wording
 
 A useful finding identifies:
