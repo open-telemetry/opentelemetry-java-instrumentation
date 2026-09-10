@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -125,6 +126,14 @@ class ConfigServerTargetsTest {
         argumentSet("null", (Object) null),
         argumentSet("malformed authority", "redis://[invalid"),
         argumentSet("invalid port", "redis://replica:99999"));
+  }
+
+  @Test
+  void masterAndReplicasFailClosedWithoutMaster() {
+    Config config = new Config();
+    config.useMasterSlaveServers().setSlaveAddresses(singleton("redis://replica:6380"));
+
+    assertThat(ConfigServerTargetsSince317.of(config)).isNull();
   }
 
   @Test

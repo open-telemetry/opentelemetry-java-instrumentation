@@ -13,7 +13,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -69,12 +68,12 @@ public class ConfigServerTargetsBefore317 {
     }
     SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
     if (sentinelConfig != null) {
-      return ofSentinelAddresses(
-          sentinelConfig.getSentinelAddresses(), sentinelConfig.getMasterName());
+      return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+          addressList(sentinelConfig.getSentinelAddresses()), sentinelConfig.getMasterName());
     }
     ClusterServersConfig clusterConfig = config.getClusterServersConfig();
     if (clusterConfig != null) {
-      return ofUnorderedAddresses(clusterConfig.getNodeAddresses());
+      return RedisServerTarget.ofUnorderedEndpoints(addressList(clusterConfig.getNodeAddresses()));
     }
     RedisServerTarget elasticacheTarget =
         ofOptionalServerConfig(config, CONFIG_GET_ELASTICACHE_SERVERS);
@@ -88,8 +87,9 @@ public class ConfigServerTargetsBefore317 {
     }
     MasterSlaveServersConfig masterSlaveConfig = config.getMasterSlaveServersConfig();
     if (masterSlaveConfig != null) {
-      return ofMasterSlaveAddresses(
-          getMasterAddress(masterSlaveConfig), masterSlaveConfig.getSlaveAddresses());
+      return RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+          addressString(getMasterAddress(masterSlaveConfig)),
+          addressList(masterSlaveConfig.getSlaveAddresses()));
     }
     return null;
   }
@@ -121,7 +121,7 @@ public class ConfigServerTargetsBefore317 {
       }
       Object addresses = serverConfig.getClass().getMethod("getNodeAddresses").invoke(serverConfig);
       return addresses instanceof Collection
-          ? ofUnorderedAddresses((Collection<?>) addresses)
+          ? RedisServerTarget.ofUnorderedEndpoints(addressList((Collection<?>) addresses))
           : null;
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured Redisson servers", e);
@@ -145,56 +145,15 @@ public class ConfigServerTargetsBefore317 {
 
   // Redisson stores addresses as URI, URL, or String across supported versions.
   @Nullable
-  private static RedisServerTarget ofUnorderedAddresses(@Nullable Collection<?> addresses) {
-    if (addresses == null || addresses.isEmpty()) {
+  private static List<String> addressList(@Nullable Collection<?> addresses) {
+    if (addresses == null) {
       return null;
     }
     List<String> endpoints = new ArrayList<>(addresses.size());
     for (Object address : addresses) {
       endpoints.add(addressString(address));
     }
-    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
-  }
-
-  @Nullable
-  private static RedisServerTarget ofMasterSlaveAddresses(
-      @Nullable Object firstAddress, @Nullable Collection<?> otherAddresses) {
-    List<String> endpoints = new ArrayList<>();
-    String firstEndpoint = addressString(firstAddress);
-    if (firstEndpoint == null) {
-      return null;
-    }
-    endpoints.add(firstEndpoint);
-    List<String> sortedAddresses = new ArrayList<>();
-    if (otherAddresses != null) {
-      for (Object address : otherAddresses) {
-        RedisServerTarget target = RedisServerTarget.ofEndpoint(addressString(address));
-        if (target == null) {
-          return null;
-        }
-        Integer port = target.getPort();
-        sortedAddresses.add(
-            port == null
-                ? target.getAddress()
-                : RedisServerTarget.endpoint(target.getAddress(), port.intValue()));
-      }
-    }
-    Collections.sort(sortedAddresses);
-    endpoints.addAll(sortedAddresses);
-    return RedisServerTarget.ofEndpoints(endpoints);
-  }
-
-  @Nullable
-  private static RedisServerTarget ofSentinelAddresses(
-      @Nullable Collection<?> addresses, @Nullable String logicalName) {
-    if (addresses == null || addresses.isEmpty()) {
-      return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(null, logicalName);
-    }
-    List<String> endpoints = new ArrayList<>(addresses.size());
-    for (Object address : addresses) {
-      endpoints.add(addressString(address));
-    }
-    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, logicalName);
+    return endpoints;
   }
 
   @Nullable
