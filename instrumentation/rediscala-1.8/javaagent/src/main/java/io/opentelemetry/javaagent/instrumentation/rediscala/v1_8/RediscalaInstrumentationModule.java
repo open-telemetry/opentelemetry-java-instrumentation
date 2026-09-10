@@ -22,6 +22,7 @@ public class RediscalaInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new RediscalaMutablePoolInstrumentation(),
         new RequestInstrumentation(),
         new TransactionBuilderInstrumentation(),
         new TransactionInstrumentation());

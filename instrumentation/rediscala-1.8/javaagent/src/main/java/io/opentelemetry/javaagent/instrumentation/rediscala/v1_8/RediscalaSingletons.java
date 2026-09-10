@@ -11,11 +11,13 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
+import redis.Request;
 import redis.commands.TransactionBuilder;
 
 public class RediscalaSingletons {
@@ -24,8 +26,12 @@ public class RediscalaSingletons {
 
   private static final Instrumenter<RediscalaRequest, Void> instrumenter;
 
-  public static final VirtualField<TransactionBuilder, ServerEndpoint> TRANSACTION_ENDPOINT =
-      VirtualField.find(TransactionBuilder.class, ServerEndpoint.class);
+  public static final VirtualField<TransactionBuilder, RediscalaTransactionState>
+      TRANSACTION_STATE =
+          VirtualField.find(TransactionBuilder.class, RediscalaTransactionState.class);
+
+  public static final VirtualField<Request, RedisServerTarget> REQUEST_TARGET =
+      VirtualField.find(Request.class, RedisServerTarget.class);
 
   static {
     RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();
@@ -54,6 +60,19 @@ public class RediscalaSingletons {
 
   public static Instrumenter<RediscalaRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  @Nullable
+  static <T> RedisServerTarget getServerTarget(
+      VirtualField<T, RedisServerTarget> targetField, T client) {
+    RedisServerTarget target = targetField.get(client);
+    if (target == null) {
+      target = RediscalaServerTargets.of(client);
+      if (target != null) {
+        targetField.set(client, target);
+      }
+    }
+    return target;
   }
 
   private RediscalaSingletons() {}
