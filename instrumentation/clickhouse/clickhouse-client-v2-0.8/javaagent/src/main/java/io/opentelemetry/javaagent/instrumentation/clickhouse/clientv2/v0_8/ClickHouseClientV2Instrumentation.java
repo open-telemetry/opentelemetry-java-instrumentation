@@ -5,23 +5,27 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.clickhouse.client.api.Client;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseScope;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.CurrentServerInfo;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -41,7 +45,8 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
             .and(named("query"))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, isSubTypeOf(Map.class)))
-            .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings"))),
+            .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings")))
+            .and(returns(isSubTypeOf(CompletableFuture.class))),
         getClass().getName() + "$QueryAdvice");
   }
 
@@ -64,19 +69,17 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         return null;
       }
 
-      AddressAndPort addressAndPort = ClickHouseClientV2Singletons.getAddressAndPort(client);
-      if (addressAndPort == null) {
-        String endpoint = client.getEndpoints().stream().findFirst().orElse(null);
-        addressAndPort = ClickHouseClientV2Singletons.setAddressAndPort(client, endpoint);
-      }
+      DbServerTarget serverTarget = ClickHouseClientV2Singletons.configuredServerTarget(client);
+      CurrentServerInfo currentServerInfo = ClickHouseClientV2Singletons.currentServerInfo(client);
 
       String database = client.getConfiguration().get("database");
       Context parentContext = currentContext();
       ClickHouseDbRequest request =
           ClickHouseDbRequest.create(
-              addressAndPort.getAddress(),
-              addressAndPort.getPort(),
-              ClickHouseClientV2Singletons.configuredServerTarget(client),
+              currentServerInfo.getAddress(),
+              currentServerInfo.getPort(),
+              currentServerInfo.getPeer(),
+              serverTarget,
               database,
               sqlQuery);
 
@@ -86,13 +89,18 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return @Nullable CompletableFuture<?> future,
         @Advice.Enter @Nullable ClickHouseScope scope) {
       CallDepth callDepth = CallDepth.forClass(Client.class);
       if (callDepth.decrementAndGet() > 0 || scope == null) {
         return;
       }
 
-      scope.end(throwable);
+      if (!emitStableDatabaseSemconv() || throwable != null || future == null) {
+        scope.end(throwable);
+      } else {
+        scope.endOnCompletion(future);
+      }
     }
   }
 }

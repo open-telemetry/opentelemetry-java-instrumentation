@@ -61,6 +61,11 @@ public class ClickHouseClientV1Singletons {
     return uncapturedServerTarget(request);
   }
 
+  @Nullable
+  public static DbServerTarget peerServerTarget(String host, int port) {
+    return DbServerTarget.builder(-1).addEndpoint(host, port).build();
+  }
+
   public static void captureConfiguredNodes(
       ClickHouseNodes nodes, Collection<ClickHouseNode> configuredNodes) {
     NODES_SERVER_TARGET.set(nodes, createServerTarget(configuredNodes));

@@ -13,6 +13,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -31,6 +33,7 @@ import com.clickhouse.client.ClickHouseParameterizedQuery;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.client.ClickHouseResponseSummary;
+import com.clickhouse.client.TestClickHouseClient;
 import com.clickhouse.data.ClickHouseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -122,6 +125,11 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -136,6 +144,8 @@ class ClickHouseClientV1Test {
         DB_SYSTEM_NAME,
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -287,6 +297,11 @@ class ClickHouseClientV1Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + TABLE_NAME + " values(?)(?)(?)"),
                             equalTo(
@@ -307,6 +322,11 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -346,6 +366,11 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -387,6 +412,11 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from non_existent_table"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -403,6 +433,8 @@ class ClickHouseClientV1Test {
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
         ERROR_TYPE,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
     if (emitStableDatabaseSemconv()) {
@@ -445,6 +477,54 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
+  void testAsyncExecuteUsesFinalServer() {
+    ClickHouseNode initialServer = ClickHouseNode.of("http://initial.example:8124/default");
+    ClickHouseNode finalServer = ClickHouseNode.of("http://final.example:9123/default");
+    TestClickHouseClient client = new TestClickHouseClient();
+
+    CompletableFuture<ClickHouseResponse> response =
+        client.read(initialServer).query("select * from " + TABLE_NAME).execute();
+
+    client.failOverTo(finalServer);
+    if (emitStableDatabaseSemconv()) {
+      assertThat(testing.spans()).isEmpty();
+    }
+    client.complete();
+    response.join();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "select test_table"
+                                : "SELECT " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, "initial.example"),
+                            equalTo(SERVER_PORT, 8124),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? "final.example" : null),
+                            equalTo(NETWORK_PEER_PORT, emitStableDatabaseSemconv() ? 9123L : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -481,6 +561,11 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
@@ -523,6 +608,11 @@ class ClickHouseClientV1Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + TABLE_NAME + " values(?)(?)(?)"),
                             equalTo(
@@ -543,6 +633,11 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
@@ -600,6 +695,11 @@ class ClickHouseClientV1Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + TABLE_NAME + " values(:val1)(:val2)(:val3)"),
                             equalTo(
@@ -620,6 +720,11 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " where s=:val"),
@@ -669,6 +774,11 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " where s={s:String}"),
