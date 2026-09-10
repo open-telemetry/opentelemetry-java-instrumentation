@@ -10,7 +10,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-public class LettuceCommandPeer {
+final class LettuceCommandPeer {
   private static final String DOMAIN_SOCKET_ADDRESS_CLASS =
       "io.netty.channel.unix.DomainSocketAddress";
 
