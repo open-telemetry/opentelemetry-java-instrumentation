@@ -12,6 +12,7 @@ import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -28,30 +29,35 @@ final class LettuceBatchRequest {
   @Nullable private final Long batchSize;
   @Nullable private final InetSocketAddress serverAddress;
   @Nullable private final Integer databaseIndex;
+  @Nullable private final RedisServerTarget serverTarget;
 
   private LettuceBatchRequest(
       String operationName,
       @Nullable String queryText,
       @Nullable Long batchSize,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable Integer databaseIndex) {
+      @Nullable Integer databaseIndex,
+      @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
     this.serverAddress = serverAddress;
     this.databaseIndex = databaseIndex;
+    this.serverTarget = serverTarget;
   }
 
   static LettuceBatchRequest create(
       List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable Integer databaseIndex) {
+      @Nullable Integer databaseIndex,
+      @Nullable RedisServerTarget serverTarget) {
     return new LettuceBatchRequest(
         operationName(commands),
         queryText(commands),
         commands.size() != 1 ? (long) commands.size() : null,
         serverAddress,
-        databaseIndex);
+        databaseIndex,
+        serverTarget);
   }
 
   String getOperationName() {
@@ -76,6 +82,11 @@ final class LettuceBatchRequest {
   @Nullable
   Integer getDatabaseIndex() {
     return databaseIndex;
+  }
+
+  @Nullable
+  RedisServerTarget getServerTarget() {
+    return serverTarget;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {

@@ -9,9 +9,11 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceVersionSupport.configuredTargetsSupported;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -24,24 +26,33 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDI
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 
 import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionException;
+import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.codec.StringCodec;
+import io.lettuce.core.masterslave.MasterSlave;
+import io.lettuce.core.masterslave.StatefulRedisMasterSlaveConnection;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -184,6 +195,95 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         DB_NAMESPACE,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  @DisabledIfSystemProperty(
+      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
+      matches = "true")
+  void testMasterSlaveCommandsAndBatchUseConfiguredUris() throws Exception {
+    List<RedisURI> redisUris =
+        asList(RedisURI.create(embeddedDbUri), RedisURI.create(embeddedDbUri));
+    String configuredTarget = host + ":" + port + "," + host + ":" + port;
+    StatefulRedisMasterSlaveConnection<String, String> masterSlaveConnection =
+        MasterSlave.connect(redisClient, StringCodec.UTF8, redisUris);
+    cleanup.deferCleanup(masterSlaveConnection);
+
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    assertThat(masterSlaveConnection.sync().set("MASTER_SLAVE_COMMAND_KEY", "value"))
+        .isEqualTo("OK");
+
+    masterSlaveConnection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> masterSlaveConnection.setAutoFlushCommands(true));
+    RedisAsyncCommands<String, String> asyncCommands = masterSlaveConnection.async();
+    RedisFuture<String> first = asyncCommands.set("MASTER_SLAVE_BATCH_KEY_1", "value");
+    RedisFuture<String> second = asyncCommands.set("MASTER_SLAVE_BATCH_KEY_2", "value");
+    masterSlaveConnection.flushCommands();
+    assertThat(first.get(10, SECONDS)).isEqualTo("OK");
+    assertThat(second.get(10, SECONDS)).isEqualTo("OK");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SET "
+                                    + (configuredTargetsSupported()
+                                        ? configuredTarget
+                                        : host + ":" + port)
+                                : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() && configuredTargetsSupported()
+                                    ? configuredTarget
+                                    : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() && configuredTargetsSupported()
+                                    ? null
+                                    : Long.valueOf(port)),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "SET MASTER_SLAVE_COMMAND_KEY ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "PIPELINE SET "
+                                    + (configuredTargetsSupported()
+                                        ? configuredTarget
+                                        : host + ":" + port)
+                                : "PIPELINE SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() && configuredTargetsSupported()
+                                    ? configuredTarget
+                                    : host),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() && configuredTargetsSupported()
+                                    ? null
+                                    : Long.valueOf(port)),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? "SET MASTER_SLAVE_BATCH_KEY_1 ?; SET MASTER_SLAVE_BATCH_KEY_2 ?"
+                                    : "SET MASTER_SLAVE_BATCH_KEY_1 ?;SET MASTER_SLAVE_BATCH_KEY_2 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? Long.valueOf(2) : null))));
   }
 
   @Test
