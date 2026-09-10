@@ -13,6 +13,7 @@ import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.masterslave.StatefulRedisMasterSlaveConnection;
 import io.lettuce.core.protocol.AsyncCommand;
+import io.lettuce.core.protocol.DecoratedCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -30,6 +31,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.List;
 import javax.annotation.Nullable;
 
 public class LettuceSingletons {
@@ -53,6 +56,9 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
       VirtualField.find(RedisCommand.class, InetSocketAddress.class);
+
+  private static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
+      VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
 
   public static final VirtualField<DefaultEndpoint, Integer> ENDPOINT_DATABASE_INDEX =
       VirtualField.find(DefaultEndpoint.class, Integer.class);
@@ -166,29 +172,86 @@ public class LettuceSingletons {
       commandTarget = CONNECTION_TARGET.get(connectionHandler);
     }
 
-    // Reactive commands previously copied endpoint metadata only when
-    // RedisChannelHandler.getChannelWriter() returned a DefaultEndpoint directly. That works with
-    // default ClientOptions through Lettuce 6.4. CommandExpiryWriter can also appear in Lettuce
-    // 5.1-6.4 when command timeouts are explicitly enabled.
-    //
-    // Starting with Lettuce 6.5, command timeouts are enabled by default, so getChannelWriter()
-    // returns CommandExpiryWriter instead of its DefaultEndpoint delegate. Lettuce 7 can return
-    // MaintenanceAwareExpiryWriter, and CommandListenerWriter can add another outer wrapper.
-    // Although these writers eventually delegate write() to DefaultEndpoint, the old
-    // "channelWriter instanceof DefaultEndpoint" check is performed against the outer writer
-    // object and therefore evaluates to false.
-    //
-    // As a result, the old branch was skipped and COMMAND_ADDRESS and COMMAND_DATABASE_INDEX
-    // remained null. Reactive spans are started later by Reactor doOnSubscribe, where the
-    // attributes getter reads these command fields, so the spans lacked server.address,
-    // server.port, db.namespace, and the endpoint suffix in the span name.
-    //
-    // LettuceClientInstrumentation now stores the RedisURI metadata directly on the
+    // LettuceClientInstrumentation stores the RedisURI metadata directly on the
     // RedisChannelHandler while the connection and original DefaultEndpoint are both available.
-    // Reading CONNECTION_* here avoids depending on the concrete channel-writer wrapper chain.
+    // Reading CONNECTION_* here avoids depending on the concrete channel-writer wrapper chain and
+    // makes the metadata available when the reactive span is started.
     COMMAND_ADDRESS.set(command, CONNECTION_ADDRESS.get(connectionHandler));
     COMMAND_DATABASE_INDEX.set(command, CONNECTION_DATABASE_INDEX.get(connectionHandler));
     COMMAND_TARGET.set(command, commandTarget);
+  }
+
+  public static boolean markCommandSpanStarted(AsyncCommand<?, ?, ?> command) {
+    LettuceCommandPeer peer = findCommandPeer(command);
+    return peer != null && peer.markSpanStarted();
+  }
+
+  static void recordCommandPeer(RedisCommand<?, ?, ?> command, SocketAddress peerAddress) {
+    LettuceCommandPeer peer = findCommandPeer(command);
+    if (peer != null) {
+      peer.record(peerAddress);
+    }
+  }
+
+  public static void initializeCommandPeer(RedisCommand<?, ?, ?> command) {
+    if (COMMAND_PEER.get(command) == null) {
+      COMMAND_PEER.set(command, new LettuceCommandPeer());
+    }
+  }
+
+  public static void initializeCommandPeerForSubscription(RedisCommand<?, ?, ?> command) {
+    if (findCommandPeer(command) == null) {
+      COMMAND_PEER.set(command, new LettuceCommandPeer());
+    }
+  }
+
+  @Nullable
+  private static LettuceCommandPeer findCommandPeer(RedisCommand<?, ?, ?> command) {
+    RedisCommand<?, ?, ?> current = command;
+    while (current != null) {
+      LettuceCommandPeer peer = COMMAND_PEER.get(current);
+      if (peer != null) {
+        return peer;
+      }
+      current =
+          current instanceof DecoratedCommand
+              ? ((DecoratedCommand<?, ?, ?>) current).getDelegate()
+              : null;
+    }
+    return null;
+  }
+
+  @Nullable
+  static SocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
+    // A command that does not expect a response has its span ended synchronously in
+    // DefaultEndpoint.write, while the channel write that records the peer runs later on the netty
+    // event loop, so the peer is not known yet.
+    if (!LettuceInstrumentationUtil.expectsResponse(command)) {
+      return null;
+    }
+    LettuceCommandPeer peer = findCommandPeer(command);
+    return peer == null ? null : peer.getAddress();
+  }
+
+  @Nullable
+  static SocketAddress batchPeerAddress(List<RedisCommand<?, ?, ?>> commands) {
+    SocketAddress batchPeerAddress = null;
+    for (RedisCommand<?, ?, ?> command : commands) {
+      LettuceCommandPeer peer = findCommandPeer(command);
+      if (peer == null) {
+        return null;
+      }
+      SocketAddress commandPeerAddress = peer.getAddress();
+      if (commandPeerAddress == null) {
+        return null;
+      }
+      if (batchPeerAddress == null) {
+        batchPeerAddress = commandPeerAddress;
+      } else if (!batchPeerAddress.equals(commandPeerAddress)) {
+        return null;
+      }
+    }
+    return batchPeerAddress;
   }
 
   private LettuceSingletons() {}
