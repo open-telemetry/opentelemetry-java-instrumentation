@@ -57,6 +57,13 @@ testing {
         }
       }
     }
+
+    register<JvmTestSuite>("version23Test") {
+      dependencies {
+        implementation("redis.clients:jedis:2.3.0")
+        implementation("org.testcontainers:testcontainers")
+      }
+    }
   }
 }
 
@@ -66,15 +73,18 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
-  }
+        jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+      }
+    }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, stableSemconvSuites)
   }
 }
