@@ -24,14 +24,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SignalType;
 
-public class LettuceFluxTerminationRunnable
-    implements LettuceReactiveCommandHandler, Consumer<Signal<?>>, Runnable {
+public class LettuceFluxTerminationHandler
+    implements LettuceReactiveCommandHandler, Consumer<Signal<?>> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
           .getBoolean("experimental_span_attributes/development", false);
   private static final Logger logger =
-      Logger.getLogger(LettuceFluxTerminationRunnable.class.getName());
+      Logger.getLogger(LettuceFluxTerminationHandler.class.getName());
 
   private final StatefulConnection<?, ?> connection;
   private final AtomicBoolean spanEnded = new AtomicBoolean();
@@ -44,7 +44,7 @@ public class LettuceFluxTerminationRunnable
     return new Flux<T>() {
       @Override
       public void subscribe(CoreSubscriber<? super T> actual) {
-        LettuceFluxTerminationRunnable handler = new LettuceFluxTerminationRunnable(connection);
+        LettuceFluxTerminationHandler handler = new LettuceFluxTerminationHandler(connection);
         publisher
             .doOnEach(handler)
             .subscribe(new LettuceReactiveCommandSubscriber<>(actual, handler));
@@ -52,7 +52,7 @@ public class LettuceFluxTerminationRunnable
     };
   }
 
-  private LettuceFluxTerminationRunnable(StatefulConnection<?, ?> connection) {
+  private LettuceFluxTerminationHandler(StatefulConnection<?, ?> connection) {
     this.connection = connection;
   }
 
@@ -85,7 +85,7 @@ public class LettuceFluxTerminationRunnable
       instrumenter().end(context, command, null, throwable);
     } else {
       logger.fine(
-          "Failed to end this.context, LettuceFluxTerminationRunnable cannot find this.context "
+          "Failed to end this.context, LettuceFluxTerminationHandler cannot find this.context "
               + "because it probably wasn't started.");
     }
   }
@@ -103,15 +103,10 @@ public class LettuceFluxTerminationRunnable
   }
 
   @Override
-  public void run() {
+  public void onCancel() {
     if (!expectsResponse) {
       return;
     }
     finishSpan(/* isCommandCancelled= */ true, null);
-  }
-
-  @Override
-  public void onCancel() {
-    run();
   }
 }
