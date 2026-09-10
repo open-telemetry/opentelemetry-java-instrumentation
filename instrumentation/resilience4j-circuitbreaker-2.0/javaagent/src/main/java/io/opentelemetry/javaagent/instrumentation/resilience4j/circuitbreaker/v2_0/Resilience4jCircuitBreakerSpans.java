@@ -75,7 +75,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  public static Capture beginCapture(CircuitBreaker circuitBreaker) {
+  static Capture beginCapture(CircuitBreaker circuitBreaker) {
     return beginCapture(circuitBreaker, false);
   }
 
@@ -93,17 +93,17 @@ public class Resilience4jCircuitBreakerSpans {
     return capture;
   }
 
-  public static Capture beginCaptureAfterAcquisition(CircuitBreaker circuitBreaker) {
+  static Capture beginCaptureAfterAcquisition(CircuitBreaker circuitBreaker) {
     return beginCapture(circuitBreaker, true);
   }
 
   @Nullable
-  public static PendingSpan endCapture(Capture capture) {
+  static PendingSpan endCapture(Capture capture) {
     removeCapture(capture);
     return claim(capture.token);
   }
 
-  public static void cancelCapture(Capture capture) {
+  static void cancelCapture(Capture capture) {
     removeCapture(capture);
   }
 
@@ -122,7 +122,7 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   @Nullable
-  public static PendingSpan claimRecentAcquisition(CircuitBreaker circuitBreaker) {
+  static PendingSpan claimRecentAcquisition(CircuitBreaker circuitBreaker) {
     return claim(peekRecentAcquisition(circuitBreaker));
   }
 
@@ -325,7 +325,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  public static void endResult(CircuitBreaker circuitBreaker) {
+  private static void endResult(CircuitBreaker circuitBreaker) {
     // Do not invoke Resilience4j's recordResult predicate from instrumentation. Result predicate
     // failures are handled when Resilience4j publishes its synthetic circuit error event.
     // Otherwise, treat onResult() completion as success.
@@ -345,7 +345,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  public static void attachPendingSpan(PendingSpan pendingSpan) {
+  static void attachPendingSpan(PendingSpan pendingSpan) {
     Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
     if (spans == null) {
       spans = new ArrayDeque<>();
@@ -354,7 +354,7 @@ public class Resilience4jCircuitBreakerSpans {
     spans.push(new AttachedPendingSpan(pendingSpan, pendingSpan.makeCurrent()));
   }
 
-  public static void detachPendingSpan(PendingSpan pendingSpan) {
+  static void detachPendingSpan(PendingSpan pendingSpan) {
     removeAttachedPendingSpan(pendingSpan);
   }
 
@@ -480,7 +480,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  public static class Capture {
+  static class Capture {
     private final CircuitBreaker circuitBreaker;
     @Nullable private AttemptToken token;
 
@@ -525,7 +525,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  public static class PendingSpan {
+  static class PendingSpan {
     private final CircuitBreaker circuitBreaker;
     private final Resilience4jCircuitBreakerRequest request;
     private final Context context;
@@ -547,11 +547,11 @@ public class Resilience4jCircuitBreakerSpans {
       return this.circuitBreaker == circuitBreaker;
     }
 
-    public Scope makeCurrent() {
+    Scope makeCurrent() {
       return context.makeCurrent();
     }
 
-    public void closeOperationScope() {
+    void closeOperationScope() {
       Scope scope;
       synchronized (this) {
         scope = operationScope;
@@ -562,7 +562,7 @@ public class Resilience4jCircuitBreakerSpans {
       }
     }
 
-    public void end(String outcome, @Nullable Throwable throwable) {
+    void end(String outcome, @Nullable Throwable throwable) {
       synchronized (this) {
         if (ended) {
           return;

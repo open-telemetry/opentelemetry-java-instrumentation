@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 
-public class Resilience4jCircuitBreakerSingletons {
+class Resilience4jCircuitBreakerSingletons {
 
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.resilience4j-circuitbreaker-2.0";
@@ -20,7 +20,7 @@ public class Resilience4jCircuitBreakerSingletons {
   private static final Instrumenter<Resilience4jCircuitBreakerRequest, String> instrumenter =
       createInstrumenter();
 
-  public static Instrumenter<Resilience4jCircuitBreakerRequest, String> instrumenter() {
+  static Instrumenter<Resilience4jCircuitBreakerRequest, String> instrumenter() {
     return instrumenter;
   }
 
