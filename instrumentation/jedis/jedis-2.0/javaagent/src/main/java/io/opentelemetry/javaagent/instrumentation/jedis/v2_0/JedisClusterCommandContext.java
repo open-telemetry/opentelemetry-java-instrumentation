@@ -7,10 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
@@ -62,15 +59,8 @@ public final class JedisClusterCommandContext {
         this.request = request;
       }
     } else if (this.request.getOperationName().equals(request.getOperationName())
-        && this.request.getQueryText().equals(request.getQueryText())
-        && this.request.useLaterPeerAddress(request)
-        && !emitStableDatabaseSemconv()) {
-      Context spanContext = this.context;
-      if (spanContext != null) {
-        Span span = Span.fromContext(spanContext);
-        span.setAttribute(SERVER_ADDRESS, request.getConnection().getHost());
-        span.setAttribute(SERVER_PORT, request.getConnection().getPort());
-      }
+        && this.request.getQueryText().equals(request.getQueryText())) {
+      this.request.useLaterPeerAddress(request);
     }
   }
 
