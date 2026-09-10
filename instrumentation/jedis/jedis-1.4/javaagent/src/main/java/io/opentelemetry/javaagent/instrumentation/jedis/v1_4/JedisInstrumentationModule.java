@@ -41,7 +41,6 @@ public class JedisInstrumentationModule extends InstrumentationModule {
     return asList(
         new JedisConnectionInstrumentation(),
         new ShardedJedisInstrumentation(),
-        new ShardedRoutingInstrumentation(),
         new JedisInstrumentation());
   }
 }

@@ -21,20 +21,16 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
-import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Connection;
-import redis.clients.util.Sharded;
 
 public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
 
-  private static final VirtualField<Sharded<?, ?>, ConfiguredTarget> SHARDED_TARGET =
-      VirtualField.find(Sharded.class, ConfiguredTarget.class);
-  private static final VirtualField<Connection, ConfiguredTarget> CONNECTION_TARGET =
-      VirtualField.find(Connection.class, ConfiguredTarget.class);
-  private static final ContextKey<ConfiguredTarget> CURRENT_CONFIGURED_TARGET =
+  private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
+      VirtualField.find(Connection.class, RedisServerTarget.class);
+  private static final ContextKey<RedisServerTarget> CURRENT_CONFIGURED_TARGET =
       ContextKey.named("opentelemetry-jedis-configured-target");
 
   static {
@@ -59,51 +55,31 @@ public class JedisSingletons {
     return instrumenter;
   }
 
-  public static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
-    SHARDED_TARGET.set(sharded, new ConfiguredTarget(target));
-  }
-
-  public static void attachShardedTarget(Sharded<?, ?> sharded, @Nullable Object shard) {
-    ConfiguredTarget target = SHARDED_TARGET.get(sharded);
-    if (target == null || !(shard instanceof BinaryJedis)) {
-      return;
-    }
-    CONNECTION_TARGET.set(((BinaryJedis) shard).getClient(), target);
-  }
-
   public static void captureConnectionTarget(Connection connection) {
-    ConfiguredTarget target = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    RedisServerTarget target = Context.current().get(CURRENT_CONFIGURED_TARGET);
     if (target == null) {
-      target =
-          new ConfiguredTarget(
-              RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort()));
+      target = RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort());
     }
-    CONNECTION_TARGET.set(connection, target);
+    if (target != null) {
+      CONNECTION_TARGET.set(connection, target);
+    }
   }
 
+  @Nullable
   public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
-    return Context.current()
-        .with(CURRENT_CONFIGURED_TARGET, new ConfiguredTarget(target))
-        .makeCurrent();
+    return target != null
+        ? Context.current().with(CURRENT_CONFIGURED_TARGET, target).makeCurrent()
+        : null;
   }
 
   @Nullable
   static RedisServerTarget connectionTarget(Connection connection) {
-    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
-    if (configuredTarget != null) {
-      return configuredTarget.target;
+    RedisServerTarget target = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    if (target != null) {
+      return target;
     }
-    ConfiguredTarget target = CONNECTION_TARGET.get(connection);
-    return target != null ? target.target : null;
+    return CONNECTION_TARGET.get(connection);
   }
 
   private JedisSingletons() {}
-
-  private static final class ConfiguredTarget {
-    @Nullable private final RedisServerTarget target;
-
-    private ConfiguredTarget(@Nullable RedisServerTarget target) {
-      this.target = target;
-    }
-  }
 }
