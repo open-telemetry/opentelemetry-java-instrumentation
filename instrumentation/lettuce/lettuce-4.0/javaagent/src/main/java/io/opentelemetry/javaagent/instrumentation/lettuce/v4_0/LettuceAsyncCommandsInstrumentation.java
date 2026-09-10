@@ -103,6 +103,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
         return null;
       }
 
+      LettuceSingletons.initializeCommandPeer(command);
       Context context = instrumenter().start(parentContext, command);
       // remember the context that called dispatch, it is used in LettuceAsyncCommandInstrumentation
       context = context.with(COMMAND_CONTEXT_KEY, parentContext);

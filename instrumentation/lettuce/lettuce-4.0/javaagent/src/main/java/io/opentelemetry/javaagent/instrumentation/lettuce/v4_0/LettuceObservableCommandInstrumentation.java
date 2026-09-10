@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import rx.Subscriber;
 
 class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
 
@@ -54,10 +55,13 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This RedisCommand<?, ?, ?> command) {
+    public static void onExit(
+        @Advice.This RedisCommand<?, ?, ?> observableCommand,
+        @Advice.Argument(1) Subscriber<?> subscriber) {
+      LettuceSingletons.applySubscriberPeer(observableCommand, subscriber);
       Context context = Java8BytecodeBridge.currentContext();
       if (context.get(COMMAND_CONTEXT_KEY) != null) {
-        CONTEXT.set(command, context);
+        CONTEXT.set(observableCommand, context);
       }
     }
   }
@@ -77,7 +81,11 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
       }
 
       CONTEXT.set(command, null);
-      InstrumentationPoints.endReactiveCommand(command, context, methodName, commandError);
+      try {
+        InstrumentationPoints.endReactiveCommand(command, context, methodName, commandError);
+      } finally {
+        LettuceSingletons.clearCommandPeer(command);
+      }
       context = context.get(COMMAND_CONTEXT_KEY);
       return context.makeCurrent();
     }
