@@ -16,6 +16,7 @@ dependencies {
   compileOnly("io.vertx:vertx-codegen:4.0.0")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.4.5:javaagent"))
 
   testLibrary("io.vertx:vertx-codegen:4.0.0")
 }
