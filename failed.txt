@@ -9,3 +9,4 @@ kafka-connect-2.6:javaagent-unit-tests	2026-08-18T11:39:55Z	git apply failed (pa
 apache-commons-pool-2.0:testing	2026-08-19T23:59:05Z	git apply failed (patch conflict)
 redisson-metrics-common-2.3:javaagent	2026-09-07T11:02:07Z	git apply failed (patch conflict)
 couchbase-3.0:javaagent	2026-09-09T03:55:44Z	git apply failed (patch conflict)
+cassandra-4.4:javaagent-unit-tests	2026-09-10T20:49:02Z	git apply failed (patch conflict)
