@@ -338,8 +338,8 @@ We parse gradle files in order to determine several pieces of metadata:
 
 Every `pass { ... }` block contributes a line to `javaagent_target_versions`. Some pass blocks exist
 only to verify a sub-range or an alternate dependency set, and publishing their version range
-alongside the module's real range is misleading. Add an `// instrumentation-docs:ignore` comment
-inside such a block to leave it out of the generated documentation:
+alongside the module's real range is misleading. Add a `// instrumentation-docs:ignore` comment
+immediately after `pass {` inside such a block to leave it out of the generated documentation:
 
 ```kotlin
 muzzle {
@@ -358,9 +358,8 @@ muzzle {
 }
 ```
 
-The comment must be inside the block body. A comment placed on the line above `pass {` is not
-honored, since it reads as a trailing comment on the preceding block. The marker has no effect on
-muzzle itself, only on the generated `instrumentation-list.yaml`.
+Place the comment on the first line of the block body. A comment above `pass {` is not honored.
+The marker has no effect on muzzle itself, only on the generated `instrumentation-list.yaml`.
 
 ### Scope
 

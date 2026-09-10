@@ -29,7 +29,8 @@ public class GradleParser {
   private static final Pattern variablePattern =
       Pattern.compile("val\\s+(\\w+)\\s*=\\s*\"([^\"]+)\"");
 
-  private static final Pattern muzzlePassBlockStartPattern = Pattern.compile("\\bpass\\s*\\{");
+  private static final Pattern muzzlePassBlockPattern =
+      Pattern.compile("pass\\s*\\{(.*?)}", Pattern.DOTALL);
 
   private static final Pattern coreJdkPattern = Pattern.compile("coreJdk\\.set\\(true\\)");
 
@@ -77,10 +78,12 @@ public class GradleParser {
   private static DependencyInfo parseMuzzle(
       String gradleFileContents, Map<String, String> variables) {
     Set<String> results = new HashSet<>();
+    Matcher passBlockMatcher = muzzlePassBlockPattern.matcher(gradleFileContents);
 
     Integer minJavaVersion = parseMinJavaVersion(gradleFileContents);
 
-    for (String passBlock : extractPassBlocks(gradleFileContents)) {
+    while (passBlockMatcher.find()) {
+      String passBlock = passBlockMatcher.group(1);
       if (docsIgnorePattern.matcher(passBlock).find()) {
         continue;
       }
@@ -103,47 +106,6 @@ public class GradleParser {
       }
     }
     return new DependencyInfo(results, minJavaVersion);
-  }
-
-  /**
-   * Extracts the body of each muzzle "pass { ... }" block. Braces are matched by depth rather than
-   * with a regex so that a block containing a brace, such as a comment referencing {@code
-   * io.opentelemetry.context.{Context,Scope}}, is captured in full instead of being truncated at
-   * that brace.
-   *
-   * @param gradleFileContents Contents of a Gradle build file as a String
-   * @return The body of each pass block, in the order they appear
-   */
-  private static List<String> extractPassBlocks(String gradleFileContents) {
-    List<String> passBlocks = new ArrayList<>();
-    Matcher blockStartMatcher = muzzlePassBlockStartPattern.matcher(gradleFileContents);
-    int searchFrom = 0;
-
-    while (blockStartMatcher.find(searchFrom)) {
-      int bodyStart = blockStartMatcher.end();
-      int depth = 1;
-      int position = bodyStart;
-
-      while (position < gradleFileContents.length() && depth > 0) {
-        char c = gradleFileContents.charAt(position);
-        if (c == '{') {
-          depth++;
-        } else if (c == '}') {
-          depth--;
-        }
-        position++;
-      }
-
-      if (depth != 0) {
-        // unbalanced braces, the file is not something we can reason about
-        break;
-      }
-
-      passBlocks.add(gradleFileContents.substring(bodyStart, position - 1));
-      searchFrom = position;
-    }
-
-    return passBlocks;
   }
 
   @Nullable

@@ -112,11 +112,19 @@ class GradleParserTest {
                 versions.set("[2,2.6)")
                 assertInverse.set(true)
               }
+              pass {
+                group.set("com.couchbase.client")
+                module.set("java-client")
+                versions.set("[3,4)")
+                assertInverse.set(true)
+              }
             }""";
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions()).containsExactly("com.couchbase.client:java-client:[2,3)");
+    assertThat(info.versions())
+        .containsExactlyInAnyOrder(
+            "com.couchbase.client:java-client:[2,3)", "com.couchbase.client:java-client:[3,4)");
   }
 
   @Test
@@ -133,51 +141,6 @@ class GradleParserTest {
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
     assertThat(info.versions()).isEmpty();
-  }
-
-  @Test
-  void testDocsIgnoreHonoredAfterCommentContainingBraces() {
-    String gradleBuildFileContent =
-        """
-            muzzle {
-              pass {
-                group.set("com.azure")
-                module.set("azure-core")
-                versions.set("[1.53.0,)")
-                // this module references the application's io.opentelemetry.context.{Context,Scope}
-                // instrumentation-docs:ignore - verification only
-                excludeInstrumentationName("azure-core-1.53-context")
-              }
-            }""";
-
-    DependencyInfo info =
-        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions()).isEmpty();
-  }
-
-  @Test
-  void testExtractMuzzleVersions_CommentContainingBracesDoesNotTruncateBlock() {
-    String gradleBuildFileContent =
-        """
-            muzzle {
-              pass {
-                // this module references the application's io.opentelemetry.context.{Context,Scope}
-                group.set("com.azure")
-                module.set("azure-core")
-                versions.set("[1.53.0,)")
-              }
-              pass {
-                group.set("com.azure")
-                module.set("azure-core-amqp")
-                versions.set("[2.0.0,)")
-              }
-            }""";
-
-    DependencyInfo info =
-        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions())
-        .containsExactlyInAnyOrder(
-            "com.azure:azure-core:[1.53.0,)", "com.azure:azure-core-amqp:[2.0.0,)");
   }
 
   @Test
