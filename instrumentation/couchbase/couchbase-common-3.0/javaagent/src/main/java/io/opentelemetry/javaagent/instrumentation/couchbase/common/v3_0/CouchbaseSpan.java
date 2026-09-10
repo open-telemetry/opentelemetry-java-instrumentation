@@ -39,10 +39,12 @@ public final class CouchbaseSpan {
 
   private final Span span;
   private final boolean makeCurrentOnEnd;
+  private final boolean mapLegacyNetworkPeerAttributes;
 
-  CouchbaseSpan(Span span, boolean makeCurrentOnEnd) {
+  CouchbaseSpan(Span span, boolean makeCurrentOnEnd, boolean mapLegacyNetworkPeerAttributes) {
     this.span = span;
     this.makeCurrentOnEnd = makeCurrentOnEnd;
+    this.mapLegacyNetworkPeerAttributes = mapLegacyNetworkPeerAttributes;
   }
 
   Span getSpan() {
@@ -99,6 +101,10 @@ public final class CouchbaseSpan {
     span.setAttribute(key, value);
   }
 
+  public void updateName(String name) {
+    span.updateName(name);
+  }
+
   public void addEvent(String name, Instant timestamp) {
     span.addEvent(name, timestamp);
   }
@@ -123,7 +129,7 @@ public final class CouchbaseSpan {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Nullable
-  private static String stableKey(String key) {
+  private String stableKey(String key) {
     if (key.equals(DB_COUCHBASE_COLLECTION)) {
       return DB_COLLECTION_NAME.getKey();
     }
@@ -139,10 +145,10 @@ public final class CouchbaseSpan {
     if (key.equals(DB_SYSTEM.getKey())) {
       return DB_SYSTEM_NAME.getKey();
     }
-    if (key.equals(NET_PEER_NAME)) {
+    if (mapLegacyNetworkPeerAttributes && key.equals(NET_PEER_NAME)) {
       return NETWORK_PEER_ADDRESS.getKey();
     }
-    if (key.equals(NET_PEER_PORT)) {
+    if (mapLegacyNetworkPeerAttributes && key.equals(NET_PEER_PORT)) {
       return NETWORK_PEER_PORT.getKey();
     }
     return null;

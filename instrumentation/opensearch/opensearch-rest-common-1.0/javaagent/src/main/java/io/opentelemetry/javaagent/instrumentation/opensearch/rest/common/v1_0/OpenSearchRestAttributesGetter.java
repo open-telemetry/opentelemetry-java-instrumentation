@@ -5,7 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -27,8 +31,9 @@ final class OpenSearchRestAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getDbQueryText(OpenSearchRestRequest request) {
-    return request.getMethod() + " " + request.getEndpoint();
+    return emitStableDatabaseSemconv() ? null : request.getMethod() + " " + request.getEndpoint();
   }
 
   @Override
@@ -52,11 +57,31 @@ final class OpenSearchRestAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
+  public String getServerAddress(OpenSearchRestRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    DbServerTarget target = request.getServerTarget();
+    return target != null ? target.getAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(OpenSearchRestRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    DbServerTarget target = request.getServerTarget();
+    return target != null ? target.getPort() : null;
+  }
+
+  @Override
+  @Nullable
   public String getNetworkType(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (response == null) {
+    if (!emitOldDatabaseSemconv() || response == null) {
       return null;
     }
     InetAddress address = response.getAddress();
@@ -72,7 +97,7 @@ final class OpenSearchRestAttributesGetter
   @Nullable
   public String getNetworkPeerAddress(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (response != null) {
+    if (!emitStableDatabaseSemconv() && response != null) {
       InetAddress address = response.getAddress();
       if (address != null) {
         return address.getHostAddress();
