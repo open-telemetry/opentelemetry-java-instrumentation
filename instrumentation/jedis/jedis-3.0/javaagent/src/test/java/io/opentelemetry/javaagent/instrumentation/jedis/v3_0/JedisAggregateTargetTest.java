@@ -29,7 +29,6 @@ import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class JedisAggregateTargetTest {
 
   private static final String MASTER_NAME = "mymaster";
