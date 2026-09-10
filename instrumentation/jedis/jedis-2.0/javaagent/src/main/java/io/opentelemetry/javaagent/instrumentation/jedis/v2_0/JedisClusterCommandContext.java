@@ -23,7 +23,7 @@ public final class JedisClusterCommandContext {
 
   @Nullable
   public static JedisClusterCommandContext start() {
-    if (current.get() != null) {
+    if (!emitStableDatabaseSemconv() || current.get() != null) {
       return null;
     }
     JedisClusterCommandContext commandContext = new JedisClusterCommandContext();

@@ -189,11 +189,13 @@ class JedisAggregateTargetTest {
                 .invoke(null, key);
     Class<?> hostAndPortClass = Class.forName("redis.clients.jedis.HostAndPort");
 
+    int askingPort;
     try (AskingServer askingServer = new AskingServer(slot, clusterPort)) {
+      askingPort = askingServer.getPort();
       Object askingNode =
           hostAndPortClass
               .getConstructor(String.class, int.class)
-              .newInstance("127.0.0.1", askingServer.getPort());
+              .newInstance("127.0.0.1", askingPort);
       assignSlotToNode(clusterHandler, slot, askingNode);
       try {
         cluster
@@ -208,28 +210,35 @@ class JedisAggregateTargetTest {
 
     await()
         .untilAsserted(
-            () ->
+            () -> {
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().startsWith("SET"))
+                  .hasSize(emitStableDatabaseSemconv() ? 1 : 2)
+                  .allSatisfy(
+                      span -> {
+                        if (emitStableDatabaseSemconv()) {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                          assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS))
+                              .isEqualTo("127.0.0.1");
+                          assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
+                              .isEqualTo((long) clusterPort);
+                        } else {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isNotEqualTo(clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
+                          assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isNull();
+                          assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isNull();
+                        }
+                      });
+              if (!emitStableDatabaseSemconv()) {
                 assertThat(testing.spans())
                     .filteredOn(span -> span.getName().startsWith("SET"))
-                    .singleElement()
-                    .satisfies(
-                        span -> {
-                          if (emitStableDatabaseSemconv()) {
-                            assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                                .isEqualTo(clusterTarget);
-                            assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                            assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS))
-                                .isEqualTo("127.0.0.1");
-                            assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
-                                .isEqualTo((long) clusterPort);
-                          } else {
-                            assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                                .isNotEqualTo(clusterTarget);
-                            assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-                            assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isNull();
-                            assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isNull();
-                          }
-                        }));
+                    .extracting(span -> span.getAttributes().get(SERVER_PORT))
+                    .containsExactly((long) askingPort, (long) clusterPort);
+              }
+            });
   }
 
   @Test
@@ -239,8 +248,12 @@ class JedisAggregateTargetTest {
         .getMethod("publish", String.class, String.class)
         .invoke(cluster, "channel", "message");
 
-    testing.waitForTraces(1);
+    testing.waitForTraces(emitStableDatabaseSemconv() ? 1 : 2);
     assertThat(testing.spans())
+        .filteredOn(span -> span.getName().startsWith("PING"))
+        .hasSize(emitStableDatabaseSemconv() ? 0 : 1);
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().startsWith("PUBLISH"))
         .singleElement()
         .satisfies(
             span -> {
