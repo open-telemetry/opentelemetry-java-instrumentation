@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -164,6 +165,24 @@ class MessagingConfigTest {
       System.clearProperty(replacementProperty);
       System.clearProperty(deprecatedProperty);
     }
+  }
+
+  @Test
+  void replacementAndDeprecatedHeaderAliasesAreResolvedIndependently() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("*"));
+    when(deprecatedMessagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("excluded", String.class))
+        .thenReturn(singletonList("authorization"));
+
+    IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
+
+    assertThat(headers.matches("x-test")).isTrue();
+    assertThat(headers.matches("authorization")).isFalse();
   }
 
   @Test

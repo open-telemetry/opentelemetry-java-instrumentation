@@ -56,18 +56,20 @@ public final class MessagingConfig {
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
     DeclarativeConfigProperties messagingConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
+    DeclarativeConfigProperties headers = messagingConfig.get("headers/development");
+    DeclarativeConfigProperties deprecatedHeaders =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
+            .get("headers/development");
+    List<String> included =
+        getHeaderPatterns("included", headers, deprecatedHeaders, systemPropertyFallback);
+    List<String> excluded =
+        getHeaderPatterns("excluded", headers, deprecatedHeaders, systemPropertyFallback);
     IncludeExclude selector =
-        getHeaders(
-            messagingConfig.get("headers/development"),
-            COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.",
-            systemPropertyFallback);
-    if (selector != null) {
-      return selector;
-    }
-
-    // TODO: remove the deprecated flat messaging names in a future minor release.
-    selector = getDeprecatedHeaderAliases(openTelemetry, systemPropertyFallback);
-    if (selector != null) {
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build();
+    if (!selector.isEmpty()) {
       return selector;
     }
 
@@ -82,27 +84,27 @@ public final class MessagingConfig {
     return selector == null ? NONE : selector;
   }
 
-  /**
-   * Returns the header selector configured under the given node and flat property prefix, or {@code
-   * null} when nothing is configured to be captured. An empty selector is equivalent to no selector
-   * at all, matching flat configuration where empty property values cannot be distinguished from
-   * unset ones.
-   */
+  /** Returns the replacement header patterns, or the matching deprecated patterns if absent. */
   @Nullable
-  private static IncludeExclude getHeaders(
+  private static List<String> getHeaderPatterns(
+      String name,
       DeclarativeConfigProperties headers,
-      String flatPropertyPrefix,
+      DeclarativeConfigProperties deprecatedHeaders,
       boolean systemPropertyFallback) {
-    List<String> included =
-        getList(headers, "included", flatPropertyPrefix + "included", systemPropertyFallback);
-    List<String> excluded =
-        getList(headers, "excluded", flatPropertyPrefix + "excluded", systemPropertyFallback);
-    IncludeExclude selector =
-        IncludeExclude.builder()
-            .setIncluded(included == null ? emptyList() : included)
-            .setExcluded(excluded == null ? emptyList() : excluded)
-            .build();
-    return selector.isEmpty() ? null : selector;
+    String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
+    List<String> patterns = getList(headers, name, replacementProperty, systemPropertyFallback);
+    if (patterns != null) {
+      return patterns;
+    }
+
+    // TODO: remove the deprecated flat messaging names in a future minor release.
+    String deprecatedProperty =
+        DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
+    patterns = getList(deprecatedHeaders, name, deprecatedProperty, systemPropertyFallback);
+    if (patterns != null && !patterns.isEmpty()) {
+      warnDeprecatedProperty(deprecatedProperty, replacementProperty);
+    }
+    return patterns;
   }
 
   /**
@@ -194,33 +196,6 @@ public final class MessagingConfig {
             COMMON_MESSAGING_PROPERTY_PREFIX + ".message-create-spans.enabled",
             systemPropertyFallback);
     return enabled != null ? enabled : true;
-  }
-
-  @Nullable
-  private static IncludeExclude getDeprecatedHeaderAliases(
-      OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
-    String deprecatedHeadersPrefix =
-        DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.";
-    IncludeExclude selector =
-        getHeaders(
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
-                .get("headers/development"),
-            deprecatedHeadersPrefix,
-            systemPropertyFallback);
-    if (selector == null) {
-      return null;
-    }
-    if (!selector.getIncluded().isEmpty()) {
-      warnDeprecatedProperty(
-          deprecatedHeadersPrefix + "included",
-          COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.included");
-    }
-    if (!selector.getExcluded().isEmpty()) {
-      warnDeprecatedProperty(
-          deprecatedHeadersPrefix + "excluded",
-          COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers.excluded");
-    }
-    return selector;
   }
 
   @Nullable
