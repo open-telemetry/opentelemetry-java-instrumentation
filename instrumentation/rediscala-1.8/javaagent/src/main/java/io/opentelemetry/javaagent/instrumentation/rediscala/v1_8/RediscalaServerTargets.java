@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -195,13 +194,9 @@ public class RediscalaServerTargets {
       RedisServer redisServer = (RedisServer) slave;
       slaveEndpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
     }
-    // the master always leads, the replicas behind it carry no meaningful order
-    Collections.sort(slaveEndpoints);
     RedisServer masterServer = (RedisServer) master;
-    List<String> endpoints = new ArrayList<>();
-    endpoints.add(RedisServerTarget.endpoint(masterServer.host(), masterServer.port()));
-    endpoints.addAll(slaveEndpoints);
-    return RedisServerTarget.ofEndpoints(endpoints);
+    return RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+        RedisServerTarget.endpoint(masterServer.host(), masterServer.port()), slaveEndpoints);
   }
 
   @Nullable
