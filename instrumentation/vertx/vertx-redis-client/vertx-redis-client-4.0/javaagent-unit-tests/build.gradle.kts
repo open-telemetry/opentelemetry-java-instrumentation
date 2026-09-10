@@ -5,7 +5,7 @@ plugins {
 dependencies {
   testImplementation(project(":instrumentation-api-incubator"))
   testImplementation(project(":instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.0:javaagent"))
-  testImplementation("io.vertx:vertx-redis-client:4.0.0")
+  testImplementation("io.vertx:vertx-redis-client:4.4.4")
 }
 
 tasks {

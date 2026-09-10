@@ -32,6 +32,9 @@ public final class VertxRedisServerTargets {
     if (options.getType() == RedisClientType.STANDALONE) {
       return RedisServerTarget.ofEndpoint(options.getEndpoint());
     }
+    if (options.getType().name().equals("REPLICATION")) {
+      return RedisServerTarget.ofEndpoints(options.getEndpoints());
+    }
     return RedisServerTarget.ofUnorderedEndpoints(options.getEndpoints());
   }
 
