@@ -364,15 +364,7 @@ class Resilience4jCircuitBreakerTest {
   @Test
   @SuppressWarnings("unchecked")
   void createsFailureSpanWhenDecoratedCompletionStageTimestampFunctionThrows() throws Exception {
-    Method currentTimestampFunction;
-    try {
-      currentTimestampFunction =
-          CircuitBreakerConfig.Builder.class.getMethod(
-              "currentTimestampFunction", Function.class, TimeUnit.class);
-    } catch (NoSuchMethodException e) {
-      assumeTrue(false, "currentTimestampFunction is not available in this Resilience4j version");
-      throw e;
-    }
+    Method currentTimestampFunction = currentTimestampFunctionMethod();
     Method decorateCompletionStage = decorateCompletionStageMethod();
     IllegalStateException exception = new IllegalStateException("boom");
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
@@ -1190,6 +1182,16 @@ class Resilience4jCircuitBreakerTest {
       return CircuitBreakerConfig.Builder.class.getMethod("transitionOnResult", Function.class);
     } catch (NoSuchMethodException e) {
       assumeTrue(false, "transitionOnResult is not available in this Resilience4j version");
+      throw e;
+    }
+  }
+
+  private static Method currentTimestampFunctionMethod() throws NoSuchMethodException {
+    try {
+      return CircuitBreakerConfig.Builder.class.getMethod(
+          "currentTimestampFunction", Function.class, TimeUnit.class);
+    } catch (NoSuchMethodException e) {
+      assumeTrue(false, "currentTimestampFunction is not available in this Resilience4j version");
       throw e;
     }
   }
