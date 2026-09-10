@@ -12,6 +12,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -704,8 +705,8 @@ class Resilience4jCircuitBreakerTest {
 
   @ParameterizedTest
   @MethodSource("futureGetFailures")
-  void decoratedFutureGetEndsSpan(
-      Throwable exception, String outcome, Throwable expectedException) throws Exception {
+  void decoratedFutureGetEndsSpan(Throwable exception, String outcome, Throwable expectedException)
+      throws Exception {
     Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
 
     Throwable thrown = catchThrowable(decoratedFuture::get);
@@ -719,13 +720,10 @@ class Resilience4jCircuitBreakerTest {
     ExecutionException executionException = new ExecutionException(cause);
     IllegalStateException runtimeException = new IllegalStateException("boom");
     return Stream.of(
-        Arguments.argumentSet(
-            "cancellation", new CancellationException("boom"), "cancelled", null),
-        Arguments.argumentSet(
-            "interruption", new InterruptedException("boom"), "cancelled", null),
-        Arguments.argumentSet("execution failure", executionException, "failure", cause),
-        Arguments.argumentSet(
-            "runtime failure", runtimeException, "failure", runtimeException));
+        argumentSet("cancellation", new CancellationException("boom"), "cancelled", null),
+        argumentSet("interruption", new InterruptedException("boom"), "cancelled", null),
+        argumentSet("execution failure", executionException, "failure", cause),
+        argumentSet("runtime failure", runtimeException, "failure", runtimeException));
   }
 
   @ParameterizedTest
@@ -741,8 +739,8 @@ class Resilience4jCircuitBreakerTest {
 
   private static Stream<Arguments> futureTimedGetFailures() {
     return Stream.of(
-        Arguments.argumentSet("timeout", new TimeoutException("boom")),
-        Arguments.argumentSet("runtime failure", new IllegalStateException("boom")));
+        argumentSet("timeout", new TimeoutException("boom")),
+        argumentSet("runtime failure", new IllegalStateException("boom")));
   }
 
   @Test
