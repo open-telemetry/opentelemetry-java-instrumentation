@@ -132,12 +132,12 @@ public class OpenTelemetryInstrumentationHelper {
     Context parentContext = Context.current();
 
     // Capture the span that is current when execution begins (normally the enclosing server span)
-    // so GraphQL telemetry can be stamped onto it. Null when there is no valid current span, e.g.
-    // the standalone case.
+    // so GraphQL telemetry can be stamped onto it. Null when there is no recording current span,
+    // e.g. the standalone case or a non-recording remote parent.
     Span currentSpan = null;
     if (addAttributesToCurrentSpan) {
       Span span = Span.fromContext(parentContext);
-      if (span.getSpanContext().isValid()) {
+      if (span.isRecording()) {
         currentSpan = span;
         state.setCurrentSpan(span);
       }
