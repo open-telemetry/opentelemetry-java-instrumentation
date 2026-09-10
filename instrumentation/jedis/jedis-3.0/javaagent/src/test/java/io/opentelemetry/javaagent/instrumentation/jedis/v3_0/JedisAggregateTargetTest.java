@@ -188,6 +188,14 @@ class JedisAggregateTargetTest {
     if (result.getExitCode() != 0) {
       throw new IllegalStateException(result.getStderr());
     }
+    await()
+        .untilAsserted(
+            () -> {
+              Container.ExecResult clusterInfo =
+                  clusterServer.execInContainer("redis-cli", "cluster", "info");
+              assertThat(clusterInfo.getExitCode()).isZero();
+              assertThat(clusterInfo.getStdout()).contains("cluster_state:ok");
+            });
 
     clusterHost = clusterServer.getHost();
     Class<?> hostAndPortClass = Class.forName("redis.clients.jedis.HostAndPort");
