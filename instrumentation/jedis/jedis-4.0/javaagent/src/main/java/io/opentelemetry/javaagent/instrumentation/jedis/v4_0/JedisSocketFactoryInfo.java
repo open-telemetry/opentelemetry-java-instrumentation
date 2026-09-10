@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import redis.clients.jedis.HostAndPort;
@@ -15,21 +16,23 @@ public final class JedisSocketFactoryInfo {
       SOCKET_FACTORY_INFO =
           VirtualField.find(JedisSocketFactory.class, JedisSocketFactoryInfo.class);
 
-  private final HostAndPort configuredHostAndPort;
+  @Nullable private final RedisServerTarget serverTarget;
 
-  private JedisSocketFactoryInfo(HostAndPort configuredHostAndPort) {
-    this.configuredHostAndPort = configuredHostAndPort;
+  private JedisSocketFactoryInfo(@Nullable RedisServerTarget serverTarget) {
+    this.serverTarget = serverTarget;
   }
 
   @Nullable
-  public static HostAndPort getConfiguredHostAndPort(@Nullable JedisSocketFactory socketFactory) {
+  public static RedisServerTarget getServerTarget(@Nullable JedisSocketFactory socketFactory) {
     JedisSocketFactoryInfo info =
         socketFactory == null ? null : SOCKET_FACTORY_INFO.get(socketFactory);
-    return info == null ? null : info.configuredHostAndPort;
+    return info == null ? null : info.serverTarget;
   }
 
-  public static void setConfiguredHostAndPort(
+  public static void setConfiguredTarget(
       JedisSocketFactory socketFactory, HostAndPort hostAndPort) {
-    SOCKET_FACTORY_INFO.set(socketFactory, new JedisSocketFactoryInfo(hostAndPort));
+    SOCKET_FACTORY_INFO.set(
+        socketFactory,
+        new JedisSocketFactoryInfo(JedisSingletons.currentOrDirectTarget(hostAndPort)));
   }
 }

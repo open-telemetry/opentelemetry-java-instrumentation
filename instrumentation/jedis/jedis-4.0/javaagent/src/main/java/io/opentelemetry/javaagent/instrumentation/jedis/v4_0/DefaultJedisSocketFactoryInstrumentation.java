@@ -49,7 +49,7 @@ class DefaultJedisSocketFactoryInstrumentation implements TypeInstrumentation {
         @Advice.This JedisSocketFactory socketFactory,
         @Advice.Argument(0) String host,
         @Advice.Argument(1) int port) {
-      JedisSocketFactoryInfo.setConfiguredHostAndPort(socketFactory, new HostAndPort(host, port));
+      JedisSocketFactoryInfo.setConfiguredTarget(socketFactory, new HostAndPort(host, port));
     }
   }
 
@@ -64,7 +64,7 @@ class DefaultJedisSocketFactoryInstrumentation implements TypeInstrumentation {
       HostAndPort configuredHostAndPort =
           hostAndPort != null ? hostAndPort : initializedHostAndPort;
       if (configuredHostAndPort != null) {
-        JedisSocketFactoryInfo.setConfiguredHostAndPort(socketFactory, configuredHostAndPort);
+        JedisSocketFactoryInfo.setConfiguredTarget(socketFactory, configuredHostAndPort);
       }
     }
   }

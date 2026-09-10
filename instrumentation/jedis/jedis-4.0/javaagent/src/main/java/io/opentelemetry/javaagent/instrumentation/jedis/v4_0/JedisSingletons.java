@@ -23,11 +23,9 @@ import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisClusterInfoCache;
 import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.util.Pool;
@@ -39,10 +37,7 @@ public class JedisSingletons {
   private static final VirtualField<Connection, JedisConnectionInfo> CONNECTION_INFO =
       VirtualField.find(Connection.class, JedisConnectionInfo.class);
 
-  private static final VirtualField<Connection, ConfiguredTarget> CONNECTION_CONFIGURED_TARGET =
-      VirtualField.find(Connection.class, ConfiguredTarget.class);
-
-  private static final VirtualField<Pool<?>, ConfiguredTarget> POOL_CONFIGURED_TARGET =
+  private static final VirtualField<Pool<?>, ConfiguredTarget> SENTINEL_POOL_CONFIGURED_TARGET =
       VirtualField.find(Pool.class, ConfiguredTarget.class);
 
   @Nullable
@@ -92,13 +87,11 @@ public class JedisSingletons {
 
   public static void setConnectionInfo(
       Connection connection, JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
-    JedisConnectionInfo connectionInfo = JedisConnectionInfo.create(socketFactory, clientConfig);
-    CONNECTION_INFO.set(connection, connectionInfo);
-    setConnectionTarget(connection, connectionInfo.getServerTarget());
+    CONNECTION_INFO.set(connection, JedisConnectionInfo.create(socketFactory, clientConfig));
   }
 
-  public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
-    POOL_CONFIGURED_TARGET.set(pool, new ConfiguredTarget(target));
+  public static void setSentinelPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
+    SENTINEL_POOL_CONFIGURED_TARGET.set(pool, new ConfiguredTarget(target));
   }
 
   public static void setProviderTarget(Object provider, @Nullable RedisServerTarget target) {
@@ -120,43 +113,6 @@ public class JedisSingletons {
     setTopologyTarget(topologyOwner, targetOfNodes(startNodes));
   }
 
-  public static void attachPoolTarget(Pool<?> pool, @Nullable Object resource) {
-    ConfiguredTarget configuredTarget = POOL_CONFIGURED_TARGET.get(pool);
-    if (configuredTarget == null) {
-      return;
-    }
-    Connection connection;
-    if (resource instanceof Jedis) {
-      connection = ((Jedis) resource).getConnection();
-    } else if (resource instanceof Connection) {
-      connection = (Connection) resource;
-    } else {
-      return;
-    }
-    setConnectionTarget(connection, configuredTarget.target);
-  }
-
-  public static void attachProviderTarget(Object provider, @Nullable Connection connection) {
-    ConfiguredTarget configuredTarget = getProviderTarget(provider);
-    if (configuredTarget != null) {
-      setConnectionTarget(connection, configuredTarget.target);
-    }
-  }
-
-  public static void attachProviderTargetToPools(
-      Object provider, @Nullable Map<?, ? extends Pool<?>> pools) {
-    ConfiguredTarget configuredTarget =
-        provider instanceof JedisClusterInfoCache
-            ? TOPOLOGY_CONFIGURED_TARGET.get((JedisClusterInfoCache) provider)
-            : getProviderTarget(provider);
-    if (configuredTarget == null || pools == null) {
-      return;
-    }
-    for (Pool<?> pool : pools.values()) {
-      setPoolTarget(pool, configuredTarget.target);
-    }
-  }
-
   @Nullable
   public static Scope openProviderTargetScope(Object provider) {
     ConfiguredTarget configuredTarget = getProviderTarget(provider);
@@ -170,8 +126,8 @@ public class JedisSingletons {
   }
 
   @Nullable
-  public static Scope openPoolTargetScope(Pool<?> pool) {
-    ConfiguredTarget configuredTarget = POOL_CONFIGURED_TARGET.get(pool);
+  public static Scope openSentinelPoolTargetScope(Pool<?> pool) {
+    ConfiguredTarget configuredTarget = SENTINEL_POOL_CONFIGURED_TARGET.get(pool);
     return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
   }
 
@@ -213,22 +169,13 @@ public class JedisSingletons {
         VirtualField.find(providerClass, ConfiguredTarget.class);
   }
 
-  private static void setConnectionTarget(
-      @Nullable Connection connection, @Nullable RedisServerTarget target) {
-    if (connection == null) {
-      return;
-    }
-    CONNECTION_CONFIGURED_TARGET.set(connection, new ConfiguredTarget(target));
-  }
-
   @Nullable
-  static RedisServerTarget connectionTarget(Connection connection) {
+  static RedisServerTarget currentOrDirectTarget(HostAndPort hostAndPort) {
     ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
     if (configuredTarget != null) {
       return configuredTarget.target;
     }
-    configuredTarget = CONNECTION_CONFIGURED_TARGET.get(connection);
-    return configuredTarget != null ? configuredTarget.target : null;
+    return RedisServerTarget.ofHostAndPort(hostAndPort.getHost(), hostAndPort.getPort());
   }
 
   @Nullable
@@ -259,19 +206,6 @@ public class JedisSingletons {
       }
     }
     return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, masterName);
-  }
-
-  @Nullable
-  public static RedisServerTarget targetOfSentinelsFromArguments(
-      @Nullable String masterName, @Nullable Object[] arguments) {
-    if (arguments != null) {
-      for (Object argument : arguments) {
-        if (argument instanceof Collection) {
-          return targetOfSentinels(masterName, (Collection<?>) argument);
-        }
-      }
-    }
-    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(null, masterName);
   }
 
   @Nullable

@@ -45,7 +45,9 @@ public abstract class JedisRequest {
     return new AutoValue_JedisRequest(
         connectionInfo != null ? connectionInfo.getServerAddress() : null,
         connectionInfo != null ? connectionInfo.getServerPort() : null,
-        serverTargetOf(connection),
+        emitStableDatabaseSemconv() && connectionInfo != null
+            ? connectionInfo.getServerTarget()
+            : null,
         connectionInfo != null ? connectionInfo.getDatabaseIndex() : null,
         operationName,
         sanitizer.sanitize(operationName, args),
@@ -98,13 +100,6 @@ public abstract class JedisRequest {
   private static JedisConnectionInfo getConnectionInfo(@Nullable Object connection) {
     return connection instanceof Connection
         ? JedisSingletons.connectionInfo((Connection) connection)
-        : null;
-  }
-
-  @Nullable
-  private static RedisServerTarget serverTargetOf(@Nullable Object connection) {
-    return emitStableDatabaseSemconv() && connection instanceof Connection
-        ? JedisSingletons.connectionTarget((Connection) connection)
         : null;
   }
 

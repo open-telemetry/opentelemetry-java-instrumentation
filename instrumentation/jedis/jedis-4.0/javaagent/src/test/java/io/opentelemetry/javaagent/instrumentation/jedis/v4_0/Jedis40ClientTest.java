@@ -32,6 +32,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.function.Consumer;
@@ -48,6 +50,7 @@ import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.DefaultJedisSocketFactory;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
 
@@ -187,6 +190,47 @@ class Jedis40ClientTest {
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : host),
                             equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @Test
+  void customSocketFactoryFallsBackToNetworkPeer() {
+    DefaultJedisClientConfig clientConfig = DefaultJedisClientConfig.builder().build();
+    DefaultJedisSocketFactory delegate =
+        new DefaultJedisSocketFactory(new HostAndPort(host, port), clientConfig);
+    JedisSocketFactory socketFactory =
+        (JedisSocketFactory)
+            Proxy.newProxyInstance(
+                JedisSocketFactory.class.getClassLoader(),
+                new Class<?>[] {JedisSocketFactory.class},
+                (proxy, method, args) -> {
+                  try {
+                    return method.invoke(delegate, args);
+                  } catch (InvocationTargetException e) {
+                    throw e.getCause();
+                  }
+                });
+
+    try (Jedis custom = new Jedis(socketFactory, clientConfig)) {
+      testing.clearData();
+      custom.set("custom", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET custom ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, null),
+                            equalTo(SERVER_PORT, null),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));

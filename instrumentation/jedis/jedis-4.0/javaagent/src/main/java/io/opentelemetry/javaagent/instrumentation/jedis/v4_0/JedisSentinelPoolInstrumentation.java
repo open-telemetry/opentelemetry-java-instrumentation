@@ -44,6 +44,9 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("java.lang.String"))),
         getClass().getName() + "$InitializeAdvice");
     transformer.applyAdviceToMethod(
+        named("initMaster").and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
+        getClass().getName() + "$PoolTargetScopeAdvice");
+    transformer.applyAdviceToMethod(
         named("run")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisSentinelPool$MasterListener"))),
         getClass().getName() + "$MasterListenerAdvice");
@@ -57,7 +60,8 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable String masterName,
         @Advice.Argument(1) @Nullable Set<?> sentinels) {
-      JedisSingletons.setPoolTarget(pool, JedisSingletons.targetOfSentinels(masterName, sentinels));
+      JedisSingletons.setSentinelPoolTarget(
+          pool, JedisSingletons.targetOfSentinels(masterName, sentinels));
     }
   }
 
@@ -70,8 +74,26 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable Set<?> sentinels,
         @Advice.Argument(1) @Nullable String masterName) {
-      JedisSingletons.setPoolTarget(pool, JedisSingletons.targetOfSentinels(masterName, sentinels));
-      return JedisSingletons.openPoolTargetScope(pool);
+      JedisSingletons.setSentinelPoolTarget(
+          pool, JedisSingletons.targetOfSentinels(masterName, sentinels));
+      return JedisSingletons.openSentinelPoolTargetScope(pool);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class PoolTargetScopeAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.This Pool<?> pool) {
+      return JedisSingletons.openSentinelPoolTargetScope(pool);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -88,7 +110,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("this$0") Pool<?> pool) {
-      return JedisSingletons.openPoolTargetScope(pool);
+      return JedisSingletons.openSentinelPoolTargetScope(pool);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

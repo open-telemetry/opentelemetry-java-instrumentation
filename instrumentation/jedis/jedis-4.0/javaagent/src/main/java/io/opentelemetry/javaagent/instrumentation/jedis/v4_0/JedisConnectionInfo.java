@@ -34,12 +34,6 @@ class JedisConnectionInfo {
     // The socket endpoint is the one the connection dials, after any HostAndPortMapper ran.
     HostAndPort socketHostAndPort =
         DefaultJedisSocketFactoryUtil.getSocketHostAndPort(socketFactory);
-    // The configured endpoint is the one the client was given, before any mapping.
-    HostAndPort configuredHostAndPort =
-        JedisSocketFactoryInfo.getConfiguredHostAndPort(socketFactory);
-    if (configuredHostAndPort == null) {
-      configuredHostAndPort = socketHostAndPort;
-    }
     // Without a client config, Jedis leaves the new Redis connection on the default database 0.
     Long databaseIndex =
         clientConfig instanceof JedisClientConfig
@@ -48,10 +42,7 @@ class JedisConnectionInfo {
     return new JedisConnectionInfo(
         socketHostAndPort != null ? socketHostAndPort.getHost() : null,
         socketHostAndPort != null ? socketHostAndPort.getPort() : null,
-        configuredHostAndPort != null
-            ? RedisServerTarget.ofHostAndPort(
-                configuredHostAndPort.getHost(), configuredHostAndPort.getPort())
-            : null,
+        JedisSocketFactoryInfo.getServerTarget(socketFactory),
         databaseIndex);
   }
 
