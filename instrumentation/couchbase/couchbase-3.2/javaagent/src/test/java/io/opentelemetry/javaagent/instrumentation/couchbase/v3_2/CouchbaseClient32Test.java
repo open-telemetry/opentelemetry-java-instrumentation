@@ -28,6 +28,7 @@ import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_PE
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_PEER_PORT;
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_TRANSPORT;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,9 +51,13 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -166,12 +171,16 @@ class CouchbaseClient32Test {
                         .hasAttributesSatisfyingExactly(dispatchAttributes)));
   }
 
-  @Test
-  void testEmitsProtostellarTarget() throws ReflectiveOperationException {
+  @ParameterizedTest
+  @MethodSource("protostellarTargets")
+  void testEmitsProtostellarTarget(String portSuffix, Long expectedPort)
+      throws ReflectiveOperationException {
     assumeTrue(testLatestDeps());
     Cluster protostellar =
         Cluster.connect(
-            "couchbase2://" + seedAddress, couchbase.getUsername(), couchbase.getPassword());
+            "couchbase2://" + seedAddress + portSuffix,
+            couchbase.getUsername(),
+            couchbase.getPassword());
     cleanup.deferCleanup(protostellar::disconnect);
 
     Object core =
@@ -205,12 +214,19 @@ class CouchbaseClient32Test {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(CLIENT)
-                        .hasName(emitStableDatabaseSemconv() ? "get " + seedAddress : "get")
+                        .hasName(
+                            emitStableDatabaseSemconv() ? "get " + seedAddress + portSuffix : "get")
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "couchbase"),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? seedAddress : null),
-                            equalTo(SERVER_PORT, null))));
+                            equalTo(
+                                SERVER_PORT, emitStableDatabaseSemconv() ? expectedPort : null))));
+  }
+
+  private static Stream<Arguments> protostellarTargets() {
+    return Stream.of(
+        argumentSet("default port", "", null), argumentSet("non-default port", ":18099", 18099L));
   }
 
   private static <T> T oldOrExperimental(T value) {
