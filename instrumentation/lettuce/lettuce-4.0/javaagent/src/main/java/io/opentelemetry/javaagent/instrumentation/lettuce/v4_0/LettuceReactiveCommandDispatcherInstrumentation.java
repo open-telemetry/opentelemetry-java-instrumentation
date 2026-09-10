@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import rx.Subscriber;
 
 class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumentation {
 
@@ -56,21 +57,30 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
 
     public static class AdviceScope {
       private final RedisCommand<?, ?, ?> command;
+      private final Subscriber<?> subscriber;
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(RedisCommand<?, ?, ?> command, Context context) {
+      public AdviceScope(RedisCommand<?, ?, ?> command, Subscriber<?> subscriber, Context context) {
         this.command = command;
+        this.subscriber = subscriber;
         this.context = context;
         this.scope = context.makeCurrent();
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        if (throwable != null) {
-          instrumenter().end(context, command, null, throwable);
-        } else if (!InstrumentationPoints.expectsResponse(command)) {
-          instrumenter().end(context, command, null, null);
+        try {
+          if (throwable != null) {
+            LettuceSingletons.finishCommandPeer(command);
+            instrumenter().end(context, command, null, throwable);
+          } else if (!InstrumentationPoints.expectsResponse(command)) {
+            LettuceSingletons.finishCommandPeer(command);
+            instrumenter().end(context, command, null, null);
+          }
+        } finally {
+          LettuceSingletons.clearCommandPeer(command);
+          LettuceSingletons.clearSubscriberPeer(subscriber);
         }
       }
     }
@@ -79,6 +89,7 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This ReactiveCommandDispatcher<?, ?, ?> dispatcher,
+        @Advice.Argument(0) Subscriber<?> subscriber,
         @Advice.FieldValue(value = "command") @Nullable RedisCommand<?, ?, ?> command,
         @Advice.FieldValue("commandSupplier")
             Supplier<? extends RedisCommand<?, ?, ?>> commandSupplier,
@@ -89,15 +100,18 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
       }
       RedisCommand<?, ?, ?> otelCommand = command == null ? commandSupplier.get() : command;
       LettuceSingletons.attachAddress(otelCommand, connection);
+      LettuceSingletons.clearSubscriberPeer(subscriber);
       if (!instrumenter().shouldStart(parentContext, otelCommand)) {
         return null;
       }
 
+      LettuceSingletons.initializeCommandPeer(otelCommand);
       Context context = instrumenter().start(parentContext, otelCommand);
       // remember the context that called dispatch, it is used in
       // LettuceObservableCommandInstrumentation
       context = context.with(COMMAND_CONTEXT_KEY, parentContext);
-      return new AdviceScope(otelCommand, context);
+      LettuceSingletons.captureSubscriberPeer(subscriber, otelCommand);
+      return new AdviceScope(otelCommand, subscriber, context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
