@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtr
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.List;
 import javax.annotation.Nullable;
 import rx.Subscriber;
 
@@ -200,6 +201,26 @@ public class LettuceSingletons {
     }
     LettuceCommandPeer peer = COMMAND_PEER.get(command);
     return peer != null ? peer.getAddress() : null;
+  }
+
+  @Nullable
+  static SocketAddress batchPeerAddress(List<RedisCommand<?, ?, ?>> commands) {
+    // The batch span reports a peer only when every buffered command resolved to the same
+    // address; a batch spanning more than one connection has no single peer to report.
+    SocketAddress batchPeerAddress = null;
+    for (RedisCommand<?, ?, ?> command : commands) {
+      LettuceCommandPeer peer = COMMAND_PEER.get(command);
+      SocketAddress commandPeerAddress = peer != null ? peer.getAddress() : null;
+      if (commandPeerAddress == null) {
+        return null;
+      }
+      if (batchPeerAddress == null) {
+        batchPeerAddress = commandPeerAddress;
+      } else if (!batchPeerAddress.equals(commandPeerAddress)) {
+        return null;
+      }
+    }
+    return batchPeerAddress;
   }
 
   @Nullable

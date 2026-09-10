@@ -43,12 +43,13 @@ class LettuceCommandHandlerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) ChannelHandlerContext context, @Advice.Argument(1) Object message) {
       SocketAddress address = context.channel().remoteAddress();
-      if (address != null && message instanceof RedisCommand) {
+      if (address == null) {
+        return;
+      }
+      if (message instanceof RedisCommand) {
         LettuceSingletons.recordCommandPeer((RedisCommand<?, ?, ?>) message, address);
-      } else if (address != null && message instanceof Collection) {
-        Collection<?> commands = (Collection<?>) message;
-        if (commands.size() == 1) {
-          Object command = commands.iterator().next();
+      } else if (message instanceof Collection) {
+        for (Object command : (Collection<?>) message) {
           if (command instanceof RedisCommand) {
             LettuceSingletons.recordCommandPeer((RedisCommand<?, ?, ?>) command, address);
           }
