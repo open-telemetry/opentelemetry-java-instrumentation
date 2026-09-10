@@ -12,6 +12,7 @@ import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import reactor.core.CoreSubscriber;
@@ -22,6 +23,7 @@ public class LettuceMonoDualConsumer<T> implements LettuceReactiveCommandHandler
   private static final Logger logger = Logger.getLogger(LettuceMonoDualConsumer.class.getName());
 
   private final StatefulConnection<?, ?> connection;
+  private final AtomicBoolean spanEnded = new AtomicBoolean();
   @Nullable private RedisCommand<?, ?, ?> command;
   @Nullable private Context context;
   private boolean expectsResponse;
@@ -54,8 +56,8 @@ public class LettuceMonoDualConsumer<T> implements LettuceReactiveCommandHandler
     }
   }
 
-  public void accept(T t, Throwable throwable) {
-    if (!expectsResponse) {
+  private void endSpan(@Nullable Throwable throwable) {
+    if (!expectsResponse || !spanEnded.compareAndSet(false, true)) {
       return;
     }
     if (context != null && command != null) {
@@ -63,6 +65,11 @@ public class LettuceMonoDualConsumer<T> implements LettuceReactiveCommandHandler
     } else {
       logger.fine("Failed to finish this.span because it probably wasn't started.");
     }
+  }
+
+  @Override
+  public void onCancel() {
+    endSpan(null);
   }
 
   /**
@@ -74,8 +81,6 @@ public class LettuceMonoDualConsumer<T> implements LettuceReactiveCommandHandler
    * access).
    */
   private Mono<T> finishSpanOnTerminal(Mono<T> publisher) {
-    return publisher
-        .doOnSuccess(value -> accept(value, (Throwable) null))
-        .doOnError(error -> accept(null, error));
+    return publisher.doOnSuccess(value -> endSpan(null)).doOnError(this::endSpan);
   }
 }
