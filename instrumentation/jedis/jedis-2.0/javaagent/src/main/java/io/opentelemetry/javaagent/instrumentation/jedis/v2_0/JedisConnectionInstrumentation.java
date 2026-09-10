@@ -104,8 +104,12 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       }
       JedisClusterCommandContext clusterCommandContext = JedisClusterCommandContext.current();
       if (clusterCommandContext != null
-          && (!clusterCommandContext.isExecuting() || clusterCommandContext.hasRequest())) {
+          && (!clusterCommandContext.isExecuting()
+              || clusterCommandContext.matchesCapturedRequest(request))) {
         return new AdviceScope(null, null, request, clusterCommandContext);
+      }
+      if (clusterCommandContext != null && clusterCommandContext.hasRequest()) {
+        clusterCommandContext = null;
       }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;

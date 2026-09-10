@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -195,6 +196,40 @@ class JedisNetworkAttributesGetterTest {
 
     assertThat(commandContext.hasRequest()).isTrue();
     commandContext.end(null);
+  }
+
+  @Test
+  void clusterContextMatchesOnlyCapturedRequest() {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    Connection connection = new Connection();
+    JedisClusterCommandContext commandContext = JedisClusterCommandContext.start();
+    commandContext.enterExecute();
+    try {
+      commandContext.capture(
+          Context.root(),
+          JedisRequest.create(
+              connection, Protocol.Command.GET, singletonList("key".getBytes(US_ASCII))));
+
+      assertThat(
+              commandContext.matchesCapturedRequest(
+                  JedisRequest.create(
+                      connection, Protocol.Command.GET, singletonList("key".getBytes(US_ASCII)))))
+          .isTrue();
+      assertThat(
+              commandContext.matchesCapturedRequest(
+                  JedisRequest.create(
+                      connection, Protocol.Command.GET, singletonList("other".getBytes(US_ASCII)))))
+          .isFalse();
+      assertThat(
+              commandContext.matchesCapturedRequest(
+                  JedisRequest.create(
+                      connection, Protocol.Command.SET, singletonList("key".getBytes(US_ASCII)))))
+          .isFalse();
+    } finally {
+      commandContext.exitExecute();
+      commandContext.end(null);
+    }
   }
 
   @Test
