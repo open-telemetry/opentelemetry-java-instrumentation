@@ -9,9 +9,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.mongodb.async.SingleResultCallback;
+import com.mongodb.connection.ConnectionDescription;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -27,6 +29,7 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(named("open"), getClass().getName() + "$OpenAdvice");
     transformer.applyAdviceToMethod(
         named("openAsync").and(takesArgument(0, named("com.mongodb.async.SingleResultCallback"))),
         getClass().getName() + "$SingleResultCallbackArg0Advice");
@@ -36,6 +39,23 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
     transformer.applyAdviceToMethod(
         named("writeAsync").and(takesArgument(1, named("com.mongodb.async.SingleResultCallback"))),
         getClass().getName() + "$SingleResultCallbackArg1Advice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class OpenAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static MongoConnectionPeer.OpenState onEnter() {
+      return MongoConnectionPeer.startOpen();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Enter MongoConnectionPeer.OpenState state,
+        @Advice.FieldValue("description") @Nullable ConnectionDescription connectionDescription,
+        @Advice.Thrown @Nullable Throwable error) {
+      MongoConnectionPeer.endOpen(state, connectionDescription, error);
+    }
   }
 
   @SuppressWarnings("unused")
