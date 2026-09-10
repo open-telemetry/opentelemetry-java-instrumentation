@@ -210,6 +210,19 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
+  void replicationPreservesSeedOrder() {
+    RedisServerTarget target =
+        VertxRedisServerTargets.of(
+            new RedisOptions()
+                .setType(RedisClientType.REPLICATION)
+                .addConnectionString("redis://replica2:7001")
+                .addConnectionString("redis://replica1:7000"));
+
+    assertThat(target.getAddress()).isEqualTo("replica2:7001,replica1:7000");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void sentinelsAreScopedByTheirMaster() {
     RedisServerTarget first =
         VertxRedisServerTargets.of(
