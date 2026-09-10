@@ -70,7 +70,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
     // include/exclude metrics by name
     Optional.ofNullable(
-            SelectorConfig.resolve(config, INSTRUMENTATION_NAME, "metrics", STABLE, true))
+            SelectorConfig.resolve(config, INSTRUMENTATION_NAME, "metrics", STABLE))
         .ifPresent(jmx::setMetrics);
 
     jmx.build().start();
