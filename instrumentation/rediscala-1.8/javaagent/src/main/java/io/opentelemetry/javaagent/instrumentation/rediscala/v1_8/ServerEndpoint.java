@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import redis.RedisClientActorLike;
 import redis.RedisClientMasterSlaves;
+import redis.SentinelMonitoredRedisBlockingClient;
 import redis.SentinelMonitoredRedisClient;
 import scala.Option;
 
@@ -44,6 +45,11 @@ public class ServerEndpoint {
     }
     if (client instanceof SentinelMonitoredRedisClient) {
       RedisClientActorLike redisClient = ((SentinelMonitoredRedisClient) client).redisClient();
+      return redisClient != null ? create(redisClient) : null;
+    }
+    if (client instanceof SentinelMonitoredRedisBlockingClient) {
+      RedisClientActorLike redisClient =
+          ((SentinelMonitoredRedisBlockingClient) client).redisClient();
       return redisClient != null ? create(redisClient) : null;
     }
     if (useMasterClient && client instanceof RedisClientMasterSlaves) {

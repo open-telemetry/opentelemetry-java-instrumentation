@@ -10,8 +10,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
+import redis.RedisBlockingClient;
 import redis.RedisClient;
 import redis.RedisClientMasterSlaves;
+import redis.SentinelMonitoredRedisBlockingClient;
 import redis.SentinelMonitoredRedisClientMasterSlaves;
 import scala.Option;
 
@@ -36,6 +38,18 @@ class ServerEndpointTest {
 
     assertEndpoint(ServerEndpoint.create(client, true));
     assertThat(ServerEndpoint.create(client, false)).isNull();
+  }
+
+  @Test
+  void extractsSentinelBlockingClient() {
+    RedisBlockingClient redisClient = mock(RedisBlockingClient.class);
+    when(redisClient.host()).thenReturn("master");
+    when(redisClient.port()).thenReturn(6380);
+    when(redisClient.db()).thenReturn(Option.apply(2));
+    SentinelMonitoredRedisBlockingClient client = mock(SentinelMonitoredRedisBlockingClient.class);
+    when(client.redisClient()).thenReturn(redisClient);
+
+    assertEndpoint(ServerEndpoint.create(client, false));
   }
 
   private static RedisClient masterClient() {
