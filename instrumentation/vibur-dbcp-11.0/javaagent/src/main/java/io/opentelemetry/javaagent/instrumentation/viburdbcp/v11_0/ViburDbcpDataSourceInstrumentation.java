@@ -53,10 +53,10 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This ViburDBCPDataSource dataSource) {
-      JdbcConnectionPoolMetricsInfo metricsInfo = ViburSingletons.getMetricsInfo(dataSource);
-      if (ViburSingletons.isDataSourceNameConfigured(dataSource)) {
-        metricsInfo = metricsInfo.withPoolName(dataSource.getName());
-      }
+      String poolName =
+          ViburSingletons.isDataSourceNameConfigured(dataSource) ? dataSource.getName() : null;
+      JdbcConnectionPoolMetricsInfo metricsInfo =
+          ViburSingletons.getMetricsInfo(dataSource, poolName);
       telemetry()
           .registerMetrics(
               dataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());

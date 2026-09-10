@@ -49,10 +49,7 @@ class DruidDataSourceInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Argument(0) Object dataSource, @Advice.Argument(1) @Nullable String name) {
       DruidDataSourceMBean druidDataSource = (DruidDataSourceMBean) dataSource;
-      JdbcConnectionPoolMetricsInfo metricsInfo = getMetricsInfo(druidDataSource);
-      if (name != null && !name.isEmpty()) {
-        metricsInfo = metricsInfo.withPoolName(name);
-      }
+      JdbcConnectionPoolMetricsInfo metricsInfo = getMetricsInfo(druidDataSource, name);
       telemetry()
           .registerMetrics(
               druidDataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());

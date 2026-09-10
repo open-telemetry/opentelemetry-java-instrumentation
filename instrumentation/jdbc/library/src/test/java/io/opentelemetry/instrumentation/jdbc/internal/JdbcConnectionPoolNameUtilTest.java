@@ -184,6 +184,28 @@ class JdbcConnectionPoolNameUtilTest {
   }
 
   @Test
+  void explicitPoolNameTakesPrecedenceAndPreservesDatabaseAttributes() {
+    DbInfo dbInfo =
+        DbInfo.builder()
+            .dbSystemName("postgresql")
+            .dbNamespace("orders")
+            .configuredServerTarget(DbServerTarget.create("db.example", 5432))
+            .build();
+
+    JdbcConnectionPoolMetricsInfo metricsInfo =
+        JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, "explicit");
+
+    assertThat(metricsInfo.getPoolName()).isEqualTo("explicit");
+    assertThat(metricsInfo.getDatabaseAttributes())
+        .isEqualTo(
+            Attributes.of(
+                DB_SYSTEM_NAME, "postgresql",
+                DB_NAMESPACE, "orders",
+                SERVER_ADDRESS, "db.example",
+                SERVER_PORT, 5432L));
+  }
+
+  @Test
   void replacingPoolNamePreservesDatabaseAttributes() {
     JdbcConnectionPoolMetricsInfo metricsInfo =
         JdbcConnectionPoolNameUtil.createMetricsInfo(

@@ -52,13 +52,12 @@ public class TomcatConnectionPoolMetrics {
   @SuppressWarnings("deprecation") // deprecated overload keeps the legacy scope by default
   private static BatchCallback createInstruments(DataSourceProxy dataSource) {
     DbInfo dbInfo = getDbInfo(dataSource);
-    JdbcConnectionPoolMetricsInfo metricsInfo =
-        JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, DEFAULT_POOL_NAME);
     PoolConfiguration poolProperties = dataSource.getPoolProperties();
     String configuredPoolName = dataSource.getPoolName();
-    if (configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)) {
-      metricsInfo = metricsInfo.withPoolName(configuredPoolName);
-    }
+    JdbcConnectionPoolMetricsInfo metricsInfo =
+        configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)
+            ? JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, configuredPoolName)
+            : JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, DEFAULT_POOL_NAME);
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(
             meter, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());

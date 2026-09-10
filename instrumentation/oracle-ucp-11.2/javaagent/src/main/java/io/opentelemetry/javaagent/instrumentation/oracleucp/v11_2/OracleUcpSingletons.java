@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.oracleucp.v11_2.OracleUcpTelemetry;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.util.Properties;
+import javax.annotation.Nullable;
 import oracle.ucp.UniversalConnectionPool;
 import oracle.ucp.jdbc.PoolDataSource;
 
@@ -36,23 +37,31 @@ public class OracleUcpSingletons {
       PoolDataSource dataSource,
       UniversalConnectionPool connectionPool,
       boolean generatedPoolName) {
-    JdbcConnectionPoolMetricsInfo metricsInfo = getMetricsInfo(dataSource);
+    String poolName = null;
     if (!generatedPoolName) {
-      String poolName = connectionPool.getName();
-      if (poolName != null && !poolName.isEmpty()) {
-        metricsInfo = metricsInfo.withPoolName(poolName);
+      poolName = connectionPool.getName();
+      if (poolName != null && poolName.isEmpty()) {
+        poolName = null;
       }
     }
+    JdbcConnectionPoolMetricsInfo metricsInfo = getMetricsInfo(dataSource, poolName);
     METRICS_INFO_FIELD.set(connectionPool, metricsInfo);
   }
 
-  private static JdbcConnectionPoolMetricsInfo getMetricsInfo(PoolDataSource dataSource) {
+  private static JdbcConnectionPoolMetricsInfo getMetricsInfo(
+      PoolDataSource dataSource, @Nullable String poolName) {
+    DbInfo dbInfo = getDbInfo(dataSource);
+    return poolName == null
+        ? JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, DEFAULT_POOL_NAME)
+        : JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, poolName);
+  }
+
+  private static DbInfo getDbInfo(PoolDataSource dataSource) {
     String connectionUrl = dataSource.getURL();
     Properties connectionProperties = dataSource.getConnectionProperties();
 
     if (connectionUrl != null) {
-      DbInfo dbInfo = JdbcConnectionUrlParser.parse(connectionUrl, connectionProperties);
-      return JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, DEFAULT_POOL_NAME);
+      return JdbcConnectionUrlParser.parse(connectionUrl, connectionProperties);
     }
 
     Properties poolNameProperties = new Properties(connectionProperties);
@@ -73,7 +82,7 @@ public class OracleUcpSingletons {
       poolNameProperties.setProperty("databaseName", databaseName);
     }
 
-    return JdbcConnectionPoolNameUtil.createMetricsInfo(poolNameProperties, DEFAULT_POOL_NAME);
+    return JdbcConnectionPoolNameUtil.dbInfo(poolNameProperties);
   }
 
   public static void updatePoolName(UniversalConnectionPool connectionPool) {

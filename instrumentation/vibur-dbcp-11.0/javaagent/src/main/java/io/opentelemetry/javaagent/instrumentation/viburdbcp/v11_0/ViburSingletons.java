@@ -39,9 +39,12 @@ public class ViburSingletons {
     return Boolean.TRUE.equals(CONFIGURED_NAME_FIELD.get(config));
   }
 
-  public static JdbcConnectionPoolMetricsInfo getMetricsInfo(ViburDBCPDataSource dataSource) {
-    return JdbcConnectionPoolNameUtil.createMetricsInfo(
-        getDbInfo(dataSource), DEFAULT_DATA_SOURCE_NAME);
+  public static JdbcConnectionPoolMetricsInfo getMetricsInfo(
+      ViburDBCPDataSource dataSource, @Nullable String poolName) {
+    DbInfo dbInfo = getDbInfo(dataSource);
+    return poolName == null
+        ? JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, DEFAULT_DATA_SOURCE_NAME)
+        : JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, poolName);
   }
 
   private static DbInfo getDbInfo(ViburDBCPDataSource dataSource) {

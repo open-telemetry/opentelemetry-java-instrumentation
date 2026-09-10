@@ -32,8 +32,12 @@ public final class JdbcConnectionPoolNameUtil {
 
   public static JdbcConnectionPoolMetricsInfo createMetricsInfo(
       DbInfo dbInfo, String fallbackName) {
-    return new JdbcConnectionPoolMetricsInfo(
-        poolName(dbInfo, fallbackName), databaseAttributes(dbInfo));
+    return createMetricsInfoWithPoolName(dbInfo, poolName(dbInfo, fallbackName));
+  }
+
+  public static JdbcConnectionPoolMetricsInfo createMetricsInfoWithPoolName(
+      DbInfo dbInfo, String poolName) {
+    return new JdbcConnectionPoolMetricsInfo(poolName, databaseAttributes(dbInfo));
   }
 
   private static String poolName(DbInfo dbInfo, String fallbackName) {

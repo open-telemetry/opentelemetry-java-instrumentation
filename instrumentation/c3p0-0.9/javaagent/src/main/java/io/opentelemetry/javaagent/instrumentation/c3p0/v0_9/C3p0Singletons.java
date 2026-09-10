@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsI
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
+import javax.annotation.Nullable;
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.DataSource;
 
@@ -27,9 +28,11 @@ public class C3p0Singletons {
   }
 
   public static JdbcConnectionPoolMetricsInfo getMetricsInfo(
-      AbstractPoolBackedDataSource dataSource) {
-    return JdbcConnectionPoolNameUtil.createMetricsInfo(
-        getDbInfo(dataSource), DEFAULT_DATA_SOURCE_NAME);
+      AbstractPoolBackedDataSource dataSource, @Nullable String poolName) {
+    DbInfo dbInfo = getDbInfo(dataSource);
+    return poolName == null
+        ? JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, DEFAULT_DATA_SOURCE_NAME)
+        : JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, poolName);
   }
 
   private static DbInfo getDbInfo(AbstractPoolBackedDataSource dataSource) {
