@@ -42,6 +42,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -56,6 +57,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
@@ -261,7 +263,7 @@ class LettuceClusterClientTest {
 
     assertThat(redirectConnection.sync().set("REDIRECT_KEY", "value")).isEqualTo("OK");
 
-    testing.waitAndAssertTraces(
+    Consumer<TraceAssert> traceAssertion =
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -305,7 +307,13 @@ class LettuceClusterClientTest {
                                     ? "0"
                                     : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET REDIRECT_KEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+                            equalTo(maybeStable(DB_OPERATION), "SET")));
+    List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
+    traceAssertions.add(traceAssertion);
+    if (!emitStableDatabaseSemconv()) {
+      traceAssertions.add(traceAssertion);
+    }
+    testing.waitAndAssertTraces(traceAssertions);
 
     source.assertNoFailure();
     target.assertNoFailure();
