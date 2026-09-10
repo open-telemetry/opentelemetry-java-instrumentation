@@ -26,9 +26,11 @@ public interface TestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       boolean setServiceName,
+      boolean logOutput,
       List<ResourceMapping> extraResources,
       List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
+      String[] entrypoint,
       String[] command);
 
   void stopTarget();
