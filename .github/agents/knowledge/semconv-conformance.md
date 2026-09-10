@@ -92,12 +92,12 @@ boundaries, names, status, errors, value sources, or conditional attributes with
 
 ## Apply attribute requirement levels
 
-| Level                    | Review expectation                                                                                                                                                                                                     |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Required`               | The instrumentation must populate the attribute. It is on by default and cannot be disabled. Do not invent a general "not readily available" exception.                                                                |
-| `Conditionally Required` | The instrumentation must populate the attribute whenever the convention's stated condition is true. When false, follow special instructions; if there are none and the value can be populated, it should be `Opt-In`.  |
-| `Recommended`            | Emit it by default when it is readily and efficiently available. It may have a disable option. A concrete performance, security, privacy, or similar reason can justify default omission, with opt-in when applicable. |
-| `Opt-In`                 | Emit it only when the user enables it. Instrumentation without configuration support must not emit it.                                                                                                                 |
+| Level                    | Review expectation                                                                                                                                                                                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Required`               | The instrumentation must populate the attribute. It is on by default and cannot be disabled. Do not invent a general "not readily available" exception.                                                                                                                  |
+| `Conditionally Required` | The instrumentation must populate the attribute whenever the convention's stated condition is true. When false, follow special instructions; if there are none and the value can be populated, it should be `Opt-In`.                                                    |
+| `Recommended`            | Emit it by default when it is readily and efficiently available. It may have a disable option. A concrete performance, security, privacy, or similar reason can justify default omission, but users should be able to opt in when the attribute is logically applicable. |
+| `Opt-In`                 | Emit it only when the user enables it. Instrumentation without configuration support must not emit it.                                                                                                                                                                   |
 
 An attribute's inclusion level does not weaken normative instructions about its value. Evaluate
 both questions:
