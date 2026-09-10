@@ -18,6 +18,11 @@ public final class LettuceReactiveCommandSubscriber<T> implements CoreSubscriber
   private final LettuceReactiveCommandHandler handler;
   private final boolean cancelHandlerOnSubscribe;
 
+  public static Subscriber<?> withCancellation(
+      CoreSubscriber<?> actual, LettuceReactiveCommandHandler handler) {
+    return new LettuceReactiveCommandSubscriber<>(actual, handler, true);
+  }
+
   LettuceReactiveCommandSubscriber(
       CoreSubscriber<? super T> actual, LettuceReactiveCommandHandler handler) {
     this(actual, handler, false);
@@ -30,11 +35,6 @@ public final class LettuceReactiveCommandSubscriber<T> implements CoreSubscriber
     this.actual = actual;
     this.handler = handler;
     this.cancelHandlerOnSubscribe = cancelHandlerOnSubscribe;
-  }
-
-  public static Subscriber<?> withCancellation(
-      CoreSubscriber<?> actual, LettuceReactiveCommandHandler handler) {
-    return new LettuceReactiveCommandSubscriber<>(actual, handler, true);
   }
 
   @Override
