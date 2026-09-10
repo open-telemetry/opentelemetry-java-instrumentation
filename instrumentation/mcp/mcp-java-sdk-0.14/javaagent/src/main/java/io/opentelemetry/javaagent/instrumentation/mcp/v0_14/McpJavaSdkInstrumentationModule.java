@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.mcp.v0_14;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -21,6 +21,6 @@ public class McpJavaSdkInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new McpClientSessionInstrumentation());
+    return asList(new McpClientSessionInstrumentation(), new McpServerRequestInstrumentation());
   }
 }
