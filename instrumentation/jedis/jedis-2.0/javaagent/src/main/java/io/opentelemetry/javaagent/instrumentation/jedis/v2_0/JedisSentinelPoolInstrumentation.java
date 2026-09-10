@@ -62,10 +62,14 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JedisSingletons.ConfiguredTargetScope onEnter(
+        @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable Set<?> sentinels,
         @Advice.Argument(1) @Nullable String masterName) {
-      return JedisSingletons.openConfiguredTargetScope(
-          JedisServerTargets.ofSentinels(masterName, sentinels));
+      JedisSingletons.ConfiguredTargetScope scope =
+          JedisSingletons.openConfiguredTargetScope(
+              JedisServerTargets.ofSentinels(masterName, sentinels));
+      JedisSingletons.setPoolTarget(pool, scope.getTarget());
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
