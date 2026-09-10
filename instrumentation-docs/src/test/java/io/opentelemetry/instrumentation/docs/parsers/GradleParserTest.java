@@ -94,6 +94,111 @@ class GradleParserTest {
   }
 
   @Test
+  void testDocsIgnoreSkipsPassBlock() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              pass {
+                group.set("com.couchbase.client")
+                module.set("java-client")
+                versions.set("[2,3)")
+                assertInverse.set(true)
+              }
+              pass {
+                // instrumentation-docs:ignore - verification only
+                name.set("Pre-2.6 network instrumentation")
+                group.set("com.couchbase.client")
+                module.set("java-client")
+                versions.set("[2,2.6)")
+                assertInverse.set(true)
+              }
+            }""";
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions()).containsExactly("com.couchbase.client:java-client:[2,3)");
+  }
+
+  @Test
+  void testDocsIgnoreSkipsCoreJdkPassBlock() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              pass {
+                // instrumentation-docs:ignore
+                coreJdk.set(true)
+              }
+            }""";
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions()).isEmpty();
+  }
+
+  @Test
+  void testDocsIgnoreHonoredAfterCommentContainingBraces() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              pass {
+                group.set("com.azure")
+                module.set("azure-core")
+                versions.set("[1.53.0,)")
+                // this module references the application's io.opentelemetry.context.{Context,Scope}
+                // instrumentation-docs:ignore - verification only
+                excludeInstrumentationName("azure-core-1.53-context")
+              }
+            }""";
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions()).isEmpty();
+  }
+
+  @Test
+  void testExtractMuzzleVersions_CommentContainingBracesDoesNotTruncateBlock() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              pass {
+                // this module references the application's io.opentelemetry.context.{Context,Scope}
+                group.set("com.azure")
+                module.set("azure-core")
+                versions.set("[1.53.0,)")
+              }
+              pass {
+                group.set("com.azure")
+                module.set("azure-core-amqp")
+                versions.set("[2.0.0,)")
+              }
+            }""";
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions())
+        .containsExactlyInAnyOrder(
+            "com.azure:azure-core:[1.53.0,)", "com.azure:azure-core-amqp:[2.0.0,)");
+  }
+
+  @Test
+  void testDocsIgnoreAbovePassBlockIsNotHonored() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              // instrumentation-docs:ignore
+              pass {
+                group.set("com.couchbase.client")
+                module.set("java-client")
+                versions.set("[2,2.6)")
+              }
+            }""";
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions()).containsExactly("com.couchbase.client:java-client:[2,2.6)");
+  }
+
+  @Test
   void testExtractMuzzleVersions_MultiplePassBlocks() {
     String gradleBuildFileContent =
         """
