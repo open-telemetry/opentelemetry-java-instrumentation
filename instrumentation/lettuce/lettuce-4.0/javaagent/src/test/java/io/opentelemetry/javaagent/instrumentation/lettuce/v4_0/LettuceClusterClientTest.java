@@ -231,18 +231,7 @@ class LettuceClusterClientTest {
 
     private void writeResponse(List<String> command, OutputStream output) throws IOException {
       String name = command.get(0).toUpperCase(Locale.ROOT);
-      if ("CLUSTER".equals(name)
-          && command.size() > 1
-          && "NODES".equals(command.get(1).toUpperCase(Locale.ROOT))) {
-        String nodes =
-            NODE_ID
-                + " "
-                + getHost()
-                + ":"
-                + getPort()
-                + " myself,master - 0 0 1 connected 0-16383\n";
-        write(output, "$" + nodes.getBytes(UTF_8).length + "\r\n" + nodes + "\r\n");
-      } else if ("SET".equals(name) || "CLIENT".equals(name)) {
+      if ("SET".equals(name) || "CLIENT".equals(name)) {
         write(output, "+OK\r\n");
       } else if ("COMMAND".equals(name)) {
         write(output, "*0\r\n");
