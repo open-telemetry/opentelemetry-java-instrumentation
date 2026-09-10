@@ -37,23 +37,23 @@ class FilteringMeter implements Meter {
   }
 
   @Override
-  public LongCounterBuilder counterBuilder(String s) {
-    return (metrics.matches(s) ? delegate : NOOP_METER).counterBuilder(s);
+  public LongCounterBuilder counterBuilder(String name) {
+    return (metrics.matches(name) ? delegate : NOOP_METER).counterBuilder(name);
   }
 
   @Override
-  public LongUpDownCounterBuilder upDownCounterBuilder(String s) {
-    return (metrics.matches(s) ? delegate : NOOP_METER).upDownCounterBuilder(s);
+  public LongUpDownCounterBuilder upDownCounterBuilder(String name) {
+    return (metrics.matches(name) ? delegate : NOOP_METER).upDownCounterBuilder(name);
   }
 
   @Override
-  public DoubleHistogramBuilder histogramBuilder(String s) {
-    return (metrics.matches(s) ? delegate : NOOP_METER).histogramBuilder(s);
+  public DoubleHistogramBuilder histogramBuilder(String name) {
+    return (metrics.matches(name) ? delegate : NOOP_METER).histogramBuilder(name);
   }
 
   @Override
-  public DoubleGaugeBuilder gaugeBuilder(String s) {
-    return (metrics.matches(s) ? delegate : NOOP_METER).gaugeBuilder(s);
+  public DoubleGaugeBuilder gaugeBuilder(String name) {
+    return (metrics.matches(name) ? delegate : NOOP_METER).gaugeBuilder(name);
   }
 
   @Override
