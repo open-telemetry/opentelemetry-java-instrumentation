@@ -47,7 +47,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       this.infoReference = infoReference;
     }
 
-    public boolean isNested() {
+    public boolean decrementAndCheckNested() {
       return callDepth.decrementAndGet() > 0;
     }
 
@@ -119,7 +119,7 @@ class PoolInstrumentation implements TypeInstrumentation {
         @Advice.Return Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
         @Advice.Enter PoolConstructionState state) {
-      if (state.isNested()) {
+      if (state.decrementAndCheckNested()) {
         return;
       }
 
@@ -163,7 +163,7 @@ class PoolInstrumentation implements TypeInstrumentation {
         @Advice.Return Object client,
         @Advice.Argument(1) List<SqlConnectOptions> databases,
         @Advice.Enter PoolConstructionState state) {
-      if (state.isNested()) {
+      if (state.decrementAndCheckNested()) {
         return;
       }
 
