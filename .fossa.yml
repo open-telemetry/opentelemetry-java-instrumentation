@@ -1266,6 +1266,9 @@ targets:
       target: ':instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.4.5:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent'
     - type: gradle
       path: ./
