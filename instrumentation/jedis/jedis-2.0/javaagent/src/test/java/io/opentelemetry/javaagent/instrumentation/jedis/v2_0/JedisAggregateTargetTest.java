@@ -232,6 +232,11 @@ class JedisAggregateTargetTest {
                           assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isNull();
                         }
                       });
+              // the redirection is followed by an ASKING command that the cluster command sends
+              // outside of running the redirected command, so it keeps a span of its own
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().startsWith("ASKING"))
+                  .hasSize(1);
               if (!emitStableDatabaseSemconv()) {
                 assertThat(testing.spans())
                     .filteredOn(span -> span.getName().startsWith("SET"))
