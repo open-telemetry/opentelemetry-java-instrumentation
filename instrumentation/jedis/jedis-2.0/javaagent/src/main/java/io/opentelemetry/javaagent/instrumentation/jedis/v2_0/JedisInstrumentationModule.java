@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -23,8 +24,8 @@ public class JedisInstrumentationModule extends InstrumentationModule
 
   private static final String CLUSTER_TARGET_ACCESSOR =
       "io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterTargetAccessor";
-  private static final String CLUSTER_TARGET_STATE =
-      CLUSTER_TARGET_ACCESSOR + "$ClusterTargetState";
+  private static final String REDIS_SERVER_TARGET =
+      "io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget";
 
   public JedisInstrumentationModule() {
     super("jedis", "jedis-2.0");
@@ -40,13 +41,13 @@ public class JedisInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<String> getAdditionalHelperClassNames() {
-    return asList(CLUSTER_TARGET_ACCESSOR, CLUSTER_TARGET_STATE);
+    return singletonList(CLUSTER_TARGET_ACCESSOR);
   }
 
   @Override
   public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
     virtualFieldRegistrar.accept(
-        "redis.clients.jedis.JedisClusterConnectionHandler", CLUSTER_TARGET_STATE);
+        "redis.clients.jedis.JedisClusterConnectionHandler", REDIS_SERVER_TARGET);
   }
 
   @Override
@@ -54,7 +55,6 @@ public class JedisInstrumentationModule extends InstrumentationModule
     return asList(
         new JedisConnectionInstrumentation(),
         new ShardedJedisInstrumentation(),
-        new ShardedRoutingInstrumentation(),
         new JedisSentinelPoolInstrumentation(),
         new PoolResourceInstrumentation(),
         new JedisClusterInstrumentation(),
