@@ -617,3 +617,4 @@ opensearch-rest-common-1.0:javaagent-unit-tests
 couchbase-common-3.1:javaagent
 couchbase-common-3.1:javaagent-unit-tests
 mongo-3.7:javaagent-unit-tests
+mongo-4.0:javaagent-unit-tests
