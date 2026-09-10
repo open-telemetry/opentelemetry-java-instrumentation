@@ -32,7 +32,6 @@ class TestRedisCluster implements AutoCloseable {
   private final ServerSocket serverSocket;
   private final Set<Socket> connections = ConcurrentHashMap.newKeySet();
   private final AtomicReference<Throwable> failure = new AtomicReference<>();
-  private final Thread acceptThread;
   private volatile boolean closed;
 
   TestRedisCluster() {
@@ -41,7 +40,7 @@ class TestRedisCluster implements AutoCloseable {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-    acceptThread = new Thread(this::acceptConnections, "test-vertx-redis-cluster-accept");
+    Thread acceptThread = new Thread(this::acceptConnections, "test-vertx-redis-cluster-accept");
     acceptThread.setDaemon(true);
     acceptThread.start();
   }
