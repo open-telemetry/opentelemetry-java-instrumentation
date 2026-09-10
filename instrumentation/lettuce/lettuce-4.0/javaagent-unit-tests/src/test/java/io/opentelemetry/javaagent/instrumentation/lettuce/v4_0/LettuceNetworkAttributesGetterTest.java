@@ -171,7 +171,7 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void multiCommandWriteDoesNotRecordSelectedAddress() throws UnknownHostException {
+  void multiCommandWriteRecordsSelectedAddressForEachCommand() throws UnknownHostException {
     InetSocketAddress initialAddress =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
     InetSocketAddress writeAddress =
@@ -186,8 +186,8 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandHandlerInstrumentation.WriteAdvice.onEnter(
         context, asList(firstCommand, secondCommand));
 
-    assertThat(LettuceSingletons.commandPeerAddress(firstCommand)).isEqualTo(initialAddress);
-    assertThat(LettuceSingletons.commandPeerAddress(secondCommand)).isEqualTo(initialAddress);
+    assertThat(LettuceSingletons.commandPeerAddress(firstCommand)).isEqualTo(writeAddress);
+    assertThat(LettuceSingletons.commandPeerAddress(secondCommand)).isEqualTo(writeAddress);
   }
 
   @Test
@@ -204,6 +204,71 @@ class LettuceNetworkAttributesGetterTest {
 
     assertThat(LettuceSingletons.COMMAND_PEER.get(command)).isNull();
     assertThat(LettuceSingletons.commandPeerAddress(command)).isNull();
+  }
+
+  @Test
+  void batchUsesResolvedAddressWhenEveryCommandAgrees() throws UnknownHostException {
+    InetSocketAddress address =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
+    RedisCommand<?, ?, ?> firstCommand = commandWithPeer(address);
+    RedisCommand<?, ?, ?> secondCommand = commandWithPeer(address);
+    LettuceBatchRequest request =
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
+    assertThat(getter.getNetworkPeerPort(request, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+  }
+
+  @Test
+  void batchOmitsPeerWhenCommandsResolveToDifferentAddresses() throws UnknownHostException {
+    RedisCommand<?, ?, ?> firstCommand =
+        commandWithPeer(
+            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
+    RedisCommand<?, ?, ?> secondCommand =
+        commandWithPeer(
+            new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT));
+    LettuceBatchRequest request =
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+  }
+
+  @Test
+  void batchOmitsPeerWhenAnyCommandPeerIsUnknown() throws UnknownHostException {
+    InetSocketAddress address =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
+    RedisCommand<?, ?, ?> firstCommand = commandWithPeer(address);
+    RedisCommand<?, ?, ?> secondCommand = command();
+    LettuceSingletons.initializeCommandPeer(secondCommand);
+    LettuceBatchRequest request =
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+  }
+
+  @Test
+  void batchOmitsPeerWhenAnyCommandHasNoState() throws UnknownHostException {
+    InetSocketAddress address =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
+    RedisCommand<?, ?, ?> firstCommand = commandWithPeer(address);
+    RedisCommand<?, ?, ?> secondCommand = command();
+    LettuceBatchRequest request =
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   private static RedisCommand<?, ?, ?> command() {
