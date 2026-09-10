@@ -8,12 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
@@ -32,12 +35,26 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SetTargetAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("setHost", "setPort").and(takesArguments(1)),
+        getClass().getName() + "$SetTargetAdvice");
+
     transformer.applyAdviceToMethod(
         named("sendCommand")
             .and(takesArguments(2))
             .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
         getClass().getName() + "$SendCommandAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetTargetAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisSingletons.setConnectionTarget(
+          connection, RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort()));
+    }
   }
 
   @SuppressWarnings("unused")
