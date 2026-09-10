@@ -8,13 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_DATABASE_INDEX;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -73,19 +69,17 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       AsyncCommand<?, ?, ?> asyncCommand = asAsyncCommand(command);
-      COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get(endpoint));
-      COMMAND_DATABASE_INDEX.set(command, ENDPOINT_DATABASE_INDEX.get(endpoint));
       RedisServerTarget commandTarget = commandTarget(command);
-      if (commandTarget != null) {
-        COMMAND_TARGET.set(command, commandTarget);
-      }
+      LettuceConnectionState endpointState = ENDPOINT_STATE.get(endpoint);
+      COMMAND_STATE.set(
+          command,
+          commandTarget == null
+              ? endpointState
+              : LettuceConnectionState.withServerTarget(endpointState, commandTarget));
 
       if (LettuceBatchContext.isBatching(endpoint)) {
         LettuceBatchContext.capture(endpoint, command, asyncCommand);
         return;
-      }
-      if (commandTarget == null) {
-        COMMAND_TARGET.set(command, ENDPOINT_TARGET.get(endpoint));
       }
 
       // Reactive commands are not backed by an AsyncCommand future and are traced by
@@ -118,9 +112,9 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     public static RedisServerTarget commandTarget(RedisCommand<?, ?, ?> command) {
       RedisCommand<?, ?, ?> current = command;
       while (current != null) {
-        RedisServerTarget target = COMMAND_TARGET.get(current);
-        if (target != null) {
-          return target;
+        LettuceConnectionState state = COMMAND_STATE.get(current);
+        if (state != null && state.serverTarget != null) {
+          return state.serverTarget;
         }
         if (current instanceof AsyncCommand) {
           current = ((AsyncCommand<?, ?, ?>) current).getDelegate();

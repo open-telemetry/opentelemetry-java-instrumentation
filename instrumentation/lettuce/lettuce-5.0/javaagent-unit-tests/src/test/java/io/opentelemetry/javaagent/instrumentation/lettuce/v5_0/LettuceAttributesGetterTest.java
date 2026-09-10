@@ -34,7 +34,8 @@ class LettuceAttributesGetterTest {
   @Test
   void commandWithoutTargetUsesSelectedAddressOnlyForLegacySemconv() {
     RedisCommand<String, String, String> command = command();
-    LettuceSingletons.COMMAND_ADDRESS.set(command, SELECTED_ADDRESS);
+    LettuceSingletons.COMMAND_STATE.set(
+        command, new LettuceConnectionState(SELECTED_ADDRESS, null, null));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
@@ -46,7 +47,8 @@ class LettuceAttributesGetterTest {
   @Test
   void batchWithoutTargetUsesSelectedAddressOnlyForLegacySemconv() {
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(singletonList(command()), SELECTED_ADDRESS, null, null);
+        LettuceBatchRequest.create(
+            singletonList(command()), new LettuceConnectionState(SELECTED_ADDRESS, null, null));
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -69,7 +71,8 @@ class LettuceAttributesGetterTest {
 
     LettuceBatchRequest multipleSocketRequest =
         LettuceBatchRequest.create(
-            singletonList(command()), SELECTED_ADDRESS, null, multipleSocketTarget);
+            singletonList(command()),
+            new LettuceConnectionState(SELECTED_ADDRESS, null, multipleSocketTarget));
     assertThat(getter.getServerAddress(multipleSocketRequest))
         .isEqualTo(emitStableDatabaseSemconv() ? null : "selected-node");
     assertThat(getter.getServerPort(multipleSocketRequest))
@@ -77,7 +80,8 @@ class LettuceAttributesGetterTest {
 
     LettuceBatchRequest singleSocketRequest =
         LettuceBatchRequest.create(
-            singletonList(command()), SELECTED_ADDRESS, null, singleSocketTarget);
+            singletonList(command()),
+            new LettuceConnectionState(SELECTED_ADDRESS, null, singleSocketTarget));
     assertThat(getter.getServerAddress(singleSocketRequest))
         .isEqualTo(emitStableDatabaseSemconv() ? "/var/run/redis1.sock" : "selected-node");
     assertThat(getter.getServerPort(singleSocketRequest))
@@ -96,10 +100,11 @@ class LettuceAttributesGetterTest {
           LettuceClusterClientInstrumentation.AttachEndpointAdvice.onEnter(
               client, new Object(), endpoint, selectedRedisUri, addressSupplier);
 
-      assertThat(LettuceSingletons.ENDPOINT_TARGET.get(endpoint)).isNull();
+      assertThat(LettuceSingletons.ENDPOINT_STATE.get(endpoint).serverTarget).isNull();
       assertThat(wrappedAddressSource).isInstanceOf(Supplier.class);
       assertThat(((Supplier<?>) wrappedAddressSource).get()).isEqualTo(SELECTED_ADDRESS);
-      assertThat(LettuceSingletons.ENDPOINT_ADDRESS.get(endpoint)).isEqualTo(SELECTED_ADDRESS);
+      assertThat(LettuceSingletons.ENDPOINT_STATE.get(endpoint).serverAddress)
+          .isEqualTo(SELECTED_ADDRESS);
     } finally {
       endpoint.close();
       client.shutdown(0, 15, SECONDS);

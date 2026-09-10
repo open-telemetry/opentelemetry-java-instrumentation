@@ -73,6 +73,30 @@ class LettuceServerTargetsTest {
   }
 
   @Test
+  void masterIdWithoutSentinelsKeepsTheHost() {
+    RedisURI redisUri = RedisURI.create("redis://host:6379");
+    redisUri.setSentinelMasterId("mymaster");
+
+    RedisServerTarget target = LettuceServerTargets.of(redisUri);
+
+    assertThat(target.getAddress()).isEqualTo("host");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void masterSlaveMasterIdWithoutSentinelsKeepsAllEndpoints() {
+    RedisURI first = RedisURI.create("redis://node1:7000");
+    first.setSentinelMasterId("mymaster");
+
+    RedisServerTarget target =
+        LettuceServerTargets.ofMasterSlaveUris(
+            asList(first, RedisURI.create("redis://node2:7001")));
+
+    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void singleSocket() {
     RedisServerTarget target =
         LettuceServerTargets.of(RedisURI.Builder.socket("/var/run/redis1.sock").build());

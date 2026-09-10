@@ -29,40 +29,29 @@ final class LettuceBatchRequest {
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
   private final List<RedisCommand<?, ?, ?>> commands;
-  @Nullable private final InetSocketAddress serverAddress;
-  @Nullable private final Integer databaseIndex;
-  @Nullable private final RedisServerTarget serverTarget;
+  @Nullable private final LettuceConnectionState connectionState;
 
   private LettuceBatchRequest(
       String operationName,
       @Nullable String queryText,
       @Nullable Long batchSize,
       List<RedisCommand<?, ?, ?>> commands,
-      @Nullable InetSocketAddress serverAddress,
-      @Nullable Integer databaseIndex,
-      @Nullable RedisServerTarget serverTarget) {
+      @Nullable LettuceConnectionState connectionState) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
     this.commands = commands;
-    this.serverAddress = serverAddress;
-    this.databaseIndex = databaseIndex;
-    this.serverTarget = serverTarget;
+    this.connectionState = connectionState;
   }
 
   static LettuceBatchRequest create(
-      List<RedisCommand<?, ?, ?>> commands,
-      @Nullable InetSocketAddress serverAddress,
-      @Nullable Integer databaseIndex,
-      @Nullable RedisServerTarget serverTarget) {
+      List<RedisCommand<?, ?, ?>> commands, @Nullable LettuceConnectionState connectionState) {
     return new LettuceBatchRequest(
         operationName(commands),
         queryText(commands),
         commands.size() != 1 ? (long) commands.size() : null,
         commands,
-        serverAddress,
-        databaseIndex,
-        serverTarget);
+        connectionState);
   }
 
   String getOperationName() {
@@ -81,7 +70,7 @@ final class LettuceBatchRequest {
 
   @Nullable
   InetSocketAddress getServerAddress() {
-    return serverAddress;
+    return connectionState == null ? null : connectionState.serverAddress;
   }
 
   @Nullable
@@ -92,12 +81,12 @@ final class LettuceBatchRequest {
 
   @Nullable
   Integer getDatabaseIndex() {
-    return databaseIndex;
+    return connectionState == null ? null : connectionState.databaseIndex;
   }
 
   @Nullable
   RedisServerTarget getServerTarget() {
-    return serverTarget;
+    return connectionState == null ? null : connectionState.serverTarget;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {

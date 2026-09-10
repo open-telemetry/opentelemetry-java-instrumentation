@@ -50,7 +50,7 @@ public class LettuceMonoTerminationHandler<T> implements LettuceReactiveCommandH
     command = subscriptionCommand;
     expectsResponse = expectsResponse(subscriptionCommand);
     LettuceSingletons.initializeCommandPeerForSubscription(subscriptionCommand);
-    LettuceSingletons.attachAddress(subscriptionCommand, connection);
+    LettuceSingletons.attachConnectionState(subscriptionCommand, connection);
     context = instrumenter().start(Context.current(), subscriptionCommand);
     if (!expectsResponse) {
       instrumenter().end(context, subscriptionCommand, null, null);

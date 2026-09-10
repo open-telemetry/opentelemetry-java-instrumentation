@@ -6,10 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CLUSTER_CLIENT_TARGET;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_TARGET;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_TARGET;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_STATE;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_STATE;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -25,14 +23,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import reactor.core.publisher.Mono;
 
 class LettuceClusterClientInstrumentation implements TypeInstrumentation {
 
@@ -61,12 +57,6 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("io.lettuce.core.protocol.DefaultEndpoint")))
             .and(takesArgument(2, named("io.lettuce.core.RedisURI"))),
         getClass().getName() + "$AttachEndpointAdvice");
-    transformer.applyAdviceToMethod(
-        named("connectStatefulAsync")
-            .and(takesArgument(2, named("io.lettuce.core.protocol.DefaultEndpoint")))
-            .and(takesArgument(3, named("io.lettuce.core.RedisURI")))
-            .and(takesArgument(4, named("reactor.core.publisher.Mono"))),
-        getClass().getName() + "$AttachEndpointWithCodecAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -93,7 +83,11 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
       }
       RedisServerTarget target = CLUSTER_CLIENT_TARGET.get(client);
       if (target != null && connection instanceof RedisChannelHandler) {
-        CONNECTION_TARGET.set((RedisChannelHandler<?, ?>) connection, target);
+        RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
+        CONNECTION_STATE.set(
+            connectionHandler,
+            LettuceConnectionState.withServerTarget(
+                CONNECTION_STATE.get(connectionHandler), target));
       }
     }
   }
@@ -109,43 +103,18 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) DefaultEndpoint endpoint,
         @Advice.Argument(2) RedisURI redisUri,
         @Advice.Argument(3) Object socketAddressSource) {
-      return AttachEndpointHelper.attach(
-          client, connection, endpoint, redisUri, socketAddressSource);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class AttachEndpointWithCodecAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Advice.AssignReturned.ToArguments(@ToArgument(4))
-    public static Object onEnter(
-        @Advice.This RedisClusterClient client,
-        @Advice.Argument(0) Object connection,
-        @Advice.Argument(2) DefaultEndpoint endpoint,
-        @Advice.Argument(3) RedisURI redisUri,
-        @Advice.Argument(4) Object socketAddressSource) {
-      return AttachEndpointHelper.attach(
-          client, connection, endpoint, redisUri, socketAddressSource);
-    }
-  }
-
-  public static class AttachEndpointHelper {
-
-    public static Object attach(
-        RedisClusterClient client,
-        Object connection,
-        DefaultEndpoint endpoint,
-        RedisURI redisUri,
-        Object socketAddressSource) {
       if (!LettuceServerTargets.configuredTargetsSupported()) {
         return socketAddressSource;
       }
-      ENDPOINT_DATABASE_INDEX.set(endpoint, redisUri.getDatabase());
       RedisServerTarget target = CLUSTER_CLIENT_TARGET.get(client);
-      ENDPOINT_TARGET.set(endpoint, target);
+      ENDPOINT_STATE.set(
+          endpoint, new LettuceConnectionState(null, redisUri.getDatabase(), target));
       if (connection instanceof RedisChannelHandler) {
-        CONNECTION_TARGET.set((RedisChannelHandler<?, ?>) connection, target);
+        RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
+        CONNECTION_STATE.set(
+            connectionHandler,
+            LettuceConnectionState.withServerTarget(
+                CONNECTION_STATE.get(connectionHandler), target));
       }
       if (socketAddressSource instanceof Supplier) {
         Supplier<?> socketAddressSupplier = (Supplier<?>) socketAddressSource;
@@ -153,13 +122,8 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
             ? socketAddressSupplier
             : new EndpointAddressSupplier(socketAddressSupplier, endpoint);
       }
-      if (socketAddressSource instanceof Mono) {
-        return ((Mono<?>) socketAddressSource).doOnNext(new EndpointAddressConsumer(endpoint));
-      }
       return socketAddressSource;
     }
-
-    private AttachEndpointHelper() {}
   }
 
   public static class EndpointAddressSupplier implements Supplier<SocketAddress> {
@@ -175,24 +139,12 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     public SocketAddress get() {
       Object address = delegate.get();
       if (address instanceof InetSocketAddress) {
-        ENDPOINT_ADDRESS.set(endpoint, (InetSocketAddress) address);
+        ENDPOINT_STATE.set(
+            endpoint,
+            LettuceConnectionState.withServerAddress(
+                ENDPOINT_STATE.get(endpoint), (InetSocketAddress) address));
       }
       return (SocketAddress) address;
-    }
-  }
-
-  public static class EndpointAddressConsumer implements Consumer<Object> {
-    private final DefaultEndpoint endpoint;
-
-    public EndpointAddressConsumer(DefaultEndpoint endpoint) {
-      this.endpoint = endpoint;
-    }
-
-    @Override
-    public void accept(Object address) {
-      if (address instanceof InetSocketAddress) {
-        ENDPOINT_ADDRESS.set(endpoint, (InetSocketAddress) address);
-      }
     }
   }
 }

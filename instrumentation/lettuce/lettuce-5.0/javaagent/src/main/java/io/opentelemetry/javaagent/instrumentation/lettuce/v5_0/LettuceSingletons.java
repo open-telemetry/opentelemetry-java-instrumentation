@@ -11,7 +11,6 @@ import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.cluster.RedisClusterClient;
-import io.lettuce.core.masterslave.StatefulRedisMasterSlaveConnection;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.DecoratedCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
@@ -30,7 +29,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -48,43 +46,20 @@ public class LettuceSingletons {
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
 
-  public static final VirtualField<DefaultEndpoint, InetSocketAddress> ENDPOINT_ADDRESS =
-      VirtualField.find(DefaultEndpoint.class, InetSocketAddress.class);
+  public static final VirtualField<DefaultEndpoint, LettuceConnectionState> ENDPOINT_STATE =
+      VirtualField.find(DefaultEndpoint.class, LettuceConnectionState.class);
 
-  public static final VirtualField<RedisChannelHandler<?, ?>, InetSocketAddress>
-      CONNECTION_ADDRESS = VirtualField.find(RedisChannelHandler.class, InetSocketAddress.class);
-
-  public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
-      VirtualField.find(RedisCommand.class, InetSocketAddress.class);
+  public static final VirtualField<RedisChannelHandler<?, ?>, LettuceConnectionState>
+      CONNECTION_STATE = VirtualField.find(RedisChannelHandler.class, LettuceConnectionState.class);
 
   private static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
       VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
 
-  public static final VirtualField<DefaultEndpoint, Integer> ENDPOINT_DATABASE_INDEX =
-      VirtualField.find(DefaultEndpoint.class, Integer.class);
-
-  public static final VirtualField<RedisChannelHandler<?, ?>, Integer> CONNECTION_DATABASE_INDEX =
-      VirtualField.find(RedisChannelHandler.class, Integer.class);
-
-  public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE_INDEX =
-      VirtualField.find(RedisCommand.class, Integer.class);
-
-  public static final VirtualField<DefaultEndpoint, RedisServerTarget> ENDPOINT_TARGET =
-      VirtualField.find(DefaultEndpoint.class, RedisServerTarget.class);
-
-  public static final VirtualField<RedisChannelHandler<?, ?>, RedisServerTarget> CONNECTION_TARGET =
-      VirtualField.find(RedisChannelHandler.class, RedisServerTarget.class);
-
-  public static final VirtualField<RedisCommand<?, ?, ?>, RedisServerTarget> COMMAND_TARGET =
-      VirtualField.find(RedisCommand.class, RedisServerTarget.class);
+  public static final VirtualField<RedisCommand<?, ?, ?>, LettuceConnectionState> COMMAND_STATE =
+      VirtualField.find(RedisCommand.class, LettuceConnectionState.class);
 
   public static final VirtualField<RedisClusterClient, RedisServerTarget> CLUSTER_CLIENT_TARGET =
       VirtualField.find(RedisClusterClient.class, RedisServerTarget.class);
-
-  public static final VirtualField<
-          StatefulRedisMasterSlaveConnection<?, ?>, RedisChannelHandler<?, ?>>
-      MASTER_SLAVE_CONNECTION_DELEGATE =
-          VirtualField.find(StatefulRedisMasterSlaveConnection.class, RedisChannelHandler.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -160,25 +135,21 @@ public class LettuceSingletons {
     return connectInstrumenter;
   }
 
-  public static void attachAddress(
+  public static void attachConnectionState(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     if (!(connection instanceof RedisChannelHandler)) {
       return;
     }
 
     RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
-    RedisServerTarget commandTarget = COMMAND_TARGET.get(command);
-    if (commandTarget == null) {
-      commandTarget = CONNECTION_TARGET.get(connectionHandler);
-    }
-
-    // LettuceClientInstrumentation stores the RedisURI metadata directly on the
-    // RedisChannelHandler while the connection and original DefaultEndpoint are both available.
-    // Reading CONNECTION_* here avoids depending on the concrete channel-writer wrapper chain and
-    // makes the metadata available when the reactive span is started.
-    COMMAND_ADDRESS.set(command, CONNECTION_ADDRESS.get(connectionHandler));
-    COMMAND_DATABASE_INDEX.set(command, CONNECTION_DATABASE_INDEX.get(connectionHandler));
-    COMMAND_TARGET.set(command, commandTarget);
+    LettuceConnectionState commandState = COMMAND_STATE.get(command);
+    RedisServerTarget commandTarget = commandState == null ? null : commandState.serverTarget;
+    LettuceConnectionState connectionState = CONNECTION_STATE.get(connectionHandler);
+    COMMAND_STATE.set(
+        command,
+        commandTarget == null
+            ? connectionState
+            : LettuceConnectionState.withServerTarget(connectionState, commandTarget));
   }
 
   public static boolean markCommandSpanStarted(AsyncCommand<?, ?, ?> command) {

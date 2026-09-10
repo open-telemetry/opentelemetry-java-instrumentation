@@ -61,7 +61,7 @@ public class LettuceFluxTerminationHandler
     this.command = command;
     expectsResponse = expectsResponse(command);
     LettuceSingletons.initializeCommandPeerForSubscription(command);
-    LettuceSingletons.attachAddress(command, connection);
+    LettuceSingletons.attachConnectionState(command, connection);
     context = instrumenter().start(Context.current(), command);
     if (!expectsResponse) {
       instrumenter().end(context, command, null, null);
