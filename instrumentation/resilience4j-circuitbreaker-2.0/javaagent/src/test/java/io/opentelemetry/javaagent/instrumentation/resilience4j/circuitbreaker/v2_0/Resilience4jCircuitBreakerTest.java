@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v2_0.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -43,6 +42,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Resilience4jCircuitBreakerTest {
+
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean(
+          "otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -1396,5 +1399,9 @@ class Resilience4jCircuitBreakerTest {
                     span.hasException(expectedException);
                   }
                 }));
+  }
+
+  private static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 }
