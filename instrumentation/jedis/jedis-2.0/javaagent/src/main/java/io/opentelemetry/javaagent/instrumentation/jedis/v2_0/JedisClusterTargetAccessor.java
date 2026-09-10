@@ -55,13 +55,13 @@ public final class JedisClusterTargetAccessor {
     return state != null ? JedisSingletons.openConfiguredTargetScope(state.target) : null;
   }
 
-  private JedisClusterTargetAccessor() {}
-
   @NoMuzzle
   private static VirtualField<JedisClusterConnectionHandler, ClusterTargetState>
       getClusterTargetStateVirtualField() {
     return VirtualField.find(JedisClusterConnectionHandler.class, ClusterTargetState.class);
   }
+
+  private JedisClusterTargetAccessor() {}
 
   static final class ClusterTargetState {
     @Nullable private final RedisServerTarget target;
