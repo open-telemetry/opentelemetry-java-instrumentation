@@ -618,3 +618,4 @@ couchbase-common-3.1:javaagent
 couchbase-common-3.1:javaagent-unit-tests
 mongo-3.7:javaagent-unit-tests
 mongo-4.0:javaagent-unit-tests
+cassandra-4.4:javaagent-unit-tests
