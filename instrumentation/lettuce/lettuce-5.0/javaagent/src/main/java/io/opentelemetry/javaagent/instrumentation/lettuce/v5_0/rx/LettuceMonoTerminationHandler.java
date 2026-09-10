@@ -18,9 +18,10 @@ import javax.annotation.Nullable;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
-public class LettuceMonoDualConsumer<T> implements LettuceReactiveCommandHandler {
+public class LettuceMonoTerminationHandler<T> implements LettuceReactiveCommandHandler {
 
-  private static final Logger logger = Logger.getLogger(LettuceMonoDualConsumer.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(LettuceMonoTerminationHandler.class.getName());
 
   private final StatefulConnection<?, ?> connection;
   private final AtomicBoolean spanEnded = new AtomicBoolean();
@@ -32,7 +33,7 @@ public class LettuceMonoDualConsumer<T> implements LettuceReactiveCommandHandler
     return new Mono<T>() {
       @Override
       public void subscribe(CoreSubscriber<? super T> actual) {
-        LettuceMonoDualConsumer<T> handler = new LettuceMonoDualConsumer<>(connection);
+        LettuceMonoTerminationHandler<T> handler = new LettuceMonoTerminationHandler<>(connection);
         handler
             .finishSpanOnTerminal(publisher)
             .subscribe(new LettuceReactiveCommandSubscriber<>(actual, handler));
@@ -40,7 +41,7 @@ public class LettuceMonoDualConsumer<T> implements LettuceReactiveCommandHandler
     };
   }
 
-  private LettuceMonoDualConsumer(StatefulConnection<?, ?> connection) {
+  private LettuceMonoTerminationHandler(StatefulConnection<?, ?> connection) {
     this.connection = connection;
   }
 

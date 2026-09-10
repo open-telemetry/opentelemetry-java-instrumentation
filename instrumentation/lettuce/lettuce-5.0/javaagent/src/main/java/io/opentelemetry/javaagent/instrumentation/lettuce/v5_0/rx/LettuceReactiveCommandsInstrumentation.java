@@ -54,7 +54,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     public static <K, V, T> Mono<T> monitorSpan(
         @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Return Mono<T> originalPublisher) {
-      return LettuceMonoDualConsumer.monitor(originalPublisher, commands.getConnection());
+      return LettuceMonoTerminationHandler.monitor(originalPublisher, commands.getConnection());
     }
   }
 
@@ -66,7 +66,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     public static <K, V, T> Flux<T> monitorSpan(
         @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Return Flux<T> originalPublisher) {
-      return LettuceFluxTerminationRunnable.monitor(originalPublisher, commands.getConnection());
+      return LettuceFluxTerminationHandler.monitor(originalPublisher, commands.getConnection());
     }
   }
 }
