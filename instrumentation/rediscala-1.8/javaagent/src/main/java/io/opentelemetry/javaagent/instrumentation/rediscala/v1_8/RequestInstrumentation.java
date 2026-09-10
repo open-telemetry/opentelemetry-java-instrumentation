@@ -8,9 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaServerTargets.findMethod;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.instrumenter;
-import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -22,8 +20,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.reflect.Method;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -31,7 +27,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.ActorRequest;
 import redis.BufferedRequest;
 import redis.RedisClientActorLike;
-import redis.RedisClientPoolLike;
 import redis.RedisCommand;
 import redis.Request;
 import redis.RoundRobinPoolRequest;
@@ -51,7 +46,6 @@ class RequestInstrumentation implements TypeInstrumentation {
             "redis.ActorRequest",
             "redis.Request",
             "redis.BufferedRequest",
-            "redis.RedisCluster",
             "redis.RoundRobinPoolRequest"));
   }
 
@@ -69,12 +63,6 @@ class RequestInstrumentation implements TypeInstrumentation {
   public static class SendAdvice {
 
     public static class AdviceScope {
-      private static final Logger logger = Logger.getLogger(AdviceScope.class.getName());
-
-      @Nullable
-      private static final Method POOL_EXECUTION_CONTEXT =
-          findMethod(RedisClientPoolLike.class, "executionContext");
-
       private final Context context;
       private final Scope scope;
       private final RediscalaRequest request;
@@ -121,12 +109,6 @@ class RequestInstrumentation implements TypeInstrumentation {
           ctx = ((Request) action).executionContext();
         } else if (action instanceof BufferedRequest) {
           ctx = ((BufferedRequest) action).executionContext();
-        } else if (action instanceof RedisClientPoolLike && POOL_EXECUTION_CONTEXT != null) {
-          try {
-            ctx = (ExecutionContext) POOL_EXECUTION_CONTEXT.invoke(action);
-          } catch (ReflectiveOperationException e) {
-            logger.log(FINE, "Failed to read the rediscala pool execution context", e);
-          }
         } else if (action instanceof RoundRobinPoolRequest) {
           ctx = ((RoundRobinPoolRequest) action).executionContext();
         }
