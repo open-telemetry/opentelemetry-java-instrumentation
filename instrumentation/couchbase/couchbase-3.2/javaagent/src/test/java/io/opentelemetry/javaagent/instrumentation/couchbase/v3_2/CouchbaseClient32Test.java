@@ -30,13 +30,11 @@ import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_TR
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.core.msg.RequestContext;
-import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -190,10 +188,6 @@ class CouchbaseClient32Test {
     Class<?> protostellarRequestClass =
         Class.forName("com.couchbase.client.core.protostellar.ProtostellarRequest");
     Object protostellarRequest = mock(protostellarRequestClass);
-    when(protostellarRequestClass.getMethod("createdAt").invoke(protostellarRequest))
-        .thenReturn(System.nanoTime());
-    when(protostellarRequestClass.getMethod("serviceType").invoke(protostellarRequest))
-        .thenReturn(ServiceType.KV);
     Object request =
         requestClass
             .getConstructor(core.getClass(), protostellarRequestClass)
