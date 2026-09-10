@@ -28,8 +28,7 @@ final class GraphqlInstrumenterFactory {
       boolean sanitizeQuery,
       boolean addOperationNameToSpanName,
       boolean operationSpanEnabled,
-      boolean addAttributesToLocalRootSpan,
-      boolean promoteErrorStatusToLocalRootSpan) {
+      boolean addAttributesToCurrentSpan) {
     return OpenTelemetryInstrumentationHelper.create(
         openTelemetry,
         INSTRUMENTATION_NAME,
@@ -37,8 +36,7 @@ final class GraphqlInstrumenterFactory {
         sanitizeQuery,
         addOperationNameToSpanName,
         operationSpanEnabled,
-        addAttributesToLocalRootSpan,
-        promoteErrorStatusToLocalRootSpan);
+        addAttributesToCurrentSpan);
   }
 
   static Instrumenter<DataFetchingEnvironment, Object> createDataFetcherInstrumenter(

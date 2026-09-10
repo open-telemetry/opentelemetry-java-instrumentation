@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
  */
 public class OpenTelemetryInstrumentationState implements InstrumentationState {
   @Nullable private Context context;
-  @Nullable private Span localRootSpan;
+  @Nullable private Span currentSpan;
   private boolean operationSpanCreated;
   @Nullable private Operation operation;
   @Nullable private String operationName;
@@ -42,17 +42,17 @@ public class OpenTelemetryInstrumentationState implements InstrumentationState {
   }
 
   /**
-   * The local root span captured from the parent context, used when enriching it with GraphQL
-   * telemetry. {@code null} when there is no enclosing local root or when local-root enrichment is
-   * disabled.
+   * The span that was current when execution began (normally the enclosing server span), used when
+   * stamping GraphQL telemetry onto it. {@code null} when there is no valid current span or when
+   * current-span enrichment is disabled.
    */
   @Nullable
-  public Span getLocalRootSpan() {
-    return localRootSpan;
+  public Span getCurrentSpan() {
+    return currentSpan;
   }
 
-  public void setLocalRootSpan(@Nullable Span localRootSpan) {
-    this.localRootSpan = localRootSpan;
+  public void setCurrentSpan(@Nullable Span currentSpan) {
+    this.currentSpan = currentSpan;
   }
 
   @Nullable

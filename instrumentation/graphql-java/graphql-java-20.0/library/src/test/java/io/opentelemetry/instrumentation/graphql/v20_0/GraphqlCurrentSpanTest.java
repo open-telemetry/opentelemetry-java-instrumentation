@@ -41,14 +41,13 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
- * Tests for enriching the local root span (e.g. the enclosing HTTP server span) with GraphQL
- * telemetry, and for suppressing the GraphQL operation span. These live outside the shared {@code
- * AbstractGraphqlTest} because the behaviour is specific to graphql-java-20.0 and requires an
- * enclosing local root span, established here via {@link
- * InstrumentationExtension#runWithHttpServerSpan}.
+ * Tests for stamping GraphQL telemetry onto the current span (e.g. the enclosing HTTP server span)
+ * and for suppressing the GraphQL operation span. These live outside the shared {@code
+ * AbstractGraphqlTest} because the behaviour is specific to graphql-java-20.0; the current-span
+ * cases establish an enclosing span via {@link InstrumentationExtension#runWithHttpServerSpan}.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class GraphqlLocalRootSpanTest {
+class GraphqlCurrentSpanTest {
 
   private static final String SERVER_SPAN_NAME = "GET";
 
@@ -103,8 +102,8 @@ class GraphqlLocalRootSpanTest {
       "query findBookById { bookById(id: \"book-graphql-error\") { name } }";
 
   @Test
-  void enrichAndOwnSpan() {
-    GraphQL graphql = graphql(b -> b.setAddAttributesToLocalRootSpan(true));
+  void stampCurrentSpanAndCreateOwnSpan() {
+    GraphQL graphql = graphql(b -> b.setAddAttributesToCurrentSpan(true));
 
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();
@@ -126,9 +125,9 @@ class GraphqlLocalRootSpanTest {
   }
 
   @Test
-  void enrichWithoutOwnSpan() {
+  void stampCurrentSpanWithoutOwnSpan() {
     GraphQL graphql =
-        graphql(b -> b.setAddAttributesToLocalRootSpan(true).setOperationSpanEnabled(false));
+        graphql(b -> b.setAddAttributesToCurrentSpan(true).setOperationSpanEnabled(false));
 
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();
@@ -146,7 +145,28 @@ class GraphqlLocalRootSpanTest {
   }
 
   @Test
-  void dataFetcherSpanReparentsToLocalRootWhenOperationSpanDisabled() {
+  void createsOwnSpanAsFallbackWhenNoCurrentSpan() {
+    // Operation span disabled and current-span stamping requested, but there is no enclosing span:
+    // an operation span must be created anyway so telemetry is not lost.
+    GraphQL graphql =
+        graphql(b -> b.setAddAttributesToCurrentSpan(true).setOperationSpanEnabled(false));
+
+    ExecutionResult result = graphql.execute(QUERY);
+    assertThat(result.getErrors()).isEmpty();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("query")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
+                        .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")));
+  }
+
+  @Test
+  void dataFetcherSpanReparentsToCurrentSpanWhenOperationSpanDisabled() {
     // With the operation span disabled, data fetcher spans must nest directly under the enclosing
     // server span rather than a (missing) GraphQL operation span.
     GraphQL graphql =
@@ -167,8 +187,8 @@ class GraphqlLocalRootSpanTest {
   }
 
   @Test
-  void errorsEnrichedOntoLocalRootStatusNotPromoted() {
-    GraphQL graphql = graphql(b -> b.setAddAttributesToLocalRootSpan(true));
+  void errorsPromoteStatusOnCurrentSpan() {
+    GraphQL graphql = graphql(b -> b.setAddAttributesToCurrentSpan(true));
 
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(ERROR_QUERY));
     assertThat(result.getErrors()).isNotEmpty();
@@ -179,8 +199,9 @@ class GraphqlLocalRootSpanTest {
                 span ->
                     span.hasName(SERVER_SPAN_NAME)
                         .hasKind(SpanKind.SERVER)
-                        // status is NOT promoted to error
-                        .hasStatus(StatusData.unset())
+                        // status is promoted to error because we stamp onto the current span
+                        .hasStatus(StatusData.error())
+                        .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -192,48 +213,7 @@ class GraphqlLocalRootSpanTest {
   }
 
   @Test
-  void promoteErrorStatusWithoutAttributes() {
-    GraphQL graphql = graphql(b -> b.setPromoteErrorStatusToLocalRootSpan(true));
-
-    ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(ERROR_QUERY));
-    assertThat(result.getErrors()).isNotEmpty();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SERVER_SPAN_NAME)
-                        .hasKind(SpanKind.SERVER)
-                        // status IS promoted, but no graphql.* attributes are added
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfying(
-                            attrs -> {
-                              assertThat(attrs.get(GRAPHQL_OPERATION_NAME)).isNull();
-                              assertThat(attrs.get(GRAPHQL_OPERATION_TYPE)).isNull();
-                              assertThat(attrs.get(GRAPHQL_DOCUMENT)).isNull();
-                            }),
-                span -> span.hasName("query").hasKind(SpanKind.INTERNAL)));
-  }
-
-  @Test
-  void promoteErrorStatusWithoutErrorsLeavesStatusUnset() {
-    GraphQL graphql = graphql(b -> b.setPromoteErrorStatusToLocalRootSpan(true));
-
-    ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
-    assertThat(result.getErrors()).isEmpty();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SERVER_SPAN_NAME)
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.unset()),
-                span -> span.hasName("query").hasKind(SpanKind.INTERNAL)));
-  }
-
-  @Test
-  void defaultsDoNotEnrichLocalRoot() {
+  void defaultsDoNotStampCurrentSpan() {
     GraphQL graphql = graphql(b -> {});
 
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
@@ -256,8 +236,8 @@ class GraphqlLocalRootSpanTest {
   }
 
   @Test
-  void captureQueryFalseOmitsDocumentOnLocalRoot() {
-    GraphQL graphql = graphql(b -> b.setAddAttributesToLocalRootSpan(true).setCaptureQuery(false));
+  void captureQueryFalseOmitsDocumentOnCurrentSpan() {
+    GraphQL graphql = graphql(b -> b.setAddAttributesToCurrentSpan(true).setCaptureQuery(false));
 
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();
