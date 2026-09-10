@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jmx;
 
+import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.STABLE;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
@@ -12,8 +13,8 @@ import static java.util.logging.Level.WARNING;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
@@ -25,7 +26,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
@@ -33,15 +34,17 @@ import java.util.logging.Logger;
 public class JmxMetricInsightInstaller implements AgentListener {
 
   private static final Logger logger = Logger.getLogger(JmxMetricInsightInstaller.class.getName());
+  private static final String INSTRUMENTATION_NAME = "jmx";
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     DeclarativeConfigProperties config =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
+        DeclarativeConfigUtil.getInstrumentationConfig(
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME);
 
     boolean v3Preview = AgentCommonConfig.get().isV3Preview();
     if (v3Preview) {
-      if (!AgentDistributionConfig.get().isInstrumentationEnabled("jmx")) {
+      if (!AgentDistributionConfig.get().isInstrumentationEnabled(INSTRUMENTATION_NAME)) {
         return;
       }
     } else {
@@ -66,14 +69,9 @@ public class JmxMetricInsightInstaller implements AgentListener {
         .forEach(target -> addClasspathRules(target, jmx));
 
     // include/exclude metrics by name
-    List<String> metricsInclude =
-        config.get("metrics").getScalarList("included", String.class, emptyList());
-    List<String> metricsExclude =
-        config.get("metrics").getScalarList("excluded", String.class, emptyList());
-    if (!metricsInclude.isEmpty() || !metricsExclude.isEmpty()) {
-      jmx.setMetrics(
-          IncludeExclude.builder().setIncluded(metricsInclude).setExcluded(metricsExclude).build());
-    }
+    Optional.ofNullable(
+            SelectorConfig.resolve(config, INSTRUMENTATION_NAME, "metrics", STABLE, true))
+        .ifPresent(jmx::setMetrics);
 
     jmx.build().start();
   }
