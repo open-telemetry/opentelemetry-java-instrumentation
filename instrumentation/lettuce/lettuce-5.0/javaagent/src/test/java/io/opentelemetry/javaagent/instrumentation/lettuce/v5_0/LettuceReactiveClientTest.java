@@ -267,6 +267,40 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_OPERATION), "BLPOP"))));
   }
 
+  @Test
+  void testCommandCancelOnMonoPublisher() {
+    withIsolatedContainer(
+        (connection, isolatedPort) -> {
+          Disposable subscription = connection.reactive().blpop(30, "cancelled-mono").subscribe();
+          subscription.dispose();
+
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName(
+                                  emitStableDatabaseSemconv()
+                                      ? "BLPOP " + host + ":" + isolatedPort
+                                      : "BLPOP")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, isolatedPort),
+                                  equalTo(
+                                      NETWORK_PEER_ADDRESS,
+                                      emitStableDatabaseSemconv() ? ip : null),
+                                  equalTo(
+                                      NETWORK_PEER_PORT,
+                                      emitStableDatabaseSemconv()
+                                          ? Long.valueOf(isolatedPort)
+                                          : null),
+                                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                  equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                                  equalTo(maybeStable(DB_STATEMENT), "BLPOP cancelled-mono 30"),
+                                  equalTo(maybeStable(DB_OPERATION), "BLPOP"))));
+        });
+  }
+
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
   // still recording spans
   @Test
