@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Connection;
@@ -42,6 +43,9 @@ public class JedisSingletons {
 
   private static final VirtualField<Pool<?>, ConfiguredTarget> POOL_TARGET =
       VirtualField.find(Pool.class, ConfiguredTarget.class);
+
+  private static final VirtualField<Set<?>, ConfiguredSentinels> PARSED_SENTINELS =
+      VirtualField.find(Set.class, ConfiguredSentinels.class);
 
   private static final VirtualField<JedisClusterConnectionHandler, ConfiguredTarget>
       CLUSTER_TARGET =
@@ -90,9 +94,22 @@ public class JedisSingletons {
     POOL_TARGET.set(pool, new ConfiguredTarget(target));
   }
 
+  public static void registerParsedSentinels(
+      @Nullable Set<?> parsedSentinels, @Nullable Collection<?> configuredSentinels) {
+    if (parsedSentinels != null) {
+      PARSED_SENTINELS.set(parsedSentinels, new ConfiguredSentinels(configuredSentinels));
+    }
+  }
+
   @Nullable
   public static RedisServerTarget sentinelTarget(
       @Nullable String masterName, @Nullable Collection<?> sentinels) {
+    if (sentinels instanceof Set<?>) {
+      ConfiguredSentinels configuredSentinels = PARSED_SENTINELS.get((Set<?>) sentinels);
+      if (configuredSentinels != null) {
+        sentinels = configuredSentinels.sentinels;
+      }
+    }
     return JedisServerTargets.ofSentinels(masterName, sentinels);
   }
 
@@ -187,6 +204,14 @@ public class JedisSingletons {
 
     private ConfiguredTarget(@Nullable RedisServerTarget target) {
       this.target = target;
+    }
+  }
+
+  private static final class ConfiguredSentinels {
+    @Nullable private final Collection<?> sentinels;
+
+    private ConfiguredSentinels(@Nullable Collection<?> sentinels) {
+      this.sentinels = sentinels;
     }
   }
 }

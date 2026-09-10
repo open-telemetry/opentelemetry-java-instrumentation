@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -37,6 +38,9 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("java.util.Set"))),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
+        named("parseHostAndPorts").and(isStatic()).and(takesArgument(0, named("java.util.Set"))),
+        getClass().getName() + "$ParseHostAndPortsAdvice");
+    transformer.applyAdviceToMethod(
         named("initSentinels")
             .and(takesArgument(0, named("java.util.Set")))
             .and(takesArgument(1, named("java.lang.String"))),
@@ -53,6 +57,17 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) @Nullable String masterName,
         @Advice.Argument(1) @Nullable Set<?> sentinels) {
       JedisSingletons.setPoolTarget(pool, JedisSingletons.sentinelTarget(masterName, sentinels));
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ParseHostAndPortsAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Argument(0) @Nullable Set<?> configuredSentinels,
+        @Advice.Return @Nullable Set<?> parsedSentinels) {
+      JedisSingletons.registerParsedSentinels(parsedSentinels, configuredSentinels);
     }
   }
 
