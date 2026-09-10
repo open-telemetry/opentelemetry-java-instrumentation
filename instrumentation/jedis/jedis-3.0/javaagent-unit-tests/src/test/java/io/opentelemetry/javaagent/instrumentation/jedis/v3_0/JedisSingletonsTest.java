@@ -6,12 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Connection;
+import redis.clients.jedis.HostAndPort;
 
 class JedisSingletonsTest {
 
@@ -52,5 +55,15 @@ class JedisSingletonsTest {
     assertThat(JedisSingletons.connectionTarget(connection))
         .extracting(RedisServerTarget::getAddress)
         .isEqualTo("direct");
+  }
+
+  @Test
+  void parsedSentinelsUseConfiguredEndpoints() {
+    Set<HostAndPort> parsedSentinels = singleton(new HostAndPort("192.0.2.1", 26379));
+    JedisSingletons.registerParsedSentinels(parsedSentinels, singleton("sentinel.example:26379"));
+
+    assertThat(JedisSingletons.sentinelTarget("mymaster", parsedSentinels))
+        .extracting(RedisServerTarget::getAddress)
+        .isEqualTo("sentinel.example:26379/mymaster");
   }
 }

@@ -20,12 +20,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Connection;
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClusterConnectionHandler;
 import redis.clients.jedis.util.Pool;
 import redis.clients.jedis.util.Sharded;
@@ -44,8 +46,8 @@ public class JedisSingletons {
   private static final VirtualField<Pool<?>, ConfiguredTarget> POOL_TARGET =
       VirtualField.find(Pool.class, ConfiguredTarget.class);
 
-  private static final VirtualField<Set<?>, ConfiguredSentinels> PARSED_SENTINELS =
-      VirtualField.find(Set.class, ConfiguredSentinels.class);
+  private static final VirtualField<HostAndPort, ConfiguredSentinels> PARSED_SENTINEL_CONFIG =
+      VirtualField.find(HostAndPort.class, ConfiguredSentinels.class);
 
   private static final VirtualField<JedisClusterConnectionHandler, ConfiguredTarget>
       CLUSTER_TARGET =
@@ -96,18 +98,32 @@ public class JedisSingletons {
 
   public static void registerParsedSentinels(
       @Nullable Set<?> parsedSentinels, @Nullable Collection<?> configuredSentinels) {
-    if (parsedSentinels != null) {
-      PARSED_SENTINELS.set(parsedSentinels, new ConfiguredSentinels(configuredSentinels));
+    if (parsedSentinels == null) {
+      return;
+    }
+    ConfiguredSentinels state =
+        new ConfiguredSentinels(
+            configuredSentinels == null ? null : new ArrayList<>(configuredSentinels));
+    for (Object parsedSentinel : parsedSentinels) {
+      if (parsedSentinel instanceof HostAndPort) {
+        PARSED_SENTINEL_CONFIG.set((HostAndPort) parsedSentinel, state);
+      }
     }
   }
 
   @Nullable
   public static RedisServerTarget sentinelTarget(
       @Nullable String masterName, @Nullable Collection<?> sentinels) {
-    if (sentinels instanceof Set<?>) {
-      ConfiguredSentinels configuredSentinels = PARSED_SENTINELS.get((Set<?>) sentinels);
-      if (configuredSentinels != null) {
-        sentinels = configuredSentinels.sentinels;
+    if (sentinels != null) {
+      for (Object sentinel : sentinels) {
+        if (sentinel instanceof HostAndPort) {
+          ConfiguredSentinels configuredSentinels =
+              PARSED_SENTINEL_CONFIG.get((HostAndPort) sentinel);
+          if (configuredSentinels != null) {
+            sentinels = configuredSentinels.sentinels;
+            break;
+          }
+        }
       }
     }
     return JedisServerTargets.ofSentinels(masterName, sentinels);
