@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.vertx.redis.client.impl.RedisConnectionManagerUtil;
 import io.vertx.redis.client.impl.RedisURI;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -34,7 +35,7 @@ class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.FieldValue("redisURI") RedisURI redisUri) {
       io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisServerTargets.set(
-          redisUri, VertxRedisServerTargets.getProviderTarget());
+          redisUri, RedisConnectionManagerUtil.getServerTargetThreadLocal());
     }
   }
 }
