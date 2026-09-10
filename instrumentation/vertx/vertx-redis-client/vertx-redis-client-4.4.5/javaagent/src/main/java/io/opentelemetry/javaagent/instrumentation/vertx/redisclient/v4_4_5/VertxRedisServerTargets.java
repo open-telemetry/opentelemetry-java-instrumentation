@@ -25,10 +25,16 @@ public final class VertxRedisServerTargets {
 
   @Nullable
   public static RedisServerTarget of(@Nullable RedisOptions options) {
-    if (options != null
-        && options.getType() == RedisClientType.REPLICATION
-        && hasStaticTopology(options)) {
-      return RedisServerTarget.ofEndpoints(options.getEndpoints());
+    if (options == null) {
+      return null;
+    }
+    // replication topology is resolved here, rather than left to the 4.0 helper's fallback, so
+    // that a STATIC topology preserves endpoint order the same way it does through
+    // RedisConnectOptions, and a DISCOVER topology is never mistaken for one that does
+    if (options.getType() == RedisClientType.REPLICATION) {
+      return hasStaticTopology(options)
+          ? RedisServerTarget.ofEndpoints(options.getEndpoints())
+          : RedisServerTarget.ofUnorderedEndpoints(options.getEndpoints());
     }
     return io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisServerTargets
         .of(options);
