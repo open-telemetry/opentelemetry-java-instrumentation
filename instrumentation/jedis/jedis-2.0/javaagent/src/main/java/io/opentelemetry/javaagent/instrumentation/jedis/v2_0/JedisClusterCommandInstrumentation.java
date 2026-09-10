@@ -38,7 +38,8 @@ class JedisClusterCommandInstrumentation implements TypeInstrumentation {
         isPublic().and(namedOneOf("run", "runBinary", "runWithAnyNode")),
         getClass().getName() + "$CommandAdvice");
     transformer.applyAdviceToMethod(
-        named("execute").and(takesArguments(1)), getClass().getName() + "$ExecuteAdvice");
+        named("execute").and(takesArguments(0).or(takesArguments(1))),
+        getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
