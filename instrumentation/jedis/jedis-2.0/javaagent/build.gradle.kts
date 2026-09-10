@@ -44,6 +44,7 @@ testing {
     register<JvmTestSuite>("unitTests") {
       dependencies {
         implementation(project())
+        implementation(project(":javaagent-extension-api"))
         implementation(project(":instrumentation-api-incubator"))
         implementation("redis.clients:jedis:2.0.0")
       }
