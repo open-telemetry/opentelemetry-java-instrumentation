@@ -271,6 +271,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   void testCommandCancelOnMonoPublisher() {
     withIsolatedContainer(
         (connection, isolatedPort) -> {
+          // holding the command in the write buffer keeps the peer unknown until the span ends
+          connection.setAutoFlushCommands(false);
           Disposable subscription = connection.reactive().blpop(30, "cancelled-mono").subscribe();
           subscription.dispose();
 
@@ -286,14 +288,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                               .hasAttributesSatisfyingExactly(
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, isolatedPort),
-                                  equalTo(
-                                      NETWORK_PEER_ADDRESS,
-                                      emitStableDatabaseSemconv() ? ip : null),
-                                  equalTo(
-                                      NETWORK_PEER_PORT,
-                                      emitStableDatabaseSemconv()
-                                          ? Long.valueOf(isolatedPort)
-                                          : null),
+                                  equalTo(NETWORK_PEER_ADDRESS, null),
+                                  equalTo(NETWORK_PEER_PORT, null),
                                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                                   equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_STATEMENT), "BLPOP cancelled-mono 30"),
