@@ -33,6 +33,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 class JedisAggregateTargetTest {
 
   private static final String MASTER_NAME = "mymaster";
+  private static final String CLUSTER_NODE_HOST = "127.0.0.1";
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -47,6 +48,7 @@ class JedisAggregateTargetTest {
   private static Object cluster;
   private static String clusterTarget;
   private static String clusterHost;
+  private static int clusterPort;
 
   @BeforeAll
   static void setup() throws Exception {
@@ -87,7 +89,14 @@ class JedisAggregateTargetTest {
   }
 
   @Test
-  void clusterRefreshUsesConfiguredTarget() throws Exception {
+  void clusterRefreshAndCommandsUseConfiguredTarget() throws Exception {
+    assertThat(
+            cluster
+                .getClass()
+                .getMethod("set", String.class, String.class)
+                .invoke(cluster, "key", "value"))
+        .isEqualTo("OK");
+
     Field handlerField =
         Class.forName("redis.clients.jedis.BinaryJedisCluster")
             .getDeclaredField("connectionHandler");
@@ -105,11 +114,26 @@ class JedisAggregateTargetTest {
 
     await()
         .untilAsserted(
-            () ->
-                assertThat(testing.spans())
-                    .filteredOn(span -> span.getName().startsWith("CLUSTER"))
-                    .isNotEmpty()
-                    .allSatisfy(span -> assertTarget(span, clusterTarget)));
+            () -> {
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().startsWith("SET"))
+                  .singleElement()
+                  .satisfies(
+                      span -> {
+                        assertThat(span.getName())
+                            .isEqualTo(
+                                emitStableDatabaseSemconv() ? "SET " + clusterTarget : "SET");
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(
+                                emitStableDatabaseSemconv() ? clusterTarget : CLUSTER_NODE_HOST);
+                        assertThat(span.getAttributes().get(SERVER_PORT))
+                            .isEqualTo(emitStableDatabaseSemconv() ? null : (long) clusterPort);
+                      });
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().startsWith("CLUSTER"))
+                  .isNotEmpty()
+                  .allSatisfy(span -> assertTarget(span, clusterTarget));
+            });
   }
 
   private static void startSentinelServer() throws Exception {
@@ -143,7 +167,7 @@ class JedisAggregateTargetTest {
   }
 
   private static void startClusterServer() throws Exception {
-    int clusterPort = availablePort();
+    clusterPort = availablePort();
     clusterServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
     clusterServer.setPortBindings(singletonList(clusterPort + ":6379"));
     clusterServer.withCommand(
@@ -153,7 +177,7 @@ class JedisAggregateTargetTest {
         "--cluster-config-file",
         "/tmp/nodes.conf",
         "--cluster-announce-ip",
-        "127.0.0.1",
+        CLUSTER_NODE_HOST,
         "--cluster-announce-port",
         Integer.toString(clusterPort));
     clusterServer.start();
