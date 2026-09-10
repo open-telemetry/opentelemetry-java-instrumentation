@@ -76,11 +76,7 @@ class CassandraTest extends AbstractCassandra44Test {
               }
               assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
                   .isEqualTo(emitStableDatabaseSemconv() ? (long) cassandraPort : null);
-              assertThat(span.getAttributes().get(NETWORK_TYPE))
-                  .isEqualTo(
-                      emitOldDatabaseSemconv() && emitStableDatabaseSemconv()
-                          ? (peerAddress.contains(":") ? "ipv6" : "ipv4")
-                          : null);
+              assertThat(span.getAttributes().get(NETWORK_TYPE)).isNull();
               assertThat(span.getAttributes().get(SERVER_ADDRESS))
                   .isEqualTo(emitStableDatabaseSemconv() ? null : proxyAddress.getHostString());
               assertThat(span.getAttributes().get(SERVER_PORT))
