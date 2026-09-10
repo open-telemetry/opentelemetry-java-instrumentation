@@ -43,7 +43,7 @@ OpenTelemetry openTelemetry = ...;
 
 JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
   // Load metrics from classpath resource (optional)
-  .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("rules/tomcat.yaml"))
+  .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("jmx/rules/tomcat.yaml"))
   // Load custom metrics by path (optional)
   .addRules(Paths.get("/path/to/custom-jmx.yaml"))
   // delay bean discovery by 5 seconds
