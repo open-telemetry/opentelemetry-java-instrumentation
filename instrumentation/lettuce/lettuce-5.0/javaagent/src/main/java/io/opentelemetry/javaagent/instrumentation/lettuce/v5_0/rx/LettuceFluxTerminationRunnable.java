@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -33,6 +34,7 @@ public class LettuceFluxTerminationRunnable
       Logger.getLogger(LettuceFluxTerminationRunnable.class.getName());
 
   private final StatefulConnection<?, ?> connection;
+  private final AtomicBoolean spanEnded = new AtomicBoolean();
   @Nullable private RedisCommand<?, ?, ?> command;
   @Nullable private Context context;
   private boolean expectsResponse;
@@ -67,6 +69,11 @@ public class LettuceFluxTerminationRunnable
   }
 
   private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
+    // A terminal signal on the netty event loop can race a cancellation from the subscribing
+    // thread, and both reach this method.
+    if (!spanEnded.compareAndSet(false, true)) {
+      return;
+    }
     if (context != null && command != null) {
       if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
         Span span = Span.fromContext(context);
