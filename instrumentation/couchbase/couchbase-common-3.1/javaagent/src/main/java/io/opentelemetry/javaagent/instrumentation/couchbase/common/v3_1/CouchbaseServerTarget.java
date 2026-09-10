@@ -12,6 +12,7 @@ public class CouchbaseServerTarget {
 
   private static final int COUCHBASE_DEFAULT_PORT = 11210;
   private static final int COUCHBASES_DEFAULT_PORT = 11207;
+  private static final int COUCHBASE2_DEFAULT_PORT = 18098;
 
   private final DbServerTarget target;
   @Nullable private final String scheme;
@@ -48,6 +49,9 @@ public class CouchbaseServerTarget {
     }
     if ("couchbases".equalsIgnoreCase(scheme)) {
       return COUCHBASES_DEFAULT_PORT;
+    }
+    if ("couchbase2".equalsIgnoreCase(scheme)) {
+      return COUCHBASE2_DEFAULT_PORT;
     }
     return -1;
   }

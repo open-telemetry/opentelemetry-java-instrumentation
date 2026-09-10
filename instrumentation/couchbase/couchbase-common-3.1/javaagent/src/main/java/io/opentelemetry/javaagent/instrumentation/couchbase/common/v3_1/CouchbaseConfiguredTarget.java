@@ -11,15 +11,27 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
 import com.couchbase.client.core.msg.RequestContext;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseSpan;
+import javax.annotation.Nullable;
 
 public final class CouchbaseConfiguredTarget {
 
   public static void capture(
       CouchbaseSpan span, CouchbaseSpanName spanName, RequestContext requestContext) {
+    capture(span, spanName, requestContext, null);
+  }
+
+  public static void capture(
+      CouchbaseSpan span,
+      CouchbaseSpanName spanName,
+      RequestContext requestContext,
+      @Nullable CouchbaseServerTarget requestTarget) {
     if (!emitStableDatabaseSemconv()) {
       return;
     }
     CouchbaseServerTarget target = CouchbaseServerTargets.get(requestContext.core());
+    if (target == null) {
+      target = requestTarget;
+    }
     spanName.captureServerTarget(target);
     if (target == null) {
       return;
