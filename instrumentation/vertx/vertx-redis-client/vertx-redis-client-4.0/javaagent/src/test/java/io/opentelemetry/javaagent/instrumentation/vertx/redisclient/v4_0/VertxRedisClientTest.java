@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -351,6 +352,124 @@ class VertxRedisClientTest {
                             .isEqualTo(Long.valueOf(port));
                       });
             });
+  }
+
+  @Test
+  void dynamicOptionsSupplierOmitsStableTarget() throws Exception {
+    assumeTrue(hasDynamicOptionsSupplier());
+
+    Class<?> connectOptionsClass =
+        Class.forName("io.vertx.redis.client.RedisStandaloneConnectOptions");
+    Object connectOptions = connectOptionsClass.getConstructor().newInstance();
+    connectOptionsClass
+        .getMethod("setConnectionString", String.class)
+        .invoke(connectOptions, "redis://" + host + ":" + port);
+    Supplier<Future<?>> optionsSupplier = () -> Future.succeededFuture(connectOptions);
+    Redis dynamicClient =
+        (Redis)
+            Redis.class
+                .getMethod(
+                    "createStandaloneClient", Vertx.class, RedisOptions.class, Supplier.class)
+                .invoke(null, vertx, new RedisOptions(), optionsSupplier);
+    cleanup.deferCleanup(
+        () ->
+            ((Future<?>) Redis.class.getMethod("close").invoke(dynamicClient))
+                .toCompletionStage()
+                .toCompletableFuture()
+                .join());
+
+    dynamicClient
+        .send(Request.cmd(Command.SET).arg("dynamic-options").arg("value"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .join();
+
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              List<SpanData> spans =
+                  testing.spans().stream()
+                      .filter(span -> span.getName().startsWith("SET"))
+                      .collect(toList());
+              assertThat(spans).hasSize(1);
+              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS))
+                  .isEqualTo(emitStableDatabaseSemconv() ? null : host);
+              assertThat(spans.get(0).getAttributes().get(SERVER_PORT))
+                  .isEqualTo(emitStableDatabaseSemconv() ? null : Long.valueOf(port));
+              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
+              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
+                  .isEqualTo(Long.valueOf(port));
+            });
+  }
+
+  @Test
+  void staticReplicationPreservesConfiguredEndpointOrder() throws Exception {
+    assumeTrue(emitStableDatabaseSemconv());
+    assumeTrue(hasStaticReplicationTopology());
+
+    RedisOptions options =
+        new RedisOptions()
+            .addConnectionString("redis://" + host + ":" + port)
+            .addConnectionString("redis://" + host.toUpperCase(Locale.ROOT) + ":" + port);
+    RedisOptions.class
+        .getMethod("setType", RedisClientType.class)
+        .invoke(options, RedisClientType.class.getField("REPLICATION").get(null));
+    Class<?> topologyClass = Class.forName("io.vertx.redis.client.RedisTopology");
+    RedisOptions.class
+        .getMethod("setTopology", topologyClass)
+        .invoke(options, topologyClass.getField("STATIC").get(null));
+    Redis replicationClient = Redis.createClient(vertx, options);
+    cleanup.deferCleanup(
+        () ->
+            ((Future<?>) Redis.class.getMethod("close").invoke(replicationClient))
+                .toCompletionStage()
+                .toCompletableFuture()
+                .join());
+
+    replicationClient
+        .send(Request.cmd(Command.SET).arg("replication-target").arg("value"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .join();
+
+    String configuredTarget = host + ":" + port + "," + host.toUpperCase(Locale.ROOT) + ":" + port;
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              List<SpanData> spans =
+                  testing.spans().stream()
+                      .filter(span -> span.getName().equals("SET " + configuredTarget))
+                      .collect(toList());
+              assertThat(spans).hasSize(1);
+              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS))
+                  .isEqualTo(configuredTarget);
+              assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isNull();
+              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
+              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
+                  .isEqualTo(Long.valueOf(port));
+            });
+  }
+
+  private static boolean hasDynamicOptionsSupplier() {
+    try {
+      Redis.class.getMethod(
+          "createStandaloneClient", Vertx.class, RedisOptions.class, Supplier.class);
+      return true;
+    } catch (NoSuchMethodException ignored) {
+      return false;
+    }
+  }
+
+  private static boolean hasStaticReplicationTopology() {
+    try {
+      RedisOptions.class.getMethod(
+          "setTopology", Class.forName("io.vertx.redis.client.RedisTopology"));
+      return true;
+    } catch (ReflectiveOperationException ignored) {
+      return false;
+    }
   }
 
   @ParameterizedTest
