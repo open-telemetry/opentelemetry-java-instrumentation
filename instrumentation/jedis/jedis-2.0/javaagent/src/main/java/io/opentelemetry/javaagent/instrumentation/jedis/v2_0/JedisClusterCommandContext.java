@@ -39,6 +39,12 @@ public final class JedisClusterCommandContext {
     return request != null;
   }
 
+  public boolean matchesCapturedRequest(JedisRequest request) {
+    return this.request != null
+        && this.request.getOperationName().equals(request.getOperationName())
+        && this.request.getQueryText().equals(request.getQueryText());
+  }
+
   public boolean isExecuting() {
     return executing;
   }
@@ -60,8 +66,7 @@ public final class JedisClusterCommandContext {
         this.context = context;
         this.request = request;
       }
-    } else if (this.request.getOperationName().equals(request.getOperationName())
-        && this.request.getQueryText().equals(request.getQueryText())) {
+    } else if (matchesCapturedRequest(request)) {
       this.request.useLaterPeerAddress(request);
     }
   }
