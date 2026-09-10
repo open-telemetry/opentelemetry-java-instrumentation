@@ -124,6 +124,7 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
 
       BuildState state = (BuildState) enterState[1];
       state.constructionState.complete(client);
+      // Restore the original connect handler after onEnter temporarily replaced it.
       return new Object[] {state.connectHandler};
     }
 
