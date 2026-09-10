@@ -46,7 +46,7 @@ public class JedisSingletons {
       VirtualField.find(Pool.class, ConfiguredTarget.class);
 
   @Nullable
-  private static final ProviderConfiguredTargetField<?> PROVIDER_CONFIGURED_TARGET =
+  private static final VirtualField<Object, ConfiguredTarget> PROVIDER_CONFIGURED_TARGET =
       createProviderConfiguredTargetField();
 
   private static final VirtualField<JedisClusterInfoCache, ConfiguredTarget>
@@ -189,7 +189,7 @@ public class JedisSingletons {
   }
 
   @Nullable
-  private static ProviderConfiguredTargetField<?> createProviderConfiguredTargetField() {
+  private static VirtualField<Object, ConfiguredTarget> createProviderConfiguredTargetField() {
     ClassLoader classLoader = JedisSingletons.class.getClassLoader();
     try {
       return providerConfiguredTargetField(
@@ -199,17 +199,18 @@ public class JedisSingletons {
         return providerConfiguredTargetField(
             Class.forName(
                 "redis.clients.jedis.providers.JedisConnectionProvider", false, classLoader));
-      } catch (ClassNotFoundException ignoredAgain) {
+      } catch (ClassNotFoundException ignore) {
         return null;
       }
     }
   }
 
   @NoMuzzle // the carrier interface was renamed after the beta release
-  private static <T> ProviderConfiguredTargetField<T> providerConfiguredTargetField(
-      Class<T> providerClass) {
-    return new ProviderConfiguredTargetField<>(
-        providerClass, VirtualField.find(providerClass, ConfiguredTarget.class));
+  @SuppressWarnings("unchecked") // the carrier type is not known at compile time
+  private static VirtualField<Object, ConfiguredTarget> providerConfiguredTargetField(
+      Class<?> providerClass) {
+    return (VirtualField<Object, ConfiguredTarget>)
+        VirtualField.find(providerClass, ConfiguredTarget.class);
   }
 
   private static void setConnectionTarget(
@@ -291,28 +292,6 @@ public class JedisSingletons {
   }
 
   private JedisSingletons() {}
-
-  private static final class ProviderConfiguredTargetField<T> {
-    private final Class<T> providerClass;
-    private final VirtualField<T, ConfiguredTarget> field;
-
-    private ProviderConfiguredTargetField(
-        Class<T> providerClass, VirtualField<T, ConfiguredTarget> field) {
-      this.providerClass = providerClass;
-      this.field = field;
-    }
-
-    private void set(Object provider, ConfiguredTarget target) {
-      if (providerClass.isInstance(provider)) {
-        field.set(providerClass.cast(provider), target);
-      }
-    }
-
-    @Nullable
-    private ConfiguredTarget get(Object provider) {
-      return providerClass.isInstance(provider) ? field.get(providerClass.cast(provider)) : null;
-    }
-  }
 
   static final class ConfiguredTarget {
     @Nullable private final RedisServerTarget target;
