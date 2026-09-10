@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.VIRTUAL_HOST;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
@@ -44,7 +45,7 @@ class RabbitConnectionInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.FieldValue("_virtualHost") @Nullable String virtualHost) {
       if (virtualHost != null) {
-        RabbitConnectionAttributes.VIRTUAL_HOST.set(connection, virtualHost);
+        VIRTUAL_HOST.set(connection, virtualHost);
       }
     }
   }
