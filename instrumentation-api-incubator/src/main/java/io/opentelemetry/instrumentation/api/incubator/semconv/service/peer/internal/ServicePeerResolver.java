@@ -47,12 +47,10 @@ public class ServicePeerResolver {
           comparing(PortPathMatcher::getPort, nullsFirst(naturalOrder()))
               .thenComparing(PortPathMatcher::getPath, nullsFirst(naturalOrder())));
 
-  // Mappings indexed by parsed host. They match server.address together with a separately supplied
-  // server.port and, when available, URL path.
+  // Mappings resolved from separately supplied server.address, server.port, and optional URL path.
   private final Map<String, Map<PortPathMatcher, ServicePeer>> servicePeersByHost = new HashMap<>();
 
-  // Mappings indexed by the complete configured peer string. They allow server.address values that
-  // represent a logical target, such as a comma-separated database cluster, to match verbatim.
+  // Mappings resolved by matching the complete server.address value verbatim.
   private final Map<String, ServicePeer> servicePeersByExactAddress = new HashMap<>();
 
   public ServicePeerResolver(OpenTelemetry openTelemetry) {
@@ -90,6 +88,9 @@ public class ServicePeerResolver {
     String host = UrlParser.getHost(url);
     Integer port = UrlParser.getPort(url);
     String path = UrlParser.getPath(url);
+    // A non-host peer may be reported verbatim in server.address or as separate address, port, and
+    // path components. Index single-endpoint peers both ways. A multi-endpoint peer has no single
+    // host identity, so only exact matching is meaningful.
     if (!peer.equals(host)) {
       servicePeersByExactAddress.putIfAbsent(peer, info);
       if (hasMultipleEndpoints(peer)) {
@@ -120,6 +121,10 @@ public class ServicePeerResolver {
     return servicePeersByHost.isEmpty() && servicePeersByExactAddress.isEmpty();
   }
 
+  /**
+   * Resolves an exact server.address match first, then falls back to matching server.address as a
+   * host together with the separately supplied port and path.
+   */
   @SuppressWarnings("deprecation") // old semconv
   public void resolve(
       String serverAddress,
