@@ -38,7 +38,7 @@ public final class VertxRedisServerTargets {
     return RedisServerTarget.ofUnorderedEndpoints(options.getEndpoints());
   }
 
-  private static List<String> discoveryEndpoints(List<String> connectionStrings) {
+  public static List<String> discoveryEndpoints(List<String> connectionStrings) {
     List<String> endpoints = new ArrayList<>(connectionStrings.size());
     for (String connectionString : connectionStrings) {
       try {
