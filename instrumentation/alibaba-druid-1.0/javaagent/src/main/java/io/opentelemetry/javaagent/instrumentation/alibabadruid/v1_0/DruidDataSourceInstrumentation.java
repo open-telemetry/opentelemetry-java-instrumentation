@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0.DruidSingletons.getDataSourceName;
-import static io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0.DruidSingletons.getDatabaseAttributes;
+import static io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0.DruidSingletons.getMetricsInfo;
 import static io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0.DruidSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -14,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.alibaba.druid.pool.DruidDataSourceMBean;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -49,9 +49,13 @@ class DruidDataSourceInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Argument(0) Object dataSource, @Advice.Argument(1) @Nullable String name) {
       DruidDataSourceMBean druidDataSource = (DruidDataSourceMBean) dataSource;
-      String poolName = name == null || name.isEmpty() ? getDataSourceName(druidDataSource) : name;
+      JdbcConnectionPoolMetricsInfo metricsInfo = getMetricsInfo(druidDataSource);
+      if (name != null && !name.isEmpty()) {
+        metricsInfo = metricsInfo.withPoolName(name);
+      }
       telemetry()
-          .registerMetrics(druidDataSource, poolName, getDatabaseAttributes(druidDataSource));
+          .registerMetrics(
+              druidDataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
     }
   }
 

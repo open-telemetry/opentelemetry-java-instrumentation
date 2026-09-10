@@ -25,11 +25,18 @@ import javax.annotation.Nullable;
  */
 public final class JdbcConnectionPoolNameUtil {
 
-  public static String poolName(Properties properties, String fallbackName) {
-    return poolName(dbInfo(properties), fallbackName);
+  public static JdbcConnectionPoolMetricsInfo createMetricsInfo(
+      Properties properties, String fallbackName) {
+    return createMetricsInfo(dbInfo(properties), fallbackName);
   }
 
-  public static String poolName(DbInfo dbInfo, String fallbackName) {
+  public static JdbcConnectionPoolMetricsInfo createMetricsInfo(
+      DbInfo dbInfo, String fallbackName) {
+    return new JdbcConnectionPoolMetricsInfo(
+        poolName(dbInfo, fallbackName), databaseAttributes(dbInfo));
+  }
+
+  private static String poolName(DbInfo dbInfo, String fallbackName) {
     if (emitStableDatabaseSemconv()) {
       String dbNamespace = dbInfo.getDbNamespace();
       if (dbNamespace != null && !dbNamespace.isEmpty()) {
@@ -103,11 +110,7 @@ public final class JdbcConnectionPoolNameUtil {
     return dbInfoBuilder.build();
   }
 
-  public static Attributes databaseAttributes(DbInfo dbInfo) {
-    if (!emitStableDatabaseSemconv()) {
-      return Attributes.empty();
-    }
-
+  private static Attributes databaseAttributes(DbInfo dbInfo) {
     AttributesBuilder attributes = Attributes.builder();
     attributes.put(DB_SYSTEM_NAME, dbInfo.getDbSystemName());
     attributes.put(DB_NAMESPACE, dbInfo.getDbNamespace());

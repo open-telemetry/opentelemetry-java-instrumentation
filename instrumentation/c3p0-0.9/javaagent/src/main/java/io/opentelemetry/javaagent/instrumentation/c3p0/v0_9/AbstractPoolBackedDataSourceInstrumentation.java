@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.c3p0.v0_9.C3p0Singleton
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -34,13 +35,14 @@ final class AbstractPoolBackedDataSourceInstrumentation implements TypeInstrumen
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This AbstractPoolBackedDataSource dataSource) {
+      JdbcConnectionPoolMetricsInfo metricsInfo = C3p0Singletons.getMetricsInfo(dataSource);
       String dataSourceName = dataSource.getDataSourceName();
-      if (dataSourceName == null || dataSourceName.equals(dataSource.getIdentityToken())) {
-        dataSourceName = C3p0Singletons.getDataSourceName(dataSource);
+      if (dataSourceName != null && !dataSourceName.equals(dataSource.getIdentityToken())) {
+        metricsInfo = metricsInfo.withPoolName(dataSourceName);
       }
       telemetry()
           .registerMetrics(
-              dataSource, dataSourceName, C3p0Singletons.getDatabaseAttributes(dataSource));
+              dataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
     }
   }
 

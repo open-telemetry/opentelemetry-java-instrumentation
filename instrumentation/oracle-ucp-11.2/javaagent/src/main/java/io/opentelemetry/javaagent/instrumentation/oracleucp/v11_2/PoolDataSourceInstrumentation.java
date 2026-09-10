@@ -46,7 +46,7 @@ class PoolDataSourceInstrumentation implements TypeInstrumentation {
         @Advice.Enter boolean generatedPoolName,
         @Advice.Return @Nullable UniversalConnectionPool connectionPool) {
       if (connectionPool != null) {
-        OracleUcpSingletons.captureDatabaseInfo(dataSource, connectionPool, generatedPoolName);
+        OracleUcpSingletons.captureMetricsInfo(dataSource, connectionPool, generatedPoolName);
       }
     }
   }

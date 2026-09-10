@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0.ViburSi
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Properties;
@@ -52,12 +53,13 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This ViburDBCPDataSource dataSource) {
-      String poolName = dataSource.getName();
-      if (!ViburSingletons.isDataSourceNameConfigured(dataSource)) {
-        poolName = ViburSingletons.getDataSourceName(dataSource);
+      JdbcConnectionPoolMetricsInfo metricsInfo = ViburSingletons.getMetricsInfo(dataSource);
+      if (ViburSingletons.isDataSourceNameConfigured(dataSource)) {
+        metricsInfo = metricsInfo.withPoolName(dataSource.getName());
       }
       telemetry()
-          .registerMetrics(dataSource, poolName, ViburSingletons.getDatabaseAttributes(dataSource));
+          .registerMetrics(
+              dataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
     }
   }
 
