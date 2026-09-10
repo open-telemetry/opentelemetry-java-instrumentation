@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
@@ -36,10 +35,10 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SetTargetAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$CaptureTargetAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("setHost", "setPort").and(takesArguments(1)),
-        getClass().getName() + "$SetTargetAdvice");
+        getClass().getName() + "$CaptureTargetAdvice");
 
     transformer.applyAdviceToMethod(
         named("sendCommand")
@@ -65,11 +64,10 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class SetTargetAdvice {
+  public static class CaptureTargetAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Connection connection) {
-      JedisSingletons.setConnectionTarget(
-          connection, RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort()));
+      JedisSingletons.captureConnectionTarget(connection);
     }
   }
 
