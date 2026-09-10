@@ -9,8 +9,8 @@ import com.mchange.v2.c3p0.DriverManagerDataSource;
 import com.mchange.v2.c3p0.WrapperConnectionPoolDataSource;
 import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.c3p0.v0_9.C3p0Telemetry;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -26,12 +26,10 @@ public class C3p0Singletons {
     return telemetry;
   }
 
-  public static String getDataSourceName(AbstractPoolBackedDataSource dataSource) {
-    return JdbcConnectionPoolNameUtil.poolName(getDbInfo(dataSource), DEFAULT_DATA_SOURCE_NAME);
-  }
-
-  public static Attributes getDatabaseAttributes(AbstractPoolBackedDataSource dataSource) {
-    return JdbcConnectionPoolNameUtil.databaseAttributes(getDbInfo(dataSource));
+  public static JdbcConnectionPoolMetricsInfo getMetricsInfo(
+      AbstractPoolBackedDataSource dataSource) {
+    return JdbcConnectionPoolNameUtil.createMetricsInfo(
+        getDbInfo(dataSource), DEFAULT_DATA_SOURCE_NAME);
   }
 
   private static DbInfo getDbInfo(AbstractPoolBackedDataSource dataSource) {

@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.viburdbcp.v11_0.ViburTelemetry;
@@ -39,12 +39,9 @@ public class ViburSingletons {
     return Boolean.TRUE.equals(CONFIGURED_NAME_FIELD.get(config));
   }
 
-  public static String getDataSourceName(ViburDBCPDataSource dataSource) {
-    return JdbcConnectionPoolNameUtil.poolName(getDbInfo(dataSource), DEFAULT_DATA_SOURCE_NAME);
-  }
-
-  public static Attributes getDatabaseAttributes(ViburDBCPDataSource dataSource) {
-    return JdbcConnectionPoolNameUtil.databaseAttributes(getDbInfo(dataSource));
+  public static JdbcConnectionPoolMetricsInfo getMetricsInfo(ViburDBCPDataSource dataSource) {
+    return JdbcConnectionPoolNameUtil.createMetricsInfo(
+        getDbInfo(dataSource), DEFAULT_DATA_SOURCE_NAME);
   }
 
   private static DbInfo getDbInfo(ViburDBCPDataSource dataSource) {

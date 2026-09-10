@@ -6,11 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0;
 
 import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.getDataSourceName;
-import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.getDatabaseAttributes;
+import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.getMetricsInfo;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.management.ObjectName;
@@ -46,10 +47,12 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
-      String dataSourceName =
-          objectName != null ? getDataSourceName(objectName) : getDataSourceName(dataSource);
+      JdbcConnectionPoolMetricsInfo metricsInfo = getMetricsInfo(dataSource);
+      if (objectName != null) {
+        metricsInfo = metricsInfo.withPoolName(getDataSourceName(objectName));
+      }
       TomcatDbcpDataSourceMetrics.registerMetrics(
-          dataSource, dataSourceName, getDatabaseAttributes(dataSource));
+          dataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
     }
   }
 
@@ -70,11 +73,12 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String dataSourceName = getDataSourceName(objectName);
+      JdbcConnectionPoolMetricsInfo metricsInfo =
+          getMetricsInfo(dataSource).withPoolName(getDataSourceName(objectName));
 
       TomcatDbcpDataSourceMetrics.unregisterMetrics(dataSource);
       TomcatDbcpDataSourceMetrics.registerMetrics(
-          dataSource, dataSourceName, getDatabaseAttributes(dataSource));
+          dataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
     }
   }
 }
