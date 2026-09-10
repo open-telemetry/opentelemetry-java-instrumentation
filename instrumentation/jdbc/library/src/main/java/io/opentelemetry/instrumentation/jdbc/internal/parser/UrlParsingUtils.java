@@ -447,7 +447,7 @@ public final class UrlParsingUtils {
       return null;
     }
     String addressHost = hostMatcher.group(1).trim();
-    if (!isValidHostPort(addressHost)) {
+    if (!isValidHostPort(addressHost) || hostMatcher.find()) {
       return null;
     }
     StringBuilder sanitized = new StringBuilder("address=(host=");

@@ -250,6 +250,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(sanitizeHostList("address=(host=h1),address=(host=unexpected=value)")).isNull();
     assertThat(sanitizeHostList("h1:5432,:5433")).isNull();
     assertThat(sanitizeHostList("not:an:address,h2")).isNull();
+    assertThat(sanitizeHostList("address=(host=h1)(host=h2),address=(host=h3)")).isNull();
     assertThat(sanitizeHostList("address=(host=h1)(port=secret),address=(host=h2)(port=3306)"))
         .isNull();
     assertThat(
