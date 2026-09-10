@@ -21,6 +21,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.Field;
 import java.net.ServerSocket;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -133,6 +134,44 @@ class JedisAggregateTargetTest {
                   .isNotEmpty()
                   .allSatisfy(span -> assertTarget(span, clusterTarget));
             });
+  }
+
+  @Test
+  void clusterNodePoolsUseConfiguredTarget() throws Exception {
+    Map<?, ?> clusterNodes =
+        (Map<?, ?>) cluster.getClass().getMethod("getClusterNodes").invoke(cluster);
+    Object pool = clusterNodes.get(CLUSTER_NODE_HOST + ":" + clusterPort);
+    assertThat(pool).isNotNull();
+
+    Object jedis = pool.getClass().getMethod("getResource").invoke(pool);
+    try {
+      assertThat(
+              jedis
+                  .getClass()
+                  .getMethod("set", String.class, String.class)
+                  .invoke(jedis, "pool-key", "value"))
+          .isEqualTo("OK");
+    } finally {
+      jedis.getClass().getMethod("close").invoke(jedis);
+    }
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .filteredOn(span -> span.getName().startsWith("SET"))
+                    .singleElement()
+                    .satisfies(
+                        span -> {
+                          assertThat(span.getName())
+                              .isEqualTo(
+                                  emitStableDatabaseSemconv() ? "SET " + clusterTarget : "SET");
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(
+                                  emitStableDatabaseSemconv() ? clusterTarget : CLUSTER_NODE_HOST);
+                          assertThat(span.getAttributes().get(SERVER_PORT))
+                              .isEqualTo(emitStableDatabaseSemconv() ? null : (long) clusterPort);
+                        }));
   }
 
   private static void startSentinelServer() throws Exception {
