@@ -110,13 +110,18 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @NoMuzzle
     public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
+      JedisClusterCommandContext.enterConnectionAcquisition();
       return JedisClusterTargetAccessor.openTargetScope(handler);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      if (scope != null) {
-        scope.close();
+      try {
+        JedisClusterCommandContext.exitConnectionAcquisition();
+      } finally {
+        if (scope != null) {
+          scope.close();
+        }
       }
     }
   }
