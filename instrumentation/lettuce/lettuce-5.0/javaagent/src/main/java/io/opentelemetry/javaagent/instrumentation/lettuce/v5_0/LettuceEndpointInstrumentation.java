@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_STATE;
@@ -87,7 +88,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       if (asyncCommand == null) {
         return;
       }
-      if (!LettuceSingletons.markCommandSpanStarted(asyncCommand)) {
+      if (emitStableDatabaseSemconv() && !LettuceSingletons.markCommandSpanStarted(asyncCommand)) {
         return;
       }
 
