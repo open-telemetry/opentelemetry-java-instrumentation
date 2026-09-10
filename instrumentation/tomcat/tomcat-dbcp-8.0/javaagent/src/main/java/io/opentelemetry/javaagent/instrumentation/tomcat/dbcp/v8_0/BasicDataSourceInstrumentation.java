@@ -47,10 +47,8 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
-      JdbcConnectionPoolMetricsInfo metricsInfo = getMetricsInfo(dataSource);
-      if (objectName != null) {
-        metricsInfo = metricsInfo.withPoolName(getDataSourceName(objectName));
-      }
+      String poolName = objectName == null ? null : getDataSourceName(objectName);
+      JdbcConnectionPoolMetricsInfo metricsInfo = getMetricsInfo(dataSource, poolName);
       TomcatDbcpDataSourceMetrics.registerMetrics(
           dataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
     }
@@ -74,7 +72,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
       }
 
       JdbcConnectionPoolMetricsInfo metricsInfo =
-          getMetricsInfo(dataSource).withPoolName(getDataSourceName(objectName));
+          getMetricsInfo(dataSource, getDataSourceName(objectName));
 
       TomcatDbcpDataSourceMetrics.unregisterMetrics(dataSource);
       TomcatDbcpDataSourceMetrics.registerMetrics(

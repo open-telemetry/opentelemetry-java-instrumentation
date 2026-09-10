@@ -14,13 +14,18 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.util.Properties;
+import javax.annotation.Nullable;
 
 public class DruidSingletons {
 
   private static final DruidTelemetry telemetry = DruidTelemetry.create(GlobalOpenTelemetry.get());
 
-  public static JdbcConnectionPoolMetricsInfo getMetricsInfo(DruidDataSourceMBean dataSource) {
-    return JdbcConnectionPoolNameUtil.createMetricsInfo(getDbInfo(dataSource), "alibaba-druid");
+  public static JdbcConnectionPoolMetricsInfo getMetricsInfo(
+      DruidDataSourceMBean dataSource, @Nullable String poolName) {
+    DbInfo dbInfo = getDbInfo(dataSource);
+    return poolName == null || poolName.isEmpty()
+        ? JdbcConnectionPoolNameUtil.createMetricsInfo(dbInfo, "alibaba-druid")
+        : JdbcConnectionPoolNameUtil.createMetricsInfoWithPoolName(dbInfo, poolName);
   }
 
   private static DbInfo getDbInfo(DruidDataSourceMBean dataSource) {

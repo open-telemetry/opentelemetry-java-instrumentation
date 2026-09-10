@@ -35,11 +35,12 @@ final class AbstractPoolBackedDataSourceInstrumentation implements TypeInstrumen
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This AbstractPoolBackedDataSource dataSource) {
-      JdbcConnectionPoolMetricsInfo metricsInfo = C3p0Singletons.getMetricsInfo(dataSource);
       String dataSourceName = dataSource.getDataSourceName();
-      if (dataSourceName != null && !dataSourceName.equals(dataSource.getIdentityToken())) {
-        metricsInfo = metricsInfo.withPoolName(dataSourceName);
+      if (dataSourceName != null && dataSourceName.equals(dataSource.getIdentityToken())) {
+        dataSourceName = null;
       }
+      JdbcConnectionPoolMetricsInfo metricsInfo =
+          C3p0Singletons.getMetricsInfo(dataSource, dataSourceName);
       telemetry()
           .registerMetrics(
               dataSource, metricsInfo.getPoolName(), metricsInfo.getDatabaseAttributes());
