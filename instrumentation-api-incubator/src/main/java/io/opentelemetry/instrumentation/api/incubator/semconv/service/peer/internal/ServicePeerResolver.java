@@ -42,13 +42,18 @@ public class ServicePeerResolver {
   private static final AttributeKey<String> SERVICE_PEER_NAMESPACE =
       AttributeKey.stringKey("service.peer.namespace");
 
-  private static final Comparator<ServiceMatcher> matcherComparator =
+  private static final Comparator<PortPathMatcher> matcherComparator =
       nullsFirst(
-          comparing(ServiceMatcher::getPort, nullsFirst(naturalOrder()))
-              .thenComparing(ServiceMatcher::getPath, nullsFirst(naturalOrder())));
+          comparing(PortPathMatcher::getPort, nullsFirst(naturalOrder()))
+              .thenComparing(PortPathMatcher::getPath, nullsFirst(naturalOrder())));
 
-  private final Map<String, Map<ServiceMatcher, ServicePeer>> servicePeerMapping = new HashMap<>();
-  private final Map<String, ServicePeer> exactServicePeerMapping = new HashMap<>();
+  // Mappings indexed by parsed host. They match server.address together with a separately supplied
+  // server.port and, when available, URL path.
+  private final Map<String, Map<PortPathMatcher, ServicePeer>> servicePeersByHost = new HashMap<>();
+
+  // Mappings indexed by the complete configured peer string. They allow server.address values that
+  // represent a logical target, such as a comma-separated database cluster, to match verbatim.
+  private final Map<String, ServicePeer> servicePeersByExactAddress = new HashMap<>();
 
   public ServicePeerResolver(OpenTelemetry openTelemetry) {
     DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
@@ -86,14 +91,14 @@ public class ServicePeerResolver {
     Integer port = UrlParser.getPort(url);
     String path = UrlParser.getPath(url);
     if (!peer.equals(host)) {
-      exactServicePeerMapping.putIfAbsent(peer, info);
+      servicePeersByExactAddress.putIfAbsent(peer, info);
       if (hasMultipleEndpoints(peer)) {
         return;
       }
     }
-    Map<ServiceMatcher, ServicePeer> matchers =
-        servicePeerMapping.computeIfAbsent(host, x -> new HashMap<>());
-    matchers.putIfAbsent(ServiceMatcher.create(port, path), info);
+    Map<PortPathMatcher, ServicePeer> matchers =
+        servicePeersByHost.computeIfAbsent(host, x -> new HashMap<>());
+    matchers.putIfAbsent(PortPathMatcher.create(port, path), info);
   }
 
   private static boolean hasMultipleEndpoints(String peer) {
@@ -112,16 +117,16 @@ public class ServicePeerResolver {
   }
 
   public boolean isEmpty() {
-    return servicePeerMapping.isEmpty() && exactServicePeerMapping.isEmpty();
+    return servicePeersByHost.isEmpty() && servicePeersByExactAddress.isEmpty();
   }
 
   @SuppressWarnings("deprecation") // old semconv
   public void resolve(
-      String host,
+      String serverAddress,
       @Nullable Integer port,
       Supplier<String> pathSupplier,
       BiConsumer<AttributeKey<String>, String> attributeSetter) {
-    ServicePeer servicePeer = resolveServicePeer(host, port, pathSupplier);
+    ServicePeer servicePeer = resolveServicePeer(serverAddress, port, pathSupplier);
     if (servicePeer == null) {
       return;
     }
@@ -145,12 +150,12 @@ public class ServicePeerResolver {
 
   @Nullable
   private ServicePeer resolveServicePeer(
-      String host, @Nullable Integer port, Supplier<String> pathSupplier) {
-    ServicePeer exactMatch = exactServicePeerMapping.get(host);
+      String serverAddress, @Nullable Integer port, Supplier<String> pathSupplier) {
+    ServicePeer exactMatch = servicePeersByExactAddress.get(serverAddress);
     if (exactMatch != null) {
       return exactMatch;
     }
-    Map<ServiceMatcher, ServicePeer> matchers = servicePeerMapping.get(host);
+    Map<PortPathMatcher, ServicePeer> matchers = servicePeersByHost.get(serverAddress);
     if (matchers == null) {
       return null;
     }
@@ -162,10 +167,10 @@ public class ServicePeerResolver {
   }
 
   @AutoValue
-  abstract static class ServiceMatcher {
+  abstract static class PortPathMatcher {
 
-    static ServiceMatcher create(@Nullable Integer port, @Nullable String path) {
-      return new AutoValue_ServicePeerResolver_ServiceMatcher(port, path);
+    static PortPathMatcher create(@Nullable Integer port, @Nullable String path) {
+      return new AutoValue_ServicePeerResolver_PortPathMatcher(port, path);
     }
 
     @Nullable
