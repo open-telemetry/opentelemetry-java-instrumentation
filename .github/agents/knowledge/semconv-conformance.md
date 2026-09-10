@@ -9,13 +9,17 @@
 
 ## Establish the review target
 
-Determine the semantic-conventions version that the instrumentation targets. Start with
-`semConvVersion` in `dependencyManagement/build.gradle.kts`. Then resolve the affected domain's
-effective mode through
+Determine the semantic-conventions version from the affected instrumentation's existing telemetry
+contract, such as its schema URL or the migration that introduced the current shape. Do not infer
+the target from the `opentelemetry-semconv` dependency version; that version determines which
+generated constants are available, while instrumentations may intentionally preserve telemetry
+from an older convention. For a domain with multiple supported modes, resolve the effective mode
+through
 [`SemconvSelectionResolver`](../../../instrumentation-api/src/main/java/io/opentelemetry/instrumentation/api/internal/SemconvSelectionResolver.java).
 The resolver applies structured per-domain settings before stability and preview flags and accounts
 for v3-preview behavior. Use the matching released documentation rather than silently comparing
-released code with the latest unreleased conventions. See
+existing telemetry with the latest conventions. If the target version cannot be established, do
+not report a version-specific conformance finding. See
 [testing-semconv-stability.md](testing-semconv-stability.md) for legacy opt-in test modes.
 
 Identify all dimensions of the applicable convention:
@@ -30,10 +34,7 @@ registry defines reusable keys and types; it does not establish that an attribut
 signal that could use it. A signal-specific convention can also override the requirement level of
 an imported attribute within its own scope.
 
-See the
-[semantic-conventions index](https://opentelemetry.io/docs/specs/semconv/)
-and
-[attribute requirement level rules](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/).
+See the [semantic-conventions index](https://opentelemetry.io/docs/specs/semconv/).
 
 If no semantic convention applies, do not invent a conformance requirement. Prefer an existing
 semantic-convention attribute only when its name, type, and meaning match exactly. Otherwise apply
@@ -95,12 +96,11 @@ boundaries, names, status, errors, value sources, or conditional attributes with
 
 ## Apply attribute requirement levels
 
-| Level                    | Review expectation                                                                                                                                                                                                                                                       |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Required`               | The instrumentation must populate the attribute. It is on by default and cannot be disabled. Do not invent a general "not readily available" exception.                                                                                                                  |
-| `Conditionally Required` | The instrumentation must populate the attribute whenever the convention's stated condition is true. When false, follow special instructions; if there are none and the value can be populated, it should be `Opt-In`.                                                    |
-| `Recommended`            | Emit it by default when it is readily and efficiently available. It may have a disable option. A concrete performance, security, privacy, or similar reason can justify default omission, but users should be able to opt in when the attribute is logically applicable. |
-| `Opt-In`                 | Emit it only when the user enables it. Instrumentation without configuration support must not emit it.                                                                                                                                                                   |
+Use OpenTelemetry's
+[attribute requirement level rules](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/)
+as the source of truth for `Required`, `Conditionally Required`, `Recommended`, and `Opt-In`.
+Read the inclusion and configuration table, the full definition for the applicable level, and its
+linked performance guidance.
 
 An attribute's inclusion level does not weaken normative instructions about its value. Evaluate
 both questions:
@@ -111,14 +111,8 @@ both questions:
 
 ## Protect telemetry quality and users
 
-- For instrumentation-defined metric attributes outside the applicable convention, check
-  cardinality before recommending a requirement level; attributes that may have high cardinality
-  can only be `Opt-In`. When a convention already assigns a level, apply that declared level.
 - Follow every applicable redaction, sanitization, sensitive-data, and privacy instruction. A
   `Recommended` attribute is not permission to expose sensitive values.
-- Do not require expensive lookups or parsing by default when the requirement level permits
-  omission or opt-in. The requirement-level guidance specifically accounts for performance,
-  security, and privacy.
 - Do not invent a universal normalization, redaction, or fallback rule. Cite the rule from the
   applicable convention.
 
