@@ -184,6 +184,59 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
+  void discoverReplicationSortsBootstrapSeedsThroughRedisOptions() {
+    RedisServerTarget first =
+        VertxRedisServerTargets.of(
+            new DiscoverReplicationRedisOptions()
+                .addConnectionString("redis://z-seed:6380")
+                .addConnectionString("redis://a-seed:6380"));
+    RedisServerTarget second =
+        VertxRedisServerTargets.of(
+            new DiscoverReplicationRedisOptions()
+                .addConnectionString("redis://a-seed:6380")
+                .addConnectionString("redis://z-seed:6380"));
+
+    assertThat(first.getAddress()).isEqualTo("a-seed:6380,z-seed:6380");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getPort()).isNull();
+  }
+
+  @Test
+  void discoverReplicationSortsBootstrapSeedsThroughRedisConnectOptions() {
+    RedisServerTarget first =
+        VertxRedisServerTargets.of(
+            new DiscoverReplicationConnectOptions()
+                .addConnectionString("redis://z-seed:6380")
+                .addConnectionString("redis://a-seed:6380"));
+    RedisServerTarget second =
+        VertxRedisServerTargets.of(
+            new DiscoverReplicationConnectOptions()
+                .addConnectionString("redis://a-seed:6380")
+                .addConnectionString("redis://z-seed:6380"));
+
+    assertThat(first.getAddress()).isEqualTo("a-seed:6380,z-seed:6380");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getPort()).isNull();
+  }
+
+  @Test
+  void discoverReplicationRendersIdenticallyThroughBothOptionsTypes() {
+    RedisServerTarget redisOptionsTarget =
+        VertxRedisServerTargets.of(
+            new DiscoverReplicationRedisOptions()
+                .addConnectionString("redis://z-seed:6380")
+                .addConnectionString("redis://a-seed:6380"));
+    RedisServerTarget connectOptionsTarget =
+        VertxRedisServerTargets.of(
+            new DiscoverReplicationConnectOptions()
+                .addConnectionString("redis://z-seed:6380")
+                .addConnectionString("redis://a-seed:6380"));
+
+    assertThat(redisOptionsTarget.getAddress()).isEqualTo(connectOptionsTarget.getAddress());
+    assertThat(redisOptionsTarget.getPort()).isEqualTo(connectOptionsTarget.getPort());
+  }
+
+  @Test
   void staticReplicationWithMultipleUnixSocketsIsUnrepresentable() {
     RedisServerTarget redisOptionsTarget =
         VertxRedisServerTargets.of(
@@ -397,8 +450,37 @@ class VertxRedisServerTargetsTest {
     }
   }
 
+  static class DiscoverReplicationRedisOptions extends RedisOptions {
+    private DiscoverReplicationRedisOptions() {
+      setType(RedisClientType.REPLICATION);
+    }
+
+    public String getTopology() {
+      return "DISCOVER";
+    }
+
+    @Override
+    public DiscoverReplicationRedisOptions addConnectionString(String connectionString) {
+      super.addConnectionString(connectionString);
+      return this;
+    }
+  }
+
+  static class DiscoverReplicationConnectOptions extends RedisConnectOptions {
+    public TestTopology getTopology() {
+      return TestTopology.DISCOVER;
+    }
+
+    @Override
+    public DiscoverReplicationConnectOptions addConnectionString(String connectionString) {
+      super.addConnectionString(connectionString);
+      return this;
+    }
+  }
+
   enum TestTopology {
-    STATIC;
+    STATIC,
+    DISCOVER;
 
     @Override
     public String toString() {
