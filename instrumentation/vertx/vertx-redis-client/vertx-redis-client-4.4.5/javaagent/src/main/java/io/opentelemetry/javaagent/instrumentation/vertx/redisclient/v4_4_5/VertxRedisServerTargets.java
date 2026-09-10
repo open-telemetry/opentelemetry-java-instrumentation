@@ -9,11 +9,11 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.vertx.redis.client.RedisClientType;
+import io.vertx.core.Future;
 import io.vertx.redis.client.RedisConnectOptions;
-import io.vertx.redis.client.RedisOptions;
 import io.vertx.redis.client.RedisSentinelConnectOptions;
 import io.vertx.redis.client.RedisStandaloneConnectOptions;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -21,24 +21,8 @@ public final class VertxRedisServerTargets {
 
   private static final Logger logger = Logger.getLogger(VertxRedisServerTargets.class.getName());
 
-  private static final ThreadLocal<TargetFrame> factoryTarget = new ThreadLocal<>();
-
-  @Nullable
-  public static RedisServerTarget of(@Nullable RedisOptions options) {
-    if (options == null) {
-      return null;
-    }
-    // replication topology is resolved here, rather than left to the 4.0 helper's fallback, so
-    // that a STATIC topology preserves endpoint order the same way it does through
-    // RedisConnectOptions, and a DISCOVER topology is never mistaken for one that does
-    if (options.getType() == RedisClientType.REPLICATION) {
-      return hasStaticTopology(options)
-          ? RedisServerTarget.ofEndpoints(options.getEndpoints())
-          : RedisServerTarget.ofUnorderedEndpoints(options.getEndpoints());
-    }
-    return io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisServerTargets
-        .of(options);
-  }
+  private static final String CONSTANT_SUPPLIER_CLASS_NAME =
+      "io.vertx.redis.client.ConstantSupplier";
 
   @Nullable
   public static RedisServerTarget of(@Nullable RedisConnectOptions options) {
@@ -59,6 +43,33 @@ public final class VertxRedisServerTargets {
     return RedisServerTarget.ofUnorderedEndpoints(options.getEndpoints());
   }
 
+  @Nullable
+  public static RedisServerTarget ofConstantSupplier(
+      Object manager, @Nullable Supplier<?> optionsSupplier) {
+    if (optionsSupplier == null) {
+      return null;
+    }
+    Class<?> supplierClass = optionsSupplier.getClass();
+    try {
+      // Vert.x 5 legacy clients use this exact constant supplier; other suppliers may be dynamic.
+      Class<?> constantSupplierClass =
+          Class.forName(CONSTANT_SUPPLIER_CLASS_NAME, false, manager.getClass().getClassLoader());
+      if (supplierClass != constantSupplierClass) {
+        return null;
+      }
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
+
+    Object supplied = optionsSupplier.get();
+    if (!(supplied instanceof Future)) {
+      return null;
+    }
+    Future<?> optionsFuture = (Future<?>) supplied;
+    Object options = optionsFuture.succeeded() ? optionsFuture.result() : null;
+    return options instanceof RedisConnectOptions ? of((RedisConnectOptions) options) : null;
+  }
+
   private static boolean hasStaticTopology(Object options) {
     try {
       Object topology = options.getClass().getMethod("getTopology").invoke(options);
@@ -71,35 +82,6 @@ public final class VertxRedisServerTargets {
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the Vert.x Redis topology", e);
       return false;
-    }
-  }
-
-  public static void pushFactoryTarget(RedisOptions options) {
-    factoryTarget.set(new TargetFrame(of(options), factoryTarget.get()));
-  }
-
-  public static void popFactoryTarget() {
-    TargetFrame current = factoryTarget.get();
-    if (current == null || current.previous == null) {
-      factoryTarget.remove();
-    } else {
-      factoryTarget.set(current.previous);
-    }
-  }
-
-  @Nullable
-  public static RedisServerTarget getFactoryTarget() {
-    TargetFrame current = factoryTarget.get();
-    return current == null ? null : current.target;
-  }
-
-  private static final class TargetFrame {
-    @Nullable private final RedisServerTarget target;
-    @Nullable private final TargetFrame previous;
-
-    private TargetFrame(@Nullable RedisServerTarget target, @Nullable TargetFrame previous) {
-      this.target = target;
-      this.previous = previous;
     }
   }
 
