@@ -108,10 +108,15 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Set metrics to include and exclude
+   * Configures which JMX metrics are collected.
    *
-   * @param metrics metrics to include/exclude
-   * @return this
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns collects every metric that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector collects every metric.
+   *
+   * @param metrics metric names to include and exclude
+   * @return builder instance
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder setMetrics(IncludeExclude metrics) {

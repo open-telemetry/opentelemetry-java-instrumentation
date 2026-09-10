@@ -29,11 +29,20 @@ configurations:
     default: ""
   - name: otel.jmx.metrics.included
     declarative_name: java.jmx.metrics.included
-    description: List of metric name patterns to include. When set, only metrics matching these patterns are collected; all others are excluded. Wildcards are supported.
+    description: >
+      Comma-separated list of case-sensitive glob patterns for metric names to collect. "*" matches
+      any number of characters and "?" matches one character. Excluded patterns take precedence
+      over included patterns. When no included patterns are configured, all metrics that are not
+      excluded are collected. With neither selector property configured, all metrics are collected.
     type: list
     default: ""
   - name: otel.jmx.metrics.excluded
     declarative_name: java.jmx.metrics.excluded
-    description: List of metric name patterns to exclude. Metrics matching these patterns are not collected. Wildcards are supported.
+    description: >
+      Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*"
+      matches any number of characters and "?" matches one character. Excluded patterns take
+      precedence over included patterns. When no included patterns are configured, all metrics that
+      are not excluded are collected. With neither selector property configured, all metrics are
+      collected.
     type: list
     default: ""

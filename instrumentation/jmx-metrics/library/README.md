@@ -54,3 +54,7 @@ JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
 
 jmxTelemetry.start();
 ```
+
+Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.
+Excluded patterns take precedence over included patterns. A selector with no included patterns
+collects every metric that is not excluded. An empty selector collects every metric.
