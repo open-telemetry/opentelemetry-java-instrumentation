@@ -17,6 +17,7 @@ public final class JedisClusterCommandContext {
   @Nullable private Context context;
   @Nullable private JedisRequest request;
   private boolean executing;
+  private int connectionAcquisitionDepth;
 
   @Nullable
   public static JedisClusterCommandContext start() {
@@ -33,6 +34,30 @@ public final class JedisClusterCommandContext {
   @Nullable
   public static JedisClusterCommandContext current() {
     return current.get();
+  }
+
+  /**
+   * Marks the start of borrowing a cluster connection. Commands the client sends while borrowing,
+   * such as the health check that validates a pooled connection, are part of getting the connection
+   * rather than operations of their own.
+   */
+  public static void enterConnectionAcquisition() {
+    JedisClusterCommandContext commandContext = current.get();
+    if (commandContext != null) {
+      commandContext.connectionAcquisitionDepth++;
+    }
+  }
+
+  /** Marks the end of borrowing a cluster connection. */
+  public static void exitConnectionAcquisition() {
+    JedisClusterCommandContext commandContext = current.get();
+    if (commandContext != null && commandContext.connectionAcquisitionDepth > 0) {
+      commandContext.connectionAcquisitionDepth--;
+    }
+  }
+
+  public boolean isAcquiringConnection() {
+    return connectionAcquisitionDepth > 0;
   }
 
   public boolean hasRequest() {

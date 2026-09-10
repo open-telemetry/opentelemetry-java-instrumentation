@@ -199,6 +199,29 @@ class JedisNetworkAttributesGetterTest {
   }
 
   @Test
+  void clusterContextTracksNestedConnectionAcquisition() {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    JedisClusterCommandContext commandContext = JedisClusterCommandContext.start();
+    try {
+      assertThat(commandContext.isAcquiringConnection()).isFalse();
+
+      // getting a connection for a slot delegates to getting a connection, so the acquisitions nest
+      JedisClusterCommandContext.enterConnectionAcquisition();
+      JedisClusterCommandContext.enterConnectionAcquisition();
+      assertThat(commandContext.isAcquiringConnection()).isTrue();
+
+      JedisClusterCommandContext.exitConnectionAcquisition();
+      assertThat(commandContext.isAcquiringConnection()).isTrue();
+
+      JedisClusterCommandContext.exitConnectionAcquisition();
+      assertThat(commandContext.isAcquiringConnection()).isFalse();
+    } finally {
+      commandContext.end(null);
+    }
+  }
+
+  @Test
   void clusterContextMatchesOnlyCapturedRequest() {
     assumeTrue(emitStableDatabaseSemconv());
 

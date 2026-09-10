@@ -105,13 +105,24 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         return new AdviceScope(null, null, request, null);
       }
       JedisClusterCommandContext clusterCommandContext = JedisClusterCommandContext.current();
-      if (clusterCommandContext != null
-          && (!clusterCommandContext.isExecuting()
-              || clusterCommandContext.matchesCapturedRequest(request))) {
-        return new AdviceScope(null, null, request, clusterCommandContext);
-      }
-      if (clusterCommandContext != null && clusterCommandContext.hasRequest()) {
-        clusterCommandContext = null;
+      if (clusterCommandContext != null) {
+        if (clusterCommandContext.isAcquiringConnection()) {
+          // Jedis validates a pooled cluster connection with a health check command before handing
+          // it out; that command belongs to getting the connection rather than being an operation
+          // of its own.
+          return null;
+        }
+        if (clusterCommandContext.isExecuting()
+            && clusterCommandContext.matchesCapturedRequest(request)) {
+          // A retry or a redirection re-sends the same command to another node, so it updates the
+          // peer of the span already started for this cluster command instead of adding one.
+          return new AdviceScope(null, null, request, clusterCommandContext);
+        }
+        if (!clusterCommandContext.isExecuting() || clusterCommandContext.hasRequest()) {
+          // Slot cache refreshes and ASKING redirections are sent around the cluster command rather
+          // than by it, so they get their own spans.
+          clusterCommandContext = null;
+        }
       }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;

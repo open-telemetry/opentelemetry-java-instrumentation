@@ -109,6 +109,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @NoMuzzle
     public static JedisSingletons.ConfiguredTargetScope onEnter(
         @Advice.This JedisClusterConnectionHandler handler) {
+      JedisClusterCommandContext.enterConnectionAcquisition();
       return JedisClusterTargetAccessor.openTargetScope(handler);
     }
 
@@ -121,6 +122,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
       try {
         JedisClusterTargetAccessor.attachTarget(handler, connection);
       } finally {
+        JedisClusterCommandContext.exitConnectionAcquisition();
         if (scope != null) {
           scope.close();
         }
