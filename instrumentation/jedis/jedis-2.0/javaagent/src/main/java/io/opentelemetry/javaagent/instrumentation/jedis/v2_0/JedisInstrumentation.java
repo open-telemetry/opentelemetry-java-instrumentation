@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequest
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class JedisInstrumentation implements TypeInstrumentation {
@@ -79,8 +80,9 @@ class JedisInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      JedisPipelineContext.exitTransactionFraming();
+    public static void onExit(
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object transaction) {
+      JedisPipelineContext.exitTransactionFraming(transaction);
     }
   }
 }

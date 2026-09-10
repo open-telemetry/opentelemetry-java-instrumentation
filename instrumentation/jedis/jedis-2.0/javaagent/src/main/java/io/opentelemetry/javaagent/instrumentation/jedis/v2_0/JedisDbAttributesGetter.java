@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
@@ -66,5 +67,12 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
     }
     RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
     return target != null ? target.getPort() : null;
+  }
+
+  @Override
+  @Nullable
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      JedisRequest request, @Nullable Void unused) {
+    return emitStableDatabaseSemconv() ? request.getPeerAddress() : null;
   }
 }
