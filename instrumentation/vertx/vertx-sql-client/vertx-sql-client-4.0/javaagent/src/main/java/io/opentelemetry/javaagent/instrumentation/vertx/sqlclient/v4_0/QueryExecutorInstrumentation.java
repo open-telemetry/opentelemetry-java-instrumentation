@@ -129,10 +129,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
         scope.close();
         if (throwable != null) {
-          Scope parentScope = VertxSqlClientUtil.endQuerySpan(instrumenter(), promise, throwable);
-          if (parentScope != null) {
-            parentScope.close();
-          }
+          VertxSqlClientUtil.endQuerySpanAndGetParentContext(instrumenter(), promise, throwable);
         }
         // span will be ended in QueryResultBuilderInstrumentation
       }

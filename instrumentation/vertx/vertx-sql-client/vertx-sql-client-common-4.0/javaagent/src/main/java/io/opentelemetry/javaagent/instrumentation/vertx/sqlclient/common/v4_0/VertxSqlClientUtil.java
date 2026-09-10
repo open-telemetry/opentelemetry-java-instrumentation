@@ -119,13 +119,22 @@ public class VertxSqlClientUtil {
       Instrumenter<VertxSqlClientRequest, Void> instrumenter,
       Promise<?> promise,
       @Nullable Throwable throwable) {
+    Context parentContext = endQuerySpanAndGetParentContext(instrumenter, promise, throwable);
+    return parentContext != null ? parentContext.makeCurrent() : null;
+  }
+
+  @Nullable
+  public static Context endQuerySpanAndGetParentContext(
+      Instrumenter<VertxSqlClientRequest, Void> instrumenter,
+      Promise<?> promise,
+      @Nullable Throwable throwable) {
     RequestData requestData = REQUEST_DATA.get(promise);
     if (requestData == null) {
       return null;
     }
     REQUEST_DATA.set(promise, null);
     instrumenter.end(requestData.context, requestData.request, null, throwable);
-    return requestData.parentContext.makeCurrent();
+    return requestData.parentContext;
   }
 
   private static class RequestData {
