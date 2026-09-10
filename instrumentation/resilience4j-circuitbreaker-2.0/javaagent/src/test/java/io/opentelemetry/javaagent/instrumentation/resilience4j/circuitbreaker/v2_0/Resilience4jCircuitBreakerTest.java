@@ -259,7 +259,7 @@ class Resilience4jCircuitBreakerTest {
         (Function<Object, Object>)
             result -> {
               innerCircuitBreaker.acquirePermission();
-              invokeOnSuccessUnchecked(innerCircuitBreaker);
+              invokeOnSuccess(innerCircuitBreaker);
               return noTransitionResult();
             });
     CircuitBreaker outerCircuitBreaker =
@@ -316,7 +316,7 @@ class Resilience4jCircuitBreakerTest {
         (Function<Object, Object>)
             result -> {
               circuitBreakerHolder[0].acquirePermission();
-              invokeOnSuccessUnchecked(circuitBreakerHolder[0]);
+              invokeOnSuccess(circuitBreakerHolder[0]);
               return noTransitionResult();
             });
     circuitBreakerHolder[0] = CircuitBreaker.of("test-circuit-breaker", builder.build());
@@ -471,7 +471,7 @@ class Resilience4jCircuitBreakerTest {
             result -> {
               callbackThread.set(Thread.currentThread());
               circuitBreakerHolder[0].acquirePermission();
-              invokeOnErrorUnchecked(circuitBreakerHolder[0], exception);
+              invokeOnError(circuitBreakerHolder[0], exception);
               return false;
             });
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
@@ -993,7 +993,7 @@ class Resilience4jCircuitBreakerTest {
             circuitBreaker,
             () -> {
               circuitBreaker.acquirePermission();
-              invokeOnErrorUnchecked(circuitBreaker, exception);
+              invokeOnError(circuitBreaker, exception);
               return "ok";
             });
 
@@ -1186,16 +1186,8 @@ class Resilience4jCircuitBreakerTest {
     assertThat(testing.spans()).isEmpty();
   }
 
-  private static void invokeOnSuccessUnchecked(CircuitBreaker circuitBreaker) {
-    circuitBreaker.onSuccess(1L, MILLISECONDS);
-  }
-
   private static void invokeOnSuccess(CircuitBreaker circuitBreaker) {
     circuitBreaker.onSuccess(1L, MILLISECONDS);
-  }
-
-  private static void invokeOnErrorUnchecked(CircuitBreaker circuitBreaker, Throwable throwable) {
-    circuitBreaker.onError(1L, MILLISECONDS, throwable);
   }
 
   private static void invokeOnError(CircuitBreaker circuitBreaker, Throwable throwable) {
