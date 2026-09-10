@@ -17,13 +17,24 @@ public final class CouchbaseTracer {
   private final boolean inheritCurrentContext;
   private final SpanKind spanKind;
   private final boolean makeCurrentOnEnd;
+  private final boolean mapLegacyNetworkPeerAttributes;
 
   public CouchbaseTracer(
       Tracer tracer, boolean inheritCurrentContext, SpanKind spanKind, boolean makeCurrentOnEnd) {
+    this(tracer, inheritCurrentContext, spanKind, makeCurrentOnEnd, true);
+  }
+
+  public CouchbaseTracer(
+      Tracer tracer,
+      boolean inheritCurrentContext,
+      SpanKind spanKind,
+      boolean makeCurrentOnEnd,
+      boolean mapLegacyNetworkPeerAttributes) {
     this.tracer = tracer;
     this.inheritCurrentContext = inheritCurrentContext;
     this.spanKind = spanKind;
     this.makeCurrentOnEnd = makeCurrentOnEnd;
+    this.mapLegacyNetworkPeerAttributes = mapLegacyNetworkPeerAttributes;
   }
 
   public CouchbaseSpan startSpan(String name, @Nullable CouchbaseSpan parent) {
@@ -35,6 +46,7 @@ public final class CouchbaseTracer {
     } else {
       spanBuilder.setNoParent();
     }
-    return new CouchbaseSpan(spanBuilder.startSpan(), makeCurrentOnEnd);
+    return new CouchbaseSpan(
+        spanBuilder.startSpan(), makeCurrentOnEnd, mapLegacyNetworkPeerAttributes);
   }
 }

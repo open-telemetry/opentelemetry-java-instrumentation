@@ -9,6 +9,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 
 import javax.annotation.Nullable;
 
@@ -28,6 +29,9 @@ public class CouchbaseSpanName {
   public void captureAttribute(String key, @Nullable String value) {
     if (DB_QUERY_SUMMARY.getKey().equals(key)) {
       querySummary = value;
+    } else if ((DB_QUERY_TEXT.getKey().equals(key) || "db.statement".equals(key))
+        && operation.equals(value)) {
+      operation = "query";
     } else if (DB_COLLECTION_NAME.getKey().equals(key)
         || "db.couchbase.collection".equals(key)
         || "couchbase.collection.name".equals(key)) {
