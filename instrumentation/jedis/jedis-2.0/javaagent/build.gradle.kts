@@ -15,6 +15,7 @@ dependencies {
   library("redis.clients:jedis:2.0.0")
 
   compileOnly(project(":muzzle")) // For @NoMuzzle
+  compileOnly("redis.clients:jedis:2.3.0") // For optional cluster types added in 2.3
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
