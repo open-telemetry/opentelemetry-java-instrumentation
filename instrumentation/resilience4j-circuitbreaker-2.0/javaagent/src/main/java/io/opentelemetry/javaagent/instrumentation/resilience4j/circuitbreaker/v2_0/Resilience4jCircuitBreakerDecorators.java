@@ -315,8 +315,12 @@ public class Resilience4jCircuitBreakerDecorators {
           Resilience4jCircuitBreakerSpans.claimRecentAcquisition(circuitBreaker);
       try {
         CompletionStage<T> result;
-        try (Scope ignored = pendingSpan == null ? null : pendingSpan.makeCurrent()) {
+        if (pendingSpan == null) {
           result = delegate.get();
+        } else {
+          try (Scope ignored = pendingSpan.makeCurrent()) {
+            result = delegate.get();
+          }
         }
         if (pendingSpan == null) {
           return result;
