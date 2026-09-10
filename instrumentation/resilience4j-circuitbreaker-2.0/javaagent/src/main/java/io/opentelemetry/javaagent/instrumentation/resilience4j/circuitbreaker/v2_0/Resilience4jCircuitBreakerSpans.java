@@ -177,7 +177,12 @@ public class Resilience4jCircuitBreakerSpans {
     if (tokens == null) {
       return;
     }
-    tokens.removeIf(token -> token.pendingSpan == pendingSpan);
+    Iterator<AttemptToken> iterator = tokens.iterator();
+    while (iterator.hasNext()) {
+      if (iterator.next().pendingSpan == pendingSpan) {
+        iterator.remove();
+      }
+    }
     if (tokens.isEmpty()) {
       recentAcquisitions.remove();
     }
@@ -244,7 +249,12 @@ public class Resilience4jCircuitBreakerSpans {
     if (current != null && current.circuitBreaker == circuitBreaker) {
       callbacks.poll();
     } else {
-      callbacks.removeIf(callback -> callback.circuitBreaker == circuitBreaker);
+      Iterator<CircuitBreakerCallback> iterator = callbacks.iterator();
+      while (iterator.hasNext()) {
+        if (iterator.next().circuitBreaker == circuitBreaker) {
+          iterator.remove();
+        }
+      }
     }
     if (callbacks.isEmpty()) {
       circuitBreakerCallbacks.remove();
