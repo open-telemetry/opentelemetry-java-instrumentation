@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -62,7 +63,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static JedisSingletons.ConfiguredTargetScope onEnter(
+    public static Scope onEnter(
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable Set<?> sentinels,
         @Advice.Argument(1) @Nullable String masterName) {
@@ -78,14 +79,15 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This Pool<?> pool,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable JedisSingletons.ConfiguredTargetScope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Enter @Nullable Scope scope) {
       try {
-        JedisSingletons.setPoolTarget(pool, throwable == null ? scope.getTarget() : null);
+        if (throwable != null) {
+          JedisSingletons.setPoolTarget(pool, null);
+        }
       } finally {
-        scope.close();
+        if (scope != null) {
+          scope.close();
+        }
       }
     }
   }
@@ -95,13 +97,12 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static JedisSingletons.ConfiguredTargetScope onEnter(
-        @Advice.FieldValue("this$0") Pool<?> pool) {
+    public static Scope onEnter(@Advice.FieldValue("this$0") Pool<?> pool) {
       return JedisSingletons.openPoolTargetScope(pool);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable JedisSingletons.ConfiguredTargetScope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
