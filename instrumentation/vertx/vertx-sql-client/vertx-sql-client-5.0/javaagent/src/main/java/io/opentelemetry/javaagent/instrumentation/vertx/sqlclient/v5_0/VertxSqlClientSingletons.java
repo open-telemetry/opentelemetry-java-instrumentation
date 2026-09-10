@@ -88,17 +88,9 @@ public class VertxSqlClientSingletons {
     return CLIENT_INFO.get(sqlClientBase);
   }
 
-  public static void setQueryExecutorInfo(Object queryExecutor, @Nullable VertxSqlClientInfo info) {
-    QueryExecutorUtil.setData(queryExecutor, info);
-  }
-
   public static void captureQueryExecutorInfo(Object queryExecutor) {
     VertxSqlClientSupplierInfo supplier = querySupplier.get();
-    if (supplier != null) {
-      QueryExecutorUtil.setData(queryExecutor, supplier);
-    } else {
-      setQueryExecutorInfo(queryExecutor, getClientInfo());
-    }
+    QueryExecutorUtil.setData(queryExecutor, supplier != null ? supplier : getClientInfo());
   }
 
   @Nullable
