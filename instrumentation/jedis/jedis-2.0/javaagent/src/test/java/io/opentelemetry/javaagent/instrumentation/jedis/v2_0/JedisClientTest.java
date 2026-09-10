@@ -14,6 +14,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -21,12 +23,14 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.net.InetSocketAddress;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
@@ -79,6 +83,7 @@ class JedisClientTest {
   @Test
   void setCommand() {
     jedis.set("foo", "bar");
+    InetSocketAddress peerAddress = peerAddress();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -93,16 +98,71 @@ class JedisClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null))));
 
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.jedis-2.0",
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        DB_NAMESPACE,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+    if (emitStableDatabaseSemconv()) {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.jedis-2.0",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          SERVER_ADDRESS,
+          SERVER_PORT,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT);
+    } else {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.jedis-2.0",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          SERVER_ADDRESS,
+          SERVER_PORT);
+    }
+  }
+
+  @Test
+  void reconnectUsesNewlyConnectedSocket() {
+    jedis.disconnect();
+    jedis.set("foo", "bar");
+    InetSocketAddress peerAddress = peerAddress();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null))));
   }
 
   @Test
@@ -110,8 +170,10 @@ class JedisClientTest {
     JedisPool pool = new JedisPool(host, port);
     cleanup.deferAfterAll(pool::destroy);
     Jedis pooled = pool.getResource();
+    InetSocketAddress pooledPeerAddress;
     try {
       pooled.set("pooled", "value");
+      pooledPeerAddress = peerAddress(pooled);
     } finally {
       pool.returnResource(pooled);
     }
@@ -129,13 +191,24 @@ class JedisClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? pooledPeerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(pooledPeerAddress.getPort())
+                                    : null))));
   }
 
   @Test
   void getCommand() {
     jedis.set("foo", "bar");
     String value = jedis.get("foo");
+    InetSocketAddress peerAddress = peerAddress();
 
     assertThat(value).isEqualTo("bar");
 
@@ -152,7 +225,17 @@ class JedisClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -165,13 +248,24 @@ class JedisClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null))));
   }
 
   @Test
   void commandWithNoArguments() {
     jedis.set("foo", "bar");
     String value = jedis.randomKey();
+    InetSocketAddress peerAddress = peerAddress();
 
     assertThat(value).isEqualTo("foo");
 
@@ -188,7 +282,17 @@ class JedisClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -204,7 +308,17 @@ class JedisClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null))));
   }
 
   @Test
@@ -217,6 +331,7 @@ class JedisClientTest {
     testing.clearData();
 
     jedis.set("foo", "bar");
+    InetSocketAddress peerAddress = peerAddress();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -231,7 +346,17 @@ class JedisClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null))));
   }
 
   @ParameterizedTest
@@ -245,6 +370,7 @@ class JedisClientTest {
       assertThat(testing.spans()).isEmpty();
       return;
     }
+    InetSocketAddress peerAddress = peerAddress();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -265,7 +391,17 @@ class JedisClientTest {
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null))));
   }
 
   @ParameterizedTest
@@ -282,6 +418,7 @@ class JedisClientTest {
       assertThat(testing.spans()).isEmpty();
       return;
     }
+    InetSocketAddress peerAddress = peerAddress();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -302,7 +439,17 @@ class JedisClientTest {
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null))));
   }
 
   @Test
@@ -315,6 +462,45 @@ class JedisClientTest {
     transaction.discard();
 
     assertThat(testing.spans()).isEmpty();
+  }
+
+  @Test
+  void transactionExecGetResponseUsesBatchSpan() throws Exception {
+    assumeTrue(
+        Stream.of(Transaction.class.getMethods())
+            .anyMatch(method -> method.getName().equals("execGetResponse")));
+    Transaction transaction = jedis.multi();
+    transaction.set("tx1", "v1");
+
+    transaction.getClass().getMethod("execGetResponse").invoke(transaction);
+    InetSocketAddress peerAddress = peerAddress();
+
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getName())
+                  .isEqualTo(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET");
+              assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(host);
+              assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo((long) port);
+              assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS))
+                  .isEqualTo(
+                      emitStableDatabaseSemconv()
+                          ? peerAddress.getAddress().getHostAddress()
+                          : null);
+              assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
+                  .isEqualTo(
+                      emitStableDatabaseSemconv() ? Long.valueOf(peerAddress.getPort()) : null);
+            });
+  }
+
+  private static InetSocketAddress peerAddress() {
+    return peerAddress(jedis);
+  }
+
+  private static InetSocketAddress peerAddress(Jedis client) {
+    return (InetSocketAddress) client.getClient().getSocket().getRemoteSocketAddress();
   }
 
   private static Stream<Arguments> batchScenarios() {
