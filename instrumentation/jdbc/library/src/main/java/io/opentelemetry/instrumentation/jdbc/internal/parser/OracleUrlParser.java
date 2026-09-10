@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.indexOfAny;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,6 +49,8 @@ public final class OracleUrlParser implements JdbcUrlParser {
   private static final Pattern DESCRIPTION_LIST_PATTERN =
       Pattern.compile("\\(\\s*description_list\\s*=");
   private static final Pattern ADDRESS_PATTERN = Pattern.compile("\\(\\s*address\\s*=");
+  private static final Pattern SOURCE_ROUTE_PATTERN =
+      Pattern.compile("\\(\\s*source_route\\s*=\\s*(?:on|yes|true)\\s*\\)");
   private static final Pattern HOST_PATTERN =
       Pattern.compile("\\(\\s*host\\s*=\\s*([^ )]+)\\s*\\)");
   private static final Pattern PORT_PATTERN =
@@ -97,12 +100,18 @@ public final class OracleUrlParser implements JdbcUrlParser {
     }
 
     String connectInfo = atSplit[1];
-    boolean ldapDiscovery = connectInfo.startsWith("ldap://");
+    if (connectInfo.startsWith("ldap://")) {
+      parseLdapConnectInfo(connectInfo, "ldap", ctx);
+      return;
+    }
+    if (connectInfo.startsWith("ldaps://")) {
+      parseLdapConnectInfo(connectInfo, "ldaps", ctx);
+      return;
+    }
+
     int hostStart;
     if (connectInfo.startsWith("//")) {
       hostStart = "//".length();
-    } else if (connectInfo.startsWith("ldap://")) {
-      hostStart = "ldap://".length();
     } else if (connectInfo.startsWith("tcp://")) {
       hostStart = "tcp://".length();
     } else if (connectInfo.startsWith("tcps://")) {
@@ -112,10 +121,6 @@ public final class OracleUrlParser implements JdbcUrlParser {
     }
 
     String directConnectInfo = connectInfo.substring(hostStart);
-    if (ldapDiscovery) {
-      parseConnectInfo(directConnectInfo, ctx);
-      return;
-    }
     String authority = applyEasyConnectGroup(directConnectInfo, ctx);
     if (authority == null) {
       parseConnectInfo(directConnectInfo, ctx);
@@ -124,16 +129,78 @@ public final class OracleUrlParser implements JdbcUrlParser {
     }
   }
 
+  private static void parseLdapConnectInfo(String connectInfo, String scheme, ParseContext ctx) {
+    ctx.resolveConfiguredServerTarget(parseLdapTarget(connectInfo, scheme));
+    parseConnectInfo(connectInfo.substring(scheme.length() + "://".length()), ctx);
+  }
+
+  @Nullable
+  private static DbServerTarget parseLdapTarget(String connectInfo, String scheme) {
+    String authority = extractAuthority(connectInfo);
+    if (authority == null || authority.indexOf(',') >= 0 || authority.indexOf('@') >= 0) {
+      return null;
+    }
+
+    HostPort hostPort = extractHostPort(authority);
+    DbServerTarget discoveryEndpoint =
+        DbServerTarget.builder()
+            .setPortAlwaysInline(true)
+            .addEndpoint(hostPort.host(), hostPort.port() == null ? -1 : hostPort.port())
+            .build();
+    if (discoveryEndpoint == null) {
+      return null;
+    }
+
+    int lookupStart = scheme.length() + "://".length() + authority.length();
+    if (lookupStart >= connectInfo.length() || connectInfo.charAt(lookupStart) != '/') {
+      return null;
+    }
+    lookupStart++;
+    int lookupEnd = indexOfAny(connectInfo, '?', '#');
+    lookupEnd = lookupEnd < 0 ? connectInfo.length() : lookupEnd;
+    if (lookupStart >= lookupEnd) {
+      return null;
+    }
+    String lookup = connectInfo.substring(lookupStart, lookupEnd);
+    if (!isSafeLdapLookup(lookup)) {
+      return null;
+    }
+    return DbServerTarget.create(
+        scheme + "://" + discoveryEndpoint.getAddress() + "/" + lookup, null);
+  }
+
+  private static boolean isSafeLdapLookup(String lookup) {
+    for (int i = 0; i < lookup.length(); i++) {
+      char c = lookup.charAt(i);
+      if (c == '/'
+          || c == '\\'
+          || c == '%'
+          || c == '@'
+          || Character.isWhitespace(c)
+          || Character.isSpaceChar(c)
+          || Character.isISOControl(c)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   @Nullable
   private static String applyEasyConnectGroup(String connectInfo, ParseContext ctx) {
     String authority = extractAuthority("oracle://" + connectInfo);
     if (authority == null || authority.indexOf(',') < 0) {
       return null;
     }
-    ctx.disableSingleServerFallback();
     ctx.resolveConfiguredServerTarget(
-        UrlParsingUtils.parseServerTargetGroup(authority, DEFAULT_PORT));
+        isSourceRouteEnabled(connectInfo)
+            ? null
+            : UrlParsingUtils.parseServerTargetGroup(authority, DEFAULT_PORT));
     return authority;
+  }
+
+  private static boolean isSourceRouteEnabled(String connectInfo) {
+    String value = UrlParsingUtils.extractQueryParams(connectInfo, "&").get("source_route");
+    return "on".equals(value) || "yes".equals(value) || "true".equals(value);
   }
 
   private static void parseEasyConnectList(String connectInfo, String authority, ParseContext ctx) {
@@ -201,7 +268,12 @@ public final class OracleUrlParser implements JdbcUrlParser {
     }
     ctx.disableSingleServerFallback();
 
-    // A DESCRIPTION_LIST contains independent targets, not one failover/load-balancing group.
+    // SOURCE_ROUTE addresses are successive hops, not alternative database endpoints.
+    if (SOURCE_ROUTE_PATTERN.matcher(description).find()) {
+      return;
+    }
+
+    // Each DESCRIPTION may have its own CONNECT_DATA and options, which a flat list cannot retain.
     if (DESCRIPTION_LIST_PATTERN.matcher(description).find()) {
       return;
     }

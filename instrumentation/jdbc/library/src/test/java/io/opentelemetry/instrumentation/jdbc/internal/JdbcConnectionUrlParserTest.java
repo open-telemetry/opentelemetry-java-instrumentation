@@ -132,6 +132,7 @@ class JdbcConnectionUrlParserTest {
   @ValueSource(
       strings = {
         "jdbc:postgresql://h1:5432,unexpected=value/db",
+        "jdbc:mariadb:failover://h1:3306,unexpected=value/db",
         "jdbc:unknown://valid.host:1234,evil host:1234/db",
         "jdbc:unknown://address=(host=valid.host)(port=1234),"
             + "address=(host=evil host)(port=1234)/db",
@@ -1077,6 +1078,19 @@ class JdbcConnectionUrlParserTest {
         .isEqualTo(DbServerTarget.create("[2001:db8::1]:2521,[2001:db8::2]:2521", null));
   }
 
+  @Test
+  void oracleLdapDiscoveryTargetOmitsConnectionParameters() {
+    DbInfo info =
+        parse(
+            "jdbc:oracle:thin:@ldap://orcl.host:389/some,cn=OracleContext,dc=com"
+                + "?connect_timeout=5",
+            null);
+
+    assertThat(info.getConfiguredServerTarget())
+        .isEqualTo(
+            DbServerTarget.create("ldap://orcl.host:389/some,cn=oraclecontext,dc=com", null));
+  }
+
   private static Stream<Arguments> oracleArguments() {
     return args(
         // https://docs.oracle.com/cd/B28359_01/java.111/b31224/urls.htm
@@ -1138,6 +1152,17 @@ class JdbcConnectionUrlParserTest {
             .setHost("orcl.host")
             .setPort(55)
             .setName("some,cn=oraclecontext,dc=com")
+            .setConfiguredServerTarget("ldap://orcl.host:55/some,cn=oraclecontext,dc=com", null)
+            .build(),
+        arg("jdbc:oracle:thin:@ldaps://orcl.host:636/some,cn=OracleContext,dc=com")
+            .setShortUrl("oracle:thin://orcl.host:636")
+            .setSystem("oracle.db")
+            .setOldSystem("oracle")
+            .setSubtype("thin")
+            .setHost("orcl.host")
+            .setPort(636)
+            .setName("some,cn=oraclecontext,dc=com")
+            .setConfiguredServerTarget("ldaps://orcl.host:636/some,cn=oraclecontext,dc=com", null)
             .build(),
         arg("jdbc:oracle:thin:127.0.0.1:orclsn")
             .setShortUrl("oracle:thin://127.0.0.1:1521")
@@ -2252,7 +2277,7 @@ class JdbcConnectionUrlParserTest {
             .setName("orclsn")
             .setServerAddressGroup("orcl.host1:1521,orcl.host2:1522")
             .build(),
-        // a DESCRIPTION_LIST holds independent descriptions, so its addresses are not one group
+        // flattening a DESCRIPTION_LIST would lose each DESCRIPTION's CONNECT_DATA and options
         arg("jdbc:oracle:thin:@(description_list="
                 + "(description=(address=(protocol=tcp)(host=orcl.host1)(port=1521))"
                 + "(connect_data=(service_name=orclsn)))"
@@ -2264,6 +2289,29 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("thin")
             .setHost("orcl.host1")
             .setPort(1521)
+            .setName("orclsn")
+            .setMultiTarget()
+            .build(),
+        arg("jdbc:oracle:thin:@(description=(source_route=on)"
+                + "(address=(protocol=tcp)(host=cman.host)(port=1630))"
+                + "(address=(protocol=tcp)(host=orcl.host)(port=1521))"
+                + "(connect_data=(service_name=orclsn)))")
+            .setShortUrl("oracle:thin://cman.host:1630")
+            .setSystem("oracle.db")
+            .setOldSystem("oracle")
+            .setSubtype("thin")
+            .setHost("cman.host")
+            .setPort(1630)
+            .setName("orclsn")
+            .setMultiTarget()
+            .build(),
+        arg("jdbc:oracle:thin:@//cman.host:1630,orcl.host:1521/orclsn?source_route=on")
+            .setShortUrl("oracle:thin://cman.host:1630")
+            .setSystem("oracle.db")
+            .setOldSystem("oracle")
+            .setSubtype("thin")
+            .setHost("cman.host")
+            .setPort(1630)
             .setName("orclsn")
             .setMultiTarget()
             .build(),
@@ -2539,13 +2587,15 @@ class JdbcConnectionUrlParserTest {
               .legacyServerAddress(builder.host)
               .legacyServerPort(builder.port)
               .configuredServerTarget(
-                  builder.noConfiguredTarget
-                          || builder.multiTarget
-                          || (builder.serverAddressGroup == null && builder.host == null)
+                  builder.noConfiguredTarget || builder.multiTarget
                       ? null
-                      : builder.serverAddressGroup != null
-                          ? DbServerTarget.create(builder.serverAddressGroup, null)
-                          : DbServerTarget.create(builder.host, builder.port))
+                      : builder.configuredServerTarget != null
+                          ? builder.configuredServerTarget
+                          : builder.serverAddressGroup == null && builder.host == null
+                              ? null
+                              : builder.serverAddressGroup != null
+                                  ? DbServerTarget.create(builder.serverAddressGroup, null)
+                                  : DbServerTarget.create(builder.host, builder.port))
               .build();
     }
 
@@ -2567,6 +2617,7 @@ class JdbcConnectionUrlParserTest {
     String namespace;
     String name;
     String serverAddressGroup;
+    DbServerTarget configuredServerTarget;
     boolean multiTarget;
     boolean noConfiguredTarget;
 
@@ -2629,6 +2680,11 @@ class JdbcConnectionUrlParserTest {
 
     ParseTestArgumentBuilder setServerAddressGroup(String serverAddressGroup) {
       this.serverAddressGroup = serverAddressGroup;
+      return this;
+    }
+
+    ParseTestArgumentBuilder setConfiguredServerTarget(String address, Integer port) {
+      this.configuredServerTarget = DbServerTarget.create(address, port);
       return this;
     }
 
