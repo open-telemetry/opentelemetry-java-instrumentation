@@ -210,7 +210,8 @@ instrumentation/development:
         # Enables the creation of experimental view spans.
         enabled: false
     couchbase:
-      # Enables experimental span attributes emitted from the underlying Couchbase library.
+      # Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
+      # Different operation types receive different experimental attributes.
       experimental_span_attributes/development: false
     elasticsearch:
       # Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this
