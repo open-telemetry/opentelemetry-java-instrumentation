@@ -222,6 +222,33 @@ class JedisNetworkAttributesGetterTest {
   }
 
   @Test
+  void connectionAcquisitionSuppressesOnlyHealthCheck() {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    Connection connection = new Connection();
+    JedisClusterCommandContext commandContext = JedisClusterCommandContext.start();
+    try {
+      JedisClusterCommandContext.enterConnectionAcquisition();
+
+      assertThat(
+              JedisConnectionInstrumentation.SendCommandNoArgsAdvice.onEnter(
+                  connection, Protocol.Command.PING))
+          .isNull();
+
+      // jedis 2.0.0 has no CLUSTER command constant, so an ordinary command stands in for the slot
+      // cache refresh a missing slot triggers while a connection is being borrowed
+      JedisConnectionInstrumentation.AdviceScope refreshScope =
+          JedisConnectionInstrumentation.SendCommandNoArgsAdvice.onEnter(
+              connection, Protocol.Command.GET);
+      assertThat(refreshScope).isNotNull();
+      JedisConnectionInstrumentation.SendCommandNoArgsAdvice.stopSpan(null, refreshScope);
+    } finally {
+      JedisClusterCommandContext.exitConnectionAcquisition();
+      commandContext.end(null);
+    }
+  }
+
+  @Test
   void clusterContextMatchesOnlyCapturedRequest() {
     assumeTrue(emitStableDatabaseSemconv());
 
