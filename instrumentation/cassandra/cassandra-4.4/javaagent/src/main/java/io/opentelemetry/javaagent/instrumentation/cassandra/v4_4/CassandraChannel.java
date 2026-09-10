@@ -13,10 +13,16 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
+/**
+ * Reads remote addresses from both regular and driver-shaded Netty objects.
+ *
+ * <p>The shaded Cassandra driver relocates Netty classes, so this code cannot refer to {@code
+ * ChannelHandlerContext} or {@code Channel} by type.
+ */
 public class CassandraChannel {
 
   private static final MethodType ACCESSOR_TYPE = MethodType.methodType(Object.class, Object.class);
-  private static final MethodHandle NOOP_ACCESSOR =
+  private static final MethodHandle MISSING_ACCESSOR =
       MethodHandles.dropArguments(MethodHandles.constant(Object.class, null), 0, Object.class);
 
   private static final ClassValue<MethodHandle> channelMethods =
@@ -55,14 +61,17 @@ public class CassandraChannel {
   }
 
   private static MethodHandle createAccessor(Class<?> type, String name) {
+    // A public method declared by a package-private implementation is not accessible through
+    // publicLookup(). Resolve the method from a public interface to get an accessible declaring
+    // type.
     Method method = findPublicInterfaceMethod(type, name);
     if (method == null) {
-      return NOOP_ACCESSOR;
+      return MISSING_ACCESSOR;
     }
     try {
       return MethodHandles.publicLookup().unreflect(method).asType(ACCESSOR_TYPE);
     } catch (IllegalAccessException ignored) {
-      return NOOP_ACCESSOR;
+      return MISSING_ACCESSOR;
     }
   }
 
@@ -75,10 +84,11 @@ public class CassandraChannel {
         } catch (NoSuchMethodException ignored) {
           // Continue with the other public interfaces.
         }
-      }
-      Method method = findPublicInterfaceMethod(interfaceType, name);
-      if (method != null) {
-        return method;
+      } else {
+        Method method = findPublicInterfaceMethod(interfaceType, name);
+        if (method != null) {
+          return method;
+        }
       }
     }
     Class<?> superclass = type.getSuperclass();
