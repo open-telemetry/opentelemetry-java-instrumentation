@@ -64,6 +64,8 @@ public final class VertxRedisServerTargets {
     return redisUri == null ? null : TARGET_FIELD.get(redisUri);
   }
 
+  private VertxRedisServerTargets() {}
+
   static final class CapturedTarget {
     @Nullable private final RedisServerTarget target;
 
@@ -76,6 +78,4 @@ public final class VertxRedisServerTargets {
       return target;
     }
   }
-
-  private VertxRedisServerTargets() {}
 }
