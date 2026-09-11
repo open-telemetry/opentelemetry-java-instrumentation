@@ -54,7 +54,7 @@ class Jedis23ClusterCommandTest {
     private final String host;
     private final int port;
 
-    TestClusterCommand(String host, int port) {
+    private TestClusterCommand(String host, int port) {
       super(null, 0, 0);
       this.host = host;
       this.port = port;
