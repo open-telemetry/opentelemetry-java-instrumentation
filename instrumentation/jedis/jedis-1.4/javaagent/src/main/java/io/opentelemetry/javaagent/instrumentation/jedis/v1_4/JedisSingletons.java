@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.JedisShardInfo;
 
-class JedisSingletons {
+public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
@@ -54,7 +54,7 @@ class JedisSingletons {
     return instrumenter;
   }
 
-  static void captureConnectionTarget(Connection connection) {
+  public static void captureConnectionTarget(Connection connection) {
     RedisServerTarget target = configuredTarget.get();
     if (target == null) {
       target = RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort());
@@ -63,7 +63,8 @@ class JedisSingletons {
   }
 
   @Nullable
-  static ConfiguredTargetScope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
+  public static ConfiguredTargetScope openConfiguredTargetScope(
+      @Nullable RedisServerTarget target) {
     if (target == null) {
       return null;
     }
