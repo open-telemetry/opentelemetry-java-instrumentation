@@ -271,7 +271,7 @@ class LettuceClusterClientTest {
   }
 
   @Test
-  void movedRedirectUsesCompletingPeer() throws Exception {
+  void movedRedirectUsesCompletingPeer() throws IOException {
     TestRedisCluster target = new TestRedisCluster();
     cleanup.deferCleanup(target);
     TestRedisCluster source = new TestRedisCluster(target);

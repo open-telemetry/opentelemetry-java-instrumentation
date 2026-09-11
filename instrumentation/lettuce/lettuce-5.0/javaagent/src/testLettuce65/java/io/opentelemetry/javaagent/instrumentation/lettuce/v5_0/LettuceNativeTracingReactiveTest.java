@@ -96,7 +96,7 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void asyncTraceContextPreservesReactorContextAcrossResubscriptions() throws Exception {
+  void asyncTraceContextPreservesReactorContextAcrossResubscriptions() throws InterruptedException {
     traceContextProvider.expectAsyncInvocations(2, Thread.currentThread());
     AtomicReference<List<String>> values = new AtomicReference<>();
 
@@ -131,7 +131,7 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void cancellationBeforeAndAfterNativeSubscriptionDoesNotLeakSpans() throws Exception {
+  void cancellationBeforeAndAfterNativeSubscriptionDoesNotLeakSpans() throws InterruptedException {
     traceContextProvider.blockAsyncInvocation();
     Disposable beforeNativeSubscription =
         reactiveCommands
