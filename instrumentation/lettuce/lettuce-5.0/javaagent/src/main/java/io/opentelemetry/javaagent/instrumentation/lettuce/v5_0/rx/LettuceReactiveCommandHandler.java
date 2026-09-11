@@ -10,5 +10,5 @@ import io.lettuce.core.protocol.RedisCommand;
 public interface LettuceReactiveCommandHandler {
   void onCommand(RedisCommand<?, ?, ?> command);
 
-  default void onCancel() {}
+  void onCancel();
 }
