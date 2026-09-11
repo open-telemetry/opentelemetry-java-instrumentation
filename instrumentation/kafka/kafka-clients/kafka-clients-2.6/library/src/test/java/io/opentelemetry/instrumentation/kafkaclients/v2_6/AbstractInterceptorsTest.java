@@ -257,6 +257,8 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                       }
                     })));
     addClientIdAssertions(assertions, "producer");
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -275,6 +277,8 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                     MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     addClientIdAssertions(assertions, "consumer");
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (emitStableMessagingSemconv()) {
       assertions.add(
           satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
@@ -315,6 +319,8 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
       assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));
     }
     addClientIdAssertions(assertions, "consumer");
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 

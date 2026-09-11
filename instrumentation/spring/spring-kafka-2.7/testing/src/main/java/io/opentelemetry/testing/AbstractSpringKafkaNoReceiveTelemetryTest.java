@@ -358,6 +358,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         messagingAttributes(topic, "publish", "send", "send", "producer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     addOffsetAssertion(assertions);
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     return assertions;
   }
@@ -373,6 +375,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     addOffsetAssertion(assertions);
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     addGroupAssertions(assertions, group);
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -382,6 +386,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         messagingAttributes(topic, "process", "process", "process", "consumer");
     addGroupAssertions(assertions, group);
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (emitStableMessagingSemconv()) {
       assertions.add(
           satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));

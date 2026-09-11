@@ -185,6 +185,8 @@ class WrapperTest extends AbstractWrapperTest {
           equalTo(
               MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testExperimental) {
       assertions.add(
           satisfies(
@@ -213,6 +215,8 @@ class WrapperTest extends AbstractWrapperTest {
                     MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null)));
     addClientIdAssertions(assertions, "consumer");
     addOffsetAssertions(assertions);
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -239,6 +243,8 @@ class WrapperTest extends AbstractWrapperTest {
                     MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     addClientIdAssertions(assertions, "consumer");
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (emitStableMessagingSemconv()) {
       assertions.add(
           satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));

@@ -11,10 +11,13 @@ abstract class AbstractKafkaConsumerRequest {
 
   @Nullable private final String consumerGroup;
   @Nullable private final String clientId;
+  @Nullable private final String clusterId;
 
-  AbstractKafkaConsumerRequest(@Nullable String consumerGroup, @Nullable String clientId) {
+  AbstractKafkaConsumerRequest(
+      @Nullable String consumerGroup, @Nullable String clientId, @Nullable String clusterId) {
     this.consumerGroup = consumerGroup;
     this.clientId = clientId;
+    this.clusterId = clusterId;
   }
 
   @Nullable
@@ -25,6 +28,11 @@ abstract class AbstractKafkaConsumerRequest {
   @Nullable
   public String getClientId() {
     return clientId;
+  }
+
+  @Nullable
+  public String getClusterId() {
+    return clusterId;
   }
 
   @Nullable
