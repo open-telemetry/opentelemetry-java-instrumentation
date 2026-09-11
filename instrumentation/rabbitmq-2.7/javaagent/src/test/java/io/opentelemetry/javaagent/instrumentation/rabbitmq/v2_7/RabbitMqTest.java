@@ -202,11 +202,10 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                             stringKey("rabbitmq.command"),
                             EXPERIMENTAL_ATTRIBUTES ? "queue.declare" : null),
                         equalTo(
-                            stringKey("messaging.rabbitmq.vhost.name"),
-                            EXPERIMENTAL_ATTRIBUTES ? "otel-test" : null),
+                            stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
                         equalTo(
                             stringKey("messaging.rabbitmq.cluster.name"),
-                            EXPERIMENTAL_ATTRIBUTES ? "otel-test-cluster" : null))));
+                            experimental("otel-test-cluster")))));
   }
 
   @Test
