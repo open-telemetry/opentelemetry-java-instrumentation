@@ -8,9 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
@@ -33,8 +30,7 @@ class JedisSingletons {
 
   private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
       VirtualField.find(Connection.class, RedisServerTarget.class);
-  private static final ContextKey<RedisServerTarget> CURRENT_CONFIGURED_TARGET =
-      ContextKey.named("opentelemetry-jedis-configured-target");
+  private static final ThreadLocal<RedisServerTarget> configuredTarget = new ThreadLocal<>();
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -59,7 +55,7 @@ class JedisSingletons {
   }
 
   static void captureConnectionTarget(Connection connection) {
-    RedisServerTarget target = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    RedisServerTarget target = configuredTarget.get();
     if (target == null) {
       target = RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort());
     }
@@ -69,15 +65,18 @@ class JedisSingletons {
   }
 
   @Nullable
-  static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
-    return target != null
-        ? Context.current().with(CURRENT_CONFIGURED_TARGET, target).makeCurrent()
-        : null;
+  static ConfiguredTargetScope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
+    if (target == null) {
+      return null;
+    }
+    RedisServerTarget previous = configuredTarget.get();
+    configuredTarget.set(target);
+    return new ConfiguredTargetScope(previous);
   }
 
   @Nullable
   static RedisServerTarget connectionTarget(Connection connection) {
-    RedisServerTarget target = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    RedisServerTarget target = configuredTarget.get();
     if (target != null) {
       return target;
     }
@@ -95,6 +94,24 @@ class JedisSingletons {
           shard == null ? null : RedisServerTarget.endpoint(shard.getHost(), shard.getPort()));
     }
     return RedisServerTarget.ofEndpoints(endpoints);
+  }
+
+  public static class ConfiguredTargetScope implements AutoCloseable {
+
+    @Nullable private final RedisServerTarget previous;
+
+    private ConfiguredTargetScope(@Nullable RedisServerTarget previous) {
+      this.previous = previous;
+    }
+
+    @Override
+    public void close() {
+      if (previous == null) {
+        configuredTarget.remove();
+      } else {
+        configuredTarget.set(previous);
+      }
+    }
   }
 
   private JedisSingletons() {}

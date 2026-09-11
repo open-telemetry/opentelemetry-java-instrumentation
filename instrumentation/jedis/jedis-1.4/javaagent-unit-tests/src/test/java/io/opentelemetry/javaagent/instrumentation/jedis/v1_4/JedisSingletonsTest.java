@@ -10,8 +10,8 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.ConfiguredTargetScope;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -79,7 +79,8 @@ class JedisSingletonsTest {
     Connection connection = new Connection("direct", 6379);
     RedisServerTarget configuredTarget = RedisServerTarget.ofHostAndPort("configured", 6380);
 
-    try (Scope ignored = JedisSingletons.openConfiguredTargetScope(configuredTarget)) {
+    try (ConfiguredTargetScope ignored =
+        JedisSingletons.openConfiguredTargetScope(configuredTarget)) {
       JedisSingletons.captureConnectionTarget(connection);
     }
 
@@ -92,12 +93,14 @@ class JedisSingletonsTest {
     RedisServerTarget attachedTarget = RedisServerTarget.ofHostAndPort("attached", 6380);
     RedisServerTarget scopedTarget = RedisServerTarget.ofHostAndPort("scoped", 6381);
 
-    try (Scope ignored = JedisSingletons.openConfiguredTargetScope(attachedTarget)) {
+    try (ConfiguredTargetScope ignored =
+        JedisSingletons.openConfiguredTargetScope(attachedTarget)) {
       JedisSingletons.captureConnectionTarget(connection);
     }
     assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(attachedTarget);
 
-    try (Scope ignored = JedisSingletons.openConfiguredTargetScope(scopedTarget)) {
+    try (ConfiguredTargetScope ignored =
+        JedisSingletons.openConfiguredTargetScope(scopedTarget)) {
       assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(scopedTarget);
     }
 

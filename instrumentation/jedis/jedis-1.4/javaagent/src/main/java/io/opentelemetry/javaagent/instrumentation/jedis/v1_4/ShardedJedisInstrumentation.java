@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.ConfiguredTargetScope;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -36,12 +36,13 @@ class ShardedJedisInstrumentation implements TypeInstrumentation {
   public static class InitializeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
+    public static ConfiguredTargetScope onEnter(
+        @Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
       return JedisSingletons.openConfiguredTargetScope(JedisSingletons.createServerTarget(shards));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable ConfiguredTargetScope scope) {
       if (scope != null) {
         scope.close();
       }
