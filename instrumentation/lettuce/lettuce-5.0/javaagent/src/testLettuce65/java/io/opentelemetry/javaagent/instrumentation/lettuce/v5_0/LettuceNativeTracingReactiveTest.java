@@ -55,7 +55,7 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
             .tracing(enabledTracing(Tracing.disabled(), traceContextProvider))
             .build();
     assertThat(resources.tracing().isEnabled()).isTrue();
-    cleanup.deferCleanup(() -> resources.shutdown());
+    cleanup.deferCleanup(resources::shutdown);
 
     redisClient = RedisClient.create(resources, embeddedDbUri);
     redisClient.setOptions(CLIENT_OPTIONS);
