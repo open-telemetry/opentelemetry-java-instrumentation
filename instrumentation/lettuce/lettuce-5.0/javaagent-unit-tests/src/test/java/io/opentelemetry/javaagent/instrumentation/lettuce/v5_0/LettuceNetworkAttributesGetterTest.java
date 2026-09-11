@@ -12,7 +12,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
@@ -24,14 +23,12 @@ import io.lettuce.core.protocol.DecoratedCommand;
 import io.lettuce.core.protocol.RedisCommand;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -89,7 +86,7 @@ class LettuceNetworkAttributesGetterTest {
   void addressAttachmentDoesNotInstallStateOnAnUnownedCommand() {
     RedisCommand<?, ?, ?> command = new Command<>(CommandType.GET, null);
 
-    LettuceSingletons.attachAddress(command, mock(StatefulConnection.class));
+    LettuceSingletons.attachConnectionState(command, mock(StatefulConnection.class));
 
     assertThat(LettuceSingletons.commandPeerAddress(command)).isNull();
   }
@@ -126,10 +123,12 @@ class LettuceNetworkAttributesGetterTest {
   @Test
   void commandKeepsConfiguredServerAddressWhenPeerIsUnknown() {
     RedisCommand<?, ?, ?> command = command();
-    LettuceSingletons.COMMAND_ADDRESS.set(
-        command, InetSocketAddress.createUnresolved("redis.example", PORT));
-    LettuceSingletons.COMMAND_TARGET.set(
-        command, RedisServerTarget.ofHostAndPort("redis.example", PORT));
+    LettuceSingletons.COMMAND_STATE.set(
+        command,
+        new LettuceConnectionState(
+            InetSocketAddress.createUnresolved("redis.example", PORT),
+            null,
+            RedisServerTarget.ofHostAndPort("redis.example", PORT)));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
@@ -144,7 +143,7 @@ class LettuceNetworkAttributesGetterTest {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(singletonList(commandWithPeer(address)), null, null, null);
+        LettuceBatchRequest.create(singletonList(commandWithPeer(address)), null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -161,8 +160,6 @@ class LettuceNetworkAttributesGetterTest {
         LettuceBatchRequest.create(
             singletonList(
                 commandWithPeer(InetSocketAddress.createUnresolved("redis.example", PORT))),
-            null,
-            null,
             null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
@@ -181,7 +178,7 @@ class LettuceNetworkAttributesGetterTest {
     RedisCommand<?, ?, ?> secondCommand = commandWithPeer(finalAddress);
     LettuceSingletons.recordCommandPeer(firstCommand, finalAddress);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -201,7 +198,7 @@ class LettuceNetworkAttributesGetterTest {
     RedisCommand<?, ?, ?> secondCommand = commandWithPeer(firstAddress);
     LettuceSingletons.recordCommandPeer(firstCommand, secondAddress);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -226,23 +223,21 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void outboundWriteCapturesDomainSocketPath() {
+  void encoderCapturesDomainSocketPath() {
     DomainSocketAddress address = new DomainSocketAddress("/var/run/redis.sock");
     RedisCommand<?, ?, ?> command = command();
     Channel channel = mock(Channel.class);
     when(channel.remoteAddress()).thenReturn(address);
     ChannelHandlerContext context = mock(ChannelHandlerContext.class);
     when(context.channel()).thenReturn(channel);
-    ChannelPromise promise = mock(ChannelPromise.class);
 
-    new LettuceCommandOutboundHandler().write(context, command, promise);
+    LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, command);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
     assertThat(getter.getNetworkPeerAddress(command, null))
         .isEqualTo(emitStableDatabaseSemconv() ? "/var/run/redis.sock" : null);
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
-    verify(context).write(command, promise);
   }
 
   @Test
@@ -253,7 +248,11 @@ class LettuceNetworkAttributesGetterTest {
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
 
     LettuceSingletons.initializeCommandPeer(wrapper);
-    LettuceCommandOutboundHandler.recordCommandPeers(singletonList(wrapper), address);
+    Channel channel = mock(Channel.class);
+    when(channel.remoteAddress()).thenReturn(address);
+    ChannelHandlerContext context = mock(ChannelHandlerContext.class);
+    when(context.channel()).thenReturn(channel);
+    LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, singletonList(wrapper));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
     assertThat(LettuceSingletons.commandPeerAddress(wrapper)).isEqualTo(address);
@@ -264,23 +263,7 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void outboundWriteContinuesWhenRecordingFails() {
-    InetSocketAddress address = new InetSocketAddress("localhost", PORT);
-    Channel channel = mock(Channel.class);
-    when(channel.remoteAddress()).thenReturn(address);
-    ChannelHandlerContext context = mock(ChannelHandlerContext.class);
-    when(context.channel()).thenReturn(channel);
-    ChannelPromise promise = mock(ChannelPromise.class);
-    Collection<?> message = mock(Collection.class);
-    when(message.iterator()).thenThrow(new IllegalStateException("test"));
-
-    new LettuceCommandOutboundHandler().write(context, message, promise);
-
-    verify(context).write(message, promise);
-  }
-
-  @Test
-  void outboundWriteRecordsPeerBeforePromiseCompletes() throws UnknownHostException {
+  void encoderRecordsPeerBeforeEncoding() throws UnknownHostException {
     InetSocketAddress address =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
     RedisCommand<?, ?, ?> command = command();
@@ -288,12 +271,10 @@ class LettuceNetworkAttributesGetterTest {
     when(channel.remoteAddress()).thenReturn(address);
     ChannelHandlerContext context = mock(ChannelHandlerContext.class);
     when(context.channel()).thenReturn(channel);
-    ChannelPromise promise = mock(ChannelPromise.class);
 
-    new LettuceCommandOutboundHandler().write(context, command, promise);
+    LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, command);
 
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
-    verify(context).write(command, promise);
   }
 
   @Test
@@ -359,14 +340,23 @@ class LettuceNetworkAttributesGetterTest {
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT);
 
     LettuceSingletons.initializeCommandPeer(firstWrapper);
-    LettuceCommandOutboundHandler.recordCommandPeers(firstWrapper, first);
+    Channel firstChannel = mock(Channel.class);
+    when(firstChannel.remoteAddress()).thenReturn(first);
+    ChannelHandlerContext firstContext = mock(ChannelHandlerContext.class);
+    when(firstContext.channel()).thenReturn(firstChannel);
+    LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(firstContext, firstWrapper);
     AsyncCommand<String, String, String> replayWrapper = new AsyncCommand<>(command);
     LettuceSingletons.initializeCommandPeer(replayWrapper);
 
     assertThat(LettuceSingletons.commandPeerAddress(firstWrapper)).isEqualTo(first);
     assertThat(LettuceSingletons.commandPeerAddress(replayWrapper)).isNull();
 
-    LettuceCommandOutboundHandler.recordCommandPeers(singletonList(replayWrapper), second);
+    Channel secondChannel = mock(Channel.class);
+    when(secondChannel.remoteAddress()).thenReturn(second);
+    ChannelHandlerContext secondContext = mock(ChannelHandlerContext.class);
+    when(secondContext.channel()).thenReturn(secondChannel);
+    LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(
+        secondContext, singletonList(replayWrapper));
 
     assertThat(LettuceSingletons.commandPeerAddress(firstWrapper)).isEqualTo(first);
     assertThat(LettuceSingletons.commandPeerAddress(replayWrapper)).isEqualTo(second);
