@@ -28,8 +28,7 @@ class LettuceDbAttributesGetterTest {
   void commandUsesConfiguredTargetOnlyForStableSemconv() {
     RedisCommand<String, String, String> command = command();
     LettuceSingletons.COMMAND_ADDRESS.set(command, SELECTED_ADDRESS);
-    LettuceServerTargets.capture(
-        command, RedisServerTarget.ofEndpoint("configured-node:6379"));
+    LettuceServerTargets.capture(command, RedisServerTarget.ofEndpoint("configured-node:6379"));
 
     assertThat(getter.getServerAddress(command))
         .isEqualTo(emitStableDatabaseSemconv() ? "configured-node" : "selected-node");

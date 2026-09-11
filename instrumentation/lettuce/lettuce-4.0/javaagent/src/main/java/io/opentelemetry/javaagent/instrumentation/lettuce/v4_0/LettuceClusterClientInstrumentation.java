@@ -47,9 +47,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     // Lettuce 4.2+ uses connectStateful for every connection, including node connections in 4.4+.
     transformer.applyAdviceToMethod(
         nameStartsWith("connectStateful")
-            .and(
-                takesArgument(
-                    1, hasSuperType(named("com.lambdaworks.redis.RedisChannelHandler"))))
+            .and(takesArgument(1, hasSuperType(named("com.lambdaworks.redis.RedisChannelHandler"))))
             .and(takesArgument(2, named("com.lambdaworks.redis.RedisURI"))),
         getClass().getName() + "$AttachStatefulConnectionAdvice");
   }

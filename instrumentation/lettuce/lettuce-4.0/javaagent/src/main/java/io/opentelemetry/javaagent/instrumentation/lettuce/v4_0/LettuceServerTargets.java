@@ -30,7 +30,8 @@ public class LettuceServerTargets {
     CLIENT_TARGET.set(client, LettuceServerTarget.ofUris(configuredUris));
   }
 
-  public static void capture(RedisChannelHandler<?, ?> connection, @Nullable RedisURI configuredUri) {
+  public static void capture(
+      RedisChannelHandler<?, ?> connection, @Nullable RedisURI configuredUri) {
     CONNECTION_TARGET.set(connection, LettuceServerTarget.of(configuredUri));
   }
 
@@ -47,8 +48,7 @@ public class LettuceServerTargets {
     CONNECTION_TARGET.set(connection, CLIENT_TARGET.get(client));
   }
 
-  public static void copy(
-      StatefulConnection<?, ?> connection, RedisCommand<?, ?, ?> command) {
+  public static void copy(StatefulConnection<?, ?> connection, RedisCommand<?, ?, ?> command) {
     COMMAND_TARGET.set(command, get(connection));
   }
 
