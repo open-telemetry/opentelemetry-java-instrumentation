@@ -18,9 +18,9 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 // This helper is in the Redisson package to access package-private configuration state.
-public class ConfigServerTargetSince317 {
+public class ConfigServerTargetUtil317 {
 
-  private static final Logger logger = Logger.getLogger(ConfigServerTargetSince317.class.getName());
+  private static final Logger logger = Logger.getLogger(ConfigServerTargetUtil317.class.getName());
 
   @Nullable private static final MethodHandle SERVICE_MANAGER_GET_CFG = findServiceManagerGetCfg();
 
@@ -35,7 +35,7 @@ public class ConfigServerTargetSince317 {
           Class.forName(
               "org.redisson.connection.ServiceManager",
               false,
-              ConfigServerTargetSince317.class.getClassLoader());
+              ConfigServerTargetUtil317.class.getClassLoader());
       return MethodHandles.publicLookup()
           .findVirtual(serviceManagerClass, "getCfg", MethodType.methodType(Config.class));
     } catch (ReflectiveOperationException ignored) {
@@ -118,5 +118,5 @@ public class ConfigServerTargetSince317 {
     return addresses == null ? null : new ArrayList<>(addresses);
   }
 
-  private ConfigServerTargetSince317() {}
+  private ConfigServerTargetUtil317() {}
 }

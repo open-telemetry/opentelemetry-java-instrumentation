@@ -22,7 +22,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.redisson.config.Config;
-import org.redisson.config.ConfigServerTargetBefore317;
+import org.redisson.config.ConfigServerTargetUtil30;
 import org.redisson.config.MasterSlaveServersConfig;
 
 class ConfigServerTargetTest {
@@ -35,7 +35,7 @@ class ConfigServerTargetTest {
         .setMasterName("mymaster")
         .addSentinelAddress(redisAddress("sentinel2:26380"), redisAddress("sentinel1:26379"));
 
-    RedisServerTarget target = ConfigServerTargetBefore317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil30.of(config);
 
     assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
@@ -54,8 +54,8 @@ class ConfigServerTargetTest {
         .addNodeAddress(secureRedisAddress("node1:7000"))
         .addNodeAddress(redisAddress("node2:7001"));
 
-    RedisServerTarget firstTarget = ConfigServerTargetBefore317.of(first);
-    RedisServerTarget secondTarget = ConfigServerTargetBefore317.of(second);
+    RedisServerTarget firstTarget = ConfigServerTargetUtil30.of(first);
+    RedisServerTarget secondTarget = ConfigServerTargetUtil30.of(second);
 
     assertThat(firstTarget.getAddress()).isEqualTo("node1:7000,node2:7001");
     assertThat(secondTarget.getAddress()).isEqualTo(firstTarget.getAddress());
@@ -67,7 +67,7 @@ class ConfigServerTargetTest {
     Config config = new Config();
     config.useClusterServers().addNodeAddress(redisAddress("node1:7000"));
 
-    RedisServerTarget target = ConfigServerTargetBefore317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil30.of(config);
 
     assertThat(target.getAddress()).isEqualTo("node1");
     assertThat(target.getPort()).isEqualTo(7000);
@@ -79,7 +79,7 @@ class ConfigServerTargetTest {
     assumeTrue(useElasticacheServers != null);
     Config config = configWithServers(useElasticacheServers);
 
-    RedisServerTarget target = ConfigServerTargetBefore317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil30.of(config);
 
     assertThat(target.getAddress()).isEqualTo("node1:6379,node2:6380");
     assertThat(target.getPort()).isNull();
@@ -91,7 +91,7 @@ class ConfigServerTargetTest {
     assumeTrue(useReplicatedServers != null);
     Config config = configWithServers(useReplicatedServers);
 
-    RedisServerTarget target = ConfigServerTargetBefore317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil30.of(config);
 
     assertThat(target.getAddress()).isEqualTo("node1:6379,node2:6380");
     assertThat(target.getPort()).isNull();
@@ -105,7 +105,7 @@ class ConfigServerTargetTest {
         .setMasterAddress(redisAddress("master:6379"))
         .addSlaveAddress(redisAddress("replica2:6381"), secureRedisAddress("replica1:6380"));
 
-    RedisServerTarget target = ConfigServerTargetBefore317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil30.of(config);
 
     assertThat(target.getAddress()).isEqualTo("master:6379,replica1:6380,replica2:6381");
     assertThat(target.getPort()).isNull();
@@ -128,7 +128,7 @@ class ConfigServerTargetTest {
         .getMethod("setSlaveAddresses", Set.class)
         .invoke(serverConfig, replicas);
 
-    assertThat(ConfigServerTargetBefore317.of(config)).isNull();
+    assertThat(ConfigServerTargetUtil30.of(config)).isNull();
   }
 
   private static Stream<Arguments> invalidReplicaAddresses() {
@@ -150,7 +150,7 @@ class ConfigServerTargetTest {
     Config config = new Config();
     config.useSingleServer().setAddress(redisAddress("localhost:6379"));
 
-    RedisServerTarget target = ConfigServerTargetBefore317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil30.of(config);
 
     assertThat(target.getAddress()).isEqualTo("localhost");
     assertThat(target.getPort()).isNull();
@@ -163,7 +163,7 @@ class ConfigServerTargetTest {
         .useSingleServer()
         .setAddress(redisAddress("user:password@secure.example:6380/2?timeout=5s"));
 
-    RedisServerTarget target = ConfigServerTargetBefore317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil30.of(config);
 
     assertThat(target.getAddress()).isEqualTo("secure.example");
     assertThat(target.getPort()).isEqualTo(6380);
@@ -171,7 +171,7 @@ class ConfigServerTargetTest {
 
   @Test
   void nullConfigHasNoTarget() {
-    assertThat(ConfigServerTargetBefore317.of(null)).isNull();
+    assertThat(ConfigServerTargetUtil30.of(null)).isNull();
   }
 
   private static Config configWithServers(Method method) throws ReflectiveOperationException {

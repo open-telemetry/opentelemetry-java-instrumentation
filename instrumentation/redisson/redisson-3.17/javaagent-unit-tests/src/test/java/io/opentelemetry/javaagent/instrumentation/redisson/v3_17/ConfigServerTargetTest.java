@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.redisson.config.Config;
-import org.redisson.config.ConfigServerTargetSince317;
+import org.redisson.config.ConfigServerTargetUtil317;
 import org.redisson.config.MasterSlaveServersConfig;
 import org.redisson.connection.ServiceManager;
 
@@ -34,7 +34,7 @@ class ConfigServerTargetTest {
         .setMasterName("mymaster")
         .addSentinelAddress("redis://sentinel2:26380", "redis://sentinel1:26379");
 
-    RedisServerTarget target = ConfigServerTargetSince317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil317.of(config);
 
     assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
@@ -53,8 +53,8 @@ class ConfigServerTargetTest {
         .addNodeAddress("rediss://node1:7000")
         .addNodeAddress("redis://node2:7001");
 
-    RedisServerTarget firstTarget = ConfigServerTargetSince317.of(first);
-    RedisServerTarget secondTarget = ConfigServerTargetSince317.of(second);
+    RedisServerTarget firstTarget = ConfigServerTargetUtil317.of(first);
+    RedisServerTarget secondTarget = ConfigServerTargetUtil317.of(second);
 
     assertThat(firstTarget.getAddress()).isEqualTo("node1:7000,node2:7001");
     assertThat(secondTarget.getAddress()).isEqualTo(firstTarget.getAddress());
@@ -66,7 +66,7 @@ class ConfigServerTargetTest {
     Config config = new Config();
     config.useClusterServers().addNodeAddress("redis://node1:7000");
 
-    RedisServerTarget target = ConfigServerTargetSince317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil317.of(config);
 
     assertThat(target.getAddress()).isEqualTo("node1");
     assertThat(target.getPort()).isEqualTo(7000);
@@ -77,7 +77,7 @@ class ConfigServerTargetTest {
     Config config = new Config();
     config.useReplicatedServers().addNodeAddress("redis://node1:6380");
 
-    RedisServerTarget target = ConfigServerTargetSince317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil317.of(config);
 
     assertThat(target.getAddress()).isEqualTo("node1");
     assertThat(target.getPort()).isEqualTo(6380);
@@ -91,7 +91,7 @@ class ConfigServerTargetTest {
         .addNodeAddress("redis://node2:6380")
         .addNodeAddress("redis://node1:6379");
 
-    RedisServerTarget target = ConfigServerTargetSince317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil317.of(config);
 
     assertThat(target.getAddress()).isEqualTo("node1:6379,node2:6380");
     assertThat(target.getPort()).isNull();
@@ -105,7 +105,7 @@ class ConfigServerTargetTest {
         .setMasterAddress("redis://master:6379")
         .addSlaveAddress("redis://replica2:6381", "rediss://replica1:6380");
 
-    RedisServerTarget target = ConfigServerTargetSince317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil317.of(config);
 
     assertThat(target.getAddress()).isEqualTo("master:6379,replica1:6380,replica2:6381");
     assertThat(target.getPort()).isNull();
@@ -120,7 +120,7 @@ class ConfigServerTargetTest {
     Set<String> replicas = new LinkedHashSet<>(asList("redis://replica:6380", invalidReplica));
     serverConfig.setSlaveAddresses(replicas);
 
-    assertThat(ConfigServerTargetSince317.of(config)).isNull();
+    assertThat(ConfigServerTargetUtil317.of(config)).isNull();
   }
 
   private static Stream<Arguments> invalidReplicaAddresses() {
@@ -135,7 +135,7 @@ class ConfigServerTargetTest {
     Config config = new Config();
     config.useMasterSlaveServers().setSlaveAddresses(singleton("redis://replica:6380"));
 
-    assertThat(ConfigServerTargetSince317.of(config)).isNull();
+    assertThat(ConfigServerTargetUtil317.of(config)).isNull();
   }
 
   @Test
@@ -143,7 +143,7 @@ class ConfigServerTargetTest {
     Config config = new Config();
     config.useMasterSlaveServers().setMasterAddress("redis://master:6379");
 
-    RedisServerTarget target = ConfigServerTargetSince317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil317.of(config);
 
     assertThat(target.getAddress()).isEqualTo("master");
     assertThat(target.getPort()).isNull();
@@ -154,7 +154,7 @@ class ConfigServerTargetTest {
     Config config = new Config();
     config.useSingleServer().setAddress("redis://localhost:6379");
 
-    RedisServerTarget target = ConfigServerTargetSince317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil317.of(config);
 
     assertThat(target.getAddress()).isEqualTo("localhost");
     assertThat(target.getPort()).isNull();
@@ -170,7 +170,7 @@ class ConfigServerTargetTest {
     Config config = new Config();
     config.useSingleServer().setAddress(configuredAddress);
 
-    RedisServerTarget target = ConfigServerTargetSince317.of(config);
+    RedisServerTarget target = ConfigServerTargetUtil317.of(config);
 
     assertThat(target.getAddress()).isEqualTo(expectedAddress);
     assertThat(target.getPort()).isEqualTo(expectedPort);
@@ -178,7 +178,7 @@ class ConfigServerTargetTest {
 
   @Test
   void nullConfigHasNoTarget() {
-    assertThat(ConfigServerTargetSince317.of(null)).isNull();
+    assertThat(ConfigServerTargetUtil317.of(null)).isNull();
   }
 
   @Test
@@ -187,7 +187,7 @@ class ConfigServerTargetTest {
     config.useSentinelServers().setMasterName("mymaster").addSentinelAddress("redis://s1:26379");
 
     RedisServerTarget target =
-        ConfigServerTargetSince317.ofServiceManager(new ServiceManager(config));
+        ConfigServerTargetUtil317.ofServiceManager(new ServiceManager(config));
 
     assertThat(target.getAddress()).isEqualTo("s1:26379/mymaster");
     assertThat(target.getPort()).isNull();
@@ -195,7 +195,7 @@ class ConfigServerTargetTest {
 
   @Test
   void nullOrWrongTypeServiceManagerHasNoTarget() {
-    assertThat(ConfigServerTargetSince317.ofServiceManager(null)).isNull();
-    assertThat(ConfigServerTargetSince317.ofServiceManager("not a service manager")).isNull();
+    assertThat(ConfigServerTargetUtil317.ofServiceManager(null)).isNull();
+    assertThat(ConfigServerTargetUtil317.ofServiceManager("not a service manager")).isNull();
   }
 }

@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisClient;
 import org.redisson.config.Config;
-import org.redisson.config.ConfigServerTargetSince317;
+import org.redisson.config.ConfigServerTargetUtil317;
 import org.redisson.connection.MasterSlaveConnectionManager;
 
 class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation {
@@ -54,7 +54,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(0) @Nullable Config config) {
-      RedissonServerTargets.capture(manager, ConfigServerTargetSince317.of(config));
+      RedissonServerTargets.capture(manager, ConfigServerTargetUtil317.of(config));
     }
   }
 
@@ -65,7 +65,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(1) @Nullable Config config) {
-      RedissonServerTargets.capture(manager, ConfigServerTargetSince317.of(config));
+      RedissonServerTargets.capture(manager, ConfigServerTargetUtil317.of(config));
     }
   }
 
@@ -77,7 +77,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(1) @Nullable Object serviceManager) {
       RedissonServerTargets.capture(
-          manager, ConfigServerTargetSince317.ofServiceManager(serviceManager));
+          manager, ConfigServerTargetUtil317.ofServiceManager(serviceManager));
     }
   }
 
