@@ -107,7 +107,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))));
 
     if (emitStableDatabaseSemconv()) {
@@ -161,7 +161,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))));
   }
 
@@ -200,7 +200,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(pooledPeerAddress.getPort())
+                                    ? (long) pooledPeerAddress.getPort()
                                     : null))));
   }
 
@@ -234,7 +234,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -257,7 +257,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))));
   }
 
@@ -291,7 +291,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -317,7 +317,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))));
   }
 
@@ -355,7 +355,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))));
   }
 
@@ -400,7 +400,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))));
   }
 
@@ -448,7 +448,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))));
   }
 
@@ -497,7 +497,7 @@ class JedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))));
   }
 
