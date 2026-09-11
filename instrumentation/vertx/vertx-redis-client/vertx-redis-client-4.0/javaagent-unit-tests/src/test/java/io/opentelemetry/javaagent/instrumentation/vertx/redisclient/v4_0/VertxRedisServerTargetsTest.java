@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 class VertxRedisServerTargetsTest {
 
   @Test
-  void standalone() {
+  void standaloneUsesConfiguredEndpoint() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(new RedisOptions().setConnectionString("redis://host:6379"));
 
@@ -341,7 +341,7 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void noOptions() {
+  void nullOptionsHaveNoTarget() {
     assertThat(VertxRedisServerTargets.of(null)).isNull();
   }
 }
