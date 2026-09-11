@@ -43,7 +43,7 @@ try {
 }
 ```
 
-Repository examples include:
+Stack-like examples include:
 
 - `MongoClusterSettings.LegacySrvTargetScope`, where a scoped legacy SRV target is restored after
   URI processing
@@ -52,16 +52,13 @@ Repository examples include:
 - `SpringSchedulingTaskTracing`, where callers temporarily change a wrapping flag and restore the
   caller's prior suppression state
 
-These examples justify restoration through their call structure. The scope class itself is not the
-evidence.
-
 ## Remove One-Shot State
 
 Use `ThreadLocal.remove()` when the value is a one-shot handoff, a current-operation marker that
 rejects nesting, or a suppression flag whose call path cannot overlap. Do not add a scope object and
 previous-value field for an unsupported hypothetical nested call.
 
-Repository examples include:
+One-shot examples include:
 
 - `JedisRequestContext` and the `JedisPipelineContext` variants, which track one active request or
   batch and clear it on exit
@@ -78,10 +75,10 @@ non-overlapping suppression flag should be removed.
 
 ## Review Guidance
 
-Do not copy the nearest scope abstraction solely because it solves a similar-looking problem.
-Inspect the target call path and sample several precedents from the same domain. Repository practice
-is mixed because the lifecycles are mixed.
+Review every writer, reader, and cleanup point for the `ThreadLocal`. Ask for previous-value
+restoration only when a supported call path can write an inner value while an outer value is active
+and later needs the outer value again. Recursion, nesting, constructor chaining, overlapping advice,
+and callbacks can create that requirement.
 
-Ask for previous-value restoration only when callers show recursion, nesting, constructor chaining,
-overlapping advice, or callbacks that can replace an outer value. Otherwise, prefer removal and the
-smaller state model. Ensure cleanup runs for normal and exceptional exits in either case.
+If no such path exists, prefer removal and the smaller state model. Ensure cleanup runs for normal
+and exceptional exits in either case.
