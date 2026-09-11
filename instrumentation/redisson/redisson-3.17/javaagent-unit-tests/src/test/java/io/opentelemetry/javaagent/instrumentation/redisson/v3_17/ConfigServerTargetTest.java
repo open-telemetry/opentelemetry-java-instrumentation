@@ -125,7 +125,7 @@ class ConfigServerTargetTest {
 
   private static Stream<Arguments> invalidReplicaAddresses() {
     return Stream.of(
-        argumentSet("null", (Object) null),
+        argumentSet("null", (String) null),
         argumentSet("malformed authority", "redis://[invalid"),
         argumentSet("invalid port", "redis://replica:99999"));
   }
