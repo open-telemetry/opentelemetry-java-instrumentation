@@ -34,7 +34,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -332,34 +331,28 @@ public abstract class AbstractRedissonClientTest {
     testing.clearData();
     client.getBucket(key).set("value");
 
-    await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.spans())
-                    .filteredOn(spanData -> spanData.getName().startsWith("SET"))
-                    .singleElement()
-                    .satisfies(
-                        spanData ->
-                            assertThat(spanData)
-                                .hasName(
-                                    emitStableDatabaseSemconv() ? "SET " + stableSpanTarget : "SET")
-                                .hasKind(CLIENT)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(
-                                        SERVER_ADDRESS,
-                                        emitStableDatabaseSemconv()
-                                            ? stableServerAddress
-                                            : legacyServerAddress),
-                                    equalTo(
-                                        SERVER_PORT,
-                                        emitStableDatabaseSemconv() ? stableServerPort : port),
-                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
-                                    equalTo(DB_NAMESPACE, dbNamespace()),
-                                    equalTo(maybeStable(DB_STATEMENT), "SET " + key + " ?"),
-                                    equalTo(maybeStable(DB_OPERATION), "SET"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + stableSpanTarget : "SET")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? stableServerAddress
+                                    : legacyServerAddress),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? stableServerPort : port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(maybeStable(DB_STATEMENT), "SET " + key + " ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
 
   @Test
