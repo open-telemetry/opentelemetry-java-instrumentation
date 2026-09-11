@@ -50,11 +50,11 @@ class Jedis23ClusterCommandTest {
                             : "PING")));
   }
 
-  private static class TestClusterCommand extends JedisClusterCommand<String> {
+  static class TestClusterCommand extends JedisClusterCommand<String> {
     private final String host;
     private final int port;
 
-    private TestClusterCommand(String host, int port) {
+    TestClusterCommand(String host, int port) {
       super(null, 0, 0);
       this.host = host;
       this.port = port;
