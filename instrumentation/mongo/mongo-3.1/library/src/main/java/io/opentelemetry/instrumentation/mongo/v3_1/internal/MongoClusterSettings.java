@@ -75,6 +75,7 @@ public class MongoClusterSettings {
 
   public static void built(ClusterSettings.Builder builder, ClusterSettings settings) {
     MongoServerTarget scopedSrvTarget = legacySrvTarget.get();
+    legacySrvTarget.remove();
     Configuration configuration =
         scopedSrvTarget == null
             ? BUILDER_CONFIGURATION.get(builder)

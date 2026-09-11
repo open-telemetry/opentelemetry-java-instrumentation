@@ -75,6 +75,28 @@ class MongoClusterSettingsTest {
     }
   }
 
+  @Test
+  void legacySrvTargetIsConsumedBeforeNonSrvReentry() {
+    LegacySrvTargetScope outerScope =
+        requireNonNull(
+            MongoClusterSettings.openLegacySrvTargetScope(
+                "mongodb+srv://outer.example.com/database"));
+    try {
+      assertThat(configuredTarget(directBuilder()).getAddress())
+          .isEqualTo("mongodb+srv://outer.example.com");
+
+      assertThat(
+              MongoClusterSettings.openLegacySrvTargetScope(
+                  "mongodb://nested.example.com/database"))
+          .isNull();
+      MongoServerTarget target = configuredTarget(directBuilder());
+      assertThat(target.getAddress()).isEqualTo("direct.example");
+      assertThat(target.getPort()).isEqualTo(27018);
+    } finally {
+      outerScope.close();
+    }
+  }
+
   private static ClusterSettings.Builder directBuilder() {
     ClusterSettings.Builder builder = ClusterSettings.builder();
     List<ServerAddress> hosts = singletonList(new ServerAddress("direct.example", 27018));
