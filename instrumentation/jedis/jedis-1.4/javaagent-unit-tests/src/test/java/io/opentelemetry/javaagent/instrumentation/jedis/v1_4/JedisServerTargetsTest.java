@@ -6,20 +6,22 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import redis.clients.jedis.JedisShardInfo;
 
 class JedisServerTargetsTest {
 
-  @Test
-  void noShards() {
-    assertThat(JedisServerTargets.ofShards(null)).isNull();
-    assertThat(JedisServerTargets.ofShards(emptyList())).isNull();
+  @ParameterizedTest
+  @NullAndEmptySource
+  void noShards(List<JedisShardInfo> shards) {
+    assertThat(JedisServerTargets.ofShards(shards)).isNull();
   }
 
   @Test
