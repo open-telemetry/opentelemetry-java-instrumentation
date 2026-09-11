@@ -55,7 +55,7 @@ class JedisCluster30ClientTest {
   }
 
   @Test
-  void clusterRefreshAndCommandsUseConfiguredTarget() throws Exception {
+  void clusterRefreshAndCommandsUseConfiguredTarget() throws ReflectiveOperationException {
     assertThat(cluster.set("key", "value")).isEqualTo("OK");
 
     Field handlerField = BinaryJedisCluster.class.getDeclaredField("connectionHandler");
