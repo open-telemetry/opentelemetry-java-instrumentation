@@ -87,7 +87,6 @@ class ShardedJedisClientTest {
   void commandIsReportedAgainstEveryConfiguredShard() {
     sharded.set("foo", "bar");
     assertThat(sharded.get("foo")).isEqualTo("bar");
-    assertThat(sharded.get("foo")).isEqualTo("bar");
 
     testing.waitAndAssertTraces(
         trace ->
