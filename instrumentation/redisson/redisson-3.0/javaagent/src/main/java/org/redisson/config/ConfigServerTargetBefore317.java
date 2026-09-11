@@ -28,8 +28,16 @@ public class ConfigServerTargetBefore317 {
       findConfigMethod("getElasticacheServersConfig");
 
   @Nullable
+  private static final Method ELASTICACHE_SERVERS_GET_NODE_ADDRESSES =
+      findReturnTypeMethod(CONFIG_GET_ELASTICACHE_SERVERS, "getNodeAddresses");
+
+  @Nullable
   private static final Method CONFIG_GET_REPLICATED_SERVERS =
       findConfigMethod("getReplicatedServersConfig");
+
+  @Nullable
+  private static final Method REPLICATED_SERVERS_GET_NODE_ADDRESSES =
+      findReturnTypeMethod(CONFIG_GET_REPLICATED_SERVERS, "getNodeAddresses");
 
   @Nullable
   private static final Method SINGLE_SERVER_CONFIG_GET_ADDRESS =
@@ -58,6 +66,14 @@ public class ConfigServerTargetBefore317 {
   }
 
   @Nullable
+  private static Method findReturnTypeMethod(@Nullable Method method, String returnTypeMethodName) {
+    if (method == null) {
+      return null;
+    }
+    return findPublicMethod(method.getReturnType(), returnTypeMethodName);
+  }
+
+  @Nullable
   public static RedisServerTarget of(@Nullable Config config) {
     if (config == null) {
       return null;
@@ -76,12 +92,14 @@ public class ConfigServerTargetBefore317 {
       return RedisServerTarget.ofUnorderedEndpoints(addressList(clusterConfig.getNodeAddresses()));
     }
     RedisServerTarget elasticacheTarget =
-        ofOptionalServerConfig(config, CONFIG_GET_ELASTICACHE_SERVERS);
+        ofOptionalServerConfig(
+            config, CONFIG_GET_ELASTICACHE_SERVERS, ELASTICACHE_SERVERS_GET_NODE_ADDRESSES);
     if (elasticacheTarget != null) {
       return elasticacheTarget;
     }
     RedisServerTarget replicatedTarget =
-        ofOptionalServerConfig(config, CONFIG_GET_REPLICATED_SERVERS);
+        ofOptionalServerConfig(
+            config, CONFIG_GET_REPLICATED_SERVERS, REPLICATED_SERVERS_GET_NODE_ADDRESSES);
     if (replicatedTarget != null) {
       return replicatedTarget;
     }
@@ -110,8 +128,8 @@ public class ConfigServerTargetBefore317 {
 
   @Nullable
   private static RedisServerTarget ofOptionalServerConfig(
-      Config config, @Nullable Method getServerConfig) {
-    if (getServerConfig == null) {
+      Config config, @Nullable Method getServerConfig, @Nullable Method getNodeAddresses) {
+    if (getServerConfig == null || getNodeAddresses == null) {
       return null;
     }
     try {
@@ -119,7 +137,7 @@ public class ConfigServerTargetBefore317 {
       if (serverConfig == null) {
         return null;
       }
-      Object addresses = serverConfig.getClass().getMethod("getNodeAddresses").invoke(serverConfig);
+      Object addresses = getNodeAddresses.invoke(serverConfig);
       return addresses instanceof Collection
           ? RedisServerTarget.ofUnorderedEndpoints(addressList((Collection<?>) addresses))
           : null;
