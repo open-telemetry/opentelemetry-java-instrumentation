@@ -35,6 +35,7 @@ class ShardedJedisInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitializeAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ConfiguredTargetScope onEnter(
         @Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
