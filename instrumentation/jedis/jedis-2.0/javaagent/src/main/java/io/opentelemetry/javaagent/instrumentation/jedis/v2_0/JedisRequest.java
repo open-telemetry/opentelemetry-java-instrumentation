@@ -27,6 +27,7 @@ public abstract class JedisRequest {
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jedis"));
   private static final int LIMIT = 32 * 1024;
+
   @Nullable private InetSocketAddress peerAddress;
 
   public static JedisRequest create(Connection connection, Protocol.Command command) {
