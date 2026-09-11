@@ -374,12 +374,6 @@ class LettuceNetworkAttributesGetterTest {
     return command;
   }
 
-  private static class SubclassAsyncCommand extends AsyncCommand<String, String, String> {
-    private SubclassAsyncCommand(RedisCommand<String, String, String> delegate) {
-      super(delegate);
-    }
-  }
-
   private static Stream<Arguments> resolvedAddresses() throws UnknownHostException {
     return Stream.of(
         argumentSet("ipv4", InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), "10.1.2.3"),
@@ -388,5 +382,11 @@ class LettuceNetworkAttributesGetterTest {
             InetAddress.getByAddress(
                 new byte[] {0x20, 0x01, 0x0d, (byte) 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}),
             "2001:db8:0:0:0:0:0:1"));
+  }
+
+  private static class SubclassAsyncCommand extends AsyncCommand<String, String, String> {
+    private SubclassAsyncCommand(RedisCommand<String, String, String> delegate) {
+      super(delegate);
+    }
   }
 }
