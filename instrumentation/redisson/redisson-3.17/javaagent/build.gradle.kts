@@ -32,7 +32,7 @@ testing {
 
       dependencies {
         implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
-        // a version from the window where redisson routes configuration through ServiceManager
+        // Redisson 3.24.3 routes configuration through ServiceManager.
         implementation("org.redisson:redisson:3.24.3")
       }
 
