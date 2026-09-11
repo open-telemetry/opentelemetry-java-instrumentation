@@ -74,7 +74,7 @@ public class LettuceFluxTerminationHandler
       return;
     }
     if (signal.getType() == SignalType.ON_COMPLETE || signal.getType() == SignalType.ON_ERROR) {
-      finishSpan(/* isCommandCancelled= */ false, signal.getThrowable());
+      endSpan(/* isCommandCancelled= */ false, signal.getThrowable());
     } else if (signal.getType() == SignalType.ON_NEXT) {
       ++numResults;
     }
@@ -85,10 +85,10 @@ public class LettuceFluxTerminationHandler
     if (!expectsResponse) {
       return;
     }
-    finishSpan(/* isCommandCancelled= */ true, null);
+    endSpan(/* isCommandCancelled= */ true, null);
   }
 
-  private void finishSpan(boolean isCommandCancelled, @Nullable Throwable throwable) {
+  private void endSpan(boolean isCommandCancelled, @Nullable Throwable throwable) {
     // A terminal signal on the netty event loop can race a cancellation from the subscribing
     // thread, and both reach this method.
     if (!spanEnded.compareAndSet(false, true)) {
