@@ -41,6 +41,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
     return asList(
         new LettuceAsyncCommandInstrumentation(),
         new LettuceAsyncCommandsInstrumentation(),
+        new LettuceCommandEncoderInstrumentation(),
         new LettuceEndpointInstrumentation(),
         new LettuceClientInstrumentation(),
         new LettuceClusterClientInstrumentation(),
