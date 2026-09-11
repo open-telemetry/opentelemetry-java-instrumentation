@@ -90,17 +90,9 @@ class LettuceClusterClientTest {
   }
 
   @Test
-  void commandsAndBatchesUseConfiguredSeedList() throws Exception {
+  void testCommandUsesConfiguredSeedList() throws Exception {
     RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = connection.async();
     assertThat(asyncCommands.set("CLUSTER_COMMAND_KEY", "value").get(10, SECONDS)).isEqualTo("OK");
-
-    asyncCommands.setAutoFlushCommands(false);
-    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
-    RedisFuture<String> first = asyncCommands.set("CLUSTER_BATCH_KEY_1", "value");
-    RedisFuture<String> second = asyncCommands.set("CLUSTER_BATCH_KEY_2", "value");
-    asyncCommands.flushCommands();
-    assertThat(first.get(10, SECONDS)).isEqualTo("OK");
-    assertThat(second.get(10, SECONDS)).isEqualTo("OK");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -117,7 +109,23 @@ class LettuceClusterClientTest {
                                 emitStableDatabaseSemconv() ? configuredTarget : host),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))),
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
+
+    redisServer.assertNoFailure();
+  }
+
+  @Test
+  void testBatchUsesConfiguredSeedList() throws Exception {
+    RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = connection.async();
+    asyncCommands.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
+    RedisFuture<String> first = asyncCommands.set("CLUSTER_BATCH_KEY_1", "value");
+    RedisFuture<String> second = asyncCommands.set("CLUSTER_BATCH_KEY_2", "value");
+    asyncCommands.flushCommands();
+    assertThat(first.get(10, SECONDS)).isEqualTo("OK");
+    assertThat(second.get(10, SECONDS)).isEqualTo("OK");
+
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
