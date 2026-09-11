@@ -83,7 +83,7 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void addressAttachmentDoesNotInstallStateOnAnUnownedCommand() {
+  void connectionStateAttachmentDoesNotInstallPeerStateOnAnUnownedCommand() {
     RedisCommand<?, ?, ?> command = new Command<>(CommandType.GET, null);
 
     LettuceSingletons.attachConnectionState(command, mock(StatefulConnection.class));
