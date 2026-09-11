@@ -46,11 +46,11 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         named("getConnectionFromNode")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
             .and(returns(named("redis.clients.jedis.Jedis"))),
-        getClass().getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$ClusterTargetScopeAdvice");
     transformer.applyAdviceToMethod(
         named("renewSlotCache")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler"))),
-        getClass().getName() + "$RenewSlotCacheAdvice");
+        getClass().getName() + "$ClusterTargetScopeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -81,24 +81,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class GetConnectionAdvice {
-
-    @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
-      return JedisConfiguredTargets.openClusterTargetScope(handler);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      if (scope != null) {
-        scope.close();
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class RenewSlotCacheAdvice {
+  public static class ClusterTargetScopeAdvice {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
