@@ -45,7 +45,7 @@ class Jedis23ClusterCommandTest {
         .satisfies(span -> assertThat(span.getName()).startsWith("PING"));
   }
 
-  static class TestClusterCommand extends JedisClusterCommand<String> {
+  private static class TestClusterCommand extends JedisClusterCommand<String> {
     private final String host;
     private final int port;
 
