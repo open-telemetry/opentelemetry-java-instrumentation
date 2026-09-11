@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,6 +16,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.Protocol;
 
 class JedisConfiguredTargetsTest {
 
@@ -58,6 +60,21 @@ class JedisConfiguredTargetsTest {
     assertThat(JedisConfiguredTargets.connectionTarget(connection))
         .extracting(RedisServerTarget::getAddress)
         .isEqualTo("direct");
+  }
+
+  @Test
+  void requestKeepsCapturedConnectionTarget() {
+    Connection connection = new Connection("direct", 6379);
+    JedisConfiguredTargets.setConnectionTarget(
+        connection, RedisServerTarget.ofEndpoint("configured:6379"));
+
+    JedisRequest request = JedisRequest.create(connection, Protocol.Command.GET, emptyList());
+    JedisConfiguredTargets.setConnectionTarget(
+        connection, RedisServerTarget.ofEndpoint("replacement:6379"));
+
+    assertThat(request.getServerTarget())
+        .extracting(RedisServerTarget::getAddress)
+        .isEqualTo("configured");
   }
 
   @Test
