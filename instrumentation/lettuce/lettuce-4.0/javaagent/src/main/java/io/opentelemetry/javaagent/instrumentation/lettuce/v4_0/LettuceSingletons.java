@@ -141,7 +141,7 @@ public class LettuceSingletons {
     return connectInstrumenter;
   }
 
-  public static void attachConnectionMetadata(
+  public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
     COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));

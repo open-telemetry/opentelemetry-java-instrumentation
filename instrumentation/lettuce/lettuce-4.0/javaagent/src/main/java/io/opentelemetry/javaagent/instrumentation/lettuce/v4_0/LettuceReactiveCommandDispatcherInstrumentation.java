@@ -88,7 +88,7 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
         return null;
       }
       RedisCommand<?, ?, ?> otelCommand = command == null ? commandSupplier.get() : command;
-      LettuceSingletons.attachConnectionMetadata(otelCommand, connection);
+      LettuceSingletons.attachAddress(otelCommand, connection);
       if (!instrumenter().shouldStart(parentContext, otelCommand)) {
         return null;
       }
