@@ -47,9 +47,9 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
         getClass().getName() + "$CreateClientAdvice");
   }
 
-  @SuppressWarnings("unused")
   public static class ConfigArgument0ConstructorAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
@@ -58,9 +58,9 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     }
   }
 
-  @SuppressWarnings("unused")
   public static class ConfigArgument1ConstructorAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
@@ -69,9 +69,9 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     }
   }
 
-  @SuppressWarnings("unused")
   public static class ServiceManagerConstructorAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
@@ -81,9 +81,9 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     }
   }
 
-  @SuppressWarnings("unused")
   public static class CreateClientAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
