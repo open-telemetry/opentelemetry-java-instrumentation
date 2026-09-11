@@ -36,9 +36,9 @@ class LettuceCommandWrapperInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$TerminalAdvice");
   }
 
-  @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This RedisCommand<?, ?, ?> wrapper,
@@ -47,9 +47,9 @@ class LettuceCommandWrapperInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class TerminalAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This RedisCommand<?, ?, ?> wrapper) {
       if (wrapper.isDone()) {

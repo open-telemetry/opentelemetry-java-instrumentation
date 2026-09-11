@@ -36,9 +36,9 @@ class LettuceCommandHandlerInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$WriteAdvice");
   }
 
-  @SuppressWarnings("unused")
   public static class WriteAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) ChannelHandlerContext context, @Advice.Argument(1) Object message) {
