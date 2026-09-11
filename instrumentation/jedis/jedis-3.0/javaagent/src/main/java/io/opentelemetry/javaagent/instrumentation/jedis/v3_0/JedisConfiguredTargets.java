@@ -27,8 +27,8 @@ public class JedisConfiguredTargets {
   private static final VirtualField<Pool<?>, ConfiguredTarget> POOL_TARGET =
       VirtualField.find(Pool.class, ConfiguredTarget.class);
 
-  private static final VirtualField<HostAndPort, OriginalEndpoint> ORIGINAL_ENDPOINT =
-      VirtualField.find(HostAndPort.class, OriginalEndpoint.class);
+  private static final VirtualField<HostAndPort, String> ORIGINAL_ENDPOINT =
+      VirtualField.find(HostAndPort.class, String.class);
 
   private static final VirtualField<JedisClusterConnectionHandler, ConfiguredTarget>
       CLUSTER_TARGET =
@@ -51,15 +51,15 @@ public class JedisConfiguredTargets {
   public static void captureOriginalEndpoint(
       @Nullable HostAndPort parsedEndpoint, @Nullable String configuredEndpoint) {
     if (parsedEndpoint != null && configuredEndpoint != null) {
-      ORIGINAL_ENDPOINT.set(parsedEndpoint, new OriginalEndpoint(configuredEndpoint));
+      ORIGINAL_ENDPOINT.set(parsedEndpoint, configuredEndpoint);
     }
   }
 
   private static String sentinelEndpoint(HostAndPort sentinel) {
-    OriginalEndpoint originalEndpoint = ORIGINAL_ENDPOINT.get(sentinel);
+    String originalEndpoint = ORIGINAL_ENDPOINT.get(sentinel);
     return originalEndpoint == null
         ? RedisServerTarget.endpoint(sentinel.getHost(), sentinel.getPort())
-        : RedisServerTarget.normalizeHostAndPort(originalEndpoint.value);
+        : RedisServerTarget.normalizeHostAndPort(originalEndpoint);
   }
 
   @Nullable
@@ -142,14 +142,6 @@ public class JedisConfiguredTargets {
 
     private ConfiguredTarget(@Nullable RedisServerTarget target) {
       this.target = target;
-    }
-  }
-
-  private static final class OriginalEndpoint {
-    private final String value;
-
-    private OriginalEndpoint(String value) {
-      this.value = value;
     }
   }
 }
