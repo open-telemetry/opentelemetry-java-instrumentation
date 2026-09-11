@@ -9,6 +9,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 
+// Helper class for accessing virtual field on package private RedisConnectionManager class. This
+// class is injected into the application class loader so that it can access the manager.
 public class RedisConnectionManagerUtil {
 
   private static final VirtualField<RedisConnectionManager, RedisServerTarget> TARGET_FIELD =
