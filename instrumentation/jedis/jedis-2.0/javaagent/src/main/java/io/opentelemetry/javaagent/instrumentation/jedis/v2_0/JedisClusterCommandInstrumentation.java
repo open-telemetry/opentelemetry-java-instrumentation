@@ -36,14 +36,14 @@ class JedisClusterCommandInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isPublic().and(namedOneOf("run", "runBinary", "runWithAnyNode")),
-        getClass().getName() + "$CommandAdvice");
+        getClass().getName() + "$RunAdvice");
     transformer.applyAdviceToMethod(
         named("execute").and(takesArguments(0).or(takesArguments(1))),
         getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class CommandAdvice {
+  public static class RunAdvice {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
