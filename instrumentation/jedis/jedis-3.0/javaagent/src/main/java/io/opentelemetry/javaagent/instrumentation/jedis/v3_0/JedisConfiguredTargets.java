@@ -55,13 +55,6 @@ public class JedisConfiguredTargets {
     }
   }
 
-  private static String sentinelEndpoint(HostAndPort sentinel) {
-    OriginalEndpoint originalEndpoint = ORIGINAL_ENDPOINT.get(sentinel);
-    return originalEndpoint == null
-        ? RedisServerTarget.endpoint(sentinel.getHost(), sentinel.getPort())
-        : RedisServerTarget.normalizeHostAndPort(originalEndpoint.value);
-  }
-
   @Nullable
   public static RedisServerTarget sentinelTarget(
       @Nullable String masterName, @Nullable Collection<?> sentinels) {
@@ -79,6 +72,13 @@ public class JedisConfiguredTargets {
       }
     }
     return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, masterName);
+  }
+
+  private static String sentinelEndpoint(HostAndPort sentinel) {
+    OriginalEndpoint originalEndpoint = ORIGINAL_ENDPOINT.get(sentinel);
+    return originalEndpoint == null
+        ? RedisServerTarget.endpoint(sentinel.getHost(), sentinel.getPort())
+        : RedisServerTarget.normalizeHostAndPort(originalEndpoint.value);
   }
 
   public static void setClusterTarget(
