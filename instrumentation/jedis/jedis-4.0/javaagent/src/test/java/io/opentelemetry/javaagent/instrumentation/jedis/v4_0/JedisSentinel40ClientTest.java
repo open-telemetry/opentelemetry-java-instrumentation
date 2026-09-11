@@ -32,7 +32,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisClientConfig;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class JedisSentinelTargetTest {
+class JedisSentinel40ClientTest {
 
   private static final String MASTER_NAME = "mymaster";
 

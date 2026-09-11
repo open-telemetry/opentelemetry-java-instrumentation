@@ -52,7 +52,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisClientConfig;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class JedisConnectionProviderTest {
+class JedisCluster40ClientTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -126,9 +126,9 @@ class JedisConnectionProviderTest {
                     span ->
                         span.hasName(
                             emitStableDatabaseSemconv() ? "HELLO " + configuredTarget : "HELLO")),
-            JedisConnectionProviderTest::assertPingTrace);
+            JedisCluster40ClientTest::assertPingTrace);
       } else {
-        testing.waitAndAssertTraces(JedisConnectionProviderTest::assertPingTrace);
+        testing.waitAndAssertTraces(JedisCluster40ClientTest::assertPingTrace);
       }
     }
   }
