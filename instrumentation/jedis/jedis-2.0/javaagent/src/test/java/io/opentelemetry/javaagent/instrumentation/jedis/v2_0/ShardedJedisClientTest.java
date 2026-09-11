@@ -53,7 +53,6 @@ class ShardedJedisClientTest {
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
   private static ShardedJedis sharded;
-  private static Jedis shard;
 
   private static String configuredTarget;
 
@@ -84,7 +83,7 @@ class ShardedJedisClientTest {
     sharded = new ShardedJedis(shards);
     cleanup.deferAfterAll(sharded::disconnect);
 
-    shard = sharded.getShard("foo");
+    Jedis shard = sharded.getShard("foo");
     shardHost = shard.getClient().getHost();
     shardPort = shard.getClient().getPort();
   }
@@ -95,6 +94,7 @@ class ShardedJedisClientTest {
 
     assertThat(sharded.get("foo")).isEqualTo("bar");
     assertThat(configuredTarget).contains(",");
+    Jedis shard = sharded.getShard("foo");
     InetSocketAddress peerAddress =
         (InetSocketAddress) shard.getClient().getSocket().getRemoteSocketAddress();
 
