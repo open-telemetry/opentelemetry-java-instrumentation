@@ -14,11 +14,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.net.ServerSocket;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -52,9 +52,9 @@ class JedisSentinelTargetTest {
   static void setup() throws Exception {
     assumeTrue(classPresent("redis.clients.jedis.JedisSentinelPool"));
 
-    int masterPort = availablePort();
-    replicaPort = availablePort();
-    sentinelPort = availablePort();
+    int masterPort = PortUtils.findOpenPort();
+    replicaPort = PortUtils.findOpenPort();
+    sentinelPort = PortUtils.findOpenPort();
     String sentinelConfig =
         "port "
             + sentinelPort
@@ -209,12 +209,6 @@ class JedisSentinelTargetTest {
     } else {
       assertThat(span.getAttributes().get(SERVER_ADDRESS)).isNotEqualTo(configuredTarget);
       assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-    }
-  }
-
-  private static int availablePort() throws Exception {
-    try (ServerSocket socket = new ServerSocket(0)) {
-      return socket.getLocalPort();
     }
   }
 

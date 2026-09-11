@@ -29,13 +29,13 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.time.Duration;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -74,9 +74,7 @@ class JedisConnectionProviderTest {
 
   @BeforeAll
   static void setup() throws IOException, InterruptedException, ReflectiveOperationException {
-    try (ServerSocket socket = new ServerSocket(0)) {
-      port = socket.getLocalPort();
-    }
+    port = PortUtils.findOpenPort();
     redisServer.setPortBindings(singletonList(port + ":6379"));
     redisServer.withCommand(
         "redis-server",
