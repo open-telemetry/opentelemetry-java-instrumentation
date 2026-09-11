@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-// This helper is in the Redisson package to access package-private configuration state.
+// This helper is in the Redisson package to access non-public configuration methods.
 public class ConfigServerTargetUtil317 {
 
   private static final Logger logger = Logger.getLogger(ConfigServerTargetUtil317.class.getName());
