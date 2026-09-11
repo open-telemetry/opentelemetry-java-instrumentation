@@ -74,9 +74,7 @@ class KafkaUtilTest {
 
     Thread.sleep(NANOSECONDS.toMillis(KafkaClusterId.RETRY_INTERVAL_NANOS) + 50);
 
-    assertThat(pending.shouldReadMetadataNow())
-        .describedAs("pending entry stopped reading metadata permanently")
-        .isTrue();
+    assertThat(pending.shouldReadMetadataNow()).isTrue();
   }
 
   @Test
