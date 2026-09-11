@@ -125,7 +125,7 @@ class ShardedJedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -153,7 +153,7 @@ class ShardedJedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))));
   }
 
@@ -195,7 +195,7 @@ class ShardedJedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(peerAddress.getPort())
+                                    ? (long) peerAddress.getPort()
                                     : null))));
   }
 
@@ -257,7 +257,7 @@ class ShardedJedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(firstPeerAddress.getPort())
+                                    ? (long) firstPeerAddress.getPort()
                                     : null)),
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
@@ -289,7 +289,7 @@ class ShardedJedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(secondPeerAddress.getPort())
+                                    ? (long) secondPeerAddress.getPort()
                                     : null))));
   }
 
@@ -348,7 +348,7 @@ class ShardedJedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(firstPeerAddress.getPort())
+                                    ? (long) firstPeerAddress.getPort()
                                     : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -383,7 +383,7 @@ class ShardedJedisClientTest {
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv()
-                                    ? Long.valueOf(secondPeerAddress.getPort())
+                                    ? (long) secondPeerAddress.getPort()
                                     : null))));
   }
 
