@@ -475,24 +475,30 @@ class JedisClientTest {
     transaction.getClass().getMethod("execGetResponse").invoke(transaction);
     InetSocketAddress peerAddress = peerAddress();
 
-    testing.waitForTraces(1);
-    assertThat(testing.spans())
-        .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getName())
-                  .isEqualTo(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET");
-              assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(host);
-              assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo((long) port);
-              assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS))
-                  .isEqualTo(
-                      emitStableDatabaseSemconv()
-                          ? peerAddress.getAddress().getHostAddress()
-                          : null);
-              assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
-                  .isEqualTo(
-                      emitStableDatabaseSemconv() ? Long.valueOf(peerAddress.getPort()) : null);
-            });
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET tx1 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? peerAddress.getAddress().getHostAddress()
+                                    : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(peerAddress.getPort())
+                                    : null))));
   }
 
   private static InetSocketAddress peerAddress() {
