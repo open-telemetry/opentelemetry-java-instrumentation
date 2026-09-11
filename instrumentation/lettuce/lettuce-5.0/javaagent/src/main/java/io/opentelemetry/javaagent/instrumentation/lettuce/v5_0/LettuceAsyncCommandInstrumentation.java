@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -27,8 +27,7 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.lettuce.core.protocol.AsyncCommand")
-        .or(hasSuperClass(named("io.lettuce.core.protocol.AsyncCommand")));
+    return extendsClass(named("io.lettuce.core.protocol.AsyncCommand"));
   }
 
   @Override
