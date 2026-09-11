@@ -29,9 +29,9 @@ tasks {
   withType<Test>().configureEach {
     // latest dep test fails because peer ip is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
