@@ -35,7 +35,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SetTargetAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("setHost")
             .and(takesArguments(1))
@@ -90,6 +90,15 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     public void end(@Nullable Throwable throwable) {
       scope.close();
       JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisSingletons.captureConnectionTarget(connection);
     }
   }
 
