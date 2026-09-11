@@ -23,6 +23,9 @@ class LettuceServerTargetTest {
     RedisServerTarget ipv4 = LettuceServerTarget.of(RedisURI.create("redis://192.0.2.1:6380"));
     RedisServerTarget ipv6 = LettuceServerTarget.of(RedisURI.create("redis://[::1]:6381"));
 
+    assertThat(service).isNotNull();
+    assertThat(ipv4).isNotNull();
+    assertThat(ipv6).isNotNull();
     assertThat(service.getAddress()).isEqualTo("cache.service.consul");
     assertThat(service.getPort()).isNull();
     assertThat(ipv4.getAddress()).isEqualTo("192.0.2.1");
@@ -41,6 +44,7 @@ class LettuceServerTargetTest {
     RedisServerTarget target =
         LettuceServerTarget.of(RedisURI.Builder.socket("/var/run/redis.sock").build());
 
+    assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("/var/run/redis.sock");
     assertThat(target.getPort()).isNull();
   }
@@ -54,6 +58,7 @@ class LettuceServerTargetTest {
                 .withSentinel("sentinel2", 26380)
                 .build());
 
+    assertThat(target).isNotNull();
     assertThat(target.getAddress())
         .isEqualTo("sentinel1:26379,sentinel2:26380,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
@@ -71,6 +76,8 @@ class LettuceServerTargetTest {
     RedisServerTarget blankTarget = LettuceServerTarget.of(blankMaster);
     RedisServerTarget unsafeTarget = LettuceServerTarget.of(unsafeMaster);
 
+    assertThat(blankTarget).isNotNull();
+    assertThat(unsafeTarget).isNotNull();
     assertThat(blankTarget.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
     assertThat(blankTarget.getPort()).isNull();
     assertThat(unsafeTarget.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
@@ -86,6 +93,7 @@ class LettuceServerTargetTest {
 
     RedisServerTarget target = LettuceServerTarget.ofMasterSlaveUris(singletonList(sentinel));
 
+    assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
   }
@@ -100,6 +108,8 @@ class LettuceServerTargetTest {
     RedisServerTarget masterReplica =
         LettuceServerTarget.ofMasterSlaveUris(asList(master, replica));
 
+    assertThat(target).isNotNull();
+    assertThat(masterReplica).isNotNull();
     assertThat(target.getAddress()).isEqualTo("cache.service.consul");
     assertThat(target.getPort()).isNull();
     assertThat(masterReplica.getAddress()).isEqualTo("cache.service.consul:6379,replica:7001");
@@ -115,6 +125,7 @@ class LettuceServerTargetTest {
                 RedisURI.create("redis://node1:7000"),
                 RedisURI.create("redis://node2:7001")));
 
+    assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("node2:7001,node1:7000,node2:7001");
     assertThat(target.getPort()).isNull();
   }
@@ -143,6 +154,7 @@ class LettuceServerTargetTest {
     first.setHost("other");
     second.setPort(7002);
 
+    assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
     assertThat(target.getPort()).isNull();
   }
@@ -162,6 +174,7 @@ class LettuceServerTargetTest {
     RedisServerTarget target =
         LettuceServerTarget.ofUris(singletonList(RedisURI.create("redis://node1:7000")));
 
+    assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("node1");
     assertThat(target.getPort()).isEqualTo(7000);
   }
@@ -172,6 +185,7 @@ class LettuceServerTargetTest {
         LettuceServerTarget.ofUris(
             singletonList(RedisURI.Builder.socket("/var/run/redis1.sock").build()));
 
+    assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock");
     assertThat(target.getPort()).isNull();
   }
