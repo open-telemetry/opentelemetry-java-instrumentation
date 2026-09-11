@@ -5,8 +5,14 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
+import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.mongodb.ServerAddress;
+import com.mongodb.connection.ClusterSettings;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoClusterSettings.LegacySrvTargetScope;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class MongoClusterSettingsTest {
@@ -38,5 +44,48 @@ class MongoClusterSettingsTest {
         .isNull();
     assertThat(MongoClusterSettings.srvConnectionString("mongodb://cluster0.example.com")).isNull();
     assertThat(MongoClusterSettings.srvConnectionString(null)).isNull();
+  }
+
+  @Test
+  void nestedLegacySrvTargetDoesNotRestoreConsumedOuterTarget() {
+    LegacySrvTargetScope outerScope =
+        requireNonNull(
+            MongoClusterSettings.openLegacySrvTargetScope(
+                "mongodb+srv://outer.example.com/database"));
+    try {
+      assertThat(configuredTarget(directBuilder()).getAddress())
+          .isEqualTo("mongodb+srv://outer.example.com");
+
+      LegacySrvTargetScope innerScope =
+          requireNonNull(
+              MongoClusterSettings.openLegacySrvTargetScope(
+                  "mongodb+srv://inner.example.com/database"));
+      try {
+        assertThat(configuredTarget(directBuilder()).getAddress())
+            .isEqualTo("mongodb+srv://inner.example.com");
+      } finally {
+        innerScope.close();
+      }
+
+      MongoServerTarget target = configuredTarget(directBuilder());
+      assertThat(target.getAddress()).isEqualTo("direct.example");
+      assertThat(target.getPort()).isEqualTo(27018);
+    } finally {
+      outerScope.close();
+    }
+  }
+
+  private static ClusterSettings.Builder directBuilder() {
+    ClusterSettings.Builder builder = ClusterSettings.builder();
+    List<ServerAddress> hosts = singletonList(new ServerAddress("direct.example", 27018));
+    builder.hosts(hosts);
+    MongoClusterSettings.hosts(builder, hosts);
+    return builder;
+  }
+
+  private static MongoServerTarget configuredTarget(ClusterSettings.Builder builder) {
+    ClusterSettings settings = builder.build();
+    MongoClusterSettings.built(builder, settings);
+    return requireNonNull(MongoClusterSettings.configuredTarget(settings));
   }
 }
