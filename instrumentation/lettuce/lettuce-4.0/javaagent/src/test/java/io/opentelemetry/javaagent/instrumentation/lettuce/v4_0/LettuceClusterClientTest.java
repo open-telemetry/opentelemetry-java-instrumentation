@@ -85,14 +85,6 @@ class LettuceClusterClientTest {
 
     connection = client.connect();
     cleanup.deferAfterAll(connection);
-
-    if (connectionTelemetryEnabled()) {
-      testing.waitForTraces(1);
-    }
-  }
-
-  private static boolean connectionTelemetryEnabled() {
-    return Boolean.getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled");
   }
 
   @Test
