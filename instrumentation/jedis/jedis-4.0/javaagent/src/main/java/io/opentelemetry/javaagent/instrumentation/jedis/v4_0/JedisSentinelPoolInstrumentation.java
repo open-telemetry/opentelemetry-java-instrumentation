@@ -61,7 +61,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) @Nullable String masterName,
         @Advice.Argument(1) @Nullable Set<?> sentinels) {
       JedisConfiguredTargets.setSentinelPoolTarget(
-          pool, JedisSingletons.targetOfSentinels(masterName, sentinels));
+          pool, JedisServerTarget.ofSentinels(masterName, sentinels));
     }
   }
 
@@ -75,7 +75,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) @Nullable Set<?> sentinels,
         @Advice.Argument(1) @Nullable String masterName) {
       JedisConfiguredTargets.setSentinelPoolTarget(
-          pool, JedisSingletons.targetOfSentinels(masterName, sentinels));
+          pool, JedisServerTarget.ofSentinels(masterName, sentinels));
       return JedisConfiguredTargets.openSentinelPoolTargetScope(pool);
     }
 

@@ -70,7 +70,7 @@ public class JedisConfiguredTargets {
 
   public static void setTopologyTargetFromNodes(
       JedisClusterInfoCache topologyOwner, Collection<?> startNodes) {
-    setTopologyTarget(topologyOwner, JedisSingletons.targetOfNodes(startNodes));
+    setTopologyTarget(topologyOwner, JedisServerTarget.ofNodes(startNodes));
   }
 
   @Nullable

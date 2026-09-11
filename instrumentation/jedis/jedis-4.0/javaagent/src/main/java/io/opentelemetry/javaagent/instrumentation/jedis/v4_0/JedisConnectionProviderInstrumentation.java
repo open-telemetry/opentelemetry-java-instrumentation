@@ -105,7 +105,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         @Advice.This Object provider,
         @Advice.FieldValue("cache") @Nullable JedisClusterInfoCache cache,
         @Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
-      RedisServerTarget target = JedisSingletons.targetOfNodes(nodes);
+      RedisServerTarget target = JedisServerTarget.ofNodes(nodes);
       JedisConfiguredTargets.setProviderTarget(provider, target);
       JedisConfiguredTargets.setTopologyTarget(cache, target);
       return JedisConfiguredTargets.openConfiguredTargetScope(target);
@@ -125,7 +125,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This Object provider, @Advice.Argument(0) @Nullable List<HostAndPort> shards) {
-      RedisServerTarget target = JedisSingletons.targetOfShards(shards);
+      RedisServerTarget target = JedisServerTarget.ofShards(shards);
       JedisConfiguredTargets.setProviderTarget(provider, target);
       return JedisConfiguredTargets.openConfiguredTargetScope(target);
     }
@@ -147,7 +147,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         @Advice.This Object provider,
         @Advice.FieldValue("masterName") @Nullable String masterName,
         @Advice.Argument(0) @Nullable Set<HostAndPort> sentinels) {
-      RedisServerTarget target = JedisSingletons.targetOfSentinels(masterName, sentinels);
+      RedisServerTarget target = JedisServerTarget.ofSentinels(masterName, sentinels);
       JedisConfiguredTargets.setProviderTarget(provider, target);
       return JedisConfiguredTargets.openConfiguredTargetScope(target);
     }
