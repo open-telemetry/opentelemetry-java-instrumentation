@@ -36,7 +36,6 @@ import java.util.EnumSet;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +45,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-@DisabledIfSystemProperty(
-    named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
-    matches = "true")
 class LettuceClusterClientTest {
   private static final Logger logger = LoggerFactory.getLogger(LettuceClusterClientTest.class);
 
@@ -89,6 +85,14 @@ class LettuceClusterClientTest {
 
     connection = client.connect();
     cleanup.deferAfterAll(connection);
+
+    if (connectionTelemetryEnabled()) {
+      testing.waitForTraces(1);
+    }
+  }
+
+  private static boolean connectionTelemetryEnabled() {
+    return Boolean.getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled");
   }
 
   @Test
