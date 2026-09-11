@@ -23,7 +23,7 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("redisson324ServiceManagerStableSemconvTest") {
+    register<JvmTestSuite>("redisson324Test") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
@@ -42,8 +42,6 @@ testing {
             includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
             includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
           }
-          jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
         }
       }
     }
@@ -64,8 +62,23 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  val redisson324StableSemconv = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name == "redisson324Test" }
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+        filter {
+          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+        }
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      }
+    }
+
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv, redisson324StableSemconv)
   }
 
   if (otelProps.denyUnsafe) {
