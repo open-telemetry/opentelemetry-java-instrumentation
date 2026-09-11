@@ -24,8 +24,7 @@ class LettuceServerTargetTest {
 
   @ParameterizedTest
   @MethodSource("standaloneNetworkTargets")
-  void standaloneNetworkTarget(
-      RedisURI redisUri, String expectedAddress, Integer expectedPort) {
+  void standaloneNetworkTarget(RedisURI redisUri, String expectedAddress, Integer expectedPort) {
     RedisServerTarget target = LettuceServerTarget.of(redisUri);
 
     assertThat(target).isNotNull();
@@ -46,10 +45,7 @@ class LettuceServerTargetTest {
             "192.0.2.1",
             6380),
         argumentSet(
-            "IPv6 address loses brackets",
-            RedisURI.create("redis://[::1]:6381"),
-            "::1",
-            6381));
+            "IPv6 address loses brackets", RedisURI.create("redis://[::1]:6381"), "::1", 6381));
   }
 
   @Test
@@ -152,8 +148,7 @@ class LettuceServerTargetTest {
         argumentSet("empty list", emptyList()),
         argumentSet("unsafe host", asList(RedisURI.create("redis://node1:7000"), invalid)),
         argumentSet(
-            "unsupported member",
-            asList(RedisURI.create("redis://node1:7000"), "unsupported")),
+            "unsupported member", asList(RedisURI.create("redis://node1:7000"), "unsupported")),
         argumentSet("null member", asList(RedisURI.create("redis://node1:7000"), null)));
   }
 
