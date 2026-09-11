@@ -15,15 +15,6 @@ public final class LettuceConnectionState {
   @Nullable public final Integer databaseIndex;
   @Nullable public final RedisServerTarget serverTarget;
 
-  public LettuceConnectionState(
-      @Nullable InetSocketAddress serverAddress,
-      @Nullable Integer databaseIndex,
-      @Nullable RedisServerTarget serverTarget) {
-    this.serverAddress = serverAddress;
-    this.databaseIndex = databaseIndex;
-    this.serverTarget = serverTarget;
-  }
-
   @Nullable
   public static LettuceConnectionState withServerAddress(
       @Nullable LettuceConnectionState state, @Nullable InetSocketAddress serverAddress) {
@@ -49,6 +40,15 @@ public final class LettuceConnectionState {
       return null;
     }
     return new LettuceConnectionState(state.serverAddress, state.databaseIndex, serverTarget);
+  }
+
+  public LettuceConnectionState(
+      @Nullable InetSocketAddress serverAddress,
+      @Nullable Integer databaseIndex,
+      @Nullable RedisServerTarget serverTarget) {
+    this.serverAddress = serverAddress;
+    this.databaseIndex = databaseIndex;
+    this.serverTarget = serverTarget;
   }
 
   public static boolean sameServerTarget(
