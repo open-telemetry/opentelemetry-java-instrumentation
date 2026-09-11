@@ -63,8 +63,8 @@ class LettuceNetworkAttributesGetterTest {
   @Test
   void commandRetryUsesLastSelectedAddress() throws UnknownHostException {
     RedisCommand<?, ?, ?> command = command();
-    LettuceCommandPeer peerAddress = new LettuceCommandPeer();
-    LettuceSingletons.COMMAND_PEER.set(command, peerAddress);
+    LettuceCommandPeer peer = new LettuceCommandPeer();
+    LettuceSingletons.COMMAND_PEER.set(command, peer);
     LettuceSingletons.recordCommandPeer(
         command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
     LettuceSingletons.recordCommandPeer(
