@@ -63,11 +63,8 @@ class JedisCluster30ClientTest {
     JedisClusterConnectionHandler handler =
         (JedisClusterConnectionHandler) handlerField.get(cluster);
 
-    Jedis unavailable = new Jedis(clusterHost, 1);
-    try {
+    try (Jedis unavailable = new Jedis(clusterHost, 1)) {
       handler.renewSlotCache(unavailable);
-    } finally {
-      unavailable.close();
     }
 
     await()
