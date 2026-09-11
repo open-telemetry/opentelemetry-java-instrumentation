@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertNoMessagingMetrics;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertProducerMetrics;
@@ -36,7 +37,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -155,8 +155,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @Test
   void testVhostSurvivesAutomaticRecovery() throws Exception {
     Assumptions.assumeTrue(
-        Boolean.getBoolean("testLatestDeps"),
-        "automatic recovery is not available at the 2.7.0 muzzle floor");
+        testLatestDeps(), "automatic recovery is not available at the 2.7.0 muzzle floor");
 
     ConnectionFactory recoveringFactory = new ConnectionFactory();
     recoveringFactory.setHost(rabbitMqHost);
@@ -198,9 +197,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
                         satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                         satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
-                        equalTo(
-                            stringKey("rabbitmq.command"),
-                            EXPERIMENTAL_ATTRIBUTES ? "queue.declare" : null),
+                        equalTo(stringKey("rabbitmq.command"), experimental("queue.declare")),
                         equalTo(
                             stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
                         equalTo(
@@ -933,12 +930,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                   }
                 }),
             satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)),
+            equalTo(stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
             equalTo(
-                stringKey("messaging.rabbitmq.vhost.name"),
-                EXPERIMENTAL_ATTRIBUTES ? "otel-test" : null),
-            equalTo(
-                stringKey("messaging.rabbitmq.cluster.name"),
-                EXPERIMENTAL_ATTRIBUTES ? "otel-test-cluster" : null));
+                stringKey("messaging.rabbitmq.cluster.name"), experimental("otel-test-cluster")));
   }
 
   private static Stream<Arguments> provideParametersForMessageCountAndTimestamp() {
@@ -1206,12 +1200,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 val.isNull();
               }
             }),
-        equalTo(
-            stringKey("messaging.rabbitmq.vhost.name"),
-            EXPERIMENTAL_ATTRIBUTES ? "otel-test" : null),
-        equalTo(
-            stringKey("messaging.rabbitmq.cluster.name"),
-            EXPERIMENTAL_ATTRIBUTES ? "otel-test-cluster" : null));
+        equalTo(stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
+        equalTo(stringKey("messaging.rabbitmq.cluster.name"), experimental("otel-test-cluster")));
   }
 
   private static SpanKind expectedSpanKind(String operation) {

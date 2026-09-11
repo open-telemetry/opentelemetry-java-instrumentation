@@ -56,9 +56,9 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
                             satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
                             equalTo(
                                 stringKey("messaging.rabbitmq.vhost.name"),
-                                EXPERIMENTAL_ATTRIBUTES ? "otel-test" : null),
+                                experimental("otel-test")),
                             equalTo(
                                 stringKey("messaging.rabbitmq.cluster.name"),
-                                EXPERIMENTAL_ATTRIBUTES ? "otel-test-cluster" : null))));
+                                experimental("otel-test-cluster")))));
   }
 }

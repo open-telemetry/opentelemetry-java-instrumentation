@@ -47,8 +47,8 @@ abstract class AbstractRabbitMqTest {
             .withStartupTimeout(Duration.ofMinutes(2));
     rabbitMqContainer.start();
 
-    // a test asserting vhost "/" would prove nothing, since that's also what an empty/absent
-    // value looks like
+    // use a non-default vhost to verify that instrumentation reads the connection's configured
+    // value rather than emitting a hard-coded default
     rabbitMqContainer.execInContainer("rabbitmqctl", "set_cluster_name", "otel-test-cluster");
     rabbitMqContainer.execInContainer("rabbitmqctl", "add_vhost", "otel-test");
     rabbitMqContainer.execInContainer(
