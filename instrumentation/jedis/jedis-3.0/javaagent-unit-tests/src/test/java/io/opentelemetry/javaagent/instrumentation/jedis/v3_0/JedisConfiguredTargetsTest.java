@@ -15,6 +15,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Protocol;
@@ -97,6 +99,31 @@ class JedisConfiguredTargetsTest {
 
     assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:26379/mymaster");
     assertThat(target.getPort()).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"2001:db8::1", "2001:db8::"})
+  void stringIpv6SentinelKeepsItsPort(String host) {
+    RedisServerTarget target =
+        JedisConfiguredTargets.sentinelTarget("mymaster", singletonList(host + ":26379"));
+
+    assertThat(target.getAddress()).isEqualTo("[" + host + "]:26379/mymaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void portlessStringIpv6SentinelStaysUnbracketed() {
+    RedisServerTarget target =
+        JedisConfiguredTargets.sentinelTarget("mymaster", singletonList("2001:db8::1"));
+
+    assertThat(target.getAddress()).isEqualTo("2001:db8::1/mymaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void sentinelListWithNullMemberFailsClosed() {
+    assertThat(JedisConfiguredTargets.sentinelTarget("mymaster", asList("sentinel1:26379", null)))
+        .isNull();
   }
 
   @Test

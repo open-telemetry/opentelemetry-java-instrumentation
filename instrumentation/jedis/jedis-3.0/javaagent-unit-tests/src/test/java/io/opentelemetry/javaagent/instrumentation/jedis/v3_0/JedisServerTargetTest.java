@@ -13,8 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.LinkedHashSet;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisShardInfo;
 
@@ -53,54 +51,6 @@ class JedisServerTargetTest {
   void noShards() {
     assertThat(JedisServerTarget.ofShards(null)).isNull();
     assertThat(JedisServerTarget.ofShards(emptyList())).isNull();
-  }
-
-  @Test
-  void sentinelsShareTheirMasterSuffix() {
-    RedisServerTarget target =
-        JedisServerTarget.ofSentinels("mymaster", asList("sentinel2:26380", "sentinel1:26379"));
-
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"2001:db8::1", "2001:db8::"})
-  void normalizedIpv6SentinelKeepsItsPort(String host) {
-    RedisServerTarget target =
-        JedisServerTarget.ofSentinels("mymaster", singletonList("[" + host + "]:26379"));
-
-    assertThat(target.getAddress()).isEqualTo("[" + host + "]:26379/mymaster");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void portlessStringIpv6SentinelStaysUnbracketed() {
-    RedisServerTarget target =
-        JedisServerTarget.ofSentinels("mymaster", singletonList("2001:db8::1"));
-
-    assertThat(target.getAddress()).isEqualTo("2001:db8::1/mymaster");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void sentinelsWithoutAMasterNameKeepTheSentinels() {
-    RedisServerTarget target =
-        JedisServerTarget.ofSentinels(" ", asList("sentinel1:26379", "sentinel2:26380"));
-
-    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void noSentinels() {
-    assertThat(JedisServerTarget.ofSentinels(null, null)).isNull();
-    assertThat(JedisServerTarget.ofSentinels(null, emptyList())).isNull();
-  }
-
-  @Test
-  void sentinelListWithNullMemberFailsClosed() {
-    assertThat(JedisServerTarget.ofSentinels("mymaster", asList("sentinel1:26379", null))).isNull();
   }
 
   @Test

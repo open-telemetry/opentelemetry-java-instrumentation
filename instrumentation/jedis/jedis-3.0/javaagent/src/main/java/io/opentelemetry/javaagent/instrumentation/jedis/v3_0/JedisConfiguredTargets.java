@@ -78,7 +78,7 @@ public class JedisConfiguredTargets {
         }
       }
     }
-    return JedisServerTarget.ofSentinels(masterName, endpoints);
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, masterName);
   }
 
   public static void setClusterTarget(

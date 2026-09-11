@@ -30,12 +30,6 @@ public class JedisServerTarget {
   }
 
   @Nullable
-  public static RedisServerTarget ofSentinels(
-      @Nullable String masterName, @Nullable List<String> endpoints) {
-    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, masterName);
-  }
-
-  @Nullable
   public static RedisServerTarget ofNodes(@Nullable Collection<HostAndPort> nodes) {
     if (nodes == null || nodes.isEmpty()) {
       return null;
