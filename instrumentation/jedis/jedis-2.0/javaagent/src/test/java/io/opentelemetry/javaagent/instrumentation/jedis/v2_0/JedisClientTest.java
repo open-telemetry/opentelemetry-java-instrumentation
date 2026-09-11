@@ -110,27 +110,16 @@ class JedisClientTest {
                                     ? (long) peerAddress.getPort()
                                     : null))));
 
-    if (emitStableDatabaseSemconv()) {
-      assertDurationMetric(
-          testing,
-          "io.opentelemetry.jedis-2.0",
-          DB_SYSTEM_NAME,
-          DB_OPERATION_NAME,
-          DB_NAMESPACE,
-          SERVER_ADDRESS,
-          SERVER_PORT,
-          NETWORK_PEER_ADDRESS,
-          NETWORK_PEER_PORT);
-    } else {
-      assertDurationMetric(
-          testing,
-          "io.opentelemetry.jedis-2.0",
-          DB_SYSTEM_NAME,
-          DB_OPERATION_NAME,
-          DB_NAMESPACE,
-          SERVER_ADDRESS,
-          SERVER_PORT);
-    }
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.jedis-2.0",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_NAMESPACE,
+        SERVER_ADDRESS,
+        SERVER_PORT,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT);
   }
 
   @Test
