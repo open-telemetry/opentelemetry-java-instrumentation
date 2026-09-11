@@ -29,8 +29,7 @@ public class RedissonServerTargets {
     MANAGER_TARGET.set(manager, target);
   }
 
-  public static void copy(
-      MasterSlaveConnectionManager manager, @Nullable RedisClient client) {
+  public static void copy(MasterSlaveConnectionManager manager, @Nullable RedisClient client) {
     if (client == null) {
       return;
     }

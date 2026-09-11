@@ -54,8 +54,7 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
             (InetSocketAddress) connection.getChannel().remoteAddress();
         // the redisson 3.0 client API does not expose the database index
         RedissonRequest request =
-            RedissonRequest.create(
-                remoteAddress, arg, null, RedissonServerTargets.get(connection));
+            RedissonRequest.create(remoteAddress, arg, null, RedissonServerTargets.get(connection));
         PromiseWrapper<?> promise = request.getPromiseWrapper();
         if (promise == null) {
           return null;

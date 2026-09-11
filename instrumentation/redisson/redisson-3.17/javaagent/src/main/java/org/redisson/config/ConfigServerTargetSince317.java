@@ -21,8 +21,7 @@ import javax.annotation.Nullable;
 // This helper is in the Redisson package to access package-private configuration state.
 public class ConfigServerTargetSince317 {
 
-  private static final Logger logger =
-      Logger.getLogger(ConfigServerTargetSince317.class.getName());
+  private static final Logger logger = Logger.getLogger(ConfigServerTargetSince317.class.getName());
 
   @Nullable private static final MethodHandle SERVICE_MANAGER_GET_CFG = findServiceManagerGetCfg();
 

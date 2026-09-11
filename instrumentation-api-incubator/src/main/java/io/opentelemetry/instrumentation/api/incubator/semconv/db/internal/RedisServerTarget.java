@@ -82,8 +82,7 @@ public final class RedisServerTarget {
     if (others.isEmpty()) {
       return directTarget(first);
     }
-    others.sort(
-        (left, right) -> left.renderConfigured().compareTo(right.renderConfigured()));
+    others.sort((left, right) -> left.renderConfigured().compareTo(right.renderConfigured()));
     List<Endpoint> endpoints = new ArrayList<>(others.size() + 1);
     endpoints.add(first);
     endpoints.addAll(others);

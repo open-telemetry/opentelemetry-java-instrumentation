@@ -290,8 +290,7 @@ public abstract class AbstractRedissonClientTest {
         .addSlaveAddress(redisAddressForHost(aliasHost));
     RedissonClient configuredClient = Redisson.create(config);
     try {
-      assertConfiguredTarget(
-          configuredClient, configuredServerAddress, null, host);
+      assertConfiguredTarget(configuredClient, configuredServerAddress, null, host);
     } finally {
       configuredClient.shutdown();
     }
@@ -304,8 +303,7 @@ public abstract class AbstractRedissonClientTest {
     config.useSingleServer().setAddress(redisAddressForHost(configuredHost));
     RedissonClient configuredClient = Redisson.create(config);
     try {
-      assertConfiguredTarget(
-          configuredClient, configuredHost, port, configuredHost);
+      assertConfiguredTarget(configuredClient, configuredHost, port, configuredHost);
     } finally {
       configuredClient.shutdown();
     }
@@ -340,8 +338,7 @@ public abstract class AbstractRedissonClientTest {
                                     ? stableServerAddress
                                     : legacyServerAddress),
                             equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? stableServerPort : port),
+                                SERVER_PORT, emitStableDatabaseSemconv() ? stableServerPort : port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SET configured-target ?"),
