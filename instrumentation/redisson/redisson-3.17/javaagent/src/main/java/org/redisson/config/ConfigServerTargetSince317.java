@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,6 +27,9 @@ public class ConfigServerTargetSince317 {
   @Nullable private static final MethodHandle SERVICE_MANAGER_GET_CFG = findServiceManagerGetCfg();
 
   @Nullable
+  private static final Method SINGLE_SERVER_CONFIG_GET_ADDRESS = findSingleServerConfigGetAddress();
+
+  @Nullable
   private static MethodHandle findServiceManagerGetCfg() {
     try {
       Class<?> serviceManagerClass =
@@ -37,6 +41,15 @@ public class ConfigServerTargetSince317 {
           .findVirtual(serviceManagerClass, "getCfg", MethodType.methodType(Config.class));
     } catch (ReflectiveOperationException ignored) {
       // redisson only routes the configuration through a service manager between 3.20 and 3.27
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Method findSingleServerConfigGetAddress() {
+    try {
+      return SingleServerConfig.class.getMethod("getAddress");
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }
@@ -88,8 +101,11 @@ public class ConfigServerTargetSince317 {
   // Redisson changes the single server address return type across supported versions.
   @Nullable
   private static String getAddress(SingleServerConfig config) {
+    if (SINGLE_SERVER_CONFIG_GET_ADDRESS == null) {
+      return null;
+    }
     try {
-      Object address = config.getClass().getMethod("getAddress").invoke(config);
+      Object address = SINGLE_SERVER_CONFIG_GET_ADDRESS.invoke(config);
       return address != null ? address.toString() : null;
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
