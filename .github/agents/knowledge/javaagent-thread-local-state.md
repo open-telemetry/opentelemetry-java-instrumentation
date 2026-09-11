@@ -12,10 +12,10 @@ Trace every writer, reader, and cleanup point. Check whether recursion, construc
 overlapping advice, or callbacks can write a new value while an outer value is still active. Thread
 confinement does not prevent this kind of nesting.
 
-| Lifecycle | Cleanup | Examples |
-| --------- | ------- | -------- |
-| An inner operation can replace active outer state, and the outer operation needs its state again | Restore the previous value, or remove if none existed | Mongo legacy SRV targeting, Dubbo registry capture, Spring scheduling suppression |
-| A one-shot handoff, non-nestable current-operation marker, or non-overlapping suppression flag | Remove the value | Jedis request and pipeline state, HBase client state, executor propagation, Vert.x prepared statements, Pekko remote messages, Pulsar listeners |
+| Lifecycle | Cleanup |
+| --------- | ------- |
+| An inner operation can replace active outer state, and the outer operation needs its state again | Restore the previous value, or remove if none existed |
+| A one-shot handoff, non-nestable current-operation marker, or non-overlapping suppression flag | Remove the value |
 
 A boolean does not decide the policy. A nestable suppression guard may need restoration. If no
 supported call path needs the outer value again, use `ThreadLocal.remove()` and avoid a scope object
