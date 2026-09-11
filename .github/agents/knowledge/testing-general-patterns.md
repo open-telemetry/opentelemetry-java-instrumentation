@@ -114,6 +114,14 @@ private static Stream<Arguments> testCases() {
 - If the test intentionally closes the resource mid-test or asserts behavior around explicit
   close, keep the direct close or try-with-resources in the test body.
 
+## Test Port Allocation
+
+When a test needs an available TCP port that another server or container will bind later, use
+`PortUtils.findOpenPort()` or `PortUtils.findOpenPorts(count)`. Do not implement a local probe by
+opening `new ServerSocket(0)`, reading its port, and closing it; that bypasses the repository
+allocator's coordination between parallel test processes. Keep port `0` when the same socket
+remains bound and becomes the test server.
+
 ## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
 
 When an abstract test base is shared by multiple concrete subclasses run in the same JVM
