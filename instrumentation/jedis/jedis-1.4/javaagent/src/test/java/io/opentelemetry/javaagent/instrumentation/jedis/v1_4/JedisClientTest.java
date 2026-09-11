@@ -96,13 +96,13 @@ class JedisClientTest {
   @Test
   void pooledCommand() throws ReflectiveOperationException {
     JedisPool pool = new JedisPool(host, port);
+    cleanup.deferCleanup(pool::destroy);
     try {
       pool.getClass().getMethod("setDefaultPoolWait", long.class).invoke(pool, 10_000L);
       pool.getClass().getMethod("init").invoke(pool);
     } catch (NoSuchMethodException ignored) {
       // Jedis 1.5 initializes pools in the constructor.
     }
-    cleanup.deferCleanup(pool::destroy);
     Jedis pooled = pool.getResource();
     try {
       pooled.set("pooled", "value");
