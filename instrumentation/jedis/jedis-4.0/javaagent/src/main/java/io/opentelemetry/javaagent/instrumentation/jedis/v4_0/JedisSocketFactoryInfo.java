@@ -12,6 +12,8 @@ import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisSocketFactory;
 
 public final class JedisSocketFactoryInfo {
+  private static final JedisSocketFactoryInfo UNREPRESENTABLE = new JedisSocketFactoryInfo(null);
+
   private static final VirtualField<JedisSocketFactory, JedisSocketFactoryInfo>
       SOCKET_FACTORY_INFO =
           VirtualField.find(JedisSocketFactory.class, JedisSocketFactoryInfo.class);
@@ -31,8 +33,9 @@ public final class JedisSocketFactoryInfo {
 
   public static void setConfiguredTarget(
       JedisSocketFactory socketFactory, HostAndPort hostAndPort) {
+    RedisServerTarget serverTarget = JedisSingletons.currentOrDirectTarget(hostAndPort);
     SOCKET_FACTORY_INFO.set(
         socketFactory,
-        new JedisSocketFactoryInfo(JedisSingletons.currentOrDirectTarget(hostAndPort)));
+        serverTarget == null ? UNREPRESENTABLE : new JedisSocketFactoryInfo(serverTarget));
   }
 }

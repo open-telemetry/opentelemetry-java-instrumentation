@@ -91,12 +91,12 @@ public class JedisSingletons {
   }
 
   public static void setSentinelPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
-    SENTINEL_POOL_CONFIGURED_TARGET.set(pool, new ConfiguredTarget(target));
+    SENTINEL_POOL_CONFIGURED_TARGET.set(pool, ConfiguredTarget.create(target));
   }
 
   public static void setProviderTarget(Object provider, @Nullable RedisServerTarget target) {
     if (PROVIDER_CONFIGURED_TARGET != null) {
-      PROVIDER_CONFIGURED_TARGET.set(provider, new ConfiguredTarget(target));
+      PROVIDER_CONFIGURED_TARGET.set(provider, ConfiguredTarget.create(target));
     }
   }
 
@@ -105,7 +105,7 @@ public class JedisSingletons {
     if (topologyOwner == null) {
       return;
     }
-    TOPOLOGY_CONFIGURED_TARGET.set(topologyOwner, new ConfiguredTarget(target));
+    TOPOLOGY_CONFIGURED_TARGET.set(topologyOwner, ConfiguredTarget.create(target));
   }
 
   public static void setTopologyTargetFromNodes(
@@ -132,7 +132,7 @@ public class JedisSingletons {
   }
 
   public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
-    return openConfiguredTargetScope(new ConfiguredTarget(target));
+    return openConfiguredTargetScope(ConfiguredTarget.create(target));
   }
 
   private static Scope openConfiguredTargetScope(ConfiguredTarget configuredTarget) {
@@ -228,7 +228,13 @@ public class JedisSingletons {
   private JedisSingletons() {}
 
   static final class ConfiguredTarget {
+    private static final ConfiguredTarget UNREPRESENTABLE = new ConfiguredTarget(null);
+
     @Nullable private final RedisServerTarget target;
+
+    private static ConfiguredTarget create(@Nullable RedisServerTarget target) {
+      return target == null ? UNREPRESENTABLE : new ConfiguredTarget(target);
+    }
 
     private ConfiguredTarget(@Nullable RedisServerTarget target) {
       this.target = target;
