@@ -75,6 +75,11 @@ public abstract class RedissonRequest {
     }
   }
 
+  public static RedissonRequest create(
+      @Nullable InetSocketAddress address, Object command, @Nullable Long databaseIndex) {
+    return create(address, command, databaseIndex, null);
+  }
+
   /**
    * Creates a request. The version-specific instrumentation supplies the database index and
    * configured server target because the Redisson 3.0 client API does not expose either value.
