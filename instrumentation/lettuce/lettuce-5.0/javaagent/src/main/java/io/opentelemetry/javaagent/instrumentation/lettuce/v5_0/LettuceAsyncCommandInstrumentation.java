@@ -32,14 +32,15 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SaveContextAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor(), getClass().getName() + "$InitializeCommandAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "completeExceptionally", "cancel"),
         getClass().getName() + "$RestoreContextAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class SaveContextAdvice {
+  public static class InitializeCommandAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void saveContext(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
