@@ -109,7 +109,7 @@ class LettuceClusterClientTest {
                                 emitStableDatabaseSemconv() ? configuredTarget : host),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
+                                emitStableDatabaseSemconv() ? null : (long) port))));
 
     redisServer.assertNoFailure();
   }
@@ -143,10 +143,10 @@ class LettuceClusterClientTest {
                                 emitStableDatabaseSemconv() ? configuredTarget : host),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                                emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? Long.valueOf(2) : null))));
+                                emitStableDatabaseSemconv() ? 2L : null))));
 
     redisServer.assertNoFailure();
   }
