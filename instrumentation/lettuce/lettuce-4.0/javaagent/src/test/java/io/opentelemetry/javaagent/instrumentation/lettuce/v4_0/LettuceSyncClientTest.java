@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -210,12 +209,14 @@ class LettuceSyncClientTest {
   }
 
   @Test
-  @DisabledIfSystemProperty(
-      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
-      matches = "true")
   void testPubSubCommandUsesConfiguredTarget() {
     StatefulRedisPubSubConnection<String, String> pubSubConnection = redisClient.connectPubSub();
     cleanup.deferCleanup(pubSubConnection);
+
+    if (connectionTelemetryEnabled()) {
+      testing.waitForTraces(1);
+    }
+    testing.clearData();
 
     assertThat(pubSubConnection.sync().ping()).isEqualTo("PONG");
 
@@ -235,9 +236,6 @@ class LettuceSyncClientTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  @DisabledIfSystemProperty(
-      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
-      matches = "true")
   void testMasterReplicaCommandUsesConfiguredUris() throws Exception {
     assumeTrue(emitStableDatabaseSemconv() && testLatestDeps());
 
@@ -250,7 +248,7 @@ class LettuceSyncClientTest {
                 .invoke(null, redisClient, new Utf8StringCodec(), redisUris);
     cleanup.deferCleanup(masterReplicaConnection);
 
-    testing.waitForTraces(2);
+    testing.waitForTraces(connectionTelemetryEnabled() ? 4 : 2);
     testing.clearData();
 
     assertThat(masterReplicaConnection.sync().set("MASTER_REPLICA_COMMAND_KEY", "value"))
