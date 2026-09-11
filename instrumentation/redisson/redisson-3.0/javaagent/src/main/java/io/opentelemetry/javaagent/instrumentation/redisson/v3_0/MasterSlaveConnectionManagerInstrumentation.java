@@ -72,7 +72,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Return @Nullable RedisClient client) {
-      RedissonServerTargets.copy(manager, client);
+      RedissonServerTargets.store(manager, client);
     }
   }
 }
