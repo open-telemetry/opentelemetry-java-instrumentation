@@ -175,7 +175,7 @@ class ConfigServerTargetTest {
   }
 
   @Test
-  void noConfig() {
+  void nullConfigHasNoTarget() {
     assertThat(ConfigServerTargetSince317.of(null)).isNull();
   }
 
@@ -192,7 +192,7 @@ class ConfigServerTargetTest {
   }
 
   @Test
-  void noServiceManager() {
+  void nullOrWrongTypeServiceManagerHasNoTarget() {
     assertThat(ConfigServerTargetSince317.ofServiceManager(null)).isNull();
     assertThat(ConfigServerTargetSince317.ofServiceManager("not a service manager")).isNull();
   }

@@ -168,7 +168,7 @@ class ConfigServerTargetTest {
   }
 
   @Test
-  void noConfig() {
+  void nullConfigHasNoTarget() {
     assertThat(ConfigServerTargetBefore317.of(null)).isNull();
   }
 
