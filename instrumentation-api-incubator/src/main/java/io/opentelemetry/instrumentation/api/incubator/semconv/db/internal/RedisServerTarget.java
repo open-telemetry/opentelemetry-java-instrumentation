@@ -79,15 +79,15 @@ public final class RedisServerTarget {
     if (others == null) {
       return null;
     }
-    List<String> sorted = new ArrayList<>(others.size());
-    for (Endpoint other : others) {
-      sorted.add(other.renderConfigured());
+    if (others.isEmpty()) {
+      return directTarget(first);
     }
-    sorted.sort(String::compareTo);
-    List<String> endpoints = new ArrayList<>(sorted.size() + 1);
-    endpoints.add(first.renderConfigured());
-    endpoints.addAll(sorted);
-    return createFromEndpoints(endpoints, false);
+    others.sort(
+        (left, right) -> left.renderConfigured().compareTo(right.renderConfigured()));
+    List<Endpoint> endpoints = new ArrayList<>(others.size() + 1);
+    endpoints.add(first);
+    endpoints.addAll(others);
+    return networkTarget(endpoints, false);
   }
 
   @Nullable
