@@ -71,12 +71,9 @@ class JedisSentinel30ClientTest {
   @Test
   void discoveryAndCommandsUseConfiguredTarget() {
     JedisSentinelPool pool = new JedisSentinelPool(MASTER_NAME, singleton(sentinelEndpoint));
-    Jedis jedis = pool.getResource();
-    try {
+    cleanup.deferCleanup(pool);
+    try (Jedis jedis = pool.getResource()) {
       jedis.set("key", "value");
-    } finally {
-      jedis.close();
-      pool.destroy();
     }
 
     await()
