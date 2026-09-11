@@ -64,11 +64,9 @@ class VertxRedisClientAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(VertxRedisClientRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      if (request.isServerTargetCaptured()) {
-        RedisServerTarget target = request.getServerTarget();
-        return target != null ? target.getAddress() : null;
-      }
+    if (emitStableDatabaseSemconv() && request.isServerTargetCaptured()) {
+      RedisServerTarget target = request.getServerTarget();
+      return target != null ? target.getAddress() : null;
     }
     return request.getServerAddress();
   }
@@ -76,11 +74,9 @@ class VertxRedisClientAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(VertxRedisClientRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      if (request.isServerTargetCaptured()) {
-        RedisServerTarget target = request.getServerTarget();
-        return target != null ? target.getPort() : null;
-      }
+    if (emitStableDatabaseSemconv() && request.isServerTargetCaptured()) {
+      RedisServerTarget target = request.getServerTarget();
+      return target != null ? target.getPort() : null;
     }
     return request.getServerPort();
   }
