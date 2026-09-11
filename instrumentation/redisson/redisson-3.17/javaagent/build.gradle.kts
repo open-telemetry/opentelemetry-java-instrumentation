@@ -23,7 +23,7 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("serviceManagerTest") {
+    register<JvmTestSuite>("redisson324ServiceManagerStableSemconvTest") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
