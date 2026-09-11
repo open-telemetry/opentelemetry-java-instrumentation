@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -98,20 +97,19 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
   @Test
   void asyncTraceContextPreservesReactorContextAcrossResubscriptions() throws InterruptedException {
     traceContextProvider.expectAsyncInvocations(2, Thread.currentThread());
-    AtomicReference<List<String>> values = new AtomicReference<>();
 
-    testing.runWithSpan(
-        "parent",
-        () ->
-            values.set(
+    List<String> values =
+        testing.runWithSpan(
+            "parent",
+            () ->
                 reactiveCommands
                     .get("NATIVE_TRACING_KEY")
                     .repeat(1)
                     .contextWrite(context -> context.put(USER_CONTEXT_KEY, USER_CONTEXT_VALUE))
                     .collectList()
-                    .block()));
+                    .block());
 
-    assertThat(values).hasValue(asList("value", "value"));
+    assertThat(values).containsExactly("value", "value");
     assertThat(traceContextProvider.awaitInvocations()).isTrue();
     assertThat(traceContextProvider.invocationCount()).isEqualTo(2);
     assertThat(traceContextProvider.ranOnDifferentThread()).isTrue();
