@@ -108,7 +108,7 @@ class JedisClientTest {
   @Test
   void pooledCommand() {
     JedisPool pool = new JedisPool(host, port);
-    cleanup.deferAfterAll(pool::destroy);
+    cleanup.deferCleanup(pool::destroy);
     Jedis pooled = pool.getResource();
     try {
       pooled.set("pooled", "value");
