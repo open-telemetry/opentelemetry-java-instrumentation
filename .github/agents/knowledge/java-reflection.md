@@ -24,8 +24,8 @@
 Do not choose or recommend `MethodHandle` solely for an assumed performance
 advantage. Use the design criteria above instead.
 
-When both approaches fit equally well, follow nearby precedent. Do not flag or
-convert mixed usage solely for consistency.
+Mixed use of reflection objects and method handles is not by itself a reason to
+flag or convert the code.
 
 ## Separate access from invocation
 
