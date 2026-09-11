@@ -31,6 +31,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
 
   @Override
   public void transform(TypeTransformer transformer) {
+    // Config is mutable, so capture an immutable target when the manager is constructed.
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("org.redisson.config.Config"))),
         getClass().getName() + "$ConfigArgument0ConstructorAdvice");
@@ -53,7 +54,6 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(0) @Nullable Config config) {
-      // a Config is mutable, so the target is rendered here and kept immutable
       RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetSince317.of(config));
     }
   }
