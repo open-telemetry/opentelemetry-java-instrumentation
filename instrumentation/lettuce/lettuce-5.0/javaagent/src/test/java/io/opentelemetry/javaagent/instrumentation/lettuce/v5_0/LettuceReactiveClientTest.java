@@ -161,7 +161,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void resubscribedCommandRetainsPeerCapture() {
+  void testResubscribedCommandRetainsPeerCapture() {
     Mono<String> command = reactiveCommands.set("resubscribed", "value");
     assertThat(command.block()).isEqualTo("OK");
     assertThat(command.block()).isEqualTo("OK");
@@ -202,7 +202,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void overlappingSubscriptionsUseIndependentCommands() throws Exception {
+  void testOverlappingSubscriptionsUseIndependentCommands() throws Exception {
     redisServer.execInContainer("redis-cli", "DEL", "overlapping");
     Mono<KeyValue<String, String>> command = reactiveCommands.blpop(30, "overlapping");
 
