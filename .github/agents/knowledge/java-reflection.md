@@ -1,14 +1,29 @@
 # Java reflection and method handles
 
-## Quick reference
+## Prefer direct access
 
-- Prefer a direct Java call when supported library versions expose a compatible member and ordinary
-  Java access works. This gives the compiler and muzzle a clear view of the dependency.
-- Use reflection only when compatibility, access, or runtime discovery requires it.
-- Cache reflective lookup when calls repeat. Never perform member lookup on an instrumentation hot
-  path.
-- Choose between reflection objects and method handles based on the required signature, access,
-  invocation style, and failure behavior.
+Prefer a direct Java call when supported library versions expose a compatible member and ordinary
+Java access works. This gives the compiler and muzzle a clear view of the dependency. Use reflection
+only when compatibility, access, or runtime discovery requires it.
+
+In javaagent instrumentation, a helper injected into the instrumented library's classloader under
+the library's package can directly access stable package-private members, so prefer that access over
+reflection when practical. The package name alone is not enough: the instrumentation must recognize
+the class as a helper and inject it into the target classloader. This does not grant access to
+private members.
+
+## Cache repeated lookup
+
+Flag production Java code that repeats the same reflective method lookup on a path that may execute
+more than once. Resolve the method once and cache the resulting `Method` or `MethodHandle`. Use a
+`static final` field when the declaring class is fixed.
+
+When the lookup depends on the runtime class, use `ClassValue` instead of a static map keyed by
+`Class<?>`. Static maps can keep application classloaders alive. Cache missing methods too when
+supported library versions may not provide the method.
+
+Do not apply this rule to test code or a lookup that is provably executed only once during
+initialization.
 
 ## Choose the mechanism for the job
 
@@ -36,12 +51,6 @@ require one. Use the least-privileged lookup that works.
 Do not call `setAccessible(true)` only to convert a reflection object into a `MethodHandle`. Resolve
 the handle with an appropriate lookup, or keep the reflection object when it already provides the
 required access.
-
-In javaagent instrumentation, a helper injected into the instrumented library's classloader under
-the library's package can directly access stable package-private members, so prefer that access over
-reflection when practical. The package name alone is not enough: the instrumentation must recognize
-the class as a helper and inject it into the target classloader. This does not grant access to
-private members.
 
 ## Preserve failure behavior
 
