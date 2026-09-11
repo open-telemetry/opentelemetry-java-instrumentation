@@ -10,8 +10,10 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStable
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
+  assertThat,
+  equalTo
+}
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION
@@ -22,7 +24,6 @@ import io.opentelemetry.semconv.NetworkAttributes.{
   NETWORK_PEER_PORT
 }
 import io.opentelemetry.semconv.ServerAttributes.{SERVER_ADDRESS, SERVER_PORT}
-import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.await
 import org.awaitility.core.ThrowingRunnable
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -487,8 +488,7 @@ class RediscalaConfiguredTargetTest {
           .singleElement()
           .satisfies(new Consumer[SpanData] {
             override def accept(span: SpanData): Unit =
-              OpenTelemetryAssertions
-                .assertThat(span)
+              assertThat(span)
                 .hasName(expectedSpanName)
                 .hasKind(CLIENT)
                 .hasAttributesSatisfyingExactly(
