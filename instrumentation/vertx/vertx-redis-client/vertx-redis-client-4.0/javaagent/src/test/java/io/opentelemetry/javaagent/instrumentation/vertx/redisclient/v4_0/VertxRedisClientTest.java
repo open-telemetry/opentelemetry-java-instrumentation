@@ -312,15 +312,6 @@ class VertxRedisClientTest {
     }
   }
 
-  private static boolean isVertx445OrLater() {
-    try {
-      Class.forName("io.vertx.redis.client.RedisConnectOptions");
-      return true;
-    } catch (ClassNotFoundException ignored) {
-      return false;
-    }
-  }
-
   @Test
   void trailingInvalidClusterEndpointOmitsStableTarget() {
     assumeTrue(emitStableDatabaseSemconv());
@@ -463,6 +454,15 @@ class VertxRedisClientTest {
                     .isEqualTo(Long.valueOf(port));
               }
             });
+  }
+
+  private static boolean isVertx445OrLater() {
+    try {
+      Class.forName("io.vertx.redis.client.RedisConnectOptions");
+      return true;
+    } catch (ClassNotFoundException ignored) {
+      return false;
+    }
   }
 
   @ParameterizedTest

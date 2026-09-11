@@ -45,14 +45,6 @@ class TestRedisCluster implements AutoCloseable {
     acceptThread.start();
   }
 
-  String getHost() {
-    return serverSocket.getInetAddress().getHostAddress();
-  }
-
-  int getPort() {
-    return serverSocket.getLocalPort();
-  }
-
   private void acceptConnections() {
     while (!closed) {
       try {
@@ -149,6 +141,14 @@ class TestRedisCluster implements AutoCloseable {
       failure.compareAndSet(null, error);
       write(output, "-ERR unsupported CLUSTER subcommand\r\n");
     }
+  }
+
+  String getHost() {
+    return serverSocket.getInetAddress().getHostAddress();
+  }
+
+  int getPort() {
+    return serverSocket.getLocalPort();
   }
 
   private static List<String> readCommand(DataInputStream input) throws IOException {
