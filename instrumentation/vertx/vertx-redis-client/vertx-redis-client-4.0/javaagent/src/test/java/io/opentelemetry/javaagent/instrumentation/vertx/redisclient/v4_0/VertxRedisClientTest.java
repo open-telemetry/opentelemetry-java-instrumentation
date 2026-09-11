@@ -486,7 +486,7 @@ class VertxRedisClientTest {
   }
 
   @Test
-  void dynamicOptionsSupplierOmitsStableTarget() throws Exception {
+  void dynamicOptionsSupplierOmitsStableTarget() throws ReflectiveOperationException {
     assumeTrue(hasDynamicOptionsSupplier());
 
     Class<?> connectOptionsClass =
@@ -535,7 +535,7 @@ class VertxRedisClientTest {
   }
 
   @Test
-  void staticReplicationPreservesConfiguredEndpointOrder() throws Exception {
+  void staticReplicationPreservesConfiguredEndpointOrder() throws ReflectiveOperationException {
     assumeTrue(emitStableDatabaseSemconv());
     assumeTrue(hasStaticReplicationTopology());
 
