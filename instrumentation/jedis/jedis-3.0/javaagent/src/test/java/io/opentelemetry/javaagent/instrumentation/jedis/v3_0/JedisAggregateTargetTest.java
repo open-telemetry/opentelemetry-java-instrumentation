@@ -14,12 +14,12 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.Field;
-import java.net.ServerSocket;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -175,8 +175,8 @@ class JedisAggregateTargetTest {
   }
 
   private static void startSentinelServer() throws Exception {
-    int masterPort = availablePort();
-    int sentinelPort = availablePort();
+    int masterPort = PortUtils.findOpenPort();
+    int sentinelPort = PortUtils.findOpenPort();
     String sentinelConfig =
         "port "
             + sentinelPort
@@ -205,7 +205,7 @@ class JedisAggregateTargetTest {
   }
 
   private static void startClusterServer() throws Exception {
-    clusterPort = availablePort();
+    clusterPort = PortUtils.findOpenPort();
     clusterServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
     clusterServer.setPortBindings(singletonList(clusterPort + ":6379"));
     clusterServer.withCommand(
@@ -261,12 +261,6 @@ class JedisAggregateTargetTest {
     } else {
       assertThat(span.getAttributes().get(SERVER_ADDRESS)).isNotEqualTo(configuredTarget);
       assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-    }
-  }
-
-  private static int availablePort() throws Exception {
-    try (ServerSocket socket = new ServerSocket(0)) {
-      return socket.getLocalPort();
     }
   }
 }
