@@ -152,6 +152,14 @@ subclass may have already started the container, so `withCommand` on the running
 instance is a no-op; with per-instance state each subclass mutates and starts its own
 fresh container.
 
+## Trace Assertions
+
+When a test knows the complete expected trace and span structure, use
+`InstrumentationExtension.waitAndAssertTraces(...)` with `TraceAssert` and `SpanAssert`. Do not
+call `waitForTraces(...)` and then flatten `testing.spans()` for the same exact assertion; the trace
+DSL retries the complete assertion and preserves trace grouping. Keep raw `spans()` access for
+intentionally ad hoc or cross-trace filtering that the trace DSL cannot express.
+
 ## Span Attribute Assertions
 
 - Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for
