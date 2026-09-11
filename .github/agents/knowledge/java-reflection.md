@@ -60,4 +60,5 @@ that matches the caller's catching, unwrapping, logging, and fallback behavior.
 
 Lookup and invocation failures in javaagent advice or helpers called by advice must not escape into
 application code. Follow [Javaagent advice patterns](javaagent-advice-patterns.md) for suppression
-and logging.
+and [best-effort suppressed failures](general-rules.md#javaagent-best-effort-suppressed-failures)
+for logging.
