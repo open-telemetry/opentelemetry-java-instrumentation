@@ -37,6 +37,12 @@ Do not call `setAccessible(true)` only to convert a reflection object into a `Me
 the handle with an appropriate lookup, or keep the reflection object when it already provides the
 required access.
 
+In javaagent instrumentation, a helper injected into the instrumented library's classloader under
+the library's package can directly access stable package-private members, so prefer that access over
+reflection when practical. The package name alone is not enough: the instrumentation must recognize
+the class as a helper and inject it into the target classloader. This does not grant access to
+private members.
+
 ## Preserve failure behavior
 
 `Method.invoke` wraps a target exception in `InvocationTargetException`.
