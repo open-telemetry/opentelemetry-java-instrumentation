@@ -247,7 +247,7 @@ class Jedis40ClientTest {
     }
 
     Object pool = poolClass.getConstructor(String.class, int.class).newInstance(host, port);
-    cleanup.deferAfterAll((AutoCloseable) pool);
+    cleanup.deferCleanup((AutoCloseable) pool);
     try (Jedis pooled = (Jedis) poolClass.getMethod("getResource").invoke(pool)) {
       testing.clearData();
       pooled.set("pooled", "value");
