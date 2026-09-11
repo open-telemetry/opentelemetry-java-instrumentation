@@ -79,24 +79,3 @@ failure may need different handling.
 Follow a sibling helper only when lifecycle, signatures, access, class-loader ownership, and failure
 behavior are equivalent. Mixed use of reflection objects and method handles can be the right design.
 Do not flag mixed usage or convert one form to the other solely for consistency.
-
-## Repository examples
-
-- `instrumentation/spring/spring-web/spring-web-3.1/library/src/main/java/io/opentelemetry/instrumentation/spring/web/v3_1/HeaderUtil.java`
-  probes the exact `HttpHeaders` signatures used by supported Spring versions during class
-  initialization. It caches nullable method handles and invokes them later. This is a good fit for
-  known signatures with repeated calls.
-- `instrumentation/couchbase/couchbase-2.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/couchbase/v2_0/CouchbaseConnectionStrings.java`
-  discovers methods from runtime classes because Couchbase changed connection-string types and seed
-  representations across versions. Its `ClassValue<Method>` caches preserve that dynamic discovery
-  without forcing the shapes into one `MethodType`.
-- `instrumentation/ktor/ktor-3.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/ktor/v3_0/ServerInstrumentation.java`
-  receives a target-associated `MethodHandles.Lookup` from advice and uses it to read a private
-  field whose name changed. The lookup context, rather than a general preference for handles, drives
-  this choice. By contrast,
-  `javaagent-tooling/src/main/java/io/opentelemetry/javaagent/tooling/instrumentation/indy/IndyBootstrap.java`
-  uses class-loader-specific lookup, `MethodHandle.asType`, and mutable or constant call sites. That
-  specialized linking code is not a template for ordinary compatibility helpers.
-- `instrumentation/aws-sdk/aws-sdk-2.2/library/src/main/java/io/opentelemetry/instrumentation/awssdk/v2_2/internal/AwsJsonProtocolFactoryAccess.java`
-  uses reflection once to discover and build optional AWS objects, then retains a bound method handle
-  for repeated marshaller creation. The mixed approach matches the two different lifecycles.
