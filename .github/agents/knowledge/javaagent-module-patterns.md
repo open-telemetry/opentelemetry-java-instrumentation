@@ -494,9 +494,12 @@ values it reads.
 
 `optional = true` permits the indexed argument to be absent; it does not relax type compatibility
 when the argument is present. A concretely typed optional argument still needs a compatible matcher
-for every signature that includes it. Bindings typed as `Object` or using
-`typing = Assigner.Typing.DYNAMIC` can intentionally cover broader types and do not require an exact
-type matcher, but the matcher as a whole must keep the advice binding valid.
+for every signature that includes it. A binding typed as `Object` can intentionally cover broad
+reference types and does not require an exact type matcher. `typing = Assigner.Typing.DYNAMIC`
+instead permits otherwise-incompatible assignment by inserting a runtime cast. Use it without an
+explicit type constraint only when every matched signature has a separate runtime contract that
+guarantees the value is assignable to the advice parameter. Otherwise, constrain the matcher to
+prevent `ClassCastException`.
 
 ### Rules
 
