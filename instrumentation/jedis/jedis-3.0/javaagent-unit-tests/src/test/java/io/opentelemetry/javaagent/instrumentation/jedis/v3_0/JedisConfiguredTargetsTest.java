@@ -16,25 +16,27 @@ import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
 
-class JedisSingletonsTest {
+class JedisConfiguredTargetsTest {
 
   @Test
   void replacesConnectionTargetAcrossReuse() {
     Connection connection = new Connection("first", 6379);
 
-    JedisSingletons.setConnectionTarget(connection, RedisServerTarget.ofEndpoint("first:6379"));
-    assertThat(JedisSingletons.connectionTarget(connection))
+    JedisConfiguredTargets.setConnectionTarget(
+        connection, RedisServerTarget.ofEndpoint("first:6379"));
+    assertThat(JedisConfiguredTargets.connectionTarget(connection))
         .extracting(RedisServerTarget::getAddress)
         .isEqualTo("first");
 
-    JedisSingletons.setConnectionTarget(connection, null);
-    assertThat(JedisSingletons.connectionTarget(connection)).isNull();
+    JedisConfiguredTargets.setConnectionTarget(connection, null);
+    assertThat(JedisConfiguredTargets.connectionTarget(connection)).isNull();
 
-    JedisSingletons.setConnectionTarget(connection, RedisServerTarget.ofEndpoint("second:6380"));
-    assertThat(JedisSingletons.connectionTarget(connection))
+    JedisConfiguredTargets.setConnectionTarget(
+        connection, RedisServerTarget.ofEndpoint("second:6380"));
+    assertThat(JedisConfiguredTargets.connectionTarget(connection))
         .extracting(RedisServerTarget::getAddress)
         .isEqualTo("second");
-    assertThat(JedisSingletons.connectionTarget(connection))
+    assertThat(JedisConfiguredTargets.connectionTarget(connection))
         .extracting(RedisServerTarget::getPort)
         .isEqualTo(6380);
   }
@@ -42,17 +44,18 @@ class JedisSingletonsTest {
   @Test
   void scopedTargetDoesNotReplaceConnectionTarget() {
     Connection connection = new Connection("direct", 6379);
-    JedisSingletons.setConnectionTarget(connection, RedisServerTarget.ofEndpoint("direct:6379"));
+    JedisConfiguredTargets.setConnectionTarget(
+        connection, RedisServerTarget.ofEndpoint("direct:6379"));
 
     try (Scope scope =
-        JedisSingletons.openConfiguredTargetScope(
+        JedisConfiguredTargets.openConfiguredTargetScope(
             RedisServerTarget.ofEndpoints(asList("configured-one:6379", "configured-two:6380")))) {
-      assertThat(JedisSingletons.connectionTarget(connection))
+      assertThat(JedisConfiguredTargets.connectionTarget(connection))
           .extracting(RedisServerTarget::getAddress)
           .isEqualTo("configured-one:6379,configured-two:6380");
     }
 
-    assertThat(JedisSingletons.connectionTarget(connection))
+    assertThat(JedisConfiguredTargets.connectionTarget(connection))
         .extracting(RedisServerTarget::getAddress)
         .isEqualTo("direct");
   }
@@ -60,9 +63,10 @@ class JedisSingletonsTest {
   @Test
   void parsedSentinelsUseConfiguredEndpoints() {
     Set<HostAndPort> parsedSentinels = singleton(new HostAndPort("192.0.2.1", 26379));
-    JedisSingletons.registerParsedSentinels(parsedSentinels, singleton("sentinel.example:26379"));
+    JedisConfiguredTargets.registerParsedSentinels(
+        parsedSentinels, singleton("sentinel.example:26379"));
 
-    assertThat(JedisSingletons.sentinelTarget("mymaster", parsedSentinels))
+    assertThat(JedisConfiguredTargets.sentinelTarget("mymaster", parsedSentinels))
         .extracting(RedisServerTarget::getAddress)
         .isEqualTo("sentinel.example:26379/mymaster");
   }

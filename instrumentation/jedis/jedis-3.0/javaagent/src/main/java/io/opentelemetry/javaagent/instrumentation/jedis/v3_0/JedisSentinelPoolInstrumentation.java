@@ -56,7 +56,8 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable String masterName,
         @Advice.Argument(1) @Nullable Set<?> sentinels) {
-      JedisSingletons.setPoolTarget(pool, JedisSingletons.sentinelTarget(masterName, sentinels));
+      JedisConfiguredTargets.setPoolTarget(
+          pool, JedisConfiguredTargets.sentinelTarget(masterName, sentinels));
     }
   }
 
@@ -67,7 +68,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Argument(0) @Nullable Set<?> configuredSentinels,
         @Advice.Return @Nullable Set<?> parsedSentinels) {
-      JedisSingletons.registerParsedSentinels(parsedSentinels, configuredSentinels);
+      JedisConfiguredTargets.registerParsedSentinels(parsedSentinels, configuredSentinels);
     }
   }
 
@@ -80,8 +81,9 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable Set<?> sentinels,
         @Advice.Argument(1) @Nullable String masterName) {
-      JedisSingletons.setPoolTarget(pool, JedisSingletons.sentinelTarget(masterName, sentinels));
-      return JedisSingletons.openPoolTargetScope(pool);
+      JedisConfiguredTargets.setPoolTarget(
+          pool, JedisConfiguredTargets.sentinelTarget(masterName, sentinels));
+      return JedisConfiguredTargets.openPoolTargetScope(pool);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -98,7 +100,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("this$0") Pool<?> pool) {
-      return JedisSingletons.openPoolTargetScope(pool);
+      return JedisConfiguredTargets.openPoolTargetScope(pool);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

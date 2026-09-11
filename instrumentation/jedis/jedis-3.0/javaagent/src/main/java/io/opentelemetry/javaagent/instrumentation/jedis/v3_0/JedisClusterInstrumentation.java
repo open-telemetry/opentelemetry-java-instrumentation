@@ -60,7 +60,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This JedisClusterConnectionHandler handler,
         @Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
-      JedisSingletons.setClusterTarget(handler, JedisServerTargets.ofNodes(nodes));
+      JedisConfiguredTargets.setClusterTarget(handler, JedisServerTargets.ofNodes(nodes));
     }
   }
 
@@ -69,7 +69,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
-      return JedisSingletons.openConfiguredTargetScope(JedisServerTargets.ofNodes(nodes));
+      return JedisConfiguredTargets.openConfiguredTargetScope(JedisServerTargets.ofNodes(nodes));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -86,7 +86,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
-      return JedisSingletons.openClusterTargetScope(handler);
+      return JedisConfiguredTargets.openClusterTargetScope(handler);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -103,7 +103,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
-      return JedisSingletons.openClusterTargetScope(handler);
+      return JedisConfiguredTargets.openClusterTargetScope(handler);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

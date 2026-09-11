@@ -37,7 +37,7 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Pool<?> pool) {
-      JedisSingletons.capturePoolTarget(pool);
+      JedisConfiguredTargets.capturePoolTarget(pool);
     }
   }
 
@@ -47,7 +47,7 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This Pool<?> pool) {
-      return JedisSingletons.openPoolTargetScope(pool);
+      return JedisConfiguredTargets.openPoolTargetScope(pool);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

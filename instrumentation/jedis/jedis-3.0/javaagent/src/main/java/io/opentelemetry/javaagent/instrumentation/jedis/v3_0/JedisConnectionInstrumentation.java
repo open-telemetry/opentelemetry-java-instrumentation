@@ -52,7 +52,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   public static class SetTargetAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Connection connection) {
-      JedisSingletons.captureConnectionTarget(
+      JedisConfiguredTargets.captureConnectionTarget(
           connection, RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort()));
     }
   }
