@@ -54,23 +54,23 @@ class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonReq
   @Nullable
   @Override
   public String getServerAddress(RedissonRequest request) {
-    RedisServerTarget target = request.getServerTarget();
-    if (emitStableDatabaseSemconv()) {
-      return target != null ? target.getAddress() : null;
+    if (!emitStableDatabaseSemconv()) {
+      InetSocketAddress address = request.getAddress();
+      return address != null ? address.getHostString() : null;
     }
-    InetSocketAddress address = request.getAddress();
-    return address != null ? address.getHostString() : null;
+    RedisServerTarget target = request.getServerTarget();
+    return target != null ? target.getAddress() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RedissonRequest request) {
-    RedisServerTarget target = request.getServerTarget();
-    if (emitStableDatabaseSemconv()) {
-      return target != null ? target.getPort() : null;
+    if (!emitStableDatabaseSemconv()) {
+      InetSocketAddress address = request.getAddress();
+      return address != null ? address.getPort() : null;
     }
-    InetSocketAddress address = request.getAddress();
-    return address != null ? address.getPort() : null;
+    RedisServerTarget target = request.getServerTarget();
+    return target != null ? target.getPort() : null;
   }
 
   @Override
