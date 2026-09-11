@@ -86,7 +86,7 @@ public class JedisSingletons {
 
   @Nullable
   static RedisServerTarget createServerTarget(@Nullable List<JedisShardInfo> shards) {
-    if (shards == null || shards.isEmpty()) {
+    if (shards == null) {
       return null;
     }
     List<String> endpoints = new ArrayList<>(shards.size());
