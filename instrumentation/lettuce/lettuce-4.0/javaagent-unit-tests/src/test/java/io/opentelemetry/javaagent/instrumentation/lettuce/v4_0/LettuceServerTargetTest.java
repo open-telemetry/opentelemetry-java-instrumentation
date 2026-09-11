@@ -35,7 +35,7 @@ class LettuceServerTargetTest {
   }
 
   @Test
-  void noUri() {
+  void nullUriHasNoTarget() {
     assertThat(LettuceServerTarget.of(null)).isNull();
   }
 
@@ -191,7 +191,7 @@ class LettuceServerTargetTest {
   }
 
   @Test
-  void noClusterUris() {
+  void nullOrEmptyUriListHasNoTarget() {
     assertThat(LettuceServerTarget.ofUris(null)).isNull();
     assertThat(LettuceServerTarget.ofUris(emptyList())).isNull();
   }
