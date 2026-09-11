@@ -2,9 +2,10 @@
 
 ## Quick Reference
 
-- Use when: javaagent advice or helpers place temporary state in a `ThreadLocal`
-- Review focus: call-path evidence for nesting, reentrancy, overlapping advice, callbacks, and
-  cleanup on every exit path
+- Use when: designing, implementing, or reviewing temporary `ThreadLocal` state in javaagent advice
+  or helpers
+- Focus: call-path evidence for nesting, reentrancy, overlapping advice, callbacks, and cleanup on
+  every exit path
 - Default: remove a one-shot value after use; restore a previous value only when the state is a
   stack-like dynamic scope
 
@@ -73,12 +74,12 @@ One-shot examples include:
 A boolean does not decide the policy. A nestable suppression guard may need restoration, while a
 non-overlapping suppression flag should be removed.
 
-## Review Guidance
+## Implementation and Review Guidance
 
-Review every writer, reader, and cleanup point for the `ThreadLocal`. Ask for previous-value
-restoration only when a supported call path can write an inner value while an outer value is active
-and later needs the outer value again. Recursion, nesting, constructor chaining, overlapping advice,
-and callbacks can create that requirement.
+Trace every writer, reader, and cleanup point for the `ThreadLocal`. Preserve the previous value only
+when a supported call path can write an inner value while an outer value is active and later needs
+the outer value again. Recursion, nesting, constructor chaining, overlapping advice, and callbacks
+can create that requirement.
 
 If no such path exists, prefer removal and the smaller state model. Ensure cleanup runs for normal
 and exceptional exits in either case.
