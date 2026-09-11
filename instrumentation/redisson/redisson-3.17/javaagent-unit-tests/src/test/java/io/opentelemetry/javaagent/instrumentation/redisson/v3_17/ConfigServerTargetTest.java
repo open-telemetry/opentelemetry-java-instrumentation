@@ -105,8 +105,10 @@ class ConfigServerTargetTest {
         .setMasterAddress("redis://master:6379")
         .addSlaveAddress("redis://replica2:6381", "rediss://replica1:6380");
 
-    assertThat(ConfigServerTargetSince317.of(config).getAddress())
-        .isEqualTo("master:6379,replica1:6380,replica2:6381");
+    RedisServerTarget target = ConfigServerTargetSince317.of(config);
+
+    assertThat(target.getAddress()).isEqualTo("master:6379,replica1:6380,replica2:6381");
+    assertThat(target.getPort()).isNull();
   }
 
   @ParameterizedTest
