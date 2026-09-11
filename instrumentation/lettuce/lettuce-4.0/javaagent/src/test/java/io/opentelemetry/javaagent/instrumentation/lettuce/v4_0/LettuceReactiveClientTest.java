@@ -186,7 +186,7 @@ class LettuceReactiveClientTest {
   }
 
   @Test
-  void resubscribedCommandUsesEachDispatchedPeer() {
+  void testResubscribedCommandUsesEachDispatchedPeer() {
     Observable<String> command = reactiveCommands.get("TESTKEY");
 
     assertThat(command.toBlocking().single()).isEqualTo("TESTVAL");
