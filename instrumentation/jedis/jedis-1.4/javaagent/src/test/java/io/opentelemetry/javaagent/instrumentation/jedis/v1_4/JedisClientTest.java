@@ -94,7 +94,7 @@ class JedisClientTest {
   }
 
   @Test
-  void pooledCommand() throws Exception {
+  void pooledCommand() throws ReflectiveOperationException {
     JedisPool pool = new JedisPool(host, port);
     try {
       pool.getClass().getMethod("setDefaultPoolWait", long.class).invoke(pool, 10_000L);
