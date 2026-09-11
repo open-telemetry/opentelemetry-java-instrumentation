@@ -35,6 +35,7 @@ import io.lettuce.core.output.StatusOutput;
 import io.lettuce.core.protocol.CommandArgs;
 import io.lettuce.core.protocol.CommandType;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -141,7 +142,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
 
     assertThat(future.get(10, SECONDS)).isEqualTo("TESTVAL");
 
-    testing.waitAndAssertTraces(
+    Consumer<TraceAssert> traceAssertion =
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -182,23 +183,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET resubscribed ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET resubscribed ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
+    testing.waitAndAssertTraces(traceAssertion, traceAssertion);
   }
 
   @Test
@@ -230,24 +216,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     assertThat(first.get(10, SECONDS).getKey()).isEqualTo("overlapping");
     assertThat(second.get(10, SECONDS).getKey()).isEqualTo("overlapping");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "BLPOP " + host + ":" + port : "BLPOP")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
-                            equalTo(maybeStable(DB_OPERATION), "BLPOP"))),
+    Consumer<TraceAssert> traceAssertion =
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -265,6 +234,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
                             equalTo(maybeStable(DB_OPERATION), "BLPOP"))));
+    testing.waitAndAssertTraces(traceAssertion, traceAssertion);
   }
 
   @Test
