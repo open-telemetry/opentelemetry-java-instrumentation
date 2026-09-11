@@ -68,6 +68,26 @@ public class LettuceFluxTerminationHandler
     }
   }
 
+  @Override
+  public void accept(Signal<?> signal) {
+    if (!expectsResponse) {
+      return;
+    }
+    if (signal.getType() == SignalType.ON_COMPLETE || signal.getType() == SignalType.ON_ERROR) {
+      finishSpan(/* isCommandCancelled= */ false, signal.getThrowable());
+    } else if (signal.getType() == SignalType.ON_NEXT) {
+      ++numResults;
+    }
+  }
+
+  @Override
+  public void onCancel() {
+    if (!expectsResponse) {
+      return;
+    }
+    finishSpan(/* isCommandCancelled= */ true, null);
+  }
+
   private void finishSpan(boolean isCommandCancelled, @Nullable Throwable throwable) {
     // A terminal signal on the netty event loop can race a cancellation from the subscribing
     // thread, and both reach this method.
@@ -88,25 +108,5 @@ public class LettuceFluxTerminationHandler
           "Failed to end this.context, LettuceFluxTerminationHandler cannot find this.context "
               + "because it probably wasn't started.");
     }
-  }
-
-  @Override
-  public void accept(Signal<?> signal) {
-    if (!expectsResponse) {
-      return;
-    }
-    if (signal.getType() == SignalType.ON_COMPLETE || signal.getType() == SignalType.ON_ERROR) {
-      finishSpan(/* isCommandCancelled= */ false, signal.getThrowable());
-    } else if (signal.getType() == SignalType.ON_NEXT) {
-      ++numResults;
-    }
-  }
-
-  @Override
-  public void onCancel() {
-    if (!expectsResponse) {
-      return;
-    }
-    finishSpan(/* isCommandCancelled= */ true, null);
   }
 }

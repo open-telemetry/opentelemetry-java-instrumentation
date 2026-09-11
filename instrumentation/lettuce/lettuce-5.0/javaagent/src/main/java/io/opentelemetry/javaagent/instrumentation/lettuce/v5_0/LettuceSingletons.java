@@ -177,22 +177,6 @@ public class LettuceSingletons {
   }
 
   @Nullable
-  private static LettuceCommandPeer findCommandPeer(RedisCommand<?, ?, ?> command) {
-    RedisCommand<?, ?, ?> current = command;
-    while (current != null) {
-      LettuceCommandPeer peer = COMMAND_PEER.get(current);
-      if (peer != null) {
-        return peer;
-      }
-      current =
-          current instanceof DecoratedCommand
-              ? ((DecoratedCommand<?, ?, ?>) current).getDelegate()
-              : null;
-    }
-    return null;
-  }
-
-  @Nullable
   static SocketAddress commandPeerAddress(RedisCommand<?, ?, ?> command) {
     // A command that does not expect a response has its span ended synchronously in
     // DefaultEndpoint.write, while the channel write that records the peer runs later on the netty
@@ -223,6 +207,22 @@ public class LettuceSingletons {
       }
     }
     return batchPeerAddress;
+  }
+
+  @Nullable
+  private static LettuceCommandPeer findCommandPeer(RedisCommand<?, ?, ?> command) {
+    RedisCommand<?, ?, ?> current = command;
+    while (current != null) {
+      LettuceCommandPeer peer = COMMAND_PEER.get(current);
+      if (peer != null) {
+        return peer;
+      }
+      current =
+          current instanceof DecoratedCommand
+              ? ((DecoratedCommand<?, ?, ?>) current).getDelegate()
+              : null;
+    }
+    return null;
   }
 
   private LettuceSingletons() {}

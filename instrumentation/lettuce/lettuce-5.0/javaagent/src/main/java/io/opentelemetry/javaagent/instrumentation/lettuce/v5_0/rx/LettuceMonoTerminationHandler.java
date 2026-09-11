@@ -57,17 +57,6 @@ public class LettuceMonoTerminationHandler<T> implements LettuceReactiveCommandH
     }
   }
 
-  private void endSpan(@Nullable Throwable throwable) {
-    if (!expectsResponse || !spanEnded.compareAndSet(false, true)) {
-      return;
-    }
-    if (context != null && command != null) {
-      instrumenter().end(context, command, null, throwable);
-    } else {
-      logger.fine("Failed to finish this.span because it probably wasn't started.");
-    }
-  }
-
   @Override
   public void onCancel() {
     endSpan(null);
@@ -83,5 +72,16 @@ public class LettuceMonoTerminationHandler<T> implements LettuceReactiveCommandH
    */
   private Mono<T> finishSpanOnTerminal(Mono<T> publisher) {
     return publisher.doOnSuccess(value -> endSpan(null)).doOnError(this::endSpan);
+  }
+
+  private void endSpan(@Nullable Throwable throwable) {
+    if (!expectsResponse || !spanEnded.compareAndSet(false, true)) {
+      return;
+    }
+    if (context != null && command != null) {
+      instrumenter().end(context, command, null, throwable);
+    } else {
+      logger.fine("Failed to finish this.span because it probably wasn't started.");
+    }
   }
 }
