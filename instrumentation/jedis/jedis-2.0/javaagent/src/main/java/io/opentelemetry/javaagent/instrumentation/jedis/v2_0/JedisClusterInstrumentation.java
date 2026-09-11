@@ -120,5 +120,4 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
       }
     }
   }
-
 }

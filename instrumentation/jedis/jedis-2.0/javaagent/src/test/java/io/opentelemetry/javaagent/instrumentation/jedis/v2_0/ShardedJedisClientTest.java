@@ -106,9 +106,7 @@ class ShardedJedisClientTest {
                             equalTo(
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? configuredTarget : shardHost),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : shardPort))),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : shardPort))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -125,9 +123,7 @@ class ShardedJedisClientTest {
                             equalTo(
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? configuredTarget : shardHost),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : shardPort))));
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : shardPort))));
   }
 
   @Test
@@ -156,7 +152,6 @@ class ShardedJedisClientTest {
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? configuredTarget : selectedHost),
                             equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : selectedPort))));
+                                SERVER_PORT, emitStableDatabaseSemconv() ? null : selectedPort))));
   }
 }
