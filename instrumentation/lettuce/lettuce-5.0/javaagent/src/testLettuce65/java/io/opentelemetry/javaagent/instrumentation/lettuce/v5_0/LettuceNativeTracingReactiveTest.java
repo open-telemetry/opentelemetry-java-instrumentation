@@ -137,7 +137,7 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
             .contextWrite(context -> context.put(USER_CONTEXT_KEY, USER_CONTEXT_VALUE))
             .subscribe();
 
-    assertThat(traceContextProvider.awaitInvocation()).isTrue();
+    assertThat(traceContextProvider.awaitInvocations()).isTrue();
     beforeNativeSubscription.dispose();
     assertThat(traceContextProvider.awaitCancellation()).isTrue();
     assertThat(testing.spans()).isEmpty();
@@ -254,10 +254,6 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
     }
 
     boolean awaitInvocations() throws InterruptedException {
-      return invocations.await(10, SECONDS);
-    }
-
-    boolean awaitInvocation() throws InterruptedException {
       return invocations.await(10, SECONDS);
     }
 
