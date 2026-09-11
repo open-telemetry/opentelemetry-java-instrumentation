@@ -290,6 +290,7 @@ public abstract class AbstractRedissonClientTest {
         .addSlaveAddress(redisAddressForHost(aliasHost));
     RedissonClient configuredClient = Redisson.create(config);
     try {
+      testing.waitForTraces(2);
       assertConfiguredTarget(configuredClient, configuredServerAddress, null, host);
     } finally {
       configuredClient.shutdown();
@@ -303,6 +304,7 @@ public abstract class AbstractRedissonClientTest {
     config.useSingleServer().setAddress(redisAddressForHost(configuredHost));
     RedissonClient configuredClient = Redisson.create(config);
     try {
+      testing.waitForTraces(1);
       assertConfiguredTarget(configuredClient, configuredHost, port, configuredHost);
     } finally {
       configuredClient.shutdown();
