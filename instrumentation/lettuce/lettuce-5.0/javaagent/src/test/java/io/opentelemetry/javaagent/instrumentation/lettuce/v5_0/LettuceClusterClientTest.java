@@ -26,7 +26,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
@@ -283,9 +282,7 @@ class LettuceClusterClientTest {
     StatefulRedisClusterConnection<String, String> redirectConnection = client.connect();
     cleanup.deferCleanup(redirectConnection);
     assertThat(redirectConnection.sync().set("REDIRECT_WARMUP_KEY", "value")).isEqualTo("OK");
-    await()
-        .untilAsserted(
-            () -> assertThat(testing.spans()).anyMatch(span -> span.getName().startsWith("SET")));
+    testing.waitForTraces(emitStableDatabaseSemconv() ? 1 : 2);
     source.resetRedirect();
     testing.clearData();
 
