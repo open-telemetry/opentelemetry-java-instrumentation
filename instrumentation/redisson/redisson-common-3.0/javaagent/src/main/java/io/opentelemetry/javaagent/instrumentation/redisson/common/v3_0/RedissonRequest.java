@@ -75,11 +75,6 @@ public abstract class RedissonRequest {
     }
   }
 
-  public static RedissonRequest create(
-      @Nullable InetSocketAddress address, Object command, @Nullable Long databaseIndex) {
-    return create(address, command, databaseIndex, null);
-  }
-
   /**
    * Creates a request with values supplied by version-specific instrumentation when they are not
    * uniformly exposed across supported Redisson versions.
