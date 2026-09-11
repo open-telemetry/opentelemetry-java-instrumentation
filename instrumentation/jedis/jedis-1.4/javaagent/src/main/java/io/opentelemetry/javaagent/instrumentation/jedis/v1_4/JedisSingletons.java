@@ -83,7 +83,7 @@ public class JedisSingletons {
   }
 
   @Nullable
-  static RedisServerTarget createServerTarget(@Nullable List<JedisShardInfo> shards) {
+  public static RedisServerTarget createServerTarget(@Nullable List<JedisShardInfo> shards) {
     if (shards == null) {
       return null;
     }
