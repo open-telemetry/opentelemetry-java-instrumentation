@@ -135,14 +135,7 @@ class ConfigServerTargetTest {
     return Stream.of(
         argumentSet("null", (Object) null),
         argumentSet("malformed", URI.create("redis://replica:99999")),
-        argumentSet(
-            "unsupported conversion",
-            new Object() {
-              @Override
-              public String toString() {
-                throw new IllegalStateException("conversion failed");
-              }
-            }));
+        argumentSet("unsupported type", new Object()));
   }
 
   @Test
