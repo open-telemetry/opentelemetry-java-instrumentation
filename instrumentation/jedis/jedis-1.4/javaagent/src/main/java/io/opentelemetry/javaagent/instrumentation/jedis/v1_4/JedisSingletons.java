@@ -68,9 +68,8 @@ public class JedisSingletons {
     if (target == null) {
       return null;
     }
-    RedisServerTarget previous = configuredTarget.get();
     configuredTarget.set(target);
-    return new ConfiguredTargetScope(previous);
+    return new ConfiguredTargetScope();
   }
 
   @Nullable
@@ -97,19 +96,11 @@ public class JedisSingletons {
 
   public static class ConfiguredTargetScope implements AutoCloseable {
 
-    @Nullable private final RedisServerTarget previous;
-
-    private ConfiguredTargetScope(@Nullable RedisServerTarget previous) {
-      this.previous = previous;
-    }
+    private ConfiguredTargetScope() {}
 
     @Override
     public void close() {
-      if (previous == null) {
-        configuredTarget.remove();
-      } else {
-        configuredTarget.set(previous);
-      }
+      configuredTarget.remove();
     }
   }
 
