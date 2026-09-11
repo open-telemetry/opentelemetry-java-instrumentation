@@ -40,8 +40,7 @@ public class LettuceServerTargets {
         endpoints.add(null);
         continue;
       }
-      RedisServerTarget target = of((RedisURI) redisUri);
-      endpoints.add(target == null ? null : render(target));
+      endpoints.add(endpoint((RedisURI) redisUri));
     }
     return RedisServerTarget.ofEndpoints(endpoints);
   }
@@ -58,7 +57,19 @@ public class LettuceServerTargets {
     return ofUris(redisUris);
   }
 
-  private static String render(RedisServerTarget target) {
+  @Nullable
+  private static String endpoint(RedisURI redisUri) {
+    if (!isSentinel(redisUri)) {
+      String socket = redisUri.getSocket();
+      return socket != null
+          ? socket
+          : RedisServerTarget.endpoint(redisUri.getHost(), redisUri.getPort());
+    }
+
+    RedisServerTarget target = ofSentinel(redisUri);
+    if (target == null) {
+      return null;
+    }
     Integer port = target.getPort();
     return port == null
         ? target.getAddress()
