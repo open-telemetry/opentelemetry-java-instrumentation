@@ -470,6 +470,32 @@ sufficient for optimization.
 - The `typeMatcher()` uses `named(...)` or `namedOneOf(...)` — no override needed because
   name-only matchers are already fast (they check only the class name, no bytecode).
 
+### Method matchers and advice bindings
+
+The method matcher must prove compatibility for every non-optional, statically typed value that the
+advice reads. For each `@Advice.Argument(n)`, normally include a compatible
+`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature. Apply the
+same rule to a concretely typed `@Advice.Return` with `returns(...)`.
+
+When supported signatures use different concrete subtypes accepted by the advice's common
+supertype, match the hierarchy:
+
+```java
+named("pool")
+    .and(takesArguments(3))
+    .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
+    .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool"))))
+```
+
+Match argument positions that the advice does not bind only when they distinguish an intended
+overload or supported-version signature. Do not restate unrelated arguments, and do not bind unused
+arguments merely to mirror the matcher. The matcher selects methods; the advice signature lists the
+values it reads.
+
+Broad bindings such as `optional = true`, `Object`, or `typing = Assigner.Typing.DYNAMIC` can be
+intentional. They do not require an exact type matcher, but the matcher as a whole must keep the
+advice binding valid.
+
 ### Rules
 
 - Do not flag or change the visibility of advice classes.
