@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
@@ -41,6 +43,9 @@ public class RedissonServerTargets {
 
   @Nullable
   public static RedisServerTarget get(RedisConnection connection) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
     RedisClient client = connection.getRedisClient();
     return client != null ? CLIENT_TARGET.get(client) : null;
   }
