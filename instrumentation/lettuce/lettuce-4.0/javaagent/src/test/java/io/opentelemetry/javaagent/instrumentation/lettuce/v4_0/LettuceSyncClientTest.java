@@ -237,7 +237,8 @@ class LettuceSyncClientTest {
   @SuppressWarnings("unchecked")
   @Test
   void testMasterReplicaCommandUsesConfiguredUris() throws Exception {
-    assumeTrue(emitStableDatabaseSemconv() && testLatestDeps());
+    assumeTrue(emitStableDatabaseSemconv());
+    assumeTrue(testLatestDeps());
 
     List<RedisURI> redisUris =
         asList(RedisURI.create(embeddedDbUri), RedisURI.create(embeddedDbUri));
