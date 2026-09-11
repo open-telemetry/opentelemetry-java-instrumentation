@@ -9,34 +9,47 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class LettuceServerTargetTest {
 
-  @Test
-  void standaloneNetworkTargets() {
-    RedisServerTarget service =
-        LettuceServerTarget.of(RedisURI.create("redis://cache.service.consul:6379/2"));
-    RedisServerTarget ipv4 = LettuceServerTarget.of(RedisURI.create("redis://192.0.2.1:6380"));
-    RedisServerTarget ipv6 = LettuceServerTarget.of(RedisURI.create("redis://[::1]:6381"));
+  @ParameterizedTest
+  @MethodSource("standaloneNetworkTargets")
+  void standaloneNetworkTarget(
+      RedisURI redisUri, String expectedAddress, Integer expectedPort) {
+    RedisServerTarget target = LettuceServerTarget.of(redisUri);
 
-    assertThat(service).isNotNull();
-    assertThat(ipv4).isNotNull();
-    assertThat(ipv6).isNotNull();
-    assertThat(service.getAddress()).isEqualTo("cache.service.consul");
-    assertThat(service.getPort()).isNull();
-    assertThat(ipv4.getAddress()).isEqualTo("192.0.2.1");
-    assertThat(ipv4.getPort()).isEqualTo(6380);
-    assertThat(ipv6.getAddress()).isEqualTo("::1");
-    assertThat(ipv6.getPort()).isEqualTo(6381);
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(expectedAddress);
+    assertThat(target.getPort()).isEqualTo(expectedPort);
   }
 
-  @Test
-  void nullUriHasNoTarget() {
-    assertThat(LettuceServerTarget.of(null)).isNull();
+  private static Stream<Arguments> standaloneNetworkTargets() {
+    return Stream.of(
+        argumentSet(
+            "service address omits the default port",
+            RedisURI.create("redis://cache.service.consul:6379/2"),
+            "cache.service.consul",
+            null),
+        argumentSet(
+            "IPv4 address keeps a non-default port",
+            RedisURI.create("redis://192.0.2.1:6380"),
+            "192.0.2.1",
+            6380),
+        argumentSet(
+            "IPv6 address loses brackets",
+            RedisURI.create("redis://[::1]:6381"),
+            "::1",
+            6381));
   }
 
   @Test
@@ -64,24 +77,18 @@ class LettuceServerTargetTest {
     assertThat(target.getPort()).isNull();
   }
 
-  @Test
-  void blankOrUnsafeSentinelMasterNameDropsSuffixButKeepsSentinels() {
-    RedisURI blankMaster =
+  @ParameterizedTest
+  @ValueSource(strings = {"  ", "master,name"})
+  void invalidSentinelMasterNameDropsSuffixButKeepsSentinels(String masterName) {
+    RedisURI redisUri =
         RedisURI.Builder.sentinel("sentinel2", 26380).withSentinel("sentinel1", 26379).build();
-    blankMaster.setSentinelMasterId("  ");
-    RedisURI unsafeMaster =
-        RedisURI.Builder.sentinel("sentinel2", 26380).withSentinel("sentinel1", 26379).build();
-    unsafeMaster.setSentinelMasterId("master,name");
+    redisUri.setSentinelMasterId(masterName);
 
-    RedisServerTarget blankTarget = LettuceServerTarget.of(blankMaster);
-    RedisServerTarget unsafeTarget = LettuceServerTarget.of(unsafeMaster);
+    RedisServerTarget target = LettuceServerTarget.of(redisUri);
 
-    assertThat(blankTarget).isNotNull();
-    assertThat(unsafeTarget).isNotNull();
-    assertThat(blankTarget.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
-    assertThat(blankTarget.getPort()).isNull();
-    assertThat(unsafeTarget.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
-    assertThat(unsafeTarget.getPort()).isNull();
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
+    assertThat(target.getPort()).isNull();
   }
 
   @Test
@@ -130,19 +137,24 @@ class LettuceServerTargetTest {
     assertThat(target.getPort()).isNull();
   }
 
-  @Test
-  void invalidMemberFailsClosed() {
+  @ParameterizedTest
+  @MethodSource("invalidUriLists")
+  void invalidUriListHasNoTarget(Iterable<?> redisUris) {
+    assertThat(LettuceServerTarget.ofUris(redisUris)).isNull();
+  }
+
+  private static Stream<Arguments> invalidUriLists() {
     RedisURI invalid = RedisURI.create("redis://node2:7001");
     invalid.setHost("invalid,host");
 
-    assertThat(LettuceServerTarget.ofUris(asList(RedisURI.create("redis://node1:7000"), invalid)))
-        .isNull();
-    assertThat(
-            LettuceServerTarget.ofUris(
-                asList(RedisURI.create("redis://node1:7000"), "unsupported")))
-        .isNull();
-    assertThat(LettuceServerTarget.ofUris(asList(RedisURI.create("redis://node1:7000"), null)))
-        .isNull();
+    return Stream.of(
+        argumentSet("null list", (Object) null),
+        argumentSet("empty list", emptyList()),
+        argumentSet("unsafe host", asList(RedisURI.create("redis://node1:7000"), invalid)),
+        argumentSet(
+            "unsupported member",
+            asList(RedisURI.create("redis://node1:7000"), "unsupported")),
+        argumentSet("null member", asList(RedisURI.create("redis://node1:7000"), null)));
   }
 
   @Test
@@ -188,11 +200,5 @@ class LettuceServerTargetTest {
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock");
     assertThat(target.getPort()).isNull();
-  }
-
-  @Test
-  void nullOrEmptyUriListHasNoTarget() {
-    assertThat(LettuceServerTarget.ofUris(null)).isNull();
-    assertThat(LettuceServerTarget.ofUris(emptyList())).isNull();
   }
 }
