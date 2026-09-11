@@ -12,10 +12,10 @@ import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.JedisShardInfo;
 
-public class JedisServerTargets {
+class JedisServerTargets {
 
   @Nullable
-  public static RedisServerTarget ofShards(@Nullable List<JedisShardInfo> shards) {
+  static RedisServerTarget ofShards(@Nullable List<JedisShardInfo> shards) {
     if (shards == null || shards.isEmpty()) {
       return null;
     }
@@ -28,14 +28,14 @@ public class JedisServerTargets {
   }
 
   @Nullable
-  public static RedisServerTarget ofSentinels(
+  static RedisServerTarget ofSentinels(
       @Nullable String masterName, @Nullable Collection<?> sentinels) {
     return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
         endpointStrings(sentinels), masterName);
   }
 
   @Nullable
-  public static RedisServerTarget ofNodes(@Nullable Collection<?> nodes) {
+  static RedisServerTarget ofNodes(@Nullable Collection<?> nodes) {
     return RedisServerTarget.ofUnorderedEndpoints(endpointStrings(nodes));
   }
 

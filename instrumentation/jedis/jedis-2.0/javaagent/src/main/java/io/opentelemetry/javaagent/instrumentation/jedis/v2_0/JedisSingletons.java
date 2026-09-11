@@ -70,7 +70,7 @@ public class JedisSingletons {
     return instrumenter;
   }
 
-  public static void captureConnectionTarget(Connection connection) {
+  static void captureConnectionTarget(Connection connection) {
     RedisServerTarget target = Context.current().get(CURRENT_CONFIGURED_TARGET);
     if (target == null) {
       target = RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort());
@@ -80,19 +80,19 @@ public class JedisSingletons {
     }
   }
 
-  public static void capturePoolTarget(Pool<?> pool) {
+  static void capturePoolTarget(Pool<?> pool) {
     RedisServerTarget target = Context.current().get(CURRENT_CONFIGURED_TARGET);
     if (target != null) {
       POOL_TARGET.set(pool, target);
     }
   }
 
-  public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
+  static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
     POOL_TARGET.set(pool, target);
   }
 
   @Nullable
-  public static Scope openPoolTargetScope(Pool<?> pool) {
+  static Scope openPoolTargetScope(Pool<?> pool) {
     return openConfiguredTargetScope(POOL_TARGET.get(pool));
   }
 
