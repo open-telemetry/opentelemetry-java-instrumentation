@@ -15,11 +15,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Field;
-import java.net.ServerSocket;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
@@ -169,8 +169,8 @@ class JedisAggregateTargetTest {
   }
 
   private static void startSentinelServer() throws Exception {
-    int masterPort = availablePort();
-    int sentinelPort = availablePort();
+    int masterPort = PortUtils.findOpenPort();
+    int sentinelPort = PortUtils.findOpenPort();
     String sentinelConfig =
         "port "
             + sentinelPort
@@ -199,7 +199,7 @@ class JedisAggregateTargetTest {
   }
 
   private static void startClusterServer() throws Exception {
-    int clusterPort = availablePort();
+    int clusterPort = PortUtils.findOpenPort();
     clusterServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
     clusterServer.setPortBindings(singletonList(clusterPort + ":6379"));
     clusterServer.withCommand(
@@ -245,12 +245,6 @@ class JedisAggregateTargetTest {
             .getConstructor(Set.class)
             .newInstance(nodes);
     cleanup.deferAfterAll(() -> cluster.getClass().getMethod("close").invoke(cluster));
-  }
-
-  private static int availablePort() throws Exception {
-    try (ServerSocket socket = new ServerSocket(0)) {
-      return socket.getLocalPort();
-    }
   }
 
   private static boolean classPresent(String className) {
