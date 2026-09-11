@@ -60,13 +60,13 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
             builder.visit(new TopologyRefreshTaskVisitor()));
     transformer.applyAdviceToMethod(
-        named("initializeSlotsCache").and(takesArgument(0, named("java.util.Set"))),
+        named("initializeSlotsCache").and(takesArgument(0, Set.class)),
         getClass().getName() + "$InitializeClusterAdvice");
     transformer.applyAdviceToMethod(
-        named("initialize").and(takesArgument(0, named("java.util.List"))),
+        named("initialize").and(takesArgument(0, List.class)),
         getClass().getName() + "$InitializeShardsAdvice");
     transformer.applyAdviceToMethod(
-        named("initSentinels").and(takesArgument(0, named("java.util.Set"))),
+        named("initSentinels").and(takesArgument(0, Set.class)),
         getClass().getName() + "$InitializeSentinelsAdvice");
     transformer.applyAdviceToMethod(
         named("run")
