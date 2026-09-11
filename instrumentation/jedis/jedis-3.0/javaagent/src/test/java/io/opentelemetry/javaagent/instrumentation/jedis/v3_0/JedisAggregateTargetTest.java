@@ -28,6 +28,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import redis.clients.jedis.BinaryJedisCluster;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.JedisClusterConnectionHandler;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisSentinelPool;
 
 class JedisAggregateTargetTest {
 
@@ -44,7 +51,7 @@ class JedisAggregateTargetTest {
   private static String sentinelEndpoint;
 
   private static GenericContainer<?> clusterServer;
-  private static Object cluster;
+  private static JedisCluster cluster;
   private static String clusterTarget;
   private static String clusterHost;
   private static int clusterPort;
@@ -56,18 +63,14 @@ class JedisAggregateTargetTest {
   }
 
   @Test
-  void sentinelDiscoveryAndCommandsUseConfiguredTarget() throws Exception {
-    Class<?> poolClass = Class.forName("redis.clients.jedis.JedisSentinelPool");
-    Object pool =
-        poolClass
-            .getConstructor(String.class, Set.class)
-            .newInstance(MASTER_NAME, singleton(sentinelEndpoint));
-    Object jedis = poolClass.getMethod("getResource").invoke(pool);
+  void sentinelDiscoveryAndCommandsUseConfiguredTarget() {
+    JedisSentinelPool pool = new JedisSentinelPool(MASTER_NAME, singleton(sentinelEndpoint));
+    Jedis jedis = pool.getResource();
     try {
-      jedis.getClass().getMethod("set", String.class, String.class).invoke(jedis, "key", "value");
+      jedis.set("key", "value");
     } finally {
-      jedis.getClass().getMethod("close").invoke(jedis);
-      poolClass.getMethod("destroy").invoke(pool);
+      jedis.close();
+      pool.destroy();
     }
 
     await()
@@ -122,26 +125,18 @@ class JedisAggregateTargetTest {
 
   @Test
   void clusterRefreshAndCommandsUseConfiguredTarget() throws Exception {
-    assertThat(
-            cluster
-                .getClass()
-                .getMethod("set", String.class, String.class)
-                .invoke(cluster, "key", "value"))
-        .isEqualTo("OK");
+    assertThat(cluster.set("key", "value")).isEqualTo("OK");
 
-    Field handlerField =
-        Class.forName("redis.clients.jedis.BinaryJedisCluster")
-            .getDeclaredField("connectionHandler");
+    Field handlerField = BinaryJedisCluster.class.getDeclaredField("connectionHandler");
     handlerField.setAccessible(true);
-    Object handler = handlerField.get(cluster);
+    JedisClusterConnectionHandler handler =
+        (JedisClusterConnectionHandler) handlerField.get(cluster);
 
-    Class<?> jedisClass = Class.forName("redis.clients.jedis.Jedis");
-    Object unavailable =
-        jedisClass.getConstructor(String.class, int.class).newInstance(clusterHost, 1);
+    Jedis unavailable = new Jedis(clusterHost, 1);
     try {
-      handler.getClass().getMethod("renewSlotCache", jedisClass).invoke(handler, unavailable);
+      handler.renewSlotCache(unavailable);
     } finally {
-      jedisClass.getMethod("close").invoke(unavailable);
+      unavailable.close();
     }
 
     await()
@@ -180,22 +175,13 @@ class JedisAggregateTargetTest {
   }
 
   @Test
-  void clusterNodePoolsUseConfiguredTarget() throws Exception {
-    Map<?, ?> clusterNodes =
-        (Map<?, ?>) cluster.getClass().getMethod("getClusterNodes").invoke(cluster);
-    Object pool = clusterNodes.get(CLUSTER_NODE_HOST + ":" + clusterPort);
+  void clusterNodePoolsUseConfiguredTarget() {
+    Map<String, JedisPool> clusterNodes = cluster.getClusterNodes();
+    JedisPool pool = clusterNodes.get(CLUSTER_NODE_HOST + ":" + clusterPort);
     assertThat(pool).isNotNull();
 
-    Object jedis = pool.getClass().getMethod("getResource").invoke(pool);
-    try {
-      assertThat(
-              jedis
-                  .getClass()
-                  .getMethod("set", String.class, String.class)
-                  .invoke(jedis, "pool-key", "value"))
-          .isEqualTo("OK");
-    } finally {
-      jedis.getClass().getMethod("close").invoke(jedis);
+    try (Jedis jedis = pool.getResource()) {
+      assertThat(jedis.set("pool-key", "value")).isEqualTo("OK");
     }
 
     await()
@@ -217,7 +203,7 @@ class JedisAggregateTargetTest {
                         }));
   }
 
-  private static void startSentinelServer() throws Exception {
+  private static void startSentinelServer() {
     int masterPort = PortUtils.findOpenPort();
     int sentinelPort = PortUtils.findOpenPort();
     String sentinelConfig =
@@ -280,20 +266,12 @@ class JedisAggregateTargetTest {
             });
 
     clusterHost = clusterServer.getHost();
-    Class<?> hostAndPortClass = Class.forName("redis.clients.jedis.HostAndPort");
-    Object selected =
-        hostAndPortClass
-            .getConstructor(String.class, int.class)
-            .newInstance(clusterHost, clusterPort);
-    Object unavailable =
-        hostAndPortClass.getConstructor(String.class, int.class).newInstance(clusterHost, 1);
-    Set<Object> nodes = new LinkedHashSet<>(asList(selected, unavailable));
+    HostAndPort selected = new HostAndPort(clusterHost, clusterPort);
+    HostAndPort unavailable = new HostAndPort(clusterHost, 1);
+    Set<HostAndPort> nodes = new LinkedHashSet<>(asList(selected, unavailable));
     clusterTarget = clusterHost + ":1," + clusterHost + ":" + clusterPort;
 
-    cluster =
-        Class.forName("redis.clients.jedis.JedisCluster")
-            .getConstructor(Set.class)
-            .newInstance(nodes);
-    cleanup.deferAfterAll(() -> cluster.getClass().getMethod("close").invoke(cluster));
+    cluster = new JedisCluster(nodes);
+    cleanup.deferAfterAll(cluster);
   }
 }
