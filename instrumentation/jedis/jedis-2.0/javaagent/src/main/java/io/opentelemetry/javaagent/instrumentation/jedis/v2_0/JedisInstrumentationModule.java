@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
@@ -24,8 +25,6 @@ public class JedisInstrumentationModule extends InstrumentationModule
 
   private static final String CLUSTER_TARGET_ACCESSOR =
       "io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterTargetAccessor";
-  private static final String REDIS_SERVER_TARGET =
-      "io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget";
 
   public JedisInstrumentationModule() {
     super("jedis", "jedis-2.0");
@@ -47,7 +46,7 @@ public class JedisInstrumentationModule extends InstrumentationModule
   @Override
   public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
     virtualFieldRegistrar.accept(
-        "redis.clients.jedis.JedisClusterConnectionHandler", REDIS_SERVER_TARGET);
+        "redis.clients.jedis.JedisClusterConnectionHandler", RedisServerTarget.class.getName());
   }
 
   @Override
