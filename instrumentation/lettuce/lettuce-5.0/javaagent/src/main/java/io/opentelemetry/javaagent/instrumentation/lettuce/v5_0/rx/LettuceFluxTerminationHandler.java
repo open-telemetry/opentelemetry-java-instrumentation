@@ -68,7 +68,7 @@ public class LettuceFluxTerminationHandler
     }
   }
 
-  private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
+  private void finishSpan(boolean isCommandCancelled, @Nullable Throwable throwable) {
     // A terminal signal on the netty event loop can race a cancellation from the subscribing
     // thread, and both reach this method.
     if (!spanEnded.compareAndSet(false, true)) {
