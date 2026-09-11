@@ -30,6 +30,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -284,7 +285,7 @@ class VertxRedisClientTest extends AbstractVertxRedisClientTargetTest {
   void concurrentClientsKeepDistinctConfiguredTargets() throws Exception {
     assumeTrue(emitStableDatabaseSemconv());
     String secondHost = host.toUpperCase(Locale.ROOT);
-    assumeTrue(!secondHost.equals(host));
+    assumeFalse(secondHost.equals(host));
 
     Redis firstClient = Redis.createClient(vertx, "redis://" + host + ":" + port);
     Redis secondClient = Redis.createClient(vertx, "redis://" + secondHost + ":" + port);
