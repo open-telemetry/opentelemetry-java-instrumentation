@@ -183,7 +183,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET resubscribed ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+                            equalTo(maybeStable(DB_OPERATION), "SET")));
     testing.waitAndAssertTraces(traceAssertion, traceAssertion);
   }
 
@@ -233,7 +233,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "BLPOP overlapping 30"),
-                            equalTo(maybeStable(DB_OPERATION), "BLPOP"))));
+                            equalTo(maybeStable(DB_OPERATION), "BLPOP")));
     testing.waitAndAssertTraces(traceAssertion, traceAssertion);
   }
 
