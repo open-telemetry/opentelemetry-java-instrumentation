@@ -35,13 +35,13 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor()
-            .and(takesArgument(0, named("java.lang.String")))
-            .and(takesArgument(1, named("java.util.Set"))),
+            .and(takesArgument(0, String.class))
+            .and(takesArgument(1, Set.class)),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("initSentinels")
-            .and(takesArgument(0, named("java.util.Set")))
-            .and(takesArgument(1, named("java.lang.String"))),
+            .and(takesArgument(0, Set.class))
+            .and(takesArgument(1, String.class)),
         getClass().getName() + "$InitializeAdvice");
     transformer.applyAdviceToMethod(
         named("initMaster").and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
