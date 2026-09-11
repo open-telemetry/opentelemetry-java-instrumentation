@@ -168,6 +168,13 @@ fresh container.
   is already an `int` expression or variable. The assertion API already has an
   `equalTo(AttributeKey<Long>, int)` overload, so `equalTo(longKey("iteration"), iteration)` is
   preferred over `equalTo(longKey("iteration"), (long) iteration)`.
+- Keep a `long` coercion when an `int` value is one branch of a nullable conditional passed to
+  `equalTo(AttributeKey<Long>, ...)`. Without `(long)` or an equivalent `Long` conversion, Java
+  boxes the conditional as `Integer`, which does not match the `Long` attribute key:
+
+  ```java
+  equalTo(SERVER_PORT, enabled ? (long) port : null)
+  ```
 
 ## Metric Assertions
 
