@@ -48,7 +48,7 @@ class JedisSentinel40ClientTest {
   private static int replicaPort;
 
   @BeforeAll
-  static void setup() throws Exception {
+  static void setup() {
     assumeTrue(classPresent("redis.clients.jedis.JedisSentinelPool"));
 
     int masterPort = PortUtils.findOpenPort();
