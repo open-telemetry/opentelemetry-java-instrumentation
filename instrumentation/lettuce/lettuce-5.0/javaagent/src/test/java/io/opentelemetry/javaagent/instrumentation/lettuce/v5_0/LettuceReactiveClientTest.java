@@ -142,7 +142,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
 
     assertThat(future.get(10, SECONDS)).isEqualTo("TESTVAL");
 
-    Consumer<TraceAssert> traceAssertion =
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -167,7 +167,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     assertThat(command.block()).isEqualTo("OK");
     assertThat(command.block()).isEqualTo("OK");
 
-    testing.waitAndAssertTraces(
+    Consumer<TraceAssert> traceAssertion =
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
