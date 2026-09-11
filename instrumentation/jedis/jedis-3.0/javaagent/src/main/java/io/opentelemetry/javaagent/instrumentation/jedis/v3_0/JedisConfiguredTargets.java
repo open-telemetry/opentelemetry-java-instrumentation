@@ -36,7 +36,7 @@ public class JedisConfiguredTargets {
       ContextKey.named("opentelemetry-jedis-configured-target");
 
   public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
-    POOL_TARGET.set(pool, new ConfiguredTarget(target));
+    POOL_TARGET.set(pool, ConfiguredTarget.create(target));
   }
 
   public static void capturePoolTarget(Pool<?> pool) {
@@ -68,7 +68,7 @@ public class JedisConfiguredTargets {
 
   public static void setClusterTarget(
       JedisClusterConnectionHandler handler, @Nullable RedisServerTarget target) {
-    CLUSTER_TARGET.set(handler, new ConfiguredTarget(target));
+    CLUSTER_TARGET.set(handler, ConfiguredTarget.create(target));
   }
 
   @Nullable
@@ -85,7 +85,7 @@ public class JedisConfiguredTargets {
 
   public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
     return Context.current()
-        .with(CURRENT_CONFIGURED_TARGET, new ConfiguredTarget(target))
+        .with(CURRENT_CONFIGURED_TARGET, ConfiguredTarget.create(target))
         .makeCurrent();
   }
 
@@ -94,7 +94,7 @@ public class JedisConfiguredTargets {
     if (connection == null) {
       return;
     }
-    CONNECTION_TARGET.set(connection, new ConfiguredTarget(target));
+    CONNECTION_TARGET.set(connection, ConfiguredTarget.create(target));
   }
 
   public static void captureConnectionTarget(
@@ -117,7 +117,13 @@ public class JedisConfiguredTargets {
   private JedisConfiguredTargets() {}
 
   private static final class ConfiguredTarget {
+    private static final ConfiguredTarget UNREPRESENTABLE = new ConfiguredTarget(null);
+
     @Nullable private final RedisServerTarget target;
+
+    private static ConfiguredTarget create(@Nullable RedisServerTarget target) {
+      return target == null ? UNREPRESENTABLE : new ConfiguredTarget(target);
+    }
 
     private ConfiguredTarget(@Nullable RedisServerTarget target) {
       this.target = target;
