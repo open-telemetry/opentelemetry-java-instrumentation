@@ -94,7 +94,7 @@ class JedisClientTest {
   }
 
   @Test
-  void pooledCommand() throws ReflectiveOperationException {
+  void pooledCommand() throws Exception {
     JedisPool pool = new JedisPool(host, port);
     cleanup.deferCleanup(pool::destroy);
     try {
