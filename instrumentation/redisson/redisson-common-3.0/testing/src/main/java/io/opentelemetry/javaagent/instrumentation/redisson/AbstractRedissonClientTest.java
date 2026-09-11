@@ -135,7 +135,7 @@ public abstract class AbstractRedissonClientTest {
       // ignored
     }
     SingleServerConfig singleServerConfig = config.useSingleServer();
-    singleServerConfig.setAddress(redisAddress(host));
+    singleServerConfig.setAddress(redisAddressForHost(host));
     singleServerConfig.setTimeout(30_000);
     singleServerConfig.setDatabase(database);
     if (connectionMinimumIdleSize != null) {
@@ -153,7 +153,7 @@ public abstract class AbstractRedissonClientTest {
     return config;
   }
 
-  private String redisAddress(String serverHost) {
+  private String redisAddressForHost(String serverHost) {
     // Newer versions of redisson require scheme, older versions forbid it.
     return (useRedisProtocol() ? "redis://" : "") + serverHost + ":" + port;
   }
@@ -286,8 +286,8 @@ public abstract class AbstractRedissonClientTest {
     Config config = new Config();
     config
         .useMasterSlaveServers()
-        .setMasterAddress(redisAddress(host))
-        .addSlaveAddress(redisAddress(aliasHost));
+        .setMasterAddress(redisAddressForHost(host))
+        .addSlaveAddress(redisAddressForHost(aliasHost));
     RedissonClient configuredClient = Redisson.create(config);
     try {
       assertConfiguredTarget(
@@ -301,7 +301,7 @@ public abstract class AbstractRedissonClientTest {
   void configuredSingleServerTarget() {
     String configuredHost = host.equals(ip) ? "localhost" : ip;
     Config config = new Config();
-    config.useSingleServer().setAddress(redisAddress(configuredHost));
+    config.useSingleServer().setAddress(redisAddressForHost(configuredHost));
     RedissonClient configuredClient = Redisson.create(config);
     try {
       assertConfiguredTarget(
