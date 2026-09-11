@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -37,7 +36,10 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SetTargetAdvice");
     transformer.applyAdviceToMethod(
-        namedOneOf("setHost", "setPort").and(takesArguments(1)),
+        named("setHost").and(takesArguments(1)).and(takesArgument(0, String.class)),
+        getClass().getName() + "$SetTargetAdvice");
+    transformer.applyAdviceToMethod(
+        named("setPort").and(takesArguments(1)).and(takesArgument(0, int.class)),
         getClass().getName() + "$SetTargetAdvice");
 
     transformer.applyAdviceToMethod(
