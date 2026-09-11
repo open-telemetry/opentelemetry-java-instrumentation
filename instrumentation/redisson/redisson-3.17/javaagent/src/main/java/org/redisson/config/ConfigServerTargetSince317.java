@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,7 +25,8 @@ public class ConfigServerTargetSince317 {
   @Nullable private static final MethodHandle SERVICE_MANAGER_GET_CFG = findServiceManagerGetCfg();
 
   @Nullable
-  private static final Method SINGLE_SERVER_CONFIG_GET_ADDRESS = findSingleServerConfigGetAddress();
+  private static final MethodHandle SINGLE_SERVER_CONFIG_GET_ADDRESS =
+      findSingleServerConfigGetAddress();
 
   @Nullable
   private static MethodHandle findServiceManagerGetCfg() {
@@ -45,10 +45,11 @@ public class ConfigServerTargetSince317 {
   }
 
   @Nullable
-  private static Method findSingleServerConfigGetAddress() {
+  private static MethodHandle findSingleServerConfigGetAddress() {
     try {
-      return SingleServerConfig.class.getMethod("getAddress");
-    } catch (NoSuchMethodException ignored) {
+      return MethodHandles.publicLookup()
+          .unreflect(SingleServerConfig.class.getMethod("getAddress"));
+    } catch (ReflectiveOperationException ignored) {
       return null;
     }
   }
@@ -106,8 +107,8 @@ public class ConfigServerTargetSince317 {
     try {
       Object address = SINGLE_SERVER_CONFIG_GET_ADDRESS.invoke(config);
       return address != null ? address.toString() : null;
-    } catch (ReflectiveOperationException e) {
-      logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed to read the configured Redisson single-server address", t);
       return null;
     }
   }
