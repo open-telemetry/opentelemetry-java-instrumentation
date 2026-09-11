@@ -24,6 +24,7 @@ import io.opentelemetry.semconv.NetworkAttributes.{
   NETWORK_PEER_PORT
 }
 import io.opentelemetry.semconv.ServerAttributes.{SERVER_ADDRESS, SERVER_PORT}
+import org.assertj.core.api.Assertions
 import org.awaitility.Awaitility.await
 import org.awaitility.core.ThrowingRunnable
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -152,7 +153,7 @@ class RediscalaConfiguredTargetTest {
         "-c",
         s"redis-cli CONFIG SET cluster-announce-ip $clusterAddress && redis-cli CONFIG SET cluster-announce-port $clusterPort && redis-cli CONFIG SET cluster-allow-reads-when-down yes && redis-cli CLUSTER ADDSLOTS $$(seq 0 16383)"
       )
-      assertThat(setup.getExitCode).isZero
+      Assertions.assertThat(setup.getExitCode).isZero
       val hosts = Seq(alternateHost(clusterHost), clusterHost)
       val cluster = classOf[RedisCluster].getConstructors
         .find(_.getParameterCount == 4)
@@ -166,7 +167,9 @@ class RediscalaConfiguredTargetTest {
         .asInstanceOf[RedisCluster]
       try {
         val result = cluster.get[String]("cluster-target")
-        assertThat(Await.result(result, Duration("3 second")).isEmpty).isTrue
+        Assertions
+          .assertThat(Await.result(result, Duration("3 second")).isEmpty)
+          .isTrue
         assertConfiguredTargetSpan(
           hosts.sorted
             .map(serverHost => s"$serverHost:$clusterPort")
@@ -399,7 +402,7 @@ class RediscalaConfiguredTargetTest {
   private def awaitMutablePoolConnection(pool: RedisClientMutablePool): Unit = {
     await().untilAsserted(new ThrowingRunnable {
       override def run(): Unit =
-        assertThat(pool.getNextConnection.isDefined).isTrue()
+        Assertions.assertThat(pool.getNextConnection.isDefined).isTrue()
     })
   }
 
@@ -480,7 +483,8 @@ class RediscalaConfiguredTargetTest {
         val expectedSpanName =
           if (serverSuffix == null) operationName
           else s"$operationName $serverSuffix"
-        assertThat(testing.spans(): java.lang.Iterable[SpanData])
+        Assertions
+          .assertThat(testing.spans(): java.lang.Iterable[SpanData])
           .filteredOn(new Predicate[SpanData] {
             override def test(span: SpanData): Boolean =
               span.getName == expectedSpanName
