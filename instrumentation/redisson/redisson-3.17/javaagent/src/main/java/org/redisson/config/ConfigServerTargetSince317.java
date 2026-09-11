@@ -39,7 +39,7 @@ public class ConfigServerTargetSince317 {
               ConfigServerTargetSince317.class.getClassLoader());
       return MethodHandles.publicLookup()
           .findVirtual(serviceManagerClass, "getCfg", MethodType.methodType(Config.class));
-    } catch (ReflectiveOperationException ignored) {
+    } catch (ReflectiveOperationException | RuntimeException ignored) {
       // redisson only routes the configuration through a service manager between 3.20 and 3.27
       return null;
     }
@@ -49,7 +49,7 @@ public class ConfigServerTargetSince317 {
   private static Method findSingleServerConfigGetAddress() {
     try {
       return SingleServerConfig.class.getMethod("getAddress");
-    } catch (NoSuchMethodException ignored) {
+    } catch (ReflectiveOperationException | RuntimeException ignored) {
       return null;
     }
   }
@@ -107,7 +107,7 @@ public class ConfigServerTargetSince317 {
     try {
       Object address = SINGLE_SERVER_CONFIG_GET_ADDRESS.invoke(config);
       return address != null ? address.toString() : null;
-    } catch (ReflectiveOperationException e) {
+    } catch (ReflectiveOperationException | RuntimeException e) {
       logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
       return null;
     }

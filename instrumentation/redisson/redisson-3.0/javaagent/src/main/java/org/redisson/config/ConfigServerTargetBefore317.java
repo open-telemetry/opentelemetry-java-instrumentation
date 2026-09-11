@@ -43,7 +43,7 @@ public class ConfigServerTargetBefore317 {
   private static Method findConfigMethod(String methodName) {
     try {
       return Config.class.getDeclaredMethod(methodName);
-    } catch (NoSuchMethodException ignored) {
+    } catch (ReflectiveOperationException | RuntimeException ignored) {
       return null;
     }
   }
@@ -52,7 +52,7 @@ public class ConfigServerTargetBefore317 {
   private static Method findPublicMethod(Class<?> declaringClass, String methodName) {
     try {
       return declaringClass.getMethod(methodName);
-    } catch (NoSuchMethodException ignored) {
+    } catch (ReflectiveOperationException | RuntimeException ignored) {
       return null;
     }
   }
@@ -102,7 +102,7 @@ public class ConfigServerTargetBefore317 {
     }
     try {
       return SINGLE_SERVER_CONFIG_GET_ADDRESS.invoke(config);
-    } catch (ReflectiveOperationException e) {
+    } catch (ReflectiveOperationException | RuntimeException e) {
       logger.log(FINE, "Failed to read the configured Redisson single-server address", e);
       return null;
     }
@@ -123,7 +123,7 @@ public class ConfigServerTargetBefore317 {
       return addresses instanceof Collection
           ? RedisServerTarget.ofUnorderedEndpoints(addressList((Collection<?>) addresses))
           : null;
-    } catch (ReflectiveOperationException e) {
+    } catch (ReflectiveOperationException | RuntimeException e) {
       logger.log(FINE, "Failed to read the configured Redisson servers", e);
       return null;
     }
@@ -137,7 +137,7 @@ public class ConfigServerTargetBefore317 {
     }
     try {
       return MASTER_SLAVE_SERVERS_CONFIG_GET_MASTER_ADDRESS.invoke(config);
-    } catch (ReflectiveOperationException e) {
+    } catch (ReflectiveOperationException | RuntimeException e) {
       logger.log(FINE, "Failed to read the configured Redisson master address", e);
       return null;
     }
