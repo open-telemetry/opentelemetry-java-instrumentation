@@ -56,7 +56,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 @DisabledIfSystemProperty(
     named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
     matches = "true")
@@ -94,6 +93,7 @@ class LettuceClusterClientTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void syncBatchReactiveAndPubSubCommandsUseConfiguredTarget() throws Exception {
     RedisAdvancedClusterCommands<String, String> syncCommands = connection.sync();
     assertThat(syncCommands.set("CLUSTER_COMMAND_KEY", "value")).isEqualTo("OK");
