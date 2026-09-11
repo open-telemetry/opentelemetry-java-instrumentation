@@ -492,9 +492,11 @@ overload or supported-version signature. Do not restate unrelated arguments, and
 arguments merely to mirror the matcher. The matcher selects methods; the advice signature lists the
 values it reads.
 
-Broad bindings such as `optional = true`, `Object`, or `typing = Assigner.Typing.DYNAMIC` can be
-intentional. They do not require an exact type matcher, but the matcher as a whole must keep the
-advice binding valid.
+`optional = true` permits the indexed argument to be absent; it does not relax type compatibility
+when the argument is present. A concretely typed optional argument still needs a compatible matcher
+for every signature that includes it. Bindings typed as `Object` or using
+`typing = Assigner.Typing.DYNAMIC` can intentionally cover broader types and do not require an exact
+type matcher, but the matcher as a whole must keep the advice binding valid.
 
 ### Rules
 
