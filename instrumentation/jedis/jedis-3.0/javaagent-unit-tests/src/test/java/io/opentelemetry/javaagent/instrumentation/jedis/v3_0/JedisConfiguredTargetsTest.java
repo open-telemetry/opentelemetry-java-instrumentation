@@ -61,10 +61,10 @@ class JedisConfiguredTargetsTest {
   }
 
   @Test
-  void parsedSentinelsUseConfiguredEndpoints() {
-    Set<HostAndPort> parsedSentinels = singleton(new HostAndPort("192.0.2.1", 26379));
-    JedisConfiguredTargets.registerParsedSentinels(
-        parsedSentinels, singleton("sentinel.example:26379"));
+  void parsedSentinelUsesOriginalEndpoint() {
+    HostAndPort parsedSentinel = new HostAndPort("192.0.2.1", 26379);
+    JedisConfiguredTargets.captureOriginalEndpoint(parsedSentinel, "sentinel.example:26379");
+    Set<HostAndPort> parsedSentinels = singleton(parsedSentinel);
 
     assertThat(JedisConfiguredTargets.sentinelTarget("mymaster", parsedSentinels))
         .extracting(RedisServerTarget::getAddress)

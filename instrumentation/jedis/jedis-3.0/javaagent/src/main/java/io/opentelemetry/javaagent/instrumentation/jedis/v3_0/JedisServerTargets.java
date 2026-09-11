@@ -37,8 +37,7 @@ public class JedisServerTargets {
       endpoints = new ArrayList<>(sentinels.size());
       for (Object sentinel : sentinels) {
         if (sentinel instanceof HostAndPort) {
-          HostAndPort hostAndPort = (HostAndPort) sentinel;
-          endpoints.add(RedisServerTarget.endpoint(hostAndPort.getHost(), hostAndPort.getPort()));
+          endpoints.add(JedisConfiguredTargets.sentinelEndpoint((HostAndPort) sentinel));
         } else if (sentinel instanceof String) {
           endpoints.add(RedisServerTarget.normalizeHostAndPort((String) sentinel));
         } else {
