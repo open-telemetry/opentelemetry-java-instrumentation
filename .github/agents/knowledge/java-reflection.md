@@ -21,9 +21,11 @@
 | Compatibility code discovers changing API shapes, receives reflection objects, or inspects member metadata | `Method`, `Constructor`, or `Field` |
 | The caller deliberately handles `InvocationTargetException` | `Method` or `Constructor` |
 
-Do not claim that `MethodHandle` is always faster. Performance depends on the lookup lifetime,
-handle shape, adaptation, JVM optimization, and call site. Require a concrete design reason or a
-measurement.
+Do not choose or recommend `MethodHandle` solely for an assumed performance
+advantage. Use the design criteria above instead.
+
+When both approaches fit equally well, follow nearby precedent. Do not flag or
+convert mixed usage solely for consistency.
 
 ## Separate access from invocation
 
@@ -44,9 +46,3 @@ that matches the caller's catching, unwrapping, logging, and fallback behavior.
 Lookup and invocation failures in javaagent advice or helpers called by advice must not escape into
 application code. Follow [Javaagent advice patterns](javaagent-advice-patterns.md) for suppression
 and logging.
-
-## Treat consistency as a tiebreaker
-
-Follow a sibling helper only when lifecycle, signatures, access, class-loader ownership, and failure
-behavior are equivalent. Mixed use of reflection objects and method handles can be the right design.
-Do not flag mixed usage or convert one form to the other solely for consistency.
