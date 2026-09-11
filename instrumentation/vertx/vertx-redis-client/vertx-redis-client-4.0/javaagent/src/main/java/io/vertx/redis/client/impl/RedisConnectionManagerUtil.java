@@ -19,13 +19,13 @@ public class RedisConnectionManagerUtil {
     TARGET_FIELD.set((RedisConnectionManager) manager, target);
   }
 
+  public static void setServerTargetThreadLocal(Object manager) {
+    serverTargetThreadLocal.set(getServerTarget(manager));
+  }
+
   @Nullable
   public static RedisServerTarget getServerTarget(Object manager) {
     return TARGET_FIELD.get((RedisConnectionManager) manager);
-  }
-
-  public static void setServerTargetThreadLocal(Object manager) {
-    serverTargetThreadLocal.set(getServerTarget(manager));
   }
 
   public static void clearServerTargetThreadLocal() {
