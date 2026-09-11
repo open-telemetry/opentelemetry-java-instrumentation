@@ -55,7 +55,7 @@ class Jedis23ClusterCommandTest {
       this.port = port;
     }
 
-    public String run() {
+    private String run() {
       return execute();
     }
 
