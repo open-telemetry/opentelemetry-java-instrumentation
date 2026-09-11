@@ -47,16 +47,16 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         namedOneOf("getConnection", "getConnectionFromSlot")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisSlotBasedConnectionHandler")))
             .and(returns(named("redis.clients.jedis.Jedis"))),
-        getClass().getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$TargetScopeAdvice");
     transformer.applyAdviceToMethod(
         named("getConnectionFromNode")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
             .and(returns(named("redis.clients.jedis.Jedis"))),
-        getClass().getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$TargetScopeAdvice");
     transformer.applyAdviceToMethod(
         named("renewSlotCache")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler"))),
-        getClass().getName() + "$RenewSlotCacheAdvice");
+        getClass().getName() + "$TargetScopeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -104,7 +104,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class GetConnectionAdvice {
+  public static class TargetScopeAdvice {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -121,21 +121,4 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
-  public static class RenewSlotCacheAdvice {
-
-    @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @NoMuzzle
-    public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
-      return JedisClusterTargetAccessor.openTargetScope(handler);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      if (scope != null) {
-        scope.close();
-      }
-    }
-  }
 }
