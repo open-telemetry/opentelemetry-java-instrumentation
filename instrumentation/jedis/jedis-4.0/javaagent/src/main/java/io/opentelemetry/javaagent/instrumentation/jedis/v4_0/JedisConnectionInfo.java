@@ -57,12 +57,12 @@ class JedisConnectionInfo {
   }
 
   @Nullable
-  Long getDatabaseIndex() {
-    return databaseIndex;
+  RedisServerTarget getServerTarget() {
+    return serverTarget;
   }
 
   @Nullable
-  RedisServerTarget getServerTarget() {
-    return serverTarget;
+  Long getDatabaseIndex() {
+    return databaseIndex;
   }
 }
