@@ -14,14 +14,14 @@ import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import org.junit.jupiter.api.Test;
 
-class LettuceServerTargetsTest {
+class LettuceServerTargetTest {
 
   @Test
   void standaloneNetworkTargets() {
     RedisServerTarget service =
-        LettuceServerTargets.of(RedisURI.create("redis://cache.service.consul:6379/2"));
-    RedisServerTarget ipv4 = LettuceServerTargets.of(RedisURI.create("redis://192.0.2.1:6380"));
-    RedisServerTarget ipv6 = LettuceServerTargets.of(RedisURI.create("redis://[::1]:6381"));
+        LettuceServerTarget.of(RedisURI.create("redis://cache.service.consul:6379/2"));
+    RedisServerTarget ipv4 = LettuceServerTarget.of(RedisURI.create("redis://192.0.2.1:6380"));
+    RedisServerTarget ipv6 = LettuceServerTarget.of(RedisURI.create("redis://[::1]:6381"));
 
     assertThat(service.getAddress()).isEqualTo("cache.service.consul");
     assertThat(service.getPort()).isNull();
@@ -33,13 +33,13 @@ class LettuceServerTargetsTest {
 
   @Test
   void noUri() {
-    assertThat(LettuceServerTargets.of(null)).isNull();
+    assertThat(LettuceServerTarget.of(null)).isNull();
   }
 
   @Test
   void unixSocketTarget() {
     RedisServerTarget target =
-        LettuceServerTargets.of(RedisURI.Builder.socket("/var/run/redis.sock").build());
+        LettuceServerTarget.of(RedisURI.Builder.socket("/var/run/redis.sock").build());
 
     assertThat(target.getAddress()).isEqualTo("/var/run/redis.sock");
     assertThat(target.getPort()).isNull();
@@ -48,7 +48,7 @@ class LettuceServerTargetsTest {
   @Test
   void sentinelTargetIncludesMasterAndPreservesDuplicates() {
     RedisServerTarget target =
-        LettuceServerTargets.of(
+        LettuceServerTarget.of(
             RedisURI.Builder.sentinel("sentinel2", 26380, "mymaster")
                 .withSentinel("sentinel1", 26379)
                 .withSentinel("sentinel2", 26380)
@@ -68,8 +68,8 @@ class LettuceServerTargetsTest {
         RedisURI.Builder.sentinel("sentinel2", 26380).withSentinel("sentinel1", 26379).build();
     unsafeMaster.setSentinelMasterId("master,name");
 
-    RedisServerTarget blankTarget = LettuceServerTargets.of(blankMaster);
-    RedisServerTarget unsafeTarget = LettuceServerTargets.of(unsafeMaster);
+    RedisServerTarget blankTarget = LettuceServerTarget.of(blankMaster);
+    RedisServerTarget unsafeTarget = LettuceServerTarget.of(unsafeMaster);
 
     assertThat(blankTarget.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380");
     assertThat(blankTarget.getPort()).isNull();
@@ -84,7 +84,7 @@ class LettuceServerTargetsTest {
             .withSentinel("sentinel1", 26379)
             .build();
 
-    RedisServerTarget target = LettuceServerTargets.ofMasterSlaveUris(singletonList(sentinel));
+    RedisServerTarget target = LettuceServerTarget.ofMasterSlaveUris(singletonList(sentinel));
 
     assertThat(target.getAddress()).isEqualTo("sentinel1:26379,sentinel2:26380/mymaster");
     assertThat(target.getPort()).isNull();
@@ -96,9 +96,9 @@ class LettuceServerTargetsTest {
     master.setSentinelMasterId("mymaster");
     RedisURI replica = RedisURI.create("redis://replica:7001");
 
-    RedisServerTarget target = LettuceServerTargets.of(master);
+    RedisServerTarget target = LettuceServerTarget.of(master);
     RedisServerTarget masterReplica =
-        LettuceServerTargets.ofMasterSlaveUris(asList(master, replica));
+        LettuceServerTarget.ofMasterSlaveUris(asList(master, replica));
 
     assertThat(target.getAddress()).isEqualTo("cache.service.consul");
     assertThat(target.getPort()).isNull();
@@ -109,7 +109,7 @@ class LettuceServerTargetsTest {
   @Test
   void orderedTargetsPreserveOrderAndDuplicates() {
     RedisServerTarget target =
-        LettuceServerTargets.ofUris(
+        LettuceServerTarget.ofUris(
             asList(
                 RedisURI.create("redis://node2:7001"),
                 RedisURI.create("redis://node1:7000"),
@@ -124,13 +124,13 @@ class LettuceServerTargetsTest {
     RedisURI invalid = RedisURI.create("redis://node2:7001");
     invalid.setHost("invalid,host");
 
-    assertThat(LettuceServerTargets.ofUris(asList(RedisURI.create("redis://node1:7000"), invalid)))
+    assertThat(LettuceServerTarget.ofUris(asList(RedisURI.create("redis://node1:7000"), invalid)))
         .isNull();
     assertThat(
-            LettuceServerTargets.ofUris(
+            LettuceServerTarget.ofUris(
                 asList(RedisURI.create("redis://node1:7000"), "unsupported")))
         .isNull();
-    assertThat(LettuceServerTargets.ofUris(asList(RedisURI.create("redis://node1:7000"), null)))
+    assertThat(LettuceServerTarget.ofUris(asList(RedisURI.create("redis://node1:7000"), null)))
         .isNull();
   }
 
@@ -138,7 +138,7 @@ class LettuceServerTargetsTest {
   void mutableUrisAreSnapshotted() {
     RedisURI first = RedisURI.create("redis://node1:7000");
     RedisURI second = RedisURI.create("redis://node2:7001");
-    RedisServerTarget target = LettuceServerTargets.ofUris(asList(first, second));
+    RedisServerTarget target = LettuceServerTarget.ofUris(asList(first, second));
 
     first.setHost("other");
     second.setPort(7002);
@@ -150,7 +150,7 @@ class LettuceServerTargetsTest {
   @Test
   void multipleUnixSocketsFailClosed() {
     assertThat(
-            LettuceServerTargets.ofUris(
+            LettuceServerTarget.ofUris(
                 asList(
                     RedisURI.Builder.socket("/var/run/redis1.sock").build(),
                     RedisURI.Builder.socket("/var/run/redis2.sock").build())))
@@ -160,7 +160,7 @@ class LettuceServerTargetsTest {
   @Test
   void singleMemberClusterKeepsItsPort() {
     RedisServerTarget target =
-        LettuceServerTargets.ofUris(singletonList(RedisURI.create("redis://node1:7000")));
+        LettuceServerTarget.ofUris(singletonList(RedisURI.create("redis://node1:7000")));
 
     assertThat(target.getAddress()).isEqualTo("node1");
     assertThat(target.getPort()).isEqualTo(7000);
@@ -169,7 +169,7 @@ class LettuceServerTargetsTest {
   @Test
   void singleUnixSocketMemberClusterKeepsItsPath() {
     RedisServerTarget target =
-        LettuceServerTargets.ofUris(
+        LettuceServerTarget.ofUris(
             singletonList(RedisURI.Builder.socket("/var/run/redis1.sock").build()));
 
     assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock");
@@ -178,7 +178,7 @@ class LettuceServerTargetsTest {
 
   @Test
   void noClusterUris() {
-    assertThat(LettuceServerTargets.ofUris(null)).isNull();
-    assertThat(LettuceServerTargets.ofUris(emptyList())).isNull();
+    assertThat(LettuceServerTarget.ofUris(null)).isNull();
+    assertThat(LettuceServerTarget.ofUris(emptyList())).isNull();
   }
 }

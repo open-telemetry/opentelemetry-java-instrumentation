@@ -11,7 +11,6 @@ import com.lambdaworks.redis.ReactiveCommandDispatcher;
 import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.api.StatefulConnection;
-import com.lambdaworks.redis.cluster.RedisClusterClient;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -20,7 +19,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -58,15 +56,6 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE_INDEX =
       VirtualField.find(RedisCommand.class, Integer.class);
-
-  public static final VirtualField<RedisChannelHandler<?, ?>, RedisServerTarget> CONNECTION_TARGET =
-      VirtualField.find(RedisChannelHandler.class, RedisServerTarget.class);
-
-  public static final VirtualField<RedisCommand<?, ?, ?>, RedisServerTarget> COMMAND_TARGET =
-      VirtualField.find(RedisCommand.class, RedisServerTarget.class);
-
-  public static final VirtualField<RedisClusterClient, RedisServerTarget> CLUSTER_CLIENT_TARGET =
-      VirtualField.find(RedisClusterClient.class, RedisServerTarget.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -146,20 +135,13 @@ public class LettuceSingletons {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
     COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));
     // Always overwrite the command target so reused command objects cannot retain stale state.
-    COMMAND_TARGET.set(command, serverTarget(connection));
+    LettuceServerTargets.copy(connection, command);
   }
 
   @Nullable
   static InetSocketAddress serverAddress(StatefulConnection<?, ?> connection) {
     return connection instanceof RedisChannelHandler
         ? CONNECTION_ADDRESS.get((RedisChannelHandler<?, ?>) connection)
-        : null;
-  }
-
-  @Nullable
-  static RedisServerTarget serverTarget(StatefulConnection<?, ?> connection) {
-    return connection instanceof RedisChannelHandler
-        ? CONNECTION_TARGET.get((RedisChannelHandler<?, ?>) connection)
         : null;
   }
 

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_TARGET;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -52,7 +51,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(@Advice.Argument(2) Object targetSource) {
       if (targetSource instanceof RedisURI) {
-        return new Object[] {LettuceServerTargets.of((RedisURI) targetSource), targetSource};
+        return new Object[] {LettuceServerTarget.of((RedisURI) targetSource), targetSource};
       }
       if (!(targetSource instanceof Iterable)) {
         return new Object[] {null, targetSource};
@@ -63,7 +62,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
         snapshot.add(redisUri);
       }
       // Replace the original iterable with the snapshot after consuming it to build the target.
-      return new Object[] {LettuceServerTargets.ofMasterSlaveUris(snapshot), snapshot};
+      return new Object[] {LettuceServerTarget.ofMasterSlaveUris(snapshot), snapshot};
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
@@ -71,7 +70,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
         @Advice.Enter Object[] enter, @Advice.Return @Nullable Object connection) {
       RedisServerTarget target = (RedisServerTarget) enter[0];
       if (target != null && connection instanceof RedisChannelHandler) {
-        CONNECTION_TARGET.set((RedisChannelHandler<?, ?>) connection, target);
+        LettuceServerTargets.capture((RedisChannelHandler<?, ?>) connection, target);
       }
     }
   }
