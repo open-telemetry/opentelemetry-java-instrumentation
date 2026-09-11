@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -46,7 +47,8 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     // Lettuce 4.2+ uses connectStateful for every connection, including node connections in 4.4+.
     transformer.applyAdviceToMethod(
         nameStartsWith("connectStateful")
-            .and(takesArgument(2, named("com.lambdaworks.redis.RedisURI"))),
+            .and(
+                takesArgument(1, hasSuperType(named("com.lambdaworks.redis.RedisChannelHandler")))),
         getClass().getName() + "$AttachStatefulConnectionAdvice");
   }
 
