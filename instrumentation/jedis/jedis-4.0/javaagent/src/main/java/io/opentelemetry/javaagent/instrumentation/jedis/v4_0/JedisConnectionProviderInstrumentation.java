@@ -106,9 +106,9 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("cache") @Nullable JedisClusterInfoCache cache,
         @Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
       RedisServerTarget target = JedisSingletons.targetOfNodes(nodes);
-      JedisSingletons.setProviderTarget(provider, target);
-      JedisSingletons.setTopologyTarget(cache, target);
-      return JedisSingletons.openConfiguredTargetScope(target);
+      JedisConfiguredTargets.setProviderTarget(provider, target);
+      JedisConfiguredTargets.setTopologyTarget(cache, target);
+      return JedisConfiguredTargets.openConfiguredTargetScope(target);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -126,8 +126,8 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This Object provider, @Advice.Argument(0) @Nullable List<HostAndPort> shards) {
       RedisServerTarget target = JedisSingletons.targetOfShards(shards);
-      JedisSingletons.setProviderTarget(provider, target);
-      return JedisSingletons.openConfiguredTargetScope(target);
+      JedisConfiguredTargets.setProviderTarget(provider, target);
+      return JedisConfiguredTargets.openConfiguredTargetScope(target);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -148,8 +148,8 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("masterName") @Nullable String masterName,
         @Advice.Argument(0) @Nullable Set<HostAndPort> sentinels) {
       RedisServerTarget target = JedisSingletons.targetOfSentinels(masterName, sentinels);
-      JedisSingletons.setProviderTarget(provider, target);
-      return JedisSingletons.openConfiguredTargetScope(target);
+      JedisConfiguredTargets.setProviderTarget(provider, target);
+      return JedisConfiguredTargets.openConfiguredTargetScope(target);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -166,7 +166,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("this$0") Object provider) {
-      return JedisSingletons.openProviderTargetScope(provider);
+      return JedisConfiguredTargets.openProviderTargetScope(provider);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -183,7 +183,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("this$0") JedisClusterInfoCache cache) {
-      return JedisSingletons.openTopologyTargetScope(cache);
+      return JedisConfiguredTargets.openTopologyTargetScope(cache);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -200,7 +200,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This Object provider) {
-      return JedisSingletons.openProviderTargetScope(provider);
+      return JedisConfiguredTargets.openProviderTargetScope(provider);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -259,7 +259,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
                     Opcodes.GETFIELD, CACHE_INTERNAL_NAME, "startNodes", "Ljava/util/Set;");
                 super.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
-                    Type.getInternalName(JedisSingletons.class),
+                    Type.getInternalName(JedisConfiguredTargets.class),
                     "setTopologyTargetFromNodes",
                     "(Lredis/clients/jedis/JedisClusterInfoCache;Ljava/util/Collection;)V",
                     false);

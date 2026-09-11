@@ -33,7 +33,7 @@ public class JedisInstrumentationModule extends InstrumentationModule
 
   @Override
   public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
-    String configuredTarget = JedisSingletons.ConfiguredTarget.class.getName();
+    String configuredTarget = JedisConfiguredTargets.ConfiguredTarget.class.getName();
     virtualFieldRegistrar.accept(
         "redis.clients.jedis.providers.JedisConnectionProvider", configuredTarget);
     virtualFieldRegistrar.accept(

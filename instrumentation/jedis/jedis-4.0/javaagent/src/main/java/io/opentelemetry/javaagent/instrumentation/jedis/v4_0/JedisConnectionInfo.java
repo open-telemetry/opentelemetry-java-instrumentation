@@ -42,7 +42,7 @@ class JedisConnectionInfo {
     return new JedisConnectionInfo(
         socketHostAndPort != null ? socketHostAndPort.getHost() : null,
         socketHostAndPort != null ? socketHostAndPort.getPort() : null,
-        JedisSocketFactoryInfo.getServerTarget(socketFactory),
+        JedisConfiguredTargets.socketFactoryTarget(socketFactory),
         databaseIndex);
   }
 

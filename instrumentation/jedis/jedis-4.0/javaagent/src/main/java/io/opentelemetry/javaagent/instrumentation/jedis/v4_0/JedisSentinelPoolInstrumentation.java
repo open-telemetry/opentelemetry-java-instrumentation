@@ -60,7 +60,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable String masterName,
         @Advice.Argument(1) @Nullable Set<?> sentinels) {
-      JedisSingletons.setSentinelPoolTarget(
+      JedisConfiguredTargets.setSentinelPoolTarget(
           pool, JedisSingletons.targetOfSentinels(masterName, sentinels));
     }
   }
@@ -74,9 +74,9 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool<?> pool,
         @Advice.Argument(0) @Nullable Set<?> sentinels,
         @Advice.Argument(1) @Nullable String masterName) {
-      JedisSingletons.setSentinelPoolTarget(
+      JedisConfiguredTargets.setSentinelPoolTarget(
           pool, JedisSingletons.targetOfSentinels(masterName, sentinels));
-      return JedisSingletons.openSentinelPoolTargetScope(pool);
+      return JedisConfiguredTargets.openSentinelPoolTargetScope(pool);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -93,7 +93,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This Pool<?> pool) {
-      return JedisSingletons.openSentinelPoolTargetScope(pool);
+      return JedisConfiguredTargets.openSentinelPoolTargetScope(pool);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -110,7 +110,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("this$0") Pool<?> pool) {
-      return JedisSingletons.openSentinelPoolTargetScope(pool);
+      return JedisConfiguredTargets.openSentinelPoolTargetScope(pool);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
