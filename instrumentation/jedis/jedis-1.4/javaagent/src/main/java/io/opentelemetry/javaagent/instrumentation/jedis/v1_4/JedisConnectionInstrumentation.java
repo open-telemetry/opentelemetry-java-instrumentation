@@ -69,15 +69,6 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$SendCommandWithArgsAdvice");
   }
 
-  @SuppressWarnings("unused")
-  public static class SetTargetAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Connection connection) {
-      JedisSingletons.captureConnectionTarget(connection);
-    }
-  }
-
   public static class AdviceScope {
     private final Context context;
     private final Scope scope;
@@ -102,6 +93,15 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     public void end(@Nullable Throwable throwable) {
       scope.close();
       JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetTargetAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisSingletons.captureConnectionTarget(connection);
     }
   }
 
