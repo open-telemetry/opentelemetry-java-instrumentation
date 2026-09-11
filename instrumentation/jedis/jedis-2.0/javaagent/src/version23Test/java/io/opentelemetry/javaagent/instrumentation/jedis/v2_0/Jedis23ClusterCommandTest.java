@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
