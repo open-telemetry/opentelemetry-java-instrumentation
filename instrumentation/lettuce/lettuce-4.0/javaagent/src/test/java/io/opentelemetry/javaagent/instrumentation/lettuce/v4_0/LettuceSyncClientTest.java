@@ -213,11 +213,6 @@ class LettuceSyncClientTest {
     StatefulRedisPubSubConnection<String, String> pubSubConnection = redisClient.connectPubSub();
     cleanup.deferCleanup(pubSubConnection);
 
-    if (connectionTelemetryEnabled()) {
-      testing.waitForTraces(1);
-    }
-    testing.clearData();
-
     assertThat(pubSubConnection.sync().ping()).isEqualTo("PONG");
 
     testing.waitAndAssertTraces(
@@ -249,7 +244,7 @@ class LettuceSyncClientTest {
                 .invoke(null, redisClient, new Utf8StringCodec(), redisUris);
     cleanup.deferCleanup(masterReplicaConnection);
 
-    testing.waitForTraces(connectionTelemetryEnabled() ? 4 : 2);
+    testing.waitForTraces(2);
     testing.clearData();
 
     assertThat(masterReplicaConnection.sync().set("MASTER_REPLICA_COMMAND_KEY", "value"))
