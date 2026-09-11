@@ -235,7 +235,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         MethodList<?> methods,
         int writerFlags,
         int readerFlags) {
-      if (!CACHE_INTERNAL_NAME.equals(instrumentedType.getInternalName())) {
+      if (!instrumentedType.getInternalName().equals(CACHE_INTERNAL_NAME)) {
         return classVisitor;
       }
       return new ClassVisitor(AsmApi.VERSION, classVisitor) {
@@ -244,13 +244,13 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
             int access, String name, String descriptor, String signature, String[] exceptions) {
           MethodVisitor methodVisitor =
               super.visitMethod(access, name, descriptor, signature, exceptions);
-          if (!"<init>".equals(name)) {
+          if (!name.equals("<init>")) {
             return methodVisitor;
           }
           return new MethodVisitor(api, methodVisitor) {
             @Override
             public void visitTypeInsn(int opcode, String type) {
-              if (opcode == Opcodes.NEW && TASK_INTERNAL_NAME.equals(type)) {
+              if (opcode == Opcodes.NEW && type.equals(TASK_INTERNAL_NAME)) {
                 super.visitVarInsn(Opcodes.ALOAD, 0);
                 super.visitVarInsn(Opcodes.ALOAD, 0);
                 super.visitFieldInsn(
