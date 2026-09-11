@@ -40,8 +40,11 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -252,17 +255,34 @@ class LettuceSyncClientTest {
 
     String configuredTarget = host + ":" + port + "," + host + ":" + port;
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
+        trace -> {
+          List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
+          spanAsserts.add(
+              span ->
+                  span.hasName("SET " + configuredTarget)
+                      .hasKind(SpanKind.CLIENT)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(maybeStable(DB_SYSTEM), REDIS),
+                          equalTo(DB_NAMESPACE, null),
+                          equalTo(maybeStable(DB_OPERATION), "SET"),
+                          equalTo(SERVER_ADDRESS, configuredTarget),
+                          equalTo(SERVER_PORT, null)));
+          if (connectionTelemetryEnabled()) {
+            spanAsserts.add(
                 span ->
-                    span.hasName("SET " + configuredTarget)
+                    span.hasName("CONNECT")
                         .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(SERVER_PORT, null))));
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_REDIS_DATABASE_INDEX, null),
+                            equalTo(maybeStablePeerService(), "test-peer-service")));
+          }
+          trace.hasSpansSatisfyingExactly(spanAsserts);
+        });
   }
 
   @Test
