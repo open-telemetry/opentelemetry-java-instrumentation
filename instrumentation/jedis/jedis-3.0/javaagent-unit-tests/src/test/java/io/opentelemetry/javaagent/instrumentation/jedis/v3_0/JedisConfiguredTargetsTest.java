@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.context.Scope;
@@ -86,5 +87,32 @@ class JedisConfiguredTargetsTest {
     assertThat(JedisConfiguredTargets.sentinelTarget("mymaster", parsedSentinels))
         .extracting(RedisServerTarget::getAddress)
         .isEqualTo("sentinel.example:26379/mymaster");
+  }
+
+  @Test
+  void typedIpv6SentinelKeepsItsPort() {
+    RedisServerTarget target =
+        JedisConfiguredTargets.sentinelTarget(
+            "mymaster", singletonList(new HostAndPort("2001:db8::1", 26379)));
+
+    assertThat(target.getAddress()).isEqualTo("[2001:db8::1]:26379/mymaster");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void sentinelListWithUnsupportedMemberFailsClosedWithoutConversion() {
+    assertThat(
+            JedisConfiguredTargets.sentinelTarget(
+                "mymaster", asList(new HostAndPort("sentinel1", 26379), unconvertibleMember())))
+        .isNull();
+  }
+
+  private static Object unconvertibleMember() {
+    return new Object() {
+      @Override
+      public String toString() {
+        throw new IllegalStateException("must not convert unsupported member");
+      }
+    };
   }
 }

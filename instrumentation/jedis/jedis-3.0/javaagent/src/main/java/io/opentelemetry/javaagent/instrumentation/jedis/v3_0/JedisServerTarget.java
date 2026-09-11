@@ -14,7 +14,7 @@ import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisShardInfo;
 
 // visible for testing
-public class JedisServerTargets {
+public class JedisServerTarget {
 
   @Nullable
   public static RedisServerTarget ofShards(@Nullable List<JedisShardInfo> shards) {
@@ -31,20 +31,7 @@ public class JedisServerTargets {
 
   @Nullable
   public static RedisServerTarget ofSentinels(
-      @Nullable String masterName, @Nullable Collection<?> sentinels) {
-    List<String> endpoints = null;
-    if (sentinels != null) {
-      endpoints = new ArrayList<>(sentinels.size());
-      for (Object sentinel : sentinels) {
-        if (sentinel instanceof HostAndPort) {
-          endpoints.add(JedisConfiguredTargets.sentinelEndpoint((HostAndPort) sentinel));
-        } else if (sentinel instanceof String) {
-          endpoints.add(RedisServerTarget.normalizeHostAndPort((String) sentinel));
-        } else {
-          endpoints.add(null);
-        }
-      }
-    }
+      @Nullable String masterName, @Nullable List<String> endpoints) {
     return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, masterName);
   }
 
@@ -61,5 +48,5 @@ public class JedisServerTargets {
     return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
 
-  private JedisServerTargets() {}
+  private JedisServerTarget() {}
 }

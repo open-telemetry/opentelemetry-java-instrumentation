@@ -10,7 +10,9 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
@@ -53,7 +55,7 @@ public class JedisConfiguredTargets {
     }
   }
 
-  static String sentinelEndpoint(HostAndPort sentinel) {
+  private static String sentinelEndpoint(HostAndPort sentinel) {
     OriginalEndpoint originalEndpoint = ORIGINAL_ENDPOINT.get(sentinel);
     return originalEndpoint == null
         ? RedisServerTarget.endpoint(sentinel.getHost(), sentinel.getPort())
@@ -63,7 +65,20 @@ public class JedisConfiguredTargets {
   @Nullable
   public static RedisServerTarget sentinelTarget(
       @Nullable String masterName, @Nullable Collection<?> sentinels) {
-    return JedisServerTargets.ofSentinels(masterName, sentinels);
+    List<String> endpoints = null;
+    if (sentinels != null) {
+      endpoints = new ArrayList<>(sentinels.size());
+      for (Object sentinel : sentinels) {
+        if (sentinel instanceof HostAndPort) {
+          endpoints.add(sentinelEndpoint((HostAndPort) sentinel));
+        } else if (sentinel instanceof String) {
+          endpoints.add(RedisServerTarget.normalizeHostAndPort((String) sentinel));
+        } else {
+          endpoints.add(null);
+        }
+      }
+    }
+    return JedisServerTarget.ofSentinels(masterName, endpoints);
   }
 
   public static void setClusterTarget(
