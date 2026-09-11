@@ -27,7 +27,7 @@ class LettuceAttributesGetterTest {
   void commandUsesConfiguredTargetOnlyForStableSemconv() {
     RedisCommand<String, String, String> command = command();
     LettuceSingletons.COMMAND_ADDRESS.set(command, SELECTED_ADDRESS);
-    LettuceSingletons.COMMAND_TARGET.set(
+    LettuceServerTargets.capture(
         command, RedisServerTarget.ofEndpoint("configured-node:6379"));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();

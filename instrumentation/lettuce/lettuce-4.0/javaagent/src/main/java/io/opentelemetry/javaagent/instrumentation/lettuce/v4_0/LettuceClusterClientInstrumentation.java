@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CLUSTER_CLIENT_TARGET;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_TARGET;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -17,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.cluster.RedisClusterClient;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -65,7 +62,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
         @Advice.This RedisClusterClient client,
         @Advice.FieldValue("initialUris") @Nullable Iterable<RedisURI> initialUris) {
       // RedisURI is mutable, so render the seed list before the client is published.
-      CLUSTER_CLIENT_TARGET.set(client, LettuceServerTargets.ofUris(initialUris));
+      LettuceServerTargets.capture(client, initialUris);
     }
   }
 
@@ -75,9 +72,8 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This RedisClusterClient client, @Advice.Return @Nullable Object connection) {
-      RedisServerTarget target = CLUSTER_CLIENT_TARGET.get(client);
-      if (target != null && connection instanceof RedisChannelHandler) {
-        CONNECTION_TARGET.set((RedisChannelHandler<?, ?>) connection, target);
+      if (connection instanceof RedisChannelHandler) {
+        LettuceServerTargets.copy(client, (RedisChannelHandler<?, ?>) connection);
       }
     }
   }
@@ -90,10 +86,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.This RedisClusterClient client,
         @Advice.Argument(1) RedisChannelHandler<?, ?> connection) {
-      RedisServerTarget target = CLUSTER_CLIENT_TARGET.get(client);
-      if (target != null) {
-        CONNECTION_TARGET.set(connection, target);
-      }
+      LettuceServerTargets.copy(client, connection);
     }
   }
 }

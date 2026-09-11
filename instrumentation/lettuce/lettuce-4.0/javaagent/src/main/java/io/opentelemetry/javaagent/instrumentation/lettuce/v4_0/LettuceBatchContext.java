@@ -66,7 +66,7 @@ public final class LettuceBatchContext {
     BATCH_STATE.set(commands, new BatchState());
     InetSocketAddress serverAddress = LettuceSingletons.serverAddress(commands.getConnection());
     Integer databaseIndex = LettuceSingletons.databaseIndex(commands.getConnection());
-    RedisServerTarget serverTarget = LettuceSingletons.serverTarget(commands.getConnection());
+    RedisServerTarget serverTarget = LettuceServerTargets.get(commands.getConnection());
     return BatchScope.start(
         state.commands,
         state.asyncCommands,

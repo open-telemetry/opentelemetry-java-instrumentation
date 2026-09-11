@@ -5,97 +5,63 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.RedisURI;
+import com.lambdaworks.redis.api.StatefulConnection;
+import com.lambdaworks.redis.cluster.RedisClusterClient;
+import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import java.util.ArrayList;
-import java.util.List;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 
 public class LettuceServerTargets {
 
-  @Nullable
-  public static RedisServerTarget of(@Nullable RedisURI redisUri) {
-    if (redisUri == null) {
-      return null;
-    }
+  private static final VirtualField<RedisClusterClient, RedisServerTarget> CLIENT_TARGET =
+      VirtualField.find(RedisClusterClient.class, RedisServerTarget.class);
 
-    if (isSentinel(redisUri)) {
-      return ofSentinel(redisUri);
-    }
+  private static final VirtualField<RedisChannelHandler<?, ?>, RedisServerTarget>
+      CONNECTION_TARGET = VirtualField.find(RedisChannelHandler.class, RedisServerTarget.class);
 
-    String socket = redisUri.getSocket();
-    return socket != null
-        ? RedisServerTarget.ofEndpoint(socket)
-        : RedisServerTarget.ofHostAndPort(redisUri.getHost(), redisUri.getPort());
+  private static final VirtualField<RedisCommand<?, ?, ?>, RedisServerTarget> COMMAND_TARGET =
+      VirtualField.find(RedisCommand.class, RedisServerTarget.class);
+
+  public static void capture(
+      RedisClusterClient client, @Nullable Iterable<RedisURI> configuredUris) {
+    CLIENT_TARGET.set(client, LettuceServerTarget.ofUris(configuredUris));
+  }
+
+  public static void capture(RedisChannelHandler<?, ?> connection, @Nullable RedisURI configuredUri) {
+    CONNECTION_TARGET.set(connection, LettuceServerTarget.of(configuredUri));
+  }
+
+  public static void capture(
+      RedisChannelHandler<?, ?> connection, @Nullable RedisServerTarget target) {
+    CONNECTION_TARGET.set(connection, target);
+  }
+
+  static void capture(RedisCommand<?, ?, ?> command, @Nullable RedisServerTarget target) {
+    COMMAND_TARGET.set(command, target);
+  }
+
+  public static void copy(RedisClusterClient client, RedisChannelHandler<?, ?> connection) {
+    CONNECTION_TARGET.set(connection, CLIENT_TARGET.get(client));
+  }
+
+  public static void copy(
+      StatefulConnection<?, ?> connection, RedisCommand<?, ?, ?> command) {
+    COMMAND_TARGET.set(command, get(connection));
   }
 
   @Nullable
-  public static RedisServerTarget ofUris(@Nullable Iterable<?> redisUris) {
-    if (redisUris == null) {
-      return null;
-    }
-    List<String> endpoints = new ArrayList<>();
-    for (Object redisUri : redisUris) {
-      if (!(redisUri instanceof RedisURI)) {
-        endpoints.add(null);
-        continue;
-      }
-      endpoints.add(endpoint((RedisURI) redisUri));
-    }
-    return RedisServerTarget.ofEndpoints(endpoints);
+  public static RedisServerTarget get(RedisCommand<?, ?, ?> command) {
+    return COMMAND_TARGET.get(command);
   }
 
   @Nullable
-  public static RedisServerTarget ofMasterSlaveUris(List<?> redisUris) {
-    if (!redisUris.isEmpty() && redisUris.get(0) instanceof RedisURI) {
-      RedisURI first = (RedisURI) redisUris.get(0);
-      // MasterSlave.connect switches the whole list to sentinel mode based on the first URI alone.
-      if (isSentinel(first)) {
-        return of(first);
-      }
-    }
-    return ofUris(redisUris);
-  }
-
-  @Nullable
-  private static String endpoint(RedisURI redisUri) {
-    if (!isSentinel(redisUri)) {
-      String socket = redisUri.getSocket();
-      return socket != null
-          ? socket
-          : RedisServerTarget.endpoint(redisUri.getHost(), redisUri.getPort());
-    }
-
-    RedisServerTarget target = ofSentinel(redisUri);
-    if (target == null) {
-      return null;
-    }
-    Integer port = target.getPort();
-    return port == null
-        ? target.getAddress()
-        : RedisServerTarget.endpoint(target.getAddress(), port);
-  }
-
-  // A master name alone does not select sentinel mode: lettuce resolves the master through the
-  // sentinels and otherwise connects to the host and port of the URI itself.
-  private static boolean isSentinel(RedisURI redisUri) {
-    List<RedisURI> sentinels = redisUri.getSentinels();
-    return sentinels != null && !sentinels.isEmpty();
-  }
-
-  @Nullable
-  private static RedisServerTarget ofSentinel(RedisURI redisUri) {
-    List<RedisURI> sentinels = redisUri.getSentinels();
-    List<String> endpoints = new ArrayList<>(sentinels.size());
-    for (RedisURI sentinel : sentinels) {
-      String socket = sentinel.getSocket();
-      endpoints.add(
-          socket != null
-              ? socket
-              : RedisServerTarget.endpoint(sentinel.getHost(), sentinel.getPort()));
-    }
-    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
-        endpoints, redisUri.getSentinelMasterId());
+  public static RedisServerTarget get(StatefulConnection<?, ?> connection) {
+    return connection instanceof RedisChannelHandler
+        ? CONNECTION_TARGET.get((RedisChannelHandler<?, ?>) connection)
+        : null;
   }
 
   private LettuceServerTargets() {}
