@@ -99,7 +99,6 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitializeClusterAdvice {
 
-    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This Object provider,
@@ -141,7 +140,6 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitializeSentinelsAdvice {
 
-    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This Object provider,
