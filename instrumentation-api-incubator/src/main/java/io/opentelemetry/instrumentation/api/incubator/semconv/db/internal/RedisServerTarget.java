@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +83,7 @@ public final class RedisServerTarget {
     if (others.isEmpty()) {
       return directTarget(first);
     }
-    others.sort((left, right) -> left.renderConfigured().compareTo(right.renderConfigured()));
+    others.sort(comparing(Endpoint::renderConfigured));
     List<Endpoint> endpoints = new ArrayList<>(others.size() + 1);
     endpoints.add(first);
     endpoints.addAll(others);
