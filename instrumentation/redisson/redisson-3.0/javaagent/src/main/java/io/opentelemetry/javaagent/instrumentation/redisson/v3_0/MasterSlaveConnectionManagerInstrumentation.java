@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisClient;
 import org.redisson.config.Config;
-import org.redisson.config.ConfigServerTargetsBefore317;
+import org.redisson.config.ConfigServerTargetBefore317;
 import org.redisson.connection.MasterSlaveConnectionManager;
 
 class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation {
@@ -50,7 +50,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(0) @Nullable Config config) {
       // a Config is mutable, so the target is rendered here and kept immutable
-      RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetsBefore317.of(config));
+      RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetBefore317.of(config));
     }
   }
 
@@ -61,7 +61,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(1) @Nullable Config config) {
-      RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetsBefore317.of(config));
+      RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetBefore317.of(config));
     }
   }
 

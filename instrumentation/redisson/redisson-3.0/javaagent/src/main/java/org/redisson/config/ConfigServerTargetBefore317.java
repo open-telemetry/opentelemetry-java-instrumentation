@@ -18,10 +18,10 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 // This helper is in the Redisson package to access package-private configuration state.
-public class ConfigServerTargetsBefore317 {
+public class ConfigServerTargetBefore317 {
 
   private static final Logger logger =
-      Logger.getLogger(ConfigServerTargetsBefore317.class.getName());
+      Logger.getLogger(ConfigServerTargetBefore317.class.getName());
 
   @Nullable
   private static final Method CONFIG_GET_ELASTICACHE_SERVERS =
@@ -171,5 +171,5 @@ public class ConfigServerTargetsBefore317 {
     return value.startsWith("//") ? "redis:" + value : value;
   }
 
-  private ConfigServerTargetsBefore317() {}
+  private ConfigServerTargetBefore317() {}
 }
