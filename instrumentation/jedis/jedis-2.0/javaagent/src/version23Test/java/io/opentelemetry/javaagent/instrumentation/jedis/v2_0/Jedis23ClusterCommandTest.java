@@ -25,11 +25,11 @@ class Jedis23ClusterCommandTest {
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private static GenericContainer<?> redis;
+  private static final GenericContainer<?> redis =
+      new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
   @BeforeAll
   static void setup() {
-    redis = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
     redis.start();
     cleanup.deferAfterAll(redis::stop);
   }
