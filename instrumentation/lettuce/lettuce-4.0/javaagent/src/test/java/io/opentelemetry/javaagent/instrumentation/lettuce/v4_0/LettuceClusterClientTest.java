@@ -15,10 +15,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
-import static java.nio.charset.StandardCharsets.US_ASCII;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,30 +31,27 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @DisabledIfSystemProperty(
     named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
     matches = "true")
 class LettuceClusterClientTest {
+  private static final Logger logger = LoggerFactory.getLogger(LettuceClusterClientTest.class);
+
   private static final String NODE_ID = "0000000000000000000000000000000000000000";
 
   @RegisterExtension
@@ -65,7 +59,15 @@ class LettuceClusterClientTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private static TestRedisCluster redisServer;
+  private static final DockerImageName CONTAINER_IMAGE =
+      DockerImageName.parse("redis:6.2.3-alpine");
+
+  private static final GenericContainer<?> redisServer =
+      new GenericContainer<>(CONTAINER_IMAGE)
+          .withExposedPorts(6379)
+          .withLogConsumer(new Slf4jLogConsumer(logger))
+          .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
+
   private static StatefulRedisClusterConnection<String, String> connection;
   private static String host;
   private static int port;
@@ -73,11 +75,11 @@ class LettuceClusterClientTest {
 
   @BeforeAll
   static void setUp() throws Exception {
-    redisServer = new TestRedisCluster();
-    cleanup.deferAfterAll(redisServer);
+    redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
-    port = redisServer.getPort();
+    port = redisServer.getMappedPort(6379);
 
     RedisURI nodeUri = RedisURI.create("redis://" + host + ":" + port);
     RedisURI alternateSeed = RedisURI.create("redis://seed.invalid:6379");
@@ -111,7 +113,6 @@ class LettuceClusterClientTest {
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : (long) port))));
 
-    redisServer.assertNoFailure();
   }
 
   @Test
@@ -148,7 +149,6 @@ class LettuceClusterClientTest {
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? 2L : null))));
 
-    redisServer.assertNoFailure();
   }
 
   private static class TestRedisClusterClient extends RedisClusterClient {
@@ -179,135 +179,4 @@ class LettuceClusterClientTest {
     }
   }
 
-  private static class TestRedisCluster implements AutoCloseable {
-    private final ServerSocket serverSocket;
-    private final Set<Socket> connections = ConcurrentHashMap.newKeySet();
-    private final AtomicReference<Throwable> failure = new AtomicReference<>();
-    private final Thread acceptThread;
-    private volatile boolean closed;
-
-    private TestRedisCluster() throws IOException {
-      serverSocket = new ServerSocket(0, 50, InetAddress.getAllByName("127.0.0.1")[0]);
-      acceptThread = new Thread(this::acceptConnections, "test-redis-cluster-accept");
-      acceptThread.setDaemon(true);
-      acceptThread.start();
-    }
-
-    private String getHost() {
-      return serverSocket.getInetAddress().getHostAddress();
-    }
-
-    private int getPort() {
-      return serverSocket.getLocalPort();
-    }
-
-    private void acceptConnections() {
-      while (!closed) {
-        try {
-          Socket socket = serverSocket.accept();
-          connections.add(socket);
-          Thread thread =
-              new Thread(() -> handleConnection(socket), "test-redis-cluster-connection");
-          thread.setDaemon(true);
-          thread.start();
-        } catch (IOException e) {
-          if (!closed) {
-            failure.compareAndSet(null, e);
-          }
-        }
-      }
-    }
-
-    private void handleConnection(Socket socket) {
-      try (DataInputStream input = new DataInputStream(socket.getInputStream())) {
-        OutputStream output = socket.getOutputStream();
-        while (true) {
-          List<String> command = readCommand(input);
-          if (command.isEmpty()) {
-            break;
-          }
-          writeResponse(command, output);
-        }
-      } catch (IOException e) {
-        if (!closed) {
-          failure.compareAndSet(null, e);
-        }
-      } finally {
-        connections.remove(socket);
-      }
-    }
-
-    private void writeResponse(List<String> command, OutputStream output) throws IOException {
-      String name = command.get(0).toUpperCase(Locale.ROOT);
-      if ("SET".equals(name) || "CLIENT".equals(name)) {
-        write(output, "+OK\r\n");
-      } else if ("COMMAND".equals(name)) {
-        write(output, "*0\r\n");
-      } else if ("PING".equals(name)) {
-        write(output, "+PONG\r\n");
-      } else {
-        AssertionError error = new AssertionError("Unexpected Redis command: " + command);
-        failure.compareAndSet(null, error);
-        write(output, "-ERR unsupported command\r\n");
-      }
-    }
-
-    private static List<String> readCommand(DataInputStream input) throws IOException {
-      int first = input.read();
-      if (first == -1) {
-        return emptyList();
-      }
-      if (first != '*') {
-        throw new IOException("Expected RESP array");
-      }
-      int argumentCount = Integer.parseInt(readLine(input));
-      List<String> command = new ArrayList<>(argumentCount);
-      for (int i = 0; i < argumentCount; i++) {
-        if (input.read() != '$') {
-          throw new IOException("Expected RESP bulk string");
-        }
-        int length = Integer.parseInt(readLine(input));
-        byte[] value = new byte[length];
-        input.readFully(value);
-        if (input.read() != '\r' || input.read() != '\n') {
-          throw new IOException("Expected RESP line ending");
-        }
-        command.add(new String(value, UTF_8));
-      }
-      return command;
-    }
-
-    private static String readLine(DataInputStream input) throws IOException {
-      ByteArrayOutputStream line = new ByteArrayOutputStream();
-      int value;
-      while ((value = input.read()) != '\r') {
-        if (value == -1) {
-          throw new IOException("Unexpected end of RESP input");
-        }
-        line.write(value);
-      }
-      if (input.read() != '\n') {
-        throw new IOException("Expected RESP line ending");
-      }
-      return new String(line.toByteArray(), US_ASCII);
-    }
-
-    private static void write(OutputStream output, String value) throws IOException {
-      output.write(value.getBytes(UTF_8));
-      output.flush();
-    }
-
-    private void assertNoFailure() {
-      assertThat(failure.get()).isNull();
-    }
-
-    @Override
-    public void close() throws IOException {
-      closed = true;
-      serverSocket.close();
-      for (Socket connection : new ArrayList<>(connections)) {
-        connection.close();
-      }
-    }
-  }
 }
