@@ -33,10 +33,10 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("org.redisson.config.Config"))),
-        getClass().getName() + "$ConfigFirstConstructorAdvice");
+        getClass().getName() + "$ConfigArgument0ConstructorAdvice");
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("org.redisson.config.Config"))),
-        getClass().getName() + "$ConfigSecondConstructorAdvice");
+        getClass().getName() + "$ConfigArgument1ConstructorAdvice");
     // redisson 3.20 through 3.27 hand the manager the service manager the configuration lives in
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("org.redisson.connection.ServiceManager"))),
@@ -47,7 +47,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
   }
 
   @SuppressWarnings("unused")
-  public static class ConfigFirstConstructorAdvice {
+  public static class ConfigArgument0ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
@@ -59,7 +59,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
   }
 
   @SuppressWarnings("unused")
-  public static class ConfigSecondConstructorAdvice {
+  public static class ConfigArgument1ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
