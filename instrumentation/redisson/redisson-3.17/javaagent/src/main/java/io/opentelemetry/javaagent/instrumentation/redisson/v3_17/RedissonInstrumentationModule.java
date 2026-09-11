@@ -31,8 +31,8 @@ public class RedissonInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new RedisExecutorConnectionFutureInstrumentation(),
         new MasterSlaveConnectionManagerInstrumentation(),
+        new RedisExecutorConnectionFutureInstrumentation(),
         new RedisConnectionInstrumentation(),
         new RedisCommandDataInstrumentation());
   }
