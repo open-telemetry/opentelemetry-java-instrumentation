@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Connection;
 
-class JedisTargetStateTest {
+class JedisSingletonsTest {
 
   @Test
   void captureConnectionTargetFallsBackToHostAndPortWhenNoScopeIsActive() {
