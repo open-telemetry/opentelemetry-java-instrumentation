@@ -62,6 +62,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
       for (Object redisUri : (Iterable<?>) targetSource) {
         snapshot.add(redisUri);
       }
+      // Replace the original iterable with the snapshot after consuming it to build the target.
       return new Object[] {LettuceServerTargets.ofMasterSlaveUris(snapshot), snapshot};
     }
 
