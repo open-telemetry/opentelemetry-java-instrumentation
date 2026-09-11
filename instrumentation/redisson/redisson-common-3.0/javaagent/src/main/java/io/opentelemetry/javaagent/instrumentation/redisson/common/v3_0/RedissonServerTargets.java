@@ -21,21 +21,27 @@ public class RedissonServerTargets {
   private static final VirtualField<RedisClient, RedisServerTarget> CLIENT_TARGET =
       VirtualField.find(RedisClient.class, RedisServerTarget.class);
 
-  public static void setManagerTarget(
+  public static void capture(
       MasterSlaveConnectionManager manager, @Nullable RedisServerTarget target) {
+    if (target == null) {
+      return;
+    }
     MANAGER_TARGET.set(manager, target);
   }
 
-  public static void attachClientTarget(
+  public static void copy(
       MasterSlaveConnectionManager manager, @Nullable RedisClient client) {
+    if (client == null) {
+      return;
+    }
     RedisServerTarget target = MANAGER_TARGET.get(manager);
-    if (client != null && target != null) {
+    if (target != null) {
       CLIENT_TARGET.set(client, target);
     }
   }
 
   @Nullable
-  public static RedisServerTarget connectionTarget(RedisConnection connection) {
+  public static RedisServerTarget get(RedisConnection connection) {
     RedisClient client = connection.getRedisClient();
     return client != null ? CLIENT_TARGET.get(client) : null;
   }

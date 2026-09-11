@@ -54,7 +54,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(0) @Nullable Config config) {
-      RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetSince317.of(config));
+      RedissonServerTargets.capture(manager, ConfigServerTargetSince317.of(config));
     }
   }
 
@@ -65,7 +65,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(1) @Nullable Config config) {
-      RedissonServerTargets.setManagerTarget(manager, ConfigServerTargetSince317.of(config));
+      RedissonServerTargets.capture(manager, ConfigServerTargetSince317.of(config));
     }
   }
 
@@ -76,7 +76,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(1) @Nullable Object serviceManager) {
-      RedissonServerTargets.setManagerTarget(
+      RedissonServerTargets.capture(
           manager, ConfigServerTargetSince317.ofServiceManager(serviceManager));
     }
   }
@@ -88,7 +88,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
     public static void onExit(
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Return @Nullable RedisClient client) {
-      RedissonServerTargets.attachClientTarget(manager, client);
+      RedissonServerTargets.copy(manager, client);
     }
   }
 }

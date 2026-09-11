@@ -60,7 +60,7 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
                 arg,
                 null,
                 emitStableDatabaseSemconv()
-                    ? RedissonServerTargets.connectionTarget(connection)
+                    ? RedissonServerTargets.get(connection)
                     : null);
         PromiseWrapper<?> promise = request.getPromiseWrapper();
         if (promise == null) {
