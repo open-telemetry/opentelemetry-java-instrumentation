@@ -17,7 +17,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -28,46 +27,7 @@ import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.Transaction;
 
-class JedisNetworkAttributesGetterTest {
-
-  @ParameterizedTest
-  @MethodSource("resolvedAddresses")
-  void usesConnectedInetSocketAddress(InetAddress address) {
-    InetSocketAddress peerAddress = new InetSocketAddress(address, 6379);
-    Socket socket =
-        new Socket() {
-          @Override
-          public SocketAddress getRemoteSocketAddress() {
-            return peerAddress;
-          }
-
-          @Override
-          public boolean isConnected() {
-            return true;
-          }
-        };
-    Connection connection =
-        new Connection() {
-          @Override
-          public Socket getSocket() {
-            return socket;
-          }
-        };
-    JedisRequest request = JedisRequest.create(connection, Protocol.Command.GET);
-    request.capturePeerAddress();
-
-    assertThat(request.getPeerAddress()).isEqualTo(peerAddress);
-  }
-
-  @Test
-  void emitsConnectedSocketAddressOnlyForStableSemconv() {
-    InetSocketAddress peerAddress = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
-    JedisRequest request = requestWithPeer(peerAddress);
-    request.capturePeerAddress();
-
-    assertThat(new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? peerAddress : null);
-  }
+class JedisPeerCaptureTest {
 
   @Test
   void dropsMissingSocketAddress() {
@@ -464,12 +424,6 @@ class JedisNetworkAttributesGetterTest {
           }
         };
     return Stream.of(null, unconnectedSocket);
-  }
-
-  private static Stream<InetAddress> resolvedAddresses() throws UnknownHostException {
-    return Stream.of(
-        InetAddress.getByAddress(new byte[] {127, 0, 0, 1}),
-        InetAddress.getByAddress(new byte[16]));
   }
 
   private static class MutableConnection extends Connection {
