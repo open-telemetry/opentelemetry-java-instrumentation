@@ -20,8 +20,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
+import redis.clients.jedis.JedisShardInfo;
 
 public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
@@ -79,6 +82,19 @@ public class JedisSingletons {
       return target;
     }
     return CONNECTION_TARGET.get(connection);
+  }
+
+  @Nullable
+  static RedisServerTarget createServerTarget(@Nullable List<JedisShardInfo> shards) {
+    if (shards == null || shards.isEmpty()) {
+      return null;
+    }
+    List<String> endpoints = new ArrayList<>(shards.size());
+    for (JedisShardInfo shard : shards) {
+      endpoints.add(
+          shard == null ? null : RedisServerTarget.endpoint(shard.getHost(), shard.getPort()));
+    }
+    return RedisServerTarget.ofEndpoints(endpoints);
   }
 
   private JedisSingletons() {}
