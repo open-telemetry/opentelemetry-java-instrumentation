@@ -81,6 +81,6 @@ public final class LettuceReactiveCommandSubscriber<T> implements CoreSubscriber
 
   @Override
   public Context currentContext() {
-    return actual.currentContext().put(LettuceReactiveCommandContext.HANDLER_KEY, handler);
+    return LettuceReactiveCommandContext.withHandler(actual.currentContext(), handler);
   }
 }

@@ -7,9 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
 import javax.annotation.Nullable;
 import reactor.core.CoreSubscriber;
+import reactor.util.context.Context;
 
 public final class LettuceReactiveCommandContext {
-  static final Object HANDLER_KEY = LettuceReactiveCommandContext.class;
+  private static final Object HANDLER_KEY = LettuceReactiveCommandContext.class;
 
   @Nullable
   public static LettuceReactiveCommandHandler handler(CoreSubscriber<?> subscriber) {
@@ -17,6 +18,10 @@ public final class LettuceReactiveCommandContext {
     return value instanceof LettuceReactiveCommandHandler
         ? (LettuceReactiveCommandHandler) value
         : null;
+  }
+
+  public static Context withHandler(Context context, LettuceReactiveCommandHandler handler) {
+    return context.put(HANDLER_KEY, handler);
   }
 
   private LettuceReactiveCommandContext() {}
