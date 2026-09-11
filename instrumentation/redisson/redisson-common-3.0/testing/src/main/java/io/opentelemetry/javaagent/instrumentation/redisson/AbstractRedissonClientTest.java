@@ -292,7 +292,11 @@ public abstract class AbstractRedissonClientTest {
       if (hasDatabaseIndex()) {
         testing.waitForTraces(2);
       }
-      assertConfiguredTarget(configuredClient, configuredServerAddress, null, host);
+      assertConfiguredTarget(
+          configuredClient,
+          emitStableDatabaseSemconv() ? "SET " + configuredServerAddress : "SET",
+          emitStableDatabaseSemconv() ? configuredServerAddress : host,
+          emitStableDatabaseSemconv() ? null : port);
     } finally {
       configuredClient.shutdown();
     }
@@ -308,7 +312,11 @@ public abstract class AbstractRedissonClientTest {
       if (hasDatabaseIndex()) {
         testing.waitForTraces(1);
       }
-      assertConfiguredTarget(configuredClient, configuredHost, port, configuredHost);
+      assertConfiguredTarget(
+          configuredClient,
+          emitStableDatabaseSemconv() ? "SET " + configuredHost + ":" + port : "SET",
+          configuredHost,
+          port);
     } finally {
       configuredClient.shutdown();
     }
@@ -316,9 +324,9 @@ public abstract class AbstractRedissonClientTest {
 
   private void assertConfiguredTarget(
       RedissonClient client,
-      String stableServerAddress,
-      Long stableServerPort,
-      String legacyServerAddress) {
+      String expectedSpanName,
+      String expectedServerAddress,
+      Long expectedServerPort) {
     testing.clearData();
     client.getBucket("configured-target").set("value");
 
@@ -326,24 +334,14 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "SET "
-                                    + stableServerAddress
-                                    + (stableServerPort != null ? ":" + stableServerPort : "")
-                                : "SET")
+                    span.hasName(expectedSpanName)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? stableServerAddress
-                                    : legacyServerAddress),
-                            equalTo(
-                                SERVER_PORT, emitStableDatabaseSemconv() ? stableServerPort : port),
+                            equalTo(SERVER_ADDRESS, expectedServerAddress),
+                            equalTo(SERVER_PORT, expectedServerPort),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SET configured-target ?"),
