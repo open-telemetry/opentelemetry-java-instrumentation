@@ -97,6 +97,13 @@ class JedisSingletonsTest {
 
     try (ConfiguredTargetScope ignored = JedisSingletons.openConfiguredTargetScope(scopedTarget)) {
       assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(scopedTarget);
+
+      RedisServerTarget nestedTarget = RedisServerTarget.ofHostAndPort("nested", 6382);
+      try (ConfiguredTargetScope nested = JedisSingletons.openConfiguredTargetScope(nestedTarget)) {
+        assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(nestedTarget);
+      }
+
+      assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(scopedTarget);
     }
 
     assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(attachedTarget);
