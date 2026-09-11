@@ -291,12 +291,7 @@ public abstract class AbstractRedissonClientTest {
     RedissonClient configuredClient = Redisson.create(config);
     try {
       assertConfiguredTarget(
-          configuredClient,
-          "configured-target",
-          configuredServerAddress,
-          configuredServerAddress,
-          null,
-          host);
+          configuredClient, configuredServerAddress, null, host);
     } finally {
       configuredClient.shutdown();
     }
@@ -310,12 +305,7 @@ public abstract class AbstractRedissonClientTest {
     RedissonClient configuredClient = Redisson.create(config);
     try {
       assertConfiguredTarget(
-          configuredClient,
-          "configured-single-target",
-          configuredHost + ":" + port,
-          configuredHost,
-          port,
-          configuredHost);
+          configuredClient, configuredHost, port, configuredHost);
     } finally {
       configuredClient.shutdown();
     }
@@ -323,19 +313,22 @@ public abstract class AbstractRedissonClientTest {
 
   private void assertConfiguredTarget(
       RedissonClient client,
-      String key,
-      String stableSpanTarget,
       String stableServerAddress,
       Long stableServerPort,
       String legacyServerAddress) {
     testing.clearData();
-    client.getBucket(key).set("value");
+    client.getBucket("configured-target").set("value");
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + stableSpanTarget : "SET")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SET "
+                                    + stableServerAddress
+                                    + (stableServerPort != null ? ":" + stableServerPort : "")
+                                : "SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -351,7 +344,7 @@ public abstract class AbstractRedissonClientTest {
                                 emitStableDatabaseSemconv() ? stableServerPort : port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(maybeStable(DB_STATEMENT), "SET " + key + " ?"),
+                            equalTo(maybeStable(DB_STATEMENT), "SET configured-target ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
 
