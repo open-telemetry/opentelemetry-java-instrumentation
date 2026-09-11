@@ -105,8 +105,7 @@ class LettuceClusterClientTest {
                             equalTo(
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? configuredTarget : host),
-                            equalTo(
-                                SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port))));
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : port))));
   }
 
   @Test
@@ -136,7 +135,7 @@ class LettuceClusterClientTest {
                             equalTo(
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? configuredTarget : host),
-                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : port),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? 2L : null))));
