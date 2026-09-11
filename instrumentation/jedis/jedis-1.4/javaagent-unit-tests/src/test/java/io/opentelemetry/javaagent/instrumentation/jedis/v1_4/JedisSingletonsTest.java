@@ -46,9 +46,7 @@ class JedisSingletonsTest {
             asList(new JedisShardInfo("shard2", 6380), new JedisShardInfo("shard1", 6379)),
             "shard2:6380,shard1:6379"),
         argumentSet(
-            "omits the default port",
-            singletonList(new JedisShardInfo("shard1", 6379)),
-            "shard1"),
+            "omits the default port", singletonList(new JedisShardInfo("shard1", 6379)), "shard1"),
         argumentSet(
             "preserves duplicate shards",
             asList(new JedisShardInfo("shard1", 6379), new JedisShardInfo("shard1", 6379)),
@@ -57,9 +55,7 @@ class JedisSingletonsTest {
 
   @Test
   void shardListWithNullMemberFailsClosed() {
-    assertThat(
-            JedisSingletons.createServerTarget(
-                asList(new JedisShardInfo("shard1", 6379), null)))
+    assertThat(JedisSingletons.createServerTarget(asList(new JedisShardInfo("shard1", 6379), null)))
         .isNull();
   }
 
@@ -99,8 +95,7 @@ class JedisSingletonsTest {
     }
     assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(attachedTarget);
 
-    try (ConfiguredTargetScope ignored =
-        JedisSingletons.openConfiguredTargetScope(scopedTarget)) {
+    try (ConfiguredTargetScope ignored = JedisSingletons.openConfiguredTargetScope(scopedTarget)) {
       assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(scopedTarget);
     }
 
