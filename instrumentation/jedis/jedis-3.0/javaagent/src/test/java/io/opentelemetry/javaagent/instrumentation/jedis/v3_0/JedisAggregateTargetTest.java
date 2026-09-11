@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -76,15 +75,48 @@ class JedisAggregateTargetTest {
             () -> {
               assertThat(testing.spans())
                   .filteredOn(span -> span.getName().startsWith("SET"))
-                  .anySatisfy(span -> assertTarget(span, sentinelEndpoint + "/" + MASTER_NAME));
+                  .anySatisfy(
+                      span -> {
+                        if (emitStableDatabaseSemconv()) {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                        } else {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isNotEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
+                        }
+                      });
               assertThat(testing.spans())
                   .filteredOn(span -> span.getName().startsWith("SENTINEL"))
                   .isNotEmpty()
-                  .allSatisfy(span -> assertTarget(span, sentinelEndpoint + "/" + MASTER_NAME));
+                  .allSatisfy(
+                      span -> {
+                        if (emitStableDatabaseSemconv()) {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                        } else {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isNotEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
+                        }
+                      });
               assertThat(testing.spans())
                   .filteredOn(span -> span.getName().startsWith("SUBSCRIBE"))
                   .isNotEmpty()
-                  .allSatisfy(span -> assertTarget(span, sentinelEndpoint + "/" + MASTER_NAME));
+                  .allSatisfy(
+                      span -> {
+                        if (emitStableDatabaseSemconv()) {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                        } else {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isNotEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
+                        }
+                      });
             });
   }
 
@@ -132,7 +164,18 @@ class JedisAggregateTargetTest {
               assertThat(testing.spans())
                   .filteredOn(span -> span.getName().startsWith("CLUSTER"))
                   .isNotEmpty()
-                  .allSatisfy(span -> assertTarget(span, clusterTarget));
+                  .allSatisfy(
+                      span -> {
+                        if (emitStableDatabaseSemconv()) {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                        } else {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isNotEqualTo(clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
+                        }
+                      });
             });
   }
 
@@ -252,15 +295,5 @@ class JedisAggregateTargetTest {
             .getConstructor(Set.class)
             .newInstance(nodes);
     cleanup.deferAfterAll(() -> cluster.getClass().getMethod("close").invoke(cluster));
-  }
-
-  private static void assertTarget(SpanData span, String configuredTarget) {
-    if (emitStableDatabaseSemconv()) {
-      assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(configuredTarget);
-      assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-    } else {
-      assertThat(span.getAttributes().get(SERVER_ADDRESS)).isNotEqualTo(configuredTarget);
-      assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-    }
   }
 }
