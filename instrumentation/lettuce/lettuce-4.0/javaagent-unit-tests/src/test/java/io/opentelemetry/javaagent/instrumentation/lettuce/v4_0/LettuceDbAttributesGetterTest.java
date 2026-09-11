@@ -22,14 +22,14 @@ class LettuceDbAttributesGetterTest {
   private static final InetSocketAddress SELECTED_ADDRESS =
       InetSocketAddress.createUnresolved("selected-node", 6380);
 
+  private final LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+
   @Test
   void commandUsesConfiguredTargetOnlyForStableSemconv() {
     RedisCommand<String, String, String> command = command();
     LettuceSingletons.COMMAND_ADDRESS.set(command, SELECTED_ADDRESS);
     LettuceServerTargets.capture(
         command, RedisServerTarget.ofEndpoint("configured-node:6379"));
-
-    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
     assertThat(getter.getServerAddress(command))
         .isEqualTo(emitStableDatabaseSemconv() ? "configured-node" : "selected-node");
@@ -40,8 +40,6 @@ class LettuceDbAttributesGetterTest {
   void commandWithoutConfiguredTargetOmitsStableServerAttributes() {
     RedisCommand<String, String, String> command = command();
     LettuceSingletons.COMMAND_ADDRESS.set(command, SELECTED_ADDRESS);
-
-    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
     assertThat(getter.getServerAddress(command))
         .isEqualTo(emitStableDatabaseSemconv() ? null : "selected-node");

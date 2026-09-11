@@ -23,6 +23,8 @@ class LettuceBatchAttributesGetterTest {
   private static final InetSocketAddress SELECTED_ADDRESS =
       InetSocketAddress.createUnresolved("selected-node", 6380);
 
+  private final LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
   @Test
   void batchUsesConfiguredTargetOnlyForStableSemconv() {
     LettuceBatchRequest request =
@@ -31,8 +33,6 @@ class LettuceBatchAttributesGetterTest {
             SELECTED_ADDRESS,
             null,
             RedisServerTarget.ofEndpoint("configured-node:6379"));
-
-    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
     assertThat(getter.getServerAddress(request))
         .isEqualTo(emitStableDatabaseSemconv() ? "configured-node" : "selected-node");
