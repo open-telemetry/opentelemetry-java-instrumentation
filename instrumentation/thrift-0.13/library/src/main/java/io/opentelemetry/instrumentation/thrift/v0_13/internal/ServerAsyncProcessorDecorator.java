@@ -11,7 +11,6 @@ import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.AbstractNonblockingServer;
-import org.apache.thrift.server.FrameBufferUtil;
 import org.apache.thrift.transport.TTransport;
 
 /**
@@ -35,7 +34,11 @@ public final class ServerAsyncProcessorDecorator implements TAsyncProcessor, TPr
       return;
     }
 
-    TTransport transport = FrameBufferUtil.getTransport(fb);
+    TTransport transport = FrameBufferAccess.getTransport(fb);
+    if (transport == null) {
+      processor.process(fb);
+      return;
+    }
     ServerInProtocolDecorator serverInProtocolDecorator =
         (ServerInProtocolDecorator) fb.getInputProtocol();
     ServerOutProtocolDecorator serverOutProtocolDecorator =

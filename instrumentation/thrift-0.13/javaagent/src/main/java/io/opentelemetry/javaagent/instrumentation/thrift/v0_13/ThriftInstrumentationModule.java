@@ -29,12 +29,6 @@ public class ThriftInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    // these classes are only used by library instrumentation but muzzle still checks them
-    return className.startsWith("org.apache.thrift.server.FrameBufferUtil");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ThriftServiceClientInstrumentation(),
