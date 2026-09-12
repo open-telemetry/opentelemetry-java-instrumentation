@@ -1,0 +1,198 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import javax.annotation.Nullable;
+import org.apache.commons.pool2.PooledObjectFactory;
+import redis.clients.jedis.BinaryJedis;
+import redis.clients.jedis.Connection;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.JedisClusterConnectionHandler;
+import redis.clients.jedis.util.Pool;
+
+public class JedisConfiguredTargets {
+
+  private static final VirtualField<Connection, ConfiguredTarget> CONNECTION_TARGET =
+      VirtualField.find(Connection.class, ConfiguredTarget.class);
+
+  private static final VirtualField<Pool<?>, ConfiguredTarget> POOL_TARGET =
+      VirtualField.find(Pool.class, ConfiguredTarget.class);
+
+  private static final VirtualField<Pool<?>, PoolFactory> POOL_FACTORY =
+      VirtualField.find(Pool.class, PoolFactory.class);
+
+  private static final VirtualField<PooledObjectFactory<?>, ConfiguredTarget> FACTORY_TARGET =
+      VirtualField.find(PooledObjectFactory.class, ConfiguredTarget.class);
+
+  private static final VirtualField<HostAndPort, OriginalEndpoint> ORIGINAL_ENDPOINT =
+      VirtualField.find(HostAndPort.class, OriginalEndpoint.class);
+
+  private static final VirtualField<JedisClusterConnectionHandler, ConfiguredTarget>
+      CLUSTER_TARGET =
+          VirtualField.find(JedisClusterConnectionHandler.class, ConfiguredTarget.class);
+
+  private static final ContextKey<ConfiguredTarget> CURRENT_CONFIGURED_TARGET =
+      ContextKey.named("opentelemetry-jedis-configured-target");
+
+  public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
+    ConfiguredTarget configuredTarget = ConfiguredTarget.create(target);
+    POOL_TARGET.set(pool, configuredTarget);
+    PoolFactory poolFactory = POOL_FACTORY.get(pool);
+    if (poolFactory != null) {
+      FACTORY_TARGET.set(poolFactory.factory, configuredTarget);
+    }
+  }
+
+  public static void capturePoolFactory(Pool<?> pool, PooledObjectFactory<?> factory) {
+    POOL_FACTORY.set(pool, new PoolFactory(factory));
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    if (configuredTarget == null) {
+      configuredTarget = POOL_TARGET.get(pool);
+    } else {
+      POOL_TARGET.set(pool, configuredTarget);
+    }
+    if (configuredTarget != null) {
+      FACTORY_TARGET.set(factory, configuredTarget);
+    }
+  }
+
+  public static void captureOriginalEndpoint(
+      @Nullable HostAndPort parsedEndpoint, @Nullable String configuredEndpoint) {
+    if (parsedEndpoint != null && configuredEndpoint != null) {
+      ORIGINAL_ENDPOINT.set(parsedEndpoint, new OriginalEndpoint(configuredEndpoint));
+    }
+  }
+
+  @Nullable
+  public static RedisServerTarget sentinelTarget(
+      @Nullable String masterName, @Nullable Collection<?> sentinels) {
+    List<String> endpoints = null;
+    if (sentinels != null) {
+      endpoints = new ArrayList<>(sentinels.size());
+      for (Object sentinel : sentinels) {
+        if (sentinel instanceof HostAndPort) {
+          endpoints.add(sentinelEndpoint((HostAndPort) sentinel));
+        } else if (sentinel instanceof String) {
+          endpoints.add(RedisServerTarget.normalizeHostAndPort((String) sentinel));
+        } else {
+          endpoints.add(null);
+        }
+      }
+    }
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, masterName);
+  }
+
+  private static String sentinelEndpoint(HostAndPort sentinel) {
+    OriginalEndpoint originalEndpoint = ORIGINAL_ENDPOINT.get(sentinel);
+    return originalEndpoint == null
+        ? RedisServerTarget.endpoint(sentinel.getHost(), sentinel.getPort())
+        : RedisServerTarget.normalizeHostAndPort(originalEndpoint.value);
+  }
+
+  public static void setClusterTarget(
+      JedisClusterConnectionHandler handler, @Nullable RedisServerTarget target) {
+    CLUSTER_TARGET.set(handler, ConfiguredTarget.create(target));
+  }
+
+  @Nullable
+  public static Scope openClusterTargetScope(JedisClusterConnectionHandler handler) {
+    ConfiguredTarget configuredTarget = CLUSTER_TARGET.get(handler);
+    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
+  }
+
+  @Nullable
+  public static Scope openPoolTargetScope(Pool<?> pool) {
+    ConfiguredTarget configuredTarget = POOL_TARGET.get(pool);
+    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
+  }
+
+  @Nullable
+  public static Scope openFactoryTargetScope(PooledObjectFactory<?> factory) {
+    ConfiguredTarget configuredTarget = FACTORY_TARGET.get(factory);
+    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
+  }
+
+  public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
+    return Context.current()
+        .with(CURRENT_CONFIGURED_TARGET, ConfiguredTarget.create(target))
+        .makeCurrent();
+  }
+
+  public static void capturePooledConnectionTarget(Pool<?> pool, @Nullable Object resource) {
+    if (!(resource instanceof BinaryJedis)) {
+      return;
+    }
+    ConfiguredTarget configuredTarget = POOL_TARGET.get(pool);
+    if (configuredTarget != null) {
+      CONNECTION_TARGET.set(((BinaryJedis) resource).getClient(), configuredTarget);
+    }
+  }
+
+  public static void setConnectionTarget(
+      @Nullable Connection connection, @Nullable RedisServerTarget target) {
+    if (connection == null) {
+      return;
+    }
+    CONNECTION_TARGET.set(connection, ConfiguredTarget.create(target));
+  }
+
+  public static void captureConnectionTarget(
+      Connection connection, @Nullable RedisServerTarget fallbackTarget) {
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    setConnectionTarget(
+        connection, configuredTarget == null ? fallbackTarget : configuredTarget.target);
+  }
+
+  @Nullable
+  static RedisServerTarget connectionTarget(Connection connection) {
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    if (configuredTarget != null) {
+      return configuredTarget.target;
+    }
+    configuredTarget = CONNECTION_TARGET.get(connection);
+    return configuredTarget == null ? null : configuredTarget.target;
+  }
+
+  private JedisConfiguredTargets() {}
+
+  private static final class PoolFactory {
+    private final PooledObjectFactory<?> factory;
+
+    private PoolFactory(PooledObjectFactory<?> factory) {
+      this.factory = factory;
+    }
+  }
+
+  private static final class ConfiguredTarget {
+    private static final ConfiguredTarget UNREPRESENTABLE = new ConfiguredTarget(null);
+
+    @Nullable private final RedisServerTarget target;
+
+    private static ConfiguredTarget create(@Nullable RedisServerTarget target) {
+      return target == null ? UNREPRESENTABLE : new ConfiguredTarget(target);
+    }
+
+    private ConfiguredTarget(@Nullable RedisServerTarget target) {
+      this.target = target;
+    }
+  }
+
+  private static final class OriginalEndpoint {
+    private final String value;
+
+    private OriginalEndpoint(String value) {
+      this.value = value;
+    }
+  }
+}
