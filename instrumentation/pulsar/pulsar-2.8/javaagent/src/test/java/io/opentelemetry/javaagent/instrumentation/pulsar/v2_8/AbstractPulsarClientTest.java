@@ -150,7 +150,9 @@ abstract class AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
@@ -266,7 +268,9 @@ abstract class AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
@@ -405,9 +409,9 @@ abstract class AbstractPulsarClientTest {
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
-                oldOperation("publish"),
-                operationName("send"),
-                operationType("send"),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 bodySize(),
                 equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
@@ -447,11 +451,13 @@ abstract class AbstractPulsarClientTest {
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
-                oldOperation("receive"),
-                operationName("receive"),
-                operationType("receive"),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
-                subscriptionName(),
+                equalTo(
+                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                    emitStableMessagingSemconv() ? "test_sub" : null),
                 bodySize()));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
@@ -472,11 +478,13 @@ abstract class AbstractPulsarClientTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
-                oldOperation("process"),
-                operationName("process"),
-                operationType("process"),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
-                subscriptionName(),
+                equalTo(
+                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                    emitStableMessagingSemconv() ? "test_sub" : null),
                 bodySize()));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
@@ -520,30 +528,11 @@ abstract class AbstractPulsarClientTest {
     return suffixIndex;
   }
 
-  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
-  private static AttributeAssertion subscriptionName() {
-    return equalTo(
-        MESSAGING_DESTINATION_SUBSCRIPTION_NAME, emitStableMessagingSemconv() ? "test_sub" : null);
-  }
-
   // messaging.message.body.size is opt-in in the v1.43 messaging semantic conventions
   private static AttributeAssertion bodySize() {
     return emitOldMessagingSemconv()
         ? satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)
         : equalTo(MESSAGING_MESSAGE_BODY_SIZE, null);
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  private static AttributeAssertion oldOperation(String operation) {
-    return equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationName(String operation) {
-    return equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationType(String operation) {
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 
   static void acknowledgeMessage(Consumer<String> consumer, Message<String> message) {

@@ -52,7 +52,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .messageListener(
@@ -245,7 +247,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
@@ -359,7 +363,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
@@ -421,7 +427,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
@@ -583,7 +591,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
@@ -697,7 +707,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .messageListener(
@@ -801,7 +813,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .topic(topic)
             .messageListener(
@@ -911,7 +925,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
         client
             .newConsumer(Schema.STRING)
             .topic(topic2, topic1)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .messageListener(
                 (MessageListener<String>)
@@ -1076,7 +1092,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
         client
             .newConsumer(Schema.STRING)
             .topic(topic2, topic1)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
 
@@ -1156,7 +1174,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .subscriptionName("test_sub")
+            .equalTo(
+                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                emitStableMessagingSemconv() ? "test_sub" : null)
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
