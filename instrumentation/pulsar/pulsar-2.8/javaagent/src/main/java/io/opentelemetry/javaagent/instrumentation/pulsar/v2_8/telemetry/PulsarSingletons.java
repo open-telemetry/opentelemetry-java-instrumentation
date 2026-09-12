@@ -262,7 +262,7 @@ public class PulsarSingletons {
     // instrumentation
     for (Message<?> message : messages) {
       VirtualFieldStore.markReceiveSpanRecorded(message);
-      if (emitStableMessagingSemconv()) {
+      if (emitStableMessagingSemconv() && throwable == null) {
         VirtualFieldStore.markConsumedMessagesRecorded(message);
       }
       VirtualFieldStore.inject(message, processParentContext);
