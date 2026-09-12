@@ -18,8 +18,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public final class HbaseInstrumentationModule extends InstrumentationModule {
 
-  private static final String CALL_UTIL = "org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil";
-
   public HbaseInstrumentationModule() {
     super("hbase-client", "hbase-client-2.0");
   }
@@ -33,16 +31,6 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
             "org.apache.hadoop.hbase.client.AsyncAdmin")
         // added in 2.5.0 (native OTel support)
         .and(not(hasClassesNamed("org.apache.hadoop.hbase.client.trace.IpcClientSpanBuilder")));
-  }
-
-  @Override
-  public boolean isHelperClass(String className) {
-    return CALL_UTIL.equals(className);
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return asList(CALL_UTIL);
   }
 
   @Override

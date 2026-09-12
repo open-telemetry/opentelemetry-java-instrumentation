@@ -21,7 +21,7 @@ import io.vertx.core.Promise;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
+import io.vertx.sqlclient.impl.VertxSqlClientQueryBaseHelper;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -75,12 +75,12 @@ public class VertxSqlClientUtil {
   }
 
   public static void setQueryExecutorData(Object queryExecutor, VertxSqlClientData data) {
-    QueryExecutorUtil.setData(queryExecutor, data);
+    VertxSqlClientQueryBaseHelper.setData(queryExecutor, data);
   }
 
   @Nullable
   public static VertxSqlClientData getQueryExecutorData(Object queryExecutor) {
-    return (VertxSqlClientData) QueryExecutorUtil.getData(queryExecutor);
+    return (VertxSqlClientData) VertxSqlClientQueryBaseHelper.getData(queryExecutor);
   }
 
   public static Future<PreparedStatement> attachPreparedStatementData(

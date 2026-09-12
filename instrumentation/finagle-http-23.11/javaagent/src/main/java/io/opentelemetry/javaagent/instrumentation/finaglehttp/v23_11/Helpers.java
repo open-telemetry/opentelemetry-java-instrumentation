@@ -123,7 +123,7 @@ public class Helpers {
 
   /** Part 1/3 of bridging the otel Context from netty to finagle (for h2). */
   public static void mutateHandlerPipeline(Channel ch) {
-    ChannelHandler h1Handler = ch.pipeline().get(Netty4HttpPackageHelpers.getHttpCodecName());
+    ChannelHandler h1Handler = ch.pipeline().get(package$.MODULE$.HttpCodecName());
     Http2StreamMessageHandler h2Handler = ch.pipeline().get(Http2StreamMessageHandler.class);
 
     // h1 server handler || h2 server handler;
@@ -140,7 +140,7 @@ public class Helpers {
       // not applicable to clients
       ch.pipeline()
           .addBefore(
-              ChannelTransportHelpers.getHandlerName(),
+              ChannelTransport.HandlerName(),
               OTEL_NETTY_HANDLER,
               new ChannelInboundHandlerAdapter() {
                 /*

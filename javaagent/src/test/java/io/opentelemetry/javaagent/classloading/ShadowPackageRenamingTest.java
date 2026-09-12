@@ -36,9 +36,7 @@ class ShadowPackageRenamingTest {
           "okio",
           "jnr",
           "org.objectweb.asm",
-          "com.kenai",
-          // Custom RxJava Utility
-          "rx.OpenTelemetryTracingUtil");
+          "com.kenai");
 
   @Test
   void agentDependenciesRenamed() throws Exception {

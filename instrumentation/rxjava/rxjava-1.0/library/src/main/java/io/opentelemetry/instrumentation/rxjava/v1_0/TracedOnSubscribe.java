@@ -8,10 +8,10 @@ package io.opentelemetry.instrumentation.rxjava.v1_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.rxjava.v1_0.internal.ObservableOnSubscribeAccess;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import rx.Observable;
-import rx.OpenTelemetryTracingUtil;
 import rx.Subscriber;
 
 public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscribe<T> {
@@ -29,7 +29,7 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
 
   public TracedOnSubscribe(
       Observable<T> originalObservable, Instrumenter<REQUEST, ?> instrumenter, REQUEST request) {
-    delegate = OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
+    delegate = ObservableOnSubscribeAccess.extractOnSubscribe(originalObservable);
     this.instrumenter = instrumenter;
     this.requestFactory = () -> request;
     parentContext = Context.current();
@@ -39,7 +39,7 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
       Observable<T> originalObservable,
       Instrumenter<REQUEST, ?> instrumenter,
       Supplier<REQUEST> requestFactory) {
-    delegate = OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
+    delegate = ObservableOnSubscribeAccess.extractOnSubscribe(originalObservable);
     this.instrumenter = instrumenter;
     this.requestFactory = requestFactory;
     parentContext = Context.current();

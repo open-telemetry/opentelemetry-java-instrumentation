@@ -17,6 +17,7 @@ public final class RequestAccess {
 
   private static volatile Method getArgsMethod;
 
+  // reflectively invoked package-private RequestImpl#getArgs returns List<byte[]>
   @SuppressWarnings("unchecked")
   public static List<byte[]> getArgs(Request request) {
     if (request == null || !REQUEST_IMPL.equals(request.getClass().getName())) {

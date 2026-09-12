@@ -8,30 +8,31 @@ package org.apache.hadoop.hbase.ipc;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseCallStateHelper;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
 import java.io.IOException;
 import org.apache.hadoop.hbase.client.MetricsConnection;
 import org.junit.jupiter.api.Test;
 
-class OpenTelemetryCallUtilTimeoutTest {
+class HbaseCallStateHelperTimeoutTest {
+
+  private static final VirtualField<Call, RequestAndContext> FIELD =
+      VirtualField.find(Call.class, RequestAndContext.class);
 
   @Test
   void clearsAcceptedTimeoutStateOnce() {
     Call call = newCall();
     RequestAndContext requestAndContext = requestAndContext();
-    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
+    FIELD.set(call, requestAndContext);
     IOException timeoutError = new IOException("timeout");
 
     call.setTimeout(timeoutError);
 
-    assertThat(
-            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
-                call, call.error, timeoutError))
+    assertThat(HbaseCallStateHelper.getAndClearIfError(FIELD, call, call.error, timeoutError))
         .isSameAs(requestAndContext);
-    assertThat(
-            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
-                call, call.error, timeoutError))
+    assertThat(HbaseCallStateHelper.getAndClearIfError(FIELD, call, call.error, timeoutError))
         .isNull();
   }
 
@@ -40,53 +41,45 @@ class OpenTelemetryCallUtilTimeoutTest {
     Call call = newCall();
     call.setResponse(null, null);
     RequestAndContext requestAndContext = requestAndContext();
-    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
+    FIELD.set(call, requestAndContext);
     IOException timeoutError = new IOException("timeout");
 
     call.setTimeout(timeoutError);
 
-    assertThat(
-            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
-                call, call.error, timeoutError))
+    assertThat(HbaseCallStateHelper.getAndClearIfError(FIELD, call, call.error, timeoutError))
         .isNull();
-    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
-        .isSameAs(requestAndContext);
+    assertThat(HbaseCallStateHelper.getAndClear(FIELD, call)).isSameAs(requestAndContext);
   }
 
   @Test
   void keepsStateWhenAnotherErrorCompletedTheCall() {
     Call call = newCall();
     RequestAndContext requestAndContext = requestAndContext();
-    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
+    FIELD.set(call, requestAndContext);
     call.setException(new IOException("failure"));
     IOException timeoutError = new IOException("timeout");
 
     call.setTimeout(timeoutError);
 
-    assertThat(
-            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
-                call, call.error, timeoutError))
+    assertThat(HbaseCallStateHelper.getAndClearIfError(FIELD, call, call.error, timeoutError))
         .isNull();
-    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
-        .isSameAs(requestAndContext);
+    assertThat(HbaseCallStateHelper.getAndClear(FIELD, call)).isSameAs(requestAndContext);
   }
 
   @Test
   void rejectsTimeoutWithDifferentErrorIdentity() {
     Call call = newCall();
     RequestAndContext requestAndContext = requestAndContext();
-    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
+    FIELD.set(call, requestAndContext);
     IOException timeoutError = new IOException("timeout");
 
     call.setTimeout(timeoutError);
 
     assertThat(
-            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
-                call, call.error, new IOException("timeout")))
+            HbaseCallStateHelper.getAndClearIfError(
+                FIELD, call, call.error, new IOException("timeout")))
         .isNull();
-    assertThat(
-            OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(
-                call, call.error, timeoutError))
+    assertThat(HbaseCallStateHelper.getAndClearIfError(FIELD, call, call.error, timeoutError))
         .isSameAs(requestAndContext);
   }
 
@@ -94,12 +87,11 @@ class OpenTelemetryCallUtilTimeoutTest {
   void clearsNormalCompletionState() {
     Call call = newCall();
     RequestAndContext requestAndContext = requestAndContext();
-    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
+    FIELD.set(call, requestAndContext);
 
     call.setResponse(null, null);
 
-    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
-        .isSameAs(requestAndContext);
+    assertThat(HbaseCallStateHelper.getAndClear(FIELD, call)).isSameAs(requestAndContext);
   }
 
   private static Call newCall() {

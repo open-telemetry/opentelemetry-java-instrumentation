@@ -37,6 +37,7 @@ public final class HttpClientConfigAccess {
     }
   }
 
+  // Reflection: the field type is Function with wildcard bounds erased at runtime.
   @SuppressWarnings("unchecked")
   public static Function<? super Mono<? extends Connection>, ? extends Mono<? extends Connection>>
       getConnector(HttpClientConfig config) {

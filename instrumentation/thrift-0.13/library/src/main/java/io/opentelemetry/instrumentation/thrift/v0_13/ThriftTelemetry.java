@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.AsyncMethodCallbackUtil;
+import io.opentelemetry.instrumentation.thrift.v0_13.internal.AsyncProcessorAccess;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ClientCallContext;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ClientProtocolDecorator;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerAsyncProcessorDecorator;
@@ -21,7 +22,6 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.thrift.AsyncProcessFunction;
-import org.apache.thrift.AsyncProcessorUtil;
 import org.apache.thrift.TBaseAsyncProcessor;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.TServiceClient;
@@ -61,7 +61,7 @@ public final class ThriftTelemetry {
     if (delegate instanceof TBaseAsyncProcessor) {
       TBaseAsyncProcessor<?> asyncProcessor = (TBaseAsyncProcessor<?>) delegate;
       Map<String, AsyncProcessFunction<?, ?, ?, ?>> processMap =
-          AsyncProcessorUtil.getProcessMap(asyncProcessor);
+          AsyncProcessorAccess.getProcessMap(asyncProcessor);
       Map<String, AsyncProcessFunction<?, ?, ?, ?>> copy = new HashMap<>(processMap);
       for (Map.Entry<String, AsyncProcessFunction<?, ?, ?, ?>> entry : copy.entrySet()) {
         processMap.put(entry.getKey(), AsyncMethodCallbackUtil.wrap(entry.getValue()));

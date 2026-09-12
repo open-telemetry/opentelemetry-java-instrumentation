@@ -9,7 +9,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import org.apache.thrift.AsyncProcessFunction;
-import org.apache.thrift.AsyncProcessorUtil;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
 import org.apache.thrift.async.AsyncMethodCallback;
@@ -79,7 +78,7 @@ public final class AsyncMethodCallbackUtil {
 
       @Override
       public boolean isOneway() {
-        return AsyncProcessorUtil.isOneWay(function);
+        return AsyncProcessorAccess.isOneWay(function);
       }
 
       @Override

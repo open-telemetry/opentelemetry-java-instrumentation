@@ -10,12 +10,16 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
-import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class QueryBaseInstrumentation implements TypeInstrumentation {
+
+  // Referenced by fully-qualified string because the advice class lives in the
+  // io.vertx.sqlclient.impl package (it needs same-package access to package-private
+  // QueryExecutor / QueryBase#builder) and cannot be imported from this package.
+  private static final String COPY_ADVICE_CLASS_NAME =
+      "io.vertx.sqlclient.impl.VertxSqlClientQueryBaseHelper";
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -25,15 +29,6 @@ class QueryBaseInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("mapping", "collecting"), getClass().getName() + "$CopyAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class CopyAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object sourceQuery, @Advice.Return Object copiedQuery) {
-      QueryExecutorUtil.copyQueryExecutorData(sourceQuery, copiedQuery);
-    }
+        namedOneOf("mapping", "collecting"), COPY_ADVICE_CLASS_NAME);
   }
 }

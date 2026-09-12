@@ -30,12 +30,12 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isHelperClass(String className) {
-    return "io.vertx.sqlclient.impl.QueryExecutorUtil".equals(className);
+    return "io.vertx.sqlclient.impl.VertxSqlClientQueryBaseHelper".equals(className);
   }
 
   @Override
   public List<String> injectedClassNames() {
-    return singletonList("io.vertx.sqlclient.impl.QueryExecutorUtil");
+    return singletonList("io.vertx.sqlclient.impl.VertxSqlClientQueryBaseHelper");
   }
 
   @Override
