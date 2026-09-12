@@ -184,13 +184,15 @@ intentionally ad hoc or cross-trace filtering that the trace DSL cannot express.
   is already an `int` expression or variable. The assertion API already has an
   `equalTo(AttributeKey<Long>, int)` overload, so `equalTo(longKey("iteration"), iteration)` is
   preferred over `equalTo(longKey("iteration"), (long) iteration)`.
-- Use a `(long)` cast when an `int` value is one branch of a nullable conditional passed to
-  `equalTo(AttributeKey<Long>, ...)`; prefer `(long) port` over `Long.valueOf(port)`. Without the
-  cast, Java boxes the conditional as `Integer`, which does not match the `Long` attribute key:
+- The previous rule does not apply when an `int` value is one branch of a conditional and the other
+  branch is `null`. Cast the `int` branch to `long`:
 
   ```java
   equalTo(SERVER_PORT, enabled ? (long) port : null)
   ```
+
+  The cast makes the conditional a `Long`. Without it, Java selects the primitive `int` overload
+  and tries to unbox `null`, causing a `NullPointerException`.
 
 ## Metric Assertions
 
