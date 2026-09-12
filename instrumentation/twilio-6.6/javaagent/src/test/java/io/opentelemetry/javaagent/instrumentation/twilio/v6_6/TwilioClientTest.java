@@ -13,7 +13,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -45,6 +44,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
@@ -180,8 +180,8 @@ class TwilioClientTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "testV3PreviewDisabled", matches = "true")
   void v3PreviewDisablesTwilioByDefault() {
-    assumeTrue(Boolean.getBoolean("testV3PreviewDisabled"));
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(

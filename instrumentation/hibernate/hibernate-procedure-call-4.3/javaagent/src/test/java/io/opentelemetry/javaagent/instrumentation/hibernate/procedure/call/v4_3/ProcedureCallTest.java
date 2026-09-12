@@ -24,7 +24,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -43,6 +42,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ProcedureCallTest {
@@ -154,9 +154,8 @@ class ProcedureCallTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "testV3PreviewDisabled", matches = "true")
   void v3PreviewDisablesHibernateByDefault() {
-    assumeTrue(Boolean.getBoolean("testV3PreviewDisabled"));
-
     testing.runWithSpan(
         "parent",
         () -> {

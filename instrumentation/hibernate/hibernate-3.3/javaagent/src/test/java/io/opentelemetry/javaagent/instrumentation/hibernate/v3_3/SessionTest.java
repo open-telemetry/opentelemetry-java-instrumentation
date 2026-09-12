@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -26,6 +25,7 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -33,9 +33,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 class SessionTest extends AbstractHibernateTest {
 
   @Test
+  @EnabledIfSystemProperty(named = "testV3PreviewDisabled", matches = "true")
   void v3PreviewDisablesHibernateByDefault() {
-    assumeTrue(Boolean.getBoolean("testV3PreviewDisabled"));
-
     testing.runWithSpan(
         "parent",
         () -> {

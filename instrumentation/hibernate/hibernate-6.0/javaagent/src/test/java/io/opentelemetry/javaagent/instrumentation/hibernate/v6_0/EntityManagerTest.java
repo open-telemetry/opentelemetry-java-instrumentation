@@ -26,7 +26,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -46,6 +45,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -55,9 +55,8 @@ class EntityManagerTest extends AbstractHibernateTest {
       Persistence.createEntityManagerFactory("test-pu");
 
   @Test
+  @EnabledIfSystemProperty(named = "testV3PreviewDisabled", matches = "true")
   void v3PreviewDisablesHibernateByDefault() {
-    assumeTrue(Boolean.getBoolean("testV3PreviewDisabled"));
-
     testing.runWithSpan(
         "parent",
         () -> {
