@@ -38,10 +38,7 @@ testing {
     register<JvmTestSuite>("unitTests") {
       dependencies {
         implementation(project())
-        implementation(project(":instrumentation-api"))
-        implementation(project(":instrumentation-api-incubator"))
         implementation(project(":javaagent-extension-api"))
-        implementation(project(":javaagent-tooling"))
       }
     }
   }
