@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisSentinelPool;
 
 class JedisSentinel30ClientTest {
@@ -115,6 +116,56 @@ class JedisSentinel30ClientTest {
                   .filteredOn(span -> span.getName().startsWith("SUBSCRIBE"))
                   .isNotEmpty()
                   .allSatisfy(
+                      span -> {
+                        if (emitStableDatabaseSemconv()) {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                        } else {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isNotEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
+                        }
+                      });
+            });
+  }
+
+  @Test
+  void eagerlyCreatedConnectionsUseConfiguredTarget() {
+    JedisPoolConfig config = new JedisPoolConfig();
+    config.setMinIdle(1);
+    config.setTimeBetweenEvictionRunsMillis(10);
+    JedisSentinelPool pool =
+        new JedisSentinelPool(MASTER_NAME, singleton(sentinelEndpoint), config, 2000, null, 1);
+    cleanup.deferCleanup(pool);
+    await().untilAsserted(() -> assertThat(pool.getNumIdle()).isEqualTo(1));
+
+    try (Jedis jedis = pool.getResource()) {
+      jedis.set("eager-key", "value");
+    }
+
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().startsWith("SELECT"))
+                  .isNotEmpty()
+                  .allSatisfy(
+                      span -> {
+                        if (emitStableDatabaseSemconv()) {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                        } else {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isNotEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
+                        }
+                      });
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().startsWith("SET"))
+                  .singleElement()
+                  .satisfies(
                       span -> {
                         if (emitStableDatabaseSemconv()) {
                           assertThat(span.getAttributes().get(SERVER_ADDRESS))

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -16,6 +15,7 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.commons.pool2.PooledObjectFactory;
 import redis.clients.jedis.util.Pool;
 
 class PoolResourceInstrumentation implements TypeInstrumentation {
@@ -27,17 +27,19 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        named("initPool").and(takesArguments(2)), getClass().getName() + "$InitPoolAdvice");
     transformer.applyAdviceToMethod(
         named("getResource").and(takesArguments(0)), getClass().getName() + "$GetResourceAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ConstructorAdvice {
+  public static class InitPoolAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Pool<?> pool) {
-      JedisConfiguredTargets.capturePoolTarget(pool);
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(
+        @Advice.This Pool<?> pool, @Advice.Argument(1) PooledObjectFactory<?> factory) {
+      JedisConfiguredTargets.capturePoolFactory(pool, factory);
     }
   }
 
@@ -51,9 +53,16 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+    public static void onExit(
+        @Advice.This Pool<?> pool,
+        @Advice.Return @Nullable Object resource,
+        @Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
-        scope.close();
+        try {
+          JedisConfiguredTargets.capturePooledConnectionTarget(pool, resource);
+        } finally {
+          scope.close();
+        }
       }
     }
   }

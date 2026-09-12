@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.apache.commons.pool2.PooledObjectFactory;
+import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClusterConnectionHandler;
@@ -27,6 +29,12 @@ public class JedisConfiguredTargets {
   private static final VirtualField<Pool<?>, ConfiguredTarget> POOL_TARGET =
       VirtualField.find(Pool.class, ConfiguredTarget.class);
 
+  private static final VirtualField<Pool<?>, PoolFactory> POOL_FACTORY =
+      VirtualField.find(Pool.class, PoolFactory.class);
+
+  private static final VirtualField<PooledObjectFactory<?>, ConfiguredTarget> FACTORY_TARGET =
+      VirtualField.find(PooledObjectFactory.class, ConfiguredTarget.class);
+
   private static final VirtualField<HostAndPort, OriginalEndpoint> ORIGINAL_ENDPOINT =
       VirtualField.find(HostAndPort.class, OriginalEndpoint.class);
 
@@ -38,13 +46,24 @@ public class JedisConfiguredTargets {
       ContextKey.named("opentelemetry-jedis-configured-target");
 
   public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
-    POOL_TARGET.set(pool, ConfiguredTarget.create(target));
+    ConfiguredTarget configuredTarget = ConfiguredTarget.create(target);
+    POOL_TARGET.set(pool, configuredTarget);
+    PoolFactory poolFactory = POOL_FACTORY.get(pool);
+    if (poolFactory != null) {
+      FACTORY_TARGET.set(poolFactory.factory, configuredTarget);
+    }
   }
 
-  public static void capturePoolTarget(Pool<?> pool) {
+  public static void capturePoolFactory(Pool<?> pool, PooledObjectFactory<?> factory) {
+    POOL_FACTORY.set(pool, new PoolFactory(factory));
     ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
-    if (configuredTarget != null) {
+    if (configuredTarget == null) {
+      configuredTarget = POOL_TARGET.get(pool);
+    } else {
       POOL_TARGET.set(pool, configuredTarget);
+    }
+    if (configuredTarget != null) {
+      FACTORY_TARGET.set(factory, configuredTarget);
     }
   }
 
@@ -98,10 +117,26 @@ public class JedisConfiguredTargets {
     return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
   }
 
+  @Nullable
+  public static Scope openFactoryTargetScope(PooledObjectFactory<?> factory) {
+    ConfiguredTarget configuredTarget = FACTORY_TARGET.get(factory);
+    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
+  }
+
   public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
     return Context.current()
         .with(CURRENT_CONFIGURED_TARGET, ConfiguredTarget.create(target))
         .makeCurrent();
+  }
+
+  public static void capturePooledConnectionTarget(Pool<?> pool, @Nullable Object resource) {
+    if (!(resource instanceof BinaryJedis)) {
+      return;
+    }
+    ConfiguredTarget configuredTarget = POOL_TARGET.get(pool);
+    if (configuredTarget != null) {
+      CONNECTION_TARGET.set(((BinaryJedis) resource).getClient(), configuredTarget);
+    }
   }
 
   public static void setConnectionTarget(
@@ -130,6 +165,14 @@ public class JedisConfiguredTargets {
   }
 
   private JedisConfiguredTargets() {}
+
+  private static final class PoolFactory {
+    private final PooledObjectFactory<?> factory;
+
+    private PoolFactory(PooledObjectFactory<?> factory) {
+      this.factory = factory;
+    }
+  }
 
   private static final class ConfiguredTarget {
     private static final ConfiguredTarget UNREPRESENTABLE = new ConfiguredTarget(null);

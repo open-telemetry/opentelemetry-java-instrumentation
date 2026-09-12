@@ -35,6 +35,7 @@ public class JedisInstrumentationModule extends InstrumentationModule {
     return asList(
         new HostAndPortInstrumentation(),
         new JedisConnectionInstrumentation(),
+        new JedisFactoryInstrumentation(),
         new ShardedJedisInstrumentation(),
         new JedisSentinelPoolInstrumentation(),
         new PoolResourceInstrumentation(),
