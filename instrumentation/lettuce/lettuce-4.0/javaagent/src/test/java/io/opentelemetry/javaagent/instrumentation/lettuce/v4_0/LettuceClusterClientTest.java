@@ -123,7 +123,7 @@ class LettuceClusterClientTest {
 
     RedisURI firstNodeUri =
         RedisURI.create("redis://" + firstRedisServer.getHost() + ":" + firstRedisServer.getPort());
-    RedisURI alternateSeed = RedisURI.create("redis://seed.invalid:6379");
+    RedisURI peerAlternateSeed = RedisURI.create("redis://seed.invalid:6379");
     peerConfiguredTarget =
         "seed.invalid:6379," + firstRedisServer.getHost() + ":" + firstRedisServer.getPort();
     List<RedisURI> nodeUris =
@@ -132,7 +132,7 @@ class LettuceClusterClientTest {
             RedisURI.create(
                 "redis://" + secondRedisServer.getHost() + ":" + secondRedisServer.getPort()));
     RedisClusterClient peerClient =
-        new TestRedisClusterClient(asList(alternateSeed, firstNodeUri), nodeUris);
+        new TestRedisClusterClient(asList(peerAlternateSeed, firstNodeUri), nodeUris);
     cleanup.deferAfterAll(() -> peerClient.shutdown(0, 15, SECONDS));
     peerConnection = peerClient.connect();
     cleanup.deferAfterAll(peerConnection);
