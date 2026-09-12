@@ -17,6 +17,8 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `JdbcConnectionPoolNameUtil` in favor of `JdbcConnectionPoolMetricsUtil`.
+  ([#20041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20041))
 - Deprecate `SelectorConfig.resolve` overloads that do not specify `SelectorConfig.Stability` in favor
   of overloads that require callers to choose the stability explicitly.
   ([#19969](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19969))
