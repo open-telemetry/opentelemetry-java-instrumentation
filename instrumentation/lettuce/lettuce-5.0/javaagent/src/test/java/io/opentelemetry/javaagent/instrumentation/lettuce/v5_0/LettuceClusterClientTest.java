@@ -270,6 +270,7 @@ class LettuceClusterClientTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void movedRedirectUsesCompletingPeer() throws Exception {
     TestRedisCluster target = new TestRedisCluster();
     cleanup.deferCleanup(target);
