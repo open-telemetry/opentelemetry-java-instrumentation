@@ -52,6 +52,11 @@ class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrum
           }
         };
 
+    @Nullable
+    public static Method getFilterMethod(Class<?> filterClass) {
+      return filterMethod.get(filterClass);
+    }
+
     public static class AdviceScope {
       private final Jaxrs3HandlerData handlerData;
       private final Context context;
@@ -98,7 +103,7 @@ class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrum
       if (filterClass == null) {
         return null;
       }
-      Method method = filterMethod.get(filterClass);
+      Method method = getFilterMethod(filterClass);
       if (method == null) {
         return null;
       }
