@@ -19,7 +19,8 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.ResultSet;
@@ -41,7 +42,7 @@ import org.junitpioneer.jupiter.ClearSystemProperty;
 class OpenTelemetryDriverQuerySanitizationTest {
 
   @RegisterExtension
-  static final OpenTelemetryExtension otelTesting = OpenTelemetryExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -65,7 +66,7 @@ class OpenTelemetryDriverQuerySanitizationTest {
           "otel.instrumentation.common.db.query-sanitization.enabled", commonEnabled.toString());
     }
 
-    assertQuerySanitization(otelTesting.getOpenTelemetry(), expected);
+    assertQuerySanitization(testing.getOpenTelemetry(), expected);
   }
 
   @ParameterizedTest
@@ -116,12 +117,12 @@ class OpenTelemetryDriverQuerySanitizationTest {
       Boolean jdbcEnabled, Boolean commonEnabled) {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     when(openTelemetry.getTracerProvider())
-        .thenReturn(otelTesting.getOpenTelemetry().getTracerProvider());
+        .thenReturn(testing.getOpenTelemetry().getTracerProvider());
     when(openTelemetry.getMeterProvider())
-        .thenReturn(otelTesting.getOpenTelemetry().getMeterProvider());
-    when(openTelemetry.getLogsBridge()).thenReturn(otelTesting.getOpenTelemetry().getLogsBridge());
+        .thenReturn(testing.getOpenTelemetry().getMeterProvider());
+    when(openTelemetry.getLogsBridge()).thenReturn(testing.getOpenTelemetry().getLogsBridge());
     when(openTelemetry.getPropagators())
-        .thenReturn(otelTesting.getOpenTelemetry().getPropagators());
+        .thenReturn(testing.getOpenTelemetry().getPropagators());
     when(openTelemetry.getGeneralInstrumentationConfig())
         .thenReturn(DeclarativeConfigProperties.empty());
     DeclarativeConfigProperties jdbcConfig =
@@ -167,14 +168,13 @@ class OpenTelemetryDriverQuerySanitizationTest {
 
     assertThat(resultSet.next()).isTrue();
     assertThat(resultSet.getString(1)).isEqualTo("test-value");
-    assertThat(otelTesting.getSpans())
-        .singleElement()
-        .satisfies(
-            span ->
-                assertThat(span)
-                    .hasAttribute(
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttribute(
                         equalTo(
                             maybeStable(DB_STATEMENT),
-                            expected ? "SELECT ?" : "SELECT 'test-value'")));
+                            expected ? "SELECT ?" : "SELECT 'test-value'"))));
   }
 }
