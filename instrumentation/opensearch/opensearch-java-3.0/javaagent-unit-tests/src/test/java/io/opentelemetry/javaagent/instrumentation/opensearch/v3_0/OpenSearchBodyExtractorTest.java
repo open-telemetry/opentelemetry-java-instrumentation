@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.json.spi.JsonProvider;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.json.JsonpSerializable;
+import org.opensearch.client.json.NdJsonpSerializable;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.json.jsonb.JsonbJsonpMapper;
 
@@ -76,6 +78,20 @@ class OpenSearchBodyExtractorTest {
     String beforePair = repeat('a', MAX_QUERY_BODY_LENGTH - 3);
     JsonpSerializable value =
         (generator, unused) -> generator.writeStartObject().writeKey(beforePair + "😀").writeEnd();
+
+    String result = OpenSearchBodyExtractor.extract(mapper, value, true);
+
+    assertThat(result).isEqualTo("{\"" + beforePair);
+  }
+
+  @Test
+  void shouldStopNdJsonAfterDroppingSurrogatePairAtQueryBodyLimit() {
+    JacksonJsonpMapper mapper = new JacksonJsonpMapper();
+    String beforePair = repeat('a', MAX_QUERY_BODY_LENGTH - 3);
+    JsonpSerializable first =
+        (generator, unused) -> generator.writeStartObject().writeKey(beforePair + "😀").writeEnd();
+    NdJsonpSerializable value =
+        () -> asList(first, singletonMap("message", "next item")).iterator();
 
     String result = OpenSearchBodyExtractor.extract(mapper, value, true);
 

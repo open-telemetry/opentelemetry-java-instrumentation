@@ -31,18 +31,18 @@ class OpenSearchBodyExtractor {
     try {
       if (request instanceof NdJsonpSerializable) {
         return serializeNdJson(
-            mapper, (NdJsonpSerializable) request, sanitize, MAX_QUERY_BODY_LENGTH);
+                mapper, (NdJsonpSerializable) request, sanitize, MAX_QUERY_BODY_LENGTH)
+            .value;
       }
 
-      return serialize(mapper, request, sanitize, MAX_QUERY_BODY_LENGTH);
+      return serialize(mapper, request, sanitize, MAX_QUERY_BODY_LENGTH).value;
     } catch (Throwable t) {
       logger.log(FINE, "Failure extracting body", t);
       return null;
     }
   }
 
-  @Nullable
-  private static String serialize(
+  private static SerializationResult serialize(
       JsonpMapper mapper, Object item, boolean sanitize, int maxLength) {
     BoundedStringWriter writer = new BoundedStringWriter(maxLength);
 
@@ -72,27 +72,33 @@ class OpenSearchBodyExtractor {
     }
 
     String result = writer.toString().trim();
-    return result.isEmpty() ? null : result;
+    return new SerializationResult(result.isEmpty() ? null : result, writer.limitReached());
   }
 
-  @Nullable
-  private static String serializeNdJson(
+  private static SerializationResult serializeNdJson(
       JsonpMapper mapper, NdJsonpSerializable value, boolean sanitize, int maxLength) {
     StringBuilder result = new StringBuilder(Math.min(maxLength, 1024));
     Iterator<?> values = value._serializables();
     boolean first = true;
+    boolean limitReached = false;
 
     while (values.hasNext() && result.length() < maxLength) {
       Object item = values.next();
-      String itemStr;
-      int remaining = maxLength - result.length();
-
-      if (item instanceof NdJsonpSerializable && item != value) {
-        itemStr = serializeNdJson(mapper, (NdJsonpSerializable) item, sanitize, remaining);
-      } else {
-        itemStr = serialize(mapper, item, sanitize, remaining);
+      int separatorLength = first ? 0 : QUERY_SEPARATOR.length();
+      int remaining = maxLength - result.length() - separatorLength;
+      if (remaining <= 0) {
+        limitReached = true;
+        break;
       }
 
+      SerializationResult itemResult;
+      if (item instanceof NdJsonpSerializable && item != value) {
+        itemResult = serializeNdJson(mapper, (NdJsonpSerializable) item, sanitize, remaining);
+      } else {
+        itemResult = serialize(mapper, item, sanitize, remaining);
+      }
+
+      String itemStr = itemResult.value;
       if (itemStr != null && !itemStr.isEmpty()) {
         if (!first) {
           appendPrefix(result, QUERY_SEPARATOR, maxLength);
@@ -102,9 +108,13 @@ class OpenSearchBodyExtractor {
         }
         first = false;
       }
+      if (itemResult.limitReached) {
+        limitReached = true;
+        break;
+      }
     }
 
-    return result.length() == 0 ? null : result.toString();
+    return new SerializationResult(result.length() == 0 ? null : result.toString(), limitReached);
   }
 
   private static void appendPrefix(StringBuilder result, String value, int maxLength) {
@@ -178,6 +188,17 @@ class OpenSearchBodyExtractor {
     public String toString() {
       truncate(result, maxLength);
       return result.toString();
+    }
+  }
+
+  private static final class SerializationResult {
+
+    @Nullable private final String value;
+    private final boolean limitReached;
+
+    private SerializationResult(@Nullable String value, boolean limitReached) {
+      this.value = value;
+      this.limitReached = limitReached;
     }
   }
 
