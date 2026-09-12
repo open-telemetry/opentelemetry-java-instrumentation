@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.batchInstrumenter;
 
 import io.lettuce.core.protocol.AsyncCommand;
@@ -17,8 +17,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
@@ -69,8 +69,7 @@ public final class LettuceBatchContext {
         state.commands,
         state.asyncCommands,
         state.parentContext,
-        ENDPOINT_ADDRESS.get(endpoint),
-        ENDPOINT_DATABASE_INDEX.get(endpoint));
+        state.getConnectionState(ENDPOINT_STATE.get(endpoint)));
   }
 
   private LettuceBatchContext() {}
@@ -92,10 +91,8 @@ public final class LettuceBatchContext {
         List<RedisCommand<?, ?, ?>> commands,
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
-        @Nullable InetSocketAddress serverAddress,
-        @Nullable Integer databaseIndex) {
-      LettuceBatchRequest request =
-          LettuceBatchRequest.create(commands, serverAddress, databaseIndex);
+        @Nullable LettuceConnectionState connectionState) {
+      LettuceBatchRequest request = LettuceBatchRequest.create(commands, connectionState);
       Context parentContext =
           capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {
@@ -141,9 +138,21 @@ public final class LettuceBatchContext {
     private final List<RedisCommand<?, ?, ?>> commands = new ArrayList<>();
     private final List<AsyncCommand<?, ?, ?>> asyncCommands = new ArrayList<>();
     @Nullable private Context parentContext;
+    @Nullable private RedisServerTarget serverTarget;
+    private boolean serverTargetVaries;
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
+      LettuceConnectionState commandState = COMMAND_STATE.get(command);
+      RedisServerTarget commandTarget = commandState == null ? null : commandState.serverTarget;
+      if (commandTarget != null && !serverTargetVaries) {
+        if (serverTarget == null) {
+          serverTarget = commandTarget;
+        } else if (!LettuceConnectionState.sameServerTarget(serverTarget, commandTarget)) {
+          serverTarget = null;
+          serverTargetVaries = true;
+        }
+      }
       if (parentContext == null && asyncCommand != null) {
         parentContext = CONTEXT.get(asyncCommand);
       }
@@ -154,6 +163,17 @@ public final class LettuceBatchContext {
 
     private boolean isEmpty() {
       return commands.isEmpty();
+    }
+
+    @Nullable
+    private LettuceConnectionState getConnectionState(
+        @Nullable LettuceConnectionState endpointState) {
+      if (serverTargetVaries) {
+        return LettuceConnectionState.withServerTarget(endpointState, null);
+      }
+      return serverTarget == null
+          ? endpointState
+          : LettuceConnectionState.withServerTarget(endpointState, serverTarget);
     }
   }
 }
