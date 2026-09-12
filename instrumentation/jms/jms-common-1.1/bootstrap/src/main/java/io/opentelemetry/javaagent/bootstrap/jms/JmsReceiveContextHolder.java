@@ -12,6 +12,12 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import javax.annotation.Nullable;
 
+/**
+ * Carries a receive context across Spring JMS's synchronous receive-and-dispatch call.
+ *
+ * <p>This holder transfers span parentage, not telemetry ownership. JMS telemetry ownership is
+ * tracked on each message by its {@code MessageAdapter}.
+ */
 public final class JmsReceiveContextHolder implements ImplicitContextKeyed {
   private static final ContextKey<JmsReceiveContextHolder> KEY =
       named("opentelemetry-jms-receive-context");

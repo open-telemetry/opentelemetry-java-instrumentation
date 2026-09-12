@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -26,6 +27,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -34,6 +36,7 @@ import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExt
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetrySuppression;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -66,7 +69,8 @@ public class PulsarSingletons {
   private static final Instrumenter<PulsarRequest, Void> producerInstrumenter =
       createProducerInstrumenter();
 
-  private static final ThreadLocal<Boolean> suppressReceive = new ThreadLocal<>();
+  private static final MessagingTelemetrySuppression receiveSuppression =
+      MessagingTelemetrySuppression.create();
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
@@ -219,7 +223,10 @@ public class PulsarSingletons {
             timer.startTime(),
             timer.now());
     Context processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
-    VirtualFieldStore.markReceiveTelemetryRecorded(message);
+    VirtualFieldStore.markReceiveSpanRecorded(message);
+    if (emitStableMessagingSemconv() && throwable == null) {
+      VirtualFieldStore.markConsumedMessagesRecorded(message);
+    }
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
     VirtualFieldStore.inject(message, processParentContext);
@@ -254,7 +261,10 @@ public class PulsarSingletons {
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
     for (Message<?> message : messages) {
-      VirtualFieldStore.markReceiveTelemetryRecorded(message);
+      VirtualFieldStore.markReceiveSpanRecorded(message);
+      if (emitStableMessagingSemconv()) {
+        VirtualFieldStore.markConsumedMessagesRecorded(message);
+      }
       VirtualFieldStore.inject(message, processParentContext);
     }
     return processParentContext;
@@ -345,16 +355,16 @@ public class PulsarSingletons {
     }
   }
 
-  public static void startSuppressingReceive() {
-    suppressReceive.set(true);
+  public static MessagingTelemetrySignals startSuppressingReceive() {
+    return receiveSuppression.suppress(MessagingOperationType.RECEIVE, SPAN);
   }
 
-  public static void endSuppressingReceive() {
-    suppressReceive.remove();
+  public static void endSuppressingReceive(MessagingTelemetrySignals previous) {
+    receiveSuppression.restore(previous);
   }
 
   private static boolean isSuppressingReceive() {
-    return Boolean.TRUE.equals(suppressReceive.get());
+    return receiveSuppression.isSuppressed(MessagingOperationType.RECEIVE, SPAN);
   }
 
   private PulsarSingletons() {}

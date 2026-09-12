@@ -5,6 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
@@ -51,11 +55,12 @@ public class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
     @Override
     public void onNext(T record) {
-      boolean previous = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
+      MessagingTelemetrySignals previous =
+          KafkaClientsConsumerProcessTracing.suppress(PROCESS, SPAN);
       try {
         actual.onNext(record);
       } finally {
-        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previous);
+        KafkaClientsConsumerProcessTracing.restore(previous);
       }
     }
 

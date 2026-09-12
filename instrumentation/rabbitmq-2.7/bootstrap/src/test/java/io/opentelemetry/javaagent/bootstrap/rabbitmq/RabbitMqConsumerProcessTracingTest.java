@@ -5,35 +5,45 @@
 
 package io.opentelemetry.javaagent.bootstrap.rabbitmq;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import org.junit.jupiter.api.Test;
 
 class RabbitMqConsumerProcessTracingTest {
 
   @Test
-  void shouldRestorePreviousWrappingState() {
-    boolean previous = RabbitMqConsumerProcessTracing.setWrappingEnabled(false);
+  void shouldRestorePreviousClaims() {
+    MessagingTelemetrySignals previous = RabbitMqConsumerProcessTracing.suppress(PROCESS, SPAN);
 
-    assertThat(previous).isTrue();
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isFalse();
+    assertThat(previous).isEqualTo(MessagingTelemetrySignals.none());
+    assertThat(RabbitMqConsumerProcessTracing.isSuppressed(PROCESS, SPAN)).isTrue();
 
-    RabbitMqConsumerProcessTracing.setWrappingEnabled(previous);
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    RabbitMqConsumerProcessTracing.restore(previous);
+    assertThat(RabbitMqConsumerProcessTracing.isSuppressed(PROCESS, SPAN)).isFalse();
   }
 
   @Test
-  void shouldReturnDisabledPreviousState() {
-    boolean outerPrevious = RabbitMqConsumerProcessTracing.setWrappingEnabled(false);
-    boolean innerPrevious = RabbitMqConsumerProcessTracing.setWrappingEnabled(false);
+  void shouldKeepClaimsIndependentWhenNested() {
+    MessagingTelemetrySignals outerPrevious =
+        RabbitMqConsumerProcessTracing.suppress(PROCESS, SPAN);
+    MessagingTelemetrySignals innerPrevious =
+        RabbitMqConsumerProcessTracing.suppress(RECEIVE, CONSUMED_MESSAGES);
 
-    assertThat(outerPrevious).isTrue();
-    assertThat(innerPrevious).isFalse();
+    assertThat(outerPrevious).isEqualTo(MessagingTelemetrySignals.none());
+    assertThat(innerPrevious.contains(PROCESS, SPAN)).isTrue();
+    assertThat(RabbitMqConsumerProcessTracing.isSuppressed(PROCESS, SPAN)).isTrue();
+    assertThat(RabbitMqConsumerProcessTracing.isSuppressed(RECEIVE, CONSUMED_MESSAGES)).isTrue();
 
-    RabbitMqConsumerProcessTracing.setWrappingEnabled(innerPrevious);
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isFalse();
+    RabbitMqConsumerProcessTracing.restore(innerPrevious);
+    assertThat(RabbitMqConsumerProcessTracing.isSuppressed(PROCESS, SPAN)).isTrue();
+    assertThat(RabbitMqConsumerProcessTracing.isSuppressed(RECEIVE, CONSUMED_MESSAGES)).isFalse();
 
-    RabbitMqConsumerProcessTracing.setWrappingEnabled(outerPrevious);
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    RabbitMqConsumerProcessTracing.restore(outerPrevious);
+    assertThat(RabbitMqConsumerProcessTracing.isSuppressed(PROCESS, SPAN)).isFalse();
   }
 }
