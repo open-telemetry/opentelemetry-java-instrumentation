@@ -149,7 +149,7 @@ final class SamePackageAccessValidator {
   private Class<?> tryLoadClass(String className) {
     try {
       return Class.forName(className, false, classLoader);
-    } catch (Throwable t) {
+    } catch (ClassNotFoundException | LinkageError ignored) {
       // not resolvable on the generation classpath; nothing we can validate
       return null;
     }
@@ -187,7 +187,7 @@ final class SamePackageAccessValidator {
     Class<?>[] parameterTypes;
     try {
       parameterTypes = resolveParameterTypes(methodType);
-    } catch (Throwable t) {
+    } catch (ClassNotFoundException | LinkageError ignored) {
       return null;
     }
 

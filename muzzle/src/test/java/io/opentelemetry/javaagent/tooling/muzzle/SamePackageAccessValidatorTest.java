@@ -184,6 +184,26 @@ class SamePackageAccessValidatorTest {
   }
 
   @Test
+  void propagatesUnexpectedClassLoadingErrors() {
+    ReferenceCollector collector = collectBadHelper();
+    ClassLoader failingClassLoader =
+        new ClassLoader(null) {
+          @Override
+          protected Class<?> loadClass(String name, boolean resolve) {
+            throw new AssertionError("unexpected class-loading failure");
+          }
+        };
+    SamePackageAccessValidator validator =
+        new SamePackageAccessValidator(
+            new HelperClassPredicate(name -> name.equals(BadHelper.class.getName())),
+            failingClassLoader);
+
+    assertThatExceptionOfType(AssertionError.class)
+        .isThrownBy(() -> validator.validate(collector.getReferences()))
+        .withMessage("unexpected class-loading failure");
+  }
+
+  @Test
   void acceptsHelperToHelperReferences() {
     ReferenceCollector collector =
         collectorForHelpers(HelperCallingHelper.class.getName(), OtherHelper.class.getName());
