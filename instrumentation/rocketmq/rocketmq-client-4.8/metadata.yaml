@@ -6,7 +6,6 @@ semantic_conventions:
   - MESSAGING_SPANS
 library_link: https://rocketmq.apache.org/
 configurations:
-  - ref: common.messaging.message-create-spans.enabled
   - name: otel.instrumentation.rocketmq-client.message-create-spans.enabled
     declarative_name: java.rocketmq_client.message_create_spans.enabled
     description: >
@@ -15,6 +14,7 @@ configurations:
       context propagation and does not affect single-message sends.
     type: boolean
     default: true
+  - ref: common.messaging.message-create-spans.enabled
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
