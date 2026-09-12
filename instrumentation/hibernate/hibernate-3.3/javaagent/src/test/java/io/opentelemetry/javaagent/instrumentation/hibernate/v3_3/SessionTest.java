@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -30,6 +31,32 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class SessionTest extends AbstractHibernateTest {
+
+  @Test
+  void v3PreviewDisablesHibernateByDefault() {
+    assumeTrue(Boolean.getBoolean("testV3PreviewDisabled"));
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          Session session = sessionFactory.openSession();
+          try {
+            session.get(Value.class, prepopulated.get(0).getId());
+          } finally {
+            session.close();
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)));
+  }
+
   @ParameterizedTest
   @MethodSource("provideArguments")
   void testHibernateAction(Parameter parameter) {

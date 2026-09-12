@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.javaagent.instrumentation.hystrix.v1_4.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Named.named;
 
 import com.netflix.hystrix.HystrixCommand;
@@ -23,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -32,6 +34,30 @@ class HystrixTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Test
+  void v3PreviewDisablesHystrixByDefault() {
+    assumeTrue(Boolean.getBoolean("testV3PreviewDisabled"));
+
+    class TestCommand extends HystrixCommand<String> {
+      TestCommand() {
+        super(setter());
+      }
+
+      @Override
+      protected String run() {
+        return "Hello!";
+      }
+    }
+
+    String result = testing.runWithSpan("parent", () -> new TestCommand().execute());
+    assertThat(result).isEqualTo("Hello!");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0)));
+  }
 
   @ParameterizedTest
   @MethodSource("provideCommandActionArguments")

@@ -26,6 +26,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -52,6 +53,31 @@ import org.junit.jupiter.params.provider.MethodSource;
 class EntityManagerTest extends AbstractHibernateTest {
   private static final EntityManagerFactory entityManagerFactory =
       Persistence.createEntityManagerFactory("test-pu");
+
+  @Test
+  void v3PreviewDisablesHibernateByDefault() {
+    assumeTrue(Boolean.getBoolean("testV3PreviewDisabled"));
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          EntityManager entityManager = entityManagerFactory.createEntityManager();
+          try {
+            entityManager.find(Value.class, prepopulated.get(0).getId());
+          } finally {
+            entityManager.close();
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)));
+  }
 
   @AfterAll
   static void closeEntityManagerFactory() {

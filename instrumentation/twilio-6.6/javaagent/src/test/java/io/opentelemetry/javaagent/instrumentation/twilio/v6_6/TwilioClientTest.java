@@ -13,6 +13,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -176,6 +177,31 @@ class TwilioClientTest {
                                 stringKey("twilio.sid"),
                                 experimental("MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")),
                             equalTo(stringKey("twilio.status"), experimental("sent")))));
+  }
+
+  @Test
+  void v3PreviewDisablesTwilioByDefault() {
+    assumeTrue(Boolean.getBoolean("testV3PreviewDisabled"));
+    when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
+    when(twilioRestClient.request(any()))
+        .thenReturn(
+            new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(UTF_8)), 200));
+
+    Message message =
+        testing.runWithSpan(
+            "test",
+            () ->
+                Message.creator(
+                        new PhoneNumber("+1 555 720 5913"),
+                        new PhoneNumber("+1 555 555 5215"),
+                        "Hello world!")
+                    .create(twilioRestClient));
+
+    assertThat(message.getBody()).isEqualTo("Hello, World!");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0)));
   }
 
   @Test

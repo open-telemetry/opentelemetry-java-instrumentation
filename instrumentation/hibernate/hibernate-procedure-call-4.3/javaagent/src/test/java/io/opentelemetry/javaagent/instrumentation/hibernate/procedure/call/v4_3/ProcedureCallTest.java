@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -150,6 +151,33 @@ class ProcedureCallTest {
                                 HIBERNATE_SESSION_ID,
                                 experimental(
                                     trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
+  }
+
+  @Test
+  void v3PreviewDisablesHibernateByDefault() {
+    assumeTrue(Boolean.getBoolean("testV3PreviewDisabled"));
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          Session session = sessionFactory.openSession();
+          try {
+            session.beginTransaction();
+            session.createStoredProcedureCall("TEST_PROC").getOutputs();
+            session.getTransaction().commit();
+          } finally {
+            session.close();
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)));
   }
 
   @Test

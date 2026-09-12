@@ -49,6 +49,31 @@ import org.junit.jupiter.params.provider.MethodSource;
 @SuppressWarnings("deprecation") // 'lock' is a deprecated method in the Session class
 class SessionTest extends AbstractHibernateTest {
 
+  @Test
+  void v3PreviewDisablesHibernateByDefault() {
+    assumeTrue(Boolean.getBoolean("testV3PreviewDisabled"));
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          Session session = sessionFactory.openSession();
+          try {
+            session.get(Value.class, prepopulated.get(0).getId());
+          } finally {
+            session.close();
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)));
+  }
+
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsHibernateAction")
