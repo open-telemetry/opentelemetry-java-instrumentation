@@ -61,9 +61,14 @@ final class TransformSafeApplicationLoggerFactory implements InternalLogger.Fact
     try {
       while (true) {
         DeferredLog deferredLog = deferredLogs.take();
-        delegate
-            .create(deferredLog.name)
-            .log(deferredLog.level, deferredLog.message, deferredLog.error);
+        try {
+          delegate
+              .create(deferredLog.name)
+              .log(deferredLog.level, deferredLog.message, deferredLog.error);
+        } catch (Throwable ignored) {
+          // a failing application logger must not terminate the only consumer of the queue, that
+          // would silently drop every record deferred from then on
+        }
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

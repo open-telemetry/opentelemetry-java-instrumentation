@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.bootstrap.internal.InTransformation;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -66,6 +67,21 @@ class TransformSafeApplicationLoggerFactoryTest {
   }
 
   @Test
+  void shouldKeepDrainingAfterTheApplicationLoggerThrows() throws Exception {
+    RecordingFactory delegate = new RecordingFactory();
+    InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
+    delegate.failNext.set(true);
+
+    InTransformation.enter();
+    logger.log(INFO, "boom", null);
+    logger.log(INFO, "after", null);
+
+    // the first record blows up in the drain thread, the second one still gets through
+    assertThat(delegate.await()).isTrue();
+    assertThat(delegate.message.get()).isEqualTo("after");
+  }
+
+  @Test
   void shouldAlwaysBeLoggableWhileInTransformation() {
     RecordingFactory delegate = new RecordingFactory();
     InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
@@ -79,6 +95,7 @@ class TransformSafeApplicationLoggerFactoryTest {
 
   private static final class RecordingFactory implements InternalLogger.Factory {
 
+    final AtomicBoolean failNext = new AtomicBoolean();
     final AtomicReference<Thread> createdOn = new AtomicReference<>();
     final AtomicReference<Thread> loggedOn = new AtomicReference<>();
     final AtomicReference<String> message = new AtomicReference<>();
@@ -99,6 +116,9 @@ class TransformSafeApplicationLoggerFactoryTest {
 
         @Override
         public void log(Level level, String message, Throwable error) {
+          if (RecordingFactory.this.failNext.compareAndSet(true, false)) {
+            throw new IllegalStateException("application logger failed");
+          }
           loggedOn.set(Thread.currentThread());
           RecordingFactory.this.message.set(message);
           logged.countDown();
