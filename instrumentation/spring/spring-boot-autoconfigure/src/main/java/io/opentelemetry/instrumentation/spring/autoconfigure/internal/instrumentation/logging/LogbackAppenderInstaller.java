@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import static io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors.split;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -59,6 +60,10 @@ class LogbackAppenderInstaller {
       "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included";
   private static final String KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED =
       "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded";
+  private static final String STRUCTURED_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.common.logging.structured-attributes.included";
+  private static final String STRUCTURED_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.common.logging.structured-attributes.excluded";
 
   static void install(ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
     Optional<io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender>
@@ -176,14 +181,38 @@ class LogbackAppenderInstaller {
 
     initializeMdcAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
-    initializeKeyValuePairAttributesFromProperties(
-        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
     initializeLoggerContextAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
-    initializeLogstashMarkerAttributesFromProperties(
+    initializeStructuredAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
-    initializeLogstashStructuredArgumentAttributesFromProperties(
-        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
+  }
+
+  static void initializeStructuredAttributesFromProperties(
+      ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
+    List<String> included = getLoggingListProperty(environment, STRUCTURED_ATTRIBUTES_INCLUDED);
+    List<String> excluded = getLoggingListProperty(environment, STRUCTURED_ATTRIBUTES_EXCLUDED);
+    boolean v3Preview =
+        Boolean.TRUE.equals(
+            evaluateBooleanProperty(environment, "otel.instrumentation.common.v3-preview"));
+    if (isEmpty(included) && isEmpty(excluded) && !v3Preview) {
+      initializeKeyValuePairAttributesFromProperties(environment, openTelemetryAppender);
+      initializeLogstashMarkerAttributesFromProperties(environment, openTelemetryAppender);
+      initializeLogstashStructuredArgumentAttributesFromProperties(
+          environment, openTelemetryAppender);
+      return;
+    }
+
+    IncludeExclude selector =
+        IncludeExclude.builder()
+            .setIncluded(
+                isEmpty(included) && isEmpty(excluded)
+                    ? singletonList("*")
+                    : included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build();
+    openTelemetryAppender.setKeyValuePairAttributes(selector);
+    openTelemetryAppender.setLogstashMarkerAttributes(selector);
+    openTelemetryAppender.setLogstashStructuredArgumentAttributes(selector);
   }
 
   // the appender resolves the precedence between these settings, ignoring the deprecated one when
@@ -223,6 +252,8 @@ class LogbackAppenderInstaller {
       ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
     List<String> included = getLoggingListProperty(environment, KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED);
     List<String> excluded = getLoggingListProperty(environment, KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED);
+    warnDeprecatedStructuredSelector(
+        included, excluded, KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED, KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED);
     Boolean deprecated = evaluateBooleanProperty(environment, DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES);
     // an empty selector property is equivalent to an unset one, matching how the same flat
     // properties are read outside of Spring, where empty values cannot be distinguished from unset
@@ -235,17 +266,10 @@ class LogbackAppenderInstaller {
     // logback.xml, so every source the appender resolves is set, including the ones that are not
     // configured
     openTelemetryAppender.setKeyValuePairAttributes(
-        IncludeExclude.builder()
-            .setIncluded(included == null ? emptyList() : included)
-            .setExcluded(excluded == null ? emptyList() : excluded)
-            .build());
+        structuredAttributeSelector(
+            included, excluded, deprecated, DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES));
     openTelemetryAppender.setKeyValuePairAttributesIncluded(null);
     openTelemetryAppender.setKeyValuePairAttributesExcluded(null);
-    // reaching here with an empty selector implies that the deprecated property is configured, so
-    // the settings declared in logback.xml never survive as a fallback
-    if (deprecated != null) {
-      openTelemetryAppender.setCaptureKeyValuePairAttributes(deprecated);
-    }
   }
 
   // the appender resolves the precedence between these settings, ignoring the deprecated one when
@@ -289,6 +313,11 @@ class LogbackAppenderInstaller {
         getLoggingListProperty(environment, LOGSTASH_MARKER_ATTRIBUTES_INCLUDED);
     List<String> excluded =
         getLoggingListProperty(environment, LOGSTASH_MARKER_ATTRIBUTES_EXCLUDED);
+    warnDeprecatedStructuredSelector(
+        included,
+        excluded,
+        LOGSTASH_MARKER_ATTRIBUTES_INCLUDED,
+        LOGSTASH_MARKER_ATTRIBUTES_EXCLUDED);
     Boolean deprecated =
         evaluateBooleanProperty(environment, DEPRECATED_LOGSTASH_MARKER_ATTRIBUTES);
     // an empty selector property is equivalent to an unset one, matching how the same flat
@@ -302,17 +331,10 @@ class LogbackAppenderInstaller {
     // logback.xml, so every source the appender resolves is set, including the ones that are not
     // configured
     openTelemetryAppender.setLogstashMarkerAttributes(
-        IncludeExclude.builder()
-            .setIncluded(included == null ? emptyList() : included)
-            .setExcluded(excluded == null ? emptyList() : excluded)
-            .build());
+        structuredAttributeSelector(
+            included, excluded, deprecated, DEPRECATED_LOGSTASH_MARKER_ATTRIBUTES));
     openTelemetryAppender.setLogstashMarkerAttributesIncluded(null);
     openTelemetryAppender.setLogstashMarkerAttributesExcluded(null);
-    // reaching here with an empty selector implies that the deprecated property is configured, so
-    // the settings declared in logback.xml never survive as a fallback
-    if (deprecated != null) {
-      openTelemetryAppender.setCaptureLogstashMarkerAttributes(deprecated);
-    }
   }
 
   // the appender resolves the precedence between these settings, ignoring the deprecated one when
@@ -324,6 +346,11 @@ class LogbackAppenderInstaller {
         getLoggingListProperty(environment, LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_INCLUDED);
     List<String> excluded =
         getLoggingListProperty(environment, LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_EXCLUDED);
+    warnDeprecatedStructuredSelector(
+        included,
+        excluded,
+        LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_INCLUDED,
+        LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_EXCLUDED);
     // an empty selector property is equivalent to an unset one, matching how the same flat
     // properties are read outside of Spring, where empty values cannot be distinguished from unset
     // ones
@@ -339,17 +366,50 @@ class LogbackAppenderInstaller {
     // declared in logback.xml, so every source the appender resolves is set, including the ones
     // that are not configured
     openTelemetryAppender.setLogstashStructuredArgumentAttributes(
-        IncludeExclude.builder()
-            .setIncluded(included == null ? emptyList() : included)
-            .setExcluded(excluded == null ? emptyList() : excluded)
-            .build());
+        structuredAttributeSelector(
+            included, excluded, deprecated, DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS));
     openTelemetryAppender.setLogstashStructuredArgumentAttributesIncluded(null);
     openTelemetryAppender.setLogstashStructuredArgumentAttributesExcluded(null);
-    // reaching here with an empty selector implies that the deprecated property is configured, so
-    // the settings declared in logback.xml never survive as a fallback
-    if (deprecated != null) {
-      openTelemetryAppender.setCaptureLogstashStructuredArguments(deprecated);
+  }
+
+  private static IncludeExclude structuredAttributeSelector(
+      @Nullable List<String> included,
+      @Nullable List<String> excluded,
+      @Nullable Boolean deprecated,
+      String deprecatedProperty) {
+    if (isEmpty(included) && isEmpty(excluded) && deprecated != null) {
+      warnDeprecatedStructuredProperty(deprecatedProperty);
+      included = deprecated ? singletonList("*") : emptyList();
+      excluded = deprecated ? emptyList() : singletonList("*");
     }
+    return IncludeExclude.builder()
+        .setIncluded(included == null ? emptyList() : included)
+        .setExcluded(excluded == null ? emptyList() : excluded)
+        .build();
+  }
+
+  private static void warnDeprecatedStructuredSelector(
+      @Nullable List<String> included,
+      @Nullable List<String> excluded,
+      String includedProperty,
+      String excludedProperty) {
+    if (!isEmpty(included) || !isEmpty(excluded)) {
+      logger.warn(
+          "The '{}' and '{}' properties are deprecated and will be removed in 3.0. Use '{}' and"
+              + " '{}' instead.",
+          includedProperty,
+          excludedProperty,
+          STRUCTURED_ATTRIBUTES_INCLUDED,
+          STRUCTURED_ATTRIBUTES_EXCLUDED);
+    }
+  }
+
+  private static void warnDeprecatedStructuredProperty(String deprecatedProperty) {
+    logger.warn(
+        "The '{}' property is deprecated and will be removed in 3.0. Use '{}' or '{}' instead.",
+        deprecatedProperty,
+        STRUCTURED_ATTRIBUTES_INCLUDED,
+        STRUCTURED_ATTRIBUTES_EXCLUDED);
   }
 
   private static boolean isEmpty(@Nullable List<String> values) {
