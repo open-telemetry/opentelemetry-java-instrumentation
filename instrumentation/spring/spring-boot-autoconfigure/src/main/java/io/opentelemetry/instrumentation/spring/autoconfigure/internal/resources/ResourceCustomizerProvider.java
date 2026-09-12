@@ -13,7 +13,6 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigura
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ResourceModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalResourceDetectionModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalResourceDetectorModel;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalResourceDetectorPropertyModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ResourceModelAccessor;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +42,6 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
               ResourceModelAccessor.getDetection(resource);
           if (detectionModel == null) {
             detectionModel = new ExperimentalResourceDetectionModel();
-            ResourceModelAccessor.setDetection(resource, detectionModel);
           }
           List<ExperimentalResourceDetectorModel> detectors = detectionModel.getDetectors();
           if (detectors == null) {
@@ -57,14 +55,14 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
 
           for (String name : REQUIRED_DETECTORS) {
             if (!names.contains(name)) {
-              ExperimentalResourceDetectorModel detector =
-                  new ExperimentalResourceDetectorModel()
-                      .setAdditionalProperty(name, new ExperimentalResourceDetectorPropertyModel());
+              ExperimentalResourceDetectorModel detector = new ExperimentalResourceDetectorModel();
+              detector.getAdditionalProperties().put(name, null);
               // add first (the least precedence)
               // so that the user can add a differently named detector that takes precedence
               detectors.add(0, detector);
             }
           }
+          ResourceModelAccessor.setDetection(resource, detectionModel);
           return model;
         });
   }

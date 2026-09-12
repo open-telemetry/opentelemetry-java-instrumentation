@@ -35,7 +35,6 @@ public class TestInstrumentationConfigCustomizerProvider
         OpenTelemetryConfigurationModelAccessor.getInstrumentation(model);
     if (instrumentation == null) {
       instrumentation = new ExperimentalInstrumentationModel();
-      OpenTelemetryConfigurationModelAccessor.setInstrumentation(model, instrumentation);
     }
     ExperimentalLanguageSpecificInstrumentationModel java = instrumentation.getJava();
     if (java == null) {
@@ -46,9 +45,10 @@ public class TestInstrumentationConfigCustomizerProvider
         java.getAdditionalProperties().get("foo");
     if (foo == null) {
       foo = new ExperimentalLanguageSpecificInstrumentationPropertyModel();
-      java.setAdditionalProperty("foo", foo);
     }
     foo.setAdditionalProperty(CUSTOMIZER_KEY, CUSTOMIZED_VALUE);
+    java.setAdditionalProperty("foo", foo);
+    OpenTelemetryConfigurationModelAccessor.setInstrumentation(model, instrumentation);
     return model;
   }
 }
