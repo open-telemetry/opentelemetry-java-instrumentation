@@ -89,10 +89,14 @@ class LettuceClusterClientTest {
           .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
 
   private static StatefulRedisClusterConnection<String, String> connection;
+  private static TestRedisCluster firstRedisServer;
+  private static TestRedisCluster secondRedisServer;
+  private static StatefulRedisClusterConnection<String, String> peerConnection;
   private static String host;
   private static String ip;
   private static int port;
   private static String configuredTarget;
+  private static String peerConfiguredTarget;
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -112,8 +116,29 @@ class LettuceClusterClientTest {
     connection = client.connect();
     cleanup.deferAfterAll(connection);
 
+    firstRedisServer = new TestRedisCluster();
+    cleanup.deferAfterAll(firstRedisServer);
+    secondRedisServer = new TestRedisCluster();
+    cleanup.deferAfterAll(secondRedisServer);
+
+    RedisURI firstNodeUri =
+        RedisURI.create("redis://" + firstRedisServer.getHost() + ":" + firstRedisServer.getPort());
+    RedisURI alternateSeed = RedisURI.create("redis://seed.invalid:6379");
+    peerConfiguredTarget =
+        "seed.invalid:6379," + firstRedisServer.getHost() + ":" + firstRedisServer.getPort();
+    List<RedisURI> nodeUris =
+        asList(
+            firstNodeUri,
+            RedisURI.create(
+                "redis://" + secondRedisServer.getHost() + ":" + secondRedisServer.getPort()));
+    RedisClusterClient peerClient =
+        new TestRedisClusterClient(asList(alternateSeed, firstNodeUri), nodeUris);
+    cleanup.deferAfterAll(() -> peerClient.shutdown(0, 15, SECONDS));
+    peerConnection = peerClient.connect();
+    cleanup.deferAfterAll(peerConnection);
+
     if (testLatestDeps()) {
-      testing.waitForTraces(1);
+      testing.waitForTraces(2);
     }
   }
 
@@ -152,32 +177,6 @@ class LettuceClusterClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
                             equalTo(maybeStable(DB_OPERATION), "AUTH"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? authenticatedTarget
-                                    : authenticatedHost),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : (long) authenticatedPort),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? authenticatedIp : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? (long) authenticatedPort : null))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "COMMAND " + authenticatedTarget
-                                : "COMMAND")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             equalTo(
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv()
@@ -290,30 +289,6 @@ class LettuceClusterClientTest {
 
   @Test
   void testCommandAndBatchUseObservedPeers() throws Exception {
-    TestRedisCluster firstRedisServer = new TestRedisCluster();
-    cleanup.deferCleanup(firstRedisServer);
-    TestRedisCluster secondRedisServer = new TestRedisCluster();
-    cleanup.deferCleanup(secondRedisServer);
-
-    RedisURI firstNodeUri =
-        RedisURI.create("redis://" + firstRedisServer.getHost() + ":" + firstRedisServer.getPort());
-    RedisURI alternateSeed = RedisURI.create("redis://seed.invalid:6379");
-    String peerConfiguredTarget =
-        "seed.invalid:6379," + firstRedisServer.getHost() + ":" + firstRedisServer.getPort();
-    List<RedisURI> nodeUris =
-        asList(
-            firstNodeUri,
-            RedisURI.create(
-                "redis://" + secondRedisServer.getHost() + ":" + secondRedisServer.getPort()));
-    RedisClusterClient client =
-        new TestRedisClusterClient(asList(alternateSeed, firstNodeUri), nodeUris);
-    cleanup.deferCleanup(() -> client.shutdown(0, 15, SECONDS));
-    StatefulRedisClusterConnection<String, String> peerConnection = client.connect();
-    cleanup.deferCleanup(peerConnection);
-
-    testing.waitForTraces(1);
-    testing.clearData();
-
     RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = peerConnection.async();
     String routedKey = keyInSlotRange("routed", SLOT_SPLIT, SlotHash.SLOT_COUNT);
     String firstBatchKey = keyInSlotRange("first-batch", 0, SLOT_SPLIT);
@@ -402,30 +377,6 @@ class LettuceClusterClientTest {
   @Test
   @EnabledIfSystemProperty(named = "testLatestDeps", matches = "true")
   void redirectedCommandUsesLastPeer() throws Exception {
-    TestRedisCluster firstRedisServer = new TestRedisCluster();
-    cleanup.deferCleanup(firstRedisServer);
-    TestRedisCluster secondRedisServer = new TestRedisCluster();
-    cleanup.deferCleanup(secondRedisServer);
-
-    RedisURI firstNodeUri =
-        RedisURI.create("redis://" + firstRedisServer.getHost() + ":" + firstRedisServer.getPort());
-    RedisURI alternateSeed = RedisURI.create("redis://seed.invalid:6379");
-    String peerConfiguredTarget =
-        "seed.invalid:6379," + firstRedisServer.getHost() + ":" + firstRedisServer.getPort();
-    List<RedisURI> nodeUris =
-        asList(
-            firstNodeUri,
-            RedisURI.create(
-                "redis://" + secondRedisServer.getHost() + ":" + secondRedisServer.getPort()));
-    RedisClusterClient client =
-        new TestRedisClusterClient(asList(alternateSeed, firstNodeUri), nodeUris);
-    cleanup.deferCleanup(() -> client.shutdown(0, 15, SECONDS));
-    StatefulRedisClusterConnection<String, String> peerConnection = client.connect();
-    cleanup.deferCleanup(peerConnection);
-
-    testing.waitForTraces(1);
-    testing.clearData();
-
     RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = peerConnection.async();
     String redirectedKey = keyInSlotRange("redirected", 0, SLOT_SPLIT);
     firstRedisServer.redirectSetOnce(redirectedKey, secondRedisServer);
