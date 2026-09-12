@@ -83,6 +83,19 @@ public class DubboUnknownServiceHelper {
   private static final VirtualField<RpcInvocation, Boolean> UNKNOWN_SERVICE_SPAN_RECORDED =
       VirtualField.find(RpcInvocation.class, Boolean.class);
 
+  private static final ClassValue<Method> statusCodeMethod =
+      new ClassValue<Method>() {
+        @Nullable
+        @Override
+        protected Method computeValue(Class<?> type) {
+          try {
+            return type.getMethod("getStatusCode");
+          } catch (NoSuchMethodException ignored) {
+            return null;
+          }
+        }
+      };
+
   /**
    * Creates an unknown service span when {@code DubboProtocol.getInvoker()} throws because the
    * requested service is not registered in the exporter map. This handles the Dubbo protocol
@@ -253,7 +266,10 @@ public class DubboUnknownServiceHelper {
       return false;
     }
     try {
-      Method statusMethod = throwable.getClass().getMethod("getStatusCode");
+      Method statusMethod = statusCodeMethod.get(throwable.getClass());
+      if (statusMethod == null) {
+        return false;
+      }
       Object status = statusMethod.invoke(throwable);
       return status instanceof Integer && (Integer) status == 404;
     } catch (ReflectiveOperationException ignored) {
