@@ -118,12 +118,12 @@ class MongoDbAttributesGetterTest {
 
     String normalized =
         sanitizeQueryAcrossVersions(
-            extractor, new BsonDocument("cmd", new BsonString("aaaaaaaaaa\uD83D\uDE00")));
+            extractor, new BsonDocument("cmd", new BsonString("aaaaaaaaaa😀")));
 
     assertThat(normalized)
+        .hasSizeLessThanOrEqualTo(20)
         .startsWith("{\"cmd\": \"")
-        .endsWith("a")
-        .doesNotContain("\uD83D", "\uDE00");
+        .doesNotContain(String.valueOf((char) 0xd83d), String.valueOf((char) 0xde00));
   }
 
   @ParameterizedTest
