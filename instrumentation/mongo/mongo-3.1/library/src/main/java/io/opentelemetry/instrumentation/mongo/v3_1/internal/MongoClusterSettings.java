@@ -75,6 +75,7 @@ public class MongoClusterSettings {
 
   public static void built(ClusterSettings.Builder builder, ClusterSettings settings) {
     MongoServerTarget scopedSrvTarget = legacySrvTarget.get();
+    legacySrvTarget.remove();
     Configuration configuration =
         scopedSrvTarget == null
             ? BUILDER_CONFIGURATION.get(builder)
@@ -112,9 +113,10 @@ public class MongoClusterSettings {
     if (target == null) {
       return null;
     }
-    MongoServerTarget previous = legacySrvTarget.get();
+    // The legacy driver builds ClusterSettings before it can invoke user callbacks, so this target
+    // is consumed before a reentrant MongoClient construction can replace it.
     legacySrvTarget.set(target);
-    return new LegacySrvTargetScope(previous);
+    return new LegacySrvTargetScope();
   }
 
   @Nullable
@@ -171,18 +173,10 @@ public class MongoClusterSettings {
    */
   public static class LegacySrvTargetScope {
 
-    @Nullable private final MongoServerTarget previous;
-
-    private LegacySrvTargetScope(@Nullable MongoServerTarget previous) {
-      this.previous = previous;
-    }
+    private LegacySrvTargetScope() {}
 
     public void close() {
-      if (previous == null) {
-        legacySrvTarget.remove();
-      } else {
-        legacySrvTarget.set(previous);
-      }
+      legacySrvTarget.remove();
     }
   }
 
