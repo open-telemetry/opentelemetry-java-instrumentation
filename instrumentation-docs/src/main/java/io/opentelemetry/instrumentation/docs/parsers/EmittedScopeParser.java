@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfoBuilder;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -118,8 +119,7 @@ public class EmittedScopeParser {
     }
     for (int i = 1; i <= 3; i++) {
       int comparison =
-          Integer.compare(
-              Integer.parseInt(leftMatcher.group(i)), Integer.parseInt(rightMatcher.group(i)));
+          new BigInteger(leftMatcher.group(i)).compareTo(new BigInteger(rightMatcher.group(i)));
       if (comparison != 0) {
         return comparison;
       }
