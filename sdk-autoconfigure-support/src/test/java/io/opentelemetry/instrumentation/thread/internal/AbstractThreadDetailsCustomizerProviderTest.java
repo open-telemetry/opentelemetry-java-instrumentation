@@ -42,7 +42,7 @@ class AbstractThreadDetailsCustomizerProviderTest {
       return false;
     }
     return model.getTracerProvider().getProcessors().stream()
-        .anyMatch(processor -> processor.getAdditionalProperties().containsKey("thread_details"));
+        .anyMatch(processor -> processor.getExtensionProperties().containsKey("thread_details"));
   }
 
   private static OpenTelemetryConfigurationModel applyCustomizer(

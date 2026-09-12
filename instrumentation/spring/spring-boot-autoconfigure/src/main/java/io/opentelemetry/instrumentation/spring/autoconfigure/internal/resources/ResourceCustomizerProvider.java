@@ -13,6 +13,8 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigura
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ResourceModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalResourceDetectionModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalResourceDetectorModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalResourceDetectorPropertyModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ResourceModelAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -35,17 +37,18 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
           ResourceModel resource = model.getResource();
           if (resource == null) {
             resource = new ResourceModel();
-            model.withResource(resource);
+            model.setResource(resource);
           }
-          ExperimentalResourceDetectionModel detectionModel = resource.getDetectionDevelopment();
+          ExperimentalResourceDetectionModel detectionModel =
+              ResourceModelAccessor.getDetection(resource);
           if (detectionModel == null) {
             detectionModel = new ExperimentalResourceDetectionModel();
-            resource.withDetectionDevelopment(detectionModel);
+            ResourceModelAccessor.setDetection(resource, detectionModel);
           }
           List<ExperimentalResourceDetectorModel> detectors = detectionModel.getDetectors();
           if (detectors == null) {
             detectors = new ArrayList<>();
-            detectionModel.withDetectors(detectors);
+            detectionModel.setDetectors(detectors);
           }
           Set<String> names =
               detectors.stream()
@@ -54,8 +57,9 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
 
           for (String name : REQUIRED_DETECTORS) {
             if (!names.contains(name)) {
-              ExperimentalResourceDetectorModel detector = new ExperimentalResourceDetectorModel();
-              detector.getAdditionalProperties().put(name, null);
+              ExperimentalResourceDetectorModel detector =
+                  new ExperimentalResourceDetectorModel()
+                      .setAdditionalProperty(name, new ExperimentalResourceDetectorPropertyModel());
               // add first (the least precedence)
               // so that the user can add a differently named detector that takes precedence
               detectors.add(0, detector);
