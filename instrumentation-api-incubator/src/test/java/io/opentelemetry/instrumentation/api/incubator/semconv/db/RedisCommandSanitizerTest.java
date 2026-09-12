@@ -240,6 +240,15 @@ class RedisCommandSanitizerTest {
     assertThat(result).startsWith("HMSET hash key0 ? key1 ?");
   }
 
+  @Test
+  void doesNotSplitSurrogatePairWhenTruncating() {
+    String argument = "a".repeat(RedisCommandSanitizer.LIMIT - 5) + "\uD83D\uDE00";
+
+    String result = RedisCommandSanitizer.create(true).sanitize("GET", list(argument));
+
+    assertThat(result).hasSize(RedisCommandSanitizer.LIMIT - 1).endsWith("a");
+  }
+
   static Stream<Arguments> sanitizeArgs() {
     return Stream.of(
         // Connection

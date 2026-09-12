@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.v7_0;
 
+import static io.opentelemetry.instrumentation.api.internal.StringUtils.truncate;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -22,7 +24,7 @@ import javax.annotation.Nullable;
  * <p>When the body is not a valid JSON value or sequence of JSON values, this returns {@code null}
  * so that the caller drops the body rather than capturing it raw.
  *
- * <p>Sanitized output longer than 32,768 characters is truncated.
+ * <p>Sanitized output longer than 32,768 UTF-16 code units is truncated.
  */
 final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> {
 
@@ -113,13 +115,15 @@ final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> 
     }
 
     private boolean isFull() {
-      return getBuffer().length() >= MAX_QUERY_LENGTH;
+      StringBuffer output = getBuffer();
+      return output.length() > MAX_QUERY_LENGTH
+          || (output.length() == MAX_QUERY_LENGTH
+              && !Character.isHighSurrogate(output.charAt(MAX_QUERY_LENGTH - 1)));
     }
 
     @Override
     public String toString() {
-      StringBuffer output = getBuffer();
-      return output.substring(0, Math.min(output.length(), MAX_QUERY_LENGTH));
+      return truncate(getBuffer().toString(), MAX_QUERY_LENGTH);
     }
   }
 }

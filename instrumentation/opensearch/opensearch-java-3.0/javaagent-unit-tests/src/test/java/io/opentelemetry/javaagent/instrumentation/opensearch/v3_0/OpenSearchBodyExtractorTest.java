@@ -19,6 +19,8 @@ import org.opensearch.client.json.jsonb.JsonbJsonpMapper;
 
 class OpenSearchBodyExtractorTest {
 
+  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024;
+
   @Test
   void shouldUseJacksonMapperJsonFactory() {
     JsonFactory jsonFactory =
@@ -66,5 +68,18 @@ class OpenSearchBodyExtractorTest {
         OpenSearchBodyExtractor.extract(mapper, singletonMap("message", "secret"), true);
 
     assertThat(result).isNull();
+  }
+
+  @Test
+  void shouldNotSplitSurrogatePairAtQueryBodyLimit() {
+    JacksonJsonpMapper mapper = new JacksonJsonpMapper();
+    String beforePair = "a".repeat(MAX_QUERY_BODY_LENGTH - 3);
+    JsonpSerializable value =
+        (generator, unused) ->
+            generator.writeStartObject().writeKey(beforePair + "\uD83D\uDE00").writeEnd();
+
+    String result = OpenSearchBodyExtractor.extract(mapper, value, true);
+
+    assertThat(result).isEqualTo("{\"" + beforePair);
   }
 }
