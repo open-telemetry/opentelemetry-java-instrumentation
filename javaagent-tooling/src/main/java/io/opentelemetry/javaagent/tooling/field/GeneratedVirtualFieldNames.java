@@ -24,35 +24,40 @@ final class GeneratedVirtualFieldNames {
     return className.startsWith(DYNAMIC_CLASSES_PACKAGE + "VirtualFieldAccessor$");
   }
 
-  static String getVirtualFieldImplementationClassName(String typeName, String fieldTypeName) {
+  static String getVirtualFieldImplementationClassName(
+      String fieldName, String typeName, String fieldTypeName) {
     return DYNAMIC_CLASSES_PACKAGE
         + "VirtualFieldImpl$"
+        + (!fieldName.isEmpty() ? fieldName + "$" : "")
         + sanitizeClassName(typeName)
         + "$"
         + sanitizeClassName(fieldTypeName);
   }
 
-  static String getFieldAccessorInterfaceName(String typeName, String fieldTypeName) {
+  static String getFieldAccessorInterfaceName(
+      String fieldName, String typeName, String fieldTypeName) {
     return DYNAMIC_CLASSES_PACKAGE
         + "VirtualFieldAccessor$"
+        + (!fieldName.isEmpty() ? fieldName + "$" : "")
         + sanitizeClassName(typeName)
         + "$"
         + sanitizeClassName(fieldTypeName);
   }
 
-  static String getRealFieldName(String typeName, String fieldTypeName) {
+  static String getRealFieldName(String fieldName, String typeName, String fieldTypeName) {
     return "__opentelemetryVirtualField$"
+        + (!fieldName.isEmpty() ? fieldName + "$" : "")
         + sanitizeClassName(typeName)
         + "$"
         + sanitizeClassName(fieldTypeName);
   }
 
-  static String getRealGetterName(String typeName, String fieldTypeName) {
-    return "__get" + getRealFieldName(typeName, fieldTypeName);
+  static String getRealGetterName(String fieldName, String typeName, String fieldTypeName) {
+    return "__get" + getRealFieldName(fieldName, typeName, fieldTypeName);
   }
 
-  static String getRealSetterName(String typeName, String fieldTypeName) {
-    return "__set" + getRealFieldName(typeName, fieldTypeName);
+  static String getRealSetterName(String fieldName, String typeName, String fieldTypeName) {
+    return "__set" + getRealFieldName(fieldName, typeName, fieldTypeName);
   }
 
   private static String sanitizeClassName(String className) {

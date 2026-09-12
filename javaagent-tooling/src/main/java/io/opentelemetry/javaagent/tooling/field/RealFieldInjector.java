@@ -36,12 +36,17 @@ final class RealFieldInjector implements AsmVisitorWrapper {
       Type.getInternalName(VirtualFieldInstalledMarker.class);
 
   private final FieldAccessorInterfaces fieldAccessorInterfaces;
+  private final String fieldName;
   private final String typeName;
   private final String fieldTypeName;
 
   RealFieldInjector(
-      FieldAccessorInterfaces fieldAccessorInterfaces, String typeName, String fieldTypeName) {
+      FieldAccessorInterfaces fieldAccessorInterfaces,
+      String fieldName,
+      String typeName,
+      String fieldTypeName) {
     this.fieldAccessorInterfaces = fieldAccessorInterfaces;
+    this.fieldName = fieldName;
     this.typeName = typeName;
     this.fieldTypeName = fieldTypeName;
   }
@@ -72,11 +77,11 @@ final class RealFieldInjector implements AsmVisitorWrapper {
       // We are using Object class name instead of fieldTypeName here because this gets
       // injected onto the bootstrap class loader where context class may be unavailable
       private final TypeDescription fieldType = TypeDescription.ForLoadedType.of(Object.class);
-      private final String fieldName = getRealFieldName(typeName, fieldTypeName);
-      private final String getterMethodName = getRealGetterName(typeName, fieldTypeName);
-      private final String setterMethodName = getRealSetterName(typeName, fieldTypeName);
+      private final String realFieldName = getRealFieldName(fieldName, typeName, fieldTypeName);
+      private final String getterMethodName = getRealGetterName(fieldName, typeName, fieldTypeName);
+      private final String setterMethodName = getRealSetterName(fieldName, typeName, fieldTypeName);
       private final TypeDescription interfaceType =
-          fieldAccessorInterfaces.find(typeName, fieldTypeName);
+          fieldAccessorInterfaces.find(fieldName, typeName, fieldTypeName);
       private boolean foundField = false;
       private boolean foundGetter = false;
       private boolean foundSetter = false;
@@ -101,7 +106,7 @@ final class RealFieldInjector implements AsmVisitorWrapper {
       @Override
       public FieldVisitor visitField(
           int access, String name, String descriptor, String signature, Object value) {
-        if (name.equals(fieldName)) {
+        if (name.equals(realFieldName)) {
           foundField = true;
         }
         return super.visitField(access, name, descriptor, signature, value);
@@ -132,7 +137,7 @@ final class RealFieldInjector implements AsmVisitorWrapper {
                   | Opcodes.ACC_VOLATILE
                   | Opcodes.ACC_TRANSIENT
                   | Opcodes.ACC_SYNTHETIC,
-              fieldName,
+              realFieldName,
               fieldType.getDescriptor(),
               null,
               null);
@@ -154,7 +159,7 @@ final class RealFieldInjector implements AsmVisitorWrapper {
         mv.visitFieldInsn(
             Opcodes.GETFIELD,
             instrumentedType.getInternalName(),
-            fieldName,
+            realFieldName,
             fieldType.getDescriptor());
         mv.visitInsn(Opcodes.ARETURN);
         mv.visitMaxs(0, 0);
@@ -170,7 +175,7 @@ final class RealFieldInjector implements AsmVisitorWrapper {
         mv.visitFieldInsn(
             Opcodes.PUTFIELD,
             instrumentedType.getInternalName(),
-            fieldName,
+            realFieldName,
             fieldType.getDescriptor());
         mv.visitInsn(Opcodes.RETURN);
         mv.visitMaxs(0, 0);

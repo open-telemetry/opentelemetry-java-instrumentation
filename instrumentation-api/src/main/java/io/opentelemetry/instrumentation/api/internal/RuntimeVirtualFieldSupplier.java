@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -19,12 +21,15 @@ public final class RuntimeVirtualFieldSupplier {
   private static final Logger logger =
       Logger.getLogger(RuntimeVirtualFieldSupplier.class.getName());
 
+  public static final String DEFAULT_FIELD_NAME = "";
+
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
   public interface VirtualFieldSupplier {
-    <U extends T, V extends F, T, F> VirtualField<U, V> find(Class<T> type, Class<F> fieldType);
+    <U extends T, V extends F, T, F> VirtualField<U, V> find(
+        String fieldName, Class<T> type, Class<F> fieldType);
   }
 
   private static final VirtualFieldSupplier DEFAULT = new CacheBasedVirtualFieldSupplier();
@@ -47,18 +52,19 @@ public final class RuntimeVirtualFieldSupplier {
 
   private static final class CacheBasedVirtualFieldSupplier implements VirtualFieldSupplier {
 
-    private final Cache<Class<?>, Cache<Class<?>, VirtualField<?, ?>>>
+    private final Cache<Class<?>, Cache<Class<?>, Map<String, VirtualField<?, ?>>>>
         ownerToFieldToImplementationMap = Cache.weak();
 
     @Override
     // storing VirtualField instances in a map loses the generic types
     @SuppressWarnings("unchecked")
     public <U extends T, V extends F, T, F> VirtualField<U, V> find(
-        Class<T> type, Class<F> fieldType) {
+        String fieldName, Class<T> type, Class<F> fieldType) {
       return (VirtualField<U, V>)
           ownerToFieldToImplementationMap
               .computeIfAbsent(type, c -> Cache.weak())
-              .computeIfAbsent(fieldType, c -> new CacheBasedVirtualField<>());
+              .computeIfAbsent(fieldType, c -> new ConcurrentHashMap<>())
+              .computeIfAbsent(fieldName, s -> new CacheBasedVirtualField<>());
     }
   }
 

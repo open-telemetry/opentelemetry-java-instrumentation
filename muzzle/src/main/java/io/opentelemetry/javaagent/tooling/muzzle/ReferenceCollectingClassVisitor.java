@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static java.util.Objects.requireNonNull;
 
-import com.google.common.collect.EvictingQueue;
+import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
@@ -18,7 +18,9 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibili
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.VisibilityFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -562,9 +564,9 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   }
 
   private class VirtualFieldCollectingMethodVisitor extends MethodVisitor {
-    // this data structure will remember last two LDC <class> instructions before
+    // this data structure will remember last three LDC <class>/<string> instructions before
     // VirtualField.find() call
-    private final EvictingQueue<Type> lastTwoClassConstants = EvictingQueue.create(2);
+    private final Deque<Object> lastConstants = new ArrayDeque<>();
 
     VirtualFieldCollectingMethodVisitor(MethodVisitor methodVisitor) {
       super(AsmApi.VERSION, methodVisitor);
@@ -604,9 +606,15 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     public void visitMethodInsn(
         int opcode, String owner, String name, String descriptor, boolean isInterface) {
 
-      String getVirtualFieldDescriptor =
+      String getVirtualField2ArgDescriptor =
           Type.getMethodDescriptor(
               Type.getType(VirtualField.class),
+              Type.getType(Class.class),
+              Type.getType(Class.class));
+      String getVirtualField3ArgDescriptor =
+          Type.getMethodDescriptor(
+              Type.getType(VirtualField.class),
+              Type.getType(String.class),
               Type.getType(Class.class),
               Type.getType(Class.class));
 
@@ -616,29 +624,45 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       // remember used context classes if this is an VirtualField.find() call
       if ("io.opentelemetry.instrumentation.api.util.VirtualField".equals(ownerType.getClassName())
           && "find".equals(name)
-          && methodType.getDescriptor().equals(getVirtualFieldDescriptor)) {
+          && (methodType.getDescriptor().equals(getVirtualField2ArgDescriptor)
+              || methodType.getDescriptor().equals(getVirtualField3ArgDescriptor))) {
+        int argCount = methodType.getDescriptor().equals(getVirtualField2ArgDescriptor) ? 2 : 3;
+        String methodName =
+            "VirtualField#find(" + (argCount == 3 ? "String, " : "") + " Class, Class)";
+
         // in case of invalid scenario (not using .class ref directly) don't store anything and
         // clear the last LDC <class> stack
         // note that FieldBackedProvider also check for an invalid context call in the runtime
-        if (lastTwoClassConstants.remainingCapacity() == 0) {
-          Type type = requireNonNull(lastTwoClassConstants.poll());
-          Type fieldType = requireNonNull(lastTwoClassConstants.poll());
+        if (lastConstants.size() >= argCount) {
+          Type fieldType = removeLastConstant(Type.class);
+          Type type = removeLastConstant(Type.class);
+          String fieldName = RuntimeVirtualFieldSupplier.DEFAULT_FIELD_NAME;
+          if (argCount == 3) {
+            fieldName = removeLastConstant(String.class);
+          }
 
           if (type.getSort() != Type.OBJECT) {
             throw new MuzzleCompilationException(
-                "Invalid VirtualField#find(Class, Class) usage: you cannot pass array or primitive"
+                "Invalid "
+                    + methodName
+                    + " usage: you cannot pass array or primitive"
                     + " types as the field owner type");
           }
           if (fieldType.getSort() != Type.OBJECT && fieldType.getSort() != Type.ARRAY) {
             throw new MuzzleCompilationException(
-                "Invalid VirtualField#find(Class, Class) usage: you cannot pass primitive types as"
+                "Invalid "
+                    + methodName
+                    + " usage: you cannot pass primitive types as"
                     + " the field type");
           }
 
-          virtualFieldMappingsBuilder.register(type.getClassName(), fieldType.getClassName());
+          virtualFieldMappingsBuilder.register(
+              fieldName, type.getClassName(), fieldType.getClassName());
         } else {
           throw new MuzzleCompilationException(
-              "Invalid VirtualField#find(Class, Class) usage: you cannot pass variables,"
+              "Invalid "
+                  + methodName
+                  + " usage: you cannot pass variables,"
                   + " method parameters, compute classes; class references need to be passed"
                   + " directly to the find() method");
         }
@@ -665,16 +689,27 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       // we need to remember last two LDC <class> instructions that were executed before
       // VirtualField.get() call
       if (opcode == Opcodes.LDC) {
-        if (value instanceof Type) {
-          Type type = (Type) value;
-          lastTwoClassConstants.add(type);
+        if (value instanceof Type || value instanceof String) {
+          lastConstants.add(value);
+          if (lastConstants.size() > 3) {
+            lastConstants.removeFirst();
+          }
           return;
         }
       }
 
-      // instruction other than LDC <class> visited; pop the first element if present - this will
-      // prevent adding wrong context key pairs in case of an invalid scenario
-      lastTwoClassConstants.poll();
+      // instruction other than LDC <class>/<string> visited; clear the queue - this will
+      // prevent adding wrong context keys in case of an invalid scenario
+      lastConstants.clear();
+    }
+
+    private <T> T removeLastConstant(Class<T> type) {
+      Object constant = requireNonNull(lastConstants.removeLast());
+      if (!type.isInstance(constant)) {
+        throw new MuzzleCompilationException(
+            "Expecting " + type + " but got " + constant.getClass());
+      }
+      return type.cast(constant);
     }
   }
 }

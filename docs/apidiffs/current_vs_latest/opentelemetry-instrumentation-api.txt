@@ -1,2 +1,6 @@
 Comparing source compatibility of opentelemetry-instrumentation-api-2.32.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.31.1.jar
-No changes.
+***  MODIFIED CLASS: PUBLIC ABSTRACT io.opentelemetry.instrumentation.api.util.VirtualField  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === F:java.lang.Object, === T:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.util.VirtualField<U,V> find(java.lang.String, java.lang.Class<T>, java.lang.Class<F>)
+		GENERIC TEMPLATES: +++ F:java.lang.Object, +++ T:java.lang.Object, +++ U:T, +++ V:F

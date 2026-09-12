@@ -22,11 +22,11 @@ import javax.annotation.Nullable;
 public class JmsSubscriptionNames {
 
   private static final VirtualField<MessageConsumer, String> CONSUMER_SUBSCRIPTION_NAME =
-      VirtualField.find(MessageConsumer.class, String.class);
+      VirtualField.find("subscriptionName", MessageConsumer.class, String.class);
   private static final VirtualField<Message, String> MESSAGE_SUBSCRIPTION_NAME =
-      VirtualField.find(Message.class, String.class);
+      VirtualField.find("subscriptionName", Message.class, String.class);
   private static final VirtualField<MessageListener, String> LISTENER_SUBSCRIPTION_NAME =
-      VirtualField.find(MessageListener.class, String.class);
+      VirtualField.find("subscriptionName", MessageListener.class, String.class);
 
   public static void set(MessageConsumer consumer, String subscriptionName) {
     CONSUMER_SUBSCRIPTION_NAME.set(consumer, subscriptionName);
