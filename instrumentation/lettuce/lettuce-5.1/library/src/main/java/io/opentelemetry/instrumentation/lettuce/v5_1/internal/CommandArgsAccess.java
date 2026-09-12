@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Reflective accessor for the package-private {@code CommandArgs#singularArguments} field and its
@@ -27,19 +28,28 @@ public final class CommandArgsAccess {
 
   private static final Logger logger = Logger.getLogger(CommandArgsAccess.class.getName());
 
+  @Nullable
   private static final Field singularArgumentsField =
       findField(CommandArgs.class, "singularArguments");
 
+  @Nullable
   private static final Class<?> keyArgumentClass =
       loadNestedClass("io.lettuce.core.protocol.CommandArgs$KeyArgument");
+
+  @Nullable
   private static final Class<?> valueArgumentClass =
       loadNestedClass("io.lettuce.core.protocol.CommandArgs$ValueArgument");
 
-  private static final Field keyArgumentCodecField = findField(keyArgumentClass, "codec");
-  private static final Field keyArgumentKeyField = findField(keyArgumentClass, "key");
+  @Nullable private static final Field keyArgumentCodecField = findField(keyArgumentClass, "codec");
+  @Nullable private static final Field keyArgumentKeyField = findField(keyArgumentClass, "key");
+
+  @Nullable
   private static final Field valueArgumentCodecField = findField(valueArgumentClass, "codec");
+
+  @Nullable
   private static final Field valueArgumentValField = findField(valueArgumentClass, "val");
 
+  @Nullable
   private static Class<?> loadNestedClass(String name) {
     try {
       return Class.forName(name, false, CommandArgs.class.getClassLoader());
@@ -49,7 +59,8 @@ public final class CommandArgsAccess {
     }
   }
 
-  private static Field findField(Class<?> owner, String name) {
+  @Nullable
+  private static Field findField(@Nullable Class<?> owner, String name) {
     if (owner == null) {
       return null;
     }
@@ -79,16 +90,17 @@ public final class CommandArgsAccess {
     }
     List<String> result = new ArrayList<>(singularArguments.size());
     for (Object argument : singularArguments) {
+      if (argument == null) {
+        continue;
+      }
       result.add(getArgValue(StringCodec.UTF8, argument));
     }
     return result;
   }
 
+  // casts are guarded by explicit isInstance checks against the reflectively looked-up nested types
   @SuppressWarnings("unchecked")
   private static String getArgValue(StringCodec stringCodec, Object argument) {
-    if (argument == null) {
-      return null;
-    }
     try {
       if (keyArgumentClass != null
           && keyArgumentClass.isInstance(argument)

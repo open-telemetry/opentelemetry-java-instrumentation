@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.rxjava.v1_0.internal;
 import java.lang.reflect.Field;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import rx.Observable;
 
 /**
@@ -20,8 +21,9 @@ public final class ObservableOnSubscribeAccess {
 
   private static final Logger logger = Logger.getLogger(ObservableOnSubscribeAccess.class.getName());
 
-  private static final Field onSubscribeField = findOnSubscribeField();
+  @Nullable private static final Field onSubscribeField = findOnSubscribeField();
 
+  @Nullable
   private static Field findOnSubscribeField() {
     try {
       Field field = Observable.class.getDeclaredField("onSubscribe");
@@ -33,6 +35,7 @@ public final class ObservableOnSubscribeAccess {
     }
   }
 
+  // cast is safe: the field is declared as Observable.OnSubscribe<T>
   @SuppressWarnings("unchecked")
   public static <T> Observable.OnSubscribe<T> extractOnSubscribe(Observable<T> observable) {
     if (onSubscribeField == null) {

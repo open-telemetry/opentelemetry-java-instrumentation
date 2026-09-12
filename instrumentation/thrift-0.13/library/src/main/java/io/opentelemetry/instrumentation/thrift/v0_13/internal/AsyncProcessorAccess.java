@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.apache.thrift.AsyncProcessFunction;
 import org.apache.thrift.TBaseAsyncProcessor;
 
@@ -25,9 +26,10 @@ public final class AsyncProcessorAccess {
 
   private static final Logger logger = Logger.getLogger(AsyncProcessorAccess.class.getName());
 
-  private static final Field processMapField = findProcessMapField();
-  private static final Method isOnewayMethod = findIsOnewayMethod();
+  @Nullable private static final Field processMapField = findProcessMapField();
+  @Nullable private static final Method isOnewayMethod = findIsOnewayMethod();
 
+  @Nullable
   private static Field findProcessMapField() {
     try {
       Field field = TBaseAsyncProcessor.class.getDeclaredField("processMap");
@@ -39,6 +41,7 @@ public final class AsyncProcessorAccess {
     }
   }
 
+  @Nullable
   private static Method findIsOnewayMethod() {
     try {
       Method method = AsyncProcessFunction.class.getDeclaredMethod("isOneway");
@@ -50,6 +53,7 @@ public final class AsyncProcessorAccess {
     }
   }
 
+  // cast is safe: the field is declared as Map<String, ? extends AsyncProcessFunction<?, ?, ?, ?>>
   @SuppressWarnings("unchecked")
   public static Map<String, AsyncProcessFunction<?, ?, ?, ?>> getProcessMap(
       TBaseAsyncProcessor<?> processor) {
