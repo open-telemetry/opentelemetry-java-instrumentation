@@ -14,7 +14,7 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -50,8 +50,18 @@ public class TomcatConnectionPoolMetrics {
 
   @SuppressWarnings("deprecation") // deprecated overload keeps the legacy scope by default
   private static BatchCallback createInstruments(DataSourceProxy dataSource) {
+    DbInfo dbInfo = getDbInfo(dataSource);
+    PoolConfiguration poolProperties = dataSource.getPoolProperties();
+    String configuredPoolName = dataSource.getPoolName();
+    String poolName =
+        configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)
+            ? configuredPoolName
+            : null;
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(meter, getPoolName(dataSource));
+        DbConnectionPoolMetrics.create(
+            meter,
+            JdbcConnectionPoolMetricsUtil.poolName(dbInfo, poolName, DEFAULT_POOL_NAME),
+            JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo));
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
@@ -79,16 +89,9 @@ public class TomcatConnectionPoolMetrics {
         pendingRequestsForConnection);
   }
 
-  private static String getPoolName(DataSourceProxy dataSource) {
+  private static DbInfo getDbInfo(DataSourceProxy dataSource) {
     PoolConfiguration poolProperties = dataSource.getPoolProperties();
-    String configuredPoolName = dataSource.getPoolName();
-    if (configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)) {
-      return configuredPoolName;
-    }
-
-    DbInfo dbInfo =
-        JdbcConnectionUrlParser.parse(poolProperties.getUrl(), poolProperties.getDbProperties());
-    return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_POOL_NAME);
+    return JdbcConnectionUrlParser.parse(poolProperties.getUrl(), poolProperties.getDbProperties());
   }
 
   public static void unregisterMetrics(DataSourceProxy dataSource) {

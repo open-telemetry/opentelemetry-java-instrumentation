@@ -9,14 +9,18 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.AbstractPointAssert;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DbConnectionPoolMetricsAssertions {
 
@@ -42,6 +46,8 @@ public class DbConnectionPoolMetricsAssertions {
   private boolean testCreateTime = true;
   private boolean testWaitTime = true;
   private boolean testUseTime = true;
+  private boolean databaseAttributesDeclared;
+  private final List<AttributeAssertion> databaseAttributes = new ArrayList<>();
 
   DbConnectionPoolMetricsAssertions(
       InstrumentationExtension testing, String instrumentationName, String poolName) {
@@ -98,6 +104,21 @@ public class DbConnectionPoolMetricsAssertions {
     return this;
   }
 
+  /**
+   * Declares the database attributes that every metric point is expected to carry when stable
+   * database semantic conventions are enabled. Declaring them makes each point assertion exact, so
+   * an unexpected attribute fails the assertion. Under the old semantic conventions each point is
+   * expected to carry only the pool name and the attributes that the metric itself defines.
+   */
+  @CanIgnoreReturnValue
+  public DbConnectionPoolMetricsAssertions withDatabaseAttributes(
+      AttributeAssertion... assertions) {
+    databaseAttributesDeclared = true;
+    databaseAttributes.clear();
+    databaseAttributes.addAll(asList(assertions));
+    return this;
+  }
+
   public void assertConnectionPoolEmitsMetrics() {
     verifyConnectionUsage();
     if (testMinIdleConnections) {
@@ -142,12 +163,8 @@ public class DbConnectionPoolMetricsAssertions {
             sum ->
                 sum.isNotMonotonic()
                     .hasPointsSatisfying(
-                        point ->
-                            point.hasAttributesSatisfying(
-                                equalTo(POOL_NAME_KEY, poolName), equalTo(STATE_KEY, "idle")),
-                        point ->
-                            point.hasAttributesSatisfying(
-                                equalTo(POOL_NAME_KEY, poolName), equalTo(STATE_KEY, "used"))));
+                        point -> verifyPointAttributes(point, equalTo(STATE_KEY, "idle")),
+                        point -> verifyPointAttributes(point, equalTo(STATE_KEY, "used"))));
   }
 
   private void verifyMaxConnections() {
@@ -197,8 +214,26 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyPoolName(LongSumAssert sum) {
-    sum.isNotMonotonic()
-        .hasPointsSatisfying(point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName)));
+    sum.isNotMonotonic().hasPointsSatisfying(this::verifyPointAttributes);
+  }
+
+  private void verifyPointAttributes(AbstractPointAssert<?, ?> point) {
+    verifyPointAttributes(point, new AttributeAssertion[0]);
+  }
+
+  private void verifyPointAttributes(
+      AbstractPointAssert<?, ?> point, AttributeAssertion... extraAttributes) {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.add(equalTo(POOL_NAME_KEY, poolName));
+    assertions.addAll(asList(extraAttributes));
+    if (databaseAttributesDeclared) {
+      if (emitStableDatabaseSemconv()) {
+        assertions.addAll(databaseAttributes);
+      }
+      point.hasAttributesSatisfyingExactly(assertions.toArray(new AttributeAssertion[0]));
+    } else {
+      point.hasAttributesSatisfying(assertions.toArray(new AttributeAssertion[0]));
+    }
   }
 
   private void verifyPendingRequests() {
@@ -235,10 +270,7 @@ public class DbConnectionPoolMetricsAssertions {
         .hasDescription(
             "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
         .hasLongSumSatisfying(
-            sum ->
-                sum.isMonotonic()
-                    .hasPointsSatisfying(
-                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+            sum -> sum.isMonotonic().hasPointsSatisfying(this::verifyPointAttributes));
   }
 
   private void verifyCreateTime() {
@@ -255,9 +287,7 @@ public class DbConnectionPoolMetricsAssertions {
         .hasUnit(emitStableDatabaseSemconv() ? "s" : "ms")
         .hasDescription("The time it took to create a new connection.")
         .hasHistogramSatisfying(
-            histogram ->
-                histogram.hasPointsSatisfying(
-                    point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
   }
 
   private void verifyWaitTime() {
@@ -274,9 +304,7 @@ public class DbConnectionPoolMetricsAssertions {
         .hasUnit(emitStableDatabaseSemconv() ? "s" : "ms")
         .hasDescription("The time it took to obtain an open connection from the pool.")
         .hasHistogramSatisfying(
-            histogram ->
-                histogram.hasPointsSatisfying(
-                    point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
   }
 
   private void verifyUseTime() {
@@ -293,8 +321,6 @@ public class DbConnectionPoolMetricsAssertions {
         .hasUnit(emitStableDatabaseSemconv() ? "s" : "ms")
         .hasDescription("The time between borrowing a connection and returning it to the pool.")
         .hasHistogramSatisfying(
-            histogram ->
-                histogram.hasPointsSatisfying(
-                    point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
   }
 }
