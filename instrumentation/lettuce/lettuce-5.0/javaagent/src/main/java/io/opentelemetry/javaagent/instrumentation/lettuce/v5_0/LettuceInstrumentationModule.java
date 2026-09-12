@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx.LettuceReactiveCommandsInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx.LettuceReactiveSubscriptionInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -40,10 +41,12 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
     return asList(
         new LettuceAsyncCommandInstrumentation(),
         new LettuceAsyncCommandsInstrumentation(),
+        new LettuceCommandEncoderInstrumentation(),
         new LettuceEndpointInstrumentation(),
         new LettuceClientInstrumentation(),
         new LettuceClusterClientInstrumentation(),
         new LettuceMasterSlaveInstrumentation(),
+        new LettuceReactiveSubscriptionInstrumentation(),
         new LettuceReactiveCommandsInstrumentation());
   }
 }
