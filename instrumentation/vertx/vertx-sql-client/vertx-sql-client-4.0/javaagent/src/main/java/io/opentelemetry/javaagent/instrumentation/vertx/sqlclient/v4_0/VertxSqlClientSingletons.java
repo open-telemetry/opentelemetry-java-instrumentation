@@ -14,8 +14,8 @@ import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnection;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.impl.SqlClientBase;
+import io.vertx.sqlclient.impl.VertxSqlClientQueryBaseHelper;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {
@@ -69,13 +69,13 @@ public class VertxSqlClientSingletons {
 
   public static void setQueryExecutorInfoReference(
       Object queryExecutor, @Nullable VertxSqlClientInfoReference infoReference) {
-    QueryExecutorUtil.setData(queryExecutor, infoReference);
+    VertxSqlClientQueryBaseHelper.setData(queryExecutor, infoReference);
   }
 
   @Nullable
   public static VertxSqlClientInfo getQueryExecutorInfo(Object queryExecutor) {
     VertxSqlClientInfoReference infoReference =
-        (VertxSqlClientInfoReference) QueryExecutorUtil.getData(queryExecutor);
+        (VertxSqlClientInfoReference) VertxSqlClientQueryBaseHelper.getData(queryExecutor);
     return infoReference != null ? infoReference.get() : null;
   }
 
