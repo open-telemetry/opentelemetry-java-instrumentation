@@ -282,6 +282,15 @@ class SqlQueryAnalyzerTest {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
+
+    @Test
+    void queryTextTruncationDoesNotSplitSurrogatePair() {
+      String beforePair = "A".repeat(AutoSqlSanitizer.LIMIT - 1);
+
+      SqlQuery result = analyze(beforePair + "\uD83D\uDE00");
+
+      assertThat(result.getQueryText()).isEqualTo(beforePair);
+    }
     SqlQuery result = analyze(s.toString());
     assertThat(result.getQueryText().length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
     assertThat(result.getQueryText()).doesNotContain("1234");
@@ -353,6 +362,16 @@ class SqlQueryAnalyzerTest {
     for (int i = 0; i < 50; i++) {
       if (i > 0) {
         sql.append(", ");
+      }
+
+      @Test
+      void querySummaryTruncationDoesNotSplitSurrogatePair() {
+        String beforePair = "A".repeat(254);
+
+        String summary =
+            SqlQuery.createWithSummary(null, null, beforePair + "\uD83D\uDE00").getQuerySummary();
+
+        assertThat(summary).isEqualTo(beforePair);
       }
       sql.append("very_long_table_name_").append(i);
     }

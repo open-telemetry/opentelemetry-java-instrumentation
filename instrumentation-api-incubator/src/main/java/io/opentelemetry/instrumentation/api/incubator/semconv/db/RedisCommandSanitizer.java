@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.StringUtils.truncate;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 
@@ -38,7 +39,7 @@ public final class RedisCommandSanitizer {
   private static final Map<String, CommandSanitizer> SANITIZERS;
   private static final CommandSanitizer DEFAULT = new CommandAndNumArgs(0);
 
-  // max length of the sanitized command, command longer than that will be truncated to this length
+  // max length in UTF-16 code units of the sanitized command
   // visible for testing
   static final int LIMIT = 32 * 1024;
 
@@ -377,9 +378,7 @@ public final class RedisCommandSanitizer {
   }
 
   private static String limit(StringBuilder builder) {
-    if (builder.length() > LIMIT) {
-      builder.delete(LIMIT, builder.length());
-    }
+    truncate(builder, LIMIT);
     return builder.toString();
   }
 

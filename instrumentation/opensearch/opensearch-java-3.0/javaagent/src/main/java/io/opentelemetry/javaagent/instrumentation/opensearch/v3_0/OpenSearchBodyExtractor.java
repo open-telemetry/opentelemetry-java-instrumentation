@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.StringUtils.truncate;
 import static java.util.logging.Level.FINE;
 
 import jakarta.json.stream.JsonGenerator;
@@ -106,8 +107,7 @@ class OpenSearchBodyExtractor {
   }
 
   private static void appendPrefix(StringBuilder result, String value, int maxLength) {
-    int length = Math.min(value.length(), maxLength - result.length());
-    result.append(value, 0, length);
+    result.append(truncate(value, maxLength - result.length()));
   }
 
   private static final class BoundedStringWriter extends Writer {
@@ -123,14 +123,14 @@ class OpenSearchBodyExtractor {
 
     @Override
     public void write(char[] buffer, int offset, int length) {
-      int writeLength = Math.min(length, maxLength - result.length());
+      int writeLength = Math.min(length, maxLength + 1 - result.length());
       result.append(buffer, offset, writeLength);
       abortIfFull();
     }
 
     @Override
     public void write(int value) {
-      if (result.length() < maxLength) {
+      if (result.length() <= maxLength) {
         result.append((char) value);
       }
       abortIfFull();
@@ -138,13 +138,16 @@ class OpenSearchBodyExtractor {
 
     @Override
     public void write(String value, int offset, int length) {
-      int writeLength = Math.min(length, maxLength - result.length());
+      int writeLength = Math.min(length, maxLength + 1 - result.length());
       result.append(value, offset, offset + writeLength);
       abortIfFull();
     }
 
     private void abortIfFull() {
-      if (result.length() == maxLength) {
+      if (result.length() > maxLength
+          || (result.length() == maxLength
+              && (maxLength == 0
+                  || !Character.isHighSurrogate(result.charAt(maxLength - 1))))) {
         limitReached = true;
         throw new QueryBodyLimitException();
       }
@@ -162,6 +165,7 @@ class OpenSearchBodyExtractor {
 
     @Override
     public String toString() {
+      truncate(result, maxLength);
       return result.toString();
     }
   }

@@ -65,6 +65,16 @@ class JacksonElasticsearchQuerySanitizerTest {
   }
 
   @Test
+  void doesNotSplitSurrogatePairAtQueryLengthLimit() {
+    String beforePair =
+        "{\""
+            + "a".repeat(JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 3);
+    String body = beforePair + "\uD83D\uDE00\":[]}";
+
+    assertThat(sanitize(body)).isEqualTo(beforePair);
+  }
+
+  @Test
   void stopsBeforeOverDepthContentAfterLimit() {
     String exactLimit =
         objectWithEmptyArrayField(JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 7);
