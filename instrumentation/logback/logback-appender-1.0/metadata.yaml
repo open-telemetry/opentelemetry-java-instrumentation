@@ -16,8 +16,6 @@ configurations:
       default. MDC and logger-context attributes remain separate and opt-in.
     type: list
     default: ''
-    examples:
-      - "request-*,user-?"
   - name: otel.instrumentation.common.logging.structured-attributes.excluded
     declarative_name: java.common.logging.structured_attributes.excluded
     description: >
@@ -28,9 +26,6 @@ configurations:
       structured attributes. This does not affect otel.event.name, MDC, or logger context.
     type: list
     default: ''
-    examples:
-      - "*-secret"
-      - "*"
   - name: otel.instrumentation.logback-appender.experimental-log-attributes
     declarative_name: java.logback_appender.experimental_log_attributes/development
     description: >
