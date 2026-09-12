@@ -67,11 +67,10 @@ class JacksonElasticsearchQuerySanitizerTest {
   @Test
   void doesNotSplitSurrogatePairAtQueryLengthLimit() {
     String beforePair =
-        "{\""
-            + "a".repeat(JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 3);
+        "{\"" + repeat('a', JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 3);
     String body = beforePair + "\uD83D\uDE00\":[]}";
 
-    assertThat(sanitize(body)).isEqualTo(beforePair);
+    assertThat(sanitizer.apply(body)).isEqualTo(beforePair);
   }
 
   @Test
@@ -105,5 +104,13 @@ class JacksonElasticsearchQuerySanitizerTest {
       body.append('a');
     }
     return body.append("\":[]}").toString();
+  }
+
+  private static String repeat(char value, int count) {
+    StringBuilder result = new StringBuilder(count);
+    for (int i = 0; i < count; i++) {
+      result.append(value);
+    }
+    return result.toString();
   }
 }

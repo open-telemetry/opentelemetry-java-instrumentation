@@ -17,12 +17,12 @@ class StringUtilsTest {
 
     assertThat(StringUtils.truncate(unchanged, 3)).isSameAs(unchanged);
     assertThat(StringUtils.truncate(unchanged, 4)).isSameAs(unchanged);
-    assertThat(StringUtils.truncate("abcd", 3)).isEqualTo("abc");
+    assertThat(StringUtils.truncate("abcd", 3)).isEqualTo(unchanged);
     assertThat(StringUtils.truncate("ābc", 2)).isEqualTo("āb");
     assertThat(StringUtils.truncate("a\uD83D\uDE00b", 1)).isEqualTo("a");
     assertThat(StringUtils.truncate("a\uD83D\uDE00b", 2)).isEqualTo("a");
     assertThat(StringUtils.truncate("a\uD83D\uDE00b", 3)).isEqualTo("a\uD83D\uDE00");
-    assertThat(StringUtils.truncate("abc", 0)).isEmpty();
+    assertThat(StringUtils.truncate(unchanged, 0)).isEmpty();
   }
 
   @Test

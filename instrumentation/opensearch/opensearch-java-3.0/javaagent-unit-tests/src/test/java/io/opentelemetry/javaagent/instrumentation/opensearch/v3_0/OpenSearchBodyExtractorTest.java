@@ -73,7 +73,7 @@ class OpenSearchBodyExtractorTest {
   @Test
   void shouldNotSplitSurrogatePairAtQueryBodyLimit() {
     JacksonJsonpMapper mapper = new JacksonJsonpMapper();
-    String beforePair = "a".repeat(MAX_QUERY_BODY_LENGTH - 3);
+    String beforePair = repeat('a', MAX_QUERY_BODY_LENGTH - 3);
     JsonpSerializable value =
         (generator, unused) ->
             generator.writeStartObject().writeKey(beforePair + "\uD83D\uDE00").writeEnd();
@@ -81,5 +81,13 @@ class OpenSearchBodyExtractorTest {
     String result = OpenSearchBodyExtractor.extract(mapper, value, true);
 
     assertThat(result).isEqualTo("{\"" + beforePair);
+  }
+
+  private static String repeat(char value, int count) {
+    StringBuilder result = new StringBuilder(count);
+    for (int i = 0; i < count; i++) {
+      result.append(value);
+    }
+    return result.toString();
   }
 }

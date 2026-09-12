@@ -242,7 +242,7 @@ class RedisCommandSanitizerTest {
 
   @Test
   void doesNotSplitSurrogatePairWhenTruncating() {
-    String argument = "a".repeat(RedisCommandSanitizer.LIMIT - 5) + "\uD83D\uDE00";
+    String argument = repeat('a', RedisCommandSanitizer.LIMIT - 5) + "\uD83D\uDE00";
 
     String result = RedisCommandSanitizer.create(true).sanitize("GET", list(argument));
 
@@ -329,5 +329,13 @@ class RedisCommandSanitizerTest {
 
   static List<String> list(String... args) {
     return asList(args);
+  }
+
+  private static String repeat(char value, int count) {
+    StringBuilder result = new StringBuilder(count);
+    for (int i = 0; i < count; i++) {
+      result.append(value);
+    }
+    return result.toString();
   }
 }

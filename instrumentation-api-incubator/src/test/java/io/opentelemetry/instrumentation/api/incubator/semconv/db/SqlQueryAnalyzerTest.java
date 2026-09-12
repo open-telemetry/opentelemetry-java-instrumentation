@@ -282,15 +282,6 @@ class SqlQueryAnalyzerTest {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
-
-    @Test
-    void queryTextTruncationDoesNotSplitSurrogatePair() {
-      String beforePair = "A".repeat(AutoSqlSanitizer.LIMIT - 1);
-
-      SqlQuery result = analyze(beforePair + "\uD83D\uDE00");
-
-      assertThat(result.getQueryText()).isEqualTo(beforePair);
-    }
     SqlQuery result = analyze(s.toString());
     assertThat(result.getQueryText().length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
     assertThat(result.getQueryText()).doesNotContain("1234");
@@ -299,6 +290,15 @@ class SqlQueryAnalyzerTest {
     } else {
       assertThat(result.getQuerySummary()).isNull();
     }
+  }
+
+  @Test
+  void queryTextTruncationDoesNotSplitSurrogatePair() {
+    String beforePair = repeat('A', AutoSqlSanitizer.LIMIT - 1);
+
+    SqlQuery result = analyze(beforePair + "\uD83D\uDE00");
+
+    assertThat(result.getQueryText()).isEqualTo(beforePair);
   }
 
   @Test
@@ -363,16 +363,6 @@ class SqlQueryAnalyzerTest {
       if (i > 0) {
         sql.append(", ");
       }
-
-      @Test
-      void querySummaryTruncationDoesNotSplitSurrogatePair() {
-        String beforePair = "A".repeat(254);
-
-        String summary =
-            SqlQuery.createWithSummary(null, null, beforePair + "\uD83D\uDE00").getQuerySummary();
-
-        assertThat(summary).isEqualTo(beforePair);
-      }
       sql.append("very_long_table_name_").append(i);
     }
     String result =
@@ -384,6 +374,16 @@ class SqlQueryAnalyzerTest {
         .isEqualTo(
             "SELECT very_long_table_name_0 very_long_table_name_1 very_long_table_name_2 very_long_table_name_3 very_long_table_name_4 very_long_table_name_5 very_long_table_name_6 very_long_table_name_7 very_long_table_name_8 very_long_table_name_9");
     assertThat(result.length()).isEqualTo(236);
+  }
+
+  @Test
+  void querySummaryTruncationDoesNotSplitSurrogatePair() {
+    String beforePair = repeat('A', 254);
+
+    String summary =
+        SqlQuery.createWithSummary(null, null, beforePair + "\uD83D\uDE00").getQuerySummary();
+
+    assertThat(summary).isEqualTo(beforePair);
   }
 
   @ParameterizedTest
@@ -1414,5 +1414,13 @@ class SqlQueryAnalyzerTest {
         Arguments.of(
             "merge into \"my table\"",
             expect("MERGE", "my table", "merge", "\"my table\"", "merge \"my table\"")));
+  }
+
+  private static String repeat(char value, int count) {
+    StringBuilder result = new StringBuilder(count);
+    for (int i = 0; i < count; i++) {
+      result.append(value);
+    }
+    return result.toString();
   }
 }
