@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.PreparedStatement;
-import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import io.vertx.sqlclient.internal.SqlConnectionBase;
 import javax.annotation.Nullable;
@@ -61,13 +60,7 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
         return future;
       }
 
-      SqlConnectOptions connectOptions =
-          VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
-      String dbSystem =
-          connectOptions != null
-              ? VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions)
-              : null;
-      VertxSqlClientInfo info = VertxSqlClientInfo.createLegacy(connectOptions, dbSystem);
+      VertxSqlClientInfo info = VertxSqlClientSingletons.getClientInfo(sqlClientBase);
       return info == null
           ? future
           : wrapContext(VertxSqlClientSingletons.attachPreparedStatementInfo(future, info));
