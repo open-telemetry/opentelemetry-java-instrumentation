@@ -244,17 +244,9 @@ public class DubboUnknownServiceHelper {
     return message != null && message.contains("Not found exported service");
   }
 
-  /**
-   * Returns {@code true} if the throwable is a Dubbo Triple 404 (service not found). The class
-   * check uses the name string because {@code HttpStatusException} is not available at compile time
-   * against Dubbo 2.7.
-   */
+  /** Returns {@code true} if the throwable is a Dubbo Triple 404 (service not found). */
   static boolean isTripleNotFoundFailure(Throwable throwable) {
-    if (!"org.apache.dubbo.remoting.http12.exception.HttpStatusException"
-        .equals(throwable.getClass().getName())) {
-      return false;
-    }
-    if (statusCodeMethod == null || !statusCodeMethod.getDeclaringClass().isInstance(throwable)) {
+    if (statusCodeMethod == null || throwable.getClass() != statusCodeMethod.getDeclaringClass()) {
       return false;
     }
     try {
