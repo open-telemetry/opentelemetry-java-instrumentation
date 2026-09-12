@@ -16,6 +16,7 @@ final class DefaultJedisSocketFactoryAccess {
       "redis.clients.jedis.DefaultJedisSocketFactory";
 
   @Nullable private static volatile Method getSocketHostAndPortMethod;
+  private static volatile boolean getSocketHostAndPortMethodResolved;
 
   @Nullable
   static HostAndPort getHostAndPort(@Nullable JedisSocketFactory socketFactory) {
@@ -23,22 +24,37 @@ final class DefaultJedisSocketFactoryAccess {
       return null;
     }
     try {
-      Method method = getSocketHostAndPortMethod;
-      if (method == null) {
-        Class<?> declaringClass = findDefaultJedisSocketFactoryClass(socketFactory.getClass());
-        if (declaringClass == null) {
-          return null;
-        }
-        method = declaringClass.getDeclaredMethod("getSocketHostAndPort");
-        method.setAccessible(true);
-        getSocketHostAndPortMethod = method;
-      } else if (!method.getDeclaringClass().isInstance(socketFactory)) {
+      Method method = resolveGetSocketHostAndPortMethod(socketFactory.getClass());
+      if (method == null || !method.getDeclaringClass().isInstance(socketFactory)) {
         return null;
       }
       return (HostAndPort) method.invoke(socketFactory);
     } catch (Throwable ignored) {
       return null;
     }
+  }
+
+  @Nullable
+  private static Method resolveGetSocketHostAndPortMethod(Class<?> socketFactoryClass)
+      throws NoSuchMethodException {
+    if (!getSocketHostAndPortMethodResolved) {
+      Class<?> declaringClass = findDefaultJedisSocketFactoryClass(socketFactoryClass);
+      if (declaringClass == null) {
+        return null;
+      }
+      synchronized (DefaultJedisSocketFactoryAccess.class) {
+        if (!getSocketHostAndPortMethodResolved) {
+          try {
+            Method method = declaringClass.getDeclaredMethod("getSocketHostAndPort");
+            method.setAccessible(true);
+            getSocketHostAndPortMethod = method;
+          } finally {
+            getSocketHostAndPortMethodResolved = true;
+          }
+        }
+      }
+    }
+    return getSocketHostAndPortMethod;
   }
 
   @Nullable
