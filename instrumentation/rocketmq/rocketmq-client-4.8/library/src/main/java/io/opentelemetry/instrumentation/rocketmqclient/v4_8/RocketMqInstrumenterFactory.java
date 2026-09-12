@@ -90,14 +90,16 @@ class RocketMqInstrumenterFactory {
   }
 
   static Instrumenter<SendMessageContext, Void> createMessageCreateInstrumenter(
-      OpenTelemetry openTelemetry, IncludeExclude headers, boolean enabled) {
+      OpenTelemetry openTelemetry,
+      IncludeExclude headers,
+      boolean batchSendMessageCreationSpansEnabled) {
     RocketMqProducerAttributeGetter getter = new RocketMqProducerAttributeGetter(true);
     MessagingOperationType operationType = MessagingOperationType.CREATE;
     return Instrumenter.<SendMessageContext, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, operationType, "create"))
-        .setEnabled(enabled && emitStableMessagingSemconv())
+        .setEnabled(batchSendMessageCreationSpansEnabled && emitStableMessagingSemconv())
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(getter, operationType, "create", headers))
         .addAttributesExtractor(producerAttributesExtractor())

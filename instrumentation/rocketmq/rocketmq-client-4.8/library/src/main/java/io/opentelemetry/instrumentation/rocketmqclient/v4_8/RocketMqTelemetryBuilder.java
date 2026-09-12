@@ -43,8 +43,9 @@ public final class RocketMqTelemetryBuilder {
    * single-message sends.
    */
   @CanIgnoreReturnValue
-  public RocketMqTelemetryBuilder setBatchSendMessageCreationSpansEnabled(boolean enabled) {
-    this.batchSendMessageCreationSpansEnabled = enabled;
+  public RocketMqTelemetryBuilder setBatchSendMessageCreationSpansEnabled(
+      boolean batchSendMessageCreationSpansEnabled) {
+    this.batchSendMessageCreationSpansEnabled = batchSendMessageCreationSpansEnabled;
     return this;
   }
 
