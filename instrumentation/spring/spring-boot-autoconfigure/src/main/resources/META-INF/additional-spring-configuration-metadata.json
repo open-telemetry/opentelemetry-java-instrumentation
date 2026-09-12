@@ -476,22 +476,32 @@
     {
       "name": "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included",
       "type": "java.util.List<java.lang.String>",
-      "description": "Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all key value pair attributes. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes` setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information."
+      "description": "Deprecated; use `otel.instrumentation.common.logging.structured-attributes.included` instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all key value pair attributes. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes` setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information.",
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the common structured logging attribute selector instead.",
+        "replacement": "otel.instrumentation.common.logging.structured-attributes.included"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded",
       "type": "java.util.List<java.lang.String>",
-      "description": "Comma-separated list of case-sensitive glob patterns for Logback key value pair keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes` setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information."
+      "description": "Deprecated; use `otel.instrumentation.common.logging.structured-attributes.excluded` instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logback key value pair keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes` setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information.",
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the common structured logging attribute selector instead.",
+        "replacement": "otel.instrumentation.common.logging.structured-attributes.excluded"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
       "type": "java.lang.Boolean",
-      "description": "Deprecated setting that enables the capture of all attributes from Logback key value pairs. It is ignored when `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included` or `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included` instead.",
+      "description": "Deprecated; use `otel.instrumentation.common.logging.structured-attributes.included` instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of all Logback key value pair attributes unless a source-specific included or excluded pattern is configured.",
       "defaultValue": false,
       "deprecation": {
         "level": "warning",
-        "reason": "Use the key value pair attribute selector properties instead.",
-        "replacement": "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included"
+        "reason": "Use the common structured logging attribute selector instead.",
+        "replacement": "otel.instrumentation.common.logging.structured-attributes.included"
       }
     },
     {
@@ -524,43 +534,63 @@
     {
       "name": "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included",
       "type": "java.util.List<java.lang.String>",
-      "description": "Comma-separated list of case-sensitive glob patterns for Logstash marker keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all Logstash marker attributes. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes` setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information."
+      "description": "Deprecated; use `otel.instrumentation.common.logging.structured-attributes.included` instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash marker keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all Logstash marker attributes. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes` setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.",
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the common structured logging attribute selector instead.",
+        "replacement": "otel.instrumentation.common.logging.structured-attributes.included"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded",
       "type": "java.util.List<java.lang.String>",
-      "description": "Comma-separated list of case-sensitive glob patterns for Logstash marker keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes` setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information."
+      "description": "Deprecated; use `otel.instrumentation.common.logging.structured-attributes.excluded` instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash marker keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes` setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.",
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the common structured logging attribute selector instead.",
+        "replacement": "otel.instrumentation.common.logging.structured-attributes.excluded"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
       "type": "java.lang.Boolean",
-      "description": "Deprecated setting that enables the capture of all attributes from Logstash markers, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods. It is ignored when `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included` or `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included` instead.",
+      "description": "Deprecated; use `otel.instrumentation.common.logging.structured-attributes.included` instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of all Logstash marker attributes unless a source-specific included or excluded pattern is configured.",
       "defaultValue": false,
       "deprecation": {
         "level": "warning",
-        "reason": "Use the Logstash marker attribute selector properties instead.",
-        "replacement": "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included"
+        "reason": "Use the common structured logging attribute selector instead.",
+        "replacement": "otel.instrumentation.common.logging.structured-attributes.included"
       }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included",
       "type": "java.util.List<java.lang.String>",
-      "description": "Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all Logstash structured argument attributes. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments` setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information."
+      "description": "Deprecated; use `otel.instrumentation.common.logging.structured-attributes.included` instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all Logstash structured argument attributes. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments` setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.",
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the common structured logging attribute selector instead.",
+        "replacement": "otel.instrumentation.common.logging.structured-attributes.included"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded",
       "type": "java.util.List<java.lang.String>",
-      "description": "Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments` setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information."
+      "description": "Deprecated; use `otel.instrumentation.common.logging.structured-attributes.excluded` instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments` setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.",
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the common structured logging attribute selector instead.",
+        "replacement": "otel.instrumentation.common.logging.structured-attributes.excluded"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
       "type": "java.lang.Boolean",
-      "description": "Deprecated setting that enables the capture of all attributes from Logstash structured arguments (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`). It is ignored when `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included` or `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included` instead.",
+      "description": "Deprecated; use `otel.instrumentation.common.logging.structured-attributes.included` instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of all Logstash structured argument attributes unless a source-specific included or excluded pattern is configured.",
       "defaultValue": false,
       "deprecation": {
         "level": "warning",
-        "reason": "Use the Logstash structured argument attribute selector properties instead.",
-        "replacement": "otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included"
+        "reason": "Use the common structured logging attribute selector instead.",
+        "replacement": "otel.instrumentation.common.logging.structured-attributes.included"
       }
     },
     {
