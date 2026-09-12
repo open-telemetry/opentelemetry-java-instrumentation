@@ -25,20 +25,44 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
+  test {
+    jvmArgs("-Dotel.instrumentation.resilience4j-circuitbreaker.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.resilience4j-circuitbreaker.enabled=true"
+    )
+    filter {
+      excludeTestsMatching("Resilience4jCircuitBreakerDisabledTest")
+    }
+  }
+
+  val testDefaultDisabled = register<Test>("testDefaultDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("Resilience4jCircuitBreakerDisabledTest")
+    }
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs(
+      "-Dotel.instrumentation.resilience4j-circuitbreaker.enabled=true",
       "-Dotel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
     )
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
+      "otel.instrumentation.resilience4j-circuitbreaker.enabled=true,otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
     )
+    filter {
+      excludeTestsMatching("Resilience4jCircuitBreakerDisabledTest")
+    }
   }
 
   check {
-    dependsOn(testExperimental)
+    dependsOn(testDefaultDisabled, testExperimental)
   }
 }

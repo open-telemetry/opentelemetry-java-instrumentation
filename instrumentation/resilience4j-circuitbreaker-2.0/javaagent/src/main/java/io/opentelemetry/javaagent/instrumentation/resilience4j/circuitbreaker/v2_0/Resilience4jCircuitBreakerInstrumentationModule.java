@@ -20,6 +20,11 @@ public class Resilience4jCircuitBreakerInstrumentationModule extends Instrumenta
   }
 
   @Override
+  public boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new CircuitBreakerDecoratorsInstrumentation(),

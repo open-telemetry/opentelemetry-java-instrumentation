@@ -6,10 +6,14 @@ span. Direct `acquirePermission()` and completion callback usage is correlated o
 basis when the callbacks occur on the same thread. The span name is `CircuitBreaker <name>`.
 Rejected and failed calls are reported as error spans.
 
+This instrumentation is disabled by default. Enable it by setting
+`otel.instrumentation.resilience4j-circuitbreaker.enabled=true`.
+
 ## Settings
 
 | System property | Type | Default | Description |
 | --- | --- | --- | --- |
+| `otel.instrumentation.resilience4j-circuitbreaker.enabled` | Boolean | `false` | Enables the Resilience4j CircuitBreaker instrumentation. |
 | `otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes on Resilience4j CircuitBreaker protected-call spans. |
 
 When experimental span attributes are enabled, each CircuitBreaker span records:
