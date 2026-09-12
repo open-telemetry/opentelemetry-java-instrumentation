@@ -80,7 +80,7 @@ public final class H2UrlParser implements JdbcUrlParser {
   }
 
   private static void parseNetworkMode(String subtype, String jdbcUrl, ParseContext ctx) {
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultPort(DEFAULT_PORT);
     ctx.subtype(subtype);
     ctx.parseUrl(jdbcUrl);
   }
