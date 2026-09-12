@@ -32,22 +32,27 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-jmx-metrics:OPENT
 
 ```java
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
-import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 
+import java.nio.file.Paths;
 import java.time.Duration;
 
 // Get an OpenTelemetry instance
 OpenTelemetry openTelemetry = ...;
 
 JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
-  // Configure included metrics (optional)
-  .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("jmx/rules/jetty.yaml"), "jetty")
-  .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("jmx/rules/tomcat.yaml"), "tomcat")
-  // Configure custom metrics (optional)
+    // Configure loading embedded metric definitions (optional)
+  .internalMetricsSystemFilter(IncludeExclude.builder().build()) // load internal metrics for all systems, this will load all internal stable metrics.
+  .internalMetricsUnstableMetricsFilter(IncludeExclude.builder().setIncluded("kafka.*").build()) // opt-in for all `kafka.*` internal unstable metrics
+  // Load metrics from classpath resource (optional)
+  .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("rules/tomcat.yaml"))
+  // Load custom metrics by path (optional)
   .addRules(Paths.get("/path/to/custom-jmx.yaml"))
   // delay bean discovery by 5 seconds
   .beanDiscoveryDelay(Duration.ofSeconds(5))
+  // filter captured metrics by their name (optional), will affect all loaded metric definitions
+  .setMetrics(IncludeExclude.builder().setIncluded("tomcat.*", "jvm.*", "kafka.*").setExcluded("kafka.connect.*").build())
   .build();
 
 jmxTelemetry.start();

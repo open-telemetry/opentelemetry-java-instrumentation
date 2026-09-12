@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -123,5 +125,14 @@ public class MetricDef {
       metricNames.add(extractor.getInfo().getMetricName());
     }
     return metricNames;
+  }
+
+  /**
+   * Get handler names included in this MetricDef.
+   *
+   * @return handler names.
+   */
+  public Set<String> getHandlerNames() {
+    return handlers.stream().map(MetricHandlerHolder::getHandlerName).collect(toSet());
   }
 }
