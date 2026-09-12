@@ -45,14 +45,6 @@ class TestRedisCluster implements AutoCloseable {
     acceptThread.start();
   }
 
-  String getHost() {
-    return serverSocket.getInetAddress().getHostAddress();
-  }
-
-  int getPort() {
-    return serverSocket.getLocalPort();
-  }
-
   private void acceptConnections() {
     while (!closed) {
       try {
@@ -91,15 +83,15 @@ class TestRedisCluster implements AutoCloseable {
 
   private void writeResponse(List<String> command, OutputStream output) throws IOException {
     String name = command.get(0).toUpperCase(Locale.ROOT);
-    if ("HELLO".equals(name)) {
+    if (name.equals("HELLO")) {
       write(output, "%1\r\n+proto\r\n:3\r\n");
-    } else if ("CLUSTER".equals(name) && command.size() > 1) {
+    } else if (name.equals("CLUSTER") && command.size() > 1) {
       writeClusterResponse(command.get(1), output);
-    } else if ("SET".equals(name) || "CLIENT".equals(name)) {
+    } else if (name.equals("SET") || name.equals("CLIENT")) {
       write(output, "+OK\r\n");
-    } else if ("COMMAND".equals(name)) {
+    } else if (name.equals("COMMAND")) {
       write(output, "*0\r\n");
-    } else if ("PING".equals(name)) {
+    } else if (name.equals("PING")) {
       write(output, "+PONG\r\n");
     } else {
       AssertionError error = new AssertionError("Unexpected Redis command: " + command);
@@ -110,7 +102,7 @@ class TestRedisCluster implements AutoCloseable {
 
   private void writeClusterResponse(String subcommand, OutputStream output) throws IOException {
     String name = subcommand.toUpperCase(Locale.ROOT);
-    if ("SLOTS".equals(name)) {
+    if (name.equals("SLOTS")) {
       String host = getHost();
       write(
           output,
@@ -132,7 +124,7 @@ class TestRedisCluster implements AutoCloseable {
               + "\r\n"
               + NODE_ID
               + "\r\n");
-    } else if ("NODES".equals(name)) {
+    } else if (name.equals("NODES")) {
       String nodes =
           NODE_ID
               + " "
@@ -141,7 +133,7 @@ class TestRedisCluster implements AutoCloseable {
               + getPort()
               + " myself,master - 0 0 1 connected 0-16383\n";
       write(output, "$" + nodes.getBytes(UTF_8).length + "\r\n" + nodes + "\r\n");
-    } else if ("INFO".equals(name)) {
+    } else if (name.equals("INFO")) {
       String info = "cluster_state:ok\r\n";
       write(output, "$" + info.length() + "\r\n" + info + "\r\n");
     } else {
@@ -149,6 +141,14 @@ class TestRedisCluster implements AutoCloseable {
       failure.compareAndSet(null, error);
       write(output, "-ERR unsupported CLUSTER subcommand\r\n");
     }
+  }
+
+  String getHost() {
+    return serverSocket.getInetAddress().getHostAddress();
+  }
+
+  int getPort() {
+    return serverSocket.getLocalPort();
   }
 
   private static List<String> readCommand(DataInputStream input) throws IOException {
