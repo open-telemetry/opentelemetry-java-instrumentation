@@ -62,10 +62,19 @@ public final class ThriftTelemetry {
       TBaseAsyncProcessor<?> asyncProcessor = (TBaseAsyncProcessor<?>) delegate;
       Map<String, AsyncProcessFunction<?, ?, ?, ?>> processMap =
           AsyncProcessorAccess.getProcessMap(asyncProcessor);
-      Map<String, AsyncProcessFunction<?, ?, ?, ?>> copy = new HashMap<>(processMap);
-      for (Map.Entry<String, AsyncProcessFunction<?, ?, ?, ?>> entry : copy.entrySet()) {
-        processMap.put(entry.getKey(), AsyncMethodCallbackUtil.wrap(entry.getValue()));
+      if (processMap == null) {
+        return delegate;
       }
+      Map<String, AsyncProcessFunction<?, ?, ?, ?>> wrappedProcessMap = new HashMap<>();
+      for (Map.Entry<String, AsyncProcessFunction<?, ?, ?, ?>> entry : processMap.entrySet()) {
+        Boolean isOneway = AsyncProcessorAccess.isOneWay(entry.getValue());
+        if (isOneway == null) {
+          return delegate;
+        }
+        wrappedProcessMap.put(
+            entry.getKey(), AsyncMethodCallbackUtil.wrap(entry.getValue(), isOneway));
+      }
+      processMap.putAll(wrappedProcessMap);
       return new ServerAsyncProcessorDecorator(asyncProcessor, serviceName);
     }
     return new ServerProcessorDecorator(delegate, serviceName, serverInstrumenter);

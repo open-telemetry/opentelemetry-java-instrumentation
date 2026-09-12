@@ -73,12 +73,13 @@ public final class AsyncMethodCallbackUtil {
   }
 
   public static <I, T extends TBase<?, ?>, R, A extends TBase<?, ?>>
-      AsyncProcessFunction<I, T, R, A> wrap(AsyncProcessFunction<I, T, R, A> function) {
+      AsyncProcessFunction<I, T, R, A> wrap(
+          AsyncProcessFunction<I, T, R, A> function, boolean isOneway) {
     return new AsyncProcessFunction<I, T, R, A>(function.getMethodName()) {
 
       @Override
       public boolean isOneway() {
-        return AsyncProcessorAccess.isOneWay(function);
+        return isOneway;
       }
 
       @Override

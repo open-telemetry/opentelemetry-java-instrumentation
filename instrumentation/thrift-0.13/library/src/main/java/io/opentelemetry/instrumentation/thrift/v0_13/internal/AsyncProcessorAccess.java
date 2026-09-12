@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13.internal;
 
-import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 
@@ -57,29 +56,31 @@ public final class AsyncProcessorAccess {
 
   // cast is safe: the field is declared as Map<String, ? extends AsyncProcessFunction<?, ?, ?, ?>>
   @SuppressWarnings("unchecked")
+  @Nullable
   public static Map<String, AsyncProcessFunction<?, ?, ?, ?>> getProcessMap(
       TBaseAsyncProcessor<?> processor) {
-    if (processMapField == null) {
-      return emptyMap();
+    if (processMapField == null || isOnewayMethod == null) {
+      return null;
     }
     try {
       return (Map<String, AsyncProcessFunction<?, ?, ?, ?>>) processMapField.get(processor);
     } catch (Throwable t) {
       logger.log(FINE, "Failed to read TBaseAsyncProcessor#processMap field", t);
-      return emptyMap();
+      return null;
     }
   }
 
-  public static boolean isOneWay(AsyncProcessFunction<?, ?, ?, ?> asyncProcessFunction) {
+  @Nullable
+  public static Boolean isOneWay(AsyncProcessFunction<?, ?, ?, ?> asyncProcessFunction) {
     if (isOnewayMethod == null) {
-      return false;
+      return null;
     }
     try {
       Object result = isOnewayMethod.invoke(asyncProcessFunction);
-      return result instanceof Boolean && (Boolean) result;
+      return result instanceof Boolean ? (Boolean) result : null;
     } catch (Throwable t) {
       logger.log(FINE, "Failed to invoke AsyncProcessFunction#isOneway method", t);
-      return false;
+      return null;
     }
   }
 
