@@ -6,13 +6,6 @@ Prefer a direct Java call when supported library versions expose a compatible me
 Java access works. This gives the compiler and muzzle a clear view of the dependency. Use reflection
 only when compatibility, access, or runtime discovery requires it.
 
-In javaagent instrumentation, a helper injected into the instrumented library's classloader under
-the library's package can directly access stable package-private members when both classes also
-belong to the same Java module, so prefer that access over reflection when practical. A helper in
-the classloader's unnamed module cannot access package-private members in a named module, even when
-the package and classloader match. The instrumentation must also recognize the class as a helper
-and inject it into the target classloader. This does not grant access to private members.
-
 ## Cache repeated lookup
 
 Flag production Java code that repeats the same reflective method lookup on a path that may execute
