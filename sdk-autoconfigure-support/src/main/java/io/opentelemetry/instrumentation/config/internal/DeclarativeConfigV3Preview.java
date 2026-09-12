@@ -9,6 +9,7 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryC
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationPropertyModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.OpenTelemetryConfigurationModelAccessor;
 
 /**
  * Reads the {@code instrumentation/development.java.common.v3_preview} flag from the declarative
@@ -25,7 +26,7 @@ public final class DeclarativeConfigV3Preview {
 
   public static boolean isEnabled(OpenTelemetryConfigurationModel model) {
     ExperimentalInstrumentationModel instrumentationDevelopment =
-        model.getInstrumentationDevelopment();
+        OpenTelemetryConfigurationModelAccessor.getInstrumentation(model);
     if (instrumentationDevelopment == null) {
       return false;
     }
