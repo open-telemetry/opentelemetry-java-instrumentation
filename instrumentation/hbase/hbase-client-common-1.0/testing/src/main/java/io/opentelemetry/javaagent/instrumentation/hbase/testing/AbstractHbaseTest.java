@@ -472,7 +472,7 @@ public abstract class AbstractHbaseTest {
 
   @ParameterizedTest
   @MethodSource("batchScenarios")
-  void testBatch(BatchScenario scenario) throws IOException, InterruptedException {
+  void testBatch(BatchScenario scenario) throws Exception {
     try (Table table = connection.getTable(TABLE_NAME)) {
       table.batch(scenario.actions, new Object[scenario.actions.size()]);
     }
