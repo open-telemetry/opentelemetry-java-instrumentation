@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -17,6 +18,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
@@ -36,7 +38,7 @@ import javax.annotation.Nullable;
  * attribute extraction from request/response objects.
  */
 public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider, SpanKeyProvider {
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
@@ -284,5 +286,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         return SpanKey.CONSUMER_SETTLE;
     }
     throw new IllegalStateException("Can't possibly happen");
+  }
+
+  @Override
+  public String internalGetSchemaUrl() {
+    return messagingSchemaUrl(supportsStableSemconv);
   }
 }

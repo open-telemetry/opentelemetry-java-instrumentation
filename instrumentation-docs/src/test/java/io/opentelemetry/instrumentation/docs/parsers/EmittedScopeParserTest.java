@@ -323,6 +323,71 @@ class EmittedScopeParserTest {
   }
 
   @Test
+  void testGetScopePrefersNewestCanonicalSchemaUrl(@TempDir Path tempDir) throws IOException {
+    Path instrumentationDir = tempDir.resolve("test-instrumentation");
+    Path telemetryDir = instrumentationDir.resolve(".telemetry");
+    Files.createDirectories(telemetryDir);
+
+    String scopeContent =
+        """
+        scopes:
+          - name: io.opentelemetry.test-lib-1.0
+            version: 2.14.0
+            schemaUrl: https://opentelemetry.io/schemas/1.9.0
+          - name: io.opentelemetry.test-lib-1.0
+            version: 2.14.0
+            schemaUrl: https://opentelemetry.io/schemas/1.5.invalid
+          - name: io.opentelemetry.test-lib-1.0
+            version: 2.14.0
+            schemaUrl: null
+          - name: io.opentelemetry.test-lib-1.0
+            version: 2.14.0
+            schemaUrl: https://opentelemetry.io/schemas/1.10.0
+        """;
+
+    Files.writeString(telemetryDir.resolve("scope-abc123.yaml"), scopeContent);
+
+    FileManager fileManager = new FileManager(tempDir);
+    InstrumentationModule module =
+        new InstrumentationModule.Builder("test-lib-1.0").srcPath("test-instrumentation").build();
+
+    InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
+
+    assertThat(scopeInfo).isNotNull();
+    assertThat(scopeInfo.getSchemaUrl()).isEqualTo("https://opentelemetry.io/schemas/1.10.0");
+  }
+
+  @Test
+  void testGetScopeHandlesLargeSchemaVersionComponents(@TempDir Path tempDir) throws IOException {
+    Path instrumentationDir = tempDir.resolve("test-instrumentation");
+    Path telemetryDir = instrumentationDir.resolve(".telemetry");
+    Files.createDirectories(telemetryDir);
+
+    String scopeContent =
+        """
+        scopes:
+          - name: io.opentelemetry.test-lib-1.0
+            version: 2.14.0
+            schemaUrl: https://opentelemetry.io/schemas/1.10.0
+          - name: io.opentelemetry.test-lib-1.0
+            version: 2.14.0
+            schemaUrl: https://opentelemetry.io/schemas/999999999999999999999999.0.0
+        """;
+
+    Files.writeString(telemetryDir.resolve("scope-abc123.yaml"), scopeContent);
+
+    FileManager fileManager = new FileManager(tempDir);
+    InstrumentationModule module =
+        new InstrumentationModule.Builder("test-lib-1.0").srcPath("test-instrumentation").build();
+
+    InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
+
+    assertThat(scopeInfo).isNotNull();
+    assertThat(scopeInfo.getSchemaUrl())
+        .isEqualTo("https://opentelemetry.io/schemas/999999999999999999999999.0.0");
+  }
+
+  @Test
   void testGetScopeMultipleScopesOneMatches(@TempDir Path tempDir) throws IOException {
     Path instrumentationDir = tempDir.resolve("test-instrumentation");
     Path telemetryDir = instrumentationDir.resolve(".telemetry");

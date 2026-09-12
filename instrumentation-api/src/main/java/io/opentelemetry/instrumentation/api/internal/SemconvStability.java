@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,6 +88,10 @@ public final class SemconvStability {
     return emitStableDatabaseSemconv;
   }
 
+  public static String databaseSchemaUrl() {
+    return emitStableDatabaseSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0;
+  }
+
   public static boolean emitOldServicePeerSemconv() {
     return emitOldServicePeerSemconv;
   }
@@ -136,6 +141,10 @@ public final class SemconvStability {
     return emitStableRpcSemconv;
   }
 
+  public static String rpcSchemaUrl() {
+    return emitStableRpcSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
+  }
+
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
 
   static {
@@ -178,6 +187,12 @@ public final class SemconvStability {
   // conventions are stable.
   public static boolean emitStableMessagingSemconv() { // to be removed in 3.0
     return emitStableMessagingSemconv;
+  }
+
+  public static String messagingSchemaUrl(boolean supportsStableSemconv) {
+    return supportsStableSemconv && emitStableMessagingSemconv
+        ? SchemaUrls.V1_43_0
+        : SchemaUrls.V1_24_0;
   }
 
   private SemconvStability() {}
