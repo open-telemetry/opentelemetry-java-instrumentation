@@ -27,18 +27,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
   private static final VirtualField<SendMessageContext, Context> CONTEXT_FIELD =
       VirtualField.find(SendMessageContext.class, Context.class);
 
-  // MessageBatch was introduced after the oldest supported RocketMQ version.
-  private static final ClassValue<Method> batchEncoders =
-      new ClassValue<Method>() {
-        @Override
-        protected Method computeValue(Class<?> type) {
-          try {
-            return type.getMethod("encode");
-          } catch (NoSuchMethodException e) {
-            throw new IllegalStateException(e);
-          }
-        }
-      };
+  @Nullable private static final Method batchEncoder = findBatchEncoder();
 
   private final Instrumenter<SendMessageContext, Void> instrumenter;
   private final Instrumenter<SendMessageContext, Void> messageCreateInstrumenter;
@@ -148,12 +137,29 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
   }
 
   private void encodeBatch(Message batch) throws ReflectiveOperationException {
+    if (batchEncoder == null) {
+      throw new NoSuchMethodException("MessageBatch.encode()");
+    }
     // DefaultMQProducer encodes batches before invoking the send hook.
-    byte[] body = (byte[]) batchEncoders.get(batch.getClass()).invoke(batch);
+    byte[] body = (byte[]) batchEncoder.invoke(batch);
     // The broker appends batch-level properties after per-message properties, so propagation
     // headers on the envelope would overwrite the individual creation contexts.
     propagator.fields().forEach(batch.getProperties()::remove);
     batch.setBody(body);
+  }
+
+  @Nullable
+  private static Method findBatchEncoder() {
+    try {
+      Class<?> messageBatchClass =
+          Class.forName(
+              "org.apache.rocketmq.common.message.MessageBatch",
+              false,
+              TracingSendMessageHookImpl.class.getClassLoader());
+      return messageBatchClass.getMethod("encode");
+    } catch (ReflectiveOperationException | LinkageError | SecurityException ignored) {
+      return null;
+    }
   }
 
   static final class MessageCreateContext extends SendMessageContext {
