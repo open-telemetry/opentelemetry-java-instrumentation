@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -31,9 +32,11 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -86,6 +89,10 @@ class LettuceClusterClientTest {
 
     connection = client.connect();
     cleanup.deferAfterAll(connection);
+
+    if (testLatestDeps()) {
+      testing.waitForTraces(1);
+    }
   }
 
   @Test
@@ -110,7 +117,8 @@ class LettuceClusterClientTest {
     cleanup.deferCleanup(() -> client.shutdown(0, 15, SECONDS));
     cleanup.deferCleanup(client.connect());
 
-    testing.waitAndAssertTraces(
+    List<Consumer<TraceAssert>> traceAsserts = new ArrayList<>();
+    traceAsserts.add(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -129,6 +137,30 @@ class LettuceClusterClientTest {
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : (long) authenticatedPort))));
+    if (testLatestDeps()) {
+      traceAsserts.add(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(
+                              emitStableDatabaseSemconv()
+                                  ? "COMMAND " + authenticatedTarget
+                                  : "COMMAND")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(maybeStable(DB_SYSTEM), REDIS),
+                              equalTo(DB_NAMESPACE, null),
+                              equalTo(maybeStable(DB_OPERATION), "COMMAND"),
+                              equalTo(
+                                  SERVER_ADDRESS,
+                                  emitStableDatabaseSemconv()
+                                      ? authenticatedTarget
+                                      : authenticatedHost),
+                              equalTo(
+                                  SERVER_PORT,
+                                  emitStableDatabaseSemconv() ? null : (long) authenticatedPort))));
+    }
+    testing.waitAndAssertTraces(traceAsserts);
   }
 
   @Test
