@@ -27,8 +27,14 @@ import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_HO
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_PEER_NAME;
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_PEER_PORT;
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_TRANSPORT;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.mock;
 
+import com.couchbase.client.core.cnc.RequestSpan;
+import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.error.DocumentNotFoundException;
+import com.couchbase.client.core.msg.RequestContext;
 import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -43,9 +49,13 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -157,6 +167,60 @@ class CouchbaseClient32Test {
                 span ->
                     span.hasName("dispatch_to_server")
                         .hasAttributesSatisfyingExactly(dispatchAttributes)));
+  }
+
+  @ParameterizedTest
+  @MethodSource("protostellarTargets")
+  void testEmitsProtostellarTarget(String portSuffix, Long expectedPort)
+      throws ReflectiveOperationException {
+    assumeTrue(testLatestDeps());
+    Cluster protostellar =
+        Cluster.connect(
+            "couchbase2://" + seedAddress + portSuffix,
+            couchbase.getUsername(),
+            couchbase.getPassword());
+    cleanup.deferCleanup(protostellar::disconnect);
+
+    Object core =
+        protostellar.async().getClass().getMethod("couchbaseOps").invoke(protostellar.async());
+    Class<?> requestClass =
+        Class.forName("com.couchbase.client.core.protostellar.ProtostellarBaseRequest");
+    Class<?> protostellarRequestClass =
+        Class.forName("com.couchbase.client.core.protostellar.ProtostellarRequest");
+    Object protostellarRequest = mock(protostellarRequestClass);
+    Object request =
+        requestClass
+            .getConstructor(core.getClass(), protostellarRequestClass)
+            .newInstance(core, protostellarRequest);
+    RequestContext requestContext =
+        (RequestContext) requestClass.getMethod("context").invoke(request);
+
+    Object coreResources =
+        cluster.core().getClass().getMethod("coreResources").invoke(cluster.core());
+    RequestTracer requestTracer =
+        (RequestTracer) coreResources.getClass().getMethod("requestTracer").invoke(coreResources);
+    RequestSpan requestSpan = requestTracer.requestSpan("get", null);
+    requestSpan.requestContext(requestContext);
+    requestSpan.end();
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CLIENT)
+                        .hasName(
+                            emitStableDatabaseSemconv() ? "get " + seedAddress + portSuffix : "get")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "couchbase"),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? seedAddress : null),
+                            equalTo(
+                                SERVER_PORT, emitStableDatabaseSemconv() ? expectedPort : null))));
+  }
+
+  private static Stream<Arguments> protostellarTargets() {
+    return Stream.of(
+        argumentSet("default port", "", null), argumentSet("non-default port", ":18099", 18099L));
   }
 
   private static <T> T oldOrExperimental(T value) {
