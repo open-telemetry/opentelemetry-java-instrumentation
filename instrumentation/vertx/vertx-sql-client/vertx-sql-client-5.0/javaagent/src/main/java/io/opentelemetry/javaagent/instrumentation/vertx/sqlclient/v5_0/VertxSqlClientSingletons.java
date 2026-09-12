@@ -8,13 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import javax.annotation.Nullable;
 
@@ -22,6 +25,10 @@ public class VertxSqlClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-sql-client-5.0";
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
+
+  private static final ThreadLocal<VertxSqlClientInfo> clientInfo = new ThreadLocal<>();
+  private static final VirtualField<PreparedStatement, VertxSqlClientInfo> PREPARED_STATEMENT_INFO =
+      VirtualField.find(PreparedStatement.class, VertxSqlClientInfo.class);
 
   private static final VirtualField<Pool, String> POOL_DB_SYSTEM =
       VirtualField.find(Pool.class, String.class);
@@ -38,6 +45,42 @@ public class VertxSqlClientSingletons {
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static void setClientInfo(@Nullable VertxSqlClientInfo value) {
+    if (value == null) {
+      clientInfo.remove();
+    } else {
+      clientInfo.set(value);
+    }
+  }
+
+  @Nullable
+  public static VertxSqlClientInfo getClientInfo() {
+    return clientInfo.get();
+  }
+
+  public static void setQueryExecutorInfo(Object queryExecutor, @Nullable VertxSqlClientInfo info) {
+    QueryExecutorUtil.setData(queryExecutor, info);
+  }
+
+  @Nullable
+  public static VertxSqlClientInfo getQueryExecutorInfo(Object queryExecutor) {
+    return (VertxSqlClientInfo) QueryExecutorUtil.getData(queryExecutor);
+  }
+
+  public static Future<PreparedStatement> attachPreparedStatementInfo(
+      Future<PreparedStatement> future, VertxSqlClientInfo info) {
+    return future.map(
+        preparedStatement -> {
+          PREPARED_STATEMENT_INFO.set(preparedStatement, info);
+          return preparedStatement;
+        });
+  }
+
+  @Nullable
+  public static VertxSqlClientInfo getPreparedStatementInfo(PreparedStatement preparedStatement) {
+    return PREPARED_STATEMENT_INFO.get(preparedStatement);
   }
 
   @NoMuzzle // to skip virtual field detection in this method
