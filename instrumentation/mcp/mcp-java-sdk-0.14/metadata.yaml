@@ -1,0 +1,5 @@
+display_name: MCP Java SDK
+description: This instrumentation enables MCP client and server spans for tool calls made with the Model Context Protocol Java SDK 0.14.1 and later.
+semantic_conventions:
+  - GENAI_CLIENT_SPANS
+library_link: https://github.com/modelcontextprotocol/java-sdk
