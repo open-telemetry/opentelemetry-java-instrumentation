@@ -1,0 +1,125 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.grpc.v1_6;
+
+import io.grpc.Grpc;
+import io.grpc.Metadata;
+import io.grpc.ServerCall;
+import io.grpc.ServerStreamTracer;
+import io.grpc.Status;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import java.net.SocketAddress;
+import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nullable;
+
+/**
+ * A {@link ServerStreamTracer} that detects whether a gRPC server request was handled by the {@link
+ * TracingServerInterceptor}. If the interceptor does not fire (unregistered method), {@link
+ * #streamClosed(Status)} creates a span for the unhandled request.
+ *
+ * <p>That span is only created when stable RPC semantic conventions are enabled, through {@code
+ * otel.semconv-stability.opt-in=rpc} or {@code otel.semconv-stability.opt-in=rpc/dup}.
+ */
+final class TracingServerStreamTracer extends ServerStreamTracer {
+
+  private static final String UNKNOWN_METHOD_SPAN_NAME = "_OTHER";
+  private static final io.grpc.Context.Key<CallState> STREAM_TRACER_STATE_KEY =
+      io.grpc.Context.key("otel-grpc-stream-tracer-state");
+
+  private final Instrumenter<GrpcRequest, Status> instrumenter;
+  private final ContextPropagators propagators;
+  private final String fullMethodName;
+  private final Metadata headers;
+  private final Context parentContext;
+  private final Instant startTime;
+
+  private volatile CallState callState = new CallState();
+  @Nullable private volatile SocketAddress peerAddress;
+
+  TracingServerStreamTracer(
+      Instrumenter<GrpcRequest, Status> instrumenter,
+      ContextPropagators propagators,
+      String fullMethodName,
+      Metadata headers,
+      Context parentContext) {
+    this.instrumenter = instrumenter;
+    this.propagators = propagators;
+    this.fullMethodName = fullMethodName;
+    this.headers = headers;
+    this.parentContext = parentContext;
+    this.startTime = Instant.now();
+  }
+
+  static void markCurrentCallHandled() {
+    CallState callState = STREAM_TRACER_STATE_KEY.get();
+    if (callState != null) {
+      callState.markInterceptorHandled();
+    }
+  }
+
+  @Override
+  public io.grpc.Context filterContext(io.grpc.Context context) {
+    CallState callState = STREAM_TRACER_STATE_KEY.get(context);
+    if (callState == null) {
+      return context.withValue(STREAM_TRACER_STATE_KEY, this.callState);
+    }
+    this.callState = callState;
+    return context;
+  }
+
+  @Override
+  public void serverCallStarted(ServerCall<?, ?> call) {
+    if (peerAddress == null) {
+      SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
+      if (addr != null) {
+        peerAddress = addr;
+      }
+    }
+  }
+
+  @Override
+  public void streamClosed(Status status) {
+    // The interceptor fires only for a method that is registered on the server, and gRPC closes a
+    // stream whose method it could not find with UNIMPLEMENTED. Requiring both keeps a registered
+    // method that was cancelled or aborted before the interceptor ran from being reported here.
+    if (status.getCode() != Status.Code.UNIMPLEMENTED || callState.isHandledOrSpanStarted()) {
+      return;
+    }
+    GrpcRequest request = new GrpcRequest(UNKNOWN_METHOD_SPAN_NAME, fullMethodName, headers);
+    if (peerAddress != null) {
+      request.setPeerSocketAddress(peerAddress);
+    }
+    // Extract trace context from incoming headers (e.g. W3C traceparent)
+    Context extracted =
+        propagators
+            .getTextMapPropagator()
+            .extract(parentContext, request, GrpcRequestGetter.INSTANCE);
+    if (instrumenter.shouldStart(extracted, request) && callState.tryMarkSpanStarted()) {
+      InstrumenterUtil.startAndEnd(
+          instrumenter, extracted, request, status, status.getCause(), startTime, Instant.now());
+    }
+  }
+
+  private static final class CallState {
+    private final AtomicBoolean handledOrSpanStarted = new AtomicBoolean();
+
+    void markInterceptorHandled() {
+      handledOrSpanStarted.set(true);
+    }
+
+    boolean isHandledOrSpanStarted() {
+      return handledOrSpanStarted.get();
+    }
+
+    boolean tryMarkSpanStarted() {
+      return handledOrSpanStarted.compareAndSet(false, true);
+    }
+  }
+}
