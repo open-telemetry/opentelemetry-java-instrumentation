@@ -19,9 +19,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
-import io.vertx.sqlclient.impl.VertxSqlClientQueryBaseHelper;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -36,14 +34,12 @@ public class VertxSqlClientUtil {
   private static final Map<String, String> dbSystemNameByPackage = buildPackageDbSystemNameMap();
   private static final VirtualField<Promise<?>, RequestData> REQUEST_DATA =
       VirtualField.find(Promise.class, RequestData.class);
-  private static final VirtualField<PreparedStatement, VertxSqlClientData> PREPARED_STATEMENT_DATA =
-      VirtualField.find(PreparedStatement.class, VertxSqlClientData.class);
 
-  public static void setSqlConnectOptions(@Nullable SqlConnectOptions sqlConnectOptions) {
-    if (sqlConnectOptions == null) {
+  public static void setSqlConnectOptions(@Nullable SqlConnectOptions value) {
+    if (value == null) {
       connectOptions.remove();
     } else {
-      connectOptions.set(sqlConnectOptions);
+      connectOptions.set(value);
     }
   }
 
@@ -65,8 +61,8 @@ public class VertxSqlClientUtil {
     return dbSystem.get();
   }
 
-  public static void setPoolConnectOptions(Pool pool, SqlConnectOptions sqlConnectOptions) {
-    POOL_CONNECT_OPTIONS.set(pool, sqlConnectOptions);
+  public static void setPoolConnectOptions(Pool pool, SqlConnectOptions value) {
+    POOL_CONNECT_OPTIONS.set(pool, value);
   }
 
   @Nullable
@@ -74,32 +70,12 @@ public class VertxSqlClientUtil {
     return POOL_CONNECT_OPTIONS.get(pool);
   }
 
-  public static void setQueryExecutorData(Object queryExecutor, VertxSqlClientData data) {
-    VertxSqlClientQueryBaseHelper.setData(queryExecutor, data);
-  }
-
-  @Nullable
-  public static VertxSqlClientData getQueryExecutorData(Object queryExecutor) {
-    return (VertxSqlClientData) VertxSqlClientQueryBaseHelper.getData(queryExecutor);
-  }
-
-  public static Future<PreparedStatement> attachPreparedStatementData(
-      Future<PreparedStatement> future, VertxSqlClientData data) {
-    return future.map(
-        preparedStatement -> {
-          PREPARED_STATEMENT_DATA.set(preparedStatement, data);
-          return preparedStatement;
-        });
-  }
-
-  @Nullable
-  public static VertxSqlClientData getPreparedStatementData(PreparedStatement preparedStatement) {
-    return PREPARED_STATEMENT_DATA.get(preparedStatement);
-  }
-
   public static String getDbSystemNameFromClassName(@Nullable Object instance) {
-    if (instance != null) {
-      String className = instance.getClass().getName();
+    return getDbSystemNameFromClassName(instance != null ? instance.getClass().getName() : null);
+  }
+
+  public static String getDbSystemNameFromClassName(@Nullable String className) {
+    if (className != null) {
       for (Map.Entry<String, String> entry : dbSystemNameByPackage.entrySet()) {
         if (className.startsWith(entry.getKey())) {
           return entry.getValue();
@@ -107,6 +83,18 @@ public class VertxSqlClientUtil {
       }
     }
     return OTHER_SQL;
+  }
+
+  public static boolean isKnownDbSystem(String value) {
+    return dbSystemNameByPackage.containsValue(value);
+  }
+
+  public static String resolveDbSystemName(
+      @Nullable SqlConnectOptions connectOptions, @Nullable String declaringTypeName) {
+    String dbSystemName = getDbSystemNameFromClassName(connectOptions);
+    return isKnownDbSystem(dbSystemName)
+        ? dbSystemName
+        : getDbSystemNameFromClassName(declaringTypeName);
   }
 
   // See https://github.com/eclipse-vertx/vertx-sql-client for the full list of supported
@@ -131,12 +119,22 @@ public class VertxSqlClientUtil {
       Instrumenter<VertxSqlClientRequest, Void> instrumenter,
       Promise<?> promise,
       @Nullable Throwable throwable) {
+    Context parentContext = endQuerySpanAndGetParentContext(instrumenter, promise, throwable);
+    return parentContext != null ? parentContext.makeCurrent() : null;
+  }
+
+  @Nullable
+  public static Context endQuerySpanAndGetParentContext(
+      Instrumenter<VertxSqlClientRequest, Void> instrumenter,
+      Promise<?> promise,
+      @Nullable Throwable throwable) {
     RequestData requestData = REQUEST_DATA.get(promise);
     if (requestData == null) {
       return null;
     }
+    REQUEST_DATA.set(promise, null);
     instrumenter.end(requestData.context, requestData.request, null, throwable);
-    return requestData.parentContext.makeCurrent();
+    return requestData.parentContext;
   }
 
   private static class RequestData {

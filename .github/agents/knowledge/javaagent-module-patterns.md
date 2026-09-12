@@ -470,6 +470,37 @@ sufficient for optimization.
 - The `typeMatcher()` uses `named(...)` or `namedOneOf(...)` — no override needed because
   name-only matchers are already fast (they check only the class name, no bytecode).
 
+### Method matchers and advice bindings
+
+The method matcher must prove compatibility for every non-optional, statically typed value that the
+advice reads. For each `@Advice.Argument(n)`, normally include a compatible
+`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature. Apply the
+same rule to a concretely typed `@Advice.Return` with `returns(...)`.
+
+When supported signatures use different concrete subtypes accepted by the advice's common
+supertype, match the hierarchy:
+
+```java
+named("pool")
+    .and(takesArguments(3))
+    .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
+    .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool"))))
+```
+
+Match argument positions that the advice does not bind only when they distinguish an intended
+overload or supported-version signature. Do not restate unrelated arguments, and do not bind unused
+arguments merely to mirror the matcher. The matcher selects methods; the advice signature lists the
+values it reads.
+
+`optional = true` permits the indexed argument to be absent; it does not relax type compatibility
+when the argument is present. A concretely typed optional argument still needs a compatible matcher
+for every signature that includes it. A binding typed as `Object` can intentionally cover broad
+reference types and does not require an exact type matcher. `typing = Assigner.Typing.DYNAMIC`
+instead permits otherwise-incompatible assignment by inserting a runtime cast. Use it without an
+explicit type constraint only when every matched signature has a separate runtime contract that
+guarantees the value is assignable to the advice parameter. Otherwise, constrain the matcher to
+prevent `ClassCastException`.
+
 ### Rules
 
 - Do not flag or change the visibility of advice classes.

@@ -114,6 +114,14 @@ private static Stream<Arguments> testCases() {
 - If the test intentionally closes the resource mid-test or asserts behavior around explicit
   close, keep the direct close or try-with-resources in the test body.
 
+## Test Port Allocation
+
+When a test needs an available TCP port that another server or container will bind later, use
+`PortUtils.findOpenPort()` or `PortUtils.findOpenPorts(count)`. Do not implement a local probe by
+opening `new ServerSocket(0)`, reading its port, and closing it; that bypasses the repository
+allocator's coordination between parallel test processes. Keep port `0` when the same socket
+remains bound and becomes the test server.
+
 ## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
 
 When an abstract test base is shared by multiple concrete subclasses run in the same JVM
@@ -144,6 +152,14 @@ subclass may have already started the container, so `withCommand` on the running
 instance is a no-op; with per-instance state each subclass mutates and starts its own
 fresh container.
 
+## Trace Assertions
+
+When a test knows the complete expected trace and span structure, use
+`InstrumentationExtension.waitAndAssertTraces(...)` with `TraceAssert` and `SpanDataAssert`. Do not
+call `waitForTraces(...)` and then flatten `testing.spans()` for the same exact assertion; the trace
+DSL retries the complete assertion and preserves trace grouping. Keep raw `spans()` access for
+intentionally ad hoc or cross-trace filtering that the trace DSL cannot express.
+
 ## Span Attribute Assertions
 
 - Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for
@@ -168,6 +184,15 @@ fresh container.
   is already an `int` expression or variable. The assertion API already has an
   `equalTo(AttributeKey<Long>, int)` overload, so `equalTo(longKey("iteration"), iteration)` is
   preferred over `equalTo(longKey("iteration"), (long) iteration)`.
+- The previous rule does not apply when an `int` value is one branch of a conditional and the other
+  branch is `null`. Cast the `int` branch to `long`:
+
+  ```java
+  equalTo(SERVER_PORT, enabled ? (long) port : null)
+  ```
+
+  The cast makes the conditional a `Long`. Without it, Java selects the primitive `int` overload
+  and tries to unbox `null`, causing a `NullPointerException`.
 
 ## Metric Assertions
 
