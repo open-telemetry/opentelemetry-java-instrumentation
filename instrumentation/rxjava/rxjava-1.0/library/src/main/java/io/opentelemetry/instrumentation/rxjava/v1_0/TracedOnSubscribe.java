@@ -11,11 +11,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.rxjava.v1_0.internal.ObservableOnSubscribeAccess;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import rx.Observable;
 import rx.Subscriber;
 
 public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscribe<T> {
-  private final Observable.OnSubscribe<T> delegate;
+  private final Observable<T> originalObservable;
+  @Nullable private final Observable.OnSubscribe<T> delegate;
   private final Instrumenter<REQUEST, ?> instrumenter;
   private final Supplier<REQUEST> requestFactory;
   private final Context parentContext;
@@ -29,6 +31,7 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
 
   public TracedOnSubscribe(
       Observable<T> originalObservable, Instrumenter<REQUEST, ?> instrumenter, REQUEST request) {
+    this.originalObservable = originalObservable;
     delegate = ObservableOnSubscribeAccess.extractOnSubscribe(originalObservable);
     this.instrumenter = instrumenter;
     this.requestFactory = () -> request;
@@ -39,6 +42,7 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
       Observable<T> originalObservable,
       Instrumenter<REQUEST, ?> instrumenter,
       Supplier<REQUEST> requestFactory) {
+    this.originalObservable = originalObservable;
     delegate = ObservableOnSubscribeAccess.extractOnSubscribe(originalObservable);
     this.instrumenter = instrumenter;
     this.requestFactory = requestFactory;
@@ -47,6 +51,11 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
 
   @Override
   public void call(Subscriber<? super T> subscriber) {
+    if (delegate == null) {
+      originalObservable.unsafeSubscribe(subscriber);
+      return;
+    }
+
     /*
     TODO: can't really call shouldStart() - couchbase async instrumentation nests CLIENT calls
     which normally should happen in a sequence

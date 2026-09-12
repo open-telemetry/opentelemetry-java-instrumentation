@@ -9,6 +9,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 
 /**
  * Exposes and propagates the {@link ChannelInitializer#initChannel(Channel)} call for a wrapped
@@ -17,34 +18,42 @@ import java.lang.reflect.Method;
  * <p>{@code initChannel} is {@code protected} on {@link ChannelInitializer}. Overriding it from any
  * package is legal, but invoking it on a different instance whose static type is {@link
  * ChannelInitializer} itself requires either same-package access or reflection (JLS 6.6.2). This
- * class uses a cached {@link Method} handle so it can live in a normal {@code io.opentelemetry.*}
- * package.
+ * class uses a cached {@link Method} so it can live in a normal {@code io.opentelemetry.*} package.
  */
-public abstract class OpenTelemetryChannelInitializerDelegate<T extends Channel>
+abstract class OpenTelemetryChannelInitializerDelegate<T extends Channel>
     extends ChannelInitializer<T> {
 
-  private static final Method INIT_CHANNEL_METHOD = resolveInitChannelMethod();
+  @Nullable private static final Method INIT_CHANNEL_METHOD = resolveInitChannelMethod();
 
+  @Nullable
   private static Method resolveInitChannelMethod() {
     try {
       Method method = ChannelInitializer.class.getDeclaredMethod("initChannel", Channel.class);
       method.setAccessible(true);
       return method;
-    } catch (NoSuchMethodException e) {
-      throw new IllegalStateException("ChannelInitializer#initChannel not found", e);
+    } catch (Throwable t) {
+      return null;
     }
+  }
+
+  static boolean isSupported() {
+    return INIT_CHANNEL_METHOD != null;
   }
 
   private final ChannelInitializer<T> initializer;
 
-  protected OpenTelemetryChannelInitializerDelegate(ChannelInitializer<T> initializer) {
+  OpenTelemetryChannelInitializerDelegate(ChannelInitializer<T> initializer) {
     this.initializer = initializer;
   }
 
   @Override
   protected void initChannel(T t) throws Exception {
+    Method initChannelMethod = INIT_CHANNEL_METHOD;
+    if (initChannelMethod == null) {
+      return;
+    }
     try {
-      INIT_CHANNEL_METHOD.invoke(initializer, t);
+      initChannelMethod.invoke(initializer, t);
     } catch (InvocationTargetException e) {
       Throwable cause = e.getCause();
       if (cause instanceof Exception) {

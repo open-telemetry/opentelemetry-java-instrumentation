@@ -48,6 +48,9 @@ public class Helpers {
 
   /** Bridges the netty instrumentation to the finagle-netty integration. */
   public static <C extends Channel> ChannelInitializer<C> wrapServer(ChannelInitializer<C> inner) {
+    if (!OpenTelemetryChannelInitializerDelegate.isSupported()) {
+      return inner;
+    }
     return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
 
       @Override
@@ -85,6 +88,9 @@ public class Helpers {
 
   /** Bridges the netty instrumentation to the finagle-netty integration (for h2). */
   public static <C extends Channel> ChannelInitializer<C> wrapClient(ChannelInitializer<C> inner) {
+    if (!OpenTelemetryChannelInitializerDelegate.isSupported()) {
+      return inner;
+    }
     return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
 
       // wraps everything for roughly the same reasons as in wrapServer(), above
