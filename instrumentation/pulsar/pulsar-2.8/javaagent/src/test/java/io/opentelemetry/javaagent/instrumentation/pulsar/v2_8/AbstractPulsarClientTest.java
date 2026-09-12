@@ -150,9 +150,7 @@ abstract class AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .equalTo(
-                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                emitStableMessagingSemconv() ? "test_sub" : null)
+            .subscriptionName("test_sub")
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
@@ -268,9 +266,7 @@ abstract class AbstractPulsarClientTest {
     consumer =
         client
             .newConsumer(Schema.STRING)
-            .equalTo(
-                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                emitStableMessagingSemconv() ? "test_sub" : null)
+            .subscriptionName("test_sub")
             .topic(topic)
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
