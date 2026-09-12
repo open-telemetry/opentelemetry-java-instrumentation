@@ -134,6 +134,8 @@ public class LettuceSingletons {
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
     COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));
+    // Always overwrite the command target so reused command objects cannot retain stale state.
+    LettuceServerTargets.copy(connection, command);
   }
 
   @Nullable

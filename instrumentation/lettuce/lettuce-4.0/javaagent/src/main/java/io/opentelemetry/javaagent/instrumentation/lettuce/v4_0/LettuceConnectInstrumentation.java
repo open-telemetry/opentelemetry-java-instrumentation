@@ -52,6 +52,8 @@ class LettuceConnectInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) RedisChannelHandler<?, ?> connection,
         @Advice.Argument(2) RedisURI redisUri) {
       CONNECTION_DATABASE_INDEX.set(connection, redisUri.getDatabase());
+      // RedisURI is mutable, so render the configured target before the connection is published.
+      LettuceServerTargets.capture(connection, redisUri);
     }
   }
 
