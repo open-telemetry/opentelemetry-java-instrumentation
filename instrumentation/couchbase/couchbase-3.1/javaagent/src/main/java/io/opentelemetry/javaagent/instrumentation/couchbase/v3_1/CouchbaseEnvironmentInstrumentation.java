@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -48,7 +49,11 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
       }
       builder.requestTracer(
           CouchbaseRequestTracer.create(
-              openTelemetry.getTracer(instrumentationName), legacyBridge));
+              openTelemetry
+                  .tracerBuilder(instrumentationName)
+                  .setSchemaUrl(databaseSchemaUrl())
+                  .build(),
+              legacyBridge));
     }
 
     @SuppressWarnings("EffectivelyPrivate")

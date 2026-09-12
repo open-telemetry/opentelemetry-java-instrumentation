@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.jdbc.v8_5;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -104,6 +106,7 @@ public class TomcatConnectionPoolMetrics {
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
+    meterBuilder.setSchemaUrl(databaseSchemaUrl());
     return meterBuilder.build();
   }
 

@@ -35,7 +35,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +51,26 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
+
+  @Test
+  void shouldProvideSchemaUrl() {
+    AttributesExtractor<Map<String, String>, String> extractor =
+        MessagingAttributesExtractor.create(
+            TestGetter.INSTANCE, MessagingOperationType.SEND, "send");
+
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+        .isEqualTo(emitStableMessagingSemconv() ? SchemaUrls.V1_43_0 : SchemaUrls.V1_24_0);
+  }
+
+  @SuppressWarnings("deprecation")
+  @Test
+  void deprecatedExtractorShouldProvideLegacySchemaUrl() {
+    AttributesExtractor<Map<String, String>, String> extractor =
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.PUBLISH);
+
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+        .isEqualTo(SchemaUrls.V1_24_0);
+  }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest

@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -36,6 +38,8 @@ import javax.annotation.Nullable;
  */
 public class EmittedScopeParser {
   private static final Logger logger = Logger.getLogger(EmittedScopeParser.class.getName());
+  private static final Pattern SCHEMA_VERSION =
+      Pattern.compile("^https://opentelemetry\\.io/schemas/(\\d+)\\.(\\d+)\\.(\\d+)$");
 
   @Nullable
   public static InstrumentationScopeInfo getScope(
@@ -89,8 +93,32 @@ public class EmittedScopeParser {
       Set<EmittedScope.Scope> scopes, String scopeName) {
     return scopes.stream()
         .filter(scope -> scopeName.equals(scope.getName()))
-        .min(Comparator.comparingInt(scope -> scope.getSchemaUrl() == null ? 1 : 0))
+        .max(
+            Comparator.comparing(
+                    EmittedScope.Scope::getSchemaUrl,
+                    Comparator.nullsFirst(EmittedScopeParser::compareSchemaUrls))
+                .thenComparing(
+                    EmittedScope.Scope::getVersion,
+                    Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(scope -> String.valueOf(scope.getAttributes())))
         .orElse(null);
+  }
+
+  private static int compareSchemaUrls(String left, String right) {
+    Matcher leftMatcher = SCHEMA_VERSION.matcher(left);
+    Matcher rightMatcher = SCHEMA_VERSION.matcher(right);
+    if (!leftMatcher.matches() || !rightMatcher.matches()) {
+      return left.compareTo(right);
+    }
+    for (int i = 1; i <= 3; i++) {
+      int comparison =
+          Integer.compare(
+              Integer.parseInt(leftMatcher.group(i)), Integer.parseInt(rightMatcher.group(i)));
+      if (comparison != 0) {
+        return comparison;
+      }
+    }
+    return 0;
   }
 
   /**
