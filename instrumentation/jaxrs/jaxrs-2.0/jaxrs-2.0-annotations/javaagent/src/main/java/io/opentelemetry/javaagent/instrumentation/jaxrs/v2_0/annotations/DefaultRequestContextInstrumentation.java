@@ -30,6 +30,19 @@ import net.bytebuddy.asm.Advice;
  * specific instrumentations may override this value.
  */
 class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+  private static final ClassValue<Method> filterMethod =
+      new ClassValue<Method>() {
+        @Nullable
+        @Override
+        protected Method computeValue(Class<?> type) {
+          try {
+            return type.getMethod("filter", ContainerRequestContext.class);
+          } catch (NoSuchMethodException ignored) {
+            return null;
+          }
+        }
+      };
+
   @Override
   protected String abortAdviceName() {
     return getClass().getName() + "$ContainerRequestContextAdvice";
@@ -86,14 +99,7 @@ class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrum
         return null;
       }
 
-      Method method = null;
-      try {
-        method = filterClass.getMethod("filter", ContainerRequestContext.class);
-      } catch (NoSuchMethodException ignored) {
-        // Unable to find the filter method.  This should not be reachable because the context
-        // can only be aborted inside the filter method
-      }
-
+      Method method = filterMethod.get(filterClass);
       if (method == null) {
         return null;
       }
