@@ -7,9 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -42,6 +44,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -63,8 +66,10 @@ import org.testcontainers.couchbase.CouchbaseService;
 // Couchbase instrumentation is owned upstream, so limited testing is performed here.
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient31Test {
-  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+  private static final boolean LEGACY_EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+  private static final boolean EXPERIMENTAL_TELEMETRY =
+      Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -132,7 +137,7 @@ class CouchbaseClient31Test {
 
     List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
     dispatchAttributes.add(equalTo(maybeStable(DB_SYSTEM), "couchbase"));
-    if (emitOldDatabaseSemconv() || EXPERIMENTAL_ATTRIBUTES) {
+    if (emitExperimentalAttributes()) {
       dispatchAttributes.add(
           satisfies(stringKey("db.couchbase.local_id"), val -> val.isNotBlank()));
       dispatchAttributes.add(
@@ -155,29 +160,19 @@ class CouchbaseClient31Test {
     }
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
+        trace -> {
+          if (emitSdkDetailSpans()) {
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
-                      .hasName(emitStableDatabaseSemconv() ? "get _default" : "get")
-                      .hasStatus(
-                          StatusData.unset()) // later version of couchbase gives correct behavior
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(maybeStable(DB_SYSTEM), "couchbase"),
-                          equalTo(maybeStable(DB_NAME), "test"),
-                          equalTo(maybeStable(DB_OPERATION), "get"),
-                          equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
-                          equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
-                          equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")),
-                          equalTo(
-                              longKey("db.couchbase.retries"),
-                              oldOrExperimental(testLatestDeps() ? 0L : null)),
-                          equalTo(SERVER_ADDRESS, serverAddress()),
-                          equalTo(SERVER_PORT, null));
-                },
+                span -> assertGetSpan(span, testLatestDeps() ? 0L : null),
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasAttributesSatisfyingExactly(dispatchAttributes)));
+                        .hasKind(INTERNAL)
+                        .hasAttributesSatisfyingExactly(dispatchAttributes));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span -> assertGetSpan(span, testLatestDeps() ? 0L : null));
+          }
+        });
   }
 
   @Test
@@ -189,7 +184,7 @@ class CouchbaseClient31Test {
 
     List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
     dispatchAttributes.add(equalTo(maybeStable(DB_SYSTEM), "couchbase"));
-    if (EXPERIMENTAL_ATTRIBUTES) {
+    if (emitExperimentalAttributes()) {
       // The chunked HTTP handler reports a textual operation id, unlike the key-value handler
       dispatchAttributes.add(
           satisfies(stringKey("db.couchbase.operation_id"), val -> val.isNotBlank()));
@@ -198,12 +193,35 @@ class CouchbaseClient31Test {
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, queryPort));
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
+        trace -> {
+          if (emitSdkDetailSpans()) {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("query " + serverAddress()),
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasAttributesSatisfyingExactly(dispatchAttributes)));
+                        .hasKind(INTERNAL)
+                        .hasAttributesSatisfyingExactly(dispatchAttributes));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasKind(CLIENT).hasName("query " + serverAddress()));
+          }
+        });
+  }
+
+  private static void assertGetSpan(SpanDataAssert span, Long retries) {
+    span.hasKind(v3Preview() ? CLIENT : INTERNAL)
+        .hasName(emitStableDatabaseSemconv() ? "get _default" : "get")
+        .hasStatus(StatusData.unset())
+        .hasAttributesSatisfyingExactly(
+            equalTo(maybeStable(DB_SYSTEM), "couchbase"),
+            equalTo(maybeStable(DB_NAME), "test"),
+            equalTo(maybeStable(DB_OPERATION), "get"),
+            equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
+            equalTo(stringKey("db.couchbase.scope"), experimental("_default")),
+            equalTo(stringKey("db.couchbase.service"), experimental("kv")),
+            equalTo(longKey("db.couchbase.retries"), experimental(retries)),
+            equalTo(SERVER_ADDRESS, serverAddress()),
+            equalTo(SERVER_PORT, null));
   }
 
   private static String serverAddress() {
@@ -215,7 +233,16 @@ class CouchbaseClient31Test {
     return String.join(",", endpoints);
   }
 
-  private static <T> T oldOrExperimental(T value) {
-    return emitOldDatabaseSemconv() || EXPERIMENTAL_ATTRIBUTES ? value : null;
+  private static boolean emitSdkDetailSpans() {
+    return !v3Preview() || EXPERIMENTAL_TELEMETRY;
+  }
+
+  private static boolean emitExperimentalAttributes() {
+    return emitOldDatabaseSemconv()
+        || (v3Preview() ? EXPERIMENTAL_TELEMETRY : LEGACY_EXPERIMENTAL_ATTRIBUTES);
+  }
+
+  private static <T> T experimental(T value) {
+    return emitExperimentalAttributes() ? value : null;
   }
 }

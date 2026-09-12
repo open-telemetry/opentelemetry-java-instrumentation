@@ -11,6 +11,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -37,6 +38,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -56,8 +58,10 @@ import org.testcontainers.couchbase.CouchbaseService;
 // Couchbase instrumentation is owned upstream, so limited testing is performed here.
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient32Test {
-  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+  private static final boolean LEGACY_EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+  private static final boolean EXPERIMENTAL_TELEMETRY =
+      Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -109,7 +113,7 @@ class CouchbaseClient32Test {
     dispatchAttributes.add(equalTo(maybeStable(DB_SYSTEM), "couchbase"));
     dispatchAttributes.add(equalTo(maybeStable(DB_NAME), "test"));
     dispatchAttributes.add(equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"));
-    if (emitOldDatabaseSemconv() || EXPERIMENTAL_ATTRIBUTES) {
+    if (emitExperimentalAttributes()) {
       dispatchAttributes.add(equalTo(stringKey("db.couchbase.document_id"), "id"));
       dispatchAttributes.add(
           satisfies(stringKey("db.couchbase.local_id"), val -> val.isNotBlank()));
@@ -134,32 +138,49 @@ class CouchbaseClient32Test {
     }
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
+        trace -> {
+          if (emitSdkDetailSpans()) {
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasKind(testLatestDeps() ? CLIENT : INTERNAL)
-                      .hasName(emitStableDatabaseSemconv() ? "get _default" : "get");
-                  if (testLatestDeps()) {
-                    span.hasStatus(StatusData.error());
-                  }
-                  span.hasAttributesSatisfyingExactly(
-                      equalTo(maybeStable(DB_SYSTEM), "couchbase"),
-                      equalTo(maybeStable(DB_NAME), "test"),
-                      equalTo(maybeStable(DB_OPERATION), "get"),
-                      equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
-                      equalTo(stringKey("db.couchbase.document_id"), oldOrExperimental("id")),
-                      equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
-                      equalTo(longKey("db.couchbase.retries"), oldOrExperimental(0L)),
-                      equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")),
-                      equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? seedAddress : null),
-                      equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? (long) seedPort : null));
-                },
+                CouchbaseClient32Test::assertGetSpan,
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasAttributesSatisfyingExactly(dispatchAttributes)));
+                        .hasKind(v3Preview() ? INTERNAL : (testLatestDeps() ? CLIENT : INTERNAL))
+                        .hasAttributesSatisfyingExactly(dispatchAttributes));
+          } else {
+            trace.hasSpansSatisfyingExactly(CouchbaseClient32Test::assertGetSpan);
+          }
+        });
   }
 
-  private static <T> T oldOrExperimental(T value) {
-    return emitOldDatabaseSemconv() || EXPERIMENTAL_ATTRIBUTES ? value : null;
+  private static void assertGetSpan(SpanDataAssert span) {
+    span.hasKind(v3Preview() || testLatestDeps() ? CLIENT : INTERNAL)
+        .hasName(emitStableDatabaseSemconv() ? "get _default" : "get");
+    if (testLatestDeps()) {
+      span.hasStatus(StatusData.error());
+    }
+    span.hasAttributesSatisfyingExactly(
+        equalTo(maybeStable(DB_SYSTEM), "couchbase"),
+        equalTo(maybeStable(DB_NAME), "test"),
+        equalTo(maybeStable(DB_OPERATION), "get"),
+        equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
+        equalTo(stringKey("db.couchbase.document_id"), experimental("id")),
+        equalTo(stringKey("db.couchbase.scope"), experimental("_default")),
+        equalTo(longKey("db.couchbase.retries"), experimental(0L)),
+        equalTo(stringKey("db.couchbase.service"), experimental("kv")),
+        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? seedAddress : null),
+        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? (long) seedPort : null));
+  }
+
+  private static boolean emitSdkDetailSpans() {
+    return !v3Preview() || EXPERIMENTAL_TELEMETRY;
+  }
+
+  private static boolean emitExperimentalAttributes() {
+    return emitOldDatabaseSemconv()
+        || (v3Preview() ? EXPERIMENTAL_TELEMETRY : LEGACY_EXPERIMENTAL_ATTRIBUTES);
+  }
+
+  private static <T> T experimental(T value) {
+    return emitExperimentalAttributes() ? value : null;
   }
 }
