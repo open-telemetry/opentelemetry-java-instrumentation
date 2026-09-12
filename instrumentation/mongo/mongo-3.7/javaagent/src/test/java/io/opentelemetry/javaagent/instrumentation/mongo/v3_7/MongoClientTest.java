@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation")
 class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -57,6 +59,11 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @Override
+  protected boolean supportsNetworkPeer() {
+    return testLatestDeps();
   }
 
   @Override
@@ -110,7 +117,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   @Override
   protected long getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName);
-    return db.getCollection(collectionName).estimatedDocumentCount();
+    return db.getCollection(collectionName).count();
   }
 
   @Override
@@ -131,7 +138,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   @Override
   protected long insert(MongoCollection<Document> collection) {
     collection.insertOne(new Document("password", "SECRET"));
-    return collection.estimatedDocumentCount();
+    return collection.count();
   }
 
   @Override
@@ -157,7 +164,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
         collection.updateOne(
             new BsonDocument("password", new BsonString("OLDPW")),
             new BsonDocument("$set", new BsonDocument("password", new BsonString("NEWPW"))));
-    collection.estimatedDocumentCount();
+    collection.count();
     return result.getModifiedCount();
   }
 
@@ -182,7 +189,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   protected long delete(MongoCollection<Document> collection) {
     DeleteResult result =
         collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")));
-    collection.estimatedDocumentCount();
+    collection.count();
     return result.getDeletedCount();
   }
 

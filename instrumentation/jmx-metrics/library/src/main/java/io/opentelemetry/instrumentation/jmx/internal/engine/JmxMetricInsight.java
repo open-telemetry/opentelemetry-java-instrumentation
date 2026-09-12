@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
 import java.util.List;
 import java.util.function.Supplier;
@@ -50,7 +51,8 @@ public class JmxMetricInsight {
   public AutoCloseable start(
       MetricConfiguration conf,
       Supplier<List<? extends MBeanServerConnection>> connections,
-      HandlerRegistry handlerRegistry) {
+      HandlerRegistry handlerRegistry,
+      IncludeExclude metrics) {
     if (conf.isEmpty()) {
       logger.log(
           FINE,
@@ -60,7 +62,7 @@ public class JmxMetricInsight {
     } else {
 
       MetricRegistrar registrar =
-          new MetricRegistrar(openTelemetry, INSTRUMENTATION_SCOPE, VERSION_LOOKUP_NAME);
+          new MetricRegistrar(openTelemetry, INSTRUMENTATION_SCOPE, VERSION_LOOKUP_NAME, metrics);
       BeanFinder finder = new BeanFinder(conf, registrar, handlerRegistry, discoveryDelay);
       finder.discoverBeans(connections);
 

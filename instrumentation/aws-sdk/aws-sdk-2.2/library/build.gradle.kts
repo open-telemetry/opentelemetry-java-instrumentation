@@ -60,8 +60,9 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        compileOnly("software.amazon.awssdk:bedrockruntime:2.26.5")
         val version = baseVersion("2.25.63").orLatest()
-        implementation("software.amazon.awssdk:bedrockruntime:$version")
+        runtimeOnly("software.amazon.awssdk:bedrockruntime:$version")
       }
     }
 

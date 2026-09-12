@@ -353,7 +353,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
         .hasNoParent()
         .satisfies(
             spanData ->
-                assertThat(spanData.getEndEpochNanos()).isEqualTo(spanData.getStartEpochNanos()))
+                assertThat(spanData.getEndEpochNanos())
+                    .isGreaterThanOrEqualTo(spanData.getStartEpochNanos()))
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),

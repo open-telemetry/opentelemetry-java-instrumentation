@@ -46,6 +46,17 @@ class SpymemcachedAttributesGetter
 
   @Override
   @Nullable
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      SpymemcachedRequest spymemcachedRequest, @Nullable Object response) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
+    return address == null || address.isUnresolved() ? null : address;
+  }
+
+  @Override
+  @Nullable
   public String getServerAddress(SpymemcachedRequest spymemcachedRequest) {
     if (emitStableDatabaseSemconv()) {
       DbServerTarget target = spymemcachedRequest.getServerTarget();

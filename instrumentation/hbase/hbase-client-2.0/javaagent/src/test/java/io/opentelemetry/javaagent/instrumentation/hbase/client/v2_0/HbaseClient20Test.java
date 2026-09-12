@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.hbase.testing.AbstractHbaseTest;
@@ -46,6 +49,16 @@ class HbaseClient20Test extends AbstractHbaseTest {
             .setColumnFamily(columnFamilyDescriptor)
             .build();
     admin.createTable(tableDescriptor, new byte[][] {Bytes.toBytes("m")});
+  }
+
+  @Override
+  protected int getMetaScanTraceCount() {
+    return testLatestDeps() ? 2 : 1;
+  }
+
+  @Override
+  protected boolean reportsNetworkPeerAddress() {
+    return emitStableDatabaseSemconv();
   }
 
   @Override

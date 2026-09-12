@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -12,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -86,14 +88,26 @@ class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest 
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "POST " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "POST")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
-                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}")),
+                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}"),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -138,12 +152,24 @@ class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest 
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "POST " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "POST")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(maybeStable(DB_STATEMENT), expected)),
+                                equalTo(maybeStable(DB_STATEMENT), expected),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)

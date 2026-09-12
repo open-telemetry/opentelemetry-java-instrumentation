@@ -20,6 +20,7 @@ dependencies {
   testLibrary("org.mongodb:mongodb-driver-core:4.0.1")
   testLibrary("org.mongodb:mongodb-driver-sync:4.0.0")
   testLibrary("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
+  testLibrary("io.netty:netty-handler:4.1.43.Final")
 
   testImplementation(project(":instrumentation:mongo:mongo-common:testing"))
 
@@ -32,6 +33,7 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
