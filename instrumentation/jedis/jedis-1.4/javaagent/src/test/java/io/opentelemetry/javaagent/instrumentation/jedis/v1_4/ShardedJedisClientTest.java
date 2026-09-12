@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -123,6 +125,27 @@ class ShardedJedisClientTest {
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : (long) shardPort))));
+
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.jedis-1.4",
+          metric ->
+              metric
+                  .hasName("db.client.operation.duration")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point ->
+                                  point.hasAttributesSatisfyingExactly(
+                                      equalTo(DB_SYSTEM_NAME, REDIS),
+                                      equalTo(DB_OPERATION_NAME, "SET"),
+                                      equalTo(SERVER_ADDRESS, configuredTarget)),
+                              point ->
+                                  point.hasAttributesSatisfyingExactly(
+                                      equalTo(DB_SYSTEM_NAME, REDIS),
+                                      equalTo(DB_OPERATION_NAME, "GET"),
+                                      equalTo(SERVER_ADDRESS, configuredTarget)))));
+    }
   }
 
   @Test
