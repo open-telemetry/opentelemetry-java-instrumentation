@@ -1,0 +1,21 @@
+file_format: "1.1"
+
+meter_provider:
+  readers:
+    - periodic:
+        interval: 10
+        exporter:
+          agent_test:
+
+instrumentation/development:
+  java:
+    executors_metrics:
+      name_normalization/development: all
+
+distribution:
+  javaagent:
+    instrumentation:
+      enabled:
+        - executors_metrics
+      disabled:
+        - executors
