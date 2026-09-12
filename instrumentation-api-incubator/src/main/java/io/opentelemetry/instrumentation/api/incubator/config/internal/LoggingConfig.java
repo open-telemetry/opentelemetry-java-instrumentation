@@ -21,6 +21,10 @@ import javax.annotation.Nullable;
  */
 public final class LoggingConfig {
 
+  private static final String STRUCTURED_ATTRIBUTES_PROPERTIES =
+      "otel.instrumentation.common.logging.structured-attributes.included or"
+          + " otel.instrumentation.common.logging.structured-attributes.excluded";
+
   /**
    * Resolves the common structured logging attribute selector, retaining the source-specific
    * selector as a fallback until 3.0.
@@ -62,8 +66,12 @@ public final class LoggingConfig {
     if (SemconvStability.v3Preview(openTelemetry)) {
       return value -> true;
     }
-    return SelectorConfig.resolveLegacyBoolean(
-        sourceConfig, instrumentationName, selectorName, deprecatedSelectorName);
+    return SelectorConfig.resolveDeprecatedLegacyBoolean(
+        sourceConfig,
+        instrumentationName,
+        selectorName,
+        deprecatedSelectorName,
+        STRUCTURED_ATTRIBUTES_PROPERTIES);
   }
 
   private LoggingConfig() {}

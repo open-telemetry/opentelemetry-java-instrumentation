@@ -16,9 +16,16 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
+@ResourceLock("SelectorConfig.logger")
 class LoggingConfigTest {
 
   @Test
@@ -79,14 +86,30 @@ class LoggingConfigTest {
             .get("map_message_attributes/development")
             .getScalarList("included", String.class))
         .thenReturn(singletonList("selected"));
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(SelectorConfig.class.getName());
+    logger.addHandler(handler);
+    try {
+      Predicate<String> first =
+          LoggingConfig.resolveStructuredAttributes(
+              openTelemetry, sourceConfig, "log4j-appender", "map-message-attributes");
+      Predicate<String> second =
+          LoggingConfig.resolveStructuredAttributes(
+              openTelemetry, sourceConfig, "log4j-appender", "map-message-attributes");
 
-    Predicate<String> selector =
-        LoggingConfig.resolveStructuredAttributes(
-            openTelemetry, sourceConfig, "log4j-appender", "map-message-attributes");
-
-    assertThat(selector).isNotNull();
-    assertThat(selector.test("selected")).isTrue();
-    assertThat(selector.test("other")).isFalse();
+      assertThat(first).isNotNull();
+      assertThat(first.test("selected")).isTrue();
+      assertThat(first.test("other")).isFalse();
+      assertThat(second).isNotNull();
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .contains(
+              "otel.instrumentation.log4j-appender.experimental"
+                  + ".map-message-attributes.included",
+              "otel.instrumentation.common.logging.structured-attributes.included");
+    } finally {
+      logger.removeHandler(handler);
+    }
   }
 
   private static ExtendedOpenTelemetry mockOpenTelemetry(boolean v3Preview) {
@@ -94,5 +117,20 @@ class LoggingConfigTest {
     DeclarativeConfigProperties commonConfig = openTelemetry.getInstrumentationConfig("common");
     when(commonConfig.getBoolean("v3_preview")).thenReturn(v3Preview);
     return openTelemetry;
+  }
+
+  private static final class TestHandler extends Handler {
+    private final List<LogRecord> records = new ArrayList<>();
+
+    @Override
+    public void publish(LogRecord record) {
+      records.add(record);
+    }
+
+    @Override
+    public void flush() {}
+
+    @Override
+    public void close() {}
   }
 }

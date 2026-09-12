@@ -427,6 +427,55 @@ class LogbackAppenderTest {
         .isEmpty();
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void sourceSpecificStructuredAttributeSelectorWarns(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender"
+              + ".key_value_pair_attributes/development.included",
+          "key1");
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental"
+              + ".key-value-pair-attributes.included",
+          "key1");
+    }
+    ch.qos.logback.classic.Logger installerLogger =
+        (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LogbackAppenderInstaller.class);
+    ListAppender<ILoggingEvent> warningAppender = new ListAppender<>();
+    warningAppender.start();
+    installerLogger.addAppender(warningAppender);
+    try {
+      StandardEnvironment environment = new StandardEnvironment();
+      environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+
+      LogbackAppenderInstaller.initializeStructuredAttributesFromProperties(
+          environment, new OpenTelemetryAppender());
+
+      assertThat(warningAppender.list)
+          .filteredOn(
+              event ->
+                  event
+                      .getFormattedMessage()
+                      .contains(
+                          "otel.instrumentation.logback-appender.experimental"
+                              + ".key-value-pair-attributes.included"))
+          .hasSize(1)
+          .allSatisfy(
+              event ->
+                  assertThat(event.getFormattedMessage())
+                      .contains(
+                          "otel.instrumentation.common.logging"
+                              + ".structured-attributes.included"));
+    } finally {
+      installerLogger.detachAppender(warningAppender);
+      warningAppender.stop();
+    }
+  }
+
   @Test
   @SuppressWarnings("deprecation") // verifies v3 preview ignores the deprecated appender setting
   void v3PreviewDefaultsStructuredAttributeCaptureToAll() {

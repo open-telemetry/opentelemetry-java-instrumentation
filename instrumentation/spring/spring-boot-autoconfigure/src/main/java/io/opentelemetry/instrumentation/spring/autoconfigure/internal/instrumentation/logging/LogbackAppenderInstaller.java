@@ -252,6 +252,8 @@ class LogbackAppenderInstaller {
       ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
     List<String> included = getLoggingListProperty(environment, KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED);
     List<String> excluded = getLoggingListProperty(environment, KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED);
+    warnDeprecatedStructuredSelector(
+        included, excluded, KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED, KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED);
     Boolean deprecated = evaluateBooleanProperty(environment, DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES);
     // an empty selector property is equivalent to an unset one, matching how the same flat
     // properties are read outside of Spring, where empty values cannot be distinguished from unset
@@ -318,6 +320,11 @@ class LogbackAppenderInstaller {
         getLoggingListProperty(environment, LOGSTASH_MARKER_ATTRIBUTES_INCLUDED);
     List<String> excluded =
         getLoggingListProperty(environment, LOGSTASH_MARKER_ATTRIBUTES_EXCLUDED);
+    warnDeprecatedStructuredSelector(
+        included,
+        excluded,
+        LOGSTASH_MARKER_ATTRIBUTES_INCLUDED,
+        LOGSTASH_MARKER_ATTRIBUTES_EXCLUDED);
     Boolean deprecated =
         evaluateBooleanProperty(environment, DEPRECATED_LOGSTASH_MARKER_ATTRIBUTES);
     // an empty selector property is equivalent to an unset one, matching how the same flat
@@ -353,6 +360,11 @@ class LogbackAppenderInstaller {
         getLoggingListProperty(environment, LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_INCLUDED);
     List<String> excluded =
         getLoggingListProperty(environment, LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_EXCLUDED);
+    warnDeprecatedStructuredSelector(
+        included,
+        excluded,
+        LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_INCLUDED,
+        LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_EXCLUDED);
     // an empty selector property is equivalent to an unset one, matching how the same flat
     // properties are read outside of Spring, where empty values cannot be distinguished from unset
     // ones
@@ -378,6 +390,22 @@ class LogbackAppenderInstaller {
     // the settings declared in logback.xml never survive as a fallback
     if (deprecated != null) {
       openTelemetryAppender.setCaptureLogstashStructuredArguments(deprecated);
+    }
+  }
+
+  private static void warnDeprecatedStructuredSelector(
+      @Nullable List<String> included,
+      @Nullable List<String> excluded,
+      String includedProperty,
+      String excludedProperty) {
+    if (!isEmpty(included) || !isEmpty(excluded)) {
+      logger.warn(
+          "The '{}' and '{}' properties are deprecated and will be removed in 3.0. Use '{}' and"
+              + " '{}' instead.",
+          includedProperty,
+          excludedProperty,
+          STRUCTURED_ATTRIBUTES_INCLUDED,
+          STRUCTURED_ATTRIBUTES_EXCLUDED);
     }
   }
 
