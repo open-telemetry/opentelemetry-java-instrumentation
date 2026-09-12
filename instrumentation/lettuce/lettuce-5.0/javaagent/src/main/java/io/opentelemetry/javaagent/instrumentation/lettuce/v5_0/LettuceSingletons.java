@@ -141,7 +141,6 @@ public class LettuceSingletons {
       return;
     }
     RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
-    RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
     LettuceConnectionState commandState = COMMAND_STATE.get(command);
     RedisServerTarget commandTarget = commandState == null ? null : commandState.serverTarget;
     LettuceConnectionState connectionState = CONNECTION_STATE.get(connectionHandler);
