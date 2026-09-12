@@ -112,6 +112,36 @@ class LoggingConfigTest {
     }
   }
 
+  @Test
+  void legacyBooleanRemainsFallbackOutsideV3Preview() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry(false);
+    DeclarativeConfigProperties sourceConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    when(sourceConfig.getBoolean("capture_map_message_attributes/development")).thenReturn(true);
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(SelectorConfig.class.getName());
+    logger.addHandler(handler);
+    try {
+      Predicate<String> selector =
+          LoggingConfig.resolveStructuredAttributes(
+              openTelemetry, sourceConfig, "log4j-appender", "map-message-attributes");
+
+      assertThat(selector).isNotNull();
+      assertThat(selector.test("anything")).isTrue();
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .isEqualTo(
+              "The otel.instrumentation.log4j-appender.experimental"
+                  + ".capture-map-message-attributes setting and the equivalent declarative"
+                  + " configuration property are deprecated and will be removed in 3.0. Use"
+                  + " otel.instrumentation.common.logging.structured-attributes.included or"
+                  + " otel.instrumentation.common.logging.structured-attributes.excluded or"
+                  + " equivalent declarative configuration instead.");
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
   private static ExtendedOpenTelemetry mockOpenTelemetry(boolean v3Preview) {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class, RETURNS_DEEP_STUBS);
     DeclarativeConfigProperties commonConfig = openTelemetry.getInstrumentationConfig("common");

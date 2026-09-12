@@ -270,7 +270,16 @@ public final class SelectorConfig {
     if (deprecated == null) {
       return null;
     }
-    warnDeprecated(instrumentationName, deprecatedSelectorName, replacementFlatProperties);
+    String deprecatedFlatProperty =
+        deprecatedFlatProperty(instrumentationName, deprecatedSelectorName);
+    warnOnce(
+        deprecatedFlatProperty + ":deprecated",
+        "The "
+            + deprecatedFlatProperty
+            + " setting and the equivalent declarative configuration property are deprecated and"
+            + " will be removed in 3.0. Use "
+            + replacementFlatProperties
+            + " or equivalent declarative configuration instead.");
     return deprecated ? value -> true : null;
   }
 

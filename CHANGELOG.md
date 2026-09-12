@@ -26,7 +26,7 @@
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under
-  v3-preview and will be removed in 3.0.
+  v3-preview.
 - Deprecate the Elasticsearch REST library artifacts and their public entrypoints. Elasticsearch
   Java API Client users should use its [native OpenTelemetry
   support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
