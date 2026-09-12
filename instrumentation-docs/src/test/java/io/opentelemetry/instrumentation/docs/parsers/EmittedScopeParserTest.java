@@ -323,7 +323,7 @@ class EmittedScopeParserTest {
   }
 
   @Test
-  void testGetScopePrefersNewestSchemaUrl(@TempDir Path tempDir) throws IOException {
+  void testGetScopePrefersNewestCanonicalSchemaUrl(@TempDir Path tempDir) throws IOException {
     Path instrumentationDir = tempDir.resolve("test-instrumentation");
     Path telemetryDir = instrumentationDir.resolve(".telemetry");
     Files.createDirectories(telemetryDir);
@@ -336,10 +336,13 @@ class EmittedScopeParserTest {
             schemaUrl: https://opentelemetry.io/schemas/1.9.0
           - name: io.opentelemetry.test-lib-1.0
             version: 2.14.0
+            schemaUrl: https://opentelemetry.io/schemas/1.5.invalid
+          - name: io.opentelemetry.test-lib-1.0
+            version: 2.14.0
             schemaUrl: null
           - name: io.opentelemetry.test-lib-1.0
             version: 2.14.0
-            schemaUrl: https://opentelemetry.io/schemas/1.44.0
+            schemaUrl: https://opentelemetry.io/schemas/1.10.0
         """;
 
     Files.writeString(telemetryDir.resolve("scope-abc123.yaml"), scopeContent);
@@ -351,7 +354,7 @@ class EmittedScopeParserTest {
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
     assertThat(scopeInfo).isNotNull();
-    assertThat(scopeInfo.getSchemaUrl()).isEqualTo("https://opentelemetry.io/schemas/1.44.0");
+    assertThat(scopeInfo.getSchemaUrl()).isEqualTo("https://opentelemetry.io/schemas/1.10.0");
   }
 
   @Test

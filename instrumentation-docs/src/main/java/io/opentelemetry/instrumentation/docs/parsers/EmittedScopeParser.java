@@ -107,7 +107,13 @@ public class EmittedScopeParser {
   private static int compareSchemaUrls(String left, String right) {
     Matcher leftMatcher = SCHEMA_VERSION.matcher(left);
     Matcher rightMatcher = SCHEMA_VERSION.matcher(right);
-    if (!leftMatcher.matches() || !rightMatcher.matches()) {
+    boolean leftMatches = leftMatcher.matches();
+    boolean rightMatches = rightMatcher.matches();
+    int formatComparison = Boolean.compare(leftMatches, rightMatches);
+    if (formatComparison != 0) {
+      return formatComparison;
+    }
+    if (!leftMatches) {
       return left.compareTo(right);
     }
     for (int i = 1; i <= 3; i++) {
