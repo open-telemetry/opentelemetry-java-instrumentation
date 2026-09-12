@@ -17,7 +17,7 @@ import org.apache.rocketmq.client.hook.SendMessageHook;
 public final class RocketMqTelemetry {
   private final RocketMqConsumerInstrumenter rocketMqConsumerInstrumenter;
   private final Instrumenter<SendMessageContext, Void> rocketMqProducerInstrumenter;
-  private final Instrumenter<SendMessageContext, Void> messageCreateInstrumenter;
+  private final Instrumenter<SendMessageContext, Void> rocketMqMessageCreateInstrumenter;
   private final TextMapPropagator propagator;
 
   /** Returns a new {@link RocketMqTelemetry} configured with the given {@link OpenTelemetry}. */
@@ -43,7 +43,7 @@ public final class RocketMqTelemetry {
     rocketMqProducerInstrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
             openTelemetry, headers, captureExperimentalSpanAttributes);
-    messageCreateInstrumenter =
+    rocketMqMessageCreateInstrumenter =
         RocketMqInstrumenterFactory.createMessageCreateInstrumenter(
             openTelemetry, headers, batchSendMessageCreationSpansEnabled);
     propagator = openTelemetry.getPropagators().getTextMapPropagator();
@@ -63,6 +63,6 @@ public final class RocketMqTelemetry {
    */
   public SendMessageHook createSendMessageHook() {
     return new TracingSendMessageHookImpl(
-        rocketMqProducerInstrumenter, messageCreateInstrumenter, propagator);
+        rocketMqProducerInstrumenter, rocketMqMessageCreateInstrumenter, propagator);
   }
 }
