@@ -111,6 +111,9 @@ both questions:
 
 ## Protect telemetry quality and users
 
+- Check metric data-point attribute cardinality and every convention-specific cardinality
+  constraint. Verify that values use the bounded or low-cardinality source the applicable
+  convention defines. A semantic-convention key does not make an unbounded value safe.
 - Follow every applicable redaction, sanitization, sensitive-data, and privacy instruction. A
   `Recommended` attribute is not permission to expose sensitive values.
 - Do not invent a universal normalization, redaction, or fallback rule. Cite the rule from the
