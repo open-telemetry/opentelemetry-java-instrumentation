@@ -32,14 +32,20 @@ class NettyStreamInstrumentation implements TypeInstrumentation {
   public static class OpenAdvice {
     @Nullable private static final Method remoteAddressMethod = findRemoteAddressMethod();
 
+    @Nullable
+    public static Method getRemoteAddressMethod() {
+      return remoteAddressMethod;
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.FieldValue("channel") Object channel)
         throws ReflectiveOperationException {
       if (channel == null) {
         return;
       }
-      if (remoteAddressMethod != null) {
-        SocketAddress remoteAddress = (SocketAddress) remoteAddressMethod.invoke(channel);
+      Method method = getRemoteAddressMethod();
+      if (method != null) {
+        SocketAddress remoteAddress = (SocketAddress) method.invoke(channel);
         MongoConnectionPeer.capture(remoteAddress);
       }
     }
