@@ -165,9 +165,7 @@ class LettuceClusterClientTest {
                                 emitStableDatabaseSemconv() ? authenticatedIp : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? (long) authenticatedPort
-                                    : null))));
+                                emitStableDatabaseSemconv() ? (long) authenticatedPort : null))));
     if (testLatestDeps()) {
       traceAsserts.add(
           trace ->
@@ -220,10 +218,8 @@ class LettuceClusterClientTest {
                             equalTo(
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? configuredTarget : host),
-                            equalTo(
-                                SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv() ? (long) port : null))));
@@ -257,8 +253,7 @@ class LettuceClusterClientTest {
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? configuredTarget : host),
                             equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv() ? (long) port : null),
@@ -467,8 +462,7 @@ class LettuceClusterClientTest {
     protected Partitions loadPartitions() {
       Partitions partitions = new Partitions();
       if (nodeUris.size() == 1) {
-        partitions.addPartition(
-            newNode(nodeUris.get(0), FIRST_NODE_ID, 0, SlotHash.SLOT_COUNT));
+        partitions.addPartition(newNode(nodeUris.get(0), FIRST_NODE_ID, 0, SlotHash.SLOT_COUNT));
       } else {
         partitions.addPartition(newNode(nodeUris.get(0), FIRST_NODE_ID, 0, SLOT_SPLIT));
         partitions.addPartition(
