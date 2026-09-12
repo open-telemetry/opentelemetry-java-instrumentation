@@ -165,6 +165,32 @@ class LettuceClusterClientTest {
                                 emitStableDatabaseSemconv() ? authenticatedIp : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) authenticatedPort : null))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "COMMAND " + authenticatedTarget
+                                : "COMMAND")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, null),
+                            equalTo(maybeStable(DB_OPERATION), "COMMAND"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? authenticatedTarget
+                                    : authenticatedHost),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : (long) authenticatedPort),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? authenticatedIp : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
                                 emitStableDatabaseSemconv() ? (long) authenticatedPort : null))));
     if (testLatestDeps()) {
       traceAsserts.add(
@@ -285,6 +311,9 @@ class LettuceClusterClientTest {
     StatefulRedisClusterConnection<String, String> peerConnection = client.connect();
     cleanup.deferCleanup(peerConnection);
 
+    testing.waitForTraces(1);
+    testing.clearData();
+
     RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = peerConnection.async();
     String routedKey = keyInSlotRange("routed", SLOT_SPLIT, SlotHash.SLOT_COUNT);
     String firstBatchKey = keyInSlotRange("first-batch", 0, SLOT_SPLIT);
@@ -393,6 +422,9 @@ class LettuceClusterClientTest {
     cleanup.deferCleanup(() -> client.shutdown(0, 15, SECONDS));
     StatefulRedisClusterConnection<String, String> peerConnection = client.connect();
     cleanup.deferCleanup(peerConnection);
+
+    testing.waitForTraces(1);
+    testing.clearData();
 
     RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = peerConnection.async();
     String redirectedKey = keyInSlotRange("redirected", 0, SLOT_SPLIT);
