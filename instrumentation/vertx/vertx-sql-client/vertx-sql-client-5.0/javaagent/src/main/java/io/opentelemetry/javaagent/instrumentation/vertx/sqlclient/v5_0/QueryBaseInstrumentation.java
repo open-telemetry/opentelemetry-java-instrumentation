@@ -28,7 +28,6 @@ class QueryBaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        namedOneOf("mapping", "collecting"), COPY_ADVICE_CLASS_NAME);
+    transformer.applyAdviceToMethod(namedOneOf("mapping", "collecting"), COPY_ADVICE_CLASS_NAME);
   }
 }

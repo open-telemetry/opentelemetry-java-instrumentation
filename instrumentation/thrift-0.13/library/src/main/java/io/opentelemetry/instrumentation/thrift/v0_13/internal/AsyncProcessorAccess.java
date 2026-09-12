@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13.internal;
 
+import static java.util.Collections.emptyMap;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.WARNING;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.thrift.AsyncProcessFunction;
@@ -36,7 +38,7 @@ public final class AsyncProcessorAccess {
       field.setAccessible(true);
       return field;
     } catch (Throwable t) {
-      logger.log(Level.WARNING, "Failed to locate TBaseAsyncProcessor#processMap field", t);
+      logger.log(WARNING, "Failed to locate TBaseAsyncProcessor#processMap field", t);
       return null;
     }
   }
@@ -48,7 +50,7 @@ public final class AsyncProcessorAccess {
       method.setAccessible(true);
       return method;
     } catch (Throwable t) {
-      logger.log(Level.WARNING, "Failed to locate AsyncProcessFunction#isOneway method", t);
+      logger.log(WARNING, "Failed to locate AsyncProcessFunction#isOneway method", t);
       return null;
     }
   }
@@ -58,13 +60,13 @@ public final class AsyncProcessorAccess {
   public static Map<String, AsyncProcessFunction<?, ?, ?, ?>> getProcessMap(
       TBaseAsyncProcessor<?> processor) {
     if (processMapField == null) {
-      return Collections.emptyMap();
+      return emptyMap();
     }
     try {
       return (Map<String, AsyncProcessFunction<?, ?, ?, ?>>) processMapField.get(processor);
     } catch (Throwable t) {
-      logger.log(Level.FINE, "Failed to read TBaseAsyncProcessor#processMap field", t);
-      return Collections.emptyMap();
+      logger.log(FINE, "Failed to read TBaseAsyncProcessor#processMap field", t);
+      return emptyMap();
     }
   }
 
@@ -76,7 +78,7 @@ public final class AsyncProcessorAccess {
       Object result = isOnewayMethod.invoke(asyncProcessFunction);
       return result instanceof Boolean && (Boolean) result;
     } catch (Throwable t) {
-      logger.log(Level.FINE, "Failed to invoke AsyncProcessFunction#isOneway method", t);
+      logger.log(FINE, "Failed to invoke AsyncProcessFunction#isOneway method", t);
       return false;
     }
   }
