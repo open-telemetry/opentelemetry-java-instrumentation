@@ -100,7 +100,7 @@ final class SamePackageAccessValidator {
         if (!isEnforcedSource(source, targetPackage)) {
           continue;
         }
-        Field resolved = findField(targetClass, field.getName());
+        Field resolved = findField(targetClass, field.getName(), field.getDescriptor());
         if (resolved != null && !Modifier.isPublic(resolved.getModifiers())) {
           violations.add(
               describe(
@@ -156,12 +156,26 @@ final class SamePackageAccessValidator {
   }
 
   @Nullable
-  private static Field findField(@Nullable Class<?> clazz, String name) {
-    for (Class<?> current = clazz; current != null; current = current.getSuperclass()) {
-      try {
-        return current.getDeclaredField(name);
-      } catch (NoSuchFieldException e) {
-        // keep looking in the super class
+  private static Field findField(@Nullable Class<?> clazz, String name, String descriptor) {
+    if (clazz == null) {
+      return null;
+    }
+    try {
+      Field field = clazz.getDeclaredField(name);
+      if (Type.getDescriptor(field.getType()).equals(descriptor)) {
+        return field;
+      }
+    } catch (NoSuchFieldException e) {
+      // keep looking in the type hierarchy
+    }
+    Field fromSuperClass = findField(clazz.getSuperclass(), name, descriptor);
+    if (fromSuperClass != null) {
+      return fromSuperClass;
+    }
+    for (Class<?> interfaceClass : clazz.getInterfaces()) {
+      Field fromInterface = findField(interfaceClass, name, descriptor);
+      if (fromInterface != null) {
+        return fromInterface;
       }
     }
     return null;

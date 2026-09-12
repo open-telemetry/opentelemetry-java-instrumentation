@@ -45,6 +45,15 @@ public class SamePackageAccessTestClasses {
 
   public static class LibrarySubClass extends LibrarySuperClass {}
 
+  public static class LibrarySuperClassWithHiddenField {
+    int hiddenField;
+  }
+
+  public static class LibrarySubClassWithHiddenField extends LibrarySuperClassWithHiddenField {
+    @SuppressWarnings("HidingField") // verifies descriptor-aware inherited-field lookup
+    public String hiddenField;
+  }
+
   // ----- instrumentation "advice" entry points: these simulate the actual bytecode advice
   // classes, which start the reference-collection traversal but whose own method bodies are
   // inlined into the instrumented class at runtime -----

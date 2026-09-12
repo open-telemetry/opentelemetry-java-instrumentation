@@ -6,10 +6,13 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
+import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,9 +23,11 @@ import muzzle.samepackage.SamePackageAccessTestClasses.GoodHelper;
 import muzzle.samepackage.SamePackageAccessTestClasses.GoodHelperAdvice;
 import muzzle.samepackage.SamePackageAccessTestClasses.HelperCallingHelper;
 import muzzle.samepackage.SamePackageAccessTestClasses.HelperCallingHelperAdvice;
+import muzzle.samepackage.SamePackageAccessTestClasses.LibrarySubClassWithHiddenField;
 import muzzle.samepackage.SamePackageAccessTestClasses.NonInlinedAdviceEntryPoint;
 import muzzle.samepackage.SamePackageAccessTestClasses.OtherHelper;
 import org.junit.jupiter.api.Test;
+import org.objectweb.asm.Type;
 
 class SamePackageAccessValidatorTest {
 
@@ -95,6 +100,31 @@ class SamePackageAccessValidatorTest {
         .isThrownBy(collector::validateSamePackageLibraryAccess)
         .withMessageContaining("LibrarySubClass#inheritedProtectedMethod()V is not public")
         .withMessageContaining("LibrarySubClass#inheritedProtectedField is not public");
+  }
+
+  @Test
+  void resolvesInheritedFieldByNameAndDescriptor() {
+    Source source = new Source(BadHelper.class.getName(), 1);
+    ClassRef reference =
+        ClassRef.builder(LibrarySubClassWithHiddenField.class.getName())
+            .addField(
+                new Source[] {source},
+                new Flag[0],
+                "hiddenField",
+                Type.INT_TYPE,
+                /* isFieldDeclared= */ false)
+            .build();
+    SamePackageAccessValidator validator =
+        new SamePackageAccessValidator(
+            new HelperClassPredicate(name -> name.equals(BadHelper.class.getName())),
+            SamePackageAccessValidatorTest.class.getClassLoader());
+
+    assertThatExceptionOfType(MuzzleCompilationException.class)
+        .isThrownBy(
+            () ->
+                validator.validate(
+                    singletonMap(LibrarySubClassWithHiddenField.class.getName(), reference)))
+        .withMessageContaining("LibrarySubClassWithHiddenField#hiddenField is not public");
   }
 
   @Test
