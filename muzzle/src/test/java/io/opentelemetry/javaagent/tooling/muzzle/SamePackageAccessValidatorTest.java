@@ -19,6 +19,7 @@ import muzzle.samepackage.SamePackageAccessTestClasses.GoodHelper;
 import muzzle.samepackage.SamePackageAccessTestClasses.GoodHelperAdvice;
 import muzzle.samepackage.SamePackageAccessTestClasses.HelperCallingHelper;
 import muzzle.samepackage.SamePackageAccessTestClasses.HelperCallingHelperAdvice;
+import muzzle.samepackage.SamePackageAccessTestClasses.NonInlinedAdviceEntryPoint;
 import muzzle.samepackage.SamePackageAccessTestClasses.OtherHelper;
 import org.junit.jupiter.api.Test;
 
@@ -132,6 +133,17 @@ class SamePackageAccessValidatorTest {
     collector.prune();
 
     assertThatCode(collector::validateSamePackageLibraryAccess).doesNotThrowAnyException();
+  }
+
+  @Test
+  void rejectsNonInlinedAdvice() {
+    ReferenceCollector collector = collectorForHelpers();
+    collector.collectReferencesFromAdvice(NonInlinedAdviceEntryPoint.class.getName());
+    collector.prune();
+
+    assertThatExceptionOfType(MuzzleCompilationException.class)
+        .isThrownBy(collector::validateSamePackageLibraryAccess)
+        .withMessageContaining("PackagePrivateLibraryClass is not public");
   }
 
   @Test

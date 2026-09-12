@@ -10,16 +10,14 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientQueryBaseHelper;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class QueryBaseInstrumentation implements TypeInstrumentation {
 
-  // Referenced by fully-qualified string because the advice class lives in the
-  // io.vertx.sqlclient.impl package (it needs same-package access to package-private
-  // QueryExecutor / QueryBase#builder) and cannot be imported from this package.
   private static final String COPY_ADVICE_CLASS_NAME =
-      "io.vertx.sqlclient.impl.VertxSqlClientQueryBaseHelper";
+      VertxSqlClientQueryBaseHelper.class.getName();
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

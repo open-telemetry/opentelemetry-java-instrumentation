@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
+import net.bytebuddy.asm.Advice;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Handle;
@@ -120,6 +121,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
   private final Map<String, ClassRef> references = new LinkedHashMap<>();
   private final Set<String> helperClasses = new HashSet<>();
+  private final Set<Source> inlinedAdviceSources = new HashSet<>();
   // helper super classes which are themselves also helpers
   // this is needed for injecting the helper classes into the class loader in the correct order
   private final Set<String> helperSuperClasses = new HashSet<>();
@@ -145,6 +147,10 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
   Set<String> getHelperSuperClasses() {
     return helperSuperClasses;
+  }
+
+  Set<Source> getInlinedAdviceSources() {
+    return inlinedAdviceSources;
   }
 
   VirtualFieldMappings getVirtualFieldMappings() {
@@ -279,7 +285,12 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
             if (skip) {
               target = methodVisitor;
             } else {
-              target = new AdviceReferenceMethodVisitor(methodVisitor);
+              target =
+                  new AdviceReferenceMethodVisitor(
+                      methodVisitor,
+                      isAdviceClass
+                          && (isInlinedAdvice(visibleAnnotations)
+                              || isInlinedAdvice(invisibleAnnotations)));
               target = new VirtualFieldCollectingMethodVisitor(target);
             }
             if (target != null) {
@@ -290,6 +301,27 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     // Additional references we could check
     // - Classes in signature (return type, params) and visible from this package
     return methodNode;
+  }
+
+  private static boolean isInlinedAdvice(@Nullable List<AnnotationNode> annotations) {
+    if (annotations == null) {
+      return false;
+    }
+    for (AnnotationNode annotation : annotations) {
+      if (!Type.getDescriptor(Advice.OnMethodEnter.class).equals(annotation.desc)
+          && !Type.getDescriptor(Advice.OnMethodExit.class).equals(annotation.desc)) {
+        continue;
+      }
+      if (annotation.values != null) {
+        for (int i = 0; i < annotation.values.size(); i += 2) {
+          if ("inline".equals(annotation.values.get(i))) {
+            return !Boolean.FALSE.equals(annotation.values.get(i + 1));
+          }
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
   private static VisibilityFlag computeVisibilityFlag(int access) {
@@ -323,16 +355,29 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   }
 
   private class AdviceReferenceMethodVisitor extends MethodVisitor {
+    private final boolean inlinedAdvice;
     private int currentLineNumber = -1;
 
-    AdviceReferenceMethodVisitor(MethodVisitor methodVisitor) {
+    AdviceReferenceMethodVisitor(MethodVisitor methodVisitor, boolean inlinedAdvice) {
       super(AsmApi.VERSION, methodVisitor);
+      this.inlinedAdvice = inlinedAdvice;
+      recordInlinedAdviceSource();
     }
 
     @Override
     public void visitLineNumber(int line, Label start) {
       currentLineNumber = line;
+      recordInlinedAdviceSource();
       super.visitLineNumber(line, start);
+    }
+
+    private void recordInlinedAdviceSource() {
+      if (inlinedAdvice) {
+        String sourceClassName =
+            requireNonNull(
+                refSourceClassName, "refSourceClassName must be set by visit() before use");
+        inlinedAdviceSources.add(new Source(sourceClassName, currentLineNumber));
+      }
     }
 
     @Override

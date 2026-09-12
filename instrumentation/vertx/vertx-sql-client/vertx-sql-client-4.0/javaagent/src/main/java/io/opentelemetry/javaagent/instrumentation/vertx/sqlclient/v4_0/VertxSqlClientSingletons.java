@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientQueryBaseHelper;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.vertx.core.Future;
@@ -15,7 +16,6 @@ import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.SqlClientBase;
-import io.vertx.sqlclient.impl.VertxSqlClientQueryBaseHelper;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {

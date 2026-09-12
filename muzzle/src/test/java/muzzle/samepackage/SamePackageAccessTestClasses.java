@@ -5,6 +5,8 @@
 
 package muzzle.samepackage;
 
+import net.bytebuddy.asm.Advice;
+
 /**
  * Test fixtures for {@code SamePackageAccessValidator}. All classes below live in the same package
  * on purpose: the validator flags helper -&gt; library references made across classes that share a
@@ -48,19 +50,22 @@ public class SamePackageAccessTestClasses {
   // inlined into the instrumented class at runtime -----
 
   public static class BadHelperAdvice {
-    void onEnter() {
+    @Advice.OnMethodEnter
+    static void onEnter() {
       new BadHelper();
     }
   }
 
   public static class GoodHelperAdvice {
-    void onEnter() {
+    @Advice.OnMethodEnter
+    static void onEnter() {
       new GoodHelper().usePublicMethod(new LibraryClass());
     }
   }
 
   public static class HelperCallingHelperAdvice {
-    void onEnter() {
+    @Advice.OnMethodEnter
+    static void onEnter() {
       new HelperCallingHelper().callOtherHelper();
     }
   }
@@ -124,12 +129,24 @@ public class SamePackageAccessTestClasses {
   // simulates an advice class: its body is inlined into the instrumented class at runtime, so
   // same-package access made directly from here is not subject to this check
   public static class AdviceEntryPoint {
-    void onEnter() {
+    @Advice.OnMethodEnter
+    static void onEnter() {
       new PackagePrivateLibraryClass().someMethod();
       LibraryClass library = new LibraryClass(1);
       library.packagePrivateMethod();
       int unused = library.packagePrivateField;
     }
+
+    private AdviceEntryPoint() {}
+  }
+
+  public static class NonInlinedAdviceEntryPoint {
+    @Advice.OnMethodEnter(inline = false)
+    static void onEnter() {
+      new PackagePrivateLibraryClass().someMethod();
+    }
+
+    private NonInlinedAdviceEntryPoint() {}
   }
 
   public static class HelperCallingHelper {

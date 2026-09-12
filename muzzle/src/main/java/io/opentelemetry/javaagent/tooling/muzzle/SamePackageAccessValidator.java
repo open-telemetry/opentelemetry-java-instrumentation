@@ -35,9 +35,9 @@ import org.objectweb.asm.Type;
  * different modules), so they do not actually share a runtime package/module even though their
  * binary names look alike.
  *
- * <p>Advice classes are exempt because advice bytecode is inlined into the instrumented (library)
- * class itself at instrumentation time, so it genuinely executes as if it were part of the
- * library's package.
+ * <p>References made by inlined advice methods are exempt because that bytecode executes from the
+ * instrumented (library) class itself, so it genuinely executes as if it were part of the library's
+ * package.
  *
  * <p>This class only runs at compile (muzzle generation) time. It does not affect the generated
  * muzzle references or the runtime muzzle matching behavior.
@@ -45,14 +45,17 @@ import org.objectweb.asm.Type;
 final class SamePackageAccessValidator {
 
   private final Set<String> adviceClassNames;
+  private final Set<Source> inlinedAdviceSources;
   private final HelperClassPredicate helperClassPredicate;
   private final ClassLoader classLoader;
 
   SamePackageAccessValidator(
       Set<String> adviceClassNames,
+      Set<Source> inlinedAdviceSources,
       HelperClassPredicate helperClassPredicate,
       ClassLoader classLoader) {
     this.adviceClassNames = adviceClassNames;
+    this.inlinedAdviceSources = inlinedAdviceSources;
     this.helperClassPredicate = helperClassPredicate;
     this.classLoader = classLoader;
   }
@@ -86,7 +89,7 @@ final class SamePackageAccessValidator {
     String targetPackage = packageName(targetClassName);
 
     for (Source source : reference.getSources()) {
-      if (!isEnforcedSource(source.getName(), targetPackage)) {
+      if (!isEnforcedSource(source, targetPackage)) {
         continue;
       }
       Class<?> targetClass = tryLoadClass(targetClassName);
@@ -103,7 +106,7 @@ final class SamePackageAccessValidator {
 
     for (FieldRef field : reference.getFields()) {
       for (Source source : field.getSources()) {
-        if (!isEnforcedSource(source.getName(), targetPackage)) {
+        if (!isEnforcedSource(source, targetPackage)) {
           continue;
         }
         Field resolved = findField(targetClass, field.getName());
@@ -117,7 +120,7 @@ final class SamePackageAccessValidator {
 
     for (MethodRef method : reference.getMethods()) {
       for (Source source : method.getSources()) {
-        if (!isEnforcedSource(source.getName(), targetPackage)) {
+        if (!isEnforcedSource(source, targetPackage)) {
           continue;
         }
         Executable resolved = findMethod(targetClass, method.getName(), method.getDescriptor());
@@ -141,15 +144,14 @@ final class SamePackageAccessValidator {
   }
 
   /**
-   * Returns whether {@code sourceClassName} is subject to this check: it must be an instrumentation
-   * helper class (not inlined advice), and it must be in the same package as the referenced target.
+   * Returns whether {@code source} is subject to this check: it must not be part of an inlined
+   * advice method, and it must be in the same package as the referenced target.
    */
-  private boolean isEnforcedSource(String sourceClassName, String targetPackage) {
-    if (adviceClassNames.contains(sourceClassName)) {
-      // advice bytecode is inlined into the instrumented (library) class itself
+  private boolean isEnforcedSource(Source source, String targetPackage) {
+    if (adviceClassNames.contains(source.getName()) && inlinedAdviceSources.contains(source)) {
       return false;
     }
-    return packageName(sourceClassName).equals(targetPackage);
+    return packageName(source.getName()).equals(targetPackage);
   }
 
   @Nullable
