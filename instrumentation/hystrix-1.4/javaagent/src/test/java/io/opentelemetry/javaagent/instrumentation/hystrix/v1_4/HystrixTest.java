@@ -17,12 +17,16 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -32,6 +36,36 @@ class HystrixTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Test
+  @EnabledIfSystemProperty(named = "testV3PreviewEnablement", matches = "true")
+  void v3PreviewEnablement() {
+    class TestCommand extends HystrixCommand<String> {
+      TestCommand() {
+        super(setter());
+      }
+
+      @Override
+      protected String run() {
+        return "Hello!";
+      }
+    }
+
+    HystrixCommand<String> command = new TestCommand();
+
+    testing.runWithSpan("parent", command::execute);
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    if (Boolean.getBoolean("otel.instrumentation.hystrix.enabled")) {
+      assertThat(traces.get(0))
+          .extracting(SpanData::getName)
+          .contains("ExampleGroup.TestCommand.execute");
+    } else {
+      assertThat(traces.get(0))
+          .extracting(SpanData::getName)
+          .doesNotContain("ExampleGroup.TestCommand.execute");
+    }
+  }
 
   @ParameterizedTest
   @MethodSource("provideCommandActionArguments")

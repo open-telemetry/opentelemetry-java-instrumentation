@@ -12,10 +12,13 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -25,11 +28,31 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class SessionTest extends AbstractHibernateTest {
+  @Test
+  @EnabledIfSystemProperty(named = "testV3PreviewEnablement", matches = "true")
+  void v3PreviewEnablement() {
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          Session session = sessionFactory.openSession();
+          session.beginTransaction().commit();
+          session.close();
+        });
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    if (Boolean.getBoolean("otel.instrumentation.hibernate.enabled")) {
+      assertThat(traces.get(0)).extracting(SpanData::getName).contains("Transaction.commit");
+    } else {
+      assertThat(traces.get(0)).extracting(SpanData::getName).doesNotContain("Transaction.commit");
+    }
+  }
+
   @ParameterizedTest
   @MethodSource("provideArguments")
   void testHibernateAction(Parameter parameter) {

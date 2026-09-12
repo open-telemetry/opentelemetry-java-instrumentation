@@ -1,5 +1,8 @@
 display_name: Netflix Hystrix
-description: This instrumentation enables spans for Hystrix command executions and fallbacks.
+description: >
+  This instrumentation enables spans for Hystrix command executions and fallbacks. It is disabled
+  by default when `otel.instrumentation.common.v3-preview=true` and can be enabled with
+  `otel.instrumentation.hystrix.enabled=true`.
 library_link: https://github.com/Netflix/Hystrix
 configurations:
   - name: otel.instrumentation.hystrix.experimental-span-attributes

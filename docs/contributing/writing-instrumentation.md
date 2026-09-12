@@ -32,6 +32,33 @@ for libraries where library instrumentation is not possible, such as `URLConnect
 intercept even the JDK's classes. Such libraries will not have library instrumentation but will have
 agent instrumentation.
 
+## Instrumentation acceptance
+
+New instrumentation is generally accepted as enabled by default when it belongs to one of these
+established areas:
+
+- Existing semantic-convention telemetry already represented in this repository:
+  - HTTP client and server spans and metrics, including instrumentation that only supplies
+    `http.route`
+  - RPC client and server spans and metrics
+  - Messaging spans
+  - Database client spans and metrics, database pool metrics, and Elasticsearch client telemetry
+  - JVM runtime and system metrics
+  - GraphQL server spans
+  - FaaS server spans
+  - GenAI client spans and metrics
+  - Code attributes used for method and function spans
+  - Resource attributes supplied by resource detectors
+- Context propagation across threads, asynchronous APIs, reactive pipelines, actors, and process or
+  network boundaries
+- Scheduled and batch job execution
+- Logging appenders, log bridges, and MDC or equivalent trace-context correlation
+
+Other useful instrumentation may also be accepted after considering its maintenance cost, signal
+quality, cardinality, overlap with existing instrumentation, and expected user value. New Java agent
+telemetry outside the areas above should normally be disabled by default. This default-enable rule
+does not apply to standalone library instrumentation because users instantiate it explicitly.
+
 ## Folder Structure
 
 Refer to some of our existing instrumentations for examples of the folder structure, for example:

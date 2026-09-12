@@ -92,6 +92,32 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
+  val testV3PreviewDisabled = register<Test>("testV3PreviewDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*SessionTest.v3PreviewEnablement")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("testV3PreviewEnablement", "true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewExplicitOptIn = register<Test>("testV3PreviewExplicitOptIn") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*SessionTest.v3PreviewEnablement")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    systemProperty("testV3PreviewEnablement", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.hibernate.enabled=true",
+    )
+  }
+
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
       register<Test>("${suite.name}StableSemconv") {
@@ -104,6 +130,12 @@ tasks {
     }
 
   check {
-    dependsOn(testing.suites, testExperimental, stableSemconvSuites)
+    dependsOn(
+      testing.suites,
+      testExperimental,
+      testV3PreviewDisabled,
+      testV3PreviewExplicitOptIn,
+      stableSemconvSuites,
+    )
   }
 }

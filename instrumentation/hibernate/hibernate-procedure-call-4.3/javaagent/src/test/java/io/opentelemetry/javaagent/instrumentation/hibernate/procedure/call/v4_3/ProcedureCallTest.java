@@ -27,11 +27,13 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import javax.persistence.ParameterMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -42,6 +44,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ProcedureCallTest {
@@ -150,6 +153,34 @@ class ProcedureCallTest {
                                 HIBERNATE_SESSION_ID,
                                 experimental(
                                     trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
+  }
+
+  @Test
+  @EnabledIfSystemProperty(named = "testV3PreviewEnablement", matches = "true")
+  void v3PreviewEnablement() {
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          Session session = sessionFactory.openSession();
+          try {
+            session.beginTransaction();
+            session.createStoredProcedureCall("TEST_PROC").getOutputs();
+            session.getTransaction().commit();
+          } finally {
+            session.close();
+          }
+        });
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    if (Boolean.getBoolean("otel.instrumentation.hibernate.enabled")) {
+      assertThat(traces.get(0))
+          .extracting(SpanData::getName)
+          .contains("ProcedureCall.getOutputs TEST_PROC");
+    } else {
+      assertThat(traces.get(0))
+          .extracting(SpanData::getName)
+          .doesNotContain("ProcedureCall.getOutputs TEST_PROC");
+    }
   }
 
   @Test

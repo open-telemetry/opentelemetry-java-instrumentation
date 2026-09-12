@@ -30,7 +30,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -42,12 +44,32 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("deprecation") // 'lock' is a deprecated method in the Session class
 class SessionTest extends AbstractHibernateTest {
+
+  @Test
+  @EnabledIfSystemProperty(named = "testV3PreviewEnablement", matches = "true")
+  void v3PreviewEnablement() {
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          Session session = sessionFactory.openSession();
+          session.beginTransaction().commit();
+          session.close();
+        });
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    if (Boolean.getBoolean("otel.instrumentation.hibernate.enabled")) {
+      assertThat(traces.get(0)).extracting(SpanData::getName).contains("Transaction.commit");
+    } else {
+      assertThat(traces.get(0)).extracting(SpanData::getName).doesNotContain("Transaction.commit");
+    }
+  }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest

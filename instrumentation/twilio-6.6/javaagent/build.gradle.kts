@@ -34,7 +34,33 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.twilio.experimental-span-attributes=true")
   }
 
+  val testV3PreviewDisabled = register<Test>("testV3PreviewDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*TwilioClientTest.v3PreviewEnablement")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("testV3PreviewEnablement", "true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewExplicitOptIn = register<Test>("testV3PreviewExplicitOptIn") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*TwilioClientTest.v3PreviewEnablement")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.instrumentation.twilio.enabled=true")
+    systemProperty("testV3PreviewEnablement", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.twilio.enabled=true",
+    )
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testV3PreviewDisabled, testV3PreviewExplicitOptIn)
   }
 }

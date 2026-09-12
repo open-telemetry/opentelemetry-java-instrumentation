@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Disable Hibernate, Hibernate procedure-call, Hystrix, and Twilio javaagent instrumentations by
+  default when `otel.instrumentation.common.v3-preview=true`. They can still be enabled explicitly
+  with `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`,
+  or `otel.instrumentation.twilio.enabled=true`.
 - Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
   ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
 - Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query

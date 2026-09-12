@@ -30,11 +30,13 @@ import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
@@ -44,6 +46,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
@@ -136,6 +139,33 @@ class TwilioClientTest {
     Twilio.getExecutorService().shutdown();
     Twilio.setExecutorService(null);
     Twilio.setRestClient(null);
+  }
+
+  @Test
+  @EnabledIfSystemProperty(named = "testV3PreviewEnablement", matches = "true")
+  void v3PreviewEnablement() {
+    when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
+    when(twilioRestClient.request(any()))
+        .thenReturn(
+            new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(UTF_8)), 200));
+
+    testing.runWithSpan(
+        "parent",
+        () ->
+            Message.creator(
+                    new PhoneNumber("+1 555 720 5913"),
+                    new PhoneNumber("+1 555 555 5215"),
+                    "Hello world!")
+                .create(twilioRestClient));
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    if (Boolean.getBoolean("otel.instrumentation.twilio.enabled")) {
+      assertThat(traces.get(0)).extracting(SpanData::getName).contains("MessageCreator.create");
+    } else {
+      assertThat(traces.get(0))
+          .extracting(SpanData::getName)
+          .doesNotContain("MessageCreator.create");
+    }
   }
 
   @Test
