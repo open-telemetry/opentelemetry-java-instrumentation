@@ -22,20 +22,35 @@ final class DefaultJedisSocketFactoryAccess {
     if (socketFactory == null) {
       return null;
     }
-    if (!DEFAULT_JEDIS_SOCKET_FACTORY.equals(socketFactory.getClass().getName())) {
-      return null;
-    }
     try {
       Method method = getSocketHostAndPortMethod;
       if (method == null) {
-        method = socketFactory.getClass().getDeclaredMethod("getSocketHostAndPort");
+        Class<?> declaringClass = findDefaultJedisSocketFactoryClass(socketFactory.getClass());
+        if (declaringClass == null) {
+          return null;
+        }
+        method = declaringClass.getDeclaredMethod("getSocketHostAndPort");
         method.setAccessible(true);
         getSocketHostAndPortMethod = method;
+      } else if (!method.getDeclaringClass().isInstance(socketFactory)) {
+        return null;
       }
       return (HostAndPort) method.invoke(socketFactory);
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       return null;
     }
+  }
+
+  @Nullable
+  private static Class<?> findDefaultJedisSocketFactoryClass(Class<?> socketFactoryClass) {
+    for (Class<?> current = socketFactoryClass;
+        current != null;
+        current = current.getSuperclass()) {
+      if (DEFAULT_JEDIS_SOCKET_FACTORY.equals(current.getName())) {
+        return current;
+      }
+    }
+    return null;
   }
 
   private DefaultJedisSocketFactoryAccess() {}
