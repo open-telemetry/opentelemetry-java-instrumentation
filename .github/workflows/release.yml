@@ -206,8 +206,6 @@ jobs:
     uses: ./.github/workflows/documentation-synchronization-audit.yml
 
   post-release-updates:
-    permissions:
-      contents: write # for git push to PR branch
     runs-on: ubuntu-latest
     needs:
       - release
@@ -228,8 +226,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Merge change log to main
         env:
@@ -277,8 +274,9 @@ jobs:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request against main
@@ -291,6 +289,7 @@ jobs:
           body="Post-release updates for \`$VERSION\`."
           branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
 
+          gh auth setup-git
           git checkout -b $branch
           git add CHANGELOG.md
           git add docs/apidiffs

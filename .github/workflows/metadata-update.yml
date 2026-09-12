@@ -101,7 +101,7 @@ jobs:
           STEPS_FINDBRANCH_OUTPUTS_BRANCH: ${{ steps.findbranch.outputs.branch }}
         run: |
           BRANCH_NAME="${STEPS_FINDBRANCH_OUTPUTS_BRANCH}"
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          gh auth setup-git
           git commit -m "chore: update instrumentation list [automated]"
           # Metadata collection can run for hours, allowing workflow files on main to change after
           # checkout. GitHub then rejects pushing the stale branch without workflows: write, even
@@ -115,7 +115,6 @@ jobs:
             exit 1
           fi
           git push --force origin "$BRANCH_NAME"
-          git remote set-url origin "https://github.com/${{ github.repository }}.git"
 
       - name: Create PR if needed
         if: steps.diffcheck.outputs.has_diff == 'true'
