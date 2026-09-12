@@ -7,15 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import java.lang.reflect.Field;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClientConfig;
 
 public final class HttpClientConfigAccess {
 
-  private static final Field DEFERRED_CONF_FIELD = findField("deferredConf");
-  private static final Field CONNECTOR_FIELD = findField("connector");
+  @Nullable private static final Field DEFERRED_CONF_FIELD = findField("deferredConf");
+  @Nullable private static final Field CONNECTOR_FIELD = findField("connector");
 
+  @Nullable
   private static Field findField(String name) {
     try {
       Field field = HttpClientConfig.class.getDeclaredField(name);

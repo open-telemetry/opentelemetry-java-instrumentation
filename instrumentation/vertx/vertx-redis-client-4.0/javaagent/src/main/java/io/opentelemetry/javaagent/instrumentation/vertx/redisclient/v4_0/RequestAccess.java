@@ -10,12 +10,13 @@ import static java.util.Collections.emptyList;
 import io.vertx.redis.client.Request;
 import java.lang.reflect.Method;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public final class RequestAccess {
 
   private static final String REQUEST_IMPL = "io.vertx.redis.client.impl.RequestImpl";
 
-  private static volatile Method getArgsMethod;
+  @Nullable private static volatile Method getArgsMethod;
 
   // reflectively invoked package-private RequestImpl#getArgs returns List<byte[]>
   @SuppressWarnings("unchecked")
