@@ -437,7 +437,7 @@
     {
       "name": "otel.instrumentation.common.logging.structured-attributes.included",
       "type": "java.util.List<java.lang.String>",
-      "description": "Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. Excluded patterns take precedence. An absent or empty included list captures every key not excluded. Under v3-preview, all structured attributes are captured by default. MDC and logger-context attributes remain separate and opt-in."
+      "description": "Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. Excluded patterns take precedence. An exclude-only selector captures every key not excluded. Under v3-preview, an absent or empty selector captures all structured attributes by default. MDC and logger-context attributes remain separate and opt-in."
     },
     {
       "name": "otel.instrumentation.common.logging.structured-attributes.excluded",
