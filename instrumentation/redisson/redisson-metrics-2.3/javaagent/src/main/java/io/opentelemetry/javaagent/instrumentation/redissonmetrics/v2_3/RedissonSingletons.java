@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.redisson.client.RedisClient;
+import org.redisson.connection.ConnectionManager;
 
 public class RedissonSingletons {
 
@@ -25,7 +26,7 @@ public class RedissonSingletons {
       Collection<?> regularFreeConnections,
       int subscriptionMinIdle,
       int subscriptionMax,
-      Object connectionManager,
+      ConnectionManager connectionManager,
       Object subscriptionCounter,
       Collection<?> subscriptionFreeConnections) {
     if (subscriptionMax > 0) {

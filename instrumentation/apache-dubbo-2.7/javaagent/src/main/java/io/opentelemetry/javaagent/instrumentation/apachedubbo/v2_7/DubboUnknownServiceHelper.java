@@ -83,6 +83,8 @@ public class DubboUnknownServiceHelper {
   private static final VirtualField<RpcInvocation, Boolean> UNKNOWN_SERVICE_SPAN_RECORDED =
       VirtualField.find(RpcInvocation.class, Boolean.class);
 
+  @Nullable private static final Method statusCodeMethod = findStatusCodeMethod();
+
   /**
    * Creates an unknown service span when {@code DubboProtocol.getInvoker()} throws because the
    * requested service is not registered in the exporter map. This handles the Dubbo protocol
@@ -242,22 +244,30 @@ public class DubboUnknownServiceHelper {
     return message != null && message.contains("Not found exported service");
   }
 
-  /**
-   * Returns {@code true} if the throwable is a Dubbo Triple 404 (service not found). The class
-   * check uses the name string because {@code HttpStatusException} is not available at compile time
-   * against Dubbo 2.7.
-   */
+  /** Returns {@code true} if the throwable is a Dubbo Triple 404 (service not found). */
   static boolean isTripleNotFoundFailure(Throwable throwable) {
-    if (!"org.apache.dubbo.remoting.http12.exception.HttpStatusException"
-        .equals(throwable.getClass().getName())) {
+    if (statusCodeMethod == null || throwable.getClass() != statusCodeMethod.getDeclaringClass()) {
       return false;
     }
     try {
-      Method statusMethod = throwable.getClass().getMethod("getStatusCode");
-      Object status = statusMethod.invoke(throwable);
+      Object status = statusCodeMethod.invoke(throwable);
       return status instanceof Integer && (Integer) status == 404;
     } catch (ReflectiveOperationException ignored) {
       return false;
+    }
+  }
+
+  @Nullable
+  private static Method findStatusCodeMethod() {
+    try {
+      Class<?> exceptionClass =
+          Class.forName(
+              "org.apache.dubbo.remoting.http12.exception.HttpStatusException",
+              false,
+              DubboUnknownServiceHelper.class.getClassLoader());
+      return exceptionClass.getMethod("getStatusCode");
+    } catch (ReflectiveOperationException | LinkageError | SecurityException ignored) {
+      return null;
     }
   }
 
