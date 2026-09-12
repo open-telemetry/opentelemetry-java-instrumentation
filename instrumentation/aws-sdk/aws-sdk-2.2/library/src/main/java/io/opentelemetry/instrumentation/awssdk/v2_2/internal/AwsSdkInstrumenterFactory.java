@@ -13,8 +13,10 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -205,6 +207,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+          builder.setSchemaUrl(messagingSchemaUrl(true));
           setMessagingReceiveExceptionEventExtractor(builder);
           if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
@@ -234,7 +237,8 @@ public final class AwsSdkInstrumenterFactory {
             .addAttributesExtractors(toSqsRequestExtractors(consumerAttributesExtractors()))
             .addAttributesExtractor(
                 messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME))
-            .addOperationMetrics(MessagingProcessMetrics.get());
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .setSchemaUrl(messagingSchemaUrl(true));
     if (!messagingReceiveInstrumentationEnabled && emitStableMessagingSemconv()) {
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     }
@@ -325,6 +329,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+          builder.setSchemaUrl(messagingSchemaUrl(true));
           setMessagingSendExceptionEventExtractor(builder);
           if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
@@ -351,6 +356,7 @@ public final class AwsSdkInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operationType, CREATE_OPERATION_NAME))
         .addAttributesExtractor(
             messagingAttributesExtractor(getter, operationType, CREATE_OPERATION_NAME))
+        .setSchemaUrl(messagingSchemaUrl(true))
         .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
@@ -368,6 +374,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+          builder.setSchemaUrl(messagingSchemaUrl(true));
           setMessagingSettleExceptionEventExtractor(builder);
         },
         true);
@@ -382,7 +389,8 @@ public final class AwsSdkInstrumenterFactory {
         builder -> {
           builder
               .addAttributesExtractor(new DynamoDbAttributesExtractor())
-              .addOperationMetrics(DbClientMetrics.get());
+              .addOperationMetrics(DbClientMetrics.get())
+              .setSchemaUrl(databaseSchemaUrl());
           setDbClientExceptionEventExtractor(builder);
         },
         true);
@@ -402,7 +410,8 @@ public final class AwsSdkInstrumenterFactory {
         builder -> {
           builder
               .addAttributesExtractor(SqlClientAttributesExtractor.create(getter))
-              .addOperationMetrics(DbClientMetrics.get());
+              .addOperationMetrics(DbClientMetrics.get())
+              .setSchemaUrl(databaseSchemaUrl());
           setDbClientExceptionEventExtractor(builder);
         },
         true);
