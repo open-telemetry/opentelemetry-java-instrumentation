@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_PEER;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_TARGET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -117,7 +116,7 @@ class LettuceNetworkAttributesGetterTest {
   void commandKeepsConfiguredServerAddressWhenPeerIsUnknown() {
     RedisCommand<?, ?, ?> command = command();
     COMMAND_ADDRESS.set(command, InetSocketAddress.createUnresolved("redis.example", PORT));
-    COMMAND_TARGET.set(command, RedisServerTarget.ofHostAndPort("redis.example", PORT));
+    LettuceServerTargets.capture(command, RedisServerTarget.ofHostAndPort("redis.example", PORT));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
