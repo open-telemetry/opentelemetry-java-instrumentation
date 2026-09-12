@@ -218,9 +218,7 @@ class LettuceClusterClientTest {
                                   emitStableDatabaseSemconv() ? authenticatedIp : null),
                               equalTo(
                                   NETWORK_PEER_PORT,
-                                  emitStableDatabaseSemconv()
-                                      ? (long) authenticatedPort
-                                      : null))));
+                                  emitStableDatabaseSemconv() ? (long) authenticatedPort : null))));
     }
     testing.waitAndAssertTraces(traceAsserts);
   }
