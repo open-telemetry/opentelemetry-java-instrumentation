@@ -30,19 +30,6 @@ import net.bytebuddy.asm.Advice;
  * specific instrumentations may override this value.
  */
 class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
-  private static final ClassValue<Method> filterMethod =
-      new ClassValue<Method>() {
-        @Nullable
-        @Override
-        protected Method computeValue(Class<?> type) {
-          try {
-            return type.getMethod("filter", ContainerRequestContext.class);
-          } catch (NoSuchMethodException ignored) {
-            return null;
-          }
-        }
-      };
-
   @Override
   protected String abortAdviceName() {
     return getClass().getName() + "$ContainerRequestContextAdvice";
@@ -50,6 +37,18 @@ class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrum
 
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
+    private static final ClassValue<Method> filterMethod =
+        new ClassValue<Method>() {
+          @Nullable
+          @Override
+          protected Method computeValue(Class<?> type) {
+            try {
+              return type.getMethod("filter", ContainerRequestContext.class);
+            } catch (NoSuchMethodException ignored) {
+              return null;
+            }
+          }
+        };
 
     public static class AdviceScope {
       private final Context context;

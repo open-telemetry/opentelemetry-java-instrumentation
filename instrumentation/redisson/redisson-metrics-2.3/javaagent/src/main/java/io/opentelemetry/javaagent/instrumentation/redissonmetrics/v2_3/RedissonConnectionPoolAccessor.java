@@ -40,7 +40,7 @@ class RedissonConnectionPoolAccessor {
           } catch (NoSuchMethodException ignored) {
             try {
               return type.getMethod("getSlaveSubscriptionConnectionMinimumIdleSize");
-            } catch (NoSuchMethodException | SecurityException ignoredAgain) {
+            } catch (NoSuchMethodException | SecurityException ignore) {
               return null;
             }
           } catch (SecurityException ignored) {
