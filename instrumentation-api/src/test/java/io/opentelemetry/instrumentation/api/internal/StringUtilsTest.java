@@ -19,21 +19,24 @@ class StringUtilsTest {
     assertThat(StringUtils.truncate(unchanged, 4)).isSameAs(unchanged);
     assertThat(StringUtils.truncate("abcd", 3)).isEqualTo(unchanged);
     assertThat(StringUtils.truncate("ābc", 2)).isEqualTo("āb");
-    assertThat(StringUtils.truncate("a\uD83D\uDE00b", 1)).isEqualTo("a");
-    assertThat(StringUtils.truncate("a\uD83D\uDE00b", 2)).isEqualTo("a");
-    assertThat(StringUtils.truncate("a\uD83D\uDE00b", 3)).isEqualTo("a\uD83D\uDE00");
+    assertThat(StringUtils.truncate("a😀b", 1)).isEqualTo("a");
+    assertThat(StringUtils.truncate("a😀b", 2)).isEqualTo("a");
+    assertThat(StringUtils.truncate("a😀b", 3)).isEqualTo("a😀");
     assertThat(StringUtils.truncate(unchanged, 0)).isEmpty();
   }
 
   @Test
   void truncateStringPreservesMalformedSurrogates() {
-    assertThat(StringUtils.truncate("a\uD83Db", 2)).isEqualTo("a\uD83D");
-    assertThat(StringUtils.truncate("a\uDE00b", 2)).isEqualTo("a\uDE00");
+    char highSurrogate = (char) 0xd83d;
+    char lowSurrogate = (char) 0xde00;
+
+    assertThat(StringUtils.truncate("a" + highSurrogate + "b", 2)).isEqualTo("a" + highSurrogate);
+    assertThat(StringUtils.truncate("a" + lowSurrogate + "b", 2)).isEqualTo("a" + lowSurrogate);
   }
 
   @Test
   void truncateStringBuilder() {
-    StringBuilder value = new StringBuilder("a\uD83D\uDE00b");
+    StringBuilder value = new StringBuilder("a😀b");
 
     StringUtils.truncate(value, 2);
 
@@ -42,7 +45,7 @@ class StringUtilsTest {
 
   @Test
   void truncateStringBuffer() {
-    StringBuffer value = new StringBuffer("a\uD83D\uDE00b");
+    StringBuffer value = new StringBuffer("a😀b");
 
     StringUtils.truncate(value, 2);
 
@@ -53,7 +56,7 @@ class StringUtilsTest {
   void appendTruncated() {
     StringBuilder target = new StringBuilder("prefix:");
 
-    StringUtils.appendTruncated(target, "a\uD83D\uDE00b", 2);
+    StringUtils.appendTruncated(target, "a😀b", 2);
 
     assertThat(target).hasToString("prefix:a");
   }
