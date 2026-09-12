@@ -75,8 +75,7 @@ class OpenSearchBodyExtractorTest {
     JacksonJsonpMapper mapper = new JacksonJsonpMapper();
     String beforePair = repeat('a', MAX_QUERY_BODY_LENGTH - 3);
     JsonpSerializable value =
-        (generator, unused) ->
-            generator.writeStartObject().writeKey(beforePair + "\uD83D\uDE00").writeEnd();
+        (generator, unused) -> generator.writeStartObject().writeKey(beforePair + "😀").writeEnd();
 
     String result = OpenSearchBodyExtractor.extract(mapper, value, true);
 
