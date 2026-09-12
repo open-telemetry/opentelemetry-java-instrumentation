@@ -325,17 +325,16 @@ public class Resilience4jCircuitBreakerDecorators {
         if (pendingSpan == null) {
           return result;
         }
-        try {
-          CompletionStage<T> wrapped = wrapCompletionStage(result, pendingSpan);
-          pendingSpan.closeOperationScope();
-          return wrapped;
-        } catch (Throwable t) {
-          pendingSpan.end("failure", t);
-          throw t;
-        }
+        CompletionStage<T> wrapped = wrapCompletionStage(result, pendingSpan);
+        pendingSpan.closeOperationScope();
+        return wrapped;
       } catch (Throwable t) {
         if (pendingSpan != null) {
-          pendingSpan.end("failure", t);
+          if (t instanceof Exception) {
+            Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
+          } else {
+            pendingSpan.end("failure", t);
+          }
         }
         throw t;
       }
@@ -694,8 +693,13 @@ public class Resilience4jCircuitBreakerDecorators {
                 ? null
                 : Resilience4jCircuitBreakerSpans.unwrapCompletionException(throwable);
         if (unwrapped instanceof CancellationException) {
-          pendingSpan.end("cancelled", null);
-          invokeWhenComplete(callback, result, throwable);
+          try {
+            invokeWhenComplete(callback, result, throwable);
+            pendingSpan.end("cancelled", null);
+          } catch (Throwable t) {
+            pendingSpan.end("failure", t);
+            throw t;
+          }
           return;
         }
         if (throwable instanceof Error) {

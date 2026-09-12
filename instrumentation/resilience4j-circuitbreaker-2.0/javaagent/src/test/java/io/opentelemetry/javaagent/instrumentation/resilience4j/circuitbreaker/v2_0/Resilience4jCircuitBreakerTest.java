@@ -11,19 +11,17 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.TransitionCheckResult;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.time.Clock;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -36,8 +34,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -165,7 +161,7 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsCircuitBreakerSpanWhenOnSuccessCalledDirectly() throws Exception {
+  void createsCircuitBreakerSpanWhenOnSuccessCalledDirectly() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
 
     testing.runWithSpan(
@@ -179,11 +175,9 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsCircuitBreakerSpanWhenOnResultMatchesRecordResult() throws Exception {
-    Method recordResult = recordResultMethod();
-    Method onResult = onResultMethod();
+  void createsCircuitBreakerSpanWhenOnResultMatchesRecordResult() {
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    recordResult.invoke(builder, (Predicate<Object>) result -> Integer.valueOf(500).equals(result));
+    builder.recordResult(result -> Integer.valueOf(500).equals(result));
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
 
     testing.runWithSpan(
@@ -192,24 +186,20 @@ class Resilience4jCircuitBreakerTest {
           circuitBreaker.acquirePermission();
           // Verifies the recordResult -> ResultRecordedAsFailureException ->
           // publishCircuitErrorEvent path is captured as a failure span.
-          onResult.invoke(circuitBreaker, 1L, MILLISECONDS, 500);
+          circuitBreaker.onResult(1L, MILLISECONDS, 500);
         });
 
     assertCircuitBreakerSpan("closed", "failure", null);
   }
 
   @Test
-  void createsFailureSpanWhenOnResultTransitionThrows() throws Exception {
-    Method transitionOnResult = transitionOnResultMethod();
-    Method onResult = onResultMethod();
+  void createsFailureSpanWhenOnResultTransitionThrows() {
     IllegalStateException exception = new IllegalStateException("boom");
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    transitionOnResult.invoke(
-        builder,
-        (Function<Object, Object>)
-            result -> {
-              throw exception;
-            });
+    builder.transitionOnResult(
+        result -> {
+          throw exception;
+        });
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
 
     Throwable thrown =
@@ -219,35 +209,30 @@ class Resilience4jCircuitBreakerTest {
                     "parent",
                     () -> {
                       circuitBreaker.acquirePermission();
-                      onResult.invoke(circuitBreaker, 1L, MILLISECONDS, 500);
+                      circuitBreaker.onResult(1L, MILLISECONDS, 500);
                     }));
 
-    assertThat(thrown).isInstanceOf(InvocationTargetException.class).hasCause(exception);
+    assertThat(thrown).isSameAs(exception);
     assertCircuitBreakerSpan("closed", "failure", exception);
   }
 
   @Test
-  void createsFailureSpanWhenOnResultRecordsFailureBeforeTransitionCheck() throws Exception {
-    Method recordResult = recordResultMethod();
-    Method transitionOnResult = transitionOnResultMethod();
-    Method onResult = onResultMethod();
+  void createsFailureSpanWhenOnResultRecordsFailureBeforeTransitionCheck() {
     AtomicReference<Object> transitionResult = new AtomicReference<>();
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    recordResult.invoke(builder, (Predicate<Object>) result -> true);
-    transitionOnResult.invoke(
-        builder,
-        (Function<Object, Object>)
-            result -> {
-              transitionResult.set(result);
-              return noTransitionResult();
-            });
+    builder.recordResult(result -> true);
+    builder.transitionOnResult(
+        result -> {
+          transitionResult.set(result);
+          return TransitionCheckResult.noTransition();
+        });
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
 
     testing.runWithSpan(
         "parent",
         () -> {
           circuitBreaker.acquirePermission();
-          onResult.invoke(circuitBreaker, 1L, MILLISECONDS, 500);
+          circuitBreaker.onResult(1L, MILLISECONDS, 500);
         });
 
     assertThat(transitionResult.get()).isNull();
@@ -255,18 +240,15 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void onResultOnlySuppressesOnSuccessForSameCircuitBreaker() throws Exception {
-    Method transitionOnResult = transitionOnResultMethod();
+  void onResultOnlySuppressesOnSuccessForSameCircuitBreaker() {
     CircuitBreaker innerCircuitBreaker = CircuitBreaker.ofDefaults("inner-circuit-breaker");
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    transitionOnResult.invoke(
-        builder,
-        (Function<Object, Object>)
-            result -> {
-              innerCircuitBreaker.acquirePermission();
-              invokeOnSuccess(innerCircuitBreaker);
-              return noTransitionResult();
-            });
+    builder.transitionOnResult(
+        result -> {
+          innerCircuitBreaker.acquirePermission();
+          invokeOnSuccess(innerCircuitBreaker);
+          return TransitionCheckResult.noTransition();
+        });
     CircuitBreaker outerCircuitBreaker =
         CircuitBreaker.of("outer-circuit-breaker", builder.build());
     Supplier<Integer> decorated = CircuitBreaker.decorateSupplier(outerCircuitBreaker, () -> 500);
@@ -309,18 +291,15 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void onResultDoesNotSuppressNestedAttemptForSameCircuitBreaker() throws Exception {
-    Method transitionOnResult = transitionOnResultMethod();
+  void onResultDoesNotSuppressNestedAttemptForSameCircuitBreaker() {
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
     CircuitBreaker[] circuitBreakerHolder = new CircuitBreaker[1];
-    transitionOnResult.invoke(
-        builder,
-        (Function<Object, Object>)
-            result -> {
-              circuitBreakerHolder[0].acquirePermission();
-              invokeOnSuccess(circuitBreakerHolder[0]);
-              return noTransitionResult();
-            });
+    builder.transitionOnResult(
+        result -> {
+          circuitBreakerHolder[0].acquirePermission();
+          invokeOnSuccess(circuitBreakerHolder[0]);
+          return TransitionCheckResult.noTransition();
+        });
     circuitBreakerHolder[0] = CircuitBreaker.of("test-circuit-breaker", builder.build());
     Supplier<Integer> decorated =
         CircuitBreaker.decorateSupplier(circuitBreakerHolder[0], () -> 500);
@@ -363,24 +342,18 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
-  void createsFailureSpanWhenDecoratedCompletionStageTimestampFunctionThrows() throws Exception {
-    Method currentTimestampFunction = currentTimestampFunctionMethod();
-    Method decorateCompletionStage = decorateCompletionStageMethod();
+  void createsFailureSpanWhenDecoratedCompletionStageTimestampFunctionThrows() {
     IllegalStateException exception = new IllegalStateException("boom");
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    currentTimestampFunction.invoke(
-        builder,
-        (Function<Clock, Long>)
-            clock -> {
-              throw exception;
-            },
+    builder.currentTimestampFunction(
+        clock -> {
+          throw exception;
+        },
         NANOSECONDS);
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
     Supplier<CompletionStage<String>> supplier = () -> CompletableFuture.completedFuture("ok");
     Supplier<CompletionStage<String>> decoratedSupplier =
-        (Supplier<CompletionStage<String>>)
-            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier);
 
     Throwable thrown = catchThrowable(() -> testing.runWithSpan("parent", decoratedSupplier::get));
 
@@ -389,16 +362,36 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
+  void createsFailureSpanWhenDecoratedCompletionStageSupplierCallbackThrows() {
+    IllegalArgumentException originalException = new IllegalArgumentException("original");
+    IllegalStateException callbackException = new IllegalStateException("boom");
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    builder.recordException(
+        throwable -> {
+          throw callbackException;
+        });
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    Supplier<CompletionStage<String>> supplier =
+        () -> {
+          throw originalException;
+        };
+    Supplier<CompletionStage<String>> decoratedSupplier =
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier);
+
+    Throwable thrown = catchThrowable(() -> testing.runWithSpan("parent", decoratedSupplier::get));
+
+    assertThat(thrown).isSameAs(callbackException);
+    assertCircuitBreakerSpan("closed", "failure", callbackException);
+  }
+
+  @Test
   void createsCircuitBreakerSpanWhenDecoratedCompletionStageCompletesOnDifferentThread()
       throws Exception {
-    Method decorateCompletionStage = decorateCompletionStageMethod();
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     CompletableFuture<String> future = new CompletableFuture<>();
     Supplier<CompletionStage<String>> supplier = () -> future;
     Supplier<CompletionStage<String>> decoratedSupplier =
-        (Supplier<CompletionStage<String>>)
-            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier);
     ExecutorService executor = Executors.newSingleThreadExecutor();
     AtomicReference<Thread> completionThread = new AtomicReference<>();
     try {
@@ -422,9 +415,7 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void circuitBreakerSpanIsParentOfDecoratedCompletionStageWork() throws Exception {
-    Method decorateCompletionStage = decorateCompletionStageMethod();
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Supplier<CompletionStage<String>> supplier =
@@ -432,8 +423,7 @@ class Resilience4jCircuitBreakerTest {
             CompletableFuture.supplyAsync(
                 () -> testing.runWithSpan("protected-operation", () -> "ok"), executor);
     Supplier<CompletionStage<String>> decoratedSupplier =
-        (Supplier<CompletionStage<String>>)
-            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier);
     try {
       CompletionStage<String> stage = testing.runWithSpan("parent", decoratedSupplier::get);
 
@@ -446,31 +436,25 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void decoratedCompletionStageAsyncCallbackPrefersNestedRawAcquisitionForSameBreaker()
       throws Exception {
-    Method recordResult = recordResultMethod();
-    Method decorateCompletionStage = decorateCompletionStageMethod();
     IllegalStateException exception = new IllegalStateException("boom");
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
     CircuitBreaker[] circuitBreakerHolder = new CircuitBreaker[1];
     AtomicReference<Thread> callbackThread = new AtomicReference<>();
-    recordResult.invoke(
-        builder,
-        (Predicate<Object>)
-            result -> {
-              callbackThread.set(Thread.currentThread());
-              circuitBreakerHolder[0].acquirePermission();
-              invokeOnError(circuitBreakerHolder[0], exception);
-              return false;
-            });
+    builder.recordResult(
+        result -> {
+          callbackThread.set(Thread.currentThread());
+          circuitBreakerHolder[0].acquirePermission();
+          invokeOnError(circuitBreakerHolder[0], exception);
+          return false;
+        });
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
     circuitBreakerHolder[0] = circuitBreaker;
     CompletableFuture<String> future = new CompletableFuture<>();
     Supplier<CompletionStage<String>> supplier = () -> future;
     Supplier<CompletionStage<String>> decoratedSupplier =
-        (Supplier<CompletionStage<String>>)
-            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier);
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Thread callingThread = Thread.currentThread();
@@ -515,17 +499,14 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createsFailureSpanWhenDecoratedCompletionStageCompletesWithCompletionException()
       throws Exception {
-    Method decorateCompletionStage = decorateCompletionStageMethod();
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     IllegalStateException cause = new IllegalStateException("boom");
     CompletableFuture<String> future = new CompletableFuture<>();
     Supplier<CompletionStage<String>> supplier = () -> future;
     Supplier<CompletionStage<String>> decoratedSupplier =
-        (Supplier<CompletionStage<String>>)
-            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier);
 
     CompletionStage<String> stage = testing.runWithSpan("parent", decoratedSupplier::get);
     future.completeExceptionally(new CompletionException(cause));
@@ -537,15 +518,12 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createsCancelledSpanWhenDecoratedCompletionStageIsCancelled() throws Exception {
-    Method decorateCompletionStage = decorateCompletionStageMethod();
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     CompletableFuture<String> future = new CompletableFuture<>();
     Supplier<CompletionStage<String>> supplier = () -> future;
     Supplier<CompletionStage<String>> decoratedSupplier =
-        (Supplier<CompletionStage<String>>)
-            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier);
 
     CompletionStage<String> stage = testing.runWithSpan("parent", decoratedSupplier::get);
     assertThat(future.cancel(true)).isTrue();
@@ -557,19 +535,35 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
+  void createsFailureSpanWhenDecoratedCompletionStageCancellationCallbackThrows() {
+    IllegalStateException callbackException = new IllegalStateException("boom");
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    builder.recordException(
+        throwable -> {
+          throw callbackException;
+        });
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    CompletableFuture<String> future = new CompletableFuture<>();
+    Supplier<CompletionStage<String>> supplier = () -> future;
+    Supplier<CompletionStage<String>> decoratedSupplier =
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier);
+
+    assertThat(testing.runWithSpan("parent", decoratedSupplier::get)).isNotNull();
+    assertThat(future.cancel(true)).isTrue();
+
+    assertCircuitBreakerSpan("closed", "failure", callbackException);
+  }
+
+  @Test
   void createsCircuitBreakerSpanWhenDecoratedCompletionStageResultMatchesRecordResult()
       throws Exception {
-    Method recordResult = recordResultMethod();
-    Method decorateCompletionStage = decorateCompletionStageMethod();
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    recordResult.invoke(builder, (Predicate<Object>) result -> Integer.valueOf(500).equals(result));
+    builder.recordResult(result -> Integer.valueOf(500).equals(result));
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
     CompletableFuture<Integer> future = new CompletableFuture<>();
     Supplier<CompletionStage<Integer>> supplier = () -> future;
     Supplier<CompletionStage<Integer>> decoratedSupplier =
-        (Supplier<CompletionStage<Integer>>)
-            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier);
 
     CompletionStage<Integer> stage = testing.runWithSpan("parent", decoratedSupplier::get);
     future.complete(500);
@@ -579,19 +573,15 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createsFailureSpanWhenDecoratedCompletionStageResultMatchesPredicateOnDifferentThread()
       throws Exception {
-    Method recordResult = recordResultMethod();
-    Method decorateCompletionStage = decorateCompletionStageMethod();
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    recordResult.invoke(builder, (Predicate<Object>) result -> Integer.valueOf(500).equals(result));
+    builder.recordResult(result -> Integer.valueOf(500).equals(result));
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
     CompletableFuture<Integer> future = new CompletableFuture<>();
     Supplier<CompletionStage<Integer>> supplier = () -> future;
     Supplier<CompletionStage<Integer>> decoratedSupplier =
-        (Supplier<CompletionStage<Integer>>)
-            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier);
     ExecutorService executor = Executors.newSingleThreadExecutor();
     try {
       CompletionStage<Integer> stage = testing.runWithSpan("parent", decoratedSupplier::get);
@@ -606,14 +596,12 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createsCircuitBreakerSpanWhenDecoratedFutureConsumedOnDifferentThread() throws Exception {
-    Method decorateFuture = decorateFutureMethod();
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     CompletableFuture<String> future = CompletableFuture.completedFuture("ok");
     Supplier<Future<String>> supplier = () -> future;
     Supplier<Future<String>> decoratedSupplier =
-        (Supplier<Future<String>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateFuture(circuitBreaker, supplier);
     ExecutorService executor = Executors.newSingleThreadExecutor();
     AtomicReference<Thread> getThread = new AtomicReference<>();
     try {
@@ -638,15 +626,13 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void circuitBreakerSpanIsParentOfDecoratedFutureWork() throws Exception {
-    Method decorateFuture = decorateFutureMethod();
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Supplier<Future<String>> supplier =
         () -> executor.submit(() -> testing.runWithSpan("protected-operation", () -> "ok"));
     Supplier<Future<String>> decoratedSupplier =
-        (Supplier<Future<String>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateFuture(circuitBreaker, supplier);
     try {
       Future<String> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
 
@@ -659,17 +645,14 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createsCircuitBreakerSpanWhenDecoratedFutureResultMatchesRecordResult() throws Exception {
-    Method recordResult = recordResultMethod();
-    Method decorateFuture = decorateFutureMethod();
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    recordResult.invoke(builder, (Predicate<Object>) result -> Integer.valueOf(500).equals(result));
+    builder.recordResult(result -> Integer.valueOf(500).equals(result));
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
     CompletableFuture<Integer> future = CompletableFuture.completedFuture(500);
     Supplier<Future<Integer>> supplier = () -> future;
     Supplier<Future<Integer>> decoratedSupplier =
-        (Supplier<Future<Integer>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateFuture(circuitBreaker, supplier);
 
     Future<Integer> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
 
@@ -678,18 +661,15 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createsFailureSpanWhenDecoratedFutureResultMatchesPredicateOnDifferentThread()
       throws Exception {
-    Method recordResult = recordResultMethod();
-    Method decorateFuture = decorateFutureMethod();
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    recordResult.invoke(builder, (Predicate<Object>) result -> Integer.valueOf(500).equals(result));
+    builder.recordResult(result -> Integer.valueOf(500).equals(result));
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
     CompletableFuture<Integer> future = CompletableFuture.completedFuture(500);
     Supplier<Future<Integer>> supplier = () -> future;
     Supplier<Future<Integer>> decoratedSupplier =
-        (Supplier<Future<Integer>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+        CircuitBreaker.decorateFuture(circuitBreaker, supplier);
     ExecutorService executor = Executors.newSingleThreadExecutor();
     try {
       Future<Integer> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
@@ -744,7 +724,7 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsCircuitBreakerSpanWhenOnErrorCalledDirectly() throws Exception {
+  void createsCircuitBreakerSpanWhenOnErrorCalledDirectly() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     IllegalStateException exception = new IllegalStateException("boom");
 
@@ -759,7 +739,7 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void rawRecentAcquisitionsAreTrackedPerCircuitBreaker() throws Exception {
+  void rawRecentAcquisitionsAreTrackedPerCircuitBreaker() {
     CircuitBreaker circuitBreakerA = CircuitBreaker.ofDefaults("a-circuit-breaker");
     CircuitBreaker circuitBreakerB = CircuitBreaker.ofDefaults("b-circuit-breaker");
 
@@ -807,19 +787,16 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void releasePermissionDoesNotSuppressNestedAttemptForSameCircuitBreaker() throws Exception {
-    Method recordException = recordExceptionMethod();
+  void releasePermissionDoesNotSuppressNestedAttemptForSameCircuitBreaker() {
     IllegalArgumentException outerException = new IllegalArgumentException("outer");
     CircuitBreaker[] circuitBreakerHolder = new CircuitBreaker[1];
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    recordException.invoke(
-        builder,
-        (Predicate<Throwable>)
-            throwable -> {
-              circuitBreakerHolder[0].acquirePermission();
-              circuitBreakerHolder[0].releasePermission();
-              return true;
-            });
+    builder.recordException(
+        throwable -> {
+          circuitBreakerHolder[0].acquirePermission();
+          circuitBreakerHolder[0].releasePermission();
+          return true;
+        });
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
     circuitBreakerHolder[0] = circuitBreaker;
 
@@ -861,17 +838,14 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsFailureSpanWhenOnErrorCallbackThrows() throws Exception {
-    Method recordException = recordExceptionMethod();
+  void createsFailureSpanWhenOnErrorCallbackThrows() {
     IllegalArgumentException originalException = new IllegalArgumentException("original");
     IllegalStateException callbackException = new IllegalStateException("boom");
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-    recordException.invoke(
-        builder,
-        (Predicate<Throwable>)
-            throwable -> {
-              throw callbackException;
-            });
+    builder.recordException(
+        throwable -> {
+          throw callbackException;
+        });
     CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
 
     Throwable thrown =
@@ -889,7 +863,7 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void rawOutOfOrderCallbacksRecordRecentSameThreadAttempts() throws Exception {
+  void rawOutOfOrderCallbacksRecordRecentSameThreadAttempts() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     IllegalStateException exception = new IllegalStateException("boom");
 
@@ -948,7 +922,7 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void decoratedSupplierDoesNotEndNestedRawAttemptForSameBreaker() throws Exception {
+  void decoratedSupplierDoesNotEndNestedRawAttemptForSameBreaker() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     IllegalStateException exception = new IllegalStateException("boom");
     Supplier<String> decorated =
@@ -1027,17 +1001,16 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsCircuitBreakerSpanWhenUncheckedCheckedSupplierThrowsError() throws Exception {
+  void createsCircuitBreakerSpanWhenUncheckedCheckedSupplierThrowsError() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     AssertionError error = new AssertionError("boom");
-    Object checkedSupplier =
+    CheckedSupplier<?> checkedSupplier =
         CircuitBreaker.decorateCheckedSupplier(
             circuitBreaker,
             () -> {
               throw error;
             });
-    Method unchecked = uncheckedMethod(checkedSupplier);
-    Supplier<?> supplier = (Supplier<?>) unchecked.invoke(checkedSupplier);
+    Supplier<?> supplier = checkedSupplier.unchecked();
 
     Throwable thrown = catchThrowable(() -> testing.runWithSpan("parent", supplier::get));
 
@@ -1046,13 +1019,12 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void checkedSupplierReturningSupplierPreservesApplicationResultIdentity() throws Exception {
+  void checkedSupplierReturningSupplierPreservesApplicationResultIdentity() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     Supplier<String> applicationSupplier = () -> "ok";
-    Object checkedSupplier =
+    CheckedSupplier<Supplier<String>> checkedSupplier =
         CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> applicationSupplier);
-    Method unchecked = uncheckedMethod(checkedSupplier);
-    Supplier<?> supplier = (Supplier<?>) unchecked.invoke(checkedSupplier);
+    Supplier<Supplier<String>> supplier = checkedSupplier.unchecked();
 
     Object result = testing.runWithSpan("parent", supplier::get);
 
@@ -1157,98 +1129,10 @@ class Resilience4jCircuitBreakerTest {
     circuitBreaker.onError(1L, MILLISECONDS, throwable);
   }
 
-  private static Method recordResultMethod() throws NoSuchMethodException {
-    try {
-      return CircuitBreakerConfig.Builder.class.getMethod("recordResult", Predicate.class);
-    } catch (NoSuchMethodException e) {
-      assumeTrue(false, "recordResult is not available in this Resilience4j version");
-      throw e;
-    }
-  }
-
-  private static Method recordExceptionMethod() throws NoSuchMethodException {
-    try {
-      return CircuitBreakerConfig.Builder.class.getMethod("recordException", Predicate.class);
-    } catch (NoSuchMethodException e) {
-      assumeTrue(false, "recordException is not available in this Resilience4j version");
-      throw e;
-    }
-  }
-
-  private static Method transitionOnResultMethod() throws NoSuchMethodException {
-    try {
-      return CircuitBreakerConfig.Builder.class.getMethod("transitionOnResult", Function.class);
-    } catch (NoSuchMethodException e) {
-      assumeTrue(false, "transitionOnResult is not available in this Resilience4j version");
-      throw e;
-    }
-  }
-
-  private static Method currentTimestampFunctionMethod() throws NoSuchMethodException {
-    try {
-      return CircuitBreakerConfig.Builder.class.getMethod(
-          "currentTimestampFunction", Function.class, TimeUnit.class);
-    } catch (NoSuchMethodException e) {
-      assumeTrue(false, "currentTimestampFunction is not available in this Resilience4j version");
-      throw e;
-    }
-  }
-
-  private static Method uncheckedMethod(Object checkedSupplier) throws NoSuchMethodException {
-    try {
-      return checkedSupplier.getClass().getMethod("unchecked");
-    } catch (NoSuchMethodException e) {
-      assumeTrue(false, "unchecked is not available in this Resilience4j version");
-      throw e;
-    }
-  }
-
-  private static Method decorateFutureMethod() throws NoSuchMethodException {
-    try {
-      return CircuitBreaker.class.getMethod("decorateFuture", CircuitBreaker.class, Supplier.class);
-    } catch (NoSuchMethodException e) {
-      assumeTrue(false, "decorateFuture is not available in this Resilience4j version");
-      throw e;
-    }
-  }
-
-  private static Method decorateCompletionStageMethod() throws NoSuchMethodException {
-    try {
-      return CircuitBreaker.class.getMethod(
-          "decorateCompletionStage", CircuitBreaker.class, Supplier.class);
-    } catch (NoSuchMethodException e) {
-      assumeTrue(false, "decorateCompletionStage is not available in this Resilience4j version");
-      throw e;
-    }
-  }
-
-  private static Method onResultMethod() throws NoSuchMethodException {
-    try {
-      return CircuitBreaker.class.getMethod("onResult", long.class, TimeUnit.class, Object.class);
-    } catch (NoSuchMethodException e) {
-      assumeTrue(false, "onResult is not available in this Resilience4j version");
-      throw e;
-    }
-  }
-
-  private static Object noTransitionResult() {
-    try {
-      Class<?> transitionCheckResult =
-          Class.forName(
-              "io.github.resilience4j.circuitbreaker.CircuitBreakerConfig$TransitionCheckResult");
-      return transitionCheckResult.getMethod("noTransition").invoke(null);
-    } catch (Exception e) {
-      throw new AssertionError(e);
-    }
-  }
-
   private static <T> Future<T> decoratedFuture(Future<T> future) throws Exception {
-    Method decorateFuture = decorateFutureMethod();
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     Supplier<Future<T>> supplier = () -> future;
-    @SuppressWarnings("unchecked")
-    Supplier<Future<T>> decoratedSupplier =
-        (Supplier<Future<T>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+    Supplier<Future<T>> decoratedSupplier = CircuitBreaker.decorateFuture(circuitBreaker, supplier);
     return testing.runWithSpan("parent", decoratedSupplier::get);
   }
 
