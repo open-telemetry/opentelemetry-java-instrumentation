@@ -242,7 +242,7 @@ class RedisCommandSanitizerTest {
 
   @Test
   void doesNotSplitSurrogatePairWhenTruncating() {
-    String argument = repeat('a', RedisCommandSanitizer.LIMIT - 5) + "\uD83D\uDE00";
+    String argument = repeat('a', RedisCommandSanitizer.LIMIT - 5) + "😀";
 
     String result = RedisCommandSanitizer.create(true).sanitize("GET", list(argument));
 

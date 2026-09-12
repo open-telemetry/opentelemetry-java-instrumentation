@@ -296,7 +296,7 @@ class SqlQueryAnalyzerTest {
   void queryTextTruncationDoesNotSplitSurrogatePair() {
     String beforePair = repeat('A', AutoSqlSanitizer.LIMIT - 1);
 
-    SqlQuery result = analyze(beforePair + "\uD83D\uDE00");
+    SqlQuery result = analyze(beforePair + "😀");
 
     assertThat(result.getQueryText()).isEqualTo(beforePair);
   }
@@ -380,8 +380,7 @@ class SqlQueryAnalyzerTest {
   void querySummaryTruncationDoesNotSplitSurrogatePair() {
     String beforePair = repeat('A', 254);
 
-    String summary =
-        SqlQuery.createWithSummary(null, null, beforePair + "\uD83D\uDE00").getQuerySummary();
+    String summary = SqlQuery.createWithSummary(null, null, beforePair + "😀").getQuerySummary();
 
     assertThat(summary).isEqualTo(beforePair);
   }
