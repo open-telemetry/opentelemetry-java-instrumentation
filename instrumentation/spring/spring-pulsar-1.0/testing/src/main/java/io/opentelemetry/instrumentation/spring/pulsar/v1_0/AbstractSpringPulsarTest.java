@@ -223,15 +223,10 @@ public abstract class AbstractSpringPulsarTest {
         satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isNotNegative),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
-        subscriptionName(),
+        equalTo(
+            MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+            emitStableMessagingSemconv() ? OTEL_SUBSCRIPTION : null),
         bodySize());
-  }
-
-  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
-  private static AttributeAssertion subscriptionName() {
-    return equalTo(
-        MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-        emitStableMessagingSemconv() ? OTEL_SUBSCRIPTION : null);
   }
 
   @SpringBootConfiguration

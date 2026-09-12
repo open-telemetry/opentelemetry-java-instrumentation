@@ -190,7 +190,9 @@ class Jms2InstrumentationTest {
                                 MESSAGING_OPERATION_TYPE,
                                 emitStableMessagingSemconv() ? "receive" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            subscriptionName("durable-subscription"))));
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                emitStableMessagingSemconv() ? "durable-subscription" : null))));
   }
 
   @ParameterizedTest
@@ -251,7 +253,9 @@ class Jms2InstrumentationTest {
                                 MESSAGING_OPERATION_TYPE,
                                 emitStableMessagingSemconv() ? "receive" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            subscriptionName(subscriptionName))));
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                emitStableMessagingSemconv() ? subscriptionName : null))));
   }
 
   @ParameterizedTest
@@ -292,7 +296,9 @@ class Jms2InstrumentationTest {
                                 MESSAGING_OPERATION_TYPE,
                                 emitStableMessagingSemconv() ? "process" : null),
                             messagingTempDestination(false),
-                            subscriptionName(subscriptionName))));
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                emitStableMessagingSemconv() ? subscriptionName : null))));
   }
 
   @Test
@@ -331,7 +337,11 @@ class Jms2InstrumentationTest {
                                 MESSAGING_OPERATION_TYPE,
                                 emitStableMessagingSemconv() ? "process" : null),
                             messagingTempDestination(false),
-                            subscriptionName("reused-listener-subscription"))));
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                emitStableMessagingSemconv()
+                                    ? "reused-listener-subscription"
+                                    : null))));
   }
 
   @MethodSource("destinationArguments")
@@ -530,12 +540,6 @@ class Jms2InstrumentationTest {
     return emitStableMessagingSemconv() && isTemporary
         ? satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty())
         : equalTo(MESSAGING_DESTINATION_NAME, destinationName);
-  }
-
-  private static AttributeAssertion subscriptionName(String subscriptionName) {
-    return equalTo(
-        MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-        emitStableMessagingSemconv() ? subscriptionName : null);
   }
 
   private static Stream<Arguments> emptyReceiveArguments() {
