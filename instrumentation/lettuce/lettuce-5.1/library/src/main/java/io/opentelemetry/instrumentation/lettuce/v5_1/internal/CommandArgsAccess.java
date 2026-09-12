@@ -5,15 +5,17 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1.internal;
 
+import static java.util.Collections.emptyList;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.WARNING;
+
 import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.protocol.CommandArgs;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -46,15 +48,14 @@ public final class CommandArgsAccess {
   @Nullable
   private static final Field valueArgumentCodecField = findField(valueArgumentClass, "codec");
 
-  @Nullable
-  private static final Field valueArgumentValField = findField(valueArgumentClass, "val");
+  @Nullable private static final Field valueArgumentValField = findField(valueArgumentClass, "val");
 
   @Nullable
   private static Class<?> loadNestedClass(String name) {
     try {
       return Class.forName(name, false, CommandArgs.class.getClassLoader());
     } catch (Throwable t) {
-      logger.log(Level.WARNING, "Failed to load class " + name, t);
+      logger.log(WARNING, "Failed to load class " + name, t);
       return null;
     }
   }
@@ -69,24 +70,24 @@ public final class CommandArgsAccess {
       field.setAccessible(true);
       return field;
     } catch (Throwable t) {
-      logger.log(Level.WARNING, "Failed to locate " + owner.getName() + "#" + name + " field", t);
+      logger.log(WARNING, "Failed to locate " + owner.getName() + "#" + name + " field", t);
       return null;
     }
   }
 
   public static List<String> getCommandArgs(CommandArgs<?, ?> commandArgs) {
     if (singularArgumentsField == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<?> singularArguments;
     try {
       singularArguments = (List<?>) singularArgumentsField.get(commandArgs);
     } catch (Throwable t) {
-      logger.log(Level.FINE, "Failed to read CommandArgs#singularArguments field", t);
-      return Collections.emptyList();
+      logger.log(FINE, "Failed to read CommandArgs#singularArguments field", t);
+      return emptyList();
     }
     if (singularArguments == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> result = new ArrayList<>(singularArguments.size());
     for (Object argument : singularArguments) {
@@ -115,14 +116,13 @@ public final class CommandArgsAccess {
           && valueArgumentClass.isInstance(argument)
           && valueArgumentCodecField != null
           && valueArgumentValField != null) {
-        RedisCodec<?, Object> codec =
-            (RedisCodec<?, Object>) valueArgumentCodecField.get(argument);
+        RedisCodec<?, Object> codec = (RedisCodec<?, Object>) valueArgumentCodecField.get(argument);
         Object val = valueArgumentValField.get(argument);
         ByteBuffer encoded = codec.encodeValue(val);
         return stringCodec.decodeValue(encoded);
       }
     } catch (Throwable t) {
-      logger.log(Level.FINE, "Failed to reflectively decode CommandArgs argument", t);
+      logger.log(FINE, "Failed to reflectively decode CommandArgs argument", t);
     }
     return argument.toString();
   }
