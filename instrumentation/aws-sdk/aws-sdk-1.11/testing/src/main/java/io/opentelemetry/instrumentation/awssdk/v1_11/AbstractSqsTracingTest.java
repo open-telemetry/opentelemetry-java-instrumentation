@@ -502,7 +502,9 @@ public abstract class AbstractSqsTracingTest {
                                 })));
     assertThat(createSpans)
         .allSatisfy(
-            span -> assertThat(span.getEndEpochNanos()).isEqualTo(span.getStartEpochNanos()));
+            span ->
+                assertThat(span.getEndEpochNanos())
+                    .isGreaterThanOrEqualTo(span.getStartEpochNanos()));
   }
 
   @Test

@@ -1,7 +1,7 @@
 display_name: Couchbase Client
 description: >
-  Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation
-  automatically configures the instrumentation provided by the Couchbase library.
+  This instrumentation uses the Couchbase tracing SPI to create database client spans for Couchbase
+  Java SDK 3.1.
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
 library_link: https://github.com/couchbase/couchbase-java-client
@@ -11,5 +11,3 @@ configurations:
     description: Enables experimental span attributes emitted from the underlying Couchbase library.
     type: boolean
     default: false
-features:
-  - AUTO_INSTRUMENTATION_SHIM

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -14,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -38,8 +35,13 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase sqlClientBase) {
-      // copy connection options from ThreadLocal to VirtualField
-      VertxSqlClientSingletons.attachConnectOptions(sqlClientBase, getSqlConnectOptions());
+      VertxSqlClientConstructionState state = VertxSqlClientSingletons.getConstructionState();
+      if (state != null) {
+        state.attachClient(sqlClientBase);
+      } else {
+        VertxSqlClientSingletons.attachClientInfo(
+            sqlClientBase, VertxSqlClientSingletons.getClientInfo());
+      }
     }
   }
 
@@ -52,10 +54,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
 
-      // set connection options to ThreadLocal, they will be read in QueryExecutor constructor
-      SqlConnectOptions sqlConnectOptions =
-          VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
-      setSqlConnectOptions(sqlConnectOptions);
+      VertxSqlClientSingletons.setClientInfo(VertxSqlClientSingletons.getClientInfo(sqlClientBase));
       return callDepth;
     }
 
@@ -65,7 +64,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      setSqlConnectOptions(null);
+      VertxSqlClientSingletons.setClientInfo(null);
     }
   }
 }

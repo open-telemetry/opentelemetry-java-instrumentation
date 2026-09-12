@@ -153,7 +153,7 @@ public class DbConnectionPoolMetricsAssertions {
   private void verifyMaxConnections() {
     testing.waitAndAssertMetrics(
         instrumentationName,
-        emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max",
+        emitStableDatabaseSemconv() ? "db.client.connection.limit" : "db.client.connections.max",
         metrics -> metrics.anySatisfy(this::verifyMaxConnectionsMetric));
   }
 
