@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor.constant;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -110,6 +111,7 @@ class RocketMqInstrumenterFactory {
                 openTelemetry, INSTRUMENTATION_NAME, request -> "multiple_sources receive")
             .addAttributesExtractor(constant(MESSAGING_SYSTEM, "rocketmq"))
             .addAttributesExtractor(constant(MESSAGING_OPERATION, "receive"))
+            .setSchemaUrl(messagingSchemaUrl(false))
             .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
 
     return new RocketMqConsumerInstrumenter(
