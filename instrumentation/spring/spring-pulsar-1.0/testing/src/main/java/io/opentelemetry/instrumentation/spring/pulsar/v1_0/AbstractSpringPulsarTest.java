@@ -180,9 +180,9 @@ public abstract class AbstractSpringPulsarTest {
   protected List<AttributeAssertion> publishAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        oldOperation("publish"),
-        operationName("send"),
-        operationType("send"),
+        equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+        equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+        equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
         bodySize(),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
@@ -198,9 +198,9 @@ public abstract class AbstractSpringPulsarTest {
   protected List<AttributeAssertion> processAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        oldOperation("process"),
-        operationName("process"),
-        operationType("process"),
+        equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+        equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
+        equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
         bodySize(),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC));
@@ -216,9 +216,9 @@ public abstract class AbstractSpringPulsarTest {
   protected List<AttributeAssertion> receiveAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        oldOperation("receive"),
-        operationName("receive"),
-        operationType("receive"),
+        equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+        equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null),
+        equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
         satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isNotNegative),
         equalTo(SERVER_ADDRESS, brokerHost),
@@ -232,18 +232,6 @@ public abstract class AbstractSpringPulsarTest {
     return equalTo(
         MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
         emitStableMessagingSemconv() ? OTEL_SUBSCRIPTION : null);
-  }
-
-  private static AttributeAssertion oldOperation(String operation) {
-    return equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationName(String operation) {
-    return equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationType(String operation) {
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 
   @SpringBootConfiguration
