@@ -1,10 +1,12 @@
-# Settings for the Resilience4j instrumentation
+# Resilience4j CircuitBreaker Instrumentation
 
-The Resilience4j CircuitBreaker instrumentation emits one `INTERNAL` span for each protected-call
-attempt made through decorated APIs while there is an active parent span. Direct
-`acquirePermission()` and completion callback usage is correlated on a best-effort basis when the
-callbacks occur on the same thread. The span name is `CircuitBreaker <name>`. Rejected and failed
-calls are reported as error spans.
+The Resilience4j CircuitBreaker instrumentation for versions 2.0 and higher emits one `INTERNAL`
+span for each protected-call attempt made through decorated APIs while there is an active parent
+span. Direct `acquirePermission()` and completion callback usage is correlated on a best-effort
+basis when the callbacks occur on the same thread. The span name is `CircuitBreaker <name>`.
+Rejected and failed calls are reported as error spans.
+
+## Settings
 
 | System property | Type | Default | Description |
 | --- | --- | --- | --- |
