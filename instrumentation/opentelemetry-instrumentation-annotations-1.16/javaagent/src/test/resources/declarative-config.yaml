@@ -1,4 +1,10 @@
 file_format: "1.1"
+meter_provider:
+  readers:
+    - periodic:
+        interval: 100
+        exporter:
+          agent_test:
 instrumentation/development:
   java:
     opentelemetry_instrumentation_annotations:

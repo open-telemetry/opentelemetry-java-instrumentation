@@ -2,7 +2,7 @@ display_name: OpenTelemetry Instrumentation Annotations
 classification: custom
 description: >
   Instruments methods annotated with OpenTelemetry instrumentation annotations, such as @WithSpan
-  and @SpanAttribute.
+  and @Counted, and parameters annotated with @SpanAttribute.
 configurations:
   - name: otel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods
     declarative_name: java.opentelemetry_instrumentation_annotations.exclude_methods
