@@ -20,10 +20,20 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Container.ExecResult;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.builder.Transferable;
 
 class TrinoTest extends TargetSystemTest {
 
   private static final int TRINO_PORT = 8080;
+  private static final String TRINO_CONFIG =
+      String.join(
+          "\n",
+          "coordinator=true",
+          "node-scheduler.include-coordinator=true",
+          "http-server.http.port=" + TRINO_PORT,
+          "discovery.uri=http://localhost:" + TRINO_PORT,
+          "discovery.type=AIRLIFT_DISCOVERY",
+          "");
 
   @Test
   void testTrinoMetrics() throws Exception {
@@ -38,6 +48,7 @@ class TrinoTest extends TargetSystemTest {
     GenericContainer<?> target =
         new GenericContainer<>("trinodb/trino:483")
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
+            .withCopyToContainer(Transferable.of(TRINO_CONFIG), "/etc/trino/config.properties")
             .withStartupTimeout(Duration.ofMinutes(3))
             .withExposedPorts(TRINO_PORT)
             .waitingFor(
@@ -61,6 +72,7 @@ class TrinoTest extends TargetSystemTest {
                     asList(
                         "trino.memory.pool.free",
                         "trino.memory.query.killed.count",
+                        "trino.node.active.count",
                         "trino.query.running.count",
                         "trino.query.started.count",
                         "trino.query.failed.count",
@@ -71,7 +83,7 @@ class TrinoTest extends TargetSystemTest {
                         "trino.query.waiting_for_resources.duration.max",
                         "trino.task.input.data.size",
                         "trino.task.input.row.count"),
-                    singletonList("trino.node.active.count"))
+                    emptyList())
                 .checkRegisteredAttributes(
                     "trino.",
                     asList("trino.memory.pool.name", "trino.query.failure.type"),
@@ -88,7 +100,7 @@ class TrinoTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier() {
     return MetricsVerifier.create()
-        .addOptional(
+        .add(
             "trino.node.active.count",
             metric ->
                 metric
@@ -126,7 +138,8 @@ class TrinoTest extends TargetSystemTest {
             "trino.query.started.count",
             metric ->
                 metric
-                    .hasDescription("The number of queries started in the last five minutes.")
+                    .hasDescription(
+                        "The five-minute exponentially decayed value of the number of queries started.")
                     .hasUnit("{query}")
                     .isGauge()
                     .hasDataPointsWithoutAttributes())
@@ -134,7 +147,8 @@ class TrinoTest extends TargetSystemTest {
             "trino.query.failed.count",
             metric ->
                 metric
-                    .hasDescription("The number of failed queries in the last five minutes.")
+                    .hasDescription(
+                        "The five-minute exponentially decayed value of the number of failed queries.")
                     .hasUnit("{query}")
                     .isGauge()
                     .hasDataPointsWithoutAttributes())
@@ -143,7 +157,7 @@ class TrinoTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The number of failed queries in the last five minutes by failure type.")
+                        "The five-minute exponentially decayed value of the number of failed queries by failure type.")
                     .hasUnit("{query}")
                     .isGauge()
                     .hasDataPointsWithAttributes(
@@ -157,7 +171,7 @@ class TrinoTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The 50th percentile query execution duration over the last five minutes.")
+                        "The five-minute exponentially decayed value of the 50th percentile query execution duration.")
                     .hasUnit("s")
                     .isGauge()
                     .hasDataPointsWithoutAttributes())
@@ -166,7 +180,7 @@ class TrinoTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The 90th percentile wall-clock input data rate over the last five minutes.")
+                        "The five-minute exponentially decayed value of the 90th percentile wall-clock input data rate.")
                     .hasUnit("By/s")
                     .isGauge()
                     .hasDataPointsWithoutAttributes())
@@ -191,7 +205,7 @@ class TrinoTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The input data size processed by tasks in the last five minutes.")
+                        "The five-minute exponentially decayed value of the input data size processed by tasks.")
                     .hasUnit("By")
                     .isGauge()
                     .hasDataPointsWithoutAttributes())
@@ -200,7 +214,7 @@ class TrinoTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription(
-                        "The number of input rows processed by tasks in the last five minutes.")
+                        "The five-minute exponentially decayed value of the number of input rows processed by tasks.")
                     .hasUnit("{row}")
                     .isGauge()
                     .hasDataPointsWithoutAttributes());

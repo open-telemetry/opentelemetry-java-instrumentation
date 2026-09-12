@@ -46,19 +46,19 @@ rules:
         metric: started.count
         type: gauge
         unit: "{query}"
-        desc: The number of queries started in the last five minutes.
+        desc: The five-minute exponentially decayed value of the number of queries started.
       # trino.query.failed.count
       FailedQueries\.FiveMinute\.Count:
         metric: failed.count
         type: gauge
         unit: "{query}"
-        desc: The number of failed queries in the last five minutes.
+        desc: The five-minute exponentially decayed value of the number of failed queries.
       # trino.query.failure.count
       InternalFailures\.FiveMinute\.Count:
         metric: &failure_metric failure.count
         type: &failure_type gauge
         unit: &failure_unit "{query}"
-        desc: &failure_desc The number of failed queries in the last five minutes by failure type.
+        desc: &failure_desc The five-minute exponentially decayed value of the number of failed queries by failure type.
         metricAttribute:
           trino.query.failure.type: const(internal)
       # trino.query.failure.count
@@ -91,13 +91,13 @@ rules:
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: The 50th percentile query execution duration over the last five minutes.
+        desc: The five-minute exponentially decayed value of the 50th percentile query execution duration.
       # trino.query.input.rate.p90
       WallInputBytesRate\.FiveMinutes\.P90:
         metric: input.rate.p90
         type: gauge
         unit: By/s
-        desc: The 90th percentile wall-clock input data rate over the last five minutes.
+        desc: The five-minute exponentially decayed value of the 90th percentile wall-clock input data rate.
       # trino.query.waiting_for_resources.count
       WaitingForResourcesQueries:
         metric: waiting_for_resources.count
@@ -119,10 +119,10 @@ rules:
         metric: data.size
         type: gauge
         unit: By
-        desc: The input data size processed by tasks in the last five minutes.
+        desc: The five-minute exponentially decayed value of the input data size processed by tasks.
       # trino.task.input.row.count
       InputPositions\.FiveMinute\.Count:
         metric: row.count
         type: gauge
         unit: "{row}"
-        desc: The number of input rows processed by tasks in the last five minutes.
+        desc: The five-minute exponentially decayed value of the number of input rows processed by tasks.
