@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -35,16 +34,6 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 1.0.0
     return hasClassesNamed("reactor.netty.transport.AddressUtils");
-  }
-
-  @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("reactor.netty.http.client.HttpClientConfigBuddy");
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return singletonList("reactor.netty.http.client.HttpClientConfigBuddy");
   }
 
   @Override

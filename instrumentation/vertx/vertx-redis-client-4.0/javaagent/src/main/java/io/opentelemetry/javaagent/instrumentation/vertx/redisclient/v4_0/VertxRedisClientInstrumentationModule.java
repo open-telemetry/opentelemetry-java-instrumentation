@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -18,16 +17,6 @@ public class VertxRedisClientInstrumentationModule extends InstrumentationModule
 
   public VertxRedisClientInstrumentationModule() {
     super("vertx-redis-client", "vertx-redis-client-4.0", "vertx");
-  }
-
-  @Override
-  public boolean isHelperClass(String className) {
-    return "io.vertx.redis.client.impl.RequestUtil".equals(className);
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return singletonList("io.vertx.redis.client.impl.RequestUtil");
   }
 
   @Override

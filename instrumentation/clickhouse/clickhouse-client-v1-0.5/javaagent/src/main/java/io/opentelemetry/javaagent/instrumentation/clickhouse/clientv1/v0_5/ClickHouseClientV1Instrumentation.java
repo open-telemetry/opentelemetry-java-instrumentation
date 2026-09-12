@@ -17,7 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.clickhouse.client.ClickHouseClient;
 import com.clickhouse.client.ClickHouseNode;
 import com.clickhouse.client.ClickHouseRequest;
-import com.clickhouse.client.ClickHouseRequestAccess;
 import com.clickhouse.client.config.ClickHouseDefaults;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;

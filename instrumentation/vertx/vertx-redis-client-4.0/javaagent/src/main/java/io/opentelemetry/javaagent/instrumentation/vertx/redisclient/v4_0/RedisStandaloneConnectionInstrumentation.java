@@ -20,7 +20,6 @@ import io.vertx.redis.client.Request;
 import io.vertx.redis.client.Response;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
-import io.vertx.redis.client.impl.RequestUtil;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -67,7 +66,7 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
 
         VertxRedisClientRequest otelRequest =
             new VertxRedisClientRequest(
-                commandName, RequestUtil.getArgs(request), redisUri, netSocket);
+                commandName, RequestAccess.getArgs(request), redisUri, netSocket);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return null;

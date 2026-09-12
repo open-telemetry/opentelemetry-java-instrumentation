@@ -18,7 +18,6 @@ import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientConfig;
-import reactor.netty.http.client.HttpClientConfigBuddy;
 
 class HttpClientConnectInstrumentation implements TypeInstrumentation {
   @Override
@@ -46,8 +45,8 @@ class HttpClientConnectInstrumentation implements TypeInstrumentation {
       // configuration is used
       // we're fixing this bug here, so that our instrumentation can safely add its own
       // .mapConnect() listener
-      if (HttpClientConfigBuddy.hasDeferredConfig(config)) {
-        return HttpClientConfigBuddy.getConnector(config).apply(connection);
+      if (HttpClientConfigAccess.hasDeferredConfig(config)) {
+        return HttpClientConfigAccess.getConnector(config).apply(connection);
       }
       return connection;
     }
