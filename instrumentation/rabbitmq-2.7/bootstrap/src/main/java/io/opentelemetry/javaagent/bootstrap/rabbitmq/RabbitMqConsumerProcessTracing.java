@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.bootstrap.rabbitmq;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
-
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetrySuppression;
 
@@ -19,14 +18,18 @@ public final class RabbitMqConsumerProcessTracing {
   private static final MessagingTelemetrySuppression suppression =
       MessagingTelemetrySuppression.create();
 
-  public static boolean setWrappingEnabled(boolean enabled) {
-    MessagingTelemetrySignals previous = suppression.current();
-    suppression.restore(enabled ? previous.without(PROCESS, SPAN) : previous.with(PROCESS, SPAN));
-    return !previous.contains(PROCESS, SPAN);
+  public static MessagingTelemetrySignals suppress(
+      MessagingOperationType operation, MessagingTelemetrySignal signal) {
+    return suppression.suppress(operation, signal);
   }
 
-  public static boolean isWrappingEnabled() {
-    return !suppression.isSuppressed(PROCESS, SPAN);
+  public static void restore(MessagingTelemetrySignals previous) {
+    suppression.restore(previous);
+  }
+
+  public static boolean isSuppressed(
+      MessagingOperationType operation, MessagingTelemetrySignal signal) {
+    return suppression.isSuppressed(operation, signal);
   }
 
   private RabbitMqConsumerProcessTracing() {}

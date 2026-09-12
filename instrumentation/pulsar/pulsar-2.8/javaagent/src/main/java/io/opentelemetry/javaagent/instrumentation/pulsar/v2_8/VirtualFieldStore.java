@@ -5,8 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
+
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
@@ -18,8 +24,9 @@ import org.apache.pulsar.client.impl.TopicMessageImpl;
 public class VirtualFieldStore {
   private static final VirtualField<Message<?>, Context> MSG_FIELD =
       VirtualField.find(Message.class, Context.class);
-  private static final VirtualField<Message<?>, Boolean> MSG_RECEIVE_TELEMETRY_FIELD =
-      VirtualField.find(Message.class, Boolean.class);
+  private static final MessagingTelemetryCarrier<Message<?>> messageTelemetry =
+      MessagingTelemetryCarrier.create(
+          VirtualField.find(Message.class, MessagingTelemetrySignals.class));
   private static final VirtualField<Producer<?>, ProducerData> PRODUCER_FIELD =
       VirtualField.find(Producer.class, ProducerData.class);
   private static final VirtualField<Consumer<?>, String> CONSUMER_FIELD =
@@ -60,26 +67,29 @@ public class VirtualFieldStore {
     }
     if (instance != null) {
       MSG_FIELD.set(instance, null);
-      MSG_RECEIVE_TELEMETRY_FIELD.set(instance, null);
+      messageTelemetry.clear(instance);
     }
   }
 
-  public static void markReceiveTelemetryRecorded(Message<?> instance) {
-    if (instance instanceof TopicMessageImpl<?>) {
-      TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
-      instance = topicMessage.getMessage();
-    }
-    if (instance != null) {
-      MSG_RECEIVE_TELEMETRY_FIELD.set(instance, true);
-    }
+  public static void markReceiveSpanRecorded(Message<?> instance) {
+    messageTelemetry.add(unwrap(instance), RECEIVE, SPAN);
   }
 
-  public static boolean wasReceiveTelemetryRecorded(Message<?> instance) {
+  public static void markConsumedMessagesRecorded(Message<?> instance) {
+    messageTelemetry.add(unwrap(instance), RECEIVE, CONSUMED_MESSAGES);
+  }
+
+  public static boolean wereConsumedMessagesRecorded(Message<?> instance) {
+    return messageTelemetry.contains(unwrap(instance), RECEIVE, CONSUMED_MESSAGES);
+  }
+
+  @Nullable
+  private static Message<?> unwrap(@Nullable Message<?> instance) {
     if (instance instanceof TopicMessageImpl<?>) {
       TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
-      instance = topicMessage.getMessage();
+      return topicMessage.getMessage();
     }
-    return instance != null && Boolean.TRUE.equals(MSG_RECEIVE_TELEMETRY_FIELD.get(instance));
+    return instance;
   }
 
   public static Context extract(Message<?> instance) {
