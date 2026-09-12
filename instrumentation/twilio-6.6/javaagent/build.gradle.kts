@@ -40,7 +40,10 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.instrumentation.twilio.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.twilio.enabled=true",
+    )
   }
 
   val testV3PreviewDisabled = register<Test>("testV3PreviewDisabled") {

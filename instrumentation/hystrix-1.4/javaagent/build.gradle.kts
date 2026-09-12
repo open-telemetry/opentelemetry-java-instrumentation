@@ -46,7 +46,10 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.instrumentation.hystrix.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.hystrix.enabled=true",
+    )
   }
 
   val testV3PreviewDisabled = register<Test>("testV3PreviewDisabled") {

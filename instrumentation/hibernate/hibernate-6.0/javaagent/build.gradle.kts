@@ -104,11 +104,16 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         val v3PreviewConfig = "otel.instrumentation.common.v3-preview=true"
+        val hibernateConfig = "otel.instrumentation.hibernate.enabled=true"
         jvmArgs("-D$v3PreviewConfig")
-        jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+        jvmArgs("-D$hibernateConfig")
         systemProperty(
           "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], v3PreviewConfig)
+          listOfNotNull(
+            sourceTask.systemProperties["metadataConfig"],
+            v3PreviewConfig,
+            hibernateConfig,
+          )
             .joinToString(","),
         )
         isEnabled = sourceTask.enabled
