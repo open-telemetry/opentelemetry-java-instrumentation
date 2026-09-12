@@ -49,6 +49,7 @@ class LettuceClusterClientTest {
   private static final Logger logger = LoggerFactory.getLogger(LettuceClusterClientTest.class);
 
   private static final String NODE_ID = "0000000000000000000000000000000000000000";
+  private static final String PASSWORD = "password";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -85,6 +86,49 @@ class LettuceClusterClientTest {
 
     connection = client.connect();
     cleanup.deferAfterAll(connection);
+  }
+
+  @Test
+  void testAuthenticationUsesConfiguredSeedList() {
+    GenericContainer<?> authenticatedRedisServer =
+        new GenericContainer<>(CONTAINER_IMAGE)
+            .withExposedPorts(6379)
+            .withCommand("redis-server", "--requirepass", PASSWORD)
+            .withLogConsumer(new Slf4jLogConsumer(logger))
+            .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
+    authenticatedRedisServer.start();
+    cleanup.deferCleanup(authenticatedRedisServer::stop);
+
+    String authenticatedHost = authenticatedRedisServer.getHost();
+    int authenticatedPort = authenticatedRedisServer.getMappedPort(6379);
+    RedisURI nodeUri = RedisURI.create("redis://" + authenticatedHost + ":" + authenticatedPort);
+    nodeUri.setPassword(PASSWORD);
+    RedisURI alternateSeed = RedisURI.create("redis://seed.invalid:6379");
+    alternateSeed.setPassword(PASSWORD);
+    String authenticatedTarget = "seed.invalid:6379," + authenticatedHost + ":" + authenticatedPort;
+    RedisClusterClient client = new TestRedisClusterClient(asList(alternateSeed, nodeUri), nodeUri);
+    cleanup.deferCleanup(() -> client.shutdown(0, 15, SECONDS));
+    cleanup.deferCleanup(client.connect());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "AUTH " + authenticatedTarget : "AUTH")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, null),
+                            equalTo(maybeStable(DB_OPERATION), "AUTH"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv()
+                                    ? authenticatedTarget
+                                    : authenticatedHost),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv() ? null : (long) authenticatedPort))));
   }
 
   @Test
