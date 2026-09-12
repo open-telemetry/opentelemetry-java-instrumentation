@@ -11,6 +11,8 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+import org.redisson.config.BaseMasterSlaveServersConfig;
+import org.redisson.connection.ConnectionManager;
 import org.redisson.pubsub.AsyncSemaphore;
 
 class RedissonConnectionPoolAccessor {
@@ -18,36 +20,9 @@ class RedissonConnectionPoolAccessor {
   @Nullable private static final Field counterField = findAsyncSemaphoreField("counter");
   @Nullable private static final Method queueSizeMethod;
   @Nullable private static final Field listenersField;
-  private static final ClassValue<Method> getConfigMethod =
-      new ClassValue<Method>() {
-        @Nullable
-        @Override
-        protected Method computeValue(Class<?> type) {
-          try {
-            return type.getMethod("getConfig");
-          } catch (NoSuchMethodException | SecurityException ignored) {
-            return null;
-          }
-        }
-      };
-  private static final ClassValue<Method> subscriptionMinimumIdleMethod =
-      new ClassValue<Method>() {
-        @Nullable
-        @Override
-        protected Method computeValue(Class<?> type) {
-          try {
-            return type.getMethod("getSubscriptionConnectionMinimumIdleSize");
-          } catch (NoSuchMethodException ignored) {
-            try {
-              return type.getMethod("getSlaveSubscriptionConnectionMinimumIdleSize");
-            } catch (NoSuchMethodException | SecurityException ignore) {
-              return null;
-            }
-          } catch (SecurityException ignored) {
-            return null;
-          }
-        }
-      };
+
+  @Nullable
+  private static final Method subscriptionMinimumIdleMethod = findSubscriptionMinimumIdleMethod();
 
   static {
     Method method = null;
@@ -90,20 +65,32 @@ class RedissonConnectionPoolAccessor {
     return null;
   }
 
-  static int getSubscriptionMinimumIdleSize(Object connectionManager, int fallback) {
+  static int getSubscriptionMinimumIdleSize(ConnectionManager connectionManager, int fallback) {
     try {
-      Method configGetter = getConfigMethod.get(connectionManager.getClass());
-      if (configGetter == null) {
+      if (subscriptionMinimumIdleMethod == null) {
         return fallback;
       }
-      Object config = configGetter.invoke(connectionManager);
-      Method getter = subscriptionMinimumIdleMethod.get(config.getClass());
-      if (getter == null) {
-        return fallback;
-      }
-      return ((Number) getter.invoke(config)).intValue();
+      BaseMasterSlaveServersConfig<?> config = connectionManager.getConfig();
+      return ((Number) subscriptionMinimumIdleMethod.invoke(config)).intValue();
     } catch (ReflectiveOperationException | RuntimeException ignored) {
       return fallback;
+    }
+  }
+
+  @Nullable
+  private static Method findSubscriptionMinimumIdleMethod() {
+    try {
+      return BaseMasterSlaveServersConfig.class.getMethod(
+          "getSubscriptionConnectionMinimumIdleSize");
+    } catch (NoSuchMethodException ignored) {
+      try {
+        return BaseMasterSlaveServersConfig.class.getMethod(
+            "getSlaveSubscriptionConnectionMinimumIdleSize");
+      } catch (NoSuchMethodException | SecurityException ignore) {
+        return null;
+      }
+    } catch (SecurityException ignored) {
+      return null;
     }
   }
 

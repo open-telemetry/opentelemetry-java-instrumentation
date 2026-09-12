@@ -37,6 +37,8 @@ class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrum
 
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
+    // HandlerData inspects annotations on the concrete filter method, so one Method from
+    // ContainerRequestFilter cannot be reused for every implementation.
     private static final ClassValue<Method> filterMethod =
         new ClassValue<Method>() {
           @Nullable

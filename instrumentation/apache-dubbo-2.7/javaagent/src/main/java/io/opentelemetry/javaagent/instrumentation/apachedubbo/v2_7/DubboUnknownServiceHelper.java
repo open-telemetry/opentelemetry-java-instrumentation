@@ -83,18 +83,7 @@ public class DubboUnknownServiceHelper {
   private static final VirtualField<RpcInvocation, Boolean> UNKNOWN_SERVICE_SPAN_RECORDED =
       VirtualField.find(RpcInvocation.class, Boolean.class);
 
-  private static final ClassValue<Method> statusCodeMethod =
-      new ClassValue<Method>() {
-        @Nullable
-        @Override
-        protected Method computeValue(Class<?> type) {
-          try {
-            return type.getMethod("getStatusCode");
-          } catch (NoSuchMethodException ignored) {
-            return null;
-          }
-        }
-      };
+  @Nullable private static final Method statusCodeMethod = findStatusCodeMethod();
 
   /**
    * Creates an unknown service span when {@code DubboProtocol.getInvoker()} throws because the
@@ -265,15 +254,28 @@ public class DubboUnknownServiceHelper {
         .equals(throwable.getClass().getName())) {
       return false;
     }
+    if (statusCodeMethod == null || !statusCodeMethod.getDeclaringClass().isInstance(throwable)) {
+      return false;
+    }
     try {
-      Method statusMethod = statusCodeMethod.get(throwable.getClass());
-      if (statusMethod == null) {
-        return false;
-      }
-      Object status = statusMethod.invoke(throwable);
+      Object status = statusCodeMethod.invoke(throwable);
       return status instanceof Integer && (Integer) status == 404;
     } catch (ReflectiveOperationException ignored) {
       return false;
+    }
+  }
+
+  @Nullable
+  private static Method findStatusCodeMethod() {
+    try {
+      Class<?> exceptionClass =
+          Class.forName(
+              "org.apache.dubbo.remoting.http12.exception.HttpStatusException",
+              false,
+              DubboUnknownServiceHelper.class.getClassLoader());
+      return exceptionClass.getMethod("getStatusCode");
+    } catch (ReflectiveOperationException | LinkageError | SecurityException ignored) {
+      return null;
     }
   }
 
