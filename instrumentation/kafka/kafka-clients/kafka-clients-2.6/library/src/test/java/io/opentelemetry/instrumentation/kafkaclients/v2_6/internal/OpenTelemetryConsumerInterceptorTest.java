@@ -16,7 +16,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -140,9 +139,7 @@ class OpenTelemetryConsumerInterceptorTest {
     Context inheritedContext =
         KafkaConsumerContextUtil.withReceiveOperation(Context.current(), true);
     try (Scope ignored = inheritedContext.makeCurrent()) {
-      receiveContext =
-          requireNonNull(
-              supplier.get().buildAndFinishSpan(records, "test", "client", Timer.start()));
+      receiveContext = requireNonNull(supplier.get().buildAndFinishSpan(records, "test", "client"));
     }
 
     assertThat(KafkaConsumerContextUtil.hasReceiveOperation(receiveContext)).isFalse();
