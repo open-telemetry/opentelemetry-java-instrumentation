@@ -228,6 +228,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
         collector.collectReferencesFromResource(resource);
       }
       collector.prune();
+      collector.validateSamePackageLibraryAccess();
       return collector;
     }
 

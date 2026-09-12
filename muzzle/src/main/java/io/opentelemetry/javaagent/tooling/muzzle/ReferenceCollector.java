@@ -52,6 +52,7 @@ public final class ReferenceCollector {
   private final VirtualFieldMappingsBuilderImpl virtualFieldMappingsBuilder =
       new VirtualFieldMappingsBuilderImpl();
   private final Set<String> visitedClasses = new HashSet<>();
+  private final Set<String> adviceClassNames = new HashSet<>();
   private final HelperClassPredicate helperClassPredicate;
   private final ClassLoader resourceLoader;
 
@@ -120,6 +121,7 @@ public final class ReferenceCollector {
    * @see HelperClassPredicate
    */
   public void collectReferencesFromAdvice(String adviceClassName) {
+    adviceClassNames.add(adviceClassName);
     visitClassesAndCollectReferences(singleton(adviceClassName), /* startsFromAdviceClass= */ true);
   }
 
@@ -340,5 +342,22 @@ public final class ReferenceCollector {
 
   public VirtualFieldMappings getVirtualFieldMappings() {
     return virtualFieldMappingsBuilder.build();
+  }
+
+  /**
+   * Verifies that none of the collected helper classes rely on same-package access to non-public
+   * library code, since that access pattern is not guaranteed to work: an ordinary jar can be
+   * loaded as an automatic named module, in which case the helper class (defined by a different
+   * class loader) does not actually share a runtime package with the library class even though
+   * their binary names look alike.
+   *
+   * <p>This is a compile-time-only check: it does not affect the generated muzzle references or
+   * the runtime muzzle matching behavior.
+   *
+   * @throws MuzzleCompilationException aggregating every violation found in this module, if any.
+   */
+  public void validateSamePackageLibraryAccess() {
+    new SamePackageAccessValidator(adviceClassNames, helperClassPredicate, resourceLoader)
+        .validate(references);
   }
 }
