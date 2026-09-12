@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import io.opentelemetry.javaagent.tooling.muzzle.references.Source;
 import java.util.HashSet;
 import java.util.Set;
 import muzzle.samepackage.SamePackageAccessTestClasses.AdviceEntryPoint;
@@ -144,6 +145,12 @@ class SamePackageAccessValidatorTest {
     assertThatExceptionOfType(MuzzleCompilationException.class)
         .isThrownBy(collector::validateSamePackageLibraryAccess)
         .withMessageContaining("PackagePrivateLibraryClass is not public");
+  }
+
+  @Test
+  void keepsInlineStateWhenSourceLocationsMatch() {
+    assertThat(new Source(AdviceEntryPoint.class.getName(), -1, true))
+        .isNotEqualTo(new Source(AdviceEntryPoint.class.getName(), -1, false));
   }
 
   @Test

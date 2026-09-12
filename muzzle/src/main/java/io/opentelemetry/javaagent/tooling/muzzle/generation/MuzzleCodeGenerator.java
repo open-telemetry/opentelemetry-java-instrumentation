@@ -282,11 +282,13 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
             for (Source source : reference.getSources()) {
               mv.visitLdcInsn(source.getName());
               mv.visitLdcInsn(source.getLine());
+              mv.visitInsn(source.isInlinedAdvice() ? Opcodes.ICONST_1 : Opcodes.ICONST_0);
               mv.visitMethodInsn(
                   Opcodes.INVOKEVIRTUAL,
                   referenceBuilderType.getInternalName(),
                   "addSource",
-                  Type.getMethodDescriptor(referenceBuilderType, stringType, Type.INT_TYPE),
+                  Type.getMethodDescriptor(
+                      referenceBuilderType, stringType, Type.INT_TYPE, Type.BOOLEAN_TYPE),
                   /* isInterface= */ false);
             }
             // stack: map, className, builder
@@ -444,11 +446,12 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
         mv.visitInsn(Opcodes.DUP);
         mv.visitLdcInsn(source.getName());
         mv.visitLdcInsn(source.getLine());
+        mv.visitInsn(source.isInlinedAdvice() ? Opcodes.ICONST_1 : Opcodes.ICONST_0);
         mv.visitMethodInsn(
             Opcodes.INVOKESPECIAL,
             referenceSourceType.getInternalName(),
             "<init>",
-            "(Ljava/lang/String;I)V",
+            "(Ljava/lang/String;IZ)V",
             /* isInterface= */ false);
 
         mv.visitInsn(Opcodes.AASTORE);

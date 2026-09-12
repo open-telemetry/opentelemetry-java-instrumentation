@@ -58,10 +58,11 @@ target is library code; if the source and target share a package, the referenced
 must be `public`, or generation fails with a diagnostic listing every offending helper class,
 line, and target symbol.
 
-Advice classes are exempt: advice bytecode is copied directly into the instrumented library class
-at weave time, so a same-package reference from advice code executes as if it were written inside
-the library itself, and is always safe. References from one helper class to another helper class
-are exempt too, since no library boundary is being crossed.
+References from advice methods that permit inlining are exempt: their bytecode can be copied
+directly into the instrumented library class at weave time, so a same-package reference executes as
+if it were written inside the library itself. Non-inline advice methods and ordinary helper methods
+declared on an advice class are checked like other helper code. References from one helper class to
+another helper class are exempt too, since no library boundary is being crossed.
 
 This rule exists because "same package" is not by itself a reliable substitute for `public` access.
 On the classic classpath, two classes with the same package name and class loader can always reach
@@ -100,7 +101,7 @@ library versions, when the project is built.
 The `muzzle-check` gradle plugin is just an additional utility for enhanced build-time checking
 to alert us when there are breaking changes in the underlying third party library
 that will cause the instrumentation not to get applied.
-**Even without using it muzzle reference matching is _always_ active in runtime**,
+**Even without using it muzzle reference matching is *always* active in runtime**,
 it's not an optional feature.
 
 The gradle plugin defines two tasks:

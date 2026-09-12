@@ -16,7 +16,6 @@ import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
-import io.opentelemetry.javaagent.tooling.muzzle.references.Source;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,8 +52,6 @@ public final class ReferenceCollector {
   private final VirtualFieldMappingsBuilderImpl virtualFieldMappingsBuilder =
       new VirtualFieldMappingsBuilderImpl();
   private final Set<String> visitedClasses = new HashSet<>();
-  private final Set<String> adviceClassNames = new HashSet<>();
-  private final Set<Source> inlinedAdviceSources = new HashSet<>();
   private final HelperClassPredicate helperClassPredicate;
   private final ClassLoader resourceLoader;
 
@@ -123,7 +120,6 @@ public final class ReferenceCollector {
    * @see HelperClassPredicate
    */
   public void collectReferencesFromAdvice(String adviceClassName) {
-    adviceClassNames.add(adviceClassName);
     visitClassesAndCollectReferences(singleton(adviceClassName), /* startsFromAdviceClass= */ true);
   }
 
@@ -156,7 +152,6 @@ public final class ReferenceCollector {
         }
         collectHelperClasses(
             isAdviceClass, visitedClassName, cv.getHelperClasses(), cv.getHelperSuperClasses());
-        inlinedAdviceSources.addAll(cv.getInlinedAdviceSources());
 
         virtualFieldMappingsBuilder.registerAll(cv.getVirtualFieldMappings());
       } catch (IOException e) {
@@ -360,8 +355,6 @@ public final class ReferenceCollector {
    * @throws MuzzleCompilationException aggregating every violation found in this module, if any.
    */
   public void validateSamePackageLibraryAccess() {
-    new SamePackageAccessValidator(
-            adviceClassNames, inlinedAdviceSources, helperClassPredicate, resourceLoader)
-        .validate(references);
+    new SamePackageAccessValidator(helperClassPredicate, resourceLoader).validate(references);
   }
 }

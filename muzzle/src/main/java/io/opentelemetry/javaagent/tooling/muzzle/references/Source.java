@@ -17,10 +17,16 @@ import javax.annotation.Nullable;
 public final class Source {
   private final String name;
   private final int line;
+  private final boolean inlinedAdvice;
 
   public Source(String name, int line) {
+    this(name, line, false);
+  }
+
+  public Source(String name, int line, boolean inlinedAdvice) {
     this.name = name;
     this.line = line;
+    this.inlinedAdvice = inlinedAdvice;
   }
 
   public String getName() {
@@ -29,6 +35,10 @@ public final class Source {
 
   public int getLine() {
     return line;
+  }
+
+  public boolean isInlinedAdvice() {
+    return inlinedAdvice;
   }
 
   @Override
@@ -40,12 +50,12 @@ public final class Source {
       return false;
     }
     Source other = (Source) obj;
-    return name.equals(other.name) && line == other.line;
+    return name.equals(other.name) && line == other.line && inlinedAdvice == other.inlinedAdvice;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, line);
+    return Objects.hash(name, line, inlinedAdvice);
   }
 
   @Override

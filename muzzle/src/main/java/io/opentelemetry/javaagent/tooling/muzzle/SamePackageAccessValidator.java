@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.Nullable;
 import org.objectweb.asm.Type;
 
@@ -44,18 +43,10 @@ import org.objectweb.asm.Type;
  */
 final class SamePackageAccessValidator {
 
-  private final Set<String> adviceClassNames;
-  private final Set<Source> inlinedAdviceSources;
   private final HelperClassPredicate helperClassPredicate;
   private final ClassLoader classLoader;
 
-  SamePackageAccessValidator(
-      Set<String> adviceClassNames,
-      Set<Source> inlinedAdviceSources,
-      HelperClassPredicate helperClassPredicate,
-      ClassLoader classLoader) {
-    this.adviceClassNames = adviceClassNames;
-    this.inlinedAdviceSources = inlinedAdviceSources;
+  SamePackageAccessValidator(HelperClassPredicate helperClassPredicate, ClassLoader classLoader) {
     this.helperClassPredicate = helperClassPredicate;
     this.classLoader = classLoader;
   }
@@ -147,8 +138,8 @@ final class SamePackageAccessValidator {
    * Returns whether {@code source} is subject to this check: it must not be part of an inlined
    * advice method, and it must be in the same package as the referenced target.
    */
-  private boolean isEnforcedSource(Source source, String targetPackage) {
-    if (adviceClassNames.contains(source.getName()) && inlinedAdviceSources.contains(source)) {
+  private static boolean isEnforcedSource(Source source, String targetPackage) {
+    if (source.isInlinedAdvice()) {
       return false;
     }
     return packageName(source.getName()).equals(targetPackage);
