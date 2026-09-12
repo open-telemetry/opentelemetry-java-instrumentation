@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import static java.util.stream.Collectors.joining;
+
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
@@ -18,7 +20,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.objectweb.asm.Type;
 
@@ -28,8 +29,8 @@ import org.objectweb.asm.Type;
  *
  * <p>An ordinary jar can become an automatic named module at runtime (or be loaded by a class
  * loader/module that does not open the package to unnamed code), in which case a helper class that
- * happens to share a package name with a library class it instruments is <em>not</em> guaranteed
- * to be granted package (or protected) access to that library's non-public classes, constructors,
+ * happens to share a package name with a library class it instruments is <em>not</em> guaranteed to
+ * be granted package (or protected) access to that library's non-public classes, constructors,
  * methods or fields: the two classes are defined by different class loaders (and potentially
  * different modules), so they do not actually share a runtime package/module even though their
  * binary names look alike.
@@ -90,8 +91,7 @@ final class SamePackageAccessValidator {
       }
       Class<?> targetClass = tryLoadClass(targetClassName);
       if (targetClass != null && !Modifier.isPublic(targetClass.getModifiers())) {
-        violations.add(
-            describe(source, "class " + targetClassName + " is not public"));
+        violations.add(describe(source, "class " + targetClassName + " is not public"));
       }
     }
 
@@ -110,8 +110,7 @@ final class SamePackageAccessValidator {
         if (resolved != null && !Modifier.isPublic(resolved.getModifiers())) {
           violations.add(
               describe(
-                  source,
-                  "field " + targetClassName + "#" + field.getName() + " is not public"));
+                  source, "field " + targetClassName + "#" + field.getName() + " is not public"));
         }
       }
     }
@@ -196,7 +195,8 @@ final class SamePackageAccessValidator {
   }
 
   @Nullable
-  private static Method findMethod(@Nullable Class<?> clazz, String name, Class<?>[] parameterTypes) {
+  private static Method findMethod(
+      @Nullable Class<?> clazz, String name, Class<?>[] parameterTypes) {
     if (clazz == null) {
       return null;
     }
@@ -267,7 +267,7 @@ final class SamePackageAccessValidator {
   private static String buildMessage(List<String> violations) {
     return violations.stream()
         .collect(
-            Collectors.joining(
+            joining(
                 "\n  ",
                 "Found instrumentation helper classes relying on same-package access to"
                     + " non-public library code. This does not work reliably because an ordinary"

@@ -351,8 +351,8 @@ public final class ReferenceCollector {
    * class loader) does not actually share a runtime package with the library class even though
    * their binary names look alike.
    *
-   * <p>This is a compile-time-only check: it does not affect the generated muzzle references or
-   * the runtime muzzle matching behavior.
+   * <p>This is a compile-time-only check: it does not affect the generated muzzle references or the
+   * runtime muzzle matching behavior.
    *
    * @throws MuzzleCompilationException aggregating every violation found in this module, if any.
    */
