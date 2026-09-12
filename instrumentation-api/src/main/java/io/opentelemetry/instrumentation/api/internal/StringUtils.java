@@ -14,8 +14,8 @@ package io.opentelemetry.instrumentation.api.internal;
 public final class StringUtils {
 
   /**
-   * Returns the longest prefix of {@code value} that fits within {@code maxLength} UTF-16 code
-   * units without splitting a valid surrogate pair.
+   * Returns the longest prefix whose {@link String#length()} does not exceed {@code maxLength}. If
+   * truncating at the limit would split a surrogate pair, the pair is omitted.
    */
   public static String truncate(String value, int maxLength) {
     if (value.length() <= maxLength) {
@@ -25,13 +25,32 @@ public final class StringUtils {
   }
 
   /**
-   * Truncates {@code value} to the longest prefix that fits within {@code maxLength} UTF-16 code
-   * units without splitting a valid surrogate pair.
+   * Truncates {@code value} so that its length does not exceed {@code maxLength}. If the limit
+   * would split a surrogate pair, the pair is omitted.
    */
   public static void truncate(StringBuilder value, int maxLength) {
     if (value.length() > maxLength) {
       value.setLength(truncationLength(value, maxLength));
     }
+  }
+
+  /**
+   * Truncates {@code value} so that its length does not exceed {@code maxLength}. If the limit
+   * would split a surrogate pair, the pair is omitted.
+   */
+  public static void truncate(StringBuffer value, int maxLength) {
+    if (value.length() > maxLength) {
+      value.setLength(truncationLength(value, maxLength));
+    }
+  }
+
+  /**
+   * Appends the longest prefix of {@code value} whose length does not exceed {@code maxLength}. If
+   * the limit would split a surrogate pair, the pair is omitted.
+   */
+  public static void appendTruncated(StringBuilder target, String value, int maxLength) {
+    int length = value.length() <= maxLength ? value.length() : truncationLength(value, maxLength);
+    target.append(value, 0, length);
   }
 
   private static int truncationLength(CharSequence value, int maxLength) {

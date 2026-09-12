@@ -29,7 +29,8 @@ import javax.annotation.Nullable;
  * <p>When the body is not a valid JSON value or sequence of JSON values, this returns {@code null}
  * so that the caller drops the body rather than capturing it raw.
  *
- * <p>Sanitized output longer than 32,768 UTF-16 code units is truncated.
+ * <p>Sanitized output is limited to a {@link String#length()} of 32,768 without splitting a
+ * surrogate pair.
  */
 final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> {
 
@@ -146,7 +147,9 @@ final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> 
 
     @Override
     public String toString() {
-      return truncate(getBuffer().toString(), MAX_QUERY_LENGTH);
+      StringBuffer output = getBuffer();
+      truncate(output, MAX_QUERY_LENGTH);
+      return output.toString();
     }
   }
 }

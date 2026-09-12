@@ -39,4 +39,22 @@ class StringUtilsTest {
 
     assertThat(value).hasToString("a");
   }
+
+  @Test
+  void truncateStringBuffer() {
+    StringBuffer value = new StringBuffer("a\uD83D\uDE00b");
+
+    StringUtils.truncate(value, 2);
+
+    assertThat(value).hasToString("a");
+  }
+
+  @Test
+  void appendTruncated() {
+    StringBuilder target = new StringBuilder("prefix:");
+
+    StringUtils.appendTruncated(target, "a\uD83D\uDE00b", 2);
+
+    assertThat(target).hasToString("prefix:a");
+  }
 }

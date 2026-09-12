@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.StringUtils.appendTruncated;
 import static io.opentelemetry.instrumentation.api.internal.StringUtils.truncate;
 import static java.util.logging.Level.FINE;
 
@@ -22,7 +23,7 @@ import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 class OpenSearchBodyExtractor {
 
   private static final Logger logger = Logger.getLogger(OpenSearchBodyExtractor.class.getName());
-  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024; // UTF-16 code units
+  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024;
   private static final String QUERY_SEPARATOR = ";";
 
   @Nullable
@@ -107,7 +108,7 @@ class OpenSearchBodyExtractor {
   }
 
   private static void appendPrefix(StringBuilder result, String value, int maxLength) {
-    result.append(truncate(value, maxLength - result.length()));
+    appendTruncated(result, value, maxLength - result.length());
   }
 
   private static final class BoundedStringWriter extends Writer {

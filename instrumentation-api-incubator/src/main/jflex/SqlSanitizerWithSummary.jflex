@@ -68,7 +68,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  // max length in UTF-16 code units of the sanitized statement
+  // maximum sanitized statement length
   static final int LIMIT = 32 * 1024;
 
   // Match on strings like "IN(?, ?, ...)"
