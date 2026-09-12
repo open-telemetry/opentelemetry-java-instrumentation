@@ -19,11 +19,15 @@ import java.util.Set;
 import muzzle.samepackage.SamePackageAccessTestClasses.AdviceEntryPoint;
 import muzzle.samepackage.SamePackageAccessTestClasses.BadHelper;
 import muzzle.samepackage.SamePackageAccessTestClasses.BadHelperAdvice;
+import muzzle.samepackage.SamePackageAccessTestClasses.CatchHelper;
+import muzzle.samepackage.SamePackageAccessTestClasses.CatchHelperAdvice;
 import muzzle.samepackage.SamePackageAccessTestClasses.GoodHelper;
 import muzzle.samepackage.SamePackageAccessTestClasses.GoodHelperAdvice;
 import muzzle.samepackage.SamePackageAccessTestClasses.HelperCallingHelper;
 import muzzle.samepackage.SamePackageAccessTestClasses.HelperCallingHelperAdvice;
 import muzzle.samepackage.SamePackageAccessTestClasses.LibrarySubClassWithHiddenField;
+import muzzle.samepackage.SamePackageAccessTestClasses.MultiArrayHelper;
+import muzzle.samepackage.SamePackageAccessTestClasses.MultiArrayHelperAdvice;
 import muzzle.samepackage.SamePackageAccessTestClasses.NonInlinedAdviceEntryPoint;
 import muzzle.samepackage.SamePackageAccessTestClasses.OtherHelper;
 import org.junit.jupiter.api.Test;
@@ -175,6 +179,28 @@ class SamePackageAccessValidatorTest {
     assertThatExceptionOfType(MuzzleCompilationException.class)
         .isThrownBy(collector::validateSamePackageLibraryAccess)
         .withMessageContaining("PackagePrivateLibraryClass is not public");
+  }
+
+  @Test
+  void rejectsNonPublicMultiArrayType() {
+    ReferenceCollector collector = collectorForHelpers(MultiArrayHelper.class.getName());
+    collector.collectReferencesFromAdvice(MultiArrayHelperAdvice.class.getName());
+    collector.prune();
+
+    assertThatExceptionOfType(MuzzleCompilationException.class)
+        .isThrownBy(collector::validateSamePackageLibraryAccess)
+        .withMessageContaining("PackagePrivateLibraryClass is not public");
+  }
+
+  @Test
+  void rejectsNonPublicCatchType() {
+    ReferenceCollector collector = collectorForHelpers(CatchHelper.class.getName());
+    collector.collectReferencesFromAdvice(CatchHelperAdvice.class.getName());
+    collector.prune();
+
+    assertThatExceptionOfType(MuzzleCompilationException.class)
+        .isThrownBy(collector::validateSamePackageLibraryAccess)
+        .withMessageContaining("PackagePrivateLibraryException is not public");
   }
 
   @Test

@@ -502,21 +502,38 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
     @Override
     public void visitTypeInsn(int opcode, String type) {
-      Type typeObj = underlyingType(Type.getObjectType(type));
-      if (typeObj.getSort() == Type.OBJECT) {
-        String sourceClassName =
-            requireNonNull(
-                refSourceClassName, "refSourceClassName must be set by visit() before use");
-        Type sourceType =
-            requireNonNull(refSourceType, "refSourceType must be set by visit() before use");
-        addReference(
-            ClassRef.builder(typeObj.getClassName())
-                .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
-                .addFlag(computeMinimumClassAccess(sourceType, typeObj))
-                .build());
-      }
-
+      addClassReference(underlyingType(Type.getObjectType(type)));
       super.visitTypeInsn(opcode, type);
+    }
+
+    @Override
+    public void visitMultiANewArrayInsn(String descriptor, int numDimensions) {
+      addClassReference(underlyingType(Type.getType(descriptor)));
+      super.visitMultiANewArrayInsn(descriptor, numDimensions);
+    }
+
+    @Override
+    public void visitTryCatchBlock(Label start, Label end, Label handler, @Nullable String type) {
+      if (type != null) {
+        addClassReference(Type.getObjectType(type));
+      }
+      super.visitTryCatchBlock(start, end, handler, type);
+    }
+
+    private void addClassReference(Type type) {
+      if (type.getSort() != Type.OBJECT) {
+        return;
+      }
+      String sourceClassName =
+          requireNonNull(
+              refSourceClassName, "refSourceClassName must be set by visit() before use");
+      Type sourceType =
+          requireNonNull(refSourceType, "refSourceType must be set by visit() before use");
+      addReference(
+          ClassRef.builder(type.getClassName())
+              .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
+              .addFlag(computeMinimumClassAccess(sourceType, type))
+              .build());
     }
 
     @Override

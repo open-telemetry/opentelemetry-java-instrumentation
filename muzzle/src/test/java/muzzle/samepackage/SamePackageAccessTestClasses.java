@@ -37,6 +37,16 @@ public class SamePackageAccessTestClasses {
     public void someMethod() {}
   }
 
+  static class PackagePrivateLibraryException extends Exception {}
+
+  public static class LibraryExceptionSource {
+    public static void throwPackagePrivateException() throws PackagePrivateLibraryException {
+      throw new PackagePrivateLibraryException();
+    }
+
+    private LibraryExceptionSource() {}
+  }
+
   public static class LibrarySuperClass {
     protected int inheritedProtectedField;
 
@@ -76,6 +86,20 @@ public class SamePackageAccessTestClasses {
     @Advice.OnMethodEnter
     static void onEnter() {
       new HelperCallingHelper().callOtherHelper();
+    }
+  }
+
+  public static class MultiArrayHelperAdvice {
+    @Advice.OnMethodEnter
+    static void onEnter() {
+      new MultiArrayHelper();
+    }
+  }
+
+  public static class CatchHelperAdvice {
+    @Advice.OnMethodEnter
+    static void onEnter() {
+      new CatchHelper();
     }
   }
 
@@ -166,6 +190,22 @@ public class SamePackageAccessTestClasses {
 
   public static class OtherHelper {
     void helperPackagePrivateMethod() {}
+  }
+
+  public static class MultiArrayHelper {
+    void createMultiArray() {
+      PackagePrivateLibraryClass[][] unused = new PackagePrivateLibraryClass[1][1];
+    }
+  }
+
+  public static class CatchHelper {
+    void catchPackagePrivateException() {
+      try {
+        LibraryExceptionSource.throwPackagePrivateException();
+      } catch (PackagePrivateLibraryException ignored) {
+        // expected
+      }
+    }
   }
 
   private SamePackageAccessTestClasses() {}
