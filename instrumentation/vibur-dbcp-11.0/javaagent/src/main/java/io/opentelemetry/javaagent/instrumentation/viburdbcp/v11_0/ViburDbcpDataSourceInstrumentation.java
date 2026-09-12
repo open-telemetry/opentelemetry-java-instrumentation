@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0;
 
-import static io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0.ViburSingletons.registerMetrics;
 import static io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0.ViburSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -53,7 +52,7 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This ViburDBCPDataSource dataSource) {
-      registerMetrics(dataSource);
+      ViburSingletons.registerMetrics(dataSource);
     }
   }
 

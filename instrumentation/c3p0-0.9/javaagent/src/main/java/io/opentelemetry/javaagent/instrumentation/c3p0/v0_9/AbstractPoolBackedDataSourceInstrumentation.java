@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.c3p0.v0_9;
 
-import static io.opentelemetry.javaagent.instrumentation.c3p0.v0_9.C3p0Singletons.registerMetrics;
 import static io.opentelemetry.javaagent.instrumentation.c3p0.v0_9.C3p0Singletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -35,7 +34,7 @@ final class AbstractPoolBackedDataSourceInstrumentation implements TypeInstrumen
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This AbstractPoolBackedDataSource dataSource) {
-      registerMetrics(dataSource);
+      C3p0Singletons.registerMetrics(dataSource);
     }
   }
 
