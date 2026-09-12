@@ -182,7 +182,7 @@ public final class CouchbaseSpan {
   }
 
   private static boolean captureExperimentalAttribute(String key) {
-    return captureExperimentalTelemetry && (v3Preview || key.startsWith("db.couchbase."));
+    return captureExperimentalTelemetry && key.startsWith("db.couchbase.");
   }
 
   static boolean emitExperimentalTelemetry() {
