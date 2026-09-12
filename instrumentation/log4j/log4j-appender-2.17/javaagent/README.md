@@ -24,16 +24,18 @@ Declarative configuration example:
 file_format: "1.1"
 instrumentation/development:
   java:
+    common:
+      logging:
+        structured_attributes:
+          included:
+            - order-*
+          excluded:
+            - "*-secret"
     log4j_appender:
       mdc_attributes/development:
         included:
           - request-*
           - user-?
-        excluded:
-          - "*-secret"
-      map_message_attributes/development:
-        included:
-          - order-*
         excluded:
           - "*-secret"
 ```

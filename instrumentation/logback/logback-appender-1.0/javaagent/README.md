@@ -33,21 +33,23 @@ The `otel.event.name` key is supported in key-value pairs (SLF4J 2.x fluent API)
 
 ## Declarative configuration
 
-The MDC, key value pair, logger context, Logstash marker, and Logstash structured argument
-attribute selectors can also be configured with [declarative configuration]:
+The common structured attribute selector and the source-specific MDC and logger context attribute
+selectors can also be configured with [declarative configuration]:
 
 ```yaml
 file_format: "1.1"
 instrumentation/development:
   java:
+    common:
+      logging:
+        structured_attributes:
+          included:
+            - request-*
+            - user-?
+          excluded:
+            - "*-secret"
     logback_appender:
       mdc_attributes/development:
-        included:
-          - request-*
-          - user-?
-        excluded:
-          - "*-secret"
-      key_value_pair_attributes/development:
         included:
           - request-*
           - user-?
@@ -56,16 +58,6 @@ instrumentation/development:
       logger_context_attributes/development:
         included:
           - app.*
-        excluded:
-          - "*-secret"
-      logstash_marker_attributes/development:
-        included:
-          - request-*
-        excluded:
-          - "*-secret"
-      logstash_structured_argument_attributes/development:
-        included:
-          - request-*
         excluded:
           - "*-secret"
 ```
