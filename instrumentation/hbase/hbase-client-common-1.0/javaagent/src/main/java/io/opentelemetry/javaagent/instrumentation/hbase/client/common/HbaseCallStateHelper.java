@@ -6,44 +6,44 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-// Shared, carrier-agnostic logic for the RequestAndContext state attached to each hbase Call.
-// The concrete VirtualField<Call, RequestAndContext> handle is created inline in the
-// package-private-adjacent @Advice methods that need access to the package-private Call class,
-// then passed into these generic helpers.
 public final class HbaseCallStateHelper {
 
+  private static final Class<?> CALL_CLASS = getCallClass();
+  private static final VirtualField<Object, RequestAndContext> REQUEST_AND_CONTEXT =
+      getRequestAndContextVirtualField();
+
+  public static void set(Object call, @Nullable RequestAndContext requestAndContext) {
+    REQUEST_AND_CONTEXT.set(call, requestAndContext);
+  }
+
   @Nullable
-  public static <T> RequestAndContext getAndClear(
-      VirtualField<T, RequestAndContext> field, T carrier) {
-    RequestAndContext requestAndContext = field.get(carrier);
+  public static RequestAndContext getAndClear(Object call) {
+    RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get(call);
     if (requestAndContext == null) {
       return null;
     }
-    field.set(carrier, null);
+    REQUEST_AND_CONTEXT.set(call, null);
     return requestAndContext;
   }
 
   @Nullable
-  public static <T> RequestAndContext getAndClearIfError(
-      VirtualField<T, RequestAndContext> field,
-      T carrier,
-      @Nullable IOException callError,
-      IOException expectedError) {
+  public static RequestAndContext getAndClearIfError(
+      Object call, @Nullable IOException callError, IOException expectedError) {
     if (expectedError == null || callError != expectedError) {
       return null;
     }
-    return getAndClear(field, carrier);
+    return getAndClear(call);
   }
 
-  public static <T> void updateNetworkPeer(
-      VirtualField<T, RequestAndContext> field, T carrier, @Nullable SocketAddress remoteAddress) {
-    if (!(remoteAddress instanceof InetSocketAddress)) {
+  public static void updateNetworkPeer(Object call, @Nullable SocketAddress remoteAddress) {
+    if (!CALL_CLASS.isInstance(call) || !(remoteAddress instanceof InetSocketAddress)) {
       return;
     }
     InetSocketAddress inetSocketAddress = (InetSocketAddress) remoteAddress;
@@ -51,10 +51,26 @@ public final class HbaseCallStateHelper {
     if (inetAddress == null) {
       return;
     }
-    RequestAndContext requestAndContext = field.get(carrier);
+    RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get(call);
     if (requestAndContext != null) {
       requestAndContext.getRequest().setNetworkPeer(inetSocketAddress);
     }
+  }
+
+  private static Class<?> getCallClass() {
+    try {
+      return Class.forName(
+          "org.apache.hadoop.hbase.ipc.Call", false, HbaseCallStateHelper.class.getClassLoader());
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException("HBase Call class is not available", e);
+    }
+  }
+
+  @NoMuzzle
+  @SuppressWarnings("unchecked") // virtual field key type is not known at compile time
+  private static VirtualField<Object, RequestAndContext> getRequestAndContextVirtualField() {
+    return (VirtualField<Object, RequestAndContext>)
+        VirtualField.find(CALL_CLASS, RequestAndContext.class);
   }
 
   private HbaseCallStateHelper() {}
