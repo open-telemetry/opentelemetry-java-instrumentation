@@ -6,6 +6,13 @@ semantic_conventions:
   - DATABASE_CLIENT_SPANS
 library_link: https://github.com/couchbase/couchbase-java-client
 configurations:
+  - name: otel.instrumentation.couchbase.emit-experimental-telemetry
+    declarative_name: java.couchbase.emit_experimental_telemetry/development
+    description: >
+      When v3 preview is enabled, enables experimental spans and span attributes emitted from the
+      underlying Couchbase library. This setting has no effect outside v3 preview.
+    type: boolean
+    default: false
   - name: otel.instrumentation.couchbase.experimental-span-attributes
     declarative_name: java.couchbase.experimental_span_attributes/development
     description: Enables experimental span attributes emitted from the underlying Couchbase library.

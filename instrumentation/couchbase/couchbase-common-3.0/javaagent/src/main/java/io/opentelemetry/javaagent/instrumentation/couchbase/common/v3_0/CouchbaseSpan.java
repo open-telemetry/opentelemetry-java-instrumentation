@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -20,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
@@ -33,9 +35,19 @@ public final class CouchbaseSpan {
   private static final String NET_PEER_NAME = "net.peer.name";
   private static final String NET_PEER_PORT = "net.peer.port";
 
-  private static final boolean captureExperimentalAttributes =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase")
-          .getBoolean("experimental_span_attributes/development", false);
+  private static final boolean v3Preview = v3Preview();
+  private static final boolean captureExperimentalTelemetry;
+
+  static {
+    DeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase");
+    captureExperimentalTelemetry =
+        config.getBoolean(
+            v3Preview
+                ? "emit_experimental_telemetry/development"
+                : "experimental_span_attributes/development",
+            false);
+  }
 
   private final Span span;
   private final boolean makeCurrentOnEnd;
@@ -52,43 +64,58 @@ public final class CouchbaseSpan {
   }
 
   public void setAttribute(String key, @Nullable String value) {
+    String stableKey = stableKey(key);
     if (emitStableDatabaseSemconv()) {
-      String stableKey = stableKey(key);
       if (stableKey != null) {
         span.setAttribute(stableKey, value);
       } else if (captureExperimentalAttribute(key)) {
         span.setAttribute(key, value);
       }
     }
-    if (emitOldDatabaseSemconv()) {
+    if (emitOldDatabaseSemconv()
+        && (!v3Preview || stableKey != null || captureExperimentalAttribute(key))) {
       span.setAttribute(key, value);
     }
   }
 
   public void setAttribute(String key, boolean value) {
+    String stableKey = stableKey(key);
     if (emitStableDatabaseSemconv()) {
-      String stableKey = stableKey(key);
       if (stableKey != null) {
         span.setAttribute(stableKey, value);
       } else if (captureExperimentalAttribute(key)) {
         span.setAttribute(key, value);
       }
     }
-    if (emitOldDatabaseSemconv()) {
+    if (emitOldDatabaseSemconv()
+        && (!v3Preview || stableKey != null || captureExperimentalAttribute(key))) {
       span.setAttribute(key, value);
     }
   }
 
   public void setAttribute(String key, long value) {
+    String stableKey = stableKey(key);
     if (emitStableDatabaseSemconv()) {
-      String stableKey = stableKey(key);
       if (stableKey != null) {
         span.setAttribute(stableKey, value);
       } else if (captureExperimentalAttribute(key)) {
         span.setAttribute(key, value);
       }
     }
-    if (emitOldDatabaseSemconv()) {
+    if (emitOldDatabaseSemconv()
+        && (!v3Preview || stableKey != null || captureExperimentalAttribute(key))) {
+      span.setAttribute(key, value);
+    }
+  }
+
+  public void setExperimentalAttribute(String key, @Nullable String value) {
+    if (!v3Preview || captureExperimentalTelemetry) {
+      span.setAttribute(key, value);
+    }
+  }
+
+  public void setExperimentalAttribute(String key, long value) {
+    if (!v3Preview || captureExperimentalTelemetry) {
       span.setAttribute(key, value);
     }
   }
@@ -155,6 +182,10 @@ public final class CouchbaseSpan {
   }
 
   private static boolean captureExperimentalAttribute(String key) {
-    return captureExperimentalAttributes && key.startsWith("db.couchbase.");
+    return captureExperimentalTelemetry && key.startsWith("db.couchbase.");
+  }
+
+  static boolean emitExperimentalTelemetry() {
+    return captureExperimentalTelemetry;
   }
 }

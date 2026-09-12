@@ -108,13 +108,14 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       endEncodingSpan();
       endDispatchSpan();
       RequestContext context = requireNonNull(requestContext);
-      span.setRawAttribute("peer.service", mapServiceType(context.request().serviceType()));
+      span.setExperimentalAttribute(
+          "peer.service", mapServiceType(context.request().serviceType()));
       String operationId = context.request().operationId();
       if (operationId != null) {
-        span.setRawAttribute("couchbase.operation_id", operationId);
+        span.setExperimentalAttribute("couchbase.operation_id", operationId);
       }
       if (context.request() instanceof BaseKeyValueRequest) {
-        span.setRawAttribute(
+        span.setExperimentalAttribute(
             "couchbase.document_id",
             new String(((BaseKeyValueRequest) context.request()).key(), UTF_8));
       }
@@ -124,7 +125,8 @@ public final class CouchbaseRequestTracer implements RequestTracer {
             .forEach(
                 (key, value) -> {
                   if (value != null) {
-                    span.setRawAttribute("couchbase.client_context." + key, value.toString());
+                    span.setExperimentalAttribute(
+                        "couchbase.client_context." + key, value.toString());
                   }
                 });
       }
@@ -167,7 +169,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       RequestContext context = requireNonNull(requestContext);
       long serverLatency = context.serverLatency();
       if (serverLatency > 0) {
-        dispatch.setRawAttribute("peer.latency", serverLatency);
+        dispatch.setExperimentalAttribute("peer.latency", serverLatency);
       }
       dispatch.end();
     }
