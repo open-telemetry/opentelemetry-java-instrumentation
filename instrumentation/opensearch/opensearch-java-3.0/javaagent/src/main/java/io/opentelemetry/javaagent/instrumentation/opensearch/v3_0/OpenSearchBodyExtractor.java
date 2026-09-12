@@ -22,7 +22,7 @@ import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 class OpenSearchBodyExtractor {
 
   private static final Logger logger = Logger.getLogger(OpenSearchBodyExtractor.class.getName());
-  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024;
+  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024; // UTF-16 code units
   private static final String QUERY_SEPARATOR = ";";
 
   @Nullable
@@ -123,14 +123,17 @@ class OpenSearchBodyExtractor {
 
     @Override
     public void write(char[] buffer, int offset, int length) {
-      int writeLength = Math.min(length, maxLength + 1 - result.length());
+      int writeLength = Math.min(length, maxLength - result.length());
       result.append(buffer, offset, writeLength);
+      if (writeLength < length && needsOneMoreCodeUnit()) {
+        result.append(buffer[offset + writeLength]);
+      }
       abortIfFull();
     }
 
     @Override
     public void write(int value) {
-      if (result.length() <= maxLength) {
+      if (result.length() < maxLength || needsOneMoreCodeUnit()) {
         result.append((char) value);
       }
       abortIfFull();
@@ -138,16 +141,23 @@ class OpenSearchBodyExtractor {
 
     @Override
     public void write(String value, int offset, int length) {
-      int writeLength = Math.min(length, maxLength + 1 - result.length());
+      int writeLength = Math.min(length, maxLength - result.length());
       result.append(value, offset, offset + writeLength);
+      if (writeLength < length && needsOneMoreCodeUnit()) {
+        result.append(value.charAt(offset + writeLength));
+      }
       abortIfFull();
+    }
+
+    private boolean needsOneMoreCodeUnit() {
+      return maxLength > 0
+          && result.length() == maxLength
+          && Character.isHighSurrogate(result.charAt(maxLength - 1));
     }
 
     private void abortIfFull() {
       if (result.length() > maxLength
-          || (result.length() == maxLength
-              && (maxLength == 0
-                  || !Character.isHighSurrogate(result.charAt(maxLength - 1))))) {
+          || (result.length() == maxLength && !needsOneMoreCodeUnit())) {
         limitReached = true;
         throw new QueryBodyLimitException();
       }

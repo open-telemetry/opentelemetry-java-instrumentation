@@ -14,8 +14,8 @@ package io.opentelemetry.instrumentation.api.internal;
 public final class StringUtils {
 
   /**
-   * Returns the longest prefix of {@code value} that fits within {@code maxLength} UTF-16 code units
-   * without splitting a valid surrogate pair.
+   * Returns the longest prefix of {@code value} that fits within {@code maxLength} UTF-16 code
+   * units without splitting a valid surrogate pair.
    */
   public static String truncate(String value, int maxLength) {
     if (value.length() <= maxLength) {
