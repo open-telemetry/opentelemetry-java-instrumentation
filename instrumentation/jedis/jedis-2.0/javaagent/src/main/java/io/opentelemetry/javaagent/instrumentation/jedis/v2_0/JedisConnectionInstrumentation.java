@@ -72,39 +72,82 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceScope {
-    private final Context context;
-    private final Scope scope;
-    private final JedisRequest request;
+    private static final String CONNECTION_HEALTH_CHECK_COMMAND = Protocol.Command.PING.name();
 
-    private AdviceScope(Context context, Scope scope, JedisRequest request) {
+    @Nullable private final Context context;
+    @Nullable private final Scope scope;
+    private final JedisRequest request;
+    @Nullable private final JedisClusterCommandContext clusterCommandContext;
+
+    private AdviceScope(
+        @Nullable Context context,
+        @Nullable Scope scope,
+        JedisRequest request,
+        @Nullable JedisClusterCommandContext clusterCommandContext) {
       this.context = context;
       this.scope = scope;
       this.request = request;
+      this.clusterCommandContext = clusterCommandContext;
     }
 
     @Nullable
     public static AdviceScope start(JedisRequest request) {
       if (JedisPipelineContext.inTransactionFraming()) {
         // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI batch
-        // span rather than getting their own spans.
-        return null;
+        // span rather than getting their own spans. Keep the request until method exit so a
+        // connected EXEC socket observed at method exit can become the transaction's last peer.
+        return new AdviceScope(null, null, request, null);
       }
       Context parentContext = Context.current();
       if (JedisPipelineContext.capture(request)) {
-        // A pipeline or transaction is active, so this command is captured and aggregated into the
-        // batch span created at sync()/exec() rather than getting its own span.
-        return null;
+        // Keep the request until method exit so its post-send peer snapshot is available to the
+        // batch span created at sync()/exec().
+        return new AdviceScope(null, null, request, null);
+      }
+      JedisClusterCommandContext clusterCommandContext = JedisClusterCommandContext.current();
+      if (clusterCommandContext != null) {
+        if (clusterCommandContext.isAcquiringConnection()
+            && CONNECTION_HEALTH_CHECK_COMMAND.equals(request.getOperationName())) {
+          // Jedis validates a pooled cluster connection with a health check command before handing
+          // it out; that command belongs to getting the connection rather than being an operation
+          // of its own. Anything else sent while getting a connection, such as the slot cache
+          // refresh a missing slot triggers, is an operation of its own.
+          return null;
+        }
+        if (clusterCommandContext.isExecuting()
+            && clusterCommandContext.matchesCapturedRequest(request)) {
+          // A retry or a redirection re-sends the same command to another node, so it updates the
+          // peer of the span already started for this cluster command instead of adding one.
+          return new AdviceScope(null, null, request, clusterCommandContext);
+        }
+        if (!clusterCommandContext.isExecuting() || clusterCommandContext.hasRequest()) {
+          // Slot cache refreshes and ASKING redirections are sent around the cluster command rather
+          // than by it, so they get their own spans.
+          clusterCommandContext = null;
+        }
       }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
       Context context = instrumenter().start(parentContext, request);
-      return new AdviceScope(context, context.makeCurrent(), request);
+      return new AdviceScope(context, context.makeCurrent(), request, clusterCommandContext);
     }
 
     public void end(@Nullable Throwable throwable) {
-      scope.close();
-      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+      try {
+        request.capturePeerAddress();
+        JedisPipelineContext.captureTransactionFramingPeer(request);
+      } finally {
+        Context context = this.context;
+        if (scope != null) {
+          scope.close();
+        }
+        if (clusterCommandContext != null) {
+          clusterCommandContext.capture(context, request);
+        } else if (context != null) {
+          JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+        }
+      }
     }
   }
 
