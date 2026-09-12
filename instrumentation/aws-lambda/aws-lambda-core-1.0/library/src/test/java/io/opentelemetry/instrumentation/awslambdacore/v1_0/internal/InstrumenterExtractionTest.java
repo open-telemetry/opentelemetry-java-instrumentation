@@ -56,8 +56,8 @@ class InstrumenterExtractionTest {
   }
 
   @Test
-  void useTraceHeaderFromAwsContext() {
-    assumeTrue(hasTraceHeaderApi(), "requires aws-lambda-java-core with getTraceHeader()");
+  void useXrayTraceIdFromAwsContext() {
+    assumeTrue(hasXrayTraceIdApi(), "requires aws-lambda-java-core with getXrayTraceId()");
 
     String traceHeader =
         "Root=1-00000001-d188f8fa79d48a391a778fa6;Parent=53995c3f42cd8ad8;Sampled=1";
@@ -68,16 +68,16 @@ class InstrumenterExtractionTest {
                 ContextPropagators.create(new TraceHeaderPropagator(extractedTraceHeader))));
 
     AwsLambdaRequest input =
-        AwsLambdaRequest.create(new ContextWithTraceHeader(traceHeader), new Object(), emptyMap());
+        AwsLambdaRequest.create(new ContextWithXrayTraceId(traceHeader), new Object(), emptyMap());
 
     instr.extract(input);
 
     assertThat(extractedTraceHeader.get()).isEqualTo(traceHeader);
   }
 
-  private static boolean hasTraceHeaderApi() {
+  private static boolean hasXrayTraceIdApi() {
     try {
-      com.amazonaws.services.lambda.runtime.Context.class.getMethod("getTraceHeader");
+      com.amazonaws.services.lambda.runtime.Context.class.getMethod("getXrayTraceId");
       return true;
     } catch (NoSuchMethodException | SecurityException ignored) {
       return false;
@@ -106,17 +106,17 @@ class InstrumenterExtractionTest {
     }
   }
 
-  private static final class ContextWithTraceHeader
-      implements com.amazonaws.services.lambda.runtime.Context, TraceHeaderContext {
+  private static final class ContextWithXrayTraceId
+      implements com.amazonaws.services.lambda.runtime.Context, XrayTraceIdContext {
     private final String traceHeader;
 
-    private ContextWithTraceHeader(String traceHeader) {
+    private ContextWithXrayTraceId(String traceHeader) {
       this.traceHeader = traceHeader;
     }
 
     @Override
     @SuppressWarnings("EffectivelyPrivate")
-    public String getTraceHeader() {
+    public String getXrayTraceId() {
       return traceHeader;
     }
 

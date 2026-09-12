@@ -5,6 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
-public interface TraceHeaderContext {
-  String getTraceHeader();
+public interface XrayTraceIdContext {
+  String getXrayTraceId();
 }
